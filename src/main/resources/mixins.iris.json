@@ -6,6 +6,7 @@
   "mixins": [
   ],
   "client": [
+	"MixinGameRenderer",
 	"MixinWorldRenderer"
   ],
   "injectors": {

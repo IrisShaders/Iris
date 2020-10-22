@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
+import net.coderbot.iris.uniforms.Uniforms;
+
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.gl.GlShader;
@@ -18,6 +20,7 @@ public class Iris implements ClientModInitializer {
 	private static GlShader vertex;
 	private static GlShader fragment;
 	private static GlProgram program;
+	private static Uniforms programUniforms;
 
 	private static InputStream vertexSource;
 	private static InputStream fragmentSource;
@@ -28,6 +31,7 @@ public class Iris implements ClientModInitializer {
 		}
 
 		GlProgramManager.useProgram(program.getProgramRef());
+		programUniforms.update();
 	}
 
 	private static void createShaders() {
@@ -76,6 +80,8 @@ public class Iris implements ClientModInitializer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		programUniforms = new Uniforms(program);
 
 		shadersCreated = true;
 	}
