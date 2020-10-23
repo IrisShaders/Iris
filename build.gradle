@@ -71,3 +71,7 @@ publishing {
 		// mavenLocal()
 	}
 }
+
+runClient {
+	jvmArgs "-Dmixin.debug.export=true"
+}
