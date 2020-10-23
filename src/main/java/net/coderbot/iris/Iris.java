@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
-import net.coderbot.iris.uniforms.Uniforms;
+import net.coderbot.iris.uniforms.TexturedUniforms;
 
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
@@ -17,13 +17,14 @@ import net.fabricmc.api.Environment;
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
 	private static boolean shadersCreated = false;
-	private static GlShader vertex;
-	private static GlShader fragment;
+	private static GlShader vertexTextured;
+	private static GlShader fragmentTextured;
 	private static GlProgram program;
-	private static Uniforms programUniforms;
+	private static TexturedUniforms programTexturedUniforms;
 
-	private static InputStream vertexSource;
-	private static InputStream fragmentSource;
+	private static InputStream vertexTexturedSource;
+	private static InputStream fragmentTexturedSource;
+
 
 	public static void useTerrainShaders() {
 		if (!shadersCreated) {
@@ -31,13 +32,13 @@ public class Iris implements ClientModInitializer {
 		}
 
 		GlProgramManager.useProgram(program.getProgramRef());
-		programUniforms.update();
+		programTexturedUniforms.update();
 	}
 
 	private static void createShaders() {
 		try {
-			vertex = GlShader.createFromResource(GlShader.Type.VERTEX, "gbuffers_textured.vsh", vertexSource, "");
-			fragment = GlShader.createFromResource(GlShader.Type.FRAGMENT, "gbuffers_textured.fsh", fragmentSource, "");
+			vertexTextured = GlShader.createFromResource(GlShader.Type.VERTEX, "assets/iris/shaders/gbuffers_textured.vsh", vertexTexturedSource, "");
+			fragmentTextured = GlShader.createFromResource(GlShader.Type.FRAGMENT, "assets/iris/shaders/gbuffers_textured.fsh", fragmentTexturedSource, "");
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to initialize Iris!", e);
 		}
@@ -66,12 +67,12 @@ public class Iris implements ClientModInitializer {
 
 			@Override
 			public GlShader getVertexShader() {
-				return vertex;
+				return vertexTextured;
 			}
 
 			@Override
 			public GlShader getFragmentShader() {
-				return fragment;
+				return fragmentTextured;
 			}
 		};
 
@@ -81,14 +82,14 @@ public class Iris implements ClientModInitializer {
 			e.printStackTrace();
 		}
 
-		programUniforms = new Uniforms(program);
+		programTexturedUniforms = new TexturedUniforms(program);
 
 		shadersCreated = true;
 	}
 
 	@Override
 	public void onInitializeClient() {
-		vertexSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.vsh"));
-		fragmentSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.fsh"));
+		vertexTexturedSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/assets/iris/shaders/gbuffers_textured.vsh"));
+		fragmentTexturedSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/assets/iris/shaders/gbuffers_textured.fsh"));
 	}
 }
