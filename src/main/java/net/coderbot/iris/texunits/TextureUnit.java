@@ -4,8 +4,9 @@ import org.lwjgl.opengl.GL15;
 
 public enum TextureUnit {
 	TERRAIN(0),
-	OVERLAY(1),
-	LIGHTMAP(2);
+	LIGHTMAP(1),
+	// TODO: Relocate this to a different texture unit, this is used by the normal map for normal shaders
+	OVERLAY(2);
 
 	private final int samplerId;
 	private final int unitId;
@@ -21,5 +22,11 @@ public enum TextureUnit {
 
 	public int getUnitId() {
 		return unitId;
+	}
+
+	static {
+		if (TERRAIN.getSamplerId() != 0) {
+			throw new IllegalStateException("The texture unit number of TERRAIN is not configurable.");
+		}
 	}
 }

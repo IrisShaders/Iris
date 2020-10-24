@@ -38,9 +38,7 @@ public class Uniforms {
 
 	public void update() {
 		// PERF: Only update uniforms if they have changed
-		GL21.glUniform1i(texture, 0);
-		// TODO: Apparently old shaders expect the lightmap to be in texture unit #1, not #2.
-		// Not sure why Mojang changed the texture unit of the lightmap - we'll need to change it back.
+		GL21.glUniform1i(texture, TextureUnit.TERRAIN.getSamplerId());
 		GL21.glUniform1i(lightmap, TextureUnit.LIGHTMAP.getSamplerId());
 
 		updateMatrix(gbufferModelView, CapturedRenderingState.INSTANCE.getGbufferModelView());
