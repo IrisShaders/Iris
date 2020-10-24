@@ -4,8 +4,8 @@ import org.lwjgl.opengl.GL15;
 
 public enum TextureUnit {
 	TERRAIN(0),
-	OVERLAY(2),
-	LIGHTMAP(1);
+	OVERLAY(1),
+	LIGHTMAP(2);
 
 	private final int samplerId;
 	private final int unitId;

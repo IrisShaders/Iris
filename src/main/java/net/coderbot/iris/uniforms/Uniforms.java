@@ -2,6 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import java.nio.FloatBuffer;
 
+import net.coderbot.iris.texunits.TextureUnit;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL21;
 
@@ -40,7 +41,7 @@ public class Uniforms {
 		GL21.glUniform1i(texture, 0);
 		// TODO: Apparently old shaders expect the lightmap to be in texture unit #1, not #2.
 		// Not sure why Mojang changed the texture unit of the lightmap - we'll need to change it back.
-		GL21.glUniform1i(lightmap, 2);
+		GL21.glUniform1i(lightmap, TextureUnit.LIGHTMAP.getSamplerId());
 
 		updateMatrix(gbufferModelView, CapturedRenderingState.INSTANCE.getGbufferModelView());
 		updateMatrix(gbufferModelViewInverse, invertedCopy(CapturedRenderingState.INSTANCE.getGbufferModelView()));

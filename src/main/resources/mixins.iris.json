@@ -8,6 +8,7 @@
   "client": [
 	"MixinGameRenderer",
 	"MixinWorldRenderer",
+	"texunits.MixinBufferVertexConsumer",
 	"texunits.MixinGlStateManager",
 	"texunits.MixinLightmapTextureManager",
 	"texunits.MixinOverlayTexture",
