@@ -7,7 +7,12 @@
   ],
   "client": [
 	"MixinGameRenderer",
-	"MixinWorldRenderer"
+	"MixinWorldRenderer",
+	"texunits.MixinBufferVertexConsumer",
+	"texunits.MixinGlStateManager",
+	"texunits.MixinLightmapTextureManager",
+	"texunits.MixinOverlayTexture",
+	"texunits.MixinVertexFormats"
   ],
   "injectors": {
 	"defaultRequire": 1

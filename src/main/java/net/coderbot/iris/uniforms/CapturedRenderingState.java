@@ -8,6 +8,11 @@ public class CapturedRenderingState {
 	private Matrix4f gbufferModelView;
 	private Matrix4f gbufferProjection;
 
+	/**
+	 * The state of the modelview matrix right after the sky angle rotation has been applied
+	 */
+	private Matrix4f celestialModelView;
+
 	private CapturedRenderingState() {
 	}
 
@@ -25,5 +30,13 @@ public class CapturedRenderingState {
 
 	public void setGbufferProjection(Matrix4f gbufferProjection) {
 		this.gbufferProjection = gbufferProjection;
+	}
+
+	public Matrix4f getCelestialModelView() {
+		return celestialModelView;
+	}
+
+	public void setCelestialModelView(Matrix4f celestialModelView) {
+		this.celestialModelView = celestialModelView;
 	}
 }
