@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import net.coderbot.iris.uniforms.TexturedUniforms;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.gl.GlShader;

@@ -18,6 +18,7 @@ public class TexturedUniforms {
 	private Uniform gbufferModelViewInverse;
 	private Uniform gbufferProjection;
 	private Uniform gbufferProjectionInverse;
+	private Uniform frameTimeCounter;
 
 	private Uniform cameraPosition;
 
@@ -30,7 +31,7 @@ public class TexturedUniforms {
 		gbufferProjection = new Uniform(program, "gbufferProjection");
 		gbufferProjectionInverse = new Uniform(program, "gbufferProjectionInverse");
 		cameraPosition = new Uniform(program, "cameraPosition");
-
+		frameTimeCounter = new FrameTimeCounterUniform(program, "frameTimeCounter");
 	}
 
 	public void update() {
@@ -40,19 +41,19 @@ public class TexturedUniforms {
 		// Not sure why Mojang changed the texture unit of the lightmap - we'll need to change it back.
 		GL21.glUniform1i(lightmap.getUniform(), 2);
 
-		gbufferModelView.updateMatrix(CapturedRenderingState.INSTANCE.getGbufferModelView());
-		gbufferModelViewInverse.updateMatrix(invertedCopy(CapturedRenderingState.INSTANCE.getGbufferModelView()));
-		gbufferProjection.updateMatrix(CapturedRenderingState.INSTANCE.getGbufferProjection());
-		gbufferProjectionInverse.updateMatrix(invertedCopy(CapturedRenderingState.INSTANCE.getGbufferProjection()));
+		gbufferModelView.update(CapturedRenderingState.INSTANCE.getGbufferModelView());
+		gbufferModelViewInverse.update(invertedCopy(CapturedRenderingState.INSTANCE.getGbufferModelView()));
+		gbufferProjection.update(CapturedRenderingState.INSTANCE.getGbufferProjection());
+		gbufferProjectionInverse.update(invertedCopy(CapturedRenderingState.INSTANCE.getGbufferProjection()));
 		Vec3d cameraPos = MinecraftClient.getInstance().gameRenderer.getCamera().getPos();
+		//doesnt matter what we pass as the buffer matrix stack
+		frameTimeCounter.update(CapturedRenderingState.INSTANCE.getGbufferProjection());
 		GL21.glUniform3f(cameraPosition.getUniform(), (float) cameraPos.x, (float) cameraPos.y, (float) cameraPos.z);
 	}
 	private Matrix4f invertedCopy(Matrix4f matrix) {
 		// PERF: Don't copy this matrix every time
 		Matrix4f copy = matrix.copy();
-
 		copy.invert();
-
 		return copy;
 	}
 }

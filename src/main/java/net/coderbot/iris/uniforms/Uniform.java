@@ -14,7 +14,7 @@ public class Uniform {
     public Uniform(GlProgram program, String name){
         this.uniform = GL21.glGetUniformLocation(program.getProgramRef(), name);
     }
-    protected void updateMatrix(Matrix4f instance) {
+    protected void update(Matrix4f instance) {
         FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
         instance.writeToBuffer(buffer);
         buffer.rewind();
