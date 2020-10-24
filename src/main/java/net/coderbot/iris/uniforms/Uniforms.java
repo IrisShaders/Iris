@@ -8,6 +8,8 @@ import org.lwjgl.opengl.GL21;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgram;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 
@@ -22,6 +24,8 @@ public class Uniforms {
 
 	private int cameraPosition;
 
+	private int shadowLightPosition;
+
 	public Uniforms(GlProgram program) {
 		int programId = program.getProgramRef();
 
@@ -34,6 +38,8 @@ public class Uniforms {
 		gbufferProjectionInverse = GL21.glGetUniformLocation(programId, "gbufferProjectionInverse");
 
 		cameraPosition = GL21.glGetUniformLocation(programId, "cameraPosition");
+
+		shadowLightPosition = GL21.glGetUniformLocation(programId, "shadowLightPosition");
 	}
 
 	public void update() {
@@ -46,8 +52,22 @@ public class Uniforms {
 		updateMatrix(gbufferProjection, CapturedRenderingState.INSTANCE.getGbufferProjection());
 		updateMatrix(gbufferProjectionInverse, invertedCopy(CapturedRenderingState.INSTANCE.getGbufferProjection()));
 
-		Vec3d cameraPos = MinecraftClient.getInstance().gameRenderer.getCamera().getPos();
-		GL21.glUniform3f(cameraPosition, (float) cameraPos.x, (float) cameraPos.y, (float) cameraPos.z);
+		updateVector(cameraPosition, MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+
+		// TODO: Simplify this
+		Vector4f shadowLightPositionVector;
+
+		if (MinecraftClient.getInstance().world.isDay()) {
+			// Sun position
+			shadowLightPositionVector = new Vector4f(0.0F, 100.0F, 0.0F, 0.0F);
+		} else {
+			// Moon position
+			shadowLightPositionVector = new Vector4f(0.0F, -100.0F, 0.0F, 0.0F);
+		}
+
+		shadowLightPositionVector.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
+
+		updateVector(shadowLightPosition, new Vector3f(0.0F, 100.0F, 0.0F));
 	}
 
 	private void updateMatrix(int location, Matrix4f instance) {
@@ -57,6 +77,14 @@ public class Uniforms {
 		buffer.rewind();
 
 		GL21.glUniformMatrix4fv(location, false, buffer);
+	}
+
+	private void updateVector(int location, Vec3d instance) {
+		GL21.glUniform3f(location, (float) instance.x, (float) instance.y, (float) instance.z);
+	}
+
+	private void updateVector(int location, Vector3f instance) {
+		GL21.glUniform3f(location, instance.getX(), instance.getY(), instance.getZ());
 	}
 
 	private Matrix4f invertedCopy(Matrix4f matrix) {
