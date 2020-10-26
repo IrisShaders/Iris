@@ -39,9 +39,11 @@ public class Uniforms {
 		gbufferProjection = GL21.glGetUniformLocation(programId, "gbufferProjection");
 		gbufferProjectionInverse = GL21.glGetUniformLocation(programId, "gbufferProjectionInverse");
 
-		viewHeight  = MinecraftClient.getInstance().getWindow().getHeight();
+		viewHeight = MinecraftClient.getInstance().getWindow().getHeight();
+		viewHeight = GL21.glGetUniformLocation(programID, "viewHeight");
 
-		viewWidth   = MinecraftClient.getInstance().getWindow().getWidth();
+		viewWidth = MinecraftClient.getInstance().getWindow().getWidth();
+		viewWidth = GL21.glGetUniformLocation(programID, "viewWidth");
 
 		cameraPosition = GL21.glGetUniformLocation(programId, "cameraPosition");
 
