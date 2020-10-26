@@ -1,17 +1,16 @@
 package net.coderbot.iris.uniforms;
 
-import java.nio.FloatBuffer;
-
 import net.coderbot.iris.texunits.TextureUnit;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL21;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL21;
+
+import java.nio.FloatBuffer;
 
 public class Uniforms {
 	private int texture;
@@ -21,6 +20,9 @@ public class Uniforms {
 	private int gbufferModelViewInverse;
 	private int gbufferProjection;
 	private int gbufferProjectionInverse;
+
+	private int viewHeight;
+	private int viewWidth;
 
 	private int cameraPosition;
 
@@ -36,6 +38,10 @@ public class Uniforms {
 		gbufferModelViewInverse = GL21.glGetUniformLocation(programId, "gbufferModelViewInverse");
 		gbufferProjection = GL21.glGetUniformLocation(programId, "gbufferProjection");
 		gbufferProjectionInverse = GL21.glGetUniformLocation(programId, "gbufferProjectionInverse");
+
+		viewHeight  = MinecraftClient.getInstance().getWindow().getHeight();
+
+		viewWidth   = MinecraftClient.getInstance().getWindow().getWidth();
 
 		cameraPosition = GL21.glGetUniformLocation(programId, "cameraPosition");
 
