@@ -1,19 +1,16 @@
 package net.coderbot.iris;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
-
-import net.coderbot.iris.uniforms.TexturedUniforms;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GlProgram;
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.gl.GlShader;
-
+import net.coderbot.iris.config.ShaderProperties;
+import net.coderbot.iris.uniforms.Uniforms;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.gl.GlProgram;
+import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.gl.GlShader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
@@ -21,8 +18,8 @@ public class Iris implements ClientModInitializer {
 	private static GlShader vertexTextured;
 	private static GlShader fragmentTextured;
 	private static GlProgram program;
-	private static TexturedUniforms programTexturedUniforms;
-
+	private static Uniforms programUniforms;
+	private static ShaderProperties shaderProperties;
 	private static InputStream vertexTexturedSource;
 	private static InputStream fragmentTexturedSource;
 
@@ -33,7 +30,7 @@ public class Iris implements ClientModInitializer {
 		}
 
 		GlProgramManager.useProgram(program.getProgramRef());
-		programTexturedUniforms.update();
+		programUniforms.update();
 	}
 
 	private static void createShaders() {
@@ -41,6 +38,7 @@ public class Iris implements ClientModInitializer {
 			vertexTextured = GlShader.createFromResource(GlShader.Type.VERTEX, "assets/iris/shaders/gbuffers_textured.vsh", vertexTexturedSource, "");
 			fragmentTextured = GlShader.createFromResource(GlShader.Type.FRAGMENT, "assets/iris/shaders/gbuffers_textured.fsh", fragmentTexturedSource, "");
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new RuntimeException("Failed to initialize Iris!", e);
 		}
 
@@ -83,14 +81,26 @@ public class Iris implements ClientModInitializer {
 			e.printStackTrace();
 		}
 
-		programTexturedUniforms = new TexturedUniforms(program);
+		programUniforms = new Uniforms(program);
 
 		shadersCreated = true;
 	}
 
 	@Override
 	public void onInitializeClient() {
-		vertexTexturedSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/assets/iris/shaders/gbuffers_textured.vsh"));
-		fragmentTexturedSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/assets/iris/shaders/gbuffers_textured.fsh"));
+		setShaderProperties(new ShaderProperties());
+		try {
+			getShaderProperties().createAndLoadProperties();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		vertexTexturedSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.vsh"));
+		fragmentTexturedSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.fsh"));
+	}
+	private static void setShaderProperties(ShaderProperties shaders){
+		shaderProperties = shaders;
+	}
+	public static ShaderProperties getShaderProperties(){
+		return shaderProperties;
 	}
 }

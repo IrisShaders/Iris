@@ -25,7 +25,6 @@ public class FrameTimeCounterUniform extends Uniform {
         if (frameTimeCounter > 3600){
             frameTimeCounter = 0;
         }
-        System.out.println(frameTimeCounter);
         GL21.glUniform1f(this.getUniform(), frameTimeCounter);
     }
 }
