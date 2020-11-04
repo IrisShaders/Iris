@@ -1,17 +1,16 @@
 package net.coderbot.iris.uniforms;
 
-import java.nio.FloatBuffer;
-
 import net.coderbot.iris.texunits.TextureUnit;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL21;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL21;
+
+import java.nio.FloatBuffer;
 
 public class Uniforms {
 	private int texture;
@@ -21,6 +20,9 @@ public class Uniforms {
 	private int gbufferModelViewInverse;
 	private int gbufferProjection;
 	private int gbufferProjectionInverse;
+
+	private int viewHeight;
+	private int viewWidth;
 
 	private int cameraPosition;
 
@@ -37,6 +39,9 @@ public class Uniforms {
 		gbufferProjection = GL21.glGetUniformLocation(programId, "gbufferProjection");
 		gbufferProjectionInverse = GL21.glGetUniformLocation(programId, "gbufferProjectionInverse");
 
+		viewHeight = GL21.glGetUniformLocation(programId, "viewHeight");
+		viewWidth = GL21.glGetUniformLocation(programId, "viewWidth");
+
 		cameraPosition = GL21.glGetUniformLocation(programId, "cameraPosition");
 
 		shadowLightPosition = GL21.glGetUniformLocation(programId, "shadowLightPosition");
@@ -51,6 +56,10 @@ public class Uniforms {
 		updateMatrix(gbufferModelViewInverse, invertedCopy(CapturedRenderingState.INSTANCE.getGbufferModelView()));
 		updateMatrix(gbufferProjection, CapturedRenderingState.INSTANCE.getGbufferProjection());
 		updateMatrix(gbufferProjectionInverse, invertedCopy(CapturedRenderingState.INSTANCE.getGbufferProjection()));
+
+		GL21.glUniform1f(viewHeight, MinecraftClient.getInstance().getWindow().getHeight());
+		GL21.glUniform1f(viewWidth, MinecraftClient.getInstance().getWindow().getWidth());
+
 
 		updateVector(cameraPosition, MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
 
