@@ -1,19 +1,17 @@
 package net.coderbot.iris.shaders;
 
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.uniforms.Uniforms;
+import net.coderbot.iris.uniforms.Uniforms2;
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.gl.GlShader;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public abstract class Shader {
     private Path shaderPackPath;
     private boolean shadersUsed = false;
-    private Uniforms uniforms;
+    private Uniforms2 uniforms;
     private GlProgram program;
     public Shader(Path shaderPackPath){
         this.shaderPackPath = shaderPackPath;
@@ -26,7 +24,7 @@ public abstract class Shader {
             GlShader fragmentShader = GlShader.createFromResource(GlShader.Type.FRAGMENT, this.getFileName(shaderPackPath) + ".fsh", fragmentStream, "");
 
             program = createShaders(fragmentShader, vertexShader);
-            uniforms = new Uniforms(program);
+            uniforms = new Uniforms2(program);
             shadersUsed = true;
         }
             GlProgramManager.useProgram(program.getProgramRef());

@@ -1,7 +1,7 @@
 package net.coderbot.iris;
 
 import net.coderbot.iris.config.ShaderProperties;
-import net.coderbot.iris.uniforms.Uniforms;
+import net.coderbot.iris.uniforms.Uniforms2;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -18,7 +18,7 @@ public class Iris implements ClientModInitializer {
 	private static GlShader vertexTextured;
 	private static GlShader fragmentTextured;
 	private static GlProgram program;
-	private static Uniforms programUniforms;
+	private static Uniforms2 programUniforms;
 	private static ShaderProperties shaderProperties;
 	private static InputStream vertexTexturedSource;
 	private static InputStream fragmentTexturedSource;
@@ -81,7 +81,7 @@ public class Iris implements ClientModInitializer {
 			e.printStackTrace();
 		}
 
-		programUniforms = new Uniforms(program);
+		programUniforms = new Uniforms2(program);
 
 		shadersCreated = true;
 	}

@@ -1,7 +1,6 @@
 package net.coderbot.iris.shaders;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.coderbot.iris.uniforms.Uniforms;
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.gl.GlShader;

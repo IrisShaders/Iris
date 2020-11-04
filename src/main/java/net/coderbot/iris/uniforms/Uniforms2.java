@@ -2,17 +2,23 @@ package net.coderbot.iris.uniforms;
 
 import java.nio.FloatBuffer;
 
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL21;
 
+import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL21;
 
-public class Uniforms {
+import java.nio.FloatBuffer;
+
+public class Uniforms2 {
 	private Uniform texture;
 	private Uniform lightmap;
 
@@ -24,7 +30,7 @@ public class Uniforms {
 	private Uniform shadowLightPosition;
 	private Uniform cameraPosition;
 
-	public Uniforms(GlProgram program) {
+	public Uniforms2(GlProgram program) {
 		program.getProgramRef();
 		texture = new Uniform(program, "texture");
 		lightmap = new Uniform(program, "lightmap");
@@ -36,6 +42,7 @@ public class Uniforms {
 		frameTimeCounter = new FrameTimeCounterUniform(program, "frameTimeCounter");
 		shadowLightPosition = new Uniform(program, "shadowLightPosition");
 	}
+
 
 	public void update() {
 		// PERF: Only update uniforms if they have changed
@@ -56,7 +63,7 @@ public class Uniforms {
 			Vector4f shadowLightPositionVector = MinecraftClient.getInstance().world.isDay() ? new Vector4f(0.0F, 100.0F, 0.0F, 0.0F) : new Vector4f(0.0F, -100.0F, 0.0F, 0.0F);
 			shadowLightPositionVector.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
 			shadowLightPosition.updateVector(new Vector3f(0.0F, 100.0F, 0.0F));
-		} catch (Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
@@ -67,3 +74,4 @@ public class Uniforms {
 		return copy;
 	}
 }
+
