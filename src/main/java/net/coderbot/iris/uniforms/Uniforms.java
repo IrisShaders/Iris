@@ -25,8 +25,14 @@ public class Uniforms {
 	private int viewWidth;
 
 	private int cameraPosition;
+	
+	private int eyeAltitude;
+	private int isEyeInWater;
 
 	private int shadowLightPosition;
+	private static int moonPhase;
+	
+	private static int hideGUI;
 
 	public Uniforms(GlProgram program) {
 		int programId = program.getProgramRef();
@@ -43,8 +49,14 @@ public class Uniforms {
 		viewWidth = GL21.glGetUniformLocation(programId, "viewWidth");
 
 		cameraPosition = GL21.glGetUniformLocation(programId, "cameraPosition");
+		
+		eyeAltitude = GL21.glGetUniformLocation(programId, "eyeAltitude");
+		isEyeInWater = GL21.glGetUniformLocation(programId, "isEyeInWater");		
 
 		shadowLightPosition = GL21.glGetUniformLocation(programId, "shadowLightPosition");
+		moonPhase = GL21.glGetUniformLocation(programId, "moonPhase");
+		
+		hideGUI = GL21.glGetUniformLocation(programId, "hideGUI");
 	}
 
 	public void update() {
@@ -62,6 +74,19 @@ public class Uniforms {
 
 
 		updateVector(cameraPosition, MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+		
+		GL21.glUniform1f(eyeAltitude, (float)MinecraftClient.getInstance().player.getPos().getY());
+		
+		// TODO: Simplify 
+		// Help is it player or cameraEntity
+		int EyeInWater = 0;
+		GL21.glUniform1f(eyeAltitude, (float)MinecraftClient.getInstance().player.getPos().getY());
+		if (MinecraftClient.getInstance().player.isSubmergedInWater()) {
+			EyeInWater = 1;
+		} else if (MinecraftClient.getInstance().player.isInLava()) {
+			EyeInWater = 2;
+		}
+		GL21.glUniform1i(isEyeInWater, EyeInWater);
 
 		// TODO: Simplify this
 		Vector4f shadowLightPositionVector;
@@ -77,6 +102,10 @@ public class Uniforms {
 		shadowLightPositionVector.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
 
 		updateVector(shadowLightPosition, new Vector3f(0.0F, 100.0F, 0.0F));
+		
+		GL21.glUniform1i(moonPhase, MinecraftClient.getInstance().world.getMoonPhase());
+		
+		GL21.glUniform1i(hideGUI, MinecraftClient.getInstance().options.hudHidden ? 1 : 0);
 	}
 
 	private void updateMatrix(int location, Matrix4f instance) {
