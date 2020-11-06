@@ -1,5 +1,10 @@
 package net.coderbot.iris.uniforms;
 
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+
+import net.coderbot.iris.gl.uniform.ProgramUniforms;
+import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgram;
@@ -13,11 +18,10 @@ import org.lwjgl.opengl.GL21;
 
 import java.nio.FloatBuffer;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
+import java.util.function.IntSupplier;
 
-public class Uniforms {
-	private int texture;
-	private int lightmap;
-
+public class Uniforms extends ProgramUniforms {
 	private int gbufferModelView;
 	private int gbufferModelViewInverse;
 	private int gbufferProjection;
@@ -33,14 +37,19 @@ public class Uniforms {
 
 	private int shadowLightPosition;
 	private static int moonPhase;
-	
-	private static int hideGUI;
+
+	private MinecraftClient client;
 
 	public Uniforms(GlProgram program) {
+		super(program.getProgramRef());
+
+		client = MinecraftClient.getInstance();
+
 		int programId = program.getProgramRef();
 
-		texture = GL21.glGetUniformLocation(programId, "texture");
-		lightmap = GL21.glGetUniformLocation(programId, "lightmap");
+		uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId);
+		uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId);
+		uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden);
 
 		gbufferModelView = GL21.glGetUniformLocation(programId, "gbufferModelView");
 		gbufferModelViewInverse = GL21.glGetUniformLocation(programId, "gbufferModelViewInverse");
@@ -57,15 +66,9 @@ public class Uniforms {
 
 		shadowLightPosition = GL21.glGetUniformLocation(programId, "shadowLightPosition");
 		moonPhase = GL21.glGetUniformLocation(programId, "moonPhase");
-		
-		hideGUI = GL21.glGetUniformLocation(programId, "hideGUI");
 	}
 
 	public void update() {
-		// PERF: Only update uniforms if they have changed
-		GL21.glUniform1i(texture, TextureUnit.TERRAIN.getSamplerId());
-		GL21.glUniform1i(lightmap, TextureUnit.LIGHTMAP.getSamplerId());
-
 		updateMatrix(gbufferModelView, CapturedRenderingState.INSTANCE.getGbufferModelView());
 		updateMatrix(gbufferModelViewInverse, invertedCopy(CapturedRenderingState.INSTANCE.getGbufferModelView()));
 		updateMatrix(gbufferProjection, CapturedRenderingState.INSTANCE.getGbufferProjection());
@@ -111,8 +114,6 @@ public class Uniforms {
 		updateVector(shadowLightPosition, new Vector3f(0.0F, 100.0F, 0.0F));
 		
 		GL21.glUniform1i(moonPhase, MinecraftClient.getInstance().world.getMoonPhase());
-		
-		GL21.glUniform1i(hideGUI, MinecraftClient.getInstance().options.hudHidden ? 1 : 0);
 	}
 
 	private void updateMatrix(int location, Matrix4f instance) {
