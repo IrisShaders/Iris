@@ -28,7 +28,7 @@ public class Uniform {
     protected void updateVector(Vec3d instance){
         GL21.glUniform3f(this.getUniform(), (float) instance.x, (float) instance.y, (float) instance.z);
     }
-    public int getUniform(){
+    public final int getUniform(){
         return uniform;
     }
     protected void updateVector(Vector3f instance){

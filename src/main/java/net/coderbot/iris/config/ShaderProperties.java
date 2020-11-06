@@ -9,7 +9,6 @@ import java.util.Properties;
 
 /**
  * A class dedicated to storing the config values of shaderpacks. Right now it only stores the path to the current shaderpack
- * and is hardcoded for the trippy shaderpack
  */
 public class ShaderProperties {
     private Path shaderpath;
@@ -20,16 +19,20 @@ public class ShaderProperties {
             file.mkdirs();
         }
     }
+    public ShaderProperties setShaderPack(String shaderPackName){
+        this.shaderpath = Paths.get(FabricLoader.getInstance().getGameDir() + "/shaderpacks/" + shaderPackName);
+        return this;
+    }
     public void createAndLoadProperties() throws IOException {
-        //TODO: stop hardcoding for the trippy shaderpack and make a more user friendly approach
-
         propertiesPath = Paths.get(FabricLoader.getInstance().getConfigDir() + "/iris.properties");
         Properties properties = new Properties();
         if (new File(String.valueOf(shaderpath)).exists()){
-            properties.load(new FileInputStream(FabricLoader.getInstance().getConfigDir() + "/iris.properties"));
-            shaderpath = Paths.get((String) properties.get("shaderpack"));
-        } else{
-            shaderpath  = Paths.get(FabricLoader.getInstance().getGameDir() + "/shaderpacks/" + "Trippy-Shaderpack-master" + "/shaders");
+            if (new File(propertiesPath.toString()).exists()) {
+                properties.load(new FileInputStream(propertiesPath.toString()));
+                shaderpath = Paths.get((String) properties.get("shaderpack"));
+            }
+        } else {
+            throw new IllegalStateException(String.format("The specified shaderpack %s was not found!", shaderpath));
         }
         properties.setProperty("shaderpack", shaderpath.toString());
         properties.store(new FileOutputStream(FabricLoader.getInstance().getConfigDir() + "/iris.properties"), "This file is used to parse iris shader settings.");

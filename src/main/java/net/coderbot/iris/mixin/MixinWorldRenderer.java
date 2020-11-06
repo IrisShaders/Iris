@@ -36,13 +36,13 @@ public class MixinWorldRenderer {
 	private void setupTerrainShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		try {
-			ShaderManager.useTerrainShaders();
+			Iris.getShaderManager().useTerrainShaders();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=blockentities"))
+	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities"))
 	private void stopUsingTerrainShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GlProgramManager.useProgram(0);
 	}
@@ -58,7 +58,7 @@ public class MixinWorldRenderer {
 	private void setupCloudShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
 
 		try {
-			ShaderManager.useCloudShaders();
+			Iris.getShaderManager().useCloudShaders();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -70,9 +70,8 @@ public class MixinWorldRenderer {
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=sky"))
 	private void startSkyShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
-
 		try {
-			ShaderManager.useSkyShaders();
+			Iris.getShaderManager().useSkyShaders();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -86,16 +85,14 @@ public class MixinWorldRenderer {
 	private void startBasicShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
 
 		try {
-			ShaderManager.useBasicShaders();
+			Iris.getShaderManager().useBasicShaders();
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
-
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=particles"))
 	private void stopBasicShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
 		GlProgramManager.useProgram(0);
-
 	}
 
 }

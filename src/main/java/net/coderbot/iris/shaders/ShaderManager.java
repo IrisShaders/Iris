@@ -3,26 +3,29 @@ package net.coderbot.iris.shaders;
 import net.coderbot.iris.Iris;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class ShaderManager {
-    private static TerrainShaders terrainShaders;
-    private static CloudShaders cloudShaders;
-    private static SkyShaders skyShaders;
-    private static OutlineShaders outlineShaders;
-    public static void useTerrainShaders() throws IOException {
-        terrainShaders = new TerrainShaders(Iris.getShaderProperties().getShaderPackPath());
+    private TerrainShaders terrainShaders;
+    private CloudShaders cloudShaders;
+    private SkyShaders skyShaders;
+    private OutlineShaders outlineShaders;
+    public ShaderManager(){
+        terrainShaders = new TerrainShaders(Paths.get(Iris.getShaderProperties().getShaderPackPath() + "/shaders/"));
+        cloudShaders = new CloudShaders(Paths.get(Iris.getShaderProperties().getShaderPackPath() + "/shaders/"));
+        skyShaders = new SkyShaders(Paths.get(Iris.getShaderProperties().getShaderPackPath() + "/shaders/"));
+        outlineShaders = new OutlineShaders(Paths.get(Iris.getShaderProperties().getShaderPackPath() + "/shaders/"));
+    }
+    public void useTerrainShaders() throws IOException {
         terrainShaders.useShaders();
     }
-    public static void useCloudShaders() throws IOException {
-        cloudShaders = new CloudShaders(Iris.getShaderProperties().getShaderPackPath());
+    public void useCloudShaders() throws IOException {
         cloudShaders.useShaders();
     }
-    public static void useSkyShaders() throws IOException {
-        skyShaders = new SkyShaders(Iris.getShaderProperties().getShaderPackPath());
+    public void useSkyShaders() throws IOException {
         skyShaders.useShaders();
     }
-    public static void useBasicShaders() throws IOException {
-        outlineShaders = new OutlineShaders(Iris.getShaderProperties().getShaderPackPath());
+    public void useBasicShaders() throws IOException {
         outlineShaders.useShaders();
     }
 }

@@ -1,24 +1,15 @@
 package net.coderbot.iris.uniforms;
 
-import java.nio.FloatBuffer;
-
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL21;
-
-import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgram;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
-import org.lwjgl.BufferUtils;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL21;
 
-import java.nio.FloatBuffer;
-
-public class Uniforms2 {
+public class Uniforms {
 	private Uniform texture;
 	private Uniform lightmap;
 
@@ -29,8 +20,10 @@ public class Uniforms2 {
 	private FrameTimeCounterUniform frameTimeCounter;
 	private Uniform shadowLightPosition;
 	private Uniform cameraPosition;
+	private Uniform viewHeight;
+	private Uniform viewWidth;
 
-	public Uniforms2(GlProgram program) {
+	public Uniforms(GlProgram program) {
 		program.getProgramRef();
 		texture = new Uniform(program, "texture");
 		lightmap = new Uniform(program, "lightmap");
@@ -41,9 +34,22 @@ public class Uniforms2 {
 		cameraPosition = new Uniform(program, "cameraPosition");
 		frameTimeCounter = new FrameTimeCounterUniform(program, "frameTimeCounter");
 		shadowLightPosition = new Uniform(program, "shadowLightPosition");
+		viewHeight = new Uniform(program, "viewHeight"){
+			@Override
+			protected void update(Matrix4f instance) {
+				GL21.glUniform1f(this.getUniform(), MinecraftClient.getInstance().getWindow().getHeight());
+			}
+		};
+		viewWidth = new Uniform(program, "viewWidth") {
+			@Override
+			protected void update(Matrix4f instance) {
+				GL21.glUniform1f(this.getUniform(), MinecraftClient.getInstance().getWindow().getWidth());
+			}
+		};
 	}
 
 
+	@SuppressWarnings("ConstantConditions")
 	public void update() {
 		// PERF: Only update uniforms if they have changed
 		GL21.glUniform1i(texture.getUniform(), 0);
@@ -63,6 +69,8 @@ public class Uniforms2 {
 			Vector4f shadowLightPositionVector = MinecraftClient.getInstance().world.isDay() ? new Vector4f(0.0F, 100.0F, 0.0F, 0.0F) : new Vector4f(0.0F, -100.0F, 0.0F, 0.0F);
 			shadowLightPositionVector.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
 			shadowLightPosition.updateVector(new Vector3f(0.0F, 100.0F, 0.0F));
+			viewWidth.update(null);
+			viewHeight.update(null);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
