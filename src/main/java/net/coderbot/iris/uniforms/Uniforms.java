@@ -5,12 +5,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL21;
 
 import java.nio.FloatBuffer;
+import java.util.Objects;
 
 public class Uniforms {
 	private int texture;
@@ -74,19 +76,24 @@ public class Uniforms {
 
 
 		updateVector(cameraPosition, MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+
+		Entity cameraEntity = Objects.requireNonNull(MinecraftClient.getInstance().getCameraEntity());
+
+		GL21.glUniform1f(eyeAltitude, (float) cameraEntity.getPos().getY());
 		
-		GL21.glUniform1f(eyeAltitude, (float)MinecraftClient.getInstance().player.getPos().getY());
-		
-		// TODO: Simplify 
-		// Help is it player or cameraEntity
-		int EyeInWater = 0;
-		GL21.glUniform1f(eyeAltitude, (float)MinecraftClient.getInstance().player.getPos().getY());
-		if (MinecraftClient.getInstance().player.isSubmergedInWater()) {
-			EyeInWater = 1;
-		} else if (MinecraftClient.getInstance().player.isInLava()) {
-			EyeInWater = 2;
+		// TODO: Simplify
+		int eyeInWater;
+		GL21.glUniform1f(eyeAltitude, (float) cameraEntity.getPos().getY());
+
+		if (cameraEntity.isSubmergedInWater()) {
+			eyeInWater = 1;
+		} else if (cameraEntity.isInLava()) {
+			eyeInWater = 2;
+		} else {
+			eyeInWater = 0;
 		}
-		GL21.glUniform1i(isEyeInWater, EyeInWater);
+
+		GL21.glUniform1i(isEyeInWater, eyeInWater);
 
 		// TODO: Simplify this
 		Vector4f shadowLightPositionVector;
