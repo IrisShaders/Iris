@@ -9,6 +9,7 @@ import java.util.Properties;
 
 /**
  * A class dedicated to storing the config values of shaderpacks. Right now it only stores the path to the current shaderpack
+ * It will eventually have a sort of builder system for adding settings for it
  */
 public class ShaderProperties {
     private Path shaderpath;
@@ -32,7 +33,7 @@ public class ShaderProperties {
                 shaderpath = Paths.get((String) properties.get("shaderpack"));
             }
         } else {
-            throw new IllegalStateException(String.format("The specified shaderpack %s was not found!", shaderpath));
+            throw new IllegalStateException(String.format("The specified shaderpack path  \"%s\" was not found!", shaderpath));
         }
         properties.setProperty("shaderpack", shaderpath.toString());
         properties.store(new FileOutputStream(FabricLoader.getInstance().getConfigDir() + "/iris.properties"), "This file is used to parse iris shader settings.");

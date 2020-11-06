@@ -1,25 +1,21 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaders.ShaderManager;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.render.*;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Matrix4f;
-
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 import java.io.IOException;
 
@@ -42,7 +38,7 @@ public class MixinWorldRenderer {
 		}
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities"))
+	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=blockentities"))
 	private void stopUsingTerrainShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GlProgramManager.useProgram(0);
 	}
@@ -70,6 +66,7 @@ public class MixinWorldRenderer {
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=sky"))
 	private void startSkyShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
+
 		try {
 			Iris.getShaderManager().useSkyShaders();
 		} catch (IOException e) {
@@ -89,10 +86,12 @@ public class MixinWorldRenderer {
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
+
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=particles"))
 	private void stopBasicShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
 		GlProgramManager.useProgram(0);
+
 	}
 
 }
