@@ -1,30 +1,30 @@
 package net.coderbot.iris;
 
-import net.coderbot.iris.config.ShaderProperties;
-import net.coderbot.iris.shaders.ShaderManager;
-import net.coderbot.iris.uniforms.Uniforms;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.gl.GlProgram;
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.gl.GlShader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
+import net.coderbot.iris.uniforms.Uniforms;
+import org.lwjgl.opengl.GL20;
+
+import net.minecraft.client.gl.GlProgram;
+import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.gl.GlShader;
+
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
 	private static boolean shadersCreated = false;
-	private static GlShader vertexTextured;
-	private static GlShader fragmentTextured;
+	private static GlShader vertex;
+	private static GlShader fragment;
 	private static GlProgram program;
 	private static Uniforms programUniforms;
-	private static ShaderProperties shaderProperties;
-	private static ShaderManager shaderManager;
-	private static InputStream vertexTexturedSource;
-	private static InputStream fragmentTexturedSource;
 
+	private static InputStream vertexSource;
+	private static InputStream fragmentSource;
 
 	public static void useTerrainShaders() {
 		if (!shadersCreated) {
@@ -32,15 +32,27 @@ public class Iris implements ClientModInitializer {
 		}
 
 		GlProgramManager.useProgram(program.getProgramRef());
+		setupAttributes();
 		programUniforms.update();
+	}
+
+	private static void setupAttributes() {
+		// TODO: Properly add these attributes into the vertex format
+
+		int mcEntity = GL20.glGetAttribLocation(program.getProgramRef(), "mc_Entity");
+
+		if (mcEntity != -1) {
+			float blockId = -1.0F;
+
+			GL20.glVertexAttrib4f(mcEntity, blockId, -1.0F, -1.0F, -1.0F);
+		}
 	}
 
 	private static void createShaders() {
 		try {
-			vertexTextured = GlShader.createFromResource(GlShader.Type.VERTEX, "assets/iris/shaders/gbuffers_textured.vsh", vertexTexturedSource, "");
-			fragmentTextured = GlShader.createFromResource(GlShader.Type.FRAGMENT, "assets/iris/shaders/gbuffers_textured.fsh", fragmentTexturedSource, "");
+			vertex = GlShader.createFromResource(GlShader.Type.VERTEX, "gbuffers_textured.vsh", vertexSource, "");
+			fragment = GlShader.createFromResource(GlShader.Type.FRAGMENT, "gbuffers_textured.fsh", fragmentSource, "");
 		} catch (IOException e) {
-			e.printStackTrace();
 			throw new RuntimeException("Failed to initialize Iris!", e);
 		}
 
@@ -68,12 +80,12 @@ public class Iris implements ClientModInitializer {
 
 			@Override
 			public GlShader getVertexShader() {
-				return vertexTextured;
+				return vertex;
 			}
 
 			@Override
 			public GlShader getFragmentShader() {
-				return fragmentTextured;
+				return fragment;
 			}
 		};
 
@@ -90,28 +102,7 @@ public class Iris implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		ShaderProperties shaderProperties = new ShaderProperties().setShaderPack("Vaporwave-Shaderpack-master");
-		setShaderProperties(shaderProperties);
-		try {
-			getShaderProperties().createAndLoadProperties();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		ShaderManager manager = new ShaderManager();
-		setShaderManager(manager);
-		vertexTexturedSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.vsh"));
-		fragmentTexturedSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.fsh"));
-	}
-	private static void setShaderProperties(ShaderProperties shaders){
-		shaderProperties = shaders;
-	}
-	public static ShaderProperties getShaderProperties(){
-		return shaderProperties;
-	}
-	private static void setShaderManager(ShaderManager manager){
-		shaderManager = manager;
-	}
-	public static ShaderManager getShaderManager(){
-		return shaderManager;
+		vertexSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.vsh"));
+		fragmentSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.fsh"));
 	}
 }

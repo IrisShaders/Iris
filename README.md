@@ -40,11 +40,15 @@ At the moment, the options for contributing are somewhat limited, and I don't ha
 
 ### Why not Canvas?
 
-[Canvas](https://github.com/grondag/canvas) is an advanced shader-based renderer for Minecraft also running on the Fabric modloader, by Grondag. This raises a common question: why not contribute to Canvas instead? I have already investigated this possibility, however the goals of Canvas and Iris are in fact quite different.
+[Canvas](https://github.com/grondag/canvas) is an advanced shader-based renderer for Minecraft also running on Fabric, by Grondag. This raises a common question: why not contribute to Canvas instead? I have already investigated this possibility, however the goals of Canvas and Iris are in fact quite different.
 
-Canvas has the goal of creating a new shader pipeline focused on empowering mod authors with advanced graphics features, and is very promising. But this new shader pipeline is not designed to work with existing shaderpacks, and that is by design. Canvas wants to shed all of the backwards compatibility issues of loading existing shaderpacks, in order to achieve better performance and enable additional features for modders. For more information, see the "Why" section of the [Canvas README](https://github.com/grondag/canvas/blob/one/README.md#Why).
+Canvas has the goal of creating a new shader pipeline focused on empowering mod authors with advanced graphics features, and is very promising. But this new shader pipeline is intentionally designed to not work with existing shaderpacks. Canvas wants to shed all of the backwards compatibility issues of loading existing shaderpacks, in order to achieve better performance and enable additional features for modders. For more information, see the "Why" section of the [Canvas README](https://github.com/grondag/canvas/blob/one/README.md#Why).
 
-However, Iris has a notably different goal: loading exisisting shader packs out of the box. While it's theoretically possible to get this working on Canvas, I personally prefer to start off making a standalone shaders mod instead of spending time trying to understand yet another complex rendering system in addition to Minecraft and ShadersMod/OptiFine. At the end of the day, people will still want to play with their existing SEUS and Sildur's shaderpacks, and for that purpose Iris will be the right choice.
+However, Iris has a notably different goal: loading existing shader packs out of the box. While it's theoretically possible to get this working on Canvas, I personally prefer to start off making a standalone shaders mod instead of spending time trying to understand another complex rendering system in addition to Minecraft and ShadersMod/OptiFine.
+
+I think that Canvas is a great project, and some day it could very well be the dominant shader mod for Fabric. Iris is made for those who still want to play with existing OptiFine shaderpacks, because there will always be legacy shaderpack content available, even when Canvas shaderpacks become more common.
+
+In the long run, I think that it's better for everyone if we end up with Iris and Canvas competing rather than OptiFine and Canvas competing, because at the very least, there's opportunities for cooperation and collaboration between Iris and Canvas that just don't exist with OptiFine. It's also likely that Iris can implement a subset of Grondag's [FREX](https://github.com/grondag/frex) API, which could definitely result in FREX being more widely used.
 
 
 ### Why not OptiFabric / Optifine?
