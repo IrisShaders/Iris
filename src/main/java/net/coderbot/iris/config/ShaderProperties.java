@@ -28,7 +28,7 @@ public class ShaderProperties {
         propertiesPath = Paths.get(FabricLoader.getInstance().getConfigDir() + "/iris.properties");
         Properties properties = new Properties();
         if (new File(String.valueOf(shaderpath)).exists()){
-            if (new File(propertiesPath.toString()).exists()) {
+            if (new File(propertiesPath.toString()).exists() && shaderpath == null) {
                 properties.load(new FileInputStream(propertiesPath.toString()));
                 shaderpath = Paths.get((String) properties.get("shaderpack"));
             }

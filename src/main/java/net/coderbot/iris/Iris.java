@@ -90,7 +90,7 @@ public class Iris implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		ShaderProperties shaderProperties = new ShaderProperties().setShaderPack("Trippy-Shaderpack-master");
+		ShaderProperties shaderProperties = new ShaderProperties().setShaderPack("Vaporwave-Shaderpack-master");
 		setShaderProperties(shaderProperties);
 		try {
 			getShaderProperties().createAndLoadProperties();
