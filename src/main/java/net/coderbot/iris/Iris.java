@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Objects;
 
 import net.coderbot.iris.uniforms.Uniforms;
+import org.lwjgl.opengl.GL20;
 
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
@@ -31,7 +32,20 @@ public class Iris implements ClientModInitializer {
 		}
 
 		GlProgramManager.useProgram(program.getProgramRef());
+		setupAttributes();
 		programUniforms.update();
+	}
+
+	private static void setupAttributes() {
+		// TODO: Properly add these attributes into the vertex format
+
+		int mcEntity = GL20.glGetAttribLocation(program.getProgramRef(), "mc_Entity");
+
+		if (mcEntity != -1) {
+			float blockId = -1.0F;
+
+			GL20.glVertexAttrib4f(mcEntity, blockId, -1.0F, -1.0F, -1.0F);
+		}
 	}
 
 	private static void createShaders() {
