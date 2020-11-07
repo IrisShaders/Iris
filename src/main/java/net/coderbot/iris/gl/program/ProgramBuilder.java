@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -17,12 +18,14 @@ import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.gl.GlShader;
 
 public class ProgramBuilder implements UniformHolder {
+	private final String name;
 	private final GlProgram program;
 	private final List<Uniform> once;
 	private final List<Uniform> perTick;
 	private final List<Uniform> perFrame;
 
-	private ProgramBuilder(GlProgram program) {
+	private ProgramBuilder(String name, GlProgram program) {
+		this.name = name;
 		this.program = program;
 
 		once = new ArrayList<>();
@@ -90,7 +93,7 @@ public class ProgramBuilder implements UniformHolder {
 		vertex.release();
 		fragment.release();
 
-		return new ProgramBuilder(program);
+		return new ProgramBuilder(name, program);
 	}
 
 	@Override
@@ -111,8 +114,17 @@ public class ProgramBuilder implements UniformHolder {
 	}
 
 	@Override
-	public int location(String name) {
-		return GL21.glGetUniformLocation(program.getProgramRef(), name);
+	public OptionalInt location(String name) {
+		// TODO: Make these debug messages less spammy, or toggleable
+		int id = GL21.glGetUniformLocation(program.getProgramRef(), name);
+
+		if (id == -1) {
+			System.out.println("[" + this.name + "] Skipping uniform:   " + name);
+			return OptionalInt.empty();
+		}
+
+		System.out.println("[" + this.name + "] Activating uniform: " + name);
+		return OptionalInt.of(id);
 	}
 
 	public Program build() {
