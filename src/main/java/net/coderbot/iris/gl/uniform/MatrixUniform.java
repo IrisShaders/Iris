@@ -21,7 +21,7 @@ public class MatrixUniform extends Uniform {
 	}
 
 	@Override
-	void update() {
+	public void update() {
 		Matrix4f newValue = value.get();
 
 		if (!newValue.equals(cachedValue)) {

@@ -16,7 +16,7 @@ public class IntUniform extends Uniform {
 	}
 
 	@Override
-	void update() {
+	public void update() {
 		int newValue = value.getAsInt();
 
 		if (cachedValue != newValue) {

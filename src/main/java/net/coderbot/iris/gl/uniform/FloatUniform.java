@@ -14,7 +14,7 @@ public class FloatUniform extends Uniform {
 	}
 
 	@Override
-	void update() {
+	public void update() {
 		float newValue = value.getAsFloat();
 
 		if (cachedValue != newValue) {

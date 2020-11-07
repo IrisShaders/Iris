@@ -7,5 +7,5 @@ public abstract class Uniform {
 		this.location = location;
 	}
 
-	abstract void update();
+	public abstract void update();
 }

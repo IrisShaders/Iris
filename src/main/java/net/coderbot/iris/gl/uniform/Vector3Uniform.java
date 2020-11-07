@@ -44,7 +44,7 @@ public class Vector3Uniform extends Uniform {
 	}
 
 	@Override
-	void update() {
+	public void update() {
 		Vector3f newValue = value.get();
 
 		if (!newValue.equals(cachedValue)) {

@@ -4,10 +4,9 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
-import net.coderbot.iris.gl.uniform.ProgramUniforms;
+import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Matrix4f;
@@ -22,8 +21,8 @@ public final class Uniforms {
 		// no construction allowed
 	}
 
-	public static ProgramUniforms create(GlProgram program) {
-		return new ProgramUniforms(program.getProgramRef())
+	public static void addCommonUniforms(ProgramBuilder builder) {
+		builder
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
