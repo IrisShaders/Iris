@@ -25,6 +25,7 @@ public final class CommonUniforms {
 		ViewportUniforms.addViewportUniforms(builder);
 		WorldTimeUniforms.addWorldTimeUniforms(builder);
 		SystemTimeUniforms.addSystemTimeUniforms(builder);
+		CelestialUniforms.addCelestialUniforms(builder);
 
 		builder
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
@@ -36,8 +37,7 @@ public final class CommonUniforms {
 			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", CommonUniforms::getGbufferModelViewInverse)
 			.uniformMatrix(PER_FRAME, "gbufferProjection", CapturedRenderingState.INSTANCE::getGbufferProjection)
 			.uniformMatrix(PER_FRAME, "gbufferProjectionInverse", CommonUniforms::getGbufferProjectionInverse)
-			.uniform3d(PER_FRAME, "cameraPosition", CommonUniforms::getCameraPosition)
-			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", CommonUniforms::getShadowLightPosition);
+			.uniform3d(PER_FRAME, "cameraPosition", CommonUniforms::getCameraPosition);
 	}
 
 	private static Vec3d getCameraPosition() {
@@ -62,23 +62,6 @@ public final class CommonUniforms {
 		} else {
 			return 0;
 		}
-	}
-
-	private static Vector4f getShadowLightPosition() {
-		Vector4f shadowLightPositionVector;
-
-		// TODO: Simplify this
-		if (MinecraftClient.getInstance().world.isDay()) {
-			// Sun position
-			shadowLightPositionVector = new Vector4f(0.0F, 100.0F, 0.0F, 0.0F);
-		} else {
-			// Moon position
-			shadowLightPositionVector = new Vector4f(0.0F, -100.0F, 0.0F, 0.0F);
-		}
-
-		shadowLightPositionVector.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
-
-		return shadowLightPositionVector;
 	}
 
 	private static Matrix4f invertedCopy(Matrix4f matrix) {
