@@ -14,56 +14,104 @@ import java.util.*;
  */
 public class ShaderParser {
     private Path shaderPath;
-    private Map<ArrayList<Identifier>, String> blockPropertiesMap = Maps.newHashMap();
-    private Map<ArrayList<Identifier>, String> itemPropertiesMap = Maps.newHashMap();
+    private Map<Identifier, Integer> blockPropertiesMap = Maps.newHashMap();
+    private Map<Identifier, Integer> itemPropertiesMap = Maps.newHashMap();
     public ShaderParser(Path shaderPath){
         this.shaderPath = shaderPath;
     }
     //TODO call these in the constructor instead of explicitly
-    public void parseBlockProperties() throws IOException {
+    public void parseBlockProperties() {
         Properties properties = new Properties();
-        properties.load(new FileInputStream(shaderPath + "/shaders/block.properties"));
+        try {
+            properties.load(new FileInputStream(shaderPath + "/shaders/block.properties"));
+        } catch (IOException e){
+            System.out.println("A block.properties was not found in the current shaderpack");
+            return;
+        }
         properties.forEach((key, value) -> {
             if (!key.toString().contains("layer")) {
-                ArrayList<Identifier> identifiers = new ArrayList<>();
-                String[] ar = value.toString().split(" ");
-                for (String string : ar) {
-                    if (string.contains(":")) {
-                        String keyf = string.substring(0, string.indexOf(":"));
-                        String path = string.substring(string.indexOf(":") + 1);
-                        Identifier identifier = new Identifier(keyf, path);
-                        identifiers.add(identifier);
-                    } else {
-                        identifiers.add(new Identifier(string));
-                    }
-                }
-                blockPropertiesMap.put(identifiers, key.toString());
-            }
-        });
-    }
-    public void parseItemProperties() throws IOException {
-        Properties properties = new Properties();
-        properties.load(new FileInputStream(shaderPath + "/shaders/item.properties"));
-        properties.forEach((key, value) -> {
-        ArrayList<Identifier> identifiers = new ArrayList<>();
-        String[] ar = value.toString().split(" ");
-            for (String string : ar) {
-                if (string.contains(":")) {
-                    String keyf = string.substring(0, string.indexOf(":"));
-                    String path = string.substring(string.indexOf(":") + 1);
-                    Identifier identifier = new Identifier(keyf, path);
-                    identifiers.add(identifier);
+                final int keyValue = Integer.parseInt(key.toString().substring(key.toString().indexOf(".") + 1));
+                if (value.toString().contains(" ")){
+                    ArrayList<String> fullNames = new ArrayList<>();
+                    ArrayList<Identifier> identifiers = new ArrayList<>();
+                    Collections.addAll(fullNames, value.toString().split(" "));
+                    fullNames.forEach(string -> {
+                        String namespace;
+                        String path;
+                        if (string.contains(":")) {
+                            namespace = string.substring(0, string.indexOf(":"));
+                            path = string.substring(string.indexOf(":") + 1);
+                        } else {
+                            namespace = "minecraft";
+                            path = string;
+                        }
+                     identifiers.add(new Identifier(namespace, path));
+                    });
+                    identifiers.forEach(identifier -> {
+                        blockPropertiesMap.put(identifier, keyValue);
+                    });
                 } else {
-                    identifiers.add(new Identifier(string));
+                    String namespace;
+                    String path;
+                    if (value.toString().contains(":")) {
+                        namespace = value.toString().substring(0, value.toString().indexOf(":"));
+                        path = value.toString().substring(value.toString().indexOf(":") + 1);
+                    } else {
+                        namespace = "minecraft";
+                        path = value.toString();
+                    }
+                    blockPropertiesMap.put(new Identifier(namespace, path), keyValue);
                 }
             }
-        itemPropertiesMap.put(identifiers, key.toString());
         });
     }
-    public Map<ArrayList<Identifier>, String> getBlockProperties(){
+    public void parseItemProperties() {
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream(shaderPath + "/shaders/item.properties"));
+        } catch (IOException e){
+            System.out.println("An item.properties was not found in the current shaderpack");
+            return;
+        }
+        properties.forEach((key, value) -> {
+            final int keyValue = Integer.parseInt(key.toString().substring(key.toString().indexOf(".") + 1));
+            if (value.toString().contains(" ")) {
+                ArrayList<String> fullNames = new ArrayList<>();
+                ArrayList<Identifier> identifiers = new ArrayList<>();
+                Collections.addAll(fullNames, value.toString().split(" "));
+                fullNames.forEach(string -> {
+                    String namespace;
+                    String path;
+                    if (string.contains(":")) {
+                        namespace = string.substring(0, string.indexOf(":"));
+                        path = string.substring(string.indexOf(":") + 1);
+                    } else {
+                        namespace = "minecraft";
+                        path = string;
+                    }
+                    identifiers.add(new Identifier(namespace, path));
+                });
+                identifiers.forEach(identifier -> {
+                    itemPropertiesMap.put(identifier, keyValue);
+                });
+            } else {
+                String namespace;
+                String path;
+                if (value.toString().contains(":")) {
+                    namespace = value.toString().substring(0, value.toString().indexOf(":"));
+                    path = value.toString().substring(value.toString().indexOf(":") + 1);
+                } else {
+                    namespace = "minecraft";
+                    path = value.toString();
+                }
+                itemPropertiesMap.put(new Identifier(namespace, path), keyValue);
+            }
+        });
+    }
+    public Map<Identifier, Integer> getBlockProperties(){
         return blockPropertiesMap;
     }
-    public Map<ArrayList<Identifier>, String> getItemProperties(){
+    public Map<Identifier, Integer> getItemProperties(){
         return itemPropertiesMap;
     }
 

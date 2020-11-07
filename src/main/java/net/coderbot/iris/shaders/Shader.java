@@ -1,5 +1,8 @@
 package net.coderbot.iris.shaders;
 
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.program.Program;
+import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.uniforms.Uniforms;
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
@@ -10,26 +13,46 @@ import java.nio.file.Path;
 
 public abstract class Shader {
     private Path shaderPackPath;
-    private boolean shadersUsed = false;
-    private Uniforms uniforms;
-    private GlProgram program;
-    public Shader(Path shaderPackPath){
+    private Program program;
+    Shader(Path shaderPackPath){
         this.shaderPackPath = shaderPackPath;
     }
-    public final void useShaders() throws IOException {
-        if (!shadersUsed) {
-            InputStream vertexStream = new FileInputStream(this.getFileName(shaderPackPath) + ".vsh");
-            InputStream fragmentStream = new FileInputStream(this.getFileName(shaderPackPath) + ".fsh");
-            GlShader vertexShader = GlShader.createFromResource(GlShader.Type.VERTEX, this.getFileName(shaderPackPath) + ".vsh", vertexStream, "");
-            GlShader fragmentShader = GlShader.createFromResource(GlShader.Type.FRAGMENT, this.getFileName(shaderPackPath) + ".fsh", fragmentStream, "");
 
-            program = createShaders(fragmentShader, vertexShader);
-            uniforms = new Uniforms(program);
-            shadersUsed = true;
+    /**
+     * A simple shader utility method that calls and creates shaders.
+     * Is identical to {@link Iris#useTerrainShaders()}, but takes in consideration fallback shaders
+     * @throws IOException if the Shader cannot be compiled
+     */
+    final void useShaders() throws IOException {
+        if (program == null) {
+            InputStream vertexStream = new FileInputStream(shaderPackPath + "/" + getFileName() + ".vsh");
+            InputStream fragmentStream = new FileInputStream(shaderPackPath + "/" + getFileName() + ".fsh");
+            ProgramBuilder builder;
+
+            try {
+                builder = ProgramBuilder.begin(getFileName(), vertexStream, fragmentStream);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to initialize Iris!", e);
+            }
+
+            Uniforms.addCommonUniforms(builder);
+
+           program = builder.build();
         }
-            GlProgramManager.useProgram(program.getProgramRef());
-            uniforms.update();
+           program.use();
         }
-    public abstract Path getFileName(Path shaderPackPath);
-    public abstract GlProgram createShaders(GlShader fragment, GlShader vertex) throws IOException;
+
+    /**
+     * The file name of the target shader
+     * @return the name of the shader.
+     */
+    protected abstract String getFileName();
+
+    /**
+     * Returns the fallback shader that is used if this shader is not present.
+     * @return the fallback shader name.
+     */
+    protected String getFallbackShader(){
+        return "gbuffers_basic";
+    }
 }

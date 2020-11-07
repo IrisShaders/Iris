@@ -41,6 +41,8 @@ public class ShaderProperties {
                 shaderpath = Paths.get((String) properties.get("shaderpack"));
             }
         } else {
+            properties.setProperty("shaderpack", shaderpath.toString());
+            properties.store(new FileOutputStream(FabricLoader.getInstance().getConfigDir() + "/iris.properties"), "This file is used to parse iris shader settings.");
             throw new IllegalStateException(String.format("The specified shaderpack \"%s\" was not found!", shaderpath));
         }
         if (shaderpath != null) {
