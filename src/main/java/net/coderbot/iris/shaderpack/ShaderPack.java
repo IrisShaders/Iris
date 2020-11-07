@@ -9,13 +9,23 @@ import java.util.Optional;
 
 public class ShaderPack {
 	private final ProgramSource gbuffersTextured;
+	private final ProgramSource gbuffersClouds;
+	private final ProgramSource gbuffersBasic;
 
 	public ShaderPack(Path root) throws IOException {
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured");
+		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds");
+		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
 	}
 
 	public ProgramSource getGbuffersTextured() {
 		return gbuffersTextured;
+	}
+	public ProgramSource getGbuffersClouds(){
+		return gbuffersClouds;
+	}
+	public ProgramSource getGbuffersBasic(){
+		return gbuffersBasic;
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program) throws IOException {

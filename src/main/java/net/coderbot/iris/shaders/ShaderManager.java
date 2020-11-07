@@ -11,17 +11,17 @@ public class ShaderManager {
     private CloudShaders cloudShaders;
     private OutlineShaders outlineShaders;
     public ShaderManager(){
-        terrainShaders = new TerrainShaders(Paths.get(Iris.getShaderProperties().getShaderPackPath() + "/shaders/"));
-        cloudShaders = new CloudShaders(Paths.get(Iris.getShaderProperties().getShaderPackPath() + "/shaders/"));
-        outlineShaders = new OutlineShaders(Paths.get(Iris.getShaderProperties().getShaderPackPath() + "/shaders/"));
+        terrainShaders = new TerrainShaders();
+        cloudShaders = new CloudShaders();
+        outlineShaders = new OutlineShaders();
     }
-    public void useTerrainShaders() throws IOException {
+    public void useTerrainShaders() {
         terrainShaders.useShaders();
     }
-    public void useCloudShaders() throws IOException {
+    public void useCloudShaders() {
         cloudShaders.useShaders();
     }
-    public void useBasicShaders() throws IOException {
+    public void useBasicShaders() {
         outlineShaders.useShaders();
     }
 }

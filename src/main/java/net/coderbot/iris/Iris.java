@@ -2,14 +2,18 @@ package net.coderbot.iris;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 import net.coderbot.iris.config.ShaderProperties;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaders.ShaderManager;
 import net.coderbot.iris.shaders.ShaderParser;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 import org.lwjgl.opengl.GL20;
 
 import net.fabricmc.api.ClientModInitializer;
@@ -20,8 +24,8 @@ import net.fabricmc.api.Environment;
 public class Iris implements ClientModInitializer {
 	private static Program gbuffersTextured;
 
-	private static InputStream vertexSource;
-	private static InputStream fragmentSource;
+	private static ShaderPack internal;
+	private static ShaderPack shaderPack;
 
 	private static ShaderProperties shaderProperties;
 	private static ShaderParser shaderParser;
@@ -49,19 +53,25 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static Program createShaders() {
+		ShaderPack.ProgramSource gbuffersTexturedSource = internal.getGbuffersTextured();
+
+		// TODO: Properly handle empty shaders
+		Objects.requireNonNull(gbuffersTexturedSource.getVertexSource());
+		Objects.requireNonNull(gbuffersTexturedSource.getFragmentSource());
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin("gbuffers_textured", vertexSource, fragmentSource);
+			builder = ProgramBuilder.begin("gbuffers_textured",
+					gbuffersTexturedSource.getVertexSource().orElse(null),
+					gbuffersTexturedSource.getFragmentSource().orElse(null));
 		} catch (IOException e) {
-			throw new RuntimeException("Failed to initialize Iris!", e);
+			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
 		CommonUniforms.addCommonUniforms(builder);
 
 		return builder.build();
 	}
-
 	@Override
 	public void onInitializeClient() {
 		ShaderProperties properties = new ShaderProperties().setDefaultPack("Vaporwave-Shaderpack-master");
@@ -77,8 +87,23 @@ public class Iris implements ClientModInitializer {
 		setShaderParser(shaderParser);
 		shaderParser.parseBlockProperties();
 		shaderParser.parseItemProperties();
-		vertexSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.vsh"));
-		fragmentSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.fsh"));
+		try {
+			ShaderPack pack = new ShaderPack(Paths.get(properties.getShaderPackPath() + "/shaders"));
+			setShaderPack(pack);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		Path internalShaderpackPath = FabricLoader.getInstance().getModContainer("iris")
+				.orElseThrow(() -> new RuntimeException("Iris doesn't exist???")).getRootPath();
+		//uncomment this to use internal shaders. Make sure you have up to date files
+		/*
+		try {
+			internal = new ShaderPack(internalShaderpackPath);
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to load internal shaderpack!", e);
+		}
+		 */
 	}
 	private static void setShaderProperties(ShaderProperties properties){
 		shaderProperties = properties;
@@ -97,5 +122,11 @@ public class Iris implements ClientModInitializer {
 	}
 	public static ShaderManager getShaderManager(){
 		return shaderManager;
+	}
+	private static void setShaderPack(ShaderPack shaderPack){
+		Iris.shaderPack = shaderPack;
+	}
+	public static ShaderPack getShaderPack(){
+		return shaderPack;
 	}
 }

@@ -30,6 +30,11 @@ public class ShaderProperties {
         this.shaderpath = Paths.get(FabricLoader.getInstance().getGameDir() + "/shaderpacks/" + shaderPackName);
         return this;
     }
+
+    /**
+     * loads the current properties for the shaderpack. Currently only supports the shaderpack path
+     * @throws IOException
+     */
     public void createAndLoadProperties() throws IOException {
         propertiesPath = Paths.get(FabricLoader.getInstance().getConfigDir() + "/iris.properties");
         Properties properties = new Properties();

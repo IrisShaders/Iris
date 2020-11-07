@@ -16,10 +16,16 @@ public class ShaderParser {
     private Path shaderPath;
     private Map<Identifier, Integer> blockPropertiesMap = Maps.newHashMap();
     private Map<Identifier, Integer> itemPropertiesMap = Maps.newHashMap();
+
     public ShaderParser(Path shaderPath){
         this.shaderPath = shaderPath;
     }
     //TODO call these in the constructor instead of explicitly
+
+    /**
+     * fills the block properties map with entries from block.properties
+     * Does not fill it with render layer entries
+     */
     public void parseBlockProperties() {
         Properties properties = new Properties();
         try {
@@ -65,6 +71,10 @@ public class ShaderParser {
             }
         });
     }
+
+    /**
+     * parses entries from item.properties
+     */
     public void parseItemProperties() {
         Properties properties = new Properties();
         try {

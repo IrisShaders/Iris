@@ -34,11 +34,7 @@ public class MixinWorldRenderer {
 	private void iris$setupTerrainShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
-		try {
-			Iris.getShaderManager().useTerrainShaders();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Iris.getShaderManager().useTerrainShaders();
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities"))
@@ -47,11 +43,8 @@ public class MixinWorldRenderer {
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=clouds"))
 	private void iris$startUsingCloudShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
-		try {
-			Iris.getShaderManager().useCloudShaders();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Iris.getShaderManager().useCloudShaders();
+
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=weather"))
 	private void iris$stopUsingCloudShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
@@ -59,11 +52,7 @@ public class MixinWorldRenderer {
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=outline"))
 	private void iris$startUsingOutlineShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
-		try {
-			Iris.getShaderManager().useBasicShaders();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Iris.getShaderManager().useBasicShaders();
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=string"))
 	private void iris$stopUsingOutlineShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
