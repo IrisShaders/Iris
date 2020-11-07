@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,5 +21,10 @@ public class MixinGameRenderer {
 	@Inject(method = "loadProjectionMatrix(Lnet/minecraft/util/math/Matrix4f;)V", at = @At("HEAD"))
 	private void iris$captureProjectionMatrix(Matrix4f projectionMatrix, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projectionMatrix);
+	}
+
+	@Inject(method = "render(FJZ)V", at = @At("HEAD"))
+	private void iris$beginFrame(float tickDelta, long startTime, boolean tick, CallbackInfo callback) {
+		SystemTimeUniforms.TIMER.beginFrame(startTime);
 	}
 }

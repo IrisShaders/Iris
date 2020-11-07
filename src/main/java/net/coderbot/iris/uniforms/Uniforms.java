@@ -23,6 +23,7 @@ public final class Uniforms {
 
 	public static void addCommonUniforms(ProgramBuilder builder) {
 		ViewportUniforms.addViewportUniforms(builder);
+		SystemTimeUniforms.addSystemTimeUniforms(builder);
 
 		builder
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
