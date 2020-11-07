@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
+import net.coderbot.iris.gl.uniform.ProgramUniforms;
 import net.coderbot.iris.uniforms.Uniforms;
 import org.lwjgl.opengl.GL20;
 
@@ -21,7 +22,7 @@ public class Iris implements ClientModInitializer {
 	private static GlShader vertex;
 	private static GlShader fragment;
 	private static GlProgram program;
-	private static Uniforms programUniforms;
+	private static ProgramUniforms programUniforms;
 
 	private static InputStream vertexSource;
 	private static InputStream fragmentSource;
@@ -95,7 +96,7 @@ public class Iris implements ClientModInitializer {
 			e.printStackTrace();
 		}
 
-		programUniforms = new Uniforms(program);
+		programUniforms = Uniforms.create(program);
 
 		shadersCreated = true;
 	}

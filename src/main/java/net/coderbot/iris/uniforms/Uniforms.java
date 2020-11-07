@@ -15,31 +15,32 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Objects;
 
-public class Uniforms extends ProgramUniforms {
-	private final MinecraftClient client;
+public final class Uniforms {
+	private static final MinecraftClient client = MinecraftClient.getInstance();
 
-	public Uniforms(GlProgram program) {
-		super(program.getProgramRef());
-
-		client = MinecraftClient.getInstance();
-
-		uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId);
-		uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId);
-		uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden);
-		uniform1f(PER_FRAME, "viewHeight", client.getWindow()::getHeight);
-		uniform1f(PER_FRAME, "viewWidth", client.getWindow()::getWidth);
-		uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY());
-		uniform1i(PER_FRAME, "isEyeInWater", this::isEyeInWater);
-		uniform1i(PER_TICK, "moonPhase", () -> Objects.requireNonNull(client.world).getMoonPhase());
-		uniformMatrix(PER_FRAME, "gbufferModelView", CapturedRenderingState.INSTANCE::getGbufferModelView);
-		uniformMatrix(PER_FRAME, "gbufferModelViewInverse", Uniforms::getGbufferModelViewInverse);
-		uniformMatrix(PER_FRAME, "gbufferProjection", CapturedRenderingState.INSTANCE::getGbufferProjection);
-		uniformMatrix(PER_FRAME, "gbufferProjectionInverse", Uniforms::getGbufferProjectionInverse);
-		uniform3d(PER_FRAME, "cameraPosition", this::getCameraPosition);
-		uniformTruncated3f(PER_FRAME, "shadowLightPosition", this::getShadowLightPosition);
+	private Uniforms() {
+		// no construction allowed
 	}
 
-	private Vec3d getCameraPosition() {
+	public static ProgramUniforms create(GlProgram program) {
+		return new ProgramUniforms(program.getProgramRef())
+			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
+			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
+			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
+			.uniform1f(PER_FRAME, "viewHeight", client.getWindow()::getHeight)
+			.uniform1f(PER_FRAME, "viewWidth", client.getWindow()::getWidth)
+			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
+			.uniform1i(PER_FRAME, "isEyeInWater", Uniforms::isEyeInWater)
+			.uniform1i(PER_TICK, "moonPhase", () -> Objects.requireNonNull(client.world).getMoonPhase())
+			.uniformMatrix(PER_FRAME, "gbufferModelView", CapturedRenderingState.INSTANCE::getGbufferModelView)
+			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", Uniforms::getGbufferModelViewInverse)
+			.uniformMatrix(PER_FRAME, "gbufferProjection", CapturedRenderingState.INSTANCE::getGbufferProjection)
+			.uniformMatrix(PER_FRAME, "gbufferProjectionInverse", Uniforms::getGbufferProjectionInverse)
+			.uniform3d(PER_FRAME, "cameraPosition", Uniforms::getCameraPosition)
+			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", Uniforms::getShadowLightPosition);
+	}
+
+	private static Vec3d getCameraPosition() {
 		return client.gameRenderer.getCamera().getPos();
 	}
 
@@ -51,7 +52,7 @@ public class Uniforms extends ProgramUniforms {
 		return invertedCopy(CapturedRenderingState.INSTANCE.getGbufferProjection());
 	}
 
-	private int isEyeInWater() {
+	private static int isEyeInWater() {
 		Entity cameraEntity = Objects.requireNonNull(client.getCameraEntity());
 
 		if (cameraEntity.isSubmergedInWater()) {
@@ -63,7 +64,7 @@ public class Uniforms extends ProgramUniforms {
 		}
 	}
 
-	private Vector4f getShadowLightPosition() {
+	private static Vector4f getShadowLightPosition() {
 		Vector4f shadowLightPositionVector;
 
 		// TODO: Simplify this

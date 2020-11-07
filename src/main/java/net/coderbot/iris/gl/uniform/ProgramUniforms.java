@@ -32,7 +32,7 @@ public class ProgramUniforms {
 		perFrame = new ArrayList<>();
 	}
 
-	private void addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform) {
+	private ProgramUniforms addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform) {
 		switch (updateFrequency) {
 			case ONCE:
 				once.add(uniform);
@@ -44,46 +44,48 @@ public class ProgramUniforms {
 				perFrame.add(uniform);
 				break;
 		}
+
+		return this;
 	}
 
 	private int location(String name) {
 		return GL21.glGetUniformLocation(program, name);
 	}
 
-	public void uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value) {
-		addUniform(updateFrequency, new FloatUniform(location(name), value));
+	public ProgramUniforms uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value) {
+		return addUniform(updateFrequency, new FloatUniform(location(name), value));
 	}
 
-	public void uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
-		addUniform(updateFrequency, new FloatUniform(location(name), () -> (float) value.getAsInt()));
+	public ProgramUniforms uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
+		return addUniform(updateFrequency, new FloatUniform(location(name), () -> (float) value.getAsInt()));
 	}
 
-	public void uniform1f(UniformUpdateFrequency updateFrequency, String name, DoubleSupplier value) {
-		addUniform(updateFrequency, new FloatUniform(location(name), () -> (float) value.getAsDouble()));
+	public ProgramUniforms uniform1f(UniformUpdateFrequency updateFrequency, String name, DoubleSupplier value) {
+		return addUniform(updateFrequency, new FloatUniform(location(name), () -> (float) value.getAsDouble()));
 	}
 
-	public void uniform1i(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
-		addUniform(updateFrequency, new IntUniform(location(name), value));
+	public ProgramUniforms uniform1i(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
+		return addUniform(updateFrequency, new IntUniform(location(name), value));
 	}
 
-	public void uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value) {
-		addUniform(updateFrequency, new BooleanUniform(location(name), value));
+	public ProgramUniforms uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value) {
+		return addUniform(updateFrequency, new BooleanUniform(location(name), value));
 	}
 
-	public void uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value) {
-		addUniform(updateFrequency, new Vector3Uniform(location(name), value));
+	public ProgramUniforms uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value) {
+		return addUniform(updateFrequency, new Vector3Uniform(location(name), value));
 	}
 
-	public void uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
-		addUniform(updateFrequency, Vector3Uniform.truncated(location(name), value));
+	public ProgramUniforms uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
+		return addUniform(updateFrequency, Vector3Uniform.truncated(location(name), value));
 	}
 
-	public void uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3d> value) {
-		addUniform(updateFrequency, Vector3Uniform.converted(location(name), value));
+	public ProgramUniforms uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3d> value) {
+		return addUniform(updateFrequency, Vector3Uniform.converted(location(name), value));
 	}
 
-	public void uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {
-		addUniform(updateFrequency, new MatrixUniform(location(name), value));
+	public ProgramUniforms uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {
+		return addUniform(updateFrequency, new MatrixUniform(location(name), value));
 	}
 
 	public void tick() {
