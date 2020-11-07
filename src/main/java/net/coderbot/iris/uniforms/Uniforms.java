@@ -22,12 +22,12 @@ public final class Uniforms {
 	}
 
 	public static void addCommonUniforms(ProgramBuilder builder) {
+		ViewportUniforms.addViewportUniforms(builder);
+
 		builder
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
-			.uniform1f(PER_FRAME, "viewHeight", client.getWindow()::getHeight)
-			.uniform1f(PER_FRAME, "viewWidth", client.getWindow()::getWidth)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
 			.uniform1i(PER_FRAME, "isEyeInWater", Uniforms::isEyeInWater)
 			.uniform1i(PER_TICK, "moonPhase", () -> Objects.requireNonNull(client.world).getMoonPhase())
