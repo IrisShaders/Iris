@@ -14,29 +14,30 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Objects;
 
-public final class Uniforms {
+public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
 
-	private Uniforms() {
+	private CommonUniforms() {
 		// no construction allowed
 	}
 
 	public static void addCommonUniforms(ProgramBuilder builder) {
+		ViewportUniforms.addViewportUniforms(builder);
+		WorldTimeUniforms.addWorldTimeUniforms(builder);
+		SystemTimeUniforms.addSystemTimeUniforms(builder);
+		CelestialUniforms.addCelestialUniforms(builder);
+
 		builder
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
-			.uniform1f(PER_FRAME, "viewHeight", client.getWindow()::getHeight)
-			.uniform1f(PER_FRAME, "viewWidth", client.getWindow()::getWidth)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
-			.uniform1i(PER_FRAME, "isEyeInWater", Uniforms::isEyeInWater)
-			.uniform1i(PER_TICK, "moonPhase", () -> Objects.requireNonNull(client.world).getMoonPhase())
+			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniformMatrix(PER_FRAME, "gbufferModelView", CapturedRenderingState.INSTANCE::getGbufferModelView)
-			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", Uniforms::getGbufferModelViewInverse)
+			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", CommonUniforms::getGbufferModelViewInverse)
 			.uniformMatrix(PER_FRAME, "gbufferProjection", CapturedRenderingState.INSTANCE::getGbufferProjection)
-			.uniformMatrix(PER_FRAME, "gbufferProjectionInverse", Uniforms::getGbufferProjectionInverse)
-			.uniform3d(PER_FRAME, "cameraPosition", Uniforms::getCameraPosition)
-			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", Uniforms::getShadowLightPosition);
+			.uniformMatrix(PER_FRAME, "gbufferProjectionInverse", CommonUniforms::getGbufferProjectionInverse)
+			.uniform3d(PER_FRAME, "cameraPosition", CommonUniforms::getCameraPosition);
 	}
 
 	private static Vec3d getCameraPosition() {
@@ -61,23 +62,6 @@ public final class Uniforms {
 		} else {
 			return 0;
 		}
-	}
-
-	private static Vector4f getShadowLightPosition() {
-		Vector4f shadowLightPositionVector;
-
-		// TODO: Simplify this
-		if (MinecraftClient.getInstance().world.isDay()) {
-			// Sun position
-			shadowLightPositionVector = new Vector4f(0.0F, 100.0F, 0.0F, 0.0F);
-		} else {
-			// Moon position
-			shadowLightPositionVector = new Vector4f(0.0F, -100.0F, 0.0F, 0.0F);
-		}
-
-		shadowLightPositionVector.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
-
-		return shadowLightPositionVector;
 	}
 
 	private static Matrix4f invertedCopy(Matrix4f matrix) {

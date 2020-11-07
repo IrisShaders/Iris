@@ -12,6 +12,7 @@ public class CapturedRenderingState {
 	 * The state of the modelview matrix right after the sky angle rotation has been applied
 	 */
 	private Matrix4f celestialModelView;
+	private float tickDelta;
 
 	private CapturedRenderingState() {
 	}
@@ -38,5 +39,13 @@ public class CapturedRenderingState {
 
 	public void setCelestialModelView(Matrix4f celestialModelView) {
 		this.celestialModelView = celestialModelView;
+	}
+
+	public void setTickDelta(float tickDelta) {
+		this.tickDelta = tickDelta;
+	}
+
+	public float getTickDelta() {
+		return tickDelta;
 	}
 }
