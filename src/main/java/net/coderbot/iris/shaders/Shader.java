@@ -3,12 +3,11 @@ package net.coderbot.iris.shaders;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.uniforms.Uniforms;
-import net.minecraft.client.gl.GlProgram;
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.gl.GlShader;
+import net.coderbot.iris.uniforms.*;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 
 public abstract class Shader {
@@ -35,8 +34,11 @@ public abstract class Shader {
                 throw new RuntimeException("Failed to initialize Iris!", e);
             }
 
-            Uniforms.addCommonUniforms(builder);
-
+            CommonUniforms.addCommonUniforms(builder);
+            CelestialUniforms.addCelestialUniforms(builder);
+            SystemTimeUniforms.addSystemTimeUniforms(builder);
+            ViewportUniforms.addViewportUniforms(builder);
+            WorldTimeUniforms.addWorldTimeUniforms(builder);
            program = builder.build();
         }
            program.use();
