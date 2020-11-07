@@ -1,106 +1,72 @@
 package net.coderbot.iris.uniforms;
 
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
+
+import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GlProgram;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL21;
 
-import java.nio.FloatBuffer;
 import java.util.Objects;
 
-public class Uniforms {
-	private int texture;
-	private int lightmap;
+public final class Uniforms {
+	private static final MinecraftClient client = MinecraftClient.getInstance();
 
-	private int gbufferModelView;
-	private int gbufferModelViewInverse;
-	private int gbufferProjection;
-	private int gbufferProjectionInverse;
-
-	private int viewHeight;
-	private int viewWidth;
-
-	private int cameraPosition;
-	
-	private int eyeAltitude;
-	private int isEyeInWater;
-
-	private int shadowLightPosition;
-	private static int moonPhase;
-	
-	private static int hideGUI;
-	private int frameTimeCounter;
-	private float frameTime;
-	private long lastTimeMillis;
-	public Uniforms(GlProgram program) {
-		int programId = program.getProgramRef();
-
-		texture = GL21.glGetUniformLocation(programId, "texture");
-		lightmap = GL21.glGetUniformLocation(programId, "lightmap");
-
-		gbufferModelView = GL21.glGetUniformLocation(programId, "gbufferModelView");
-		gbufferModelViewInverse = GL21.glGetUniformLocation(programId, "gbufferModelViewInverse");
-		gbufferProjection = GL21.glGetUniformLocation(programId, "gbufferProjection");
-		gbufferProjectionInverse = GL21.glGetUniformLocation(programId, "gbufferProjectionInverse");
-
-		viewHeight = GL21.glGetUniformLocation(programId, "viewHeight");
-		viewWidth = GL21.glGetUniformLocation(programId, "viewWidth");
-
-		cameraPosition = GL21.glGetUniformLocation(programId, "cameraPosition");
-		
-		eyeAltitude = GL21.glGetUniformLocation(programId, "eyeAltitude");
-		isEyeInWater = GL21.glGetUniformLocation(programId, "isEyeInWater");		
-
-		shadowLightPosition = GL21.glGetUniformLocation(programId, "shadowLightPosition");
-		moonPhase = GL21.glGetUniformLocation(programId, "moonPhase");
-		
-		hideGUI = GL21.glGetUniformLocation(programId, "hideGUI");
-		frameTimeCounter = GL21.glGetUniformLocation(programId, "frameTimeCounter");
+	private Uniforms() {
+		// no construction allowed
 	}
 
-	public void update() {
-		// PERF: Only update uniforms if they have changed
-		GL21.glUniform1i(texture, TextureUnit.TERRAIN.getSamplerId());
-		GL21.glUniform1i(lightmap, TextureUnit.LIGHTMAP.getSamplerId());
+	public static void addCommonUniforms(ProgramBuilder builder) {
+		builder
+			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
+			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
+			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
+			.uniform1f(PER_FRAME, "viewHeight", client.getWindow()::getHeight)
+			.uniform1f(PER_FRAME, "viewWidth", client.getWindow()::getWidth)
+			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
+			.uniform1i(PER_FRAME, "isEyeInWater", Uniforms::isEyeInWater)
+			.uniform1i(PER_TICK, "moonPhase", () -> Objects.requireNonNull(client.world).getMoonPhase())
+			.uniformMatrix(PER_FRAME, "gbufferModelView", CapturedRenderingState.INSTANCE::getGbufferModelView)
+			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", Uniforms::getGbufferModelViewInverse)
+			.uniformMatrix(PER_FRAME, "gbufferProjection", CapturedRenderingState.INSTANCE::getGbufferProjection)
+			.uniformMatrix(PER_FRAME, "gbufferProjectionInverse", Uniforms::getGbufferProjectionInverse)
+			.uniform3d(PER_FRAME, "cameraPosition", Uniforms::getCameraPosition)
+			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", Uniforms::getShadowLightPosition);
+	}
 
-		updateMatrix(gbufferModelView, CapturedRenderingState.INSTANCE.getGbufferModelView());
-		updateMatrix(gbufferModelViewInverse, invertedCopy(CapturedRenderingState.INSTANCE.getGbufferModelView()));
-		updateMatrix(gbufferProjection, CapturedRenderingState.INSTANCE.getGbufferProjection());
-		updateMatrix(gbufferProjectionInverse, invertedCopy(CapturedRenderingState.INSTANCE.getGbufferProjection()));
+	private static Vec3d getCameraPosition() {
+		return client.gameRenderer.getCamera().getPos();
+	}
 
-		GL21.glUniform1f(viewHeight, MinecraftClient.getInstance().getWindow().getHeight());
-		GL21.glUniform1f(viewWidth, MinecraftClient.getInstance().getWindow().getWidth());
+	private static Matrix4f getGbufferModelViewInverse() {
+		return invertedCopy(CapturedRenderingState.INSTANCE.getGbufferModelView());
+	}
 
+	private static Matrix4f getGbufferProjectionInverse() {
+		return invertedCopy(CapturedRenderingState.INSTANCE.getGbufferProjection());
+	}
 
-		updateVector(cameraPosition, MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
-
-		Entity cameraEntity = Objects.requireNonNull(MinecraftClient.getInstance().getCameraEntity());
-
-		GL21.glUniform1f(eyeAltitude, (float) cameraEntity.getPos().getY());
-
-		// TODO: Simplify
-		int eyeInWater;
-		GL21.glUniform1f(eyeAltitude, (float) cameraEntity.getPos().getY());
+	private static int isEyeInWater() {
+		Entity cameraEntity = Objects.requireNonNull(client.getCameraEntity());
 
 		if (cameraEntity.isSubmergedInWater()) {
-			eyeInWater = 1;
+			return 1;
 		} else if (cameraEntity.isInLava()) {
-			eyeInWater = 2;
+			return 2;
 		} else {
-			eyeInWater = 0;
+			return 0;
 		}
+	}
 
-		GL21.glUniform1i(isEyeInWater, eyeInWater);
-
-		// TODO: Simplify this
+	private static Vector4f getShadowLightPosition() {
 		Vector4f shadowLightPositionVector;
 
+		// TODO: Simplify this
 		if (MinecraftClient.getInstance().world.isDay()) {
 			// Sun position
 			shadowLightPositionVector = new Vector4f(0.0F, 100.0F, 0.0F, 0.0F);
@@ -111,43 +77,15 @@ public class Uniforms {
 
 		shadowLightPositionVector.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
 
-		updateVector(shadowLightPosition, new Vector3f(0.0F, 100.0F, 0.0F));
-
-		GL21.glUniform1i(moonPhase, MinecraftClient.getInstance().world.getMoonPhase());
-
-		GL21.glUniform1i(hideGUI, MinecraftClient.getInstance().options.hudHidden ? 1 : 0);
-		long timeMillis = System.currentTimeMillis();
-		if (lastTimeMillis == 0) {
-			lastTimeMillis = timeMillis;
-		}
-	long diff = timeMillis - lastTimeMillis;
-		lastTimeMillis = timeMillis;
-		frameTime += diff/1000.0F;
-		frameTime = (frameTime % 3600.0F);
-		GL21.glUniform1f(frameTimeCounter, frameTime);
+		return shadowLightPositionVector;
 	}
 
-	private void updateMatrix(int location, Matrix4f instance) {
-		// PERF: Don't reallocate this buffer every time
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-		instance.writeToBuffer(buffer);
-		buffer.rewind();
-
-		GL21.glUniformMatrix4fv(location, false, buffer);
-	}
-
-	private void updateVector(int location, Vec3d instance) {
-		GL21.glUniform3f(location, (float) instance.x, (float) instance.y, (float) instance.z);
-	}
-
-	private void updateVector(int location, Vector3f instance) {
-		GL21.glUniform3f(location, instance.getX(), instance.getY(), instance.getZ());
-	}
-
-	private Matrix4f invertedCopy(Matrix4f matrix) {
+	private static Matrix4f invertedCopy(Matrix4f matrix) {
 		// PERF: Don't copy this matrix every time
 		Matrix4f copy = matrix.copy();
+
 		copy.invert();
+
 		return copy;
 	}
 }

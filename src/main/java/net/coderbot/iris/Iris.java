@@ -1,22 +1,13 @@
 package net.coderbot.iris;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.Objects;
 
-import net.coderbot.iris.config.ShaderProperties;
-import net.coderbot.iris.shaders.ShaderManager;
-import net.coderbot.iris.shaders.ShaderParser;
+import net.coderbot.iris.gl.program.Program;
+import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.uniforms.Uniforms;
-import net.fabricmc.loader.api.FabricLoader;
 import org.lwjgl.opengl.GL20;
-
-import net.minecraft.client.gl.GlProgram;
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.gl.GlShader;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -24,32 +15,24 @@ import net.fabricmc.api.Environment;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
-	private static boolean shadersCreated = false;
-	private static GlShader vertex;
-	private static GlShader fragment;
-	private static GlProgram program;
-	private static Uniforms programUniforms;
+	private static Program gbuffersTextured;
 
-	private static ShaderProperties properties;
-	private static ShaderManager manager;
-	private static ShaderParser parser;
 	private static InputStream vertexSource;
 	private static InputStream fragmentSource;
 
 	public static void useTerrainShaders() {
-		if (!shadersCreated) {
-			createShaders();
+		if (gbuffersTextured == null) {
+			gbuffersTextured = createShaders();
 		}
 
-		GlProgramManager.useProgram(program.getProgramRef());
-		setupAttributes();
-		programUniforms.update();
+		gbuffersTextured.use();
+		setupAttributes(gbuffersTextured);
 	}
 
-	private static void setupAttributes() {
+	private static void setupAttributes(Program program) {
 		// TODO: Properly add these attributes into the vertex format
 
-		int mcEntity = GL20.glGetAttribLocation(program.getProgramRef(), "mc_Entity");
+		int mcEntity = GL20.glGetAttribLocation(program.getProgramId(), "mc_Entity");
 
 		if (mcEntity != -1) {
 			float blockId = -1.0F;
@@ -58,100 +41,23 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	private static void createShaders() {
+	private static Program createShaders() {
+		ProgramBuilder builder;
+
 		try {
-			vertex = GlShader.createFromResource(GlShader.Type.VERTEX, "gbuffers_textured.vsh", vertexSource, "");
-			fragment = GlShader.createFromResource(GlShader.Type.FRAGMENT, "gbuffers_textured.fsh", fragmentSource, "");
+			builder = ProgramBuilder.begin("gbuffers_textured", vertexSource, fragmentSource);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to initialize Iris!", e);
 		}
 
-		int programId;
+		Uniforms.addCommonUniforms(builder);
 
-		try {
-			programId = GlProgramManager.createProgram();
-		} catch (IOException e) {
-			e.printStackTrace();
-			programId = 0;
-		}
-
-		final int finalProgramId = programId;
-
-		program = new GlProgram() {
-			@Override
-			public int getProgramRef() {
-				return finalProgramId;
-			}
-
-			@Override
-			public void markUniformsDirty() {
-				// nah
-			}
-
-			@Override
-			public GlShader getVertexShader() {
-				return vertex;
-			}
-
-			@Override
-			public GlShader getFragmentShader() {
-				return fragment;
-			}
-		};
-
-		try {
-			GlProgramManager.linkProgram(program);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		programUniforms = new Uniforms(program);
-
-		shadersCreated = true;
+		return builder.build();
 	}
 
 	@Override
 	public void onInitializeClient() {
-		setShaderProperties(new ShaderProperties().setDefaultPack("Vaporwave-Shaderpack-master"));
-		try {
-			getShaderProperties().createAndLoadProperties();
-		} catch (IOException e){
-			e.printStackTrace();
-		}
-		setShaderManager(new ShaderManager());
-		setShaderParser(new ShaderParser(getShaderProperties().getShaderPackPath()));
-		try {
-			getShaderParser().parseBlockProperties();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		try {
-			vertexSource = new FileInputStream(FabricLoader.getInstance().getGameDir() + "/shaderpacks/Trippy-Shaderpack-master/shaders/gbuffers_textured.vsh");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		try {
-            fragmentSource = new FileInputStream(FabricLoader.getInstance().getGameDir() + "/shaderpacks/Trippy-Shaderpack-master/shaders/gbuffers_textured.fsh");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-	public static ShaderProperties getShaderProperties(){
-		return properties;
-	}
-	public static void  setShaderProperties(ShaderProperties properties){
-		Iris.properties = properties;
-	}
-	public static ShaderManager getShaderManager(){
-		return manager;
-	}
-	private static void setShaderManager(ShaderManager manager){
-		Iris.manager = manager;
-	}
-	private static void setShaderParser(ShaderParser parser){
-		Iris.parser = parser;
-	}
-	private static ShaderParser getShaderParser(){
-		return parser;
+		vertexSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.vsh"));
+		fragmentSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.fsh"));
 	}
 }
