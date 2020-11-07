@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.uniforms.Uniforms;
+import net.coderbot.iris.uniforms.CommonUniforms;
 import org.lwjgl.opengl.GL20;
 
 import net.fabricmc.api.ClientModInitializer;
@@ -50,7 +50,7 @@ public class Iris implements ClientModInitializer {
 			throw new RuntimeException("Failed to initialize Iris!", e);
 		}
 
-		Uniforms.addCommonUniforms(builder);
+		CommonUniforms.addCommonUniforms(builder);
 
 		return builder.build();
 	}

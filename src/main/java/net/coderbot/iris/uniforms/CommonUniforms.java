@@ -14,10 +14,10 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Objects;
 
-public final class Uniforms {
+public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
 
-	private Uniforms() {
+	private CommonUniforms() {
 		// no construction allowed
 	}
 
@@ -31,13 +31,13 @@ public final class Uniforms {
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
-			.uniform1i(PER_FRAME, "isEyeInWater", Uniforms::isEyeInWater)
+			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniformMatrix(PER_FRAME, "gbufferModelView", CapturedRenderingState.INSTANCE::getGbufferModelView)
-			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", Uniforms::getGbufferModelViewInverse)
+			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", CommonUniforms::getGbufferModelViewInverse)
 			.uniformMatrix(PER_FRAME, "gbufferProjection", CapturedRenderingState.INSTANCE::getGbufferProjection)
-			.uniformMatrix(PER_FRAME, "gbufferProjectionInverse", Uniforms::getGbufferProjectionInverse)
-			.uniform3d(PER_FRAME, "cameraPosition", Uniforms::getCameraPosition)
-			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", Uniforms::getShadowLightPosition);
+			.uniformMatrix(PER_FRAME, "gbufferProjectionInverse", CommonUniforms::getGbufferProjectionInverse)
+			.uniform3d(PER_FRAME, "cameraPosition", CommonUniforms::getCameraPosition)
+			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", CommonUniforms::getShadowLightPosition);
 	}
 
 	private static Vec3d getCameraPosition() {
