@@ -1,24 +1,24 @@
 package net.coderbot.iris;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Objects;
 
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.lwjgl.opengl.GL20;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.loader.api.FabricLoader;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
+	private static ShaderPack internal;
 	private static Program gbuffersTextured;
-
-	private static InputStream vertexSource;
-	private static InputStream fragmentSource;
 
 	public static void useTerrainShaders() {
 		if (gbuffersTextured == null) {
@@ -42,12 +42,19 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static Program createShaders() {
+		ShaderPack.ProgramSource gbuffersTexturedSource = internal.getGbuffersTextured();
+
+		// TODO: Properly handle empty shaders
+		Objects.requireNonNull(gbuffersTexturedSource.getVertexSource());
+		Objects.requireNonNull(gbuffersTexturedSource.getFragmentSource());
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin("gbuffers_textured", vertexSource, fragmentSource);
+			builder = ProgramBuilder.begin("gbuffers_textured",
+					gbuffersTexturedSource.getVertexSource().orElse(null),
+					gbuffersTexturedSource.getFragmentSource().orElse(null));
 		} catch (IOException e) {
-			throw new RuntimeException("Failed to initialize Iris!", e);
+			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
 		CommonUniforms.addCommonUniforms(builder);
@@ -57,7 +64,13 @@ public class Iris implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		vertexSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.vsh"));
-		fragmentSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.fsh"));
+		Path internalShaderpackPath = FabricLoader.getInstance().getModContainer("iris")
+				.orElseThrow(() -> new RuntimeException("Iris doesn't exist???")).getRootPath();
+
+		try {
+			internal = new ShaderPack(internalShaderpackPath);
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to load internal shaderpack!", e);
+		}
 	}
 }
