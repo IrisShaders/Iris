@@ -33,26 +33,23 @@ public class MixinWorldRenderer {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		try {
 			Iris.getShaderManager().useTerrainShaders();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=blockentities"))
+	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities"))
 	private void stopUsingTerrainShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GlProgramManager.useProgram(0);
 	}
-
 	@Inject(method = RENDER_SKY,
 			slice = @Slice(from = @At(value = "FIELD", target = POSITIVE_Y)),
 			at = @At(value = "INVOKE:FIRST", target = PEEK))
 	private void iris$renderSky$postCelestialRotate(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setCelestialModelView(matrices.peek().getModel().copy());
-
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=clouds"))
 	private void setupCloudShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
-
 		try {
 			Iris.getShaderManager().useCloudShaders();
 		} catch (IOException e) {
@@ -64,23 +61,8 @@ public class MixinWorldRenderer {
 	private void stopCloudShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
 		GlProgramManager.useProgram(0);
 	}
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=sky"))
-	private void startSkyShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
-
-		try {
-			Iris.getShaderManager().useSkyShaders();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=fog"))
-	private void stopSkyShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
-		GlProgramManager.useProgram(0);
-	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=outline"))
 	private void startBasicShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
-
 		try {
 			Iris.getShaderManager().useBasicShaders();
 		} catch (IOException ex) {
@@ -88,10 +70,9 @@ public class MixinWorldRenderer {
 		}
 
 	}
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=particles"))
+	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=string"))
 	private void stopBasicShaders(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
 		GlProgramManager.useProgram(0);
-
 	}
 
 }

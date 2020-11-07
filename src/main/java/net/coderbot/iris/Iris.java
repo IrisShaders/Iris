@@ -1,10 +1,17 @@
 package net.coderbot.iris;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Objects;
 
+import net.coderbot.iris.config.ShaderProperties;
+import net.coderbot.iris.shaders.ShaderManager;
+import net.coderbot.iris.shaders.ShaderParser;
 import net.coderbot.iris.uniforms.Uniforms;
+import net.fabricmc.loader.api.FabricLoader;
 import org.lwjgl.opengl.GL20;
 
 import net.minecraft.client.gl.GlProgram;
@@ -23,6 +30,9 @@ public class Iris implements ClientModInitializer {
 	private static GlProgram program;
 	private static Uniforms programUniforms;
 
+	private static ShaderProperties properties;
+	private static ShaderManager manager;
+	private static ShaderParser parser;
 	private static InputStream vertexSource;
 	private static InputStream fragmentSource;
 
@@ -102,7 +112,46 @@ public class Iris implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		vertexSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.vsh"));
-		fragmentSource = Objects.requireNonNull(Iris.class.getResourceAsStream("/gbuffers_textured.fsh"));
+		setShaderProperties(new ShaderProperties().setDefaultPack("Vaporwave-Shaderpack-master"));
+		try {
+			getShaderProperties().createAndLoadProperties();
+		} catch (IOException e){
+			e.printStackTrace();
+		}
+		setShaderManager(new ShaderManager());
+		setShaderParser(new ShaderParser(getShaderProperties().getShaderPackPath()));
+		try {
+			getShaderParser().parseBlockProperties();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			vertexSource = new FileInputStream(FabricLoader.getInstance().getGameDir() + "/shaderpacks/Trippy-Shaderpack-master/shaders/gbuffers_textured.vsh");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		try {
+            fragmentSource = new FileInputStream(FabricLoader.getInstance().getGameDir() + "/shaderpacks/Trippy-Shaderpack-master/shaders/gbuffers_textured.fsh");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+	public static ShaderProperties getShaderProperties(){
+		return properties;
+	}
+	public static void  setShaderProperties(ShaderProperties properties){
+		Iris.properties = properties;
+	}
+	public static ShaderManager getShaderManager(){
+		return manager;
+	}
+	private static void setShaderManager(ShaderManager manager){
+		Iris.manager = manager;
+	}
+	private static void setShaderParser(ShaderParser parser){
+		Iris.parser = parser;
+	}
+	private static ShaderParser getShaderParser(){
+		return parser;
 	}
 }

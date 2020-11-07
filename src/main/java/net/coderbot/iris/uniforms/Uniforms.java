@@ -35,7 +35,9 @@ public class Uniforms {
 	private static int moonPhase;
 	
 	private static int hideGUI;
-
+	private int frameTimeCounter;
+	private float frameTime;
+	private long lastTimeMillis;
 	public Uniforms(GlProgram program) {
 		int programId = program.getProgramRef();
 
@@ -59,6 +61,7 @@ public class Uniforms {
 		moonPhase = GL21.glGetUniformLocation(programId, "moonPhase");
 		
 		hideGUI = GL21.glGetUniformLocation(programId, "hideGUI");
+		frameTimeCounter = GL21.glGetUniformLocation(programId, "frameTimeCounter");
 	}
 
 	public void update() {
@@ -80,7 +83,7 @@ public class Uniforms {
 		Entity cameraEntity = Objects.requireNonNull(MinecraftClient.getInstance().getCameraEntity());
 
 		GL21.glUniform1f(eyeAltitude, (float) cameraEntity.getPos().getY());
-		
+
 		// TODO: Simplify
 		int eyeInWater;
 		GL21.glUniform1f(eyeAltitude, (float) cameraEntity.getPos().getY());
@@ -109,10 +112,19 @@ public class Uniforms {
 		shadowLightPositionVector.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
 
 		updateVector(shadowLightPosition, new Vector3f(0.0F, 100.0F, 0.0F));
-		
+
 		GL21.glUniform1i(moonPhase, MinecraftClient.getInstance().world.getMoonPhase());
-		
+
 		GL21.glUniform1i(hideGUI, MinecraftClient.getInstance().options.hudHidden ? 1 : 0);
+		long timeMillis = System.currentTimeMillis();
+		if (lastTimeMillis == 0) {
+			lastTimeMillis = timeMillis;
+		}
+	long diff = timeMillis - lastTimeMillis;
+		lastTimeMillis = timeMillis;
+		frameTime += diff/1000.0F;
+		frameTime = (frameTime % 3600.0F);
+		GL21.glUniform1f(frameTimeCounter, frameTime);
 	}
 
 	private void updateMatrix(int location, Matrix4f instance) {
@@ -135,9 +147,7 @@ public class Uniforms {
 	private Matrix4f invertedCopy(Matrix4f matrix) {
 		// PERF: Don't copy this matrix every time
 		Matrix4f copy = matrix.copy();
-
 		copy.invert();
-
 		return copy;
 	}
 }

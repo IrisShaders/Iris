@@ -20,23 +20,35 @@ public class ShaderProperties {
             file.mkdirs();
         }
     }
-    public ShaderProperties setShaderPack(String shaderPackName){
+
+    /**
+     * This sets the default shaderpack name for the shader properties to set.
+     * @param shaderPackName the file name of the pack
+     * @return the shaderproperties with the set value
+     */
+    public ShaderProperties setDefaultPack(String shaderPackName){
         this.shaderpath = Paths.get(FabricLoader.getInstance().getGameDir() + "/shaderpacks/" + shaderPackName);
         return this;
     }
     public void createAndLoadProperties() throws IOException {
         propertiesPath = Paths.get(FabricLoader.getInstance().getConfigDir() + "/iris.properties");
         Properties properties = new Properties();
-        if (new File(String.valueOf(shaderpath)).exists()){
-            if (new File(propertiesPath.toString()).exists() && shaderpath == null) {
+        File shaderPack = new File(shaderpath.toString());
+        File propertiesFile = new File(propertiesPath.toString());
+        if (shaderPack.exists()){
+            if (propertiesFile.exists()) {
                 properties.load(new FileInputStream(propertiesPath.toString()));
                 shaderpath = Paths.get((String) properties.get("shaderpack"));
             }
         } else {
-            throw new IllegalStateException(String.format("The specified shaderpack path  \"%s\" was not found!", shaderpath));
+            throw new IllegalStateException(String.format("The specified shaderpack \"%s\" was not found!", shaderpath));
         }
-        properties.setProperty("shaderpack", shaderpath.toString());
-        properties.store(new FileOutputStream(FabricLoader.getInstance().getConfigDir() + "/iris.properties"), "This file is used to parse iris shader settings.");
+        if (shaderpath != null) {
+            properties.setProperty("shaderpack", shaderpath.toString());
+            properties.store(new FileOutputStream(FabricLoader.getInstance().getConfigDir() + "/iris.properties"), "This file is used to parse iris shader settings.");
+        } else {
+            throw new IllegalStateException("There was no specified shaderpack path!");
+        }
     }
     public Path getShaderPackPath(){
         return shaderpath;
