@@ -11,8 +11,11 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
  *
  * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#system-time">Uniforms: System time</a>
  */
-public class SystemTimeUniforms {
+public final class SystemTimeUniforms {
 	public static final Timer TIMER = new Timer();
+
+	private SystemTimeUniforms() {
+	}
 
 	/**
 	 * Makes system time uniforms available to the given program

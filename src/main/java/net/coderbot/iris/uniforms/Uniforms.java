@@ -23,6 +23,7 @@ public final class Uniforms {
 
 	public static void addCommonUniforms(ProgramBuilder builder) {
 		ViewportUniforms.addViewportUniforms(builder);
+		WorldTimeUniforms.addWorldTimeUniforms(builder);
 		SystemTimeUniforms.addSystemTimeUniforms(builder);
 
 		builder
@@ -31,7 +32,6 @@ public final class Uniforms {
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
 			.uniform1i(PER_FRAME, "isEyeInWater", Uniforms::isEyeInWater)
-			.uniform1i(PER_TICK, "moonPhase", () -> Objects.requireNonNull(client.world).getMoonPhase())
 			.uniformMatrix(PER_FRAME, "gbufferModelView", CapturedRenderingState.INSTANCE::getGbufferModelView)
 			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", Uniforms::getGbufferModelViewInverse)
 			.uniformMatrix(PER_FRAME, "gbufferProjection", CapturedRenderingState.INSTANCE::getGbufferProjection)
