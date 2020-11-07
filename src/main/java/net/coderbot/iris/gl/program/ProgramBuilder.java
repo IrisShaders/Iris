@@ -1,7 +1,9 @@
 package net.coderbot.iris.gl.program;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
@@ -11,6 +13,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.uniform.Uniform;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL21;
 
 import net.minecraft.client.gl.GlProgram;
@@ -33,20 +36,22 @@ public class ProgramBuilder implements UniformHolder {
 		perFrame = new ArrayList<>();
 	}
 
-	public static ProgramBuilder begin(String name, InputStream vertexSource, InputStream fragmentSource) throws IOException {
+	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String fragmentSource) throws IOException {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 
 		GlShader vertex;
 		GlShader fragment;
 
 		try {
-			vertex = GlShader.createFromResource(GlShader.Type.VERTEX, name + ".vsh", vertexSource, "iris");
+			InputStream vertexSourceStream = new ByteArrayInputStream(vertexSource.getBytes(StandardCharsets.UTF_8));
+			vertex = GlShader.createFromResource(GlShader.Type.VERTEX, name + ".vsh", vertexSourceStream, "iris");
 		} catch (IOException e) {
 			throw new IOException("Failed to compile vertex shader for program " + name, e);
 		}
 
 		try {
-			fragment = GlShader.createFromResource(GlShader.Type.FRAGMENT, name + ".fsh", fragmentSource, "iris");
+			InputStream fragmentSourceStream = new ByteArrayInputStream(fragmentSource.getBytes(StandardCharsets.UTF_8));
+			fragment = GlShader.createFromResource(GlShader.Type.FRAGMENT, name + ".fsh", fragmentSourceStream, "iris");
 		} catch (IOException e) {
 			throw new IOException("Failed to compile fragment shader for program " + name, e);
 		}
