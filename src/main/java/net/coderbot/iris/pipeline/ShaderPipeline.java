@@ -7,6 +7,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20;
 
 import net.minecraft.client.gl.GlProgramManager;
@@ -16,13 +17,26 @@ import net.minecraft.client.render.RenderLayer;
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
 public class ShaderPipeline {
+	@Nullable
+	private final Program basic;
+	@Nullable
+	private final Program textured;
+	@Nullable
+	private final Program skyBasic;
+	@Nullable
+	private final Program skyTextured;
+	@Nullable
 	private final Program clouds;
+	@Nullable
 	private final Program terrain;
+	@Nullable
 	private final Program translucent;
 
 	public ShaderPipeline(ShaderPack pack) {
-		Program textured = createProgram(pack.getGbuffersTextured());
-
+		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createProgram).orElse(null);
+		this.textured = pack.getGbuffersTextured().map(ShaderPipeline::createProgram).orElse(basic);
+		this.skyBasic = pack.getGbuffersSkyBasic().map(ShaderPipeline::createProgram).orElse(basic);
+		this.skyTextured = pack.getGbuffersSkyTextured().map(ShaderPipeline::createProgram).orElse(textured);
 		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
 		this.terrain = textured;
 		this.translucent = textured;
@@ -35,7 +49,7 @@ public class ShaderPipeline {
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin("gbuffers_textured", source.getVertexSource().orElse(null),
+			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
 					source.getFragmentSource().orElse(null));
 		} catch (IOException e) {
 			// TODO: Better error handling
@@ -60,6 +74,10 @@ public class ShaderPipeline {
 	}
 
 	public void beginClouds() {
+		if (clouds == null) {
+			return;
+		}
+
 		clouds.use();
 	}
 
@@ -69,9 +87,17 @@ public class ShaderPipeline {
 
 	public void beginTerrainLayer(RenderLayer terrainLayer) {
 		if (terrainLayer == RenderLayer.getTranslucent() || terrainLayer == RenderLayer.getTripwire()) {
+			if (translucent == null) {
+				return;
+			}
+
 			translucent.use();
 			setupAttributes(translucent);
 		} else if (terrainLayer == RenderLayer.getSolid() || terrainLayer == RenderLayer.getCutout() || terrainLayer == RenderLayer.getCutoutMipped()) {
+			if (terrain == null) {
+				return;
+			}
+
 			terrain.use();
 			setupAttributes(terrain);
 		}

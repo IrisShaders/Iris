@@ -120,14 +120,13 @@ public class ProgramBuilder implements UniformHolder {
 
 	@Override
 	public OptionalInt location(String name) {
-		// TODO: Make these debug messages less spammy, or toggleable
 		int id = GL21.glGetUniformLocation(program.getProgramRef(), name);
 
 		if (id == -1) {
-			System.out.println("[" + this.name + "] Skipping uniform:   " + name);
 			return OptionalInt.empty();
 		}
 
+		// TODO: Make these debug messages less spammy, or toggleable
 		System.out.println("[" + this.name + "] Activating uniform: " + name);
 		return OptionalInt.of(id);
 	}

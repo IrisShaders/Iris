@@ -9,24 +9,38 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class ShaderPack {
+	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersTextured;
+	private final ProgramSource gbuffersSkyBasic;
+	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
 
 	public ShaderPack(Path root) throws IOException {
+		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured");
+		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic");
+		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured");
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds");
 	}
 
-	public ProgramSource getGbuffersTextured() {
-		return gbuffersTextured;
+	public Optional<ProgramSource> getGbuffersBasic() {
+		return gbuffersBasic.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersTextured() {
+		return gbuffersTextured.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersSkyBasic() {
+		return gbuffersSkyBasic.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersSkyTextured() {
+		return gbuffersSkyTextured.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersClouds() {
-		if (gbuffersClouds.isValid()) {
-			return Optional.of(gbuffersClouds);
-		}
-
-		return Optional.empty();
+		return gbuffersClouds.requireValid();
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program) throws IOException {
@@ -47,7 +61,7 @@ public class ShaderPack {
 			throw e;
 		}
 
-		return new ProgramSource(vertexSource, fragmentSource);
+		return new ProgramSource(program, vertexSource, fragmentSource);
 	}
 
 	private static String readFile(Path path) throws IOException {
@@ -59,12 +73,18 @@ public class ShaderPack {
 	}
 
 	public static class ProgramSource {
+		private final String name;
 		private final String vertexSource;
 		private final String fragmentSource;
 
-		public ProgramSource(String vertexSource, String fragmentSource) {
+		public ProgramSource(String name, String vertexSource, String fragmentSource) {
+			this.name = name;
 			this.vertexSource = vertexSource;
 			this.fragmentSource = fragmentSource;
+		}
+
+		public String getName() {
+			return name;
 		}
 
 		public Optional<String> getVertexSource() {
@@ -77,6 +97,14 @@ public class ShaderPack {
 		
 		public boolean isValid() {
 			return vertexSource != null && fragmentSource != null;
+		}
+
+		public Optional<ProgramSource> requireValid() {
+			if (this.isValid()) {
+				return Optional.of(this);
+			} else {
+				return Optional.empty();
+			}
 		}
 	}
 }
