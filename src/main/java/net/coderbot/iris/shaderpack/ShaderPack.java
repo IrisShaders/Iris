@@ -4,18 +4,29 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class ShaderPack {
 	private final ProgramSource gbuffersTextured;
+	private final ProgramSource gbuffersClouds;
 
 	public ShaderPack(Path root) throws IOException {
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured");
+		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds");
 	}
 
 	public ProgramSource getGbuffersTextured() {
 		return gbuffersTextured;
+	}
+
+	public Optional<ProgramSource> getGbuffersClouds() {
+		if (gbuffersClouds.isValid()) {
+			return Optional.of(gbuffersClouds);
+		}
+
+		return Optional.empty();
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program) throws IOException {
@@ -42,7 +53,7 @@ public class ShaderPack {
 	private static String readFile(Path path) throws IOException {
 		try {
 			return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-		} catch(FileNotFoundException e) {
+		} catch(FileNotFoundException | NoSuchFileException e) {
 			return null;
 		}
 	}

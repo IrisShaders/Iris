@@ -16,12 +16,14 @@ import net.minecraft.client.render.RenderLayer;
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
 public class ShaderPipeline {
+	private final Program clouds;
 	private final Program terrain;
 	private final Program translucent;
 
 	public ShaderPipeline(ShaderPack pack) {
 		Program textured = createProgram(pack.getGbuffersTextured());
 
+		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
 		this.terrain = textured;
 		this.translucent = textured;
 	}
@@ -55,6 +57,14 @@ public class ShaderPipeline {
 
 			GL20.glVertexAttrib4f(mcEntity, blockId, -1.0F, -1.0F, -1.0F);
 		}
+	}
+
+	public void beginClouds() {
+		clouds.use();
+	}
+
+	public void endClouds() {
+		GlProgramManager.useProgram(0);
 	}
 
 	public void beginTerrainLayer(RenderLayer terrainLayer) {

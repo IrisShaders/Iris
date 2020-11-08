@@ -26,6 +26,7 @@ public class MixinWorldRenderer {
 	private static final String RENDER = "render(Lnet/minecraft/client/util/math/MatrixStack;FJZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lnet/minecraft/client/render/LightmapTextureManager;Lnet/minecraft/util/math/Matrix4f;)V";
 	private static final String RENDER_SKY = "renderSky(Lnet/minecraft/client/util/math/MatrixStack;F)V";
 	private static final String RENDER_LAYER = "renderLayer(Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/util/math/MatrixStack;DDD)V";
+	private static final String RENDER_CLOUDS = "renderClouds(Lnet/minecraft/client/util/math/MatrixStack;FDDD)V";
 	private static final String POSITIVE_Y = "Lnet/minecraft/client/util/math/Vector3f;POSITIVE_Y:Lnet/minecraft/client/util/math/Vector3f;";
 	private static final String PEEK = "Lnet/minecraft/client/util/math/MatrixStack;peek()Lnet/minecraft/client/util/math/MatrixStack$Entry;";
 
@@ -40,6 +41,16 @@ public class MixinWorldRenderer {
 			at = @At(value = "INVOKE:FIRST", target = PEEK))
 	private void iris$renderSky$postCelestialRotate(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setCelestialModelView(matrices.peek().getModel().copy());
+	}
+
+	@Inject(method = RENDER_CLOUDS, at = @At("HEAD"))
+	private void iris$beginClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+		Iris.getPipeline().beginClouds();
+	}
+
+	@Inject(method = RENDER_CLOUDS, at = @At("RETURN"))
+	private void iris$endClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+		Iris.getPipeline().endClouds();
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
