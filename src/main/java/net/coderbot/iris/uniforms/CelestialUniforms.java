@@ -30,7 +30,7 @@ public final class CelestialUniforms {
 	}
 
 	private static float getSunAngle() {
-		float skyAngle = getWorld().getSkyAngle(CapturedRenderingState.INSTANCE.getTickDelta());
+		float skyAngle = getSkyAngle();
 
 		if (skyAngle < 0.75F) {
 			return skyAngle + 0.25F;
@@ -64,7 +64,14 @@ public final class CelestialUniforms {
 	private static Vector4f getCelestialPosition(float y) {
 		Vector4f position = new Vector4f(0.0F, y, 0.0F, 0.0F);
 
-		position.transform(CapturedRenderingState.INSTANCE.getCelestialModelView());
+		Matrix4f celestial = CapturedRenderingState.INSTANCE.getGbufferModelView().copy();
+
+		// This is the same transformation applied by renderSky, however, it's been moved to here.
+		// This is because we need the result of it before it's actually performed in vanilla.
+		celestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
+		celestial.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
+
+		position.transform(celestial);
 
 		return position;
 	}
@@ -91,5 +98,9 @@ public final class CelestialUniforms {
 
 	private static ClientWorld getWorld() {
 		return Objects.requireNonNull(MinecraftClient.getInstance().world);
+	}
+
+	private static float getSkyAngle() {
+		return getWorld().getSkyAngle(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 }
