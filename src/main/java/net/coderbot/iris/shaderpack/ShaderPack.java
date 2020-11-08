@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Optional;
 
 public class ShaderPack {
@@ -36,14 +37,12 @@ public class ShaderPack {
 			vertexSource = readFile(root.resolve(program + ".vsh"));
 		} catch (IOException e) {
 			// TODO: Better handling?
-			throw e;
 		}
 
 		try {
 			fragmentSource = readFile(root.resolve(program + ".fsh"));
 		} catch (IOException e) {
 			// TODO: Better handling?
-			throw e;
 		}
 
 		return new ProgramSource(vertexSource, fragmentSource);
@@ -76,6 +75,15 @@ public class ShaderPack {
 		
 		public boolean isValid() {
 			return vertexSource != null && fragmentSource != null;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof ProgramSource){
+				ProgramSource source = (ProgramSource)obj;
+				return source.fragmentSource.equals(this.fragmentSource) && source.vertexSource.equals(this.vertexSource);
+			}
+			return false;
 		}
 	}
 }

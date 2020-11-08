@@ -17,6 +17,7 @@ import java.util.Objects;
  */
 public abstract class Shader {
     private Program program;
+    private boolean shouldUseShaders = true;
     Shader(){
     }
 
@@ -30,23 +31,29 @@ public abstract class Shader {
 
             Objects.requireNonNull(gbuffersTexturedSource.getVertexSource());
             Objects.requireNonNull(gbuffersTexturedSource.getFragmentSource());
-            ProgramBuilder builder;
+            ProgramBuilder builder = null;
             try {
                 builder = ProgramBuilder.begin(getFileName(),
                         gbuffersTexturedSource.getVertexSource().orElse(null),
                         gbuffersTexturedSource.getFragmentSource().orElse(null));
             } catch (IOException e) {
                 throw new RuntimeException("Shader compilation failed!", e);
+            } catch (NullPointerException e){
+                System.out.println("[" + getFileName() + "]: skipping shaders!");
+                shouldUseShaders = false;
             }
-
-            CommonUniforms.addCommonUniforms(builder);
-            CelestialUniforms.addCelestialUniforms(builder);
-            SystemTimeUniforms.addSystemTimeUniforms(builder);
-            ViewportUniforms.addViewportUniforms(builder);
-            WorldTimeUniforms.addWorldTimeUniforms(builder);
-           program = builder.build();
+            if (shouldUseShaders) {
+                CommonUniforms.addCommonUniforms(builder);
+                CelestialUniforms.addCelestialUniforms(builder);
+                SystemTimeUniforms.addSystemTimeUniforms(builder);
+                ViewportUniforms.addViewportUniforms(builder);
+                WorldTimeUniforms.addWorldTimeUniforms(builder);
+                program = builder.build();
+            }
         }
-           program.use();
+        if (shouldUseShaders) {
+            program.use();
+        }
         }
 
     /**
@@ -59,8 +66,8 @@ public abstract class Shader {
      * Returns the fallback shader that is used if the current shader is not present in the pack.
      * @return the fallback shader name.
      */
-    protected String getFallbackShader(){
-        return "gbuffers_basic";
+    protected ShaderPack.ProgramSource getFallbackShader(ShaderPack pack){
+        return pack.getGbuffersBasic();
     }
 
     /**
