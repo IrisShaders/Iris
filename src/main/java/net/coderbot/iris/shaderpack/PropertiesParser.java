@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaders;
+package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.Maps;
 import net.minecraft.util.Identifier;
@@ -12,13 +12,13 @@ import java.util.*;
  * A utility class for parsing entries in item.properties and block.properties files in shaderpacks
  * This is not being used right now. Probably will delete it or reformat to be more efficient
  */
-public class ShaderParser {
+public class PropertiesParser {
     private Path shaderPath;
     private Map<Identifier, Integer> blockPropertiesMap = Maps.newHashMap();
     private Map<Identifier, Integer> itemPropertiesMap = Maps.newHashMap();
 
-    public ShaderParser(Path shaderPath){
-        this.shaderPath = shaderPath;
+    public PropertiesParser(ShaderPack pack){
+        this.shaderPath = pack.getPath();
     }
     //TODO call these in the constructor instead of explicitly
 
@@ -29,7 +29,7 @@ public class ShaderParser {
     public void parseBlockProperties() {
         Properties properties = new Properties();
         try {
-            properties.load(new FileInputStream(shaderPath + "/shaders/block.properties"));
+            properties.load(new FileInputStream(shaderPath + "/block.properties"));
         } catch (IOException e){
             System.out.println("A block.properties was not found in the current shaderpack");
             return;

@@ -1,5 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
+import net.coderbot.iris.gl.program.Program;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -11,10 +13,14 @@ import java.util.Optional;
 public class ShaderPack {
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersClouds;
+	private final ProgramSource gbuffersBasic;
+	private final Path shaderPackPath;
 
 	public ShaderPack(Path root) throws IOException {
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured");
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds");
+		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
+		this.shaderPackPath = root.resolve("shaders");
 	}
 
 	public ProgramSource getGbuffersTextured() {
@@ -28,6 +34,15 @@ public class ShaderPack {
 
 		return Optional.empty();
 	}
+	public Optional<ProgramSource> getGbuffersBasic(){
+		if (gbuffersBasic.isValid()){
+			return Optional.of(gbuffersBasic);
+		}
+		return Optional.empty();
+	}
+	public Path getPath(){
+		return shaderPackPath;
+	}
 
 	private static ProgramSource readProgramSource(Path root, String program) throws IOException {
 		String vertexSource = null;
@@ -37,14 +52,16 @@ public class ShaderPack {
 			vertexSource = readFile(root.resolve(program + ".vsh"));
 		} catch (IOException e) {
 			// TODO: Better handling?
-			throw e;
+			//throw e;
+			//allow handling of fallback shaders if the current shader is not present
 		}
 
 		try {
 			fragmentSource = readFile(root.resolve(program + ".fsh"));
 		} catch (IOException e) {
 			// TODO: Better handling?
-			throw e;
+			//throw e;
+			//allow handling of fallback shaders if the current shader is not present
 		}
 
 		return new ProgramSource(vertexSource, fragmentSource);
