@@ -106,4 +106,32 @@ public class ShaderPipeline {
 	public void endTerrainLayer(RenderLayer terrainLayer) {
 		GlProgramManager.useProgram(0);
 	}
+
+	public void beginSky() {
+		if (skyBasic == null) {
+			return;
+		}
+
+		skyBasic.use();
+	}
+
+	public void beginTexturedSky() {
+		if (skyTextured == null) {
+			return;
+		}
+
+		skyTextured.use();
+	}
+
+	public void endTexturedSky() {
+		if (skyBasic == null) {
+			endSky();
+		} else {
+			skyBasic.use();
+		}
+	}
+
+	public void endSky() {
+		GlProgramManager.useProgram(0);
+	}
 }

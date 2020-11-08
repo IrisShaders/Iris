@@ -36,11 +36,27 @@ public class MixinWorldRenderer {
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 	}
 
+	@Inject(method = RENDER_SKY, at = @At("HEAD"))
+	private void iris$renderSky$begin(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		Iris.getPipeline().beginSky();
+	}
+
 	@Inject(method = RENDER_SKY,
-			slice = @Slice(from = @At(value = "FIELD", target = POSITIVE_Y)),
-			at = @At(value = "INVOKE:FIRST", target = PEEK))
-	private void iris$renderSky$postCelestialRotate(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		CapturedRenderingState.INSTANCE.setCelestialModelView(matrices.peek().getModel().copy());
+			at = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V"))
+	private void iris$renderSky$beginTextured(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		Iris.getPipeline().beginTexturedSky();
+	}
+
+	@Inject(method = RENDER_SKY,
+			slice = @Slice(from = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V")),
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;method_23787(F)F"))
+	private void iris$renderSky$endTextured(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		Iris.getPipeline().endTexturedSky();
+	}
+
+	@Inject(method = RENDER_SKY, at = @At("RETURN"))
+	private void iris$renderSky$end(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		Iris.getPipeline().endSky();
 	}
 
 	@Inject(method = RENDER_CLOUDS, at = @At("HEAD"))
