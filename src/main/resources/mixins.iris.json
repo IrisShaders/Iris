@@ -3,11 +3,10 @@
   "minVersion": "0.8",
   "package": "net.coderbot.iris.mixin",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [
-  ],
   "client": [
 	"MixinGameRenderer",
 	"MixinWorldRenderer",
+	"MixinImmediateVertexConsumerProvider",
 	"texunits.MixinBufferVertexConsumer",
 	"texunits.MixinGlStateManager",
 	"texunits.MixinLightmapTextureManager",

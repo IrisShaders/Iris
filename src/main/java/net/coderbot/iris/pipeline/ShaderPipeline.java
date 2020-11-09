@@ -166,4 +166,37 @@ public class ShaderPipeline {
 	public void endWorldBorder() {
 		GlProgramManager.useProgram(0);
 	}
+
+	public void beginImmediateDrawing() {
+		if (!isRenderingWorld) {
+			// don't mess with non-world rendering
+			return;
+		}
+
+		if (texturedLit == null) {
+			return;
+		}
+
+		texturedLit.use();
+	}
+
+	public void endImmediateDrawing() {
+		if (!isRenderingWorld) {
+			// don't mess with non-world rendering
+			return;
+		}
+
+		GlProgramManager.useProgram(0);
+	}
+
+	// TODO: better way to avoid this global state?
+	private boolean isRenderingWorld = false;
+
+	public void beginWorldRender() {
+		isRenderingWorld = true;
+	}
+
+	public void endWorldRender() {
+		isRenderingWorld = false;
+	}
 }
