@@ -1,17 +1,16 @@
 package net.coderbot.iris.pipeline;
 
-import java.io.IOException;
-import java.util.Objects;
-
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.render.RenderLayer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20;
 
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.render.RenderLayer;
+import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -31,6 +30,7 @@ public class ShaderPipeline {
 	private final Program terrain;
 	@Nullable
 	private final Program translucent;
+	private final ShaderPack pack;
 
 	public ShaderPipeline(ShaderPack pack) {
 		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createProgram).orElse(null);
@@ -40,6 +40,10 @@ public class ShaderPipeline {
 		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
 		this.terrain = textured;
 		this.translucent = textured;
+		this.pack = pack;
+	}
+	public ShaderPack getPack(){
+		return pack;
 	}
 
 	private static Program createProgram(ShaderPack.ProgramSource source) {
@@ -103,8 +107,10 @@ public class ShaderPipeline {
 		}
 	}
 
-	public void endTerrainLayer(RenderLayer terrainLayer) {
-		GlProgramManager.useProgram(0);
+	public void endTerrainLayer(RenderLayer renderLayer) {
+		if (renderLayer == RenderLayer.getTranslucent() || renderLayer == RenderLayer.getTripwire() || renderLayer == RenderLayer.getSolid() || renderLayer == RenderLayer.getCutout() || renderLayer == RenderLayer.getCutoutMipped()){
+			GlProgramManager.useProgram(0);
+		}
 	}
 
 	public void beginSky() {
@@ -121,6 +127,15 @@ public class ShaderPipeline {
 		}
 
 		skyTextured.use();
+	}
+	public void beginBasic(){
+		if (basic == null){
+			return;
+		}
+		basic.use();
+	}
+	public void endBasic(){
+		GlProgramManager.useProgram(0);
 	}
 
 	public void endTexturedSky() {

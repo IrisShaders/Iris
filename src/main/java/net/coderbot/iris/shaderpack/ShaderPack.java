@@ -1,7 +1,5 @@
 package net.coderbot.iris.shaderpack;
 
-import net.coderbot.iris.gl.program.Program;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,17 +14,17 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
-	private final ProgramSource gbuffersBasic;
 	private final Path shaderPackPath;
+	private final PropertiesParser propertiesParser;
 
 	public ShaderPack(Path root) throws IOException {
-		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured");
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic");
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured");
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds");
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
-		this.shaderPackPath = root.resolve("shaders");
+		this.shaderPackPath = root;
+		this.propertiesParser = new PropertiesParser(this);
 	}
 
 	public Optional<ProgramSource> getGbuffersBasic() {
@@ -48,12 +46,7 @@ public class ShaderPack {
 	public Optional<ProgramSource> getGbuffersClouds() {
 		return gbuffersClouds.requireValid();
 	}
-	public Optional<ProgramSource> getGbuffersBasic(){
-		if (gbuffersBasic.isValid()){
-			return Optional.of(gbuffersBasic);
-		}
-		return Optional.empty();
-	}
+
 	public Path getPath(){
 		return shaderPackPath;
 	}
@@ -63,19 +56,18 @@ public class ShaderPack {
 		String fragmentSource = null;
 
 		try {
+			System.out.println(root.resolve(program + ".vsh"));
 			vertexSource = readFile(root.resolve(program + ".vsh"));
 		} catch (IOException e) {
 			// TODO: Better handling?
-			//throw e;
-			//allow handling of fallback shaders if the current shader is not present
+			throw e;
 		}
 
 		try {
 			fragmentSource = readFile(root.resolve(program + ".fsh"));
 		} catch (IOException e) {
 			// TODO: Better handling?
-			//throw e;
-			//allow handling of fallback shaders if the current shader is not present
+			throw e;
 		}
 
 		return new ProgramSource(program, vertexSource, fragmentSource);
