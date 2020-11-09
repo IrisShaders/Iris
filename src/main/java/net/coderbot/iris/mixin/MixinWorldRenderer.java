@@ -27,11 +27,18 @@ public class MixinWorldRenderer {
 	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V";
 
 	@Inject(method = RENDER, at = @At("HEAD"))
-	private void iris$captureRenderingState(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
+		Iris.getPipeline().beginWorldRender();
 	}
 
+	@Inject(method = RENDER, at = @At("RETURN"))
+	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		Iris.getPipeline().endWorldRender();
+	}
+
+	// TODO: end sky
 	@Inject(method = RENDER_SKY, at = @At("HEAD"))
 	private void iris$renderSky$begin(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		Iris.getPipeline().beginSky();
@@ -89,5 +96,25 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=string"))
 	private void iris$stopOutline(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
 		Iris.getPipeline().endBasic();
+	}
+
+	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("HEAD"))
+	private void iris$beginWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
+		Iris.getPipeline().beginWeather();
+	}
+
+	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("RETURN"))
+	private void iris$endWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
+		Iris.getPipeline().endWeather();
+	}
+
+	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("HEAD"))
+	private void iris$beginWorldBorder(Camera camera, CallbackInfo callback) {
+		Iris.getPipeline().beginWorldBorder();
+	}
+
+	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("RETURN"))
+	private void iris$endWorldBorder(Camera camera, CallbackInfo callback) {
+		Iris.getPipeline().endWorldBorder();
 	}
 }

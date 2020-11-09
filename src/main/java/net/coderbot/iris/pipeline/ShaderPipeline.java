@@ -1,16 +1,17 @@
 package net.coderbot.iris.pipeline;
 
+import java.io.IOException;
+import java.util.Objects;
+
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.render.RenderLayer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20;
 
-import java.io.IOException;
-import java.util.Objects;
+import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.render.RenderLayer;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -21,6 +22,8 @@ public class ShaderPipeline {
 	@Nullable
 	private final Program textured;
 	@Nullable
+	private final Program texturedLit;
+	@Nullable
 	private final Program skyBasic;
 	@Nullable
 	private final Program skyTextured;
@@ -30,20 +33,21 @@ public class ShaderPipeline {
 	private final Program terrain;
 	@Nullable
 	private final Program translucent;
-	private final ShaderPack pack;
+	@Nullable
+	private final Program weather;
 
 	public ShaderPipeline(ShaderPack pack) {
 		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createProgram).orElse(null);
 		this.textured = pack.getGbuffersTextured().map(ShaderPipeline::createProgram).orElse(basic);
+		// TODO: Load textured_lit program
+		this.texturedLit = textured;
 		this.skyBasic = pack.getGbuffersSkyBasic().map(ShaderPipeline::createProgram).orElse(basic);
 		this.skyTextured = pack.getGbuffersSkyTextured().map(ShaderPipeline::createProgram).orElse(textured);
 		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
-		this.terrain = textured;
-		this.translucent = textured;
-		this.pack = pack;
-	}
-	public ShaderPack getPack(){
-		return pack;
+		// TODO: Load terrain, water, weather shaders
+		this.terrain = texturedLit;
+		this.translucent = terrain;
+		this.weather = texturedLit;
 	}
 
 	private static Program createProgram(ShaderPack.ProgramSource source) {
@@ -107,10 +111,8 @@ public class ShaderPipeline {
 		}
 	}
 
-	public void endTerrainLayer(RenderLayer renderLayer) {
-		if (renderLayer == RenderLayer.getTranslucent() || renderLayer == RenderLayer.getTripwire() || renderLayer == RenderLayer.getSolid() || renderLayer == RenderLayer.getCutout() || renderLayer == RenderLayer.getCutoutMipped()){
-			GlProgramManager.useProgram(0);
-		}
+	public void endTerrainLayer(RenderLayer terrainLayer) {
+		GlProgramManager.useProgram(0);
 	}
 
 	public void beginSky() {
@@ -128,15 +130,6 @@ public class ShaderPipeline {
 
 		skyTextured.use();
 	}
-	public void beginBasic(){
-		if (basic == null){
-			return;
-		}
-		basic.use();
-	}
-	public void endBasic(){
-		GlProgramManager.useProgram(0);
-	}
 
 	public void endTexturedSky() {
 		if (skyBasic == null) {
@@ -148,5 +141,62 @@ public class ShaderPipeline {
 
 	public void endSky() {
 		GlProgramManager.useProgram(0);
+	}
+
+	public void beginWeather() {
+		if (weather == null) {
+			return;
+		}
+
+		weather.use();
+	}
+
+	public void endWeather() {
+		GlProgramManager.useProgram(0);
+	}
+
+	public void beginWorldBorder() {
+		if (texturedLit == null) {
+			return;
+		}
+
+		texturedLit.use();
+	}
+
+	public void endWorldBorder() {
+		GlProgramManager.useProgram(0);
+	}
+
+	public void beginImmediateDrawing() {
+		if (!isRenderingWorld) {
+			// don't mess with non-world rendering
+			return;
+		}
+
+		if (texturedLit == null) {
+			return;
+		}
+
+		texturedLit.use();
+	}
+
+	public void endImmediateDrawing() {
+		if (!isRenderingWorld) {
+			// don't mess with non-world rendering
+			return;
+		}
+
+		GlProgramManager.useProgram(0);
+	}
+
+	// TODO: better way to avoid this global state?
+	private boolean isRenderingWorld = false;
+
+	public void beginWorldRender() {
+		isRenderingWorld = true;
+	}
+
+	public void endWorldRender() {
+		isRenderingWorld = false;
 	}
 }
