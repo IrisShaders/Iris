@@ -86,4 +86,14 @@ public class MixinWorldRenderer {
 	private void iris$endTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		Iris.getPipeline().endTerrainLayer(renderLayer);
 	}
+
+	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("HEAD"))
+	private void iris$beginWorldBorder(Camera camera, CallbackInfo callback) {
+		Iris.getPipeline().beginWorldBorder();
+	}
+
+	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("RETURN"))
+	private void iris$endWorldBorder(Camera camera, CallbackInfo callback) {
+		Iris.getPipeline().endWorldBorder();
+	}
 }

@@ -22,6 +22,8 @@ public class ShaderPipeline {
 	@Nullable
 	private final Program textured;
 	@Nullable
+	private final Program texturedLit;
+	@Nullable
 	private final Program skyBasic;
 	@Nullable
 	private final Program skyTextured;
@@ -35,11 +37,14 @@ public class ShaderPipeline {
 	public ShaderPipeline(ShaderPack pack) {
 		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createProgram).orElse(null);
 		this.textured = pack.getGbuffersTextured().map(ShaderPipeline::createProgram).orElse(basic);
+		// TODO: Load textured_lit program
+		this.texturedLit = textured;
 		this.skyBasic = pack.getGbuffersSkyBasic().map(ShaderPipeline::createProgram).orElse(basic);
 		this.skyTextured = pack.getGbuffersSkyTextured().map(ShaderPipeline::createProgram).orElse(textured);
 		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
-		this.terrain = textured;
-		this.translucent = textured;
+		// TODO: Load terrain and water shaders
+		this.terrain = texturedLit;
+		this.translucent = terrain;
 	}
 
 	private static Program createProgram(ShaderPack.ProgramSource source) {
@@ -132,6 +137,18 @@ public class ShaderPipeline {
 	}
 
 	public void endSky() {
+		GlProgramManager.useProgram(0);
+	}
+
+	public void beginWorldBorder() {
+		if (texturedLit == null) {
+			return;
+		}
+
+		texturedLit.use();
+	}
+
+	public void endWorldBorder() {
 		GlProgramManager.useProgram(0);
 	}
 }
