@@ -33,6 +33,8 @@ public class ShaderPipeline {
 	private final Program terrain;
 	@Nullable
 	private final Program translucent;
+	@Nullable
+	private final Program weather;
 
 	public ShaderPipeline(ShaderPack pack) {
 		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createProgram).orElse(null);
@@ -42,9 +44,10 @@ public class ShaderPipeline {
 		this.skyBasic = pack.getGbuffersSkyBasic().map(ShaderPipeline::createProgram).orElse(basic);
 		this.skyTextured = pack.getGbuffersSkyTextured().map(ShaderPipeline::createProgram).orElse(textured);
 		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
-		// TODO: Load terrain and water shaders
+		// TODO: Load terrain, water, weather shaders
 		this.terrain = texturedLit;
 		this.translucent = terrain;
+		this.weather = texturedLit;
 	}
 
 	private static Program createProgram(ShaderPack.ProgramSource source) {
@@ -137,6 +140,18 @@ public class ShaderPipeline {
 	}
 
 	public void endSky() {
+		GlProgramManager.useProgram(0);
+	}
+
+	public void beginWeather() {
+		if (weather == null) {
+			return;
+		}
+
+		weather.use();
+	}
+
+	public void endWeather() {
 		GlProgramManager.useProgram(0);
 	}
 

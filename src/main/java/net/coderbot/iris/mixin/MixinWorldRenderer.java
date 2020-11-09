@@ -36,6 +36,7 @@ public class MixinWorldRenderer {
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 	}
 
+	// TODO: end sky
 	@Inject(method = RENDER_SKY, at = @At("HEAD"))
 	private void iris$renderSky$begin(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		Iris.getPipeline().beginSky();
@@ -85,6 +86,16 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		Iris.getPipeline().endTerrainLayer(renderLayer);
+	}
+
+	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("HEAD"))
+	private void iris$beginWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
+		Iris.getPipeline().beginWeather();
+	}
+
+	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("RETURN"))
+	private void iris$endWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
+		Iris.getPipeline().endWeather();
 	}
 
 	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("HEAD"))
