@@ -56,7 +56,6 @@ public class ShaderPack {
 		String fragmentSource = null;
 
 		try {
-			System.out.println(root.resolve(program + ".vsh"));
 			vertexSource = readFile(root.resolve(program + ".vsh"));
 		} catch (IOException e) {
 			// TODO: Better handling?
