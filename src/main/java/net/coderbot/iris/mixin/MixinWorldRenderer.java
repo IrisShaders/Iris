@@ -82,12 +82,12 @@ public class MixinWorldRenderer {
 
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		//Iris.getPipeline().beginTerrainLayer(renderLayer);
+		Iris.getPipeline().beginTerrainLayer(renderLayer);
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-	//	Iris.getPipeline().endTerrainLayer(renderLayer);
+		Iris.getPipeline().endTerrainLayer(renderLayer);
 	}
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=outline"))
 	private void iris$startOutline(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci){
@@ -117,4 +117,5 @@ public class MixinWorldRenderer {
 	private void iris$endWorldBorder(Camera camera, CallbackInfo callback) {
 		Iris.getPipeline().endWorldBorder();
 	}
+
 }
