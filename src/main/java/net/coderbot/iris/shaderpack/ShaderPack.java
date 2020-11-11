@@ -27,6 +27,10 @@ public class ShaderPack {
 		this.propertiesParser = new PropertiesParser(this);
 	}
 
+	public PropertiesParser getPropertiesParser() {
+		return propertiesParser;
+	}
+
 	public Optional<ProgramSource> getGbuffersBasic() {
 		return gbuffersBasic.requireValid();
 	}

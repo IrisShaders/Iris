@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.Maps;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
 
 import java.io.FileInputStream;
@@ -23,6 +24,7 @@ public class PropertiesParser {
      * a map that contains the identifier of an item to the integer value parsed in item.properties
      */
     private Map<Identifier, Integer> itemPropertiesMap = Maps.newHashMap();
+    private Map<Identifier, RenderLayer> blockRenderLayerMap = Maps.newHashMap();
 
     public PropertiesParser(ShaderPack pack){
         this.shaderPath = pack.getPath();
@@ -43,10 +45,35 @@ public class PropertiesParser {
             return;
         }
         properties.forEach((key, value) -> {
-            final int keyValue = Integer.parseInt(key.toString().substring(key.toString().indexOf(".") + 1));
-            ArrayList<Identifier> identifiers = parsePropertiesIntoIdentifiers(value.toString());
-            identifiers.forEach(identifier -> blockPropertiesMap.put(identifier, keyValue));
+            if (!key.toString().contains("layer.")) {
+                final int keyValue = Integer.parseInt(key.toString().substring(key.toString().indexOf(".") + 1));
+                ArrayList<Identifier> identifiers = parsePropertiesIntoIdentifiers(value.toString());
+                identifiers.forEach(identifier -> blockPropertiesMap.put(identifier, keyValue));
+            } else {
+                RenderLayer layer = parseRenderLayerFromKey(key.toString());
+                ArrayList<Identifier> identifiers = parsePropertiesIntoIdentifiers(value.toString());
+                identifiers.forEach(identifier -> blockRenderLayerMap.put(identifier, layer));
+            }
         });
+    }
+
+    /**
+     * Parses keys into render layers
+     * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L556-L576">optifine shader doc for block render layers</a>
+     * @param key the key of the property
+     * @return the renderlayer parsed from it
+     */
+    private RenderLayer parseRenderLayerFromKey(String key){
+        RenderLayer layer = null;
+        String layerAsString = key.substring(key.indexOf(".") + 1);
+        switch (layerAsString){
+            case "solid": layer = RenderLayer.getSolid(); break;
+            case "cutout": layer = RenderLayer.getCutout(); break;
+            case "cutout_mipped": layer = RenderLayer.getCutoutMipped(); break;
+            case "translucent": layer = RenderLayer.getTranslucent(); break;
+            default: System.out.println("invalid render property found... " + layerAsString); break;
+        }
+        return layer;
     }
 
     /**
@@ -87,8 +114,6 @@ public class PropertiesParser {
             return identifiers;
         }
     }
-
-
     /**
      * parses entries from item.properties
      */
@@ -112,5 +137,7 @@ public class PropertiesParser {
     public Map<Identifier, Integer> getItemProperties(){
         return itemPropertiesMap;
     }
-
+    public Map<Identifier, RenderLayer> getBlockRenderLayers(){
+        return blockRenderLayerMap;
+    }
 }

@@ -1,17 +1,17 @@
 package net.coderbot.iris.pipeline;
-
-import java.io.IOException;
-import java.util.Objects;
-
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.render.RenderLayer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20;
 
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.render.RenderLayer;
+import java.io.IOException;
+import java.util.Objects;
+
+;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -176,8 +176,8 @@ public class ShaderPipeline {
 		if (texturedLit == null) {
 			return;
 		}
+			texturedLit.use();
 
-		texturedLit.use();
 	}
 
 	public void endImmediateDrawing() {
@@ -185,8 +185,7 @@ public class ShaderPipeline {
 			// don't mess with non-world rendering
 			return;
 		}
-
-		GlProgramManager.useProgram(0);
+			GlProgramManager.useProgram(0);
 	}
 
 	// TODO: better way to avoid this global state?
@@ -198,5 +197,16 @@ public class ShaderPipeline {
 
 	public void endWorldRender() {
 		isRenderingWorld = false;
+	}
+
+	public void endBasic() {
+		GlProgramManager.useProgram(0);
+	}
+
+	public void beginBasic() {
+		if (basic == null){
+			return;
+		}
+		basic.use();
 	}
 }
