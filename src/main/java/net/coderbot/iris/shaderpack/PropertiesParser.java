@@ -4,11 +4,13 @@ import com.google.common.collect.Maps;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * A utility class for parsing entries in item.properties and block.properties files in shaderpacks
@@ -120,7 +122,7 @@ public class PropertiesParser {
     private void parseItemProperties() {
         Properties properties = new Properties();
         try {
-            properties.load(new FileInputStream(shaderPath + "/shaders/item.properties"));
+            properties.load(Files.newInputStream(shaderPath.resolve("shaders").resolve("item.properties")));
         } catch (IOException e){
             System.out.println("An item.properties was not found in the current shaderpack");
             return;
