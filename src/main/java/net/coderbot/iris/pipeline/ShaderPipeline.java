@@ -11,7 +11,6 @@ import org.lwjgl.opengl.GL20;
 import java.io.IOException;
 import java.util.Objects;
 
-;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
