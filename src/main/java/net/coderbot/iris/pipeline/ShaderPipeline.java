@@ -185,7 +185,7 @@ public class ShaderPipeline {
 			// don't mess with non-world rendering
 			return;
 		}
-			GlProgramManager.useProgram(0);
+		GlProgramManager.useProgram(0);
 	}
 
 	// TODO: better way to avoid this global state?
