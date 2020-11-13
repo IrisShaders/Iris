@@ -176,7 +176,7 @@ public class ShaderPipeline {
 		if (texturedLit == null) {
 			return;
 		}
-			texturedLit.use();
+		texturedLit.use();
 
 	}
 
