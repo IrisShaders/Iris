@@ -1,10 +1,8 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.Maps;
-import net.coderbot.iris.mixin.RenderLayersAccessor;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +27,7 @@ public class PropertiesParser {
      */
     private Map<Identifier, Integer> itemPropertiesMap = Maps.newHashMap();
     /**
-     * a mop that contains render layers for blocks in block.properties
+     * a map that contains render layers for blocks in block.properties
      */
     private Map<Identifier, RenderLayer> blockRenderLayerMap = Maps.newHashMap();
 
@@ -43,7 +41,6 @@ public class PropertiesParser {
         parseBlockProperties();
         parseItemProperties();
         parseEntityProperties();
-        this.blockRenderLayerMap.forEach(((identifier, layer) -> RenderLayersAccessor.getBlockRenderLayers().put(Registry.BLOCK.get(identifier), layer)));
     }
 
     /**
