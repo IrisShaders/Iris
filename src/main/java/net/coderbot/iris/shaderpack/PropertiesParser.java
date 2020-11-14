@@ -1,8 +1,10 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.Maps;
+import net.coderbot.iris.mixin.RenderLayersAccessor;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,12 +28,40 @@ public class PropertiesParser {
      * a map that contains the identifier of an item to the integer value parsed in item.properties
      */
     private Map<Identifier, Integer> itemPropertiesMap = Maps.newHashMap();
+    /**
+     * a mop that contains render layers for blocks in block.properties
+     */
     private Map<Identifier, RenderLayer> blockRenderLayerMap = Maps.newHashMap();
 
-    public PropertiesParser(ShaderPack pack){
+    /**
+     * A map that contains the entity ids of an entity to the int value
+     */
+    private Map<Identifier, Integer> entityPropertiesMap = Maps.newHashMap();
+
+    PropertiesParser(ShaderPack pack){
         this.shaderPath = pack.getPath();
         parseBlockProperties();
         parseItemProperties();
+        parseEntityProperties();
+        this.blockRenderLayerMap.forEach(((identifier, layer) -> RenderLayersAccessor.getBlockRenderLayers().put(Registry.BLOCK.get(identifier), layer)));
+    }
+
+    /**
+     * Parses entries from entity.properties into the entityProperties map
+     */
+    private void parseEntityProperties(){
+        Properties properties = new Properties();
+        try {
+            properties.load(Files.newInputStream(shaderPath.resolve("entity.properties")));
+        } catch (IOException e) {
+            System.out.println("A entity.properties was not found in the current shaderpack");
+            return;
+        }
+        properties.forEach((key, value) -> {
+            final int keyValue = Integer.parseInt(key.toString().substring(key.toString().indexOf(".")));
+            ArrayList<Identifier> entityIds = parsePropertiesIntoIdentifiers(value.toString());
+            entityIds.forEach(identifier -> entityPropertiesMap.put(identifier, keyValue));
+        });
     }
 
     /**
@@ -133,13 +163,20 @@ public class PropertiesParser {
             identifiers.forEach(identifier -> itemPropertiesMap.put(identifier, keyValue));
         });
     }
+
     public Map<Identifier, Integer> getBlockProperties(){
         return blockPropertiesMap;
     }
+
     public Map<Identifier, Integer> getItemProperties(){
         return itemPropertiesMap;
     }
+
     public Map<Identifier, RenderLayer> getBlockRenderLayers(){
         return blockRenderLayerMap;
+    }
+
+    public Map<Identifier, Integer> getEntityPropertiesMap() {
+        return entityPropertiesMap;
     }
 }
