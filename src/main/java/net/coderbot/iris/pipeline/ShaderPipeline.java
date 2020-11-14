@@ -11,7 +11,6 @@ import org.lwjgl.opengl.GL20;
 import java.io.IOException;
 import java.util.Objects;
 
-;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -176,7 +175,7 @@ public class ShaderPipeline {
 		if (texturedLit == null) {
 			return;
 		}
-			texturedLit.use();
+		texturedLit.use();
 
 	}
 
@@ -185,7 +184,7 @@ public class ShaderPipeline {
 			// don't mess with non-world rendering
 			return;
 		}
-			GlProgramManager.useProgram(0);
+		GlProgramManager.useProgram(0);
 	}
 
 	// TODO: better way to avoid this global state?
