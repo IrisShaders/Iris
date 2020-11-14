@@ -14,10 +14,12 @@ public class MixinImmediateVertexConsumerProvider {
 	@Inject(method = "draw(Lnet/minecraft/client/render/RenderLayer;)V", at = @At("HEAD"))
 	private void iris$beginDraw(RenderLayer layer, CallbackInfo callback) {
 		Iris.getPipeline().beginImmediateDrawing();
+		if (layer.isOutline() || layer == RenderLayer.getLines()) Iris.getPipeline().beginBasic();
 	}
 
 	@Inject(method = "draw(Lnet/minecraft/client/render/RenderLayer;)V", at = @At("RETURN"))
 	private void iris$endDraw(RenderLayer layer, CallbackInfo callback) {
 		Iris.getPipeline().endImmediateDrawing();
+		if (layer.isOutline() || layer == RenderLayer.getLines()) Iris.getPipeline().endBasic();
 	}
 }
