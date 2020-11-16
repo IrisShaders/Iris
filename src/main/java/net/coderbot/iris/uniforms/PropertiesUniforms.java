@@ -45,6 +45,11 @@ public final class PropertiesUniforms {
         return () -> -1;
     }
 
+    /**
+     * returns the block entity id of the block entity that is currently being rendererd
+     * based on values from block.properties.
+     * @return the blockentity id
+     */
     private static int getBlockEntityId(){
         BlockEntity currentEntity = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
         if (currentEntity != null){
@@ -57,6 +62,11 @@ public final class PropertiesUniforms {
         }
         return -1;
     }
+
+    /**
+     * returns the entity id based on the parsed entity id from entity.properties
+     * @return the id the entity. Defaults to -1 if not specified
+     */
     private static int getEntityId(){
         Entity entity = CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();
         if (entity != null){
