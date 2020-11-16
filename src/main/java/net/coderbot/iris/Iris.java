@@ -8,6 +8,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
@@ -18,7 +19,7 @@ public class Iris implements ClientModInitializer {
 	public void onInitializeClient() {
 		irisConfig = new IrisConfig();
 		try {
-			irisConfig.setDefaultPack("internal").createAndLoadProperties();
+			irisConfig.createAndLoadProperties();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -33,12 +34,13 @@ public class Iris implements ClientModInitializer {
 
 	public static ShaderPipeline getPipeline() {
 		if (pipeline == null) {
-			pipeline = new ShaderPipeline(currentPack);
+			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack));
 		}
 
 		return pipeline;
 	}
-	public static IrisConfig getIrisConfig(){
+
+	public static IrisConfig getIrisConfig() {
 		return irisConfig;
 	}
 }

@@ -15,20 +15,14 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
 	private final Path shaderPackPath;
-	private final PropertiesParser propertiesParser;
 
 	public ShaderPack(Path root) throws IOException {
+		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured");
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic");
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured");
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds");
-		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
 		this.shaderPackPath = root;
-		this.propertiesParser = new PropertiesParser(this);
-	}
-
-	public PropertiesParser getPropertiesParser() {
-		return propertiesParser;
 	}
 
 	public Optional<ProgramSource> getGbuffersBasic() {
@@ -51,7 +45,7 @@ public class ShaderPack {
 		return gbuffersClouds.requireValid();
 	}
 
-	public Path getPath(){
+	public Path getPath() {
 		return shaderPackPath;
 	}
 
