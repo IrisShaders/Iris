@@ -14,7 +14,6 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
-	private final Path shaderPackPath;
 
 	public ShaderPack(Path root) throws IOException {
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
@@ -22,7 +21,6 @@ public class ShaderPack {
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic");
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured");
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds");
-		this.shaderPackPath = root;
 	}
 
 	public Optional<ProgramSource> getGbuffersBasic() {
@@ -45,9 +43,6 @@ public class ShaderPack {
 		return gbuffersClouds.requireValid();
 	}
 
-	public Path getPath() {
-		return shaderPackPath;
-	}
 
 	private static ProgramSource readProgramSource(Path root, String program) throws IOException {
 		String vertexSource = null;
