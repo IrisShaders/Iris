@@ -43,6 +43,7 @@ public class ShaderPack {
 		return gbuffersClouds.requireValid();
 	}
 
+
 	private static ProgramSource readProgramSource(Path root, String program) throws IOException {
 		String vertexSource = null;
 		String fragmentSource = null;

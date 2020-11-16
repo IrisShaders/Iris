@@ -167,7 +167,7 @@ public class ShaderPipeline {
 		GlProgramManager.useProgram(0);
 	}
 
-	public void beginImmediateDrawing() {
+	public void beginImmediateDrawing(RenderLayer layer) {
 		if (!isRenderingWorld) {
 			// don't mess with non-world rendering
 			return;
@@ -178,6 +178,9 @@ public class ShaderPipeline {
 		}
 
 		texturedLit.use();
+		if ((layer.isOutline() || layer == RenderLayer.getLines()) && basic != null){
+			basic.use();
+		}
 	}
 
 	public void endImmediateDrawing() {

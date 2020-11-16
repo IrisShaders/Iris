@@ -13,7 +13,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 public class MixinImmediateVertexConsumerProvider {
 	@Inject(method = "draw(Lnet/minecraft/client/render/RenderLayer;)V", at = @At("HEAD"))
 	private void iris$beginDraw(RenderLayer layer, CallbackInfo callback) {
-		Iris.getPipeline().beginImmediateDrawing();
+		Iris.getPipeline().beginImmediateDrawing(layer);
 	}
 
 	@Inject(method = "draw(Lnet/minecraft/client/render/RenderLayer;)V", at = @At("RETURN"))
