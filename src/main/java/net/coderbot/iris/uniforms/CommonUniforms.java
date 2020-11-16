@@ -1,8 +1,5 @@
 package net.coderbot.iris.uniforms;
 
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
-
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.MinecraftClient;
@@ -14,6 +11,9 @@ import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.Objects;
+
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -27,6 +27,7 @@ public final class CommonUniforms {
 		WorldTimeUniforms.addWorldTimeUniforms(builder);
 		SystemTimeUniforms.addSystemTimeUniforms(builder);
 		CelestialUniforms.addCelestialUniforms(builder);
+		PropertiesUniforms.addPropertiesUniforms(builder);
 
 		builder
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
