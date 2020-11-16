@@ -92,7 +92,7 @@ public class IdMapParser {
      * @param key the key of the property
      * @return the renderlayer parsed from it
      */
-    private RenderLayer parseRenderLayerFromKey(String key){
+    private RenderLayer parseRenderLayerFromKey(String key) {
         RenderLayer layer = null;
         String layerAsString = key.substring(key.indexOf(".") + 1);
         switch (layerAsString){
@@ -110,7 +110,7 @@ public class IdMapParser {
      * @param value the property full value
      * @return the identifiers that have been parsed
      */
-    private ArrayList<Identifier> parsePropertiesIntoIdentifiers(String value){
+    private ArrayList<Identifier> parsePropertiesIntoIdentifiers(String value) {
         if (value.contains(" ")){
             ArrayList<String> fullNames = new ArrayList<>();
             ArrayList<Identifier> identifiers = new ArrayList<>();
@@ -161,15 +161,15 @@ public class IdMapParser {
         });
     }
 
-    public Map<Identifier, Integer> getBlockProperties(){
+    public Map<Identifier, Integer> getBlockProperties() {
         return blockPropertiesMap;
     }
 
-    public Map<Identifier, Integer> getItemProperties(){
+    public Map<Identifier, Integer> getItemProperties() {
         return itemPropertiesMap;
     }
 
-    public Map<Identifier, RenderLayer> getBlockRenderLayers(){
+    public Map<Identifier, RenderLayer> getBlockRenderLayers() {
         return blockRenderLayerMap;
     }
 

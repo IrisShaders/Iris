@@ -20,7 +20,7 @@ public final class PropertiesUniforms {
 
     private PropertiesUniforms(){}
 
-    public static void addPropertiesUniforms(ProgramBuilder builder){
+    public static void addPropertiesUniforms(ProgramBuilder builder) {
         builder
            .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId", getHeldItemId(Hand.MAIN_HAND))
            .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2", getHeldItemId(Hand.OFF_HAND))
@@ -34,7 +34,7 @@ public final class PropertiesUniforms {
      * @param hand offhand or main hand (used to not duplicate code)
      * @return int supplier of the id of the item
      */
-    private static IntSupplier getHeldItemId(Hand hand){
+    private static IntSupplier getHeldItemId(Hand hand) {
         if (MinecraftClient.getInstance().player != null) {
             Identifier currentStack = Registry.ITEM.getId(MinecraftClient.getInstance().player.getStackInHand(hand).getItem());
             IdMapParser parser = Iris.getPipeline().getPack().getIdMapParser();
@@ -50,7 +50,7 @@ public final class PropertiesUniforms {
      * based on values from block.properties.
      * @return the blockentity id
      */
-    private static int getBlockEntityId(){
+    private static int getBlockEntityId() {
         BlockEntity currentEntity = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
         if (currentEntity != null){
             Block block = MinecraftClient.getInstance().world.getBlockState(currentEntity.getPos()).getBlock();
@@ -67,7 +67,7 @@ public final class PropertiesUniforms {
      * returns the entity id based on the parsed entity id from entity.properties
      * @return the id the entity. Defaults to -1 if not specified
      */
-    private static int getEntityId(){
+    private static int getEntityId() {
         Entity entity = CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();
         if (entity != null){
             Map<Identifier, Integer> entityMap = Iris.getPipeline().getPack().getIdMapParser().getEntityPropertiesMap();
