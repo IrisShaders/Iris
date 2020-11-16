@@ -1,6 +1,9 @@
 package net.coderbot.iris.config;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.coderbot.iris.Iris;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +15,7 @@ import java.util.Properties;
  * A class dedicated to storing the config values of shaderpacks. Right now it only stores the path to the current shaderpack
  */
 public class IrisConfig {
+    private final Iris mod;
     private Path shaderpath;
     private Path propertiesPath;
     /**
@@ -19,7 +23,8 @@ public class IrisConfig {
      */
     private boolean isInternal = false;
 
-    public IrisConfig() {
+    public IrisConfig(@NotNull Iris mod) {
+        this.mod = mod;
         propertiesPath = FabricLoader.getInstance().getConfigDir().resolve("iris.properties");
         try {
             Files.createDirectories(FabricLoader.getInstance().getGameDir().resolve("shaderpacks"));
@@ -98,8 +103,8 @@ public class IrisConfig {
         Properties properties = new Properties();
         if (!Files.exists(shaderpath)){
             if (!shaderpath.endsWith("internal")) {
-                System.err.println(String.format("The specified shaderpack \"%s\" was not found! Change the value in iris.properties in your config directory! The system path should be \"%s\"", shaderpath.getFileName(), shaderpath));
-                System.out.println("falling back to internal shaders...");
+                this.mod.error(String.format("The specified shaderpack \"%s\" was not found! Change the value in iris.properties in your config directory! The system path should be \"%s\"", shaderpath.getFileName(), shaderpath));
+                this.mod.error("falling back to internal shaders...");
             }
             shaderpath = FabricLoader.getInstance().getModContainer("iris")
                     .orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();

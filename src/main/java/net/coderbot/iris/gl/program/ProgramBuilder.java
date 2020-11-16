@@ -1,5 +1,7 @@
 package net.coderbot.iris.gl.program;
 
+import net.coderbot.iris.Iris;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +24,7 @@ import net.minecraft.client.gl.GlShader;
 
 public class ProgramBuilder implements UniformHolder {
 	private final String name;
+	private final Iris mod = new Iris();
 	private final GlProgram program;
 	private final List<Uniform> once;
 	private final List<Uniform> perTick;
@@ -127,7 +130,7 @@ public class ProgramBuilder implements UniformHolder {
 		}
 
 		// TODO: Make these debug messages less spammy, or toggleable
-		System.out.println("[" + this.name + "] Activating uniform: " + name);
+		this.mod.info("[" + this.name + "] Activating uniform: " + name);
 		return OptionalInt.of(id);
 	}
 

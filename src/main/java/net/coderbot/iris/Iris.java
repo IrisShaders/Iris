@@ -6,28 +6,33 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Objects;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
+	public static final String MODID = "iris";
+	public final Logger logger = LogManager.getLogger(MODID);
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
 	private static IrisConfig irisConfig;
 	@Override
 	public void onInitializeClient() {
-		irisConfig = new IrisConfig();
+		irisConfig = new IrisConfig(this);
 		try {
 			irisConfig.createAndLoadProperties();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Using shaderpack " + irisConfig.getShaderPackName());
+		info("Using shaderpack " + irisConfig.getShaderPackName());
 		try {
 			//optifine shaderpacks have all files in the shaders dir while internal iris shaders do not.
 			currentPack = new ShaderPack(irisConfig.isInternal() ? irisConfig.getShaderPackPath() : irisConfig.getShaderPackPath().resolve("shaders"));
 		} catch (IOException e) {
+			error(String.format("Failed to load shaderpack \"%s\"!", irisConfig.getShaderPackName()) + e);
 			throw new RuntimeException(String.format("Failed to load shaderpack \"%s\"!", irisConfig.getShaderPackName()), e);
 		}
 	}
@@ -42,5 +47,12 @@ public class Iris implements ClientModInitializer {
 
 	public static IrisConfig getIrisConfig() {
 		return irisConfig;
+	}
+
+	public void info(String info) {
+		this.logger.info("[Iris] " + "info: " + info);
+	}
+	public void error(String error) {
+		this.logger.error("[Iris]" + "error: " + error);
 	}
 }
