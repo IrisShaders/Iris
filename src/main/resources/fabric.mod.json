@@ -8,6 +8,11 @@
   "authors": [
 	"coderbot"
   ],
+  "contact": {
+    	"homepage": "https://github.com/IrisShaders/Iris",
+    	"sources": "https://github.com/IrisShaders/Iris.git",
+    	"issues": "https://github.com/IrisShaders/Iris/issues"
+  },
 
   "license": "LGPL-3.0-only",
   "icon": "assets/iris/iris-logo.png",
