@@ -24,7 +24,6 @@ import net.minecraft.client.gl.GlShader;
 
 public class ProgramBuilder implements UniformHolder {
 	private final String name;
-	private final Iris mod = new Iris();
 	private final GlProgram program;
 	private final List<Uniform> once;
 	private final List<Uniform> perTick;
@@ -130,7 +129,7 @@ public class ProgramBuilder implements UniformHolder {
 		}
 
 		// TODO: Make these debug messages less spammy, or toggleable
-		this.mod.info("[" + this.name + "] Activating uniform: " + name);
+		Iris.info("[" + this.name + "] Activating uniform: " + name);
 		return OptionalInt.of(id);
 	}
 

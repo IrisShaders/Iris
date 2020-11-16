@@ -15,13 +15,13 @@ import java.util.Objects;
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
-	public final Logger logger = LogManager.getLogger(MODID);
+	public static final Logger logger = LogManager.getLogger(MODID);
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
 	private static IrisConfig irisConfig;
 	@Override
 	public void onInitializeClient() {
-		irisConfig = new IrisConfig(this);
+		irisConfig = new IrisConfig();
 		try {
 			irisConfig.createAndLoadProperties();
 		} catch (IOException e) {
@@ -49,10 +49,10 @@ public class Iris implements ClientModInitializer {
 		return irisConfig;
 	}
 
-	public void info(String info) {
-		this.logger.info("[Iris] " + "info: " + info);
+	public static void info(String info) {
+		logger.info("[Iris] " + "info: " + info);
 	}
-	public void error(String error) {
-		this.logger.error("[Iris]" + "error: " + error);
+	public static void error(String error) {
+		logger.error("[Iris]" + "error: " + error);
 	}
 }
