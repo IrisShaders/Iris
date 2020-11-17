@@ -129,7 +129,7 @@ public class ProgramBuilder implements UniformHolder {
 		}
 
 		// TODO: Make these debug messages less spammy, or toggleable
-		Iris.info("[" + this.name + "] Activating uniform: " + name);
+		Iris.logger.info("[" + this.name + "] Activating uniform: " + name);
 		return OptionalInt.of(id);
 	}
 

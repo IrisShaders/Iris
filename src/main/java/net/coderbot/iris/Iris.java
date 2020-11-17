@@ -27,12 +27,12 @@ public class Iris implements ClientModInitializer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		info("Using shaderpack " + irisConfig.getShaderPackName());
+		logger.info("Using shaderpack " + irisConfig.getShaderPackName());
 		try {
 			//optifine shaderpacks have all files in the shaders dir while internal iris shaders do not.
 			currentPack = new ShaderPack(irisConfig.isInternal() ? irisConfig.getShaderPackPath() : irisConfig.getShaderPackPath().resolve("shaders"));
 		} catch (IOException e) {
-			error(String.format("Failed to load shaderpack \"%s\"!", irisConfig.getShaderPackName()) + e);
+			logger.error(String.format("Failed to load shaderpack \"%s\"!", irisConfig.getShaderPackName()) + e);
 			throw new RuntimeException(String.format("Failed to load shaderpack \"%s\"!", irisConfig.getShaderPackName()), e);
 		}
 	}
@@ -47,12 +47,5 @@ public class Iris implements ClientModInitializer {
 
 	public static IrisConfig getIrisConfig() {
 		return irisConfig;
-	}
-
-	public static void info(String info) {
-		logger.info("[Iris] " + "info: " + info);
-	}
-	public static void error(String error) {
-		logger.error("[Iris]" + "error: " + error);
 	}
 }
