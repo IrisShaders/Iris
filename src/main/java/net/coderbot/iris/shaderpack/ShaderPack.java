@@ -14,7 +14,7 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
-    private final IdMapParser idMapParser;
+	private final IdMapParser idMapParser;
 
 	public ShaderPack(Path root) throws IOException {
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
@@ -25,11 +25,11 @@ public class ShaderPack {
 		this.idMapParser = new IdMapParser(root);
 	}
 
-    public IdMapParser getIdMapParser() {
-        return idMapParser;
-    }
+	public IdMapParser getIdMapParser() {
+		return idMapParser;
+	}
 
-    public Optional<ProgramSource> getGbuffersBasic() {
+	public Optional<ProgramSource> getGbuffersBasic() {
 		return gbuffersBasic.requireValid();
 	}
 

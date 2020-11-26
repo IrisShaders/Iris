@@ -54,8 +54,8 @@ public class ShaderPipeline {
 	}
 
 	public ShaderPack getPack() {
-        return pack;
-    }
+		return pack;
+	}
 
 	private static Program createProgram(ShaderPack.ProgramSource source) {
 		// TODO: Properly handle empty shaders
