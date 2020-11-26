@@ -1,5 +1,7 @@
 package net.coderbot.iris.gl.program;
 
+import net.coderbot.iris.Iris;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -127,7 +129,7 @@ public class ProgramBuilder implements UniformHolder {
 		}
 
 		// TODO: Make these debug messages less spammy, or toggleable
-		System.out.println("[" + this.name + "] Activating uniform: " + name);
+		Iris.logger.info("[" + this.name + "] Activating uniform: " + name);
 		return OptionalInt.of(id);
 	}
 
