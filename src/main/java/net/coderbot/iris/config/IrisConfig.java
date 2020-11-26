@@ -50,14 +50,6 @@ public class IrisConfig {
     }
 
     /**
-     * The path of the config file
-     * @return the path to config file
-     */
-    public Path getPropertiesPath(){
-        return propertiesPath;
-    }
-
-    /**
      * returns whether or not the current shaderpack is internal
      * @return if the shaderpack is internal
      */
