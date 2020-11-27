@@ -17,13 +17,30 @@ import net.minecraft.util.math.Matrix4f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
+/**
+ * An attempt to fix entity vertex normals so that they are more similar to how they were in 1.14
+ *
+ * In 1.14 and below, entities and blockentities were both rendered with a single draw call per individual entity, which
+ * isn't particularly efficient. So in 1.15 and 1.16, Mojang made it so that many entities could be drawn in only a few
+ * draw calls with their new rendering refactors.
+ *
+ * The problem? There's a few assumptions in ShadersMod/Optifine related to the fact that entities are drawn in a single
+ * draw call, and this is one of them. As it happens, the various transformations and translations that were previously
+ * stored in the OpenGL matrix stack (gl_ModelViewMatrix) are now baked directly into the vertex data.
+ *
+ * The result of multiplying a vertex position with gl_ModelViewMatrix or a vertex normal with gl_NormalMatrix will be
+ * the same between 1.14 and below and 1.15 and above. What is different is the content of gl_ModelViewMatrix,
+ * gl_NormalMatrix, as well as raw vertex normals and positions.
+ *
+ * This mixin has been disabled for now, since the behavior without it matches OptiFine's current behavior on 1.16.3. It
+ * has been preserved for now in case it ends up being necessary again at some point in the future.
+ */
 @Environment(EnvType.CLIENT)
 @Mixin(WorldRenderer.class)
-public class MixinWorldRenderer {
+public class MixinFixEntityVertexNormals {
 	private static final String RENDER = "render(Lnet/minecraft/client/util/math/MatrixStack;FJZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lnet/minecraft/client/render/LightmapTextureManager;Lnet/minecraft/util/math/Matrix4f;)V";
 	private static final String CHECK_EMPTY = "net/minecraft/client/render/WorldRenderer.checkEmpty(Lnet/minecraft/client/util/math/MatrixStack;)V";
 	private static final String PROFILER_SWAP = "net/minecraft/util/profiler/Profiler.swap(Ljava/lang/String;)V";
-	private static final String RENDER_LAYER = "Lnet/minecraft/client/render/WorldRenderer;renderLayer(Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/util/math/MatrixStack;DDD)V";
 	private static final String PUSH_MATRIX = "Lcom/mojang/blaze3d/systems/RenderSystem;pushMatrix()V";
 
 	@Inject(method = RENDER, at = {
