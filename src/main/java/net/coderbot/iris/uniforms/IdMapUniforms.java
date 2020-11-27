@@ -24,13 +24,13 @@ public final class IdMapUniforms {
 
 	public static void addIdMapUniforms(ProgramBuilder builder, IdMap idMap) {
 		Map<Identifier, Integer> blockIdMap = idMap.getBlockProperties();
-		Map<Identifier, Integer> entityIdMap = idMap.getEntityPropertiesMap();
+		Map<Identifier, Integer> entityIdMap = idMap.getEntityIdMap();
 
 		builder
 		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
-				   new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemProperties()))
+				   new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemIdMap()))
 		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",
-				   new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemProperties()))
+				   new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemIdMap()))
 		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "blockEntityId", () -> getBlockEntityId(blockIdMap))
 		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "entityId", () -> getEntityId(entityIdMap));
 
