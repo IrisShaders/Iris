@@ -1,5 +1,7 @@
 package net.coderbot.iris.uniforms;
 
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Matrix4f;
 
 public class CapturedRenderingState {
@@ -8,6 +10,8 @@ public class CapturedRenderingState {
 	private Matrix4f gbufferModelView;
 	private Matrix4f gbufferProjection;
 	private float tickDelta;
+	private BlockEntity currentRenderedBlockEntity;
+	private Entity currentRenderedEntity;
 
 	private CapturedRenderingState() {
 	}
@@ -34,5 +38,21 @@ public class CapturedRenderingState {
 
 	public float getTickDelta() {
 		return tickDelta;
+	}
+
+	public void setCurrentBlockEntity(BlockEntity entity){
+		this.currentRenderedBlockEntity = entity;
+	}
+
+	public BlockEntity getCurrentRenderedBlockEntity(){
+		return currentRenderedBlockEntity;
+	}
+
+	public void setCurrentEntity(Entity entity){
+		this.currentRenderedEntity = entity;
+	}
+
+	public Entity getCurrentRenderedEntity(){
+		return currentRenderedEntity;
 	}
 }

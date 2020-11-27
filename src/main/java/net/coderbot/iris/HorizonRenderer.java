@@ -79,9 +79,9 @@ public class HorizonRenderer {
 
 	/**
 	 * @param adjacent the adjacent side length of the a triangle with a hypotenuse extending from the center of the
-	 *                 octagon to a given vertex on the perimeter.
+	 *				 octagon to a given vertex on the perimeter.
 	 * @param opposite the opposite side length of the a triangle with a hypotenuse extending from the center of the
-	 * 	 *             octagon to a given vertex on the perimeter.
+	 * 	 *			 octagon to a given vertex on the perimeter.
 	 */
 	private void buildOctagonalPrism(VertexConsumer consumer, double adjacent, double opposite) {
 		buildHalf(consumer, adjacent, opposite, false);

@@ -1,25 +1,31 @@
 
 package net.coderbot.iris.mixin;
 
+import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.render.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 @Mixin(WorldRenderer.class)
 @Environment(EnvType.CLIENT)
@@ -112,4 +118,15 @@ public class MixinWorldRenderer {
 	private void iris$endWorldBorder(Camera camera, CallbackInfo callback) {
 		Iris.getPipeline().endWorldBorder();
 	}
+
+	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
+	/*@Inject(method = "renderEntity", at = @At("HEAD"))
+	private void iris$beginEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
+		CapturedRenderingState.INSTANCE.setCurrentEntity(entity);
+	}
+
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;getPos()Lnet/minecraft/util/math/BlockPos;", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void iris$getCurrentBlockEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f, Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3, VertexConsumerProvider.Immediate immediate, Set var39, Iterator var40, BlockEntity blockEntity2){
+		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(blockEntity2);
+	}*/
 }

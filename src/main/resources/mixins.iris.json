@@ -5,8 +5,8 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
 	"MixinGameRenderer",
-	"MixinWorldRenderer",
 	"MixinImmediateVertexConsumerProvider",
+	"MixinWorldRenderer",
 	"texunits.MixinBufferVertexConsumer",
 	"texunits.MixinGlStateManager",
 	"texunits.MixinLightmapTextureManager",
