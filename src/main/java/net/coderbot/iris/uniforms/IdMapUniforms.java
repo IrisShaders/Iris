@@ -17,11 +17,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
-public final class PropertiesUniforms {
+public final class IdMapUniforms {
 
-	private PropertiesUniforms(){}
+	private IdMapUniforms() {
+	}
 
-	public static void addPropertiesUniforms(ProgramBuilder builder, IdMapParser idMap) {
+	public static void addIdMapUniforms(ProgramBuilder builder, IdMapParser idMap) {
 		Map<Identifier, Integer> blockIdMap = idMap.getBlockProperties();
 		Map<Identifier, Integer> entityIdMap = idMap.getEntityPropertiesMap();
 

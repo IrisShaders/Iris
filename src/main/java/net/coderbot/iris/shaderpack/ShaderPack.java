@@ -17,11 +17,11 @@ public class ShaderPack {
 	private final IdMapParser idMapParser;
 
 	public ShaderPack(Path root) throws IOException {
-		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic");
-		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured");
-		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic");
-		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured");
-		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds");
+		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
+		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
+		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
+		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
+		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
 		this.idMapParser = new IdMapParser(root);
 	}
 
@@ -50,7 +50,7 @@ public class ShaderPack {
 	}
 
 
-	private static ProgramSource readProgramSource(Path root, String program) throws IOException {
+	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
 		String vertexSource = null;
 		String fragmentSource = null;
 
@@ -68,7 +68,7 @@ public class ShaderPack {
 			throw e;
 		}
 
-		return new ProgramSource(program, vertexSource, fragmentSource);
+		return new ProgramSource(program, vertexSource, fragmentSource, pack);
 	}
 
 	private static String readFile(Path path) throws IOException {
@@ -83,11 +83,13 @@ public class ShaderPack {
 		private final String name;
 		private final String vertexSource;
 		private final String fragmentSource;
+		private final ShaderPack parent;
 
-		public ProgramSource(String name, String vertexSource, String fragmentSource) {
+		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
 			this.name = name;
 			this.vertexSource = vertexSource;
 			this.fragmentSource = fragmentSource;
+			this.parent = parent;
 		}
 
 		public String getName() {
@@ -101,7 +103,11 @@ public class ShaderPack {
 		public Optional<String> getFragmentSource() {
 			return Optional.ofNullable(fragmentSource);
 		}
-		
+
+		public ShaderPack getParent() {
+			return parent;
+		}
+
 		public boolean isValid() {
 			return vertexSource != null && fragmentSource != null;
 		}

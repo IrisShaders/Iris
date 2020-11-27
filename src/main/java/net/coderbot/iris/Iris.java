@@ -19,6 +19,7 @@ public class Iris implements ClientModInitializer {
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
 	private static IrisConfig irisConfig;
+
 	@Override
 	public void onInitializeClient() {
 		irisConfig = new IrisConfig();

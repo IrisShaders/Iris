@@ -28,7 +28,7 @@ public final class CommonUniforms {
 		WorldTimeUniforms.addWorldTimeUniforms(builder);
 		SystemTimeUniforms.addSystemTimeUniforms(builder);
 		CelestialUniforms.addCelestialUniforms(builder);
-		PropertiesUniforms.addPropertiesUniforms(builder, idMap);
+		IdMapUniforms.addIdMapUniforms(builder, idMap);
 
 		builder
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)

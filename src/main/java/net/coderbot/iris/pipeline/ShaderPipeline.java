@@ -36,8 +36,6 @@ public class ShaderPipeline {
 	@Nullable
 	private final Program weather;
 
-	private final ShaderPack pack;
-
 	public ShaderPipeline(ShaderPack pack) {
 		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createProgram).orElse(null);
 		this.textured = pack.getGbuffersTextured().map(ShaderPipeline::createProgram).orElse(basic);
@@ -50,11 +48,6 @@ public class ShaderPipeline {
 		this.terrain = texturedLit;
 		this.translucent = terrain;
 		this.weather = texturedLit;
-		this.pack = pack;
-	}
-
-	public ShaderPack getPack() {
-		return pack;
 	}
 
 	private static Program createProgram(ShaderPack.ProgramSource source) {
@@ -71,7 +64,7 @@ public class ShaderPipeline {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder);
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMapParser());
 
 		return builder.build();
 	}
