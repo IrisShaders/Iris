@@ -1,6 +1,7 @@
 package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.shaderpack.IdMapParser;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -22,12 +23,12 @@ public final class CommonUniforms {
 		// no construction allowed
 	}
 
-	public static void addCommonUniforms(ProgramBuilder builder) {
+	public static void addCommonUniforms(ProgramBuilder builder, IdMapParser idMap) {
 		ViewportUniforms.addViewportUniforms(builder);
 		WorldTimeUniforms.addWorldTimeUniforms(builder);
 		SystemTimeUniforms.addSystemTimeUniforms(builder);
 		CelestialUniforms.addCelestialUniforms(builder);
-		PropertiesUniforms.addPropertiesUniforms(builder);
+		PropertiesUniforms.addPropertiesUniforms(builder, idMap);
 
 		builder
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)

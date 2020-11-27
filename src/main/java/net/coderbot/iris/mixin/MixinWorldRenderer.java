@@ -119,14 +119,14 @@ public class MixinWorldRenderer {
 		Iris.getPipeline().endWorldBorder();
 	}
 
-	@Inject(method = "renderEntity", at = @At("HEAD"))
-	private void iris$getCurrentEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci){
+	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
+	/*@Inject(method = "renderEntity", at = @At("HEAD"))
+	private void iris$beginEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentEntity(entity);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;getPos()Lnet/minecraft/util/math/BlockPos;", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void iris$getCurrentBlockEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f, Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3, VertexConsumerProvider.Immediate immediate, Set var39, Iterator var40, BlockEntity blockEntity2){
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(blockEntity2);
-	}
-
+	}*/
 }

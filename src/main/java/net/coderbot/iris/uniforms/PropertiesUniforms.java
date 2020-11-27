@@ -9,6 +9,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -20,29 +21,42 @@ public final class PropertiesUniforms {
 
 	private PropertiesUniforms(){}
 
-	public static void addPropertiesUniforms(ProgramBuilder builder) {
+	public static void addPropertiesUniforms(ProgramBuilder builder, IdMapParser idMap) {
 		builder
-		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId", getHeldItemId(Hand.MAIN_HAND))
-		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2", getHeldItemId(Hand.OFF_HAND))
+		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
+				   new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemProperties()))
+		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",
+				   new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemProperties()))
 		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "blockEntityId", PropertiesUniforms::getBlockEntityId)
 		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "entityId", PropertiesUniforms::getEntityId);
 
 	}
 
 	/**
-	 * A method that returns the heldItemId of the item the player is currently holding
-	 * @param hand offhand or main hand (used to not duplicate code)
-	 * @return int supplier of the id of the item
+	 * Provides the currently held item in the given hand as a uniform. Uses the item.properties ID map to map the item
+	 * to an integer.
 	 */
-	private static IntSupplier getHeldItemId(Hand hand) {
-		if (MinecraftClient.getInstance().player != null) {
-			Identifier currentStack = Registry.ITEM.getId(MinecraftClient.getInstance().player.getStackInHand(hand).getItem());
-			IdMapParser parser = Iris.getPipeline().getPack().getIdMapParser();
-			if (parser.getItemProperties().containsKey(currentStack)) {
-				return () -> parser.getItemProperties().get(currentStack);
-			}
+	private static class HeldItemSupplier implements IntSupplier {
+		private final Hand hand;
+		private final Map<Identifier, Integer> itemIdMap;
+
+		HeldItemSupplier(Hand hand, Map<Identifier, Integer> itemIdMap) {
+			this.hand = hand;
+			this.itemIdMap = itemIdMap;
 		}
-		return () -> -1;
+
+		@Override
+		public int getAsInt() {
+			if (MinecraftClient.getInstance().player == null) {
+				// Not valid when the player doesn't exist
+				return -1;
+			}
+
+			ItemStack heldStack = MinecraftClient.getInstance().player.getStackInHand(hand);
+			Identifier heldItemId = Registry.ITEM.getId(heldStack.getItem());
+
+			return itemIdMap.getOrDefault(heldItemId, -1);
+		}
 	}
 
 	/**
@@ -53,6 +67,7 @@ public final class PropertiesUniforms {
 	private static int getBlockEntityId() {
 		BlockEntity currentEntity = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
 		if (currentEntity != null){
+
 			Block block = MinecraftClient.getInstance().world.getBlockState(currentEntity.getPos()).getBlock();
 			boolean hasBlock = currentEntity.getType().supports(block) && currentEntity.hasWorld() && BlockEntityRenderDispatcher.INSTANCE.get(currentEntity) != null;
 			boolean isBlockParsed = Iris.getPipeline().getPack().getIdMapParser().getBlockProperties().containsKey(Registry.BLOCK.getId(block));
