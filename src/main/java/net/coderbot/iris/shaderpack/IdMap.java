@@ -13,7 +13,7 @@ import java.util.*;
  * A utility class for parsing entries in item.properties and block.properties files in shaderpacks
  * This is not being used right now. Probably will delete it or reformat to be more efficient
  */
-public class IdMapParser {
+public class IdMap {
 
 	private Path shaderPath;
 	/**
@@ -34,7 +34,7 @@ public class IdMapParser {
 	 */
 	private Map<Identifier, Integer> entityPropertiesMap = Maps.newHashMap();
 
-	IdMapParser(Path shaderPath){
+	IdMap(Path shaderPath){
 		this.shaderPath = shaderPath;
 		parseBlockProperties();
 		parseItemProperties();

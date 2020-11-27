@@ -2,7 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.shaderpack.IdMapParser;
+import net.coderbot.iris.shaderpack.IdMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
@@ -22,7 +22,7 @@ public final class IdMapUniforms {
 	private IdMapUniforms() {
 	}
 
-	public static void addIdMapUniforms(ProgramBuilder builder, IdMapParser idMap) {
+	public static void addIdMapUniforms(ProgramBuilder builder, IdMap idMap) {
 		Map<Identifier, Integer> blockIdMap = idMap.getBlockProperties();
 		Map<Identifier, Integer> entityIdMap = idMap.getEntityPropertiesMap();
 

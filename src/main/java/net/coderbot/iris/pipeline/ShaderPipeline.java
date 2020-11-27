@@ -64,7 +64,7 @@ public class ShaderPipeline {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMapParser());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 
 		return builder.build();
 	}
