@@ -22,6 +22,7 @@ public class ShaderPreprocessor {
 	private static List<String> processInternal(Path shaderPath, String source) throws IOException {
 		List<String> lines = new ArrayList<>();
 
+		// Match any valid newline sequence
 		// https://stackoverflow.com/a/31060125
 		for (String line: source.split("\\R")) {
 			if (line.startsWith("#include ")) {
@@ -44,6 +45,8 @@ public class ShaderPreprocessor {
 		// Remove the "#include " part so that we just have the file path
 		String target = directive.substring("#include ".length()).trim();
 
+		// Remove quotes if they're present
+		// All include directives should have quotes, but I
 		if (target.startsWith("\"")) {
 			target = target.substring(1);
 		}
