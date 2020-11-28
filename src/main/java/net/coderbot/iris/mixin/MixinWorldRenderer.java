@@ -4,6 +4,7 @@ package net.coderbot.iris.mixin;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.render.*;
@@ -45,6 +46,7 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At("RETURN"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		Iris.getPipeline().endWorldRender();
+		new CompositeRenderer().render();
 	}
 
 	// TODO: end sky
