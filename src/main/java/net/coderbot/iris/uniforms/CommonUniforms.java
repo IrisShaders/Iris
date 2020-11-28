@@ -24,6 +24,7 @@ public final class CommonUniforms {
 	}
 
 	public static void addCommonUniforms(ProgramBuilder builder, IdMap idMap) {
+		CameraUniforms.addCameraUniforms(builder);
 		ViewportUniforms.addViewportUniforms(builder);
 		WorldTimeUniforms.addWorldTimeUniforms(builder);
 		SystemTimeUniforms.addSystemTimeUniforms(builder);
@@ -40,7 +41,6 @@ public final class CommonUniforms {
 			.uniformMatrix(PER_FRAME, "gbufferModelViewInverse", CommonUniforms::getGbufferModelViewInverse)
 			.uniformMatrix(PER_FRAME, "gbufferProjection", CapturedRenderingState.INSTANCE::getGbufferProjection)
 			.uniformMatrix(PER_FRAME, "gbufferProjectionInverse", CommonUniforms::getGbufferProjectionInverse)
-			.uniform3d(PER_FRAME, "cameraPosition", CommonUniforms::getCameraPosition)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness);
 	}
 
@@ -58,10 +58,6 @@ public final class CommonUniforms {
 		}
 
 		return 0.0F;
-	}
-
-	private static Vec3d getCameraPosition() {
-		return client.gameRenderer.getCamera().getPos();
 	}
 
 	private static Matrix4f getGbufferModelViewInverse() {
