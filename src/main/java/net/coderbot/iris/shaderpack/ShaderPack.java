@@ -57,7 +57,10 @@ public class ShaderPack {
 		try {
 			Path vertexPath = root.resolve(program + ".vsh");
 			vertexSource = readFile(vertexPath);
-			vertexSource = ShaderPreprocessor.process(vertexPath, vertexSource);
+
+			if (vertexSource != null) {
+				vertexSource = ShaderPreprocessor.process(vertexPath, vertexSource);
+			}
 		} catch (IOException e) {
 			// TODO: Better handling?
 			throw e;
@@ -66,7 +69,10 @@ public class ShaderPack {
 		try {
 			Path fragmentPath = root.resolve(program + ".fsh");
 			fragmentSource = readFile(fragmentPath);
-			fragmentSource = ShaderPreprocessor.process(fragmentPath, fragmentSource);
+
+			if (fragmentSource != null) {
+				fragmentSource = ShaderPreprocessor.process(fragmentPath, fragmentSource);
+			}
 		} catch (IOException e) {
 			// TODO: Better handling?
 			throw e;
