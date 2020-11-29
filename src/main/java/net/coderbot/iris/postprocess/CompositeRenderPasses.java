@@ -10,6 +10,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL21C;
@@ -21,6 +22,7 @@ public class CompositeRenderPasses {
 	private final ImmutableList<Program> stages;
 	private final CompositeRenderer renderer;
 	private final Framebuffer swap;
+	private final SmoothedFloat centerDepthSmooth;
 
 	public CompositeRenderPasses(ShaderPack pack) {
 		ShaderPack.ProgramSource[] compositeSource = pack.getComposite();
@@ -46,6 +48,18 @@ public class CompositeRenderPasses {
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		this.swap = new Framebuffer(main.textureWidth, main.textureHeight, false, true);
+
+		centerDepthSmooth = new SmoothedFloat(1.0f, () -> {
+			float[] depthValue = new float[1];
+			// Read a single pixel from the depth buffer
+			// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
+			GL11C.glReadPixels(
+					main.textureWidth / 2, main.textureHeight / 2, 1, 1,
+					GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
+			);
+
+			return depthValue[0];
+		});
 	}
 
 	public void renderAll() {
@@ -57,13 +71,7 @@ public class CompositeRenderPasses {
 
 		RenderSystem.activeTexture(GL15.GL_TEXTURE0);
 		main.beginRead();
-
-		float[] depthValue = new float[1];
-		// Read a single pixel from the depth buffer
-		GL11C.glReadPixels(
-				main.textureWidth / 2, main.textureHeight / 2, 1, 1,
-				GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
-		);
+		float centerDepth = centerDepthSmooth.getAsFloat();
 
 		RenderSystem.activeTexture(GL15.GL_TEXTURE1);
 		RenderSystem.bindTexture(main.getDepthAttachment());
@@ -71,7 +79,7 @@ public class CompositeRenderPasses {
 
 		swap.beginWrite(false);
 		stages.get(0).use();
-		GL21C.glUniform1f(GL21C.glGetUniformLocation(stages.get(0).getProgramId(), "centerDepthSmooth"), depthValue[0]);
+		GL21C.glUniform1f(GL21C.glGetUniformLocation(stages.get(0).getProgramId(), "centerDepthSmooth"), centerDepth);
 		renderer.render();
 
 		main.beginWrite(false);
