@@ -2,6 +2,7 @@ package net.coderbot.iris;
 
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
+import net.coderbot.iris.postprocess.CompositeRenderPasses;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.awt.Composite;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +28,7 @@ public class Iris implements ClientModInitializer {
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
+	private static CompositeRenderPasses compositePasses;
 	private static IrisConfig irisConfig;
 
 	@Override
@@ -98,6 +101,14 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return pipeline;
+	}
+
+	public static CompositeRenderPasses getCompositePasses() {
+		if (compositePasses == null) {
+			compositePasses = new CompositeRenderPasses(Objects.requireNonNull(currentPack));
+		}
+
+		return compositePasses;
 	}
 
 	public static IrisConfig getIrisConfig() {

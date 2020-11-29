@@ -46,7 +46,7 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At("RETURN"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		Iris.getPipeline().endWorldRender();
-		new CompositeRenderer().render();
+		Iris.getCompositePasses().renderAll();
 	}
 
 	// TODO: end sky

@@ -14,6 +14,8 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
+	private final ProgramSource[] composite;
+	private final ProgramSource compositeFinal;
 	private final IdMap idMap;
 
 	public ShaderPack(Path root) throws IOException {
@@ -22,6 +24,17 @@ public class ShaderPack {
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
+
+		this.composite = new ProgramSource[16];
+
+		for (int i = 0; i < this.composite.length; i++) {
+			String suffix = i == 0 ? "" : Integer.toString(i);
+
+			this.composite[i] = readProgramSource(root, "composite" + suffix, this);
+		}
+
+		this.compositeFinal = readProgramSource(root, "final", this);
+
 		this.idMap = new IdMap(root);
 	}
 
@@ -49,6 +62,13 @@ public class ShaderPack {
 		return gbuffersClouds.requireValid();
 	}
 
+	public ProgramSource[] getComposite() {
+		return composite;
+	}
+
+	public Optional<ProgramSource> getCompositeFinal() {
+		return compositeFinal.requireValid();
+	}
 
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
 		String vertexSource = null;
