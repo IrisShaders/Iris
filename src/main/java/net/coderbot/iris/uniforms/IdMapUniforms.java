@@ -1,6 +1,6 @@
 package net.coderbot.iris.uniforms;
 
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.minecraft.block.Block;
@@ -22,11 +22,11 @@ public final class IdMapUniforms {
 	private IdMapUniforms() {
 	}
 
-	public static void addIdMapUniforms(ProgramBuilder builder, IdMap idMap) {
+	public static void addIdMapUniforms(UniformHolder uniforms, IdMap idMap) {
 		Map<Identifier, Integer> blockIdMap = idMap.getBlockProperties();
 		Map<Identifier, Integer> entityIdMap = idMap.getEntityIdMap();
 
-		builder
+		uniforms
 		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
 				   new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemIdMap()))
 		   .uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",

@@ -4,7 +4,7 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 import java.util.Objects;
 
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -15,10 +15,10 @@ public final class WorldTimeUniforms {
 
 	/**
 	 * Makes world time uniforms available to the given program
-	 * @param builder the program to make the uniforms available to
+	 * @param uniforms the program to make the uniforms available to
 	 */
-	public static void addWorldTimeUniforms(ProgramBuilder builder) {
-		builder
+	public static void addWorldTimeUniforms(UniformHolder uniforms) {
+		uniforms
 			.uniform1i(PER_TICK, "worldTime", WorldTimeUniforms::getWorldDayTime)
 			.uniform1i(PER_TICK, "worldDay", WorldTimeUniforms::getWorldDay)
 			.uniform1i(PER_TICK, "moonPhase", () -> getWorld().getMoonPhase());

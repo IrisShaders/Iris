@@ -4,7 +4,7 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 import java.util.Objects;
 
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
@@ -26,10 +26,10 @@ public final class ViewportUniforms {
 
 	/**
 	 * Makes the viewport uniforms available to the given program
-	 * @param builder the program to make the uniforms available to
+	 * @param uniforms the program to make the uniforms available to
 	 */
-	public static void addViewportUniforms(ProgramBuilder builder) {
-		builder
+	public static void addViewportUniforms(UniformHolder uniforms) {
+		uniforms
 			.uniform1f(PER_FRAME, "viewHeight", WINDOW::getHeight)
 			.uniform1f(PER_FRAME, "viewWidth", WINDOW::getWidth)
 			.uniform1f(PER_FRAME, "aspectRatio", ViewportUniforms::getAspectRatio);
