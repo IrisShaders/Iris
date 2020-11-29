@@ -1,6 +1,9 @@
 package net.coderbot.iris.config;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.coderbot.iris.Iris;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
