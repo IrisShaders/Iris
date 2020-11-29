@@ -34,8 +34,7 @@ public class CompositeRenderer {
 
 		VertexBuffer quad = getQuad();
 
-		RenderSystem.activeTexture(GL15.GL_TEXTURE0);
-		MinecraftClient.getInstance().getTextureManager().bindTexture(new Identifier("textures/environment/moon_phases.png"));
+		//MinecraftClient.getInstance().getTextureManager().bindTexture(new Identifier("textures/environment/moon_phases.png"));
 		RenderSystem.enableTexture();
 
 		renderQuad();

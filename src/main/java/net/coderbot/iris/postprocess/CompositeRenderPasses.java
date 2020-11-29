@@ -5,14 +5,20 @@ import java.util.Objects;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import org.lwjgl.opengl.GL15;
+
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.Framebuffer;
 
 public class CompositeRenderPasses {
 	private final ImmutableList<Program> stages;
 	private final CompositeRenderer renderer;
+	private final Framebuffer swap;
 
 	public CompositeRenderPasses(ShaderPack pack) {
 		ShaderPack.ProgramSource[] compositeSource = pack.getComposite();
@@ -35,13 +41,41 @@ public class CompositeRenderPasses {
 
 		this.stages = stages.build();
 		this.renderer = new CompositeRenderer();
+
+		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
+		this.swap = new Framebuffer(main.textureWidth, main.textureHeight, false, true);
 	}
 
 	public void renderAll() {
-		for (Program stage : stages) {
+		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
+
+		if (main.textureWidth != swap.textureWidth || main.textureHeight != swap.textureHeight) {
+			swap.resize(main.textureWidth, main.textureHeight, true);
+		}
+
+		RenderSystem.activeTexture(GL15.GL_TEXTURE0);
+
+		main.beginRead();
+
+		RenderSystem.activeTexture(GL15.GL_TEXTURE1);
+		RenderSystem.bindTexture(main.getDepthAttachment());
+		RenderSystem.activeTexture(GL15.GL_TEXTURE0);
+
+		swap.beginWrite(false);
+		stages.get(0).use();
+		renderer.render();
+
+		main.beginWrite(false);
+		swap.beginRead();
+		stages.get(1).use();
+		renderer.render();
+
+		swap.endRead();
+
+		/*for (Program stage : stages) {
 			stage.use();
 			renderer.render();
-		}
+		}*/
 
 		GlStateManager.useProgram(0);
 	}
