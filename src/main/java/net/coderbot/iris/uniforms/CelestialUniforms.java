@@ -4,7 +4,7 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 import java.util.Objects;
 
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.Vector3f;
@@ -19,8 +19,8 @@ public final class CelestialUniforms {
 	private CelestialUniforms() {
 	}
 
-	public static void addCelestialUniforms(ProgramBuilder builder) {
-		builder
+	public static void addCelestialUniforms(UniformHolder uniforms) {
+		uniforms
 			.uniform1f(PER_FRAME, "sunAngle", CelestialUniforms::getSunAngle)
 			.uniformTruncated3f(PER_FRAME, "sunPosition", CelestialUniforms::getSunPosition)
 			.uniformTruncated3f(PER_FRAME, "moonPosition", CelestialUniforms::getMoonPosition)

@@ -4,7 +4,7 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 import java.util.function.Supplier;
 
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 
 import net.minecraft.util.math.Matrix4f;
 
@@ -12,13 +12,13 @@ public final class MatrixUniforms {
 	private MatrixUniforms() {
 	}
 
-	public static void addMatrixUniforms(ProgramBuilder builder) {
-		addMatrix(builder, "ModelView", CapturedRenderingState.INSTANCE::getGbufferModelView);
-		addMatrix(builder, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
+	public static void addMatrixUniforms(UniformHolder uniforms) {
+		addMatrix(uniforms, "ModelView", CapturedRenderingState.INSTANCE::getGbufferModelView);
+		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
 	}
 
-	private static void addMatrix(ProgramBuilder builder, String name, Supplier<Matrix4f> supplier) {
-		builder
+	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
+		uniforms
 			.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)
 			.uniformMatrix(PER_FRAME, "gbuffer" + name + "Inverse", new Inverted(supplier))
 			.uniformMatrix(PER_FRAME, "gbufferPrevious" + name, new Previous(supplier));

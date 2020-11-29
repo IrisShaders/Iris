@@ -1,6 +1,6 @@
 package net.coderbot.iris.uniforms;
 
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.MinecraftClient;
@@ -21,16 +21,16 @@ public final class CommonUniforms {
 		// no construction allowed
 	}
 
-	public static void addCommonUniforms(ProgramBuilder builder, IdMap idMap) {
-		CameraUniforms.addCameraUniforms(builder);
-		ViewportUniforms.addViewportUniforms(builder);
-		WorldTimeUniforms.addWorldTimeUniforms(builder);
-		SystemTimeUniforms.addSystemTimeUniforms(builder);
-		CelestialUniforms.addCelestialUniforms(builder);
-		IdMapUniforms.addIdMapUniforms(builder, idMap);
-		MatrixUniforms.addMatrixUniforms(builder);
+	public static void addCommonUniforms(UniformHolder uniforms, IdMap idMap) {
+		CameraUniforms.addCameraUniforms(uniforms);
+		ViewportUniforms.addViewportUniforms(uniforms);
+		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
+		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
+		CelestialUniforms.addCelestialUniforms(uniforms);
+		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
+		MatrixUniforms.addMatrixUniforms(uniforms);
 
-		builder
+		uniforms
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)

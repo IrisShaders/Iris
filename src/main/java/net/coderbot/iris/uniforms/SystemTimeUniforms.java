@@ -3,7 +3,7 @@ package net.coderbot.iris.uniforms;
 import java.util.OptionalLong;
 import java.util.function.IntSupplier;
 
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 
 /**
@@ -19,10 +19,10 @@ public final class SystemTimeUniforms {
 
 	/**
 	 * Makes system time uniforms available to the given program
-	 * @param builder the program to make the uniforms available to
+	 * @param uniforms the program to make the uniforms available to
 	 */
-	public static void addSystemTimeUniforms(ProgramBuilder builder) {
-		builder
+	public static void addSystemTimeUniforms(UniformHolder uniforms) {
+		uniforms
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "frameCounter", new FrameCounter())
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTime", TIMER::getLastFrameTime)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeCounter", TIMER::getFrameTimeCounter);

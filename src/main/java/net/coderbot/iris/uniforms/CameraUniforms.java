@@ -5,7 +5,7 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 import java.util.function.Supplier;
 
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.Vec3d;
@@ -19,8 +19,8 @@ public class CameraUniforms {
 	private CameraUniforms() {
 	}
 
-	public static void addCameraUniforms(ProgramBuilder builder) {
-		builder
+	public static void addCameraUniforms(UniformHolder uniforms) {
+		uniforms
 			.uniform1f(ONCE, "near", () -> 0.05)
 			.uniform1f(PER_FRAME, "far", CameraUniforms::getRenderDistanceInBlocks)
 			.uniform3d(PER_FRAME, "cameraPosition", CameraUniforms::getCameraPosition)
