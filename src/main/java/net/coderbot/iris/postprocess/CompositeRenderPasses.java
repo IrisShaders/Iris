@@ -25,13 +25,9 @@ public class CompositeRenderPasses {
 	private final SmoothedFloat centerDepthSmooth;
 
 	public CompositeRenderPasses(ShaderPack pack) {
-		ShaderPack.ProgramSource[] compositeSource = pack.getComposite();
-
 		final ImmutableList.Builder<Program> stages = ImmutableList.builder();
 
-		for (int i = 0; i < compositeSource.length; i++) {
-			ShaderPack.ProgramSource source = compositeSource[i];
-
+		for (ShaderPack.ProgramSource source: pack.getComposite()) {
 			if (source == null || !source.isValid()) {
 				continue;
 			}
@@ -63,39 +59,46 @@ public class CompositeRenderPasses {
 	}
 
 	public void renderAll() {
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
+		Framebuffer renderingTo = MinecraftClient.getInstance().getFramebuffer();
+		Framebuffer readingFrom = this.swap;
 
-		if (main.textureWidth != swap.textureWidth || main.textureHeight != swap.textureHeight) {
-			swap.resize(main.textureWidth, main.textureHeight, true);
+		if (renderingTo.textureWidth != readingFrom.textureWidth || renderingTo.textureHeight != readingFrom.textureHeight) {
+			readingFrom.resize(renderingTo.textureWidth, renderingTo.textureHeight, true);
 		}
 
 		// We're actually reading from the framebuffer, but it needs to be bound to the GL_FRAMEBUFFER target
-		main.beginWrite(false);
+		renderingTo.beginWrite(false);
 		float centerDepth = centerDepthSmooth.getAsFloat();
 
-		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
-		RenderSystem.bindTexture(main.getDepthAttachment());
-		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
-		RenderSystem.bindTexture(main.getColorAttachment());
+		for (Program stage : stages) {
+			// Swap the main / swap framebuffers
+			Framebuffer temp = readingFrom;
+			readingFrom = renderingTo;
+			renderingTo = temp;
 
-		swap.beginWrite(false);
-		stages.get(0).use();
-		GL21C.glUniform1f(GL21C.glGetUniformLocation(stages.get(0).getProgramId(), "centerDepthSmooth"), centerDepth);
-		quadRenderer.render();
+			renderingTo.beginWrite(false);
 
-		main.beginWrite(false);
-		swap.beginRead();
-		stages.get(1).use();
-		quadRenderer.render();
+			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
+			RenderSystem.bindTexture(readingFrom.getDepthAttachment());
+			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
+			RenderSystem.bindTexture(readingFrom.getColorAttachment());
 
-		swap.endRead();
-
-		/*for (Program stage : stages) {
 			stage.use();
-			renderer.render();
-		}*/
+			GL21C.glUniform1f(GL21C.glGetUniformLocation(stage.getProgramId(), "centerDepthSmooth"), centerDepth);
+			quadRenderer.render();
+		}
 
 		GlStateManager.useProgram(0);
+
+		if (renderingTo != MinecraftClient.getInstance().getFramebuffer()) {
+			// TODO
+			throw new UnsupportedOperationException("TODO: Need to transfer the content of the swap framebuffer to the main Minecraft framebuffer");
+		}
+
+		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
+		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
+		RenderSystem.bindTexture(0);
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
