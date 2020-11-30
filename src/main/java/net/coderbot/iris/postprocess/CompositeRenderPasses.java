@@ -20,7 +20,7 @@ import net.minecraft.client.gl.Framebuffer;
 
 public class CompositeRenderPasses {
 	private final ImmutableList<Program> stages;
-	private final CompositeRenderer renderer;
+	private final FullScreenQuadRenderer quadRenderer;
 	private final Framebuffer swap;
 	private final SmoothedFloat centerDepthSmooth;
 
@@ -44,7 +44,7 @@ public class CompositeRenderPasses {
 		);
 
 		this.stages = stages.build();
-		this.renderer = new CompositeRenderer();
+		this.quadRenderer = new FullScreenQuadRenderer();
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		this.swap = new Framebuffer(main.textureWidth, main.textureHeight, false, true);
@@ -81,12 +81,12 @@ public class CompositeRenderPasses {
 		swap.beginWrite(false);
 		stages.get(0).use();
 		GL21C.glUniform1f(GL21C.glGetUniformLocation(stages.get(0).getProgramId(), "centerDepthSmooth"), centerDepth);
-		renderer.render();
+		quadRenderer.render();
 
 		main.beginWrite(false);
 		swap.beginRead();
 		stages.get(1).use();
-		renderer.render();
+		quadRenderer.render();
 
 		swap.endRead();
 

@@ -1,16 +1,12 @@
 
 package net.coderbot.iris.mixin;
 
-import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
-import net.minecraft.block.entity.BlockEntity;
+
 import net.minecraft.client.render.*;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.profiler.Profiler;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,11 +18,6 @@ import net.minecraft.util.math.Matrix4f;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 @Mixin(WorldRenderer.class)
 @Environment(EnvType.CLIENT)

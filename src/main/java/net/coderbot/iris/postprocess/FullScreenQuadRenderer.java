@@ -2,41 +2,32 @@ package net.coderbot.iris.postprocess;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL11C;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix4f;
 
-public class CompositeRenderer {
-	private static final Matrix4f IDENTITY = new Matrix4f();
+/**
+ * Renders a full-screen textured quad to the screen. Used in composite / deferred rendering.
+ */
+public class FullScreenQuadRenderer {
+	private final VertexBuffer quad;
 
-	static {
-		IDENTITY.loadIdentity();
+	public FullScreenQuadRenderer() {
+		this.quad = createQuad();
 	}
 
-	VertexBuffer quad;
-
-	VertexBuffer getQuad() {
-		if (quad == null) {
-			createQuad();
-		}
-
-		return quad;
-	}
-
+	/**
+	 * Renders a quad to the screen. Textures are enabled if they aren't already enabled, and identity modelview /
+	 * projection matrices will be used.
+	 */
 	public void render() {
 		begin();
 
-		VertexBuffer quad = getQuad();
-
-		//MinecraftClient.getInstance().getTextureManager().bindTexture(new Identifier("textures/environment/moon_phases.png"));
 		RenderSystem.enableTexture();
-
 		renderQuad();
 
 		end();
@@ -54,7 +45,7 @@ public class CompositeRenderer {
 	private void renderQuad() {
 		quad.bind();
 		VertexFormats.POSITION_COLOR_TEXTURE.startDrawing(0L);
-		quad.draw(IDENTITY, GL11.GL_TRIANGLES);
+		quad.draw(IDENTITY, GL11C.GL_TRIANGLES);
 		VertexFormats.POSITION_COLOR_TEXTURE.endDrawing();
 		VertexBuffer.unbind();
 	}
@@ -67,11 +58,14 @@ public class CompositeRenderer {
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 	}
 
-	private void createQuad() {
-		quad = new VertexBuffer(VertexFormats.POSITION_COLOR_TEXTURE);
+	/**
+	 * Creates and uploads a vertex buffer containing a single full-screen quad
+	 */
+	private static VertexBuffer createQuad() {
+		VertexBuffer quad = new VertexBuffer(VertexFormats.POSITION_COLOR_TEXTURE);
 
 		BufferBuilder buffer = Tessellator.getInstance().getBuffer();
-		buffer.begin(GL11.GL_TRIANGLES, VertexFormats.POSITION_COLOR_TEXTURE);
+		buffer.begin(GL11C.GL_TRIANGLES, VertexFormats.POSITION_COLOR_TEXTURE);
 
 		// NB: Use counterclockwise order here! Otherwise these triangles will be invisible.
 
@@ -87,6 +81,8 @@ public class CompositeRenderer {
 
 		buffer.end();
 		quad.upload(buffer);
+
+		return quad;
 	}
 
 	private static void vertex(BufferBuilder buffer, boolean plusX, boolean up) {
@@ -101,5 +97,16 @@ public class CompositeRenderer {
 
 		// Move to the next vertex.
 		buffer.next();
+	}
+
+	/**
+	 * An identity matrix.
+	 */
+	private static final Matrix4f IDENTITY;
+
+	static {
+		Matrix4f identity = new Matrix4f();
+		identity.loadIdentity();
+		IDENTITY = identity;
 	}
 }
