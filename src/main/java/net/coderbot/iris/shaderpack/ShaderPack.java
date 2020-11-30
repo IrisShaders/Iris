@@ -1,28 +1,38 @@
 package net.coderbot.iris.shaderpack;
 
+import com.google.common.collect.Maps;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.Optional;
+import java.util.*;
 
 public class ShaderPack {
-	private final ProgramSource gbuffersBasic;
-	private final ProgramSource gbuffersTextured;
-	private final ProgramSource gbuffersSkyBasic;
-	private final ProgramSource gbuffersSkyTextured;
-	private final ProgramSource gbuffersClouds;
-	private final IdMap idMap;
+	private ProgramSource gbuffersBasic;
+	private ProgramSource gbuffersTextured;
+	private ProgramSource gbuffersSkyBasic;
+	private ProgramSource gbuffersSkyTextured;
+	private ProgramSource gbuffersClouds;
+	private IdMap idMap;
+	private Map<String, Map<String, String>> langMap = Maps.newHashMap();
 
 	public ShaderPack(Path root) throws IOException {
+		load(root);
+	}
+	public void reload(Path root) throws IOException {
+		load(root);
+	}
+
+	public void load(Path root) throws IOException {
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
 		this.idMap = new IdMap(root);
+		this.langMap = parseLangEntries(root);
 	}
 
 	public IdMap getIdMap() {
@@ -49,6 +59,9 @@ public class ShaderPack {
 		return gbuffersClouds.requireValid();
 	}
 
+	public Map<String, Map<String, String>> getLangMap() {
+		return langMap;
+	}
 
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
 		String vertexSource = null;
@@ -87,6 +100,27 @@ public class ShaderPack {
 		} catch(FileNotFoundException | NoSuchFileException e) {
 			return null;
 		}
+	}
+
+	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {
+		Path langFolderPath = root.resolve("lang");
+		Map<String, Map<String, String>> allLanguagesMap = Maps.newHashMap();
+		if (Files.exists(langFolderPath)) {
+			Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
+				Map<String, String> currentLanguageMap = Maps.newHashMap();
+				String currentFileName = path.getFileName().toString().toLowerCase();
+				String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
+				Properties properties = new Properties();
+				try {
+					properties.load(Files.newInputStream(path));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
+				allLanguagesMap.put(currentLangCode, currentLanguageMap);
+			});
+		}
+		return allLanguagesMap;
 	}
 
 	public static class ProgramSource {

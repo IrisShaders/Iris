@@ -8,9 +8,12 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
 
+import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,6 +30,7 @@ public class Iris implements ClientModInitializer {
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
 	private static IrisConfig irisConfig;
+	public static KeyBinding reloadKeybind;
 
 	@Override
 	public void onInitializeClient() {
@@ -55,6 +59,7 @@ public class Iris implements ClientModInitializer {
 		if (currentPack == null) {
 			loadInternalShaderpack();
 		}
+		reloadKeybind = new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds");
 	}
 
 	private void loadExternalShaderpack(String name) {
@@ -98,6 +103,22 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return pipeline;
+	}
+
+	public static void reload() throws IOException {
+		//currently this first line can be used to reload to a diff shaderpack, but it should be removed
+		//when there is a gui or a better system for changing packs at runtime
+		//or could be kept for the gui to use
+		irisConfig.initialize();
+		Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+		Path shaderPackRoot = shaderpacksDirectory.resolve(irisConfig.getShaderPackName());
+		Path shaderPackPath = shaderPackRoot.resolve("shaders");
+		currentPack.reload(shaderPackPath);
+		pipeline.reload(currentPack);
+	}
+
+	public static ShaderPack getCurrentPack() {
+		return currentPack;
 	}
 
 	public static IrisConfig getIrisConfig() {
