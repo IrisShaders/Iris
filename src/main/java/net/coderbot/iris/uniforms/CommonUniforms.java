@@ -32,7 +32,6 @@ public final class CommonUniforms {
 
 		uniforms
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
-			.uniform1i(ONCE, "depthtex0", () -> 1) // TODO
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())

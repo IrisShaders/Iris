@@ -69,13 +69,14 @@ public class CompositeRenderPasses {
 			swap.resize(main.textureWidth, main.textureHeight, true);
 		}
 
-		RenderSystem.activeTexture(GL15.GL_TEXTURE0);
-		main.beginRead();
+		// We're actually reading from the framebuffer, but it needs to be bound to the GL_FRAMEBUFFER target
+		main.beginWrite(false);
 		float centerDepth = centerDepthSmooth.getAsFloat();
 
-		RenderSystem.activeTexture(GL15.GL_TEXTURE1);
+		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
 		RenderSystem.bindTexture(main.getDepthAttachment());
-		RenderSystem.activeTexture(GL15.GL_TEXTURE0);
+		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
+		RenderSystem.bindTexture(main.getColorAttachment());
 
 		swap.beginWrite(false);
 		stages.get(0).use();
@@ -113,6 +114,7 @@ public class CompositeRenderPasses {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
+		PostProcessUniforms.addPostProcessUniforms(builder);
 
 		return builder.build();
 	}

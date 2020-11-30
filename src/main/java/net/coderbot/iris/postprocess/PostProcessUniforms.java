@@ -4,6 +4,9 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 
 public class PostProcessUniforms {
+	public static final int DEFAULT_COLOR = 0;
+	public static final int DEFAULT_DEPTH = 6;
+
 	public static void addPostProcessUniforms(ProgramBuilder builder) {
 		// TODO: Some of these are shared uniforms
 
@@ -31,9 +34,9 @@ public class PostProcessUniforms {
 		addSampler(builder, 14, "shadowcolor1");
 
 		// Depth
-		addSampler(builder, 6, "gdepthtex", "depthtex0");
-		addSampler(builder, 11, "gdepthtex", "depthtex1");
-		addSampler(builder, 12, "gdepthtex", "depthtex2");
+		addSampler(builder, DEFAULT_DEPTH, "gdepthtex", "depthtex0");
+		addSampler(builder, 11, "depthtex1");
+		addSampler(builder, 12, "depthtex2");
 
 		// Noise
 		addSampler(builder, 15, "noisetex");
