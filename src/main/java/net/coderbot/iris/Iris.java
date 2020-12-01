@@ -111,9 +111,9 @@ public class Iris implements ClientModInitializer {
 		//or could be kept for the gui to use
 		irisConfig.initialize();
 		Path shaderPackRoot = shaderpacksDirectory.resolve(irisConfig.getShaderPackName());
-		Path shaderPackPath = shaderPackRoot.resolve("shaders");
-		ShaderPack pack = new ShaderPack(shaderPackPath);
+		ShaderPack pack = new ShaderPack(shaderPackRoot.resolve("shaders"));
 		pipeline = new ShaderPipeline(pack);
+		currentPack = pack;
 	}
 
 	public static ShaderPack getCurrentPack() {
