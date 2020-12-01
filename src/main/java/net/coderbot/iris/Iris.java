@@ -6,6 +6,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
 import net.minecraft.client.options.KeyBinding;
@@ -25,7 +26,7 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 
-	private final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	private static final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
@@ -54,12 +55,11 @@ public class Iris implements ClientModInitializer {
 		if (!irisConfig.isInternal()) {
 			loadExternalShaderpack(irisConfig.getShaderPackName());
 		}
-
 		// If there is no external shaderpack or it failed to load for some reason, load the internal shaders
 		if (currentPack == null) {
 			loadInternalShaderpack();
 		}
-		reloadKeybind = new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds");
+		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 	}
 
 	private void loadExternalShaderpack(String name) {
@@ -110,11 +110,10 @@ public class Iris implements ClientModInitializer {
 		//when there is a gui or a better system for changing packs at runtime
 		//or could be kept for the gui to use
 		irisConfig.initialize();
-		Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 		Path shaderPackRoot = shaderpacksDirectory.resolve(irisConfig.getShaderPackName());
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
-		currentPack.reload(shaderPackPath);
-		pipeline.reload(currentPack);
+		ShaderPack pack = new ShaderPack(shaderPackPath);
+		pipeline = new ShaderPipeline(pack);
 	}
 
 	public static ShaderPack getCurrentPack() {

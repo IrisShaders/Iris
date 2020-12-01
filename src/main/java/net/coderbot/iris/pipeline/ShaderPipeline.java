@@ -18,29 +18,25 @@ import net.minecraft.client.render.RenderLayer;
  */
 public class ShaderPipeline {
 	@Nullable
-	private Program basic;
+	private final Program basic;
 	@Nullable
-	private Program textured;
+	private final Program textured;
 	@Nullable
-	private Program texturedLit;
+	private final Program texturedLit;
 	@Nullable
-	private Program skyBasic;
+	private final Program skyBasic;
 	@Nullable
-	private Program skyTextured;
+	private final Program skyTextured;
 	@Nullable
-	private Program clouds;
+	private final Program clouds;
 	@Nullable
-	private Program terrain;
+	private final Program terrain;
 	@Nullable
-	private Program translucent;
+	private final Program translucent;
 	@Nullable
-	private Program weather;
+	private final Program weather;
 
 	public ShaderPipeline(ShaderPack pack) {
-		load(pack);
-	}
-	//just copy and paste
-	private void load(ShaderPack pack) {
 		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createProgram).orElse(null);
 		this.textured = pack.getGbuffersTextured().map(ShaderPipeline::createProgram).orElse(basic);
 		// TODO: Load textured_lit program
@@ -52,10 +48,6 @@ public class ShaderPipeline {
 		this.terrain = texturedLit;
 		this.translucent = terrain;
 		this.weather = texturedLit;
-	}
-
-	public void reload(ShaderPack pack){
-		load(pack);
 	}
 
 	private static Program createProgram(ShaderPack.ProgramSource source) {

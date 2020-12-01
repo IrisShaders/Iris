@@ -10,22 +10,15 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class ShaderPack {
-	private ProgramSource gbuffersBasic;
-	private ProgramSource gbuffersTextured;
-	private ProgramSource gbuffersSkyBasic;
-	private ProgramSource gbuffersSkyTextured;
-	private ProgramSource gbuffersClouds;
-	private IdMap idMap;
-	private Map<String, Map<String, String>> langMap = Maps.newHashMap();
+	private final ProgramSource gbuffersBasic;
+	private final ProgramSource gbuffersTextured;
+	private final ProgramSource gbuffersSkyBasic;
+	private final ProgramSource gbuffersSkyTextured;
+	private final ProgramSource gbuffersClouds;
+	private final IdMap idMap;
+	private final Map<String, Map<String, String>> langMap;
 
 	public ShaderPack(Path root) throws IOException {
-		load(root);
-	}
-	public void reload(Path root) throws IOException {
-		load(root);
-	}
-
-	public void load(Path root) throws IOException {
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
@@ -104,22 +97,30 @@ public class ShaderPack {
 
 	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {
 		Path langFolderPath = root.resolve("lang");
-		Map<String, Map<String, String>> allLanguagesMap = Maps.newHashMap();
-		if (Files.exists(langFolderPath)) {
+		Map<String, Map<String, String>> allLanguagesMap = new HashMap<>();
+
+		if (!Files.exists(langFolderPath)) {
+			return allLanguagesMap;
+		}
 			Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
+
 				Map<String, String> currentLanguageMap = Maps.newHashMap();
 				String currentFileName = path.getFileName().toString().toLowerCase();
+
 				String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
 				Properties properties = new Properties();
+
 				try {
 					properties.load(Files.newInputStream(path));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+
 				properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
+
 				allLanguagesMap.put(currentLangCode, currentLanguageMap);
 			});
-		}
+
 		return allLanguagesMap;
 	}
 
