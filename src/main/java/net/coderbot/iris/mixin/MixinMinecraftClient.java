@@ -4,6 +4,7 @@ import net.coderbot.iris.Iris;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,8 +26,11 @@ public class MixinMinecraftClient {
                 if (this.player != null){
                     this.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Iris.logger.error("Error while reloading Shaders for Iris!", e);
+                if (this.player != null) {
+                    this.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", e.getCause().getCause().getMessage()).formatted(Formatting.RED), false);
+                }
             }
         }
 
