@@ -1,6 +1,8 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.Maps;
+import net.coderbot.iris.Iris;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +19,7 @@ public class ShaderPack {
 	private final ProgramSource gbuffersClouds;
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
+
 
 	public ShaderPack(Path root) throws IOException {
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
@@ -113,7 +116,7 @@ public class ShaderPack {
 				try {
 					properties.load(Files.newInputStream(path));
 				} catch (IOException e) {
-					e.printStackTrace();
+					Iris.logger.error("Error while parsing languages for shaderpacks!", e);
 				}
 
 				properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
