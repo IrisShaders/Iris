@@ -65,6 +65,22 @@ public class Iris implements ClientModInitializer {
 			loadInternalShaderpack();
 		}
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
+		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
+			while (reloadKeybind.wasPressed()){
+				try {
+					reload();
+					minecraftClient.worldRenderer.reload();
+					if (minecraftClient.player != null){
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
+					}
+				} catch (Exception e) {
+					Iris.logger.error("Error while reloading Shaders for Iris!", e);
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
+					}
+				}
+			}
+		});
 	}
 
 	private void loadExternalShaderpack(String name) {
@@ -100,6 +116,24 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using internal shaders");
+	}
+
+	public static void reload() throws IOException {
+		//currently this first line can be used to reload to a diff shaderpack, but it should be removed
+		//when there is a gui or a better system for changing packs at runtime
+		//or could be kept for the gui to use
+		irisConfig.initialize();
+		Path shaderPackRoot;
+		if (!irisConfig.isInternal()) {
+			shaderPackRoot = shaderpacksDirectory.resolve(irisConfig.getShaderPackName());
+		} else {
+			shaderPackRoot = FabricLoader.getInstance().getModContainer("iris").orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!"))
+					.getRootPath()
+					.resolve("shaders");
+		}
+		ShaderPack pack = new ShaderPack(shaderPackRoot.resolve("shaders"));
+		pipeline = new ShaderPipeline(pack);
+		currentPack = pack;
 	}
 
 	public static ShaderPipeline getPipeline() {
