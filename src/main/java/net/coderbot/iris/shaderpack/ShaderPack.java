@@ -1,6 +1,5 @@
 package net.coderbot.iris.shaderpack;
 
-import com.google.common.collect.Maps;
 import net.coderbot.iris.Iris;
 
 import java.io.FileNotFoundException;
@@ -105,24 +104,24 @@ public class ShaderPack {
 		if (!Files.exists(langFolderPath)) {
 			return allLanguagesMap;
 		}
-			Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
+		//We are using a max depth of one to get all the files that are inside the lang folder without further walking the file.
+		//Basically, we want the immediate
+		Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
 
-				Map<String, String> currentLanguageMap = Maps.newHashMap();
-				String currentFileName = path.getFileName().toString().toLowerCase();
+			Map<String, String> currentLanguageMap = new HashMap<>();
+			String currentFileName = path.getFileName().toString().toLowerCase();
+			String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
+			Properties properties = new Properties();
 
-				String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
-				Properties properties = new Properties();
+			try {
+				properties.load(Files.newInputStream(path));
+			} catch (IOException e) {
+				Iris.logger.error("Error while parsing languages for shaderpacks! Expected File Path: " + path, e);//string concat because then the throwable will not be logged if we use format
+			}
 
-				try {
-					properties.load(Files.newInputStream(path));
-				} catch (IOException e) {
-					Iris.logger.error("Error while parsing languages for shaderpacks!", e);
-				}
-
-				properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
-
-				allLanguagesMap.put(currentLangCode, currentLanguageMap);
-			});
+			properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
+			allLanguagesMap.put(currentLangCode, currentLanguageMap);
+		});
 
 		return allLanguagesMap;
 	}

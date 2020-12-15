@@ -1,16 +1,21 @@
 package net.coderbot.iris;
 
+import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -103,17 +108,6 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return pipeline;
-	}
-
-	public static void reload() throws IOException {
-		//currently this first line can be used to reload to a diff shaderpack, but it should be removed
-		//when there is a gui or a better system for changing packs at runtime
-		//or could be kept for the gui to use
-		irisConfig.initialize();
-		Path shaderPackRoot = shaderpacksDirectory.resolve(irisConfig.getShaderPackName());
-		ShaderPack pack = new ShaderPack(shaderPackRoot.resolve("shaders"));
-		pipeline = new ShaderPipeline(pack);
-		currentPack = pack;
 	}
 
 	public static ShaderPack getCurrentPack() {

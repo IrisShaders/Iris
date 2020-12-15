@@ -6,7 +6,6 @@
   "client": [
     "MixinGameRenderer",
     "MixinImmediateVertexConsumerProvider",
-    "MixinMinecraftClient",
     "MixinWorldRenderer",
     "texunits.MixinBufferVertexConsumer",
     "texunits.MixinGlStateManager",

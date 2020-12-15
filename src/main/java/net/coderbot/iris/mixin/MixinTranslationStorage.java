@@ -11,9 +11,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Mixin(TranslationStorage.class)
 public class MixinTranslationStorage {
@@ -34,16 +33,21 @@ public class MixinTranslationStorage {
         //if they do, we load that, but if they do not, we load "en_us" instead
         Map<String, Map<String, String>> languageMap = Iris.getCurrentPack().getLangMap();
         if (!translations.containsKey(key)) {
-            if (languageMap.containsKey(languageCodes.get(1)) && languageMap.get(languageCodes.get(1)).containsKey(key)) {
-                cir.setReturnValue(languageMap.get(languageCodes.get(1)).get(key));//indicates that the shaderpack has support for the user's selected to language
-            } else if (languageMap.containsKey(languageCodes.get(0)) && languageMap.get(languageCodes.get(0)).containsKey(key)){
-                cir.setReturnValue(languageMap.get(languageCodes.get(0)).get(key));//indicates that the shaderpack has support for "en_us" or american english
-            }
+            languageCodes.forEach(code -> {
+                if (languageMap.containsKey(code)) {
+                    if (languageMap.get(code).containsKey(key)) {
+                        cir.setReturnValue(languageMap.get(code).get(key));
+                    }
+                }
+            });
         }
     }
     @Inject(method = LOAD, at = @At("HEAD"))
     private static void check(ResourceManager resourceManager, List<LanguageDefinition> definitions, CallbackInfoReturnable<TranslationStorage> cir) {
         languageCodes.clear();// make sure the language codes dont carry over!
-        definitions.forEach(languageDefinition -> languageCodes.add(languageDefinition.getCode()));//will always have 2 entries
+        //Reverse order due to how minecraft has English and then the primary language in the language definitions list
+        new LinkedList<>(definitions).descendingIterator().forEachRemaining(languageDefinition -> {
+            languageCodes.add(languageDefinition.getCode());
+        });
     }
 }
