@@ -63,6 +63,12 @@ public interface UniformHolder {
 		return this;
 	}
 
+	default UniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
+		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector4Uniform(id, value)));
+
+		return  this;
+	}
+
 	default UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {
 		location(name).ifPresent(id -> addUniform(updateFrequency, new MatrixUniform(id, value)));
 
