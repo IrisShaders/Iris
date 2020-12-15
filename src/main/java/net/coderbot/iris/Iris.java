@@ -1,6 +1,5 @@
 package net.coderbot.iris;
 
-import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -10,25 +9,25 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
-	public static final Logger logger = LogManager.getLogger(MODID);
+	public static final Logger logger = LogManager.getLogger();//so we get "Iris" instead of "iris"
 
 	private static final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
@@ -69,8 +68,12 @@ public class Iris implements ClientModInitializer {
 	private void loadExternalShaderpack(String name) {
 		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
-
-		if (!Files.exists(shaderPackPath)) {
+		if (shaderPackRoot.toString().endsWith(".zip")) {
+			Optional<Path> shaderDir = loadExternalZipShaderpack(name);
+			if (shaderDir.isPresent()) {
+				shaderPackPath = shaderDir.get();
+			}
+		} if (!Files.exists(shaderPackPath)) {
 			logger.warn("The shaderpack " + name + " does not have a shaders directory, falling back to internal shaders");
 			return;
 		}
@@ -85,6 +88,18 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using shaderpack: " + name);
+	}
+
+	private Optional<Path> loadExternalZipShaderpack(String fileName) {
+		Path path = shaderpacksDirectory.resolve(fileName);
+		try {
+			FileSystem fileSystem = FileSystems.newFileSystem(path, this.getClass().getClassLoader());
+			return Files.walk(fileSystem.getRootDirectories().iterator().next()).filter(path1 -> path1.endsWith("shaders")).findFirst();
+		} catch (IOException e) {
+			logger.error("Error while creating file system for zip directory {}", path);
+			logger.catching(Level.ERROR, e);
+		}
+		return Optional.empty();
 	}
 
 	private void loadInternalShaderpack() {
