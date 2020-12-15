@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import net.coderbot.iris.Iris;
+import org.apache.logging.log4j.Level;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -111,6 +112,9 @@ public class ShaderPack {
 		Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
 
 			Map<String, String> currentLanguageMap = new HashMap<>();
+			//some shaderpacks use optifines file name coding which is different than minecraft's.
+			//An example of this is using "en_US.lang" compared to "en_us.json"
+			//also note that optifine uses a property scheme for loading language entries to keep parity with other optifine features
 			String currentFileName = path.getFileName().toString().toLowerCase();
 			String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
 			Properties properties = new Properties();
@@ -118,7 +122,8 @@ public class ShaderPack {
 			try {
 				properties.load(Files.newInputStream(path));
 			} catch (IOException e) {
-				Iris.logger.error("Error while parsing languages for shaderpacks! Expected File Path: " + path, e);//string concat because then the throwable will not be logged if we use format
+				Iris.logger.error("Error while parsing languages for shaderpacks! Expected File Path: {}", path);
+				Iris.logger.catching(Level.ERROR, e);
 			}
 
 			properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
