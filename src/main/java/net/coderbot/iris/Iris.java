@@ -111,12 +111,12 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private Optional<Path> loadExternalZipShaderpack(String fileName) {
-		Path path = shaderpacksDirectory.resolve(fileName);
+		Path shaderPackDir = shaderpacksDirectory.resolve(fileName);
 		try {
-			FileSystem fileSystem = FileSystems.newFileSystem(path, this.getClass().getClassLoader());
-			return Files.walk(fileSystem.getRootDirectories().iterator().next()).filter(path1 -> path1.endsWith("shaders")).findFirst();
+			FileSystem fileSystem = FileSystems.newFileSystem(shaderPackDir, this.getClass().getClassLoader());
+			return Files.walk(fileSystem.getRootDirectories().iterator().next()).filter(path1 -> path1.endsWith("shaders") && Files.isDirectory(path1)).findFirst();
 		} catch (IOException e) {
-			logger.error("Error while creating file system for zip directory {}", path);
+			logger.error("Error while finding shaderpack for zip directory {}", shaderPackDir);
 			logger.catching(Level.ERROR, e);
 		}
 		return Optional.empty();
