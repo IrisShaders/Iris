@@ -22,9 +22,10 @@ public class MixinTranslationStorage {
 
     private static final String LOAD = "load(Lnet/minecraft/resource/ResourceManager;Ljava/util/List;)Lnet/minecraft/client/resource/language/TranslationStorage;";
 
-    @Shadow @Final private Map<String, String> translations;
+    @Shadow
+    @Final
+    private Map<String, String> translations;
 
-    private boolean tested = false;
 
     @Inject(method = "get", at = @At("HEAD"), cancellable = true)
     private void iris$addLanguageEntries(String key, CallbackInfoReturnable<String> cir) {
@@ -34,8 +35,8 @@ public class MixinTranslationStorage {
         Map<String, Map<String, String>> languageMap = Iris.getCurrentPack().getLangMap();
         if (!translations.containsKey(key)) {
             languageCodes.forEach(code -> {
-                if (languageMap.containsKey(code)) {
-                    if (languageMap.get(code).containsKey(key)) {
+                if (languageMap.get(code) != null) {
+                    if (languageMap.get(code).get(key) != null) {
                         cir.setReturnValue(languageMap.get(code).get(key));
                     }
                 }

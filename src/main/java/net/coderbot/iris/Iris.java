@@ -59,6 +59,7 @@ public class Iris implements ClientModInitializer {
 		if (!irisConfig.isInternal()) {
 			loadExternalShaderpack(irisConfig.getShaderPackName());
 		}
+
 		// If there is no external shaderpack or it failed to load for some reason, load the internal shaders
 		if (currentPack == null) {
 			loadInternalShaderpack();
