@@ -12,7 +12,6 @@
     "texunits.MixinLightmapTextureManager",
     "texunits.MixinOverlayTexture",
     "texunits.MixinVertexFormats",
-    "MixinTranslationStorage"
   ],
   "injectors": {
     "defaultRequire": 1
