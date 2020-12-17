@@ -17,6 +17,7 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
 	private final IdMap idMap;
+	private final Map<String, Map<String, String>> langMap;
 
 
 	public ShaderPack(Path root) throws IOException {
@@ -26,6 +27,7 @@ public class ShaderPack {
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
 		this.idMap = new IdMap(root);
+		this.langMap = parseLangEntries(root);
 	}
 
 	public IdMap getIdMap() {
@@ -50,6 +52,10 @@ public class ShaderPack {
 
 	public Optional<ProgramSource> getGbuffersClouds() {
 		return gbuffersClouds.requireValid();
+	}
+
+	public Map<String, Map<String, String>> getLangMap() {
+		return langMap;
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
@@ -89,6 +95,35 @@ public class ShaderPack {
 		} catch(FileNotFoundException | NoSuchFileException e) {
 			return null;
 		}
+	}
+
+	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {
+		Path langFolderPath = root.resolve("lang");
+		Map<String, Map<String, String>> allLanguagesMap = new HashMap<>();
+
+		if (!Files.exists(langFolderPath)) {
+			return allLanguagesMap;
+		}
+		//We are using a max depth of one to get all the files that are inside the lang folder without further walking the file.
+		//Basically, we want the immediate
+		Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
+
+			Map<String, String> currentLanguageMap = new HashMap<>();
+			String currentFileName = path.getFileName().toString().toLowerCase();
+			String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
+			Properties properties = new Properties();
+
+			try {
+				properties.load(Files.newInputStream(path));
+			} catch (IOException e) {
+				Iris.logger.error("Error while parsing languages for shaderpacks! Expected File Path: " + path, e);//string concat because then the throwable will not be logged if we use format
+			}
+
+			properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
+			allLanguagesMap.put(currentLangCode, currentLanguageMap);
+		});
+
+		return allLanguagesMap;
 	}
 
 	public static class ProgramSource {
