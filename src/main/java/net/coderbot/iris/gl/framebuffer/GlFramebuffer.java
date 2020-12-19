@@ -3,15 +3,19 @@ package net.coderbot.iris.gl.framebuffer;
 import java.nio.ByteBuffer;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import org.lwjgl.opengl.GL30C;
 
 public class GlFramebuffer {
 	private final int id;
 	private boolean valid;
+	private Int2IntMap attachments;
 
 	public GlFramebuffer() {
 		this.id = GlStateManager.genFramebuffers();
 		this.valid = true;
+		this.attachments = new Int2IntArrayMap();
 
 		bind();
 	}
@@ -37,6 +41,11 @@ public class GlFramebuffer {
 		requireValid();
 
 		GL30C.glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0 + index, GL30C.GL_TEXTURE_2D, texture, 0);
+		attachments.put(index, texture);
+	}
+
+	public int getColorAttachment(int index) {
+		return attachments.get(index);
 	}
 
 	public void bind() {

@@ -6,6 +6,7 @@ import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -59,29 +60,36 @@ public class CompositeRenderPasses {
 	}
 
 	public void renderAll() {
-		Framebuffer renderingTo = MinecraftClient.getInstance().getFramebuffer();
-		Framebuffer readingFrom = this.swap;
+		Framebuffer mainFb = MinecraftClient.getInstance().getFramebuffer();
 
-		if (renderingTo.textureWidth != readingFrom.textureWidth || renderingTo.textureHeight != readingFrom.textureHeight) {
-			readingFrom.resize(renderingTo.textureWidth, renderingTo.textureHeight, true);
+		if (mainFb.textureWidth != this.swap.textureWidth || mainFb.textureHeight != this.swap.textureHeight) {
+			this.swap.resize(mainFb.textureWidth, mainFb.textureHeight, true);
 		}
 
+		GlFramebuffer renderingTo = new GlFramebuffer();
+		renderingTo.addColorAttachment(0, mainFb.getColorAttachment());
+
+		GlFramebuffer readingFrom = new GlFramebuffer();
+		readingFrom.addColorAttachment(0, this.swap.getColorAttachment());
+
+		final GlFramebuffer mainMcFramebuffer = renderingTo;
+
 		// We're actually reading from the framebuffer, but it needs to be bound to the GL_FRAMEBUFFER target
-		renderingTo.beginWrite(false);
+		mainFb.beginWrite(false);
 		float centerDepth = centerDepthSmooth.getAsFloat();
 
 		for (Program stage : stages) {
 			// Swap the main / swap framebuffers
-			Framebuffer temp = readingFrom;
+			GlFramebuffer temp = readingFrom;
 			readingFrom = renderingTo;
 			renderingTo = temp;
 
-			renderingTo.beginWrite(false);
+			renderingTo.bind();
 
 			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
-			RenderSystem.bindTexture(readingFrom.getDepthAttachment());
+			RenderSystem.bindTexture(mainFb.getDepthAttachment());
 			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
-			RenderSystem.bindTexture(readingFrom.getColorAttachment());
+			RenderSystem.bindTexture(readingFrom.getColorAttachment(0));
 
 			stage.use();
 			GL21C.glUniform1f(GL21C.glGetUniformLocation(stage.getProgramId(), "centerDepthSmooth"), centerDepth);
@@ -90,7 +98,7 @@ public class CompositeRenderPasses {
 
 		GlStateManager.useProgram(0);
 
-		if (renderingTo != MinecraftClient.getInstance().getFramebuffer()) {
+		if (renderingTo != mainMcFramebuffer) {
 			// TODO
 			throw new UnsupportedOperationException("TODO: Need to transfer the content of the swap framebuffer to the main Minecraft framebuffer");
 		}
