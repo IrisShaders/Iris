@@ -1,5 +1,7 @@
 package net.coderbot.iris.gl.framebuffer;
 
+import java.nio.ByteBuffer;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import org.lwjgl.opengl.GL30C;
 
@@ -20,6 +22,17 @@ public class GlFramebuffer {
 		GL30C.glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
 	}
 
+	public void addDepthAttachment(int width, int height) {
+		int depthTexture = GL30C.glGenTextures();
+		GlStateManager.bindTexture(depthTexture);
+		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MIN_FILTER, GL30C.GL_NEAREST);
+		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MAG_FILTER, GL30C.GL_NEAREST);
+		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_S, GL30C.GL_CLAMP_TO_EDGE);
+		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_T, GL30C.GL_CLAMP_TO_EDGE);
+		GL30C.glTexImage2D(GL30C.GL_TEXTURE_2D, 0, GL30C.GL_DEPTH_COMPONENT, width, height, 0, GL30C.GL_DEPTH_COMPONENT, GL30C.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+		GlStateManager.bindTexture(0);
+	}
+
 	public void addColorAttachment(int index, int texture) {
 		requireValid();
 
@@ -37,6 +50,12 @@ public class GlFramebuffer {
 
 		GlStateManager.deleteFramebuffers(this.id);
 		valid = false;
+	}
+
+	public boolean isComplete() {
+		int status = GlStateManager.checkFramebufferStatus(GL30C.GL_FRAMEBUFFER);
+
+		return status == GL30C.GL_FRAMEBUFFER_COMPLETE;
 	}
 
 	private void requireValid() {

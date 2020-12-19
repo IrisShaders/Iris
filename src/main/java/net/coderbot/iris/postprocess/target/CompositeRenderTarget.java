@@ -2,6 +2,7 @@ package net.coderbot.iris.postprocess.target;
 
 import java.nio.ByteBuffer;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
@@ -100,7 +101,9 @@ public class CompositeRenderTarget {
 		private int createTexture() {
 			int texture = GL11C.glGenTextures();
 
+			GlStateManager.bindTexture(texture);
 			GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+			GlStateManager.bindTexture(0);
 
 			return texture;
 		}
