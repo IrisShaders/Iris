@@ -8,20 +8,39 @@ import net.coderbot.iris.gl.texture.PixelType;
 import org.lwjgl.opengl.GL11C;
 
 public class CompositeRenderTarget {
+	private boolean isValid;
 	private final int mainTexture;
 	private final int altTexture;
 
 	private CompositeRenderTarget(int mainTexture, int altTexture) {
+		this.isValid = true;
 		this.mainTexture = mainTexture;
 		this.altTexture = altTexture;
 	}
 
 	public int getMainTexture() {
+		requireValid();
+
 		return mainTexture;
 	}
 
 	public int getAltTexture() {
+		requireValid();
+
 		return altTexture;
+	}
+
+	public void destroy() {
+		requireValid();
+		isValid = false;
+
+		GL11C.glDeleteTextures(new int[] { mainTexture, altTexture });
+	}
+
+	private void requireValid() {
+		if (!isValid) {
+			throw new IllegalStateException("Attempted to use a deleted composite render target");
+		}
 	}
 
 	public static Builder builder() {
