@@ -11,9 +11,9 @@ public class CompositeRenderTarget {
 	private final int mainTexture;
 	private final int altTexture;
 
-	public CompositeRenderTarget(CreationInfo creationInfo) {
-		this.mainTexture = creationInfo.createTexture();
-		this.altTexture = creationInfo.createTexture();
+	private CompositeRenderTarget(int mainTexture, int altTexture) {
+		this.mainTexture = mainTexture;
+		this.altTexture = altTexture;
 	}
 
 	public int getMainTexture() {
@@ -24,14 +24,59 @@ public class CompositeRenderTarget {
 		return altTexture;
 	}
 
-	public static class CreationInfo {
-		public InternalTextureFormat internalFormat = InternalTextureFormat.RGBA;
-		public int width = 0;
-		public int height = 0;
-		public PixelFormat format = PixelFormat.BGRA;
-		public PixelType type = PixelType.UNSIGNED_INT_8_8_8_8_REV;
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static class Builder {
+		private InternalTextureFormat internalFormat = InternalTextureFormat.RGBA;
+		private int width = 0;
+		private int height = 0;
+		private PixelFormat format = PixelFormat.BGRA;
+		private PixelType type = PixelType.UNSIGNED_INT_8_8_8_8_REV;
 
 		private static final ByteBuffer NULL_BUFFER = null;
+
+		private Builder() {
+			// No-op
+		}
+
+		public Builder setInternalFormat(InternalTextureFormat format) {
+			this.internalFormat = format;
+
+			return this;
+		}
+
+		public Builder setDimensions(int width, int height) {
+			if (width <= 0) {
+				throw new IllegalArgumentException("Width must be greater than zero");
+			}
+
+			if (height <= 0) {
+				throw new IllegalArgumentException("Height must be greater than zero");
+			}
+
+			this.width = width;
+			this.height = height;
+
+			return this;
+		}
+
+		public Builder setPixelFormat(PixelFormat pixelFormat) {
+			this.format = pixelFormat;
+
+			return this;
+		}
+
+		public Builder setPixelType(PixelType pixelType) {
+			this.type = pixelType;
+
+			return this;
+		}
+
+		public CompositeRenderTarget build() {
+			return new CompositeRenderTarget(createTexture(), createTexture());
+		}
 
 		private int createTexture() {
 			int texture = GL11C.glGenTextures();
