@@ -17,7 +17,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL21C;
 
 import net.minecraft.client.MinecraftClient;
@@ -54,7 +54,6 @@ public class CompositeRenderPasses {
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
-		// TODO: render target resizing
 		this.renderTargets = new CompositeRenderTargets(main.textureWidth, main.textureHeight);
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
@@ -133,15 +132,11 @@ public class CompositeRenderPasses {
 	}
 
 	public void renderAll() {
+		// Make sure we're using texture unit 0
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-
-		// TODO: Render target resizing...
-		/*Framebuffer renderingTo = MinecraftClient.getInstance().getFramebuffer();
-		Framebuffer readingFrom = this.swap;
-
-		if (renderingTo.textureWidth != readingFrom.textureWidth || renderingTo.textureHeight != readingFrom.textureHeight) {
-			readingFrom.resize(renderingTo.textureWidth, renderingTo.textureHeight, true);
-		}*/
+		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
 
 		// We're actually reading from the framebuffer, but it needs to be bound to the GL_FRAMEBUFFER target
 		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
@@ -151,7 +146,6 @@ public class CompositeRenderPasses {
 
 		this.writesToMain.bind();
 
-		RenderSystem.activeTexture(GL15.GL_TEXTURE0);
 		RenderSystem.bindTexture(main.getColorAttachment());
 		baseline.use();
 		quadRenderer.render();
@@ -163,10 +157,10 @@ public class CompositeRenderPasses {
 				MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
 			}
 
-			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
+			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
 			RenderSystem.bindTexture(main.getDepthAttachment());
 
-			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
+			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
 			CompositeRenderTarget target = renderTargets.get(0);
 
 			RenderSystem.bindTexture(renderPass.stageReadsFromAlt ? target.getAltTexture() : target.getMainTexture());
@@ -178,9 +172,9 @@ public class CompositeRenderPasses {
 
 		GlStateManager.useProgram(0);
 
-		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
 		RenderSystem.bindTexture(0);
-		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
 		RenderSystem.bindTexture(0);
 	}
 

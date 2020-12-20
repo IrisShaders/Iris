@@ -10,14 +10,60 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 
 public class CompositeRenderTarget {
+	private final InternalTextureFormat internalFormat;
+	private final PixelFormat format;
+	private final PixelType type;
+
 	private boolean isValid;
 	private final int mainTexture;
 	private final int altTexture;
 
-	private CompositeRenderTarget(int mainTexture, int altTexture) {
+	private static final ByteBuffer NULL_BUFFER = null;
+
+	private CompositeRenderTarget(Builder builder) {
 		this.isValid = true;
-		this.mainTexture = mainTexture;
-		this.altTexture = altTexture;
+
+		this.internalFormat = builder.internalFormat;
+		this.format = builder.format;
+		this.type = builder.type;
+
+		int[] textures = new int[2];
+		GL11C.glGenTextures(textures);
+
+		this.mainTexture = textures[0];
+		this.altTexture = textures[1];
+
+		GlStateManager.bindTexture(mainTexture);
+		setupCurrentlyBoundTexture(builder.width, builder.height);
+
+		GlStateManager.bindTexture(altTexture);
+		setupCurrentlyBoundTexture(builder.width, builder.height);
+
+		// Clean up after ourselves
+		// This is strictly defensive to ensure that other buggy code doesn't tamper with our textures
+		GlStateManager.bindTexture(0);
+	}
+
+	private void setupCurrentlyBoundTexture(int width, int height) {
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_BORDER);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_BORDER);
+
+		resizeCurrentlyBoundTexture(width, height);
+	}
+
+	private void resizeCurrentlyBoundTexture(int width, int height) {
+		GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+	}
+
+	// Package private, call CompositeRenderTargets#resizeIfNeeded instead.
+	void resize(int width, int height) {
+		GlStateManager.bindTexture(mainTexture);
+		resizeCurrentlyBoundTexture(width, height);
+
+		GlStateManager.bindTexture(altTexture);
+		resizeCurrentlyBoundTexture(width, height);
 	}
 
 	public int getMainTexture() {
@@ -55,8 +101,6 @@ public class CompositeRenderTarget {
 		private int height = 0;
 		private PixelFormat format = PixelFormat.RGBA;
 		private PixelType type = PixelType.UNSIGNED_BYTE;
-
-		private static final ByteBuffer NULL_BUFFER = null;
 
 		private Builder() {
 			// No-op
@@ -96,23 +140,7 @@ public class CompositeRenderTarget {
 		}
 
 		public CompositeRenderTarget build() {
-			return new CompositeRenderTarget(createTexture(), createTexture());
-		}
-
-		private int createTexture() {
-			int texture = GL11C.glGenTextures();
-
-			GlStateManager.bindTexture(texture);
-
-			GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
-			GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-			GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
-			GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_BORDER);
-			GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_BORDER);
-
-			GlStateManager.bindTexture(0);
-
-			return texture;
+			return new CompositeRenderTarget(this);
 		}
 	}
 }

@@ -2,6 +2,7 @@ package net.coderbot.iris.postprocess.target;
 
 import java.util.function.Supplier;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 
 public class CompositeRenderTargets {
@@ -11,6 +12,8 @@ public class CompositeRenderTargets {
 	public static int MAX_RENDER_TARGETS = 8;
 
 	private final CompositeRenderTarget[] targets;
+	private int cachedWidth;
+	private int cachedHeight;
 
 	public CompositeRenderTargets(int width, int height) {
 		Supplier<CompositeRenderTarget> colorTarget =
@@ -36,9 +39,27 @@ public class CompositeRenderTargets {
 			// TODO: Just temporary
 			throw new AssertionError();
 		}
+
+		this.cachedWidth = width;
+		this.cachedHeight = height;
 	}
 
 	public CompositeRenderTarget get(int index) {
 		return targets[index];
+	}
+
+	public void resizeIfNeeded(int newWidth, int newHeight) {
+		if (newWidth == cachedWidth && newHeight == cachedHeight) {
+			// No resize needed
+			return;
+		}
+
+		Iris.logger.info("Resizing render targets to " + newWidth + "x" + newHeight);
+		cachedWidth = newWidth;
+		cachedHeight = newHeight;
+
+		for (CompositeRenderTarget target : targets) {
+			target.resize(newWidth, newHeight);
+		}
 	}
 }
