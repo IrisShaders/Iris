@@ -7,6 +7,7 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL13C;
 
 public class CompositeRenderTarget {
 	private boolean isValid;
@@ -49,11 +50,11 @@ public class CompositeRenderTarget {
 	}
 
 	public static class Builder {
-		private InternalTextureFormat internalFormat = InternalTextureFormat.RGBA;
+		private InternalTextureFormat internalFormat = InternalTextureFormat.RGBA8;
 		private int width = 0;
 		private int height = 0;
-		private PixelFormat format = PixelFormat.BGRA;
-		private PixelType type = PixelType.UNSIGNED_INT_8_8_8_8_REV;
+		private PixelFormat format = PixelFormat.RGBA;
+		private PixelType type = PixelType.UNSIGNED_BYTE;
 
 		private static final ByteBuffer NULL_BUFFER = null;
 
@@ -102,7 +103,13 @@ public class CompositeRenderTarget {
 			int texture = GL11C.glGenTextures();
 
 			GlStateManager.bindTexture(texture);
+
 			GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+			GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
+			GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+			GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_BORDER);
+			GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_BORDER);
+
 			GlStateManager.bindTexture(0);
 
 			return texture;
