@@ -1,15 +1,18 @@
 package net.coderbot.iris.postprocess;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.postprocess.target.CompositeRenderTarget;
+import net.coderbot.iris.postprocess.target.CompositeRenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
@@ -22,45 +25,68 @@ import net.minecraft.client.gl.Framebuffer;
 
 public class CompositeRenderPasses {
 	private final Program baseline;
-	private final ImmutableList<Program> stages;
+	private final CompositeRenderTargets renderTargets;
+
+	private final GlFramebuffer writesToMain;
+	private final ImmutableList<Pass> passes;
+
 	private final FullScreenQuadRenderer quadRenderer;
-	private final Framebuffer swap;
 	private final SmoothedFloat centerDepthSmooth;
 
 	public CompositeRenderPasses(ShaderPack pack) {
 		baseline = createBaselineProgram(pack);
 
-		final ImmutableList.Builder<Program> stages = ImmutableList.builder();
-		int numStages = 0;
+		final List<Program> programs = new ArrayList<>();
 
 		for (ShaderPack.ProgramSource source: pack.getComposite()) {
 			if (source == null || !source.isValid()) {
 				continue;
 			}
 
-			stages.add(createProgram(source));
-			numStages += 1;
+			programs.add(createProgram(source));
 		}
 
 		pack.getCompositeFinal().ifPresent(
-				compositeFinal -> stages.add(createProgram(compositeFinal))
+				compositeFinal -> {
+					programs.add(createProgram(compositeFinal));
+				}
 		);
 
-		if (pack.getCompositeFinal().isPresent()) {
-			numStages += 1;
-		}
-
-		if ((numStages % 2) != 0) {
-			// Add a "padding" stage so that the final rendering result is always in the main framebuffer as it should be
-			Iris.logger.info("Added a padding composite stage");
-			stages.add(baseline);
-		}
-
-		this.stages = stages.build();
-		this.quadRenderer = new FullScreenQuadRenderer();
-
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-		this.swap = new Framebuffer(main.textureWidth, main.textureHeight, false, true);
+
+		// TODO: render target resizing
+		this.renderTargets = new CompositeRenderTargets(main.textureWidth, main.textureHeight);
+
+		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
+
+		boolean stageReadsFromAlt = false;
+
+		this.writesToMain = createStageFramebuffer(renderTargets, false);
+
+		for (Program program: programs) {
+			Pass pass = new Pass();
+
+			pass.program = program;
+
+			boolean stageWritesToAlt = !stageReadsFromAlt;
+			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageWritesToAlt);
+
+			pass.stageReadsFromAlt = stageReadsFromAlt;
+			pass.framebuffer = framebuffer;
+
+			if (program == programs.get(programs.size() - 1)) {
+				pass.isLastPass = true;
+			}
+
+			passes.add(pass);
+			// TODO: Depth?
+
+			// Flip the buffers
+			stageReadsFromAlt = !stageReadsFromAlt;
+		}
+
+		this.passes = passes.build();
+		this.quadRenderer = new FullScreenQuadRenderer();
 
 		centerDepthSmooth = new SmoothedFloat(1.0f, () -> {
 			float[] depthValue = new float[1];
@@ -75,49 +101,82 @@ public class CompositeRenderPasses {
 		});
 	}
 
-	public void renderAll() {
-		Framebuffer mainFb = MinecraftClient.getInstance().getFramebuffer();
+	private static final class Pass {
+		Program program;
+		GlFramebuffer framebuffer;
+		boolean stageReadsFromAlt;
+		boolean isLastPass;
+	}
 
-		if (mainFb.textureWidth != this.swap.textureWidth || mainFb.textureHeight != this.swap.textureHeight) {
-			this.swap.resize(mainFb.textureWidth, mainFb.textureHeight, true);
+	private static GlFramebuffer createStageFramebuffer(CompositeRenderTargets renderTargets, boolean stageWritesToAlt) {
+		GlFramebuffer framebuffer = new GlFramebuffer();
+		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
+
+		System.out.println("creating framebuffer: stageWritesToAlt = " + stageWritesToAlt);
+
+		for (int i = 0; i < CompositeRenderTargets.MAX_RENDER_TARGETS; i++) {
+			CompositeRenderTarget target = renderTargets.get(i);
+			int textureId = stageWritesToAlt ? target.getAltTexture() : target.getMainTexture();
+
+			System.out.println("  attachment " + i + " -> texture " + textureId);
+
+			framebuffer.addColorAttachment(i, textureId);
 		}
 
-		GlFramebuffer renderingTo = new GlFramebuffer();
-		renderingTo.addColorAttachment(0, mainFb.getColorAttachment());
+		framebuffer.addDepthAttachment(main.textureWidth, main.textureHeight);
 
-		GlFramebuffer readingFrom = new GlFramebuffer();
-		readingFrom.addColorAttachment(0, this.swap.getColorAttachment());
+		if (!framebuffer.isComplete()) {
+			throw new IllegalStateException("Unexpected error while creating framebuffer");
+		}
 
-		final GlFramebuffer mainMcFramebuffer = renderingTo;
+		return framebuffer;
+	}
+
+	public void renderAll() {
+		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
+
+		// TODO: Render target resizing...
+		/*Framebuffer renderingTo = MinecraftClient.getInstance().getFramebuffer();
+		Framebuffer readingFrom = this.swap;
+
+		if (renderingTo.textureWidth != readingFrom.textureWidth || renderingTo.textureHeight != readingFrom.textureHeight) {
+			readingFrom.resize(renderingTo.textureWidth, renderingTo.textureHeight, true);
+		}*/
 
 		// We're actually reading from the framebuffer, but it needs to be bound to the GL_FRAMEBUFFER target
-		mainFb.beginWrite(false);
+		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
 		float centerDepth = centerDepthSmooth.getAsFloat();
 
-		for (Program stage : stages) {
-			// Swap the main / swap framebuffers
-			GlFramebuffer temp = readingFrom;
-			readingFrom = renderingTo;
-			renderingTo = temp;
+		int mainAttachment = MinecraftClient.getInstance().getFramebuffer().getColorAttachment();
 
-			renderingTo.bind();
+		this.writesToMain.bind();
+
+		RenderSystem.activeTexture(GL15.GL_TEXTURE0);
+		RenderSystem.bindTexture(main.getColorAttachment());
+		baseline.use();
+		quadRenderer.render();
+
+		for (Pass renderPass: passes) {
+			if (!renderPass.isLastPass) {
+				renderPass.framebuffer.bind();
+			} else {
+				MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+			}
 
 			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
-			RenderSystem.bindTexture(mainFb.getDepthAttachment());
-			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
-			RenderSystem.bindTexture(readingFrom.getColorAttachment(0));
+			RenderSystem.bindTexture(main.getDepthAttachment());
 
-			stage.use();
-			GL21C.glUniform1f(GL21C.glGetUniformLocation(stage.getProgramId(), "centerDepthSmooth"), centerDepth);
+			RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
+			CompositeRenderTarget target = renderTargets.get(0);
+
+			RenderSystem.bindTexture(renderPass.stageReadsFromAlt ? target.getAltTexture() : target.getMainTexture());
+
+			renderPass.program.use();
+			GL21C.glUniform1f(GL21C.glGetUniformLocation(renderPass.program.getProgramId(), "centerDepthSmooth"), centerDepth);
 			quadRenderer.render();
 		}
 
 		GlStateManager.useProgram(0);
-
-		if (renderingTo != mainMcFramebuffer) {
-			// TODO
-			throw new UnsupportedOperationException("TODO: Need to transfer the content of the swap framebuffer to the main Minecraft framebuffer");
-		}
 
 		RenderSystem.activeTexture(GL15.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
 		RenderSystem.bindTexture(0);
@@ -152,7 +211,7 @@ public class CompositeRenderPasses {
 		return createProgram(source);
 	}
 
-	private static String BASELINE_COMPOSITE_VSH =
+	private static final String BASELINE_COMPOSITE_VSH =
 			"#version 120\n" +
 			"\n" +
 			"varying vec2 texcoord;\n" +
@@ -162,7 +221,7 @@ public class CompositeRenderPasses {
 			"\ttexcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;\n" +
 			"}";
 
-	private static String BASELINE_COMPOSITE_FSH =
+	private static final String BASELINE_COMPOSITE_FSH =
 			"#version 120\n" +
 			"\n" +
 			"uniform sampler2D gcolor;\n" +
