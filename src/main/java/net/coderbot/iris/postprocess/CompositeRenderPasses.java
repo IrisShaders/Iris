@@ -6,6 +6,7 @@ import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -20,13 +21,17 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 
 public class CompositeRenderPasses {
+	private final Program baseline;
 	private final ImmutableList<Program> stages;
 	private final FullScreenQuadRenderer quadRenderer;
 	private final Framebuffer swap;
 	private final SmoothedFloat centerDepthSmooth;
 
 	public CompositeRenderPasses(ShaderPack pack) {
+		baseline = createBaselineProgram(pack);
+
 		final ImmutableList.Builder<Program> stages = ImmutableList.builder();
+		int numStages = 0;
 
 		for (ShaderPack.ProgramSource source: pack.getComposite()) {
 			if (source == null || !source.isValid()) {
@@ -34,11 +39,22 @@ public class CompositeRenderPasses {
 			}
 
 			stages.add(createProgram(source));
+			numStages += 1;
 		}
 
 		pack.getCompositeFinal().ifPresent(
 				compositeFinal -> stages.add(createProgram(compositeFinal))
 		);
+
+		if (pack.getCompositeFinal().isPresent()) {
+			numStages += 1;
+		}
+
+		if ((numStages % 2) != 0) {
+			// Add a "padding" stage so that the final rendering result is always in the main framebuffer as it should be
+			Iris.logger.info("Added a padding composite stage");
+			stages.add(baseline);
+		}
 
 		this.stages = stages.build();
 		this.quadRenderer = new FullScreenQuadRenderer();
@@ -129,4 +145,34 @@ public class CompositeRenderPasses {
 
 		return builder.build();
 	}
+
+	private static Program createBaselineProgram(ShaderPack parent) {
+		ShaderPack.ProgramSource source = new ShaderPack.ProgramSource("<iris builtin baseline composite>", BASELINE_COMPOSITE_VSH, BASELINE_COMPOSITE_FSH, parent);
+
+		return createProgram(source);
+	}
+
+	private static String BASELINE_COMPOSITE_VSH =
+			"#version 120\n" +
+			"\n" +
+			"varying vec2 texcoord;\n" +
+			"\n" +
+			"void main() {\n" +
+			"\tgl_Position = ftransform();\n" +
+			"\ttexcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;\n" +
+			"}";
+
+	private static String BASELINE_COMPOSITE_FSH =
+			"#version 120\n" +
+			"\n" +
+			"uniform sampler2D gcolor;\n" +
+			"\n" +
+			"varying vec2 texcoord;\n" +
+			"\n" +
+			"void main() {\n" +
+			"\tvec3 color = texture2D(gcolor, texcoord).rgb;\n" +
+			"\n" +
+			"/* DRAWBUFFERS:0 */\n" +
+			"\tgl_FragData[0] = vec4(color, 1.0); // gcolor\n" +
+			"}";
 }
