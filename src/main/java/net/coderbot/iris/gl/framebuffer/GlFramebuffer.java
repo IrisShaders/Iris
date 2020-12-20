@@ -23,6 +23,7 @@ public class GlFramebuffer {
 	public void addDepthAttachment(int texture) {
 		requireValid();
 
+		bind();
 		GL30C.glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
 	}
 
@@ -35,11 +36,14 @@ public class GlFramebuffer {
 		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_T, GL30C.GL_CLAMP_TO_EDGE);
 		GL30C.glTexImage2D(GL30C.GL_TEXTURE_2D, 0, GL30C.GL_DEPTH_COMPONENT, width, height, 0, GL30C.GL_DEPTH_COMPONENT, GL30C.GL_UNSIGNED_BYTE, (ByteBuffer) null);
 		GlStateManager.bindTexture(0);
+
+		addDepthAttachment(depthTexture);
 	}
 
 	public void addColorAttachment(int index, int texture) {
 		requireValid();
 
+		bind();
 		GL30C.glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0 + index, GL30C.GL_TEXTURE_2D, texture, 0);
 		attachments.put(index, texture);
 	}
