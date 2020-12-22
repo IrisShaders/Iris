@@ -35,9 +35,13 @@ public class MixinTranslationStorage {
         Map<String, Map<String, String>> languageMap = Iris.getCurrentPack().getLangMap();
         if (!translations.containsKey(key)) {
             languageCodes.forEach(code -> {
-                if (languageMap.get(code) != null) {
-                    if (languageMap.get(code).get(key) != null) {
-                        cir.setReturnValue(languageMap.get(code).get(key));
+                Map<String, String> translations = languageMap.get(code);
+
+                if (translations != null) {
+                    String translation = translations.get(key);
+
+                    if (translation != null) {
+                        cir.setReturnValue(translation);
                     }
                 }
             });
