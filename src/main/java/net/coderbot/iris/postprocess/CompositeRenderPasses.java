@@ -122,7 +122,7 @@ public class CompositeRenderPasses {
 			framebuffer.addColorAttachment(i, textureId);
 		}
 
-		framebuffer.addDepthAttachment(main.textureWidth, main.textureHeight);
+		framebuffer.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
 
 		if (!framebuffer.isComplete()) {
 			throw new IllegalStateException("Unexpected error while creating framebuffer");

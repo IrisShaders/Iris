@@ -12,6 +12,8 @@ public class CompositeRenderTargets {
 	public static int MAX_RENDER_TARGETS = 8;
 
 	private final CompositeRenderTarget[] targets;
+	private final DepthTexture depthTexture;
+
 	private int cachedWidth;
 	private int cachedHeight;
 
@@ -40,12 +42,18 @@ public class CompositeRenderTargets {
 			throw new AssertionError();
 		}
 
+		this.depthTexture = new DepthTexture(width, height);
+
 		this.cachedWidth = width;
 		this.cachedHeight = height;
 	}
 
 	public CompositeRenderTarget get(int index) {
 		return targets[index];
+	}
+
+	public DepthTexture getDepthTexture() {
+		return depthTexture;
 	}
 
 	public void resizeIfNeeded(int newWidth, int newHeight) {
@@ -61,5 +69,7 @@ public class CompositeRenderTargets {
 		for (CompositeRenderTarget target : targets) {
 			target.resize(newWidth, newHeight);
 		}
+
+		depthTexture.resize(newWidth, newHeight);
 	}
 }
