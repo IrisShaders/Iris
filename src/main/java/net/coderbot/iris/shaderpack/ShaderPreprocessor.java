@@ -11,7 +11,9 @@ public class ShaderPreprocessor {
 	public static String process(Path shaderPath, String source) throws IOException {
 		StringBuilder processed = new StringBuilder();
 
-		for (String line : processInternal(shaderPath, source)) {
+		List<String> lines = processInternal(shaderPath, source);
+
+		for (String line : lines) {
 			processed.append(line);
 			processed.append('\n');
 		}
