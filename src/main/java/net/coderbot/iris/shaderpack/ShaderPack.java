@@ -1,12 +1,15 @@
 package net.coderbot.iris.shaderpack;
 
+import net.coderbot.iris.Iris;
+import org.apache.logging.log4j.Level;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.Optional;
+import java.util.*;
 
 public class ShaderPack {
 	private final ProgramSource gbuffersBasic;
@@ -18,6 +21,8 @@ public class ShaderPack {
 	private final ProgramSource[] composite;
 	private final ProgramSource compositeFinal;
 	private final IdMap idMap;
+	private final Map<String, Map<String, String>> langMap;
+
 
 	public ShaderPack(Path root) throws IOException {
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
@@ -38,6 +43,7 @@ public class ShaderPack {
 		this.compositeFinal = readProgramSource(root, "final", this);
 
 		this.idMap = new IdMap(root);
+		this.langMap = parseLangEntries(root);
 	}
 
 	public IdMap getIdMap() {
@@ -74,6 +80,10 @@ public class ShaderPack {
 
 	public Optional<ProgramSource> getCompositeFinal() {
 		return compositeFinal.requireValid();
+	}
+
+	public Map<String, Map<String, String>> getLangMap() {
+		return langMap;
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
@@ -113,6 +123,41 @@ public class ShaderPack {
 		} catch(FileNotFoundException | NoSuchFileException e) {
 			return null;
 		}
+	}
+
+	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {
+		Path langFolderPath = root.resolve("lang");
+		Map<String, Map<String, String>> allLanguagesMap = new HashMap<>();
+
+		if (!Files.exists(langFolderPath)) {
+			return allLanguagesMap;
+		}
+		//We are using a max depth of one to ensure we only get the surface level *files* without going deeper
+		// we also want to avoid any directories while filtering
+		//Basically, we want the immediate files nested in the path for the langFolder
+		//There is also Files.list which can be used for similar behavior
+		Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
+
+			Map<String, String> currentLanguageMap = new HashMap<>();
+			//some shaderpacks use optifines file name coding which is different than minecraft's.
+			//An example of this is using "en_US.lang" compared to "en_us.json"
+			//also note that optifine uses a property scheme for loading language entries to keep parity with other optifine features
+			String currentFileName = path.getFileName().toString().toLowerCase();
+			String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
+			Properties properties = new Properties();
+
+			try {
+				properties.load(Files.newInputStream(path));
+			} catch (IOException e) {
+				Iris.logger.error("Error while parsing languages for shaderpacks! Expected File Path: {}", path);
+				Iris.logger.catching(Level.ERROR, e);
+			}
+
+			properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
+			allLanguagesMap.put(currentLangCode, currentLanguageMap);
+		});
+
+		return allLanguagesMap;
 	}
 
 	public static class ProgramSource {
