@@ -6,11 +6,15 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
+import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,11 +26,12 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 
-	private final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	private static final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
 	private static IrisConfig irisConfig;
+	public static KeyBinding reloadKeybind;
 
 	@Override
 	public void onInitializeClient() {
@@ -55,6 +60,7 @@ public class Iris implements ClientModInitializer {
 		if (currentPack == null) {
 			loadInternalShaderpack();
 		}
+		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 	}
 
 	private void loadExternalShaderpack(String name) {
@@ -98,6 +104,10 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return pipeline;
+	}
+
+	public static ShaderPack getCurrentPack() {
+		return currentPack;
 	}
 
 	public static IrisConfig getIrisConfig() {
