@@ -20,10 +20,7 @@ import net.coderbot.iris.postprocess.target.CompositeRenderTargets;
 import net.coderbot.iris.shaderpack.DirectiveParser;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL21C;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -37,9 +34,10 @@ public class CompositeRenderer {
 	private final ImmutableList<Pass> passes;
 
 	private final FullScreenQuadRenderer quadRenderer;
-	private final SmoothedFloat centerDepthSmooth;
+	final CenterDepthSampler centerDepthSampler;
 
 	public CompositeRenderer(ShaderPack pack) {
+		centerDepthSampler = new CenterDepthSampler();
 		baseline = createBaselineProgram(pack);
 
 		final List<Pair<Program, int[]>> programs = new ArrayList<>();
@@ -52,11 +50,7 @@ public class CompositeRenderer {
 			programs.add(createProgram(source));
 		}
 
-		pack.getCompositeFinal().ifPresent(
-				compositeFinal -> {
-					programs.add(createProgram(compositeFinal));
-				}
-		);
+		pack.getCompositeFinal().map(this::createProgram).ifPresent(programs::add);
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
@@ -90,7 +84,6 @@ public class CompositeRenderer {
 			}
 
 			passes.add(pass);
-			// TODO: Depth?
 
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
@@ -100,18 +93,6 @@ public class CompositeRenderer {
 
 		this.passes = passes.build();
 		this.quadRenderer = new FullScreenQuadRenderer();
-
-		centerDepthSmooth = new SmoothedFloat(1.0f, () -> {
-			float[] depthValue = new float[1];
-			// Read a single pixel from the depth buffer
-			// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
-			GL11C.glReadPixels(
-					main.textureWidth / 2, main.textureHeight / 2, 1, 1,
-					GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
-			);
-
-			return depthValue[0];
-		});
 	}
 
 	private static final class Pass {
@@ -150,17 +131,13 @@ public class CompositeRenderer {
 	}
 
 	public void renderAll() {
+		centerDepthSampler.endWorldRendering();
+
 		// Make sure we're using texture unit 0
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
-
-		// We're actually reading from the framebuffer, but it needs to be bound to the GL_FRAMEBUFFER target
-		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
-		float centerDepth = centerDepthSmooth.getAsFloat();
-
-		int mainAttachment = MinecraftClient.getInstance().getFramebuffer().getColorAttachment();
 
 		this.writesToMain.bind();
 
@@ -174,9 +151,6 @@ public class CompositeRenderer {
 			} else {
 				MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
 			}
-
-			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
-			RenderSystem.bindTexture(main.getDepthAttachment());
 
 			// TODO: Consider copying the depth texture content into a separate texture that won't be modified? Probably
 			// isn't an issue though.
@@ -197,7 +171,6 @@ public class CompositeRenderer {
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
 
 			renderPass.program.use();
-			GL21C.glUniform1f(GL21C.glGetUniformLocation(renderPass.program.getProgramId(), "centerDepthSmooth"), centerDepth);
 			quadRenderer.render();
 		}
 
@@ -219,7 +192,7 @@ public class CompositeRenderer {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private static Pair<Program, int[]> createProgram(ShaderPack.ProgramSource source) {
+	private Pair<Program, int[]> createProgram(ShaderPack.ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -239,7 +212,7 @@ public class CompositeRenderer {
 				.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[] {0}));
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
-		PostProcessUniforms.addPostProcessUniforms(builder);
+		PostProcessUniforms.addPostProcessUniforms(builder, this);
 
 		return new Pair<>(builder.build(), drawBuffers);
 	}
@@ -263,7 +236,7 @@ public class CompositeRenderer {
 		return buffers;
 	}
 
-	private static Program createBaselineProgram(ShaderPack parent) {
+	private Program createBaselineProgram(ShaderPack parent) {
 		ShaderPack.ProgramSource source = new ShaderPack.ProgramSource("<iris builtin baseline composite>", BASELINE_COMPOSITE_VSH, BASELINE_COMPOSITE_FSH, parent);
 
 		return createProgram(source).getLeft();

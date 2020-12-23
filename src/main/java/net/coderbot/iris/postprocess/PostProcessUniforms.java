@@ -20,7 +20,7 @@ public class PostProcessUniforms {
 	public static final int DEFAULT_COLOR = COLOR_TEX_0;
 	public static final int DEFAULT_DEPTH = DEPTH_TEX_0;
 
-	public static void addPostProcessUniforms(ProgramBuilder builder) {
+	public static void addPostProcessUniforms(ProgramBuilder builder, CompositeRenderer renderer) {
 		// TODO: Some of these are shared uniforms
 
 		// Generic samplers
@@ -53,6 +53,8 @@ public class PostProcessUniforms {
 
 		// Noise
 		addSampler(builder, 15, "noisetex");
+
+		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", renderer.centerDepthSampler::getCenterDepthSmoothSample);
 	}
 
 	private static void addSampler(ProgramBuilder builder, int textureUnit, String... names) {
