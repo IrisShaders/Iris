@@ -10,8 +10,8 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -64,9 +64,13 @@ public class CompositeRenderPasses {
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
-		boolean stageReadsFromAlt = false;
+		boolean[] stageReadsFromAlt = new boolean[CompositeRenderTargets.MAX_RENDER_TARGETS];
 
-		this.writesToMain = createStageFramebuffer(renderTargets, false, new int[] {0});
+		// Hack to make a framebuffer that writes to the "main" buffers.
+		Arrays.fill(stageReadsFromAlt, true);
+		this.writesToMain = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[] {0});
+
+		Arrays.fill(stageReadsFromAlt, false);
 
 		for (Pair<Program, int[]> programEntry: programs) {
 			Pass pass = new Pass();
@@ -76,8 +80,7 @@ public class CompositeRenderPasses {
 
 			System.out.println("Draw buffers: " + new IntArrayList(drawBuffers));
 
-			boolean stageWritesToAlt = !stageReadsFromAlt;
-			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageWritesToAlt, drawBuffers);
+			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, drawBuffers);
 
 			pass.stageReadsFromAlt = stageReadsFromAlt;
 			pass.framebuffer = framebuffer;
@@ -89,8 +92,10 @@ public class CompositeRenderPasses {
 			passes.add(pass);
 			// TODO: Depth?
 
-			// Flip the buffers
-			stageReadsFromAlt = !stageReadsFromAlt;
+			// Flip the buffers that this shader wrote to
+			for (int buffer : drawBuffers) {
+				stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
+			}
 		}
 
 		this.passes = passes.build();
@@ -112,21 +117,23 @@ public class CompositeRenderPasses {
 	private static final class Pass {
 		Program program;
 		GlFramebuffer framebuffer;
-		boolean stageReadsFromAlt;
+		boolean[] stageReadsFromAlt;
 		boolean isLastPass;
 	}
 
-	private static GlFramebuffer createStageFramebuffer(CompositeRenderTargets renderTargets, boolean stageWritesToAlt, int[] drawBuffers) {
+	private static GlFramebuffer createStageFramebuffer(CompositeRenderTargets renderTargets, boolean[] stageReadsFromAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
-		System.out.println("creating framebuffer: stageWritesToAlt = " + stageWritesToAlt);
+		System.out.println("creating framebuffer: stageReadsFromAlt = " + new BooleanArrayList(stageReadsFromAlt));
 
 		for (int i = 0; i < CompositeRenderTargets.MAX_RENDER_TARGETS; i++) {
 			CompositeRenderTarget target = renderTargets.get(i);
+			boolean stageWritesToAlt = !stageReadsFromAlt[i];
+
 			int textureId = stageWritesToAlt ? target.getAltTexture() : target.getMainTexture();
 
-			System.out.println("  attachment " + i + " -> texture " + textureId);
+			System.out.println("  attachment " + i + " -> texture" + textureId);
 
 			framebuffer.addColorAttachment(i, textureId);
 		}
@@ -180,14 +187,14 @@ public class CompositeRenderPasses {
 			// Once we start rendering the hand before composite content, this will need to be addressed.
 			bindTexture(PostProcessUniforms.DEPTH_TEX_2, main.getDepthAttachment());
 
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0]);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1]);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt[2]);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt[3]);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt[4]);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt[5]);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6]);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
 
 			renderPass.program.use();
 			GL21C.glUniform1f(GL21C.glGetUniformLocation(renderPass.program.getProgramId(), "centerDepthSmooth"), centerDepth);
