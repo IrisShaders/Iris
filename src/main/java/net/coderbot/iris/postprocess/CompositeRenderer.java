@@ -119,8 +119,6 @@ public class CompositeRenderer {
 			framebuffer.addColorAttachment(i, textureId);
 		}
 
-		framebuffer.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
-
 		if (!framebuffer.isComplete()) {
 			throw new IllegalStateException("Unexpected error while creating framebuffer");
 		}
