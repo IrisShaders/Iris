@@ -29,7 +29,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.util.Pair;
 
-public class CompositeRenderPasses {
+public class CompositeRenderer {
 	private final Program baseline;
 	private final CompositeRenderTargets renderTargets;
 
@@ -39,7 +39,7 @@ public class CompositeRenderPasses {
 	private final FullScreenQuadRenderer quadRenderer;
 	private final SmoothedFloat centerDepthSmooth;
 
-	public CompositeRenderPasses(ShaderPack pack) {
+	public CompositeRenderer(ShaderPack pack) {
 		baseline = createBaselineProgram(pack);
 
 		final List<Pair<Program, int[]>> programs = new ArrayList<>();
@@ -249,7 +249,7 @@ public class CompositeRenderPasses {
 		return stageSource
 				.flatMap(fragment -> DirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
 				.map(String::toCharArray)
-				.map(CompositeRenderPasses::parseDigits);
+				.map(CompositeRenderer::parseDigits);
 	}
 
 	private static int[] parseDigits(char[] directiveChars) {
