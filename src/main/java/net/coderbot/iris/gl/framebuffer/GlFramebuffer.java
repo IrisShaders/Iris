@@ -35,6 +35,20 @@ public class GlFramebuffer {
 		attachments.put(index, texture);
 	}
 
+	public void drawBuffers(int[] buffers) {
+		requireValid();
+
+		int[] glBuffers = new int[buffers.length];
+		int index = 0;
+
+		for (int buffer : buffers) {
+			glBuffers[index++] = GL30C.GL_COLOR_ATTACHMENT0 + buffer;
+		}
+
+		bind();
+		GL30C.glDrawBuffers(glBuffers);
+	}
+
 	public int getColorAttachment(int index) {
 		return attachments.get(index);
 	}

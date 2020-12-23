@@ -2,17 +2,22 @@ package net.coderbot.iris.postprocess;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.postprocess.target.CompositeRenderTarget;
 import net.coderbot.iris.postprocess.target.CompositeRenderTargets;
+import net.coderbot.iris.shaderpack.DirectiveParser;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
@@ -22,6 +27,7 @@ import org.lwjgl.opengl.GL21C;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
+import net.minecraft.util.Pair;
 
 public class CompositeRenderPasses {
 	private final Program baseline;
@@ -36,7 +42,7 @@ public class CompositeRenderPasses {
 	public CompositeRenderPasses(ShaderPack pack) {
 		baseline = createBaselineProgram(pack);
 
-		final List<Program> programs = new ArrayList<>();
+		final List<Pair<Program, int[]>> programs = new ArrayList<>();
 
 		for (ShaderPack.ProgramSource source: pack.getComposite()) {
 			if (source == null || !source.isValid()) {
@@ -60,20 +66,23 @@ public class CompositeRenderPasses {
 
 		boolean stageReadsFromAlt = false;
 
-		this.writesToMain = createStageFramebuffer(renderTargets, false);
+		this.writesToMain = createStageFramebuffer(renderTargets, false, new int[] {0});
 
-		for (Program program: programs) {
+		for (Pair<Program, int[]> programEntry: programs) {
 			Pass pass = new Pass();
 
-			pass.program = program;
+			pass.program = programEntry.getLeft();
+			int[] drawBuffers = programEntry.getRight();
+
+			System.out.println("Draw buffers: " + new IntArrayList(drawBuffers));
 
 			boolean stageWritesToAlt = !stageReadsFromAlt;
-			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageWritesToAlt);
+			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageWritesToAlt, drawBuffers);
 
 			pass.stageReadsFromAlt = stageReadsFromAlt;
 			pass.framebuffer = framebuffer;
 
-			if (program == programs.get(programs.size() - 1)) {
+			if (programEntry == programs.get(programs.size() - 1)) {
 				pass.isLastPass = true;
 			}
 
@@ -107,7 +116,7 @@ public class CompositeRenderPasses {
 		boolean isLastPass;
 	}
 
-	private static GlFramebuffer createStageFramebuffer(CompositeRenderTargets renderTargets, boolean stageWritesToAlt) {
+	private static GlFramebuffer createStageFramebuffer(CompositeRenderTargets renderTargets, boolean stageWritesToAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
@@ -127,6 +136,8 @@ public class CompositeRenderPasses {
 		if (!framebuffer.isComplete()) {
 			throw new IllegalStateException("Unexpected error while creating framebuffer");
 		}
+
+		framebuffer.drawBuffers(drawBuffers);
 
 		return framebuffer;
 	}
@@ -201,7 +212,7 @@ public class CompositeRenderPasses {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private static Program createProgram(ShaderPack.ProgramSource source) {
+	private static Pair<Program, int[]> createProgram(ShaderPack.ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -215,16 +226,40 @@ public class CompositeRenderPasses {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
+		// First try to find it in the fragment source, then in the vertex source.
+		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
+		int[] drawBuffers = findDrawbuffersDirective(source.getFragmentSource())
+				.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[] {0}));
+
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 		PostProcessUniforms.addPostProcessUniforms(builder);
 
-		return builder.build();
+		return new Pair<>(builder.build(), drawBuffers);
+	}
+
+	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource) {
+		return stageSource
+				.flatMap(fragment -> DirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
+				.map(String::toCharArray)
+				.map(CompositeRenderPasses::parseDigits);
+	}
+
+	private static int[] parseDigits(char[] directiveChars) {
+		int[] buffers = new int[directiveChars.length];
+		int index = 0;
+
+		for (char buffer: directiveChars) {
+			buffers[index++] = Character.digit(buffer, 10);
+		}
+
+		return buffers;
 	}
 
 	private static Program createBaselineProgram(ShaderPack parent) {
 		ShaderPack.ProgramSource source = new ShaderPack.ProgramSource("<iris builtin baseline composite>", BASELINE_COMPOSITE_VSH, BASELINE_COMPOSITE_FSH, parent);
 
-		return createProgram(source);
+		return createProgram(source).getLeft();
 	}
 
 	private static final String BASELINE_COMPOSITE_VSH =
