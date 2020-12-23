@@ -85,7 +85,7 @@ public class ShaderPack {
 			vertexSource = readFile(vertexPath);
 
 			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(vertexPath, vertexSource);
+				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource);
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
@@ -97,7 +97,7 @@ public class ShaderPack {
 			fragmentSource = readFile(fragmentPath);
 
 			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(fragmentPath, fragmentSource);
+				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource);
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
