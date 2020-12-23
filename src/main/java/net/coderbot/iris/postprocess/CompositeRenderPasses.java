@@ -160,10 +160,23 @@ public class CompositeRenderPasses {
 			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
 			RenderSystem.bindTexture(main.getDepthAttachment());
 
-			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
-			CompositeRenderTarget target = renderTargets.get(0);
+			// TODO: Consider copying the depth texture content into a separate texture that won't be modified? Probably
+			// isn't an issue though.
+			bindTexture(PostProcessUniforms.DEPTH_TEX_0, main.getDepthAttachment());
+			// TODO: No translucent objects
+			bindTexture(PostProcessUniforms.DEPTH_TEX_1, main.getDepthAttachment());
+			// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
+			// Once we start rendering the hand before composite content, this will need to be addressed.
+			bindTexture(PostProcessUniforms.DEPTH_TEX_2, main.getDepthAttachment());
 
-			RenderSystem.bindTexture(renderPass.stageReadsFromAlt ? target.getAltTexture() : target.getMainTexture());
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt);
+			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt);
 
 			renderPass.program.use();
 			GL21C.glUniform1f(GL21C.glGetUniformLocation(renderPass.program.getProgramId(), "centerDepthSmooth"), centerDepth);
@@ -176,6 +189,15 @@ public class CompositeRenderPasses {
 		RenderSystem.bindTexture(0);
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
 		RenderSystem.bindTexture(0);
+	}
+
+	private static void bindRenderTarget(int textureUnit, CompositeRenderTarget target, boolean readFromAlt) {
+		bindTexture(textureUnit, readFromAlt ? target.getAltTexture() : target.getMainTexture());
+	}
+
+	private static void bindTexture(int textureUnit, int texture) {
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + textureUnit);
+		RenderSystem.bindTexture(texture);
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline

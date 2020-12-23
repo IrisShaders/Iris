@@ -4,21 +4,34 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 
 public class PostProcessUniforms {
-	public static final int DEFAULT_COLOR = 0;
-	public static final int DEFAULT_DEPTH = 6;
+	public static final int COLOR_TEX_0 = 0;
+	public static final int COLOR_TEX_1 = 1;
+	public static final int COLOR_TEX_2 = 2;
+	public static final int COLOR_TEX_3 = 3;
+	public static final int COLOR_TEX_4 = 7;
+	public static final int COLOR_TEX_5 = 8;
+	public static final int COLOR_TEX_6 = 9;
+	public static final int COLOR_TEX_7 = 10;
+
+	public static final int DEPTH_TEX_0 = 6;
+	public static final int DEPTH_TEX_1 = 11;
+	public static final int DEPTH_TEX_2 = 12;
+
+	public static final int DEFAULT_COLOR = COLOR_TEX_0;
+	public static final int DEFAULT_DEPTH = DEPTH_TEX_0;
 
 	public static void addPostProcessUniforms(ProgramBuilder builder) {
 		// TODO: Some of these are shared uniforms
 
 		// Generic samplers
-		addSampler(builder, 0, "gcolor", "colortex0");
-		addSampler(builder, 1, "gdepth", "colortex1");
-		addSampler(builder, 2, "gnormal", "colortex2");
-		addSampler(builder, 3, "composite", "colortex3");
-		addSampler(builder, 7, "gaux1", "colortex4");
-		addSampler(builder, 8, "gaux2", "colortex5");
-		addSampler(builder, 9, "gaux3", "colortex6");
-		addSampler(builder, 10, "gaux4", "colortex7");
+		addSampler(builder, COLOR_TEX_0, "gcolor", "colortex0");
+		addSampler(builder, COLOR_TEX_1, "gdepth", "colortex1");
+		addSampler(builder, COLOR_TEX_2, "gnormal", "colortex2");
+		addSampler(builder, COLOR_TEX_3, "composite", "colortex3");
+		addSampler(builder, COLOR_TEX_4, "gaux1", "colortex4");
+		addSampler(builder, COLOR_TEX_5, "gaux2", "colortex5");
+		addSampler(builder, COLOR_TEX_6, "gaux3", "colortex6");
+		addSampler(builder, COLOR_TEX_7, "gaux4", "colortex7");
 
 		// Shadow
 		addSampler(builder, 4, "watershadow", "shadowtex0");

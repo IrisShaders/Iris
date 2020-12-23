@@ -15,5 +15,8 @@
   ],
   "injectors": {
 	"defaultRequire": 1
-  }
+  },
+  "mixins": [
+	"MixinGlStateManager"
+  ]
 }
