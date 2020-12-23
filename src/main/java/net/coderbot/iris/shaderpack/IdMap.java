@@ -45,10 +45,10 @@ public class IdMap {
 
 	IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
-				.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
+			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
 		entityIdMap = loadProperties(shaderPath, "entity.properties")
-				.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
+			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
 		loadProperties(shaderPath, "block.properties").ifPresent(blockProperties -> {
 			// TODO: This won't parse block states in block.properties properly

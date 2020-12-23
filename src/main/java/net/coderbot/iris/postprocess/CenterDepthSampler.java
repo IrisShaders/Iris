@@ -24,8 +24,8 @@ public class CenterDepthSampler {
 		// Read a single pixel from the depth buffer
 		// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
 		GL11C.glReadPixels(
-				main.textureWidth / 2, main.textureHeight / 2, 1, 1,
-				GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
+			main.textureWidth / 2, main.textureHeight / 2, 1, 1,
+			GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
 		);
 
 		return depthValue[0];
