@@ -42,7 +42,7 @@ public class CompositeRenderer {
 
 		final List<Pair<Program, int[]>> programs = new ArrayList<>();
 
-		for (ShaderPack.ProgramSource source: pack.getComposite()) {
+		for (ShaderPack.ProgramSource source : pack.getComposite()) {
 			if (source == null || !source.isValid()) {
 				continue;
 			}
@@ -62,11 +62,11 @@ public class CompositeRenderer {
 
 		// Hack to make a framebuffer that writes to the "main" buffers.
 		Arrays.fill(stageReadsFromAlt, true);
-		this.writesToMain = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[] {0});
+		this.writesToMain = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[]{0});
 
 		Arrays.fill(stageReadsFromAlt, false);
 
-		for (Pair<Program, int[]> programEntry: programs) {
+		for (Pair<Program, int[]> programEntry : programs) {
 			Pass pass = new Pass();
 
 			pass.program = programEntry.getLeft();
@@ -143,7 +143,7 @@ public class CompositeRenderer {
 		baseline.use();
 		quadRenderer.render();
 
-		for (Pass renderPass: passes) {
+		for (Pass renderPass : passes) {
 			if (!renderPass.isLastPass) {
 				renderPass.framebuffer.bind();
 			} else {
@@ -198,7 +198,7 @@ public class CompositeRenderer {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
-					source.getFragmentSource().orElse(null));
+				source.getFragmentSource().orElse(null));
 		} catch (IOException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -207,7 +207,7 @@ public class CompositeRenderer {
 		// First try to find it in the fragment source, then in the vertex source.
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
 		int[] drawBuffers = findDrawbuffersDirective(source.getFragmentSource())
-				.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[] {0}));
+			.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[]{0}));
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 		PostProcessUniforms.addPostProcessUniforms(builder, this);
@@ -218,16 +218,16 @@ public class CompositeRenderer {
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource) {
 		return stageSource
-				.flatMap(fragment -> DirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
-				.map(String::toCharArray)
-				.map(CompositeRenderer::parseDigits);
+			.flatMap(fragment -> DirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
+			.map(String::toCharArray)
+			.map(CompositeRenderer::parseDigits);
 	}
 
 	private static int[] parseDigits(char[] directiveChars) {
 		int[] buffers = new int[directiveChars.length];
 		int index = 0;
 
-		for (char buffer: directiveChars) {
+		for (char buffer : directiveChars) {
 			buffers[index++] = Character.digit(buffer, 10);
 		}
 
@@ -241,7 +241,7 @@ public class CompositeRenderer {
 	}
 
 	private static final String BASELINE_COMPOSITE_VSH =
-			"#version 120\n" +
+		"#version 120\n" +
 			"\n" +
 			"varying vec2 texcoord;\n" +
 			"\n" +
@@ -251,7 +251,7 @@ public class CompositeRenderer {
 			"}";
 
 	private static final String BASELINE_COMPOSITE_FSH =
-			"#version 120\n" +
+		"#version 120\n" +
 			"\n" +
 			"uniform sampler2D gcolor;\n" +
 			"\n" +

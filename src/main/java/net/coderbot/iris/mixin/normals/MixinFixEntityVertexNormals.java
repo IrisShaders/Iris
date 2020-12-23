@@ -19,19 +19,19 @@ import net.fabricmc.api.Environment;
 
 /**
  * An attempt to fix entity vertex normals so that they are more similar to how they were in 1.14
- *
+ * <p>
  * In 1.14 and below, entities and blockentities were both rendered with a single draw call per individual entity, which
  * isn't particularly efficient. So in 1.15 and 1.16, Mojang made it so that many entities could be drawn in only a few
  * draw calls with their new rendering refactors.
- *
+ * <p>
  * The problem? There's a few assumptions in ShadersMod/Optifine related to the fact that entities are drawn in a single
  * draw call, and this is one of them. As it happens, the various transformations and translations that were previously
  * stored in the OpenGL matrix stack (gl_ModelViewMatrix) are now baked directly into the vertex data.
- *
+ * <p>
  * The result of multiplying a vertex position with gl_ModelViewMatrix or a vertex normal with gl_NormalMatrix will be
  * the same between 1.14 and below and 1.15 and above. What is different is the content of gl_ModelViewMatrix,
  * gl_NormalMatrix, as well as raw vertex normals and positions.
- *
+ * <p>
  * This mixin has been disabled for now, since the behavior without it matches OptiFine's current behavior on 1.16.3. It
  * has been preserved for now in case it ends up being necessary again at some point in the future.
  */

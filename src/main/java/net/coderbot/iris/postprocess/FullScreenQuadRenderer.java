@@ -93,7 +93,7 @@ public class FullScreenQuadRenderer {
 		buffer.color(1.0F, 1.0F, 1.0F, 1.0F);
 
 		// Texture coordinates are in the range of 0.0 to 1.0
-		buffer.texture(plusX ? 1.0F : 0.0F, up? 1.0F : 0.0F);
+		buffer.texture(plusX ? 1.0F : 0.0F, up ? 1.0F : 0.0F);
 
 		// Move to the next vertex.
 		buffer.next();

@@ -1,7 +1,5 @@
 package net.coderbot.iris.gl.framebuffer;
 
-import java.nio.ByteBuffer;
-
 import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;

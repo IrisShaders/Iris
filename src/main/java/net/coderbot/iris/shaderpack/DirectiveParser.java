@@ -9,11 +9,11 @@ import java.util.function.Supplier;
  * Parses comment-based directives found in shader source files of the form:
  *
  * <pre>/* KEY:VALUE *<i></i>/</pre>
- *
+ * <p>
  * A common example is draw buffer directives:
  *
  * <pre>/* DRAWBUFFERS:157 *<i></i>/</pre>
- *
+ * <p>
  * A given directive should only occur once in a shader file. If there are multiple occurrences of a directive with a
  * given key, the last occurrence is used.
  */
@@ -141,11 +141,11 @@ public class DirectiveParser {
 			});
 
 			test("lines", Optional.of("It works"), () -> {
-				String[] linesArray = new String[] {
-					"/* Here's a random comment line */",
-					"/* Test directive:Duplicate handling? */",
-					"uniform sampler2D test;",
-					"/* Test directive:Duplicate handling within a line? */ Let's see /* Test directive:It works */"
+				String[] linesArray = new String[]{
+						"/* Here's a random comment line */",
+						"/* Test directive:Duplicate handling? */",
+						"uniform sampler2D test;",
+						"/* Test directive:Duplicate handling within a line? */ Let's see /* Test directive:It works */"
 				};
 
 				List<String> lines = Arrays.asList(linesArray);

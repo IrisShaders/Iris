@@ -26,7 +26,7 @@ public class CompositeRenderTargets {
 				() -> CompositeRenderTarget.builder().setDimensions(width, height).setInternalFormat(InternalTextureFormat.RGBA32F).build();
 
 		// TODO: Don't always try to create all 8 draw buffers if they aren't actually necessary
-		targets = new CompositeRenderTarget[] {
+		targets = new CompositeRenderTarget[]{
 				colorTarget.get(),
 				depthTarget.get(),
 				colorTarget.get(),

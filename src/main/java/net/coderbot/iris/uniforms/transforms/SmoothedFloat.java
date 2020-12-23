@@ -8,7 +8,7 @@ import net.coderbot.iris.uniforms.SystemTimeUniforms;
  * smoothed values.
  *
  * @see <a href="https://en.wikipedia.org/wiki/Exponential_smoothing#Basic_(simple)_exponential_smoothing_(Holt_linear)">
- *     Wikipedia: Basic (simple) exponential smoothing (Holt linear)</a>
+ * Wikipedia: Basic (simple) exponential smoothing (Holt linear)</a>
  */
 public class SmoothedFloat implements FloatSupplier {
 	/**
@@ -39,8 +39,9 @@ public class SmoothedFloat implements FloatSupplier {
 
 	/**
 	 * Creates a new SmoothedFloat with a given half life.
-	 * @param halfLife the half life in the exponential decay, in deciseconds (1/10th of a second) / 2 ticks.
-	 *                 For example, a half life of value of 2.0 is 4 ticks or 0.2 seconds
+	 *
+	 * @param halfLife   the half life in the exponential decay, in deciseconds (1/10th of a second) / 2 ticks.
+	 *                   For example, a half life of value of 2.0 is 4 ticks or 0.2 seconds
 	 * @param unsmoothed the input sequence of unsmoothed values to be smoothed. {@code unsmoothed.getAsFloat()} will be
 	 *                   called exactly once for every time {@code smoothed.getAsFloat()} is called.
 	 */
@@ -61,6 +62,7 @@ public class SmoothedFloat implements FloatSupplier {
 
 	/**
 	 * Takes one value from the unsmoothed value sequence, and smooths it
+	 *
 	 * @return a single smoothed value
 	 */
 	@Override
@@ -98,6 +100,7 @@ public class SmoothedFloat implements FloatSupplier {
 
 	/**
 	 * Computes an exponential decay factor based on the given decay constant and time value
+	 *
 	 * @param k the decay constant, derived from the half life
 	 * @param t the time that has passed since the decay started
 	 */
@@ -109,9 +112,10 @@ public class SmoothedFloat implements FloatSupplier {
 
 	/**
 	 * Computes a linearly interpolated value between v0 and v1
+	 *
 	 * @param v0 the starting value (t = 0)
 	 * @param v1 the ending value (t = 1)
-	 * @param t the time/progress value - should be in the range of 0.0 to 1.0
+	 * @param t  the time/progress value - should be in the range of 0.0 to 1.0
 	 */
 	private static float lerp(float v0, float v1, float t) {
 		// https://en.wikipedia.org/wiki/Linear_interpolation

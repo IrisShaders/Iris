@@ -1,15 +1,18 @@
 package net.coderbot.iris.shaderpack;
 
-import net.coderbot.iris.Iris;
-import org.apache.logging.log4j.Level;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+
+import net.coderbot.iris.Iris;
+import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
 	private final ProgramSource gbuffersBasic;
@@ -120,7 +123,7 @@ public class ShaderPack {
 	private static String readFile(Path path) throws IOException {
 		try {
 			return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-		} catch(FileNotFoundException | NoSuchFileException e) {
+		} catch (FileNotFoundException | NoSuchFileException e) {
 			return null;
 		}
 	}

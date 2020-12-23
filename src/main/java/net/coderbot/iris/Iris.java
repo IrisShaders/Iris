@@ -1,26 +1,27 @@
 package net.coderbot.iris;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
+
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.shaderpack.ShaderPack;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
-
-import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Objects;
+import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {

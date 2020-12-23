@@ -178,7 +178,7 @@ public class ShaderPipeline {
 		}
 
 		texturedLit.use();
-		if ((layer.isOutline() || layer == RenderLayer.getLines()) && basic != null){
+		if ((layer.isOutline() || layer == RenderLayer.getLines()) && basic != null) {
 			basic.use();
 		}
 	}

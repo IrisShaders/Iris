@@ -13,6 +13,7 @@ import net.minecraft.util.math.Vec3d;
 
 public interface UniformHolder {
 	UniformHolder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform);
+
 	OptionalInt location(String name);
 
 	default UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value) {
@@ -66,7 +67,7 @@ public interface UniformHolder {
 	default UniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
 		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector4Uniform(id, value)));
 
-		return  this;
+		return this;
 	}
 
 	default UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {

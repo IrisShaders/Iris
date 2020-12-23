@@ -19,6 +19,7 @@ public final class SystemTimeUniforms {
 
 	/**
 	 * Makes system time uniforms available to the given program
+	 *
 	 * @param uniforms the program to make the uniforms available to
 	 */
 	public static void addSystemTimeUniforms(UniformHolder uniforms) {

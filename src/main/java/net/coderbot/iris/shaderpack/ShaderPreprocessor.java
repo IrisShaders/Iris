@@ -26,7 +26,7 @@ public class ShaderPreprocessor {
 
 		// Match any valid newline sequence
 		// https://stackoverflow.com/a/31060125
-		for (String line: source.split("\\R")) {
+		for (String line : source.split("\\R")) {
 			String trimmedLine = line.trim();
 
 			if (trimmedLine.startsWith("#include ")) {

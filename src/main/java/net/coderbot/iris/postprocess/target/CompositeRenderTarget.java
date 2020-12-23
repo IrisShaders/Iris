@@ -82,7 +82,7 @@ public class CompositeRenderTarget {
 		requireValid();
 		isValid = false;
 
-		GL11C.glDeleteTextures(new int[] { mainTexture, altTexture });
+		GL11C.glDeleteTextures(new int[]{mainTexture, altTexture});
 	}
 
 	private void requireValid() {
