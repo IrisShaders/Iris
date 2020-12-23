@@ -11,6 +11,7 @@ import java.util.Optional;
 public class ShaderPack {
 	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersTextured;
+	private final ProgramSource gbuffersTerrain;
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
@@ -21,6 +22,7 @@ public class ShaderPack {
 	public ShaderPack(Path root) throws IOException {
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
+		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
@@ -48,6 +50,10 @@ public class ShaderPack {
 
 	public Optional<ProgramSource> getGbuffersTextured() {
 		return gbuffersTextured.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersTerrain() {
+		return gbuffersTerrain.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersSkyBasic() {

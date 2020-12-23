@@ -44,8 +44,8 @@ public class ShaderPipeline {
 		this.skyBasic = pack.getGbuffersSkyBasic().map(ShaderPipeline::createProgram).orElse(basic);
 		this.skyTextured = pack.getGbuffersSkyTextured().map(ShaderPipeline::createProgram).orElse(textured);
 		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
-		// TODO: Load terrain, water, weather shaders
-		this.terrain = texturedLit;
+		this.terrain = pack.getGbuffersTerrain().map(ShaderPipeline::createProgram).orElse(texturedLit);
+		// TODO: Load water, weather shaders
 		this.translucent = terrain;
 		this.weather = texturedLit;
 	}
