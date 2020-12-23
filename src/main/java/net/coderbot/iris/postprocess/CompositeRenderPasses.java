@@ -82,7 +82,7 @@ public class CompositeRenderPasses {
 
 			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, drawBuffers);
 
-			pass.stageReadsFromAlt = stageReadsFromAlt;
+			pass.stageReadsFromAlt = Arrays.copyOf(stageReadsFromAlt, stageReadsFromAlt.length);
 			pass.framebuffer = framebuffer;
 
 			if (programEntry == programs.get(programs.size() - 1)) {
