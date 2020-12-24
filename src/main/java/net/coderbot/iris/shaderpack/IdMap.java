@@ -1,5 +1,13 @@
 package net.coderbot.iris.shaderpack;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+
 import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
@@ -10,11 +18,6 @@ import org.apache.logging.log4j.Level;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -40,12 +43,12 @@ public class IdMap {
 	 */
 	private Map<Identifier, RenderLayer> blockRenderLayerMap = Maps.newHashMap();
 
-	IdMap(Path shaderPath){
+	IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
-				.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
+			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
 		entityIdMap = loadProperties(shaderPath, "entity.properties")
-				.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
+			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
 		loadProperties(shaderPath, "block.properties").ifPresent(blockProperties -> {
 			// TODO: This won't parse block states in block.properties properly
@@ -108,7 +111,7 @@ public class IdMap {
 					Identifier identifier = new Identifier(part);
 
 					idMap.put(identifier, intId);
-				} catch(InvalidIdentifierException e) {
+				} catch (InvalidIdentifierException e) {
 					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
@@ -137,7 +140,7 @@ public class IdMap {
 			RenderLayer layer;
 
 			// See: https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L556-L576
-			switch (key){
+			switch (key) {
 				case "solid":
 					layer = RenderLayer.getSolid();
 					break;
@@ -160,7 +163,7 @@ public class IdMap {
 					Identifier identifier = new Identifier(part);
 
 					layerMap.put(identifier, layer);
-				} catch(InvalidIdentifierException e) {
+				} catch (InvalidIdentifierException e) {
 					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}

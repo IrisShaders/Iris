@@ -15,7 +15,7 @@ import net.minecraft.client.util.math.MatrixStack;
  * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
  * above the player. This class extends the sky rendering so that an octagonal prism is drawn around the player instead,
  * allowing shaders to perform more advanced sky rendering.
- *
+ * <p>
  * However, the horizon rendering is designed so that when sky shaders are not being used, it looks almost exactly the
  * same as vanilla sky rendering, with the exception of a few almost entirely imperceptible differences where the walls
  * of the octagonal prism intersect the top plane.
@@ -79,9 +79,9 @@ public class HorizonRenderer {
 
 	/**
 	 * @param adjacent the adjacent side length of the a triangle with a hypotenuse extending from the center of the
-	 *				 octagon to a given vertex on the perimeter.
+	 *                 octagon to a given vertex on the perimeter.
 	 * @param opposite the opposite side length of the a triangle with a hypotenuse extending from the center of the
-	 * 	 *			 octagon to a given vertex on the perimeter.
+	 *                 octagon to a given vertex on the perimeter.
 	 */
 	private void buildOctagonalPrism(VertexConsumer consumer, double adjacent, double opposite) {
 		buildHalf(consumer, adjacent, opposite, false);

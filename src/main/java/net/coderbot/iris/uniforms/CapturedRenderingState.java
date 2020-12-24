@@ -40,19 +40,19 @@ public class CapturedRenderingState {
 		return tickDelta;
 	}
 
-	public void setCurrentBlockEntity(BlockEntity entity){
+	public void setCurrentBlockEntity(BlockEntity entity) {
 		this.currentRenderedBlockEntity = entity;
 	}
 
-	public BlockEntity getCurrentRenderedBlockEntity(){
+	public BlockEntity getCurrentRenderedBlockEntity() {
 		return currentRenderedBlockEntity;
 	}
 
-	public void setCurrentEntity(Entity entity){
+	public void setCurrentEntity(Entity entity) {
 		this.currentRenderedEntity = entity;
 	}
 
-	public Entity getCurrentRenderedEntity(){
+	public Entity getCurrentRenderedEntity() {
 		return currentRenderedEntity;
 	}
 }

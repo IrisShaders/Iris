@@ -30,7 +30,7 @@ public interface MixinBufferVertexConsumer {
 	 */
 	@Overwrite
 	default VertexConsumer overlay(int u, int v) {
-		return ((BufferVertexConsumer)this).texture((short)u, (short)v, TextureUnit.OVERLAY.getSamplerId());
+		return ((BufferVertexConsumer) this).texture((short) u, (short) v, TextureUnit.OVERLAY.getSamplerId());
 	}
 
 	/**
@@ -39,6 +39,6 @@ public interface MixinBufferVertexConsumer {
 	 */
 	@Overwrite
 	default VertexConsumer light(int u, int v) {
-		return ((BufferVertexConsumer)this).texture((short)u, (short)v, TextureUnit.LIGHTMAP.getSamplerId());
+		return ((BufferVertexConsumer) this).texture((short) u, (short) v, TextureUnit.LIGHTMAP.getSamplerId());
 	}
 }

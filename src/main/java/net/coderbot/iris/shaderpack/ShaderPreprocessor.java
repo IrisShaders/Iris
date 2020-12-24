@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ShaderPreprocessor {
-	public static String process(Path shaderPath, String source) throws IOException {
+	public static String process(Path rootPath, Path shaderPath, String source) throws IOException {
 		StringBuilder processed = new StringBuilder();
 
-		for (String line : processInternal(shaderPath, source)) {
+		List<String> lines = processInternal(rootPath, shaderPath, source);
+
+		for (String line : lines) {
 			processed.append(line);
 			processed.append('\n');
 		}
@@ -19,15 +21,17 @@ public class ShaderPreprocessor {
 		return processed.toString();
 	}
 
-	private static List<String> processInternal(Path shaderPath, String source) throws IOException {
+	private static List<String> processInternal(Path rootPath, Path shaderPath, String source) throws IOException {
 		List<String> lines = new ArrayList<>();
 
 		// Match any valid newline sequence
 		// https://stackoverflow.com/a/31060125
-		for (String line: source.split("\\R")) {
-			if (line.startsWith("#include ")) {
+		for (String line : source.split("\\R")) {
+			String trimmedLine = line.trim();
+
+			if (trimmedLine.startsWith("#include ")) {
 				try {
-					lines.addAll(include(shaderPath, line));
+					lines.addAll(include(rootPath, shaderPath, trimmedLine));
 				} catch (IOException e) {
 					throw new IOException("Failed to read file from #include directive", e);
 				}
@@ -36,12 +40,18 @@ public class ShaderPreprocessor {
 			}
 
 			lines.add(line);
+
+			if (line.startsWith("#version")) {
+				// That was the first line. Add our preprocessor lines
+				lines.add("#define MC_RENDER_QUALITY 1.0");
+				lines.add("#define MC_SHADOW_QUALITY 1.0");
+			}
 		}
 
 		return lines;
 	}
 
-	private static List<String> include(Path shaderPath, String directive) throws IOException {
+	private static List<String> include(Path rootPath, Path shaderPath, String directive) throws IOException {
 		// Remove the "#include " part so that we just have the file path
 		String target = directive.substring("#include ".length()).trim();
 
@@ -55,10 +65,19 @@ public class ShaderPreprocessor {
 			target = target.substring(0, target.length() - 1);
 		}
 
-		Path included = shaderPath.getParent().resolve(target);
+		Path included;
+
+		if (target.startsWith("/")) {
+			target = target.substring(1);
+
+			included = rootPath.resolve(target);
+		} else {
+			included = shaderPath.getParent().resolve(target);
+		}
+
 		String source = readFile(included);
 
-		return processInternal(included, source);
+		return processInternal(rootPath, included, source);
 	}
 
 	private static String readFile(Path path) throws IOException {

@@ -19,6 +19,7 @@ public final class SystemTimeUniforms {
 
 	/**
 	 * Makes system time uniforms available to the given program
+	 *
 	 * @param uniforms the program to make the uniforms available to
 	 */
 	public static void addSystemTimeUniforms(UniformHolder uniforms) {
@@ -70,7 +71,7 @@ public final class SystemTimeUniforms {
 		public void beginFrame(long frameStartTime) {
 			// Track how much time passed since the last time we began rendering a frame.
 			// If this is the first frame, then use a value of 0.
-			long diffNs = lastStartTime.orElse(frameStartTime) - frameStartTime;
+			long diffNs = frameStartTime - lastStartTime.orElse(frameStartTime);
 			// Convert to milliseconds
 			long diffMs = (diffNs / 1000) / 1000;
 
