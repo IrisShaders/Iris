@@ -3,6 +3,7 @@ package net.coderbot.iris;
 import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
+import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -34,6 +35,7 @@ public class Iris implements ClientModInitializer {
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
+	private static CompositeRenderer compositeRenderer;
 	private static IrisConfig irisConfig;
 	public static KeyBinding reloadKeybind;
 
@@ -65,22 +67,7 @@ public class Iris implements ClientModInitializer {
 			loadInternalShaderpack();
 		}
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
-		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			while (reloadKeybind.wasPressed()){
-				try {
-					reload();
-					minecraftClient.worldRenderer.reload();
-					if (minecraftClient.player != null){
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
-					}
-				} catch (Exception e) {
-					Iris.logger.error("Error while reloading Shaders for Iris!", e);
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
-					}
-				}
-			}
-		});
+
 	}
 
 	private void loadExternalShaderpack(String name) {
@@ -147,6 +134,15 @@ public class Iris implements ClientModInitializer {
 	public static ShaderPack getCurrentPack() {
 		return currentPack;
 	}
+
+	public static CompositeRenderer getCompositeRenderer() {
+		if (compositeRenderer == null) {
+			compositeRenderer = new CompositeRenderer(Objects.requireNonNull(currentPack));
+		}
+
+		return compositeRenderer;
+	}
+
 
 	public static IrisConfig getIrisConfig() {
 		return irisConfig;
