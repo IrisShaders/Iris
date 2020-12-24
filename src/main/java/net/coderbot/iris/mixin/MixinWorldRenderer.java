@@ -1,31 +1,24 @@
-
 package net.coderbot.iris.mixin;
 
-import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.render.*;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 @Mixin(WorldRenderer.class)
 @Environment(EnvType.CLIENT)
@@ -45,6 +38,7 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At("RETURN"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		Iris.getPipeline().endWorldRender();
+		Iris.getCompositeRenderer().renderAll();
 	}
 
 	// TODO: end sky
@@ -54,22 +48,22 @@ public class MixinWorldRenderer {
 	}
 
 	@Inject(method = RENDER_SKY,
-			at = @At(value = "INVOKE:FIRST", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableFog()V"),
-			slice = @Slice(from = @At(value = "FIELD:FIRST", target = "Lnet/minecraft/client/render/WorldRenderer;lightSkyBuffer:Lnet/minecraft/client/gl/VertexBuffer;"),
-					to = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
+		at = @At(value = "INVOKE:FIRST", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableFog()V"),
+		slice = @Slice(from = @At(value = "FIELD:FIRST", target = "Lnet/minecraft/client/render/WorldRenderer;lightSkyBuffer:Lnet/minecraft/client/gl/VertexBuffer;"),
+			to = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
 	private void iris$renderSky$drawHorizon(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		new HorizonRenderer().renderHorizon(matrices);
 	}
 
 	@Inject(method = RENDER_SKY,
-			at = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V"))
+		at = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V"))
 	private void iris$renderSky$beginTextured(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		Iris.getPipeline().beginTexturedSky();
 	}
 
 	@Inject(method = RENDER_SKY,
-			slice = @Slice(from = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V")),
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;method_23787(F)F"))
+		slice = @Slice(from = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V")),
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;method_23787(F)F"))
 	private void iris$renderSky$endTextured(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		Iris.getPipeline().endTexturedSky();
 	}

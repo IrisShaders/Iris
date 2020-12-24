@@ -44,8 +44,8 @@ public class ShaderPipeline {
 		this.skyBasic = pack.getGbuffersSkyBasic().map(ShaderPipeline::createProgram).orElse(basic);
 		this.skyTextured = pack.getGbuffersSkyTextured().map(ShaderPipeline::createProgram).orElse(textured);
 		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
-		// TODO: Load terrain, water, weather shaders
-		this.terrain = texturedLit;
+		this.terrain = pack.getGbuffersTerrain().map(ShaderPipeline::createProgram).orElse(texturedLit);
+		// TODO: Load water, weather shaders
 		this.translucent = terrain;
 		this.weather = texturedLit;
 	}
@@ -58,7 +58,7 @@ public class ShaderPipeline {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
-					source.getFragmentSource().orElse(null));
+				source.getFragmentSource().orElse(null));
 		} catch (IOException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -178,7 +178,7 @@ public class ShaderPipeline {
 		}
 
 		texturedLit.use();
-		if ((layer.isOutline() || layer == RenderLayer.getLines()) && basic != null){
+		if ((layer.isOutline() || layer == RenderLayer.getLines()) && basic != null) {
 			basic.use();
 		}
 	}
