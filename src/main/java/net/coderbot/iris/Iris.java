@@ -1,25 +1,27 @@
 package net.coderbot.iris;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
+
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
+import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.shaderpack.ShaderPack;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
-
-import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Objects;
+import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
@@ -30,6 +32,7 @@ public class Iris implements ClientModInitializer {
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
+	private static CompositeRenderer compositeRenderer;
 	private static IrisConfig irisConfig;
 	public static KeyBinding reloadKeybind;
 
@@ -60,6 +63,7 @@ public class Iris implements ClientModInitializer {
 		if (currentPack == null) {
 			loadInternalShaderpack();
 		}
+
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 	}
 
@@ -86,7 +90,7 @@ public class Iris implements ClientModInitializer {
 
 	private void loadInternalShaderpack() {
 		Path root = FabricLoader.getInstance().getModContainer("iris")
-				.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
+			.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
 
 		try {
 			currentPack = new ShaderPack(root.resolve("shaders"));
@@ -108,6 +112,14 @@ public class Iris implements ClientModInitializer {
 
 	public static ShaderPack getCurrentPack() {
 		return currentPack;
+	}
+
+	public static CompositeRenderer getCompositeRenderer() {
+		if (compositeRenderer == null) {
+			compositeRenderer = new CompositeRenderer(Objects.requireNonNull(currentPack));
+		}
+
+		return compositeRenderer;
 	}
 
 	public static IrisConfig getIrisConfig() {
