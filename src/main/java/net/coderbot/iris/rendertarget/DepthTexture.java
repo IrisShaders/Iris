@@ -1,4 +1,4 @@
-package net.coderbot.iris.postprocess.target;
+package net.coderbot.iris.rendertarget;
 
 import java.nio.ByteBuffer;
 

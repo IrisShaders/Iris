@@ -15,8 +15,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.postprocess.target.CompositeRenderTarget;
-import net.coderbot.iris.postprocess.target.CompositeRenderTargets;
+import net.coderbot.iris.rendertarget.RenderTarget;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.DirectiveParser;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -28,7 +28,7 @@ import net.minecraft.util.Pair;
 
 public class CompositeRenderer {
 	private final Program baseline;
-	private final CompositeRenderTargets renderTargets;
+	private final RenderTargets renderTargets;
 
 	private final GlFramebuffer writesToMain;
 	private final ImmutableList<Pass> passes;
@@ -54,11 +54,11 @@ public class CompositeRenderer {
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
-		this.renderTargets = new CompositeRenderTargets(main.textureWidth, main.textureHeight);
+		this.renderTargets = new RenderTargets(main.textureWidth, main.textureHeight);
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
-		boolean[] stageReadsFromAlt = new boolean[CompositeRenderTargets.MAX_RENDER_TARGETS];
+		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
 		// Hack to make a framebuffer that writes to the "main" buffers.
 		Arrays.fill(stageReadsFromAlt, true);
@@ -102,14 +102,14 @@ public class CompositeRenderer {
 		boolean isLastPass;
 	}
 
-	private static GlFramebuffer createStageFramebuffer(CompositeRenderTargets renderTargets, boolean[] stageReadsFromAlt, int[] drawBuffers) {
+	private static GlFramebuffer createStageFramebuffer(RenderTargets renderTargets, boolean[] stageReadsFromAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
 		System.out.println("creating framebuffer: stageReadsFromAlt = " + new BooleanArrayList(stageReadsFromAlt));
 
-		for (int i = 0; i < CompositeRenderTargets.MAX_RENDER_TARGETS; i++) {
-			CompositeRenderTarget target = renderTargets.get(i);
+		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
+			RenderTarget target = renderTargets.get(i);
 			boolean stageWritesToAlt = !stageReadsFromAlt[i];
 
 			int textureId = stageWritesToAlt ? target.getAltTexture() : target.getMainTexture();
@@ -180,7 +180,7 @@ public class CompositeRenderer {
 		RenderSystem.bindTexture(0);
 	}
 
-	private static void bindRenderTarget(int textureUnit, CompositeRenderTarget target, boolean readFromAlt) {
+	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean readFromAlt) {
 		bindTexture(textureUnit, readFromAlt ? target.getAltTexture() : target.getMainTexture());
 	}
 

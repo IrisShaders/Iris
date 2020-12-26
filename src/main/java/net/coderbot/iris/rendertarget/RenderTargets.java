@@ -1,32 +1,32 @@
-package net.coderbot.iris.postprocess.target;
+package net.coderbot.iris.rendertarget;
 
 import java.util.function.Supplier;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 
-public class CompositeRenderTargets {
+public class RenderTargets {
 	/**
 	 * The maximum number of render targets supported by Iris.
 	 */
 	public static int MAX_RENDER_TARGETS = 8;
 
-	private final CompositeRenderTarget[] targets;
+	private final RenderTarget[] targets;
 	private final DepthTexture depthTexture;
 
 	private int cachedWidth;
 	private int cachedHeight;
 
-	public CompositeRenderTargets(int width, int height) {
-		Supplier<CompositeRenderTarget> colorTarget =
-			() -> CompositeRenderTarget.builder().setDimensions(width, height).build();
+	public RenderTargets(int width, int height) {
+		Supplier<RenderTarget> colorTarget =
+			() -> RenderTarget.builder().setDimensions(width, height).build();
 
 		// TODO: Only use RGBA32F if gdepth is explicitly specified as opposed to colortex1
-		Supplier<CompositeRenderTarget> depthTarget =
-			() -> CompositeRenderTarget.builder().setDimensions(width, height).setInternalFormat(InternalTextureFormat.RGBA32F).build();
+		Supplier<RenderTarget> depthTarget =
+			() -> RenderTarget.builder().setDimensions(width, height).setInternalFormat(InternalTextureFormat.RGBA32F).build();
 
 		// TODO: Don't always try to create all 8 draw buffers if they aren't actually necessary
-		targets = new CompositeRenderTarget[]{
+		targets = new RenderTarget[]{
 			colorTarget.get(),
 			depthTarget.get(),
 			colorTarget.get(),
@@ -48,7 +48,7 @@ public class CompositeRenderTargets {
 		this.cachedHeight = height;
 	}
 
-	public CompositeRenderTarget get(int index) {
+	public RenderTarget get(int index) {
 		return targets[index];
 	}
 
@@ -66,7 +66,7 @@ public class CompositeRenderTargets {
 		cachedWidth = newWidth;
 		cachedHeight = newHeight;
 
-		for (CompositeRenderTarget target : targets) {
+		for (RenderTarget target : targets) {
 			target.resize(newWidth, newHeight);
 		}
 
