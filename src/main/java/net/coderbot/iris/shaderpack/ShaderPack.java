@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
@@ -87,6 +88,23 @@ public class ShaderPack {
 
 	public Map<String, Map<String, String>> getLangMap() {
 		return langMap;
+	}
+
+	public InternalTextureFormat[] getRequestedBufferFormats() {
+		// TODO: This is hardcoded to use Sildur's requested buffer formats. We need to properly parse the format
+		// directives from the shaderpack.
+		// TODO: Don't create render targets if they are unused
+		return new InternalTextureFormat[]{
+			InternalTextureFormat.RGBA16,
+			// TODO: Only use RGBA32F if gdepth is explicitly specified as opposed to colortex1
+			InternalTextureFormat.RGBA32F,
+			InternalTextureFormat.RGB10_A2,
+			InternalTextureFormat.R11F_G11F_B10F,
+			InternalTextureFormat.RGBA16,
+			InternalTextureFormat.R11F_G11F_B10F,
+			InternalTextureFormat.R11F_G11F_B10F,
+			InternalTextureFormat.R11F_G11F_B10F
+		};
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {

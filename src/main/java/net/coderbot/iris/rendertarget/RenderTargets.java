@@ -1,7 +1,5 @@
 package net.coderbot.iris.rendertarget;
 
-import java.util.function.Supplier;
-
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 
@@ -17,29 +15,16 @@ public class RenderTargets {
 	private int cachedWidth;
 	private int cachedHeight;
 
-	public RenderTargets(int width, int height) {
-		Supplier<RenderTarget> colorTarget =
-			() -> RenderTarget.builder().setDimensions(width, height).build();
+	public RenderTargets(int width, int height, InternalTextureFormat[] formats) {
+		if (formats.length > MAX_RENDER_TARGETS) {
+			throw new IllegalArgumentException("Too many render targets: " + formats.length + " targets requested, but the maximum number of render targets is " + MAX_RENDER_TARGETS);
+		}
 
-		// TODO: Only use RGBA32F if gdepth is explicitly specified as opposed to colortex1
-		Supplier<RenderTarget> depthTarget =
-			() -> RenderTarget.builder().setDimensions(width, height).setInternalFormat(InternalTextureFormat.RGBA32F).build();
+		targets = new RenderTarget[formats.length];
+		int targetIndex = 0;
 
-		// TODO: Don't always try to create all 8 draw buffers if they aren't actually necessary
-		targets = new RenderTarget[]{
-			colorTarget.get(),
-			depthTarget.get(),
-			colorTarget.get(),
-			colorTarget.get(),
-			colorTarget.get(),
-			colorTarget.get(),
-			colorTarget.get(),
-			colorTarget.get()
-		};
-
-		if (targets.length != MAX_RENDER_TARGETS) {
-			// TODO: Just temporary
-			throw new AssertionError();
+		for (InternalTextureFormat format : formats) {
+			targets[targetIndex++] = RenderTarget.builder().setDimensions(width, height).setInternalFormat(format).build();
 		}
 
 		this.depthTexture = new DepthTexture(width, height);

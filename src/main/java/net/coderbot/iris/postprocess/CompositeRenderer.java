@@ -28,9 +28,10 @@ import net.minecraft.util.Pair;
 
 public class CompositeRenderer {
 	private final Program baseline;
-	private final RenderTargets renderTargets;
+	public final RenderTargets renderTargets;
 
-	private final GlFramebuffer writesToMain;
+	// TODO: Make private
+	public final GlFramebuffer writesToMain;
 	private final ImmutableList<Pass> passes;
 
 	private final FullScreenQuadRenderer quadRenderer;
@@ -54,7 +55,7 @@ public class CompositeRenderer {
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
-		this.renderTargets = new RenderTargets(main.textureWidth, main.textureHeight);
+		this.renderTargets = new RenderTargets(main.textureWidth, main.textureHeight, pack.getRequestedBufferFormats());
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
@@ -63,6 +64,7 @@ public class CompositeRenderer {
 		// Hack to make a framebuffer that writes to the "main" buffers.
 		Arrays.fill(stageReadsFromAlt, true);
 		this.writesToMain = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[]{0});
+		this.writesToMain.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
 
 		Arrays.fill(stageReadsFromAlt, false);
 
@@ -137,11 +139,13 @@ public class CompositeRenderer {
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
 
-		this.writesToMain.bind();
+		/*this.writesToMain.bind();
 
 		RenderSystem.bindTexture(main.getColorAttachment());
 		baseline.use();
-		quadRenderer.render();
+		quadRenderer.render();*/
+
+		int depthAttachment = renderTargets.getDepthTexture().getTextureId();
 
 		for (Pass renderPass : passes) {
 			if (!renderPass.isLastPass) {
@@ -152,12 +156,12 @@ public class CompositeRenderer {
 
 			// TODO: Consider copying the depth texture content into a separate texture that won't be modified? Probably
 			// isn't an issue though.
-			bindTexture(PostProcessUniforms.DEPTH_TEX_0, main.getDepthAttachment());
+			bindTexture(PostProcessUniforms.DEPTH_TEX_0, depthAttachment);
 			// TODO: No translucent objects
-			bindTexture(PostProcessUniforms.DEPTH_TEX_1, main.getDepthAttachment());
+			bindTexture(PostProcessUniforms.DEPTH_TEX_1, depthAttachment);
 			// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
 			// Once we start rendering the hand before composite content, this will need to be addressed.
-			bindTexture(PostProcessUniforms.DEPTH_TEX_2, main.getDepthAttachment());
+			bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachment);
 
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1]);
@@ -171,6 +175,8 @@ public class CompositeRenderer {
 			renderPass.program.use();
 			quadRenderer.render();
 		}
+
+		// TODO: If there are no composite passes, we need to add a "fake" pass
 
 		GlStateManager.useProgram(0);
 
