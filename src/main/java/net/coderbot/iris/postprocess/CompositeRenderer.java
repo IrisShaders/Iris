@@ -210,34 +210,10 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		// First try to find it in the fragment source, then in the vertex source.
-		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
-		int[] drawBuffers = findDrawbuffersDirective(source.getFragmentSource())
-			.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[]{0}));
-
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 		PostProcessUniforms.addPostProcessUniforms(builder, this);
 
-		return new Pair<>(builder.build(), drawBuffers);
-	}
-
-	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource) {
-		return stageSource
-			.flatMap(fragment -> DirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
-			.map(String::toCharArray)
-			.map(CompositeRenderer::parseDigits);
-	}
-
-	private static int[] parseDigits(char[] directiveChars) {
-		int[] buffers = new int[directiveChars.length];
-		int index = 0;
-
-		for (char buffer : directiveChars) {
-			buffers[index++] = Character.digit(buffer, 10);
-		}
-
-		return buffers;
+		return new Pair<>(builder.build(), source.getDirectives().getDrawBuffers());
 	}
 
 	private Program createBaselineProgram(ShaderPack parent) {

@@ -185,6 +185,7 @@ public class ShaderPack {
 		private final String name;
 		private final String vertexSource;
 		private final String fragmentSource;
+		private final ProgramDirectives directives;
 		private final ShaderPack parent;
 
 		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
@@ -192,6 +193,7 @@ public class ShaderPack {
 			this.vertexSource = vertexSource;
 			this.fragmentSource = fragmentSource;
 			this.parent = parent;
+			this.directives = new ProgramDirectives(this);
 		}
 
 		public String getName() {
@@ -204,6 +206,10 @@ public class ShaderPack {
 
 		public Optional<String> getFragmentSource() {
 			return Optional.ofNullable(fragmentSource);
+		}
+
+		public ProgramDirectives getDirectives() {
+			return this.directives;
 		}
 
 		public ShaderPack getParent() {
