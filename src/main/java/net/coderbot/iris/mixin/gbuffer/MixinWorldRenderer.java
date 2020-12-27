@@ -28,7 +28,7 @@ public class MixinWorldRenderer {
 
 		// The framebuffer will be cleared by WorldRenderer
 		// TODO: I assume that most buffers shouldn't be cleared to the fog color...
-		Iris.getCompositeRenderer().clearEverythingBuffer.bind();
+		Iris.getCompositeRenderer().clearMainBuffers.bind();
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V"))
@@ -38,6 +38,6 @@ public class MixinWorldRenderer {
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
 
-		Iris.getCompositeRenderer().clearEverythingBuffer.bind();
+		Iris.getCompositeRenderer().clearMainBuffers.bind();
 	}
 }

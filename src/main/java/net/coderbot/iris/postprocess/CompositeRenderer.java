@@ -31,7 +31,7 @@ public class CompositeRenderer {
 	public final RenderTargets renderTargets;
 
 	// TODO: Make private
-	public final GlFramebuffer clearEverythingBuffer;
+	public final GlFramebuffer clearMainBuffers;
 	public final GlFramebuffer clearAltBuffers;
 	private final ImmutableList<Pass> passes;
 
@@ -62,16 +62,12 @@ public class CompositeRenderer {
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
+		this.clearAltBuffers = createAltFramebuffer(renderTargets, packDirectives.getBuffersToBeCleared().toIntArray());
+		this.clearMainBuffers = createMainFramebuffer(renderTargets, packDirectives.getBuffersToBeCleared().toIntArray());
+		this.clearMainBuffers.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
+
+		// Initially filled with false values
 		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
-
-		this.clearAltBuffers = createStageFramebuffer(renderTargets, stageReadsFromAlt, packDirectives.getBuffersToBeCleared().toIntArray());
-
-		// Hack to make a framebuffer that writes to the "main" buffers.
-		Arrays.fill(stageReadsFromAlt, true);
-		this.clearEverythingBuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, packDirectives.getBuffersToBeCleared().toIntArray());
-		this.clearEverythingBuffer.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
-
-		Arrays.fill(stageReadsFromAlt, false);
 
 		for (Pair<Program, ProgramDirectives> programEntry : programs) {
 			Pass pass = new Pass();
@@ -82,7 +78,13 @@ public class CompositeRenderer {
 
 			System.out.println("Draw buffers: " + new IntArrayList(drawBuffers));
 
-			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, drawBuffers);
+			boolean[] stageWritesToAlt = Arrays.copyOf(stageReadsFromAlt, RenderTargets.MAX_RENDER_TARGETS);
+
+			for (int i = 0; i < stageWritesToAlt.length; i++) {
+				stageWritesToAlt[i] = !stageWritesToAlt[i];
+			}
+
+			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, stageWritesToAlt, drawBuffers);
 
 			pass.stageReadsFromAlt = Arrays.copyOf(stageReadsFromAlt, stageReadsFromAlt.length);
 			pass.framebuffer = framebuffer;
@@ -95,6 +97,7 @@ public class CompositeRenderer {
 			passes.add(pass);
 
 			// Flip the buffers that this shader wrote to
+			// TODO: Deduplicate this
 			for (int buffer : drawBuffers) {
 				stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
 			}
@@ -113,19 +116,29 @@ public class CompositeRenderer {
 	}
 
 	public static GlFramebuffer createMainFramebuffer(RenderTargets renderTargets, int[] drawBuffers) {
+		return createBasicFramebuffer(renderTargets, true, drawBuffers);
+	}
+
+	public static GlFramebuffer createAltFramebuffer(RenderTargets renderTargets, int[] drawBuffers) {
+		return createBasicFramebuffer(renderTargets, false, drawBuffers);
+	}
+
+	public static GlFramebuffer createBasicFramebuffer(RenderTargets renderTargets, boolean readsFromAlt, int[] drawBuffers) {
 		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+		boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
 		// Hack to make a framebuffer that writes to the "main" buffers.
-		Arrays.fill(stageReadsFromAlt, true);
+		Arrays.fill(stageReadsFromAlt, readsFromAlt);
+		Arrays.fill(stageWritesToAlt, !readsFromAlt);
 
-		GlFramebuffer framebuffer =  createStageFramebuffer(renderTargets, stageReadsFromAlt, drawBuffers);
+		GlFramebuffer framebuffer =  createStageFramebuffer(renderTargets, stageReadsFromAlt, stageWritesToAlt, drawBuffers);
 
 		framebuffer.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
 
 		return framebuffer;
 	}
 
-	private static GlFramebuffer createStageFramebuffer(RenderTargets renderTargets, boolean[] stageReadsFromAlt, int[] drawBuffers) {
+	private static GlFramebuffer createStageFramebuffer(RenderTargets renderTargets, boolean[] stageReadsFromAlt, boolean[] stageWritesToAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
@@ -133,9 +146,8 @@ public class CompositeRenderer {
 
 		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
 			RenderTarget target = renderTargets.get(i);
-			boolean stageWritesToAlt = !stageReadsFromAlt[i];
 
-			int textureId = stageWritesToAlt ? target.getAltTexture() : target.getMainTexture();
+			int textureId = stageWritesToAlt[i] ? target.getAltTexture() : target.getMainTexture();
 
 			System.out.println("  attachment " + i + " -> texture" + textureId);
 
