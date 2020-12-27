@@ -57,16 +57,8 @@ public class Iris implements ClientModInitializer {
 			logger.error("Failed to initialize Iris configuration, default values will be used instead");
 			logger.catching(Level.ERROR, e);
 		}
+		loadShaderPack();
 
-		// Attempt to load an external shaderpack if it is available
-		if (!irisConfig.isInternal()) {
-			loadExternalShaderpack(irisConfig.getShaderPackName());
-		}
-
-		// If there is no external shaderpack or it failed to load for some reason, load the internal shaders
-		if (currentPack == null) {
-			loadInternalShaderpack();
-		}
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
 			if (reloadKeybind.wasPressed()){
@@ -90,7 +82,19 @@ public class Iris implements ClientModInitializer {
 		});
 	}
 
-	private void loadExternalShaderpack(String name) {
+	private static void loadShaderPack() {
+		// Attempt to load an external shaderpack if it is available
+		if (!irisConfig.isInternal()) {
+			loadExternalShaderpack(irisConfig.getShaderPackName());
+		}
+
+		// If there is no external shaderpack or it failed to load for some reason, load the internal shaders
+		if (currentPack == null) {
+			loadInternalShaderpack();
+		}
+	}
+
+	private static void loadExternalShaderpack(String name) {
 		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
 
@@ -111,7 +115,7 @@ public class Iris implements ClientModInitializer {
 		logger.info("Using shaderpack: " + name);
 	}
 
-	private void loadInternalShaderpack() {
+	private static void loadInternalShaderpack() {
 		Path root = FabricLoader.getInstance().getModContainer("iris")
 			.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
 
@@ -130,9 +134,8 @@ public class Iris implements ClientModInitializer {
 		//when there is a gui or a better system for changing packs at runtime
 		//or could be kept for the gui to use
 		irisConfig.initialize();
-		ShaderPack pack = new ShaderPack(currentPack.getPath());
-		pipeline = new ShaderPipeline(pack);
-		currentPack = pack;
+		loadShaderPack();
+		pipeline = null;//set it to null so getPipeline catches it and sets it to the current pack
 	}
 
 	public static ShaderPipeline getPipeline() {
