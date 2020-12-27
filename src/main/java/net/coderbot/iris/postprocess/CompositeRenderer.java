@@ -9,7 +9,6 @@ import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
@@ -62,8 +61,8 @@ public class CompositeRenderer {
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
-		this.clearAltBuffers = createAltFramebuffer(renderTargets, packDirectives.getBuffersToBeCleared().toIntArray());
-		this.clearMainBuffers = createMainFramebuffer(renderTargets, packDirectives.getBuffersToBeCleared().toIntArray());
+		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(packDirectives.getBuffersToBeCleared().toIntArray());
+		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(packDirectives.getBuffersToBeCleared().toIntArray());
 		this.clearMainBuffers.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
 
 		// Initially filled with false values
@@ -84,7 +83,7 @@ public class CompositeRenderer {
 				stageWritesToAlt[i] = !stageWritesToAlt[i];
 			}
 
-			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, stageWritesToAlt, drawBuffers);
+			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(stageWritesToAlt, drawBuffers);
 
 			pass.stageReadsFromAlt = Arrays.copyOf(stageReadsFromAlt, stageReadsFromAlt.length);
 			pass.framebuffer = framebuffer;
@@ -97,7 +96,6 @@ public class CompositeRenderer {
 			passes.add(pass);
 
 			// Flip the buffers that this shader wrote to
-			// TODO: Deduplicate this
 			for (int buffer : drawBuffers) {
 				stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
 			}
@@ -113,54 +111,6 @@ public class CompositeRenderer {
 		boolean[] stageReadsFromAlt;
 		boolean isLastPass;
 		float viewportScale;
-	}
-
-	public static GlFramebuffer createMainFramebuffer(RenderTargets renderTargets, int[] drawBuffers) {
-		return createBasicFramebuffer(renderTargets, true, drawBuffers);
-	}
-
-	public static GlFramebuffer createAltFramebuffer(RenderTargets renderTargets, int[] drawBuffers) {
-		return createBasicFramebuffer(renderTargets, false, drawBuffers);
-	}
-
-	public static GlFramebuffer createBasicFramebuffer(RenderTargets renderTargets, boolean readsFromAlt, int[] drawBuffers) {
-		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
-		boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
-
-		// Hack to make a framebuffer that writes to the "main" buffers.
-		Arrays.fill(stageReadsFromAlt, readsFromAlt);
-		Arrays.fill(stageWritesToAlt, !readsFromAlt);
-
-		GlFramebuffer framebuffer =  createStageFramebuffer(renderTargets, stageReadsFromAlt, stageWritesToAlt, drawBuffers);
-
-		framebuffer.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
-
-		return framebuffer;
-	}
-
-	private static GlFramebuffer createStageFramebuffer(RenderTargets renderTargets, boolean[] stageReadsFromAlt, boolean[] stageWritesToAlt, int[] drawBuffers) {
-		GlFramebuffer framebuffer = new GlFramebuffer();
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-
-		System.out.println("creating framebuffer: stageReadsFromAlt = " + new BooleanArrayList(stageReadsFromAlt));
-
-		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
-			RenderTarget target = renderTargets.get(i);
-
-			int textureId = stageWritesToAlt[i] ? target.getAltTexture() : target.getMainTexture();
-
-			System.out.println("  attachment " + i + " -> texture" + textureId);
-
-			framebuffer.addColorAttachment(i, textureId);
-		}
-
-		if (!framebuffer.isComplete()) {
-			throw new IllegalStateException("Unexpected error while creating framebuffer");
-		}
-
-		framebuffer.drawBuffers(drawBuffers);
-
-		return framebuffer;
 	}
 
 	public void renderAll() {

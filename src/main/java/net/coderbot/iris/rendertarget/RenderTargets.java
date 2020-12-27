@@ -1,6 +1,9 @@
 package net.coderbot.iris.rendertarget;
 
+import java.util.Arrays;
+
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 
 public class RenderTargets {
@@ -56,5 +59,45 @@ public class RenderTargets {
 		}
 
 		depthTexture.resize(newWidth, newHeight);
+	}
+
+	public GlFramebuffer createFramebufferWritingToMain(int[] drawBuffers) {
+		return createFullFramebuffer(false, drawBuffers);
+	}
+
+	public GlFramebuffer createFramebufferWritingToAlt(int[] drawBuffers) {
+		return createFullFramebuffer(true, drawBuffers);
+	}
+
+	private GlFramebuffer createFullFramebuffer(boolean clearsAlt, int[] drawBuffers) {
+		boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+
+		Arrays.fill(stageWritesToAlt, clearsAlt);
+
+		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToAlt, drawBuffers);
+
+		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
+
+		return framebuffer;
+	}
+
+	public GlFramebuffer createColorFramebuffer(boolean[] stageWritesToAlt, int[] drawBuffers) {
+		GlFramebuffer framebuffer = new GlFramebuffer();
+
+		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
+			RenderTarget target = this.get(i);
+
+			int textureId = stageWritesToAlt[i] ? target.getAltTexture() : target.getMainTexture();
+
+			framebuffer.addColorAttachment(i, textureId);
+		}
+
+		if (!framebuffer.isComplete()) {
+			throw new IllegalStateException("Unexpected error while creating framebuffer");
+		}
+
+		framebuffer.drawBuffers(drawBuffers);
+
+		return framebuffer;
 	}
 }

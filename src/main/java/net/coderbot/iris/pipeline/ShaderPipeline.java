@@ -69,7 +69,7 @@ public class ShaderPipeline {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
-		GlFramebuffer framebuffer = CompositeRenderer.createMainFramebuffer(Iris.getCompositeRenderer().renderTargets, source.getDirectives().getDrawBuffers());
+		GlFramebuffer framebuffer = Iris.getCompositeRenderer().renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
 		return new Pass(builder.build(), framebuffer);
 	}
