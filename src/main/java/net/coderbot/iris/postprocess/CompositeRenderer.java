@@ -104,6 +104,19 @@ public class CompositeRenderer {
 		boolean isLastPass;
 	}
 
+	public static GlFramebuffer createMainFramebuffer(RenderTargets renderTargets, int[] drawBuffers) {
+		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+
+		// Hack to make a framebuffer that writes to the "main" buffers.
+		Arrays.fill(stageReadsFromAlt, true);
+
+		GlFramebuffer framebuffer =  createStageFramebuffer(renderTargets, stageReadsFromAlt, drawBuffers);
+
+		framebuffer.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
+
+		return framebuffer;
+	}
+
 	private static GlFramebuffer createStageFramebuffer(RenderTargets renderTargets, boolean[] stageReadsFromAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
