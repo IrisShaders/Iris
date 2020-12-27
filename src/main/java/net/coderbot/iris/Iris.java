@@ -1,4 +1,3 @@
-
 package net.coderbot.iris;
 
 import java.io.IOException;
@@ -70,7 +69,7 @@ public class Iris implements ClientModInitializer {
 		}
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			while (reloadKeybind.wasPressed()){
+			if (reloadKeybind.wasPressed()){
 
 				try {
 					reload();
