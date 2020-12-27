@@ -23,7 +23,5 @@ public abstract class MixinDebugHud {
 
         messages.add("");
         messages.add("[Iris] Shaderpack: " + Iris.getIrisConfig().getShaderPackName());
-       
     }
-
 }
