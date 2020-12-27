@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -17,7 +16,6 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.shaderpack.DirectiveParser;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.lwjgl.opengl.GL15C;
@@ -31,7 +29,8 @@ public class CompositeRenderer {
 	public final RenderTargets renderTargets;
 
 	// TODO: Make private
-	public final GlFramebuffer writesToMain;
+	public final GlFramebuffer clearEverythingBuffer;
+	public final GlFramebuffer clearAltBuffers;
 	private final ImmutableList<Pass> passes;
 
 	private final FullScreenQuadRenderer quadRenderer;
@@ -61,10 +60,13 @@ public class CompositeRenderer {
 
 		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
+		// TODO: Hardcoding for sildurs: should clear all buffers unless otherwise specified, but we skip buffer 7
+		this.clearAltBuffers = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[]{0, 1, 2, 3, 4, 5, 6});
+
 		// Hack to make a framebuffer that writes to the "main" buffers.
 		Arrays.fill(stageReadsFromAlt, true);
-		this.writesToMain = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[]{0});
-		this.writesToMain.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
+		this.clearEverythingBuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[]{0, 1, 2, 3, 4, 5, 6});
+		this.clearEverythingBuffer.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
 
 		Arrays.fill(stageReadsFromAlt, false);
 
