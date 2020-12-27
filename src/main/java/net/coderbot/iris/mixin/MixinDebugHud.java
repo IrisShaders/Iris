@@ -21,14 +21,8 @@ public abstract class MixinDebugHud {
     private void appendShaderPackText(CallbackInfoReturnable<List<String>> cir) {
         List<String> messages = cir.getReturnValue();
 
-        
-
         messages.add("");
         messages.add("[Iris] Shaderpack: " + Iris.getIrisConfig().getShaderPackName());
-    
-       
-       
-
        
     }
 
