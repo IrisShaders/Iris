@@ -25,7 +25,6 @@ public class ShaderPack {
 	private final ProgramSource compositeFinal;
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
-	private final Path path;
 
 
 	public ShaderPack(Path root) throws IOException {
@@ -48,11 +47,6 @@ public class ShaderPack {
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
-		this.path = root;
-	}
-
-	public Path getPath() {
-		return path;
 	}
 
 	public IdMap getIdMap() {
