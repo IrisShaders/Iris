@@ -16,6 +16,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.lwjgl.opengl.GL15C;
@@ -40,7 +41,7 @@ public class CompositeRenderer {
 		centerDepthSampler = new CenterDepthSampler();
 		baseline = createBaselineProgram(pack);
 
-		final List<Pair<Program, int[]>> programs = new ArrayList<>();
+		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
 
 		for (ShaderPack.ProgramSource source : pack.getComposite()) {
 			if (source == null || !source.isValid()) {
@@ -70,11 +71,12 @@ public class CompositeRenderer {
 
 		Arrays.fill(stageReadsFromAlt, false);
 
-		for (Pair<Program, int[]> programEntry : programs) {
+		for (Pair<Program, ProgramDirectives> programEntry : programs) {
 			Pass pass = new Pass();
+			ProgramDirectives directives = programEntry.getRight();
 
 			pass.program = programEntry.getLeft();
-			int[] drawBuffers = programEntry.getRight();
+			int[] drawBuffers = directives.getDrawBuffers();
 
 			System.out.println("Draw buffers: " + new IntArrayList(drawBuffers));
 
@@ -82,6 +84,7 @@ public class CompositeRenderer {
 
 			pass.stageReadsFromAlt = Arrays.copyOf(stageReadsFromAlt, stageReadsFromAlt.length);
 			pass.framebuffer = framebuffer;
+			pass.viewportScale = directives.getViewportScale();
 
 			if (programEntry == programs.get(programs.size() - 1)) {
 				pass.isLastPass = true;
@@ -104,6 +107,7 @@ public class CompositeRenderer {
 		GlFramebuffer framebuffer;
 		boolean[] stageReadsFromAlt;
 		boolean isLastPass;
+		float viewportScale;
 	}
 
 	public static GlFramebuffer createMainFramebuffer(RenderTargets renderTargets, int[] drawBuffers) {
@@ -187,14 +191,21 @@ public class CompositeRenderer {
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
 
+			float scaledWidth = main.textureWidth * renderPass.viewportScale;
+			float scaledHeight = main.textureHeight * renderPass.viewportScale;
+			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
+
 			renderPass.program.use();
 			quadRenderer.render();
 		}
 
 		// TODO: If there are no composite passes, we need to add a "fake" pass
 
+		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
+		RenderSystem.viewport(0, 0, main.textureWidth, main.textureHeight);
 		GlStateManager.useProgram(0);
 
+		// TODO: We unbind these textures but it would probably make sense to unbind the other ones too.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
 		RenderSystem.bindTexture(0);
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
@@ -211,7 +222,7 @@ public class CompositeRenderer {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private Pair<Program, int[]> createProgram(ShaderPack.ProgramSource source) {
+	private Pair<Program, ProgramDirectives> createProgram(ShaderPack.ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -228,7 +239,7 @@ public class CompositeRenderer {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 		PostProcessUniforms.addPostProcessUniforms(builder, this);
 
-		return new Pair<>(builder.build(), source.getDirectives().getDrawBuffers());
+		return new Pair<>(builder.build(), source.getDirectives());
 	}
 
 	private Program createBaselineProgram(ShaderPack parent) {
