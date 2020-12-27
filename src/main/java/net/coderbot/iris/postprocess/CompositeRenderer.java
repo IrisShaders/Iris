@@ -12,6 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.rendertarget.FramebufferBlitter;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
@@ -27,6 +28,7 @@ public class CompositeRenderer {
 	private final RenderTargets renderTargets;
 
 	private final ImmutableList<Pass> passes;
+	private final GlFramebuffer baseline;
 
 	private final FullScreenQuadRenderer quadRenderer;
 	final CenterDepthSampler centerDepthSampler;
@@ -85,6 +87,8 @@ public class CompositeRenderer {
 		this.passes = passes.build();
 		this.quadRenderer = new FullScreenQuadRenderer();
 		this.renderTargets = renderTargets;
+
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 	}
 
 	private static final class Pass {
@@ -110,7 +114,7 @@ public class CompositeRenderer {
 			if (!renderPass.isLastPass) {
 				renderPass.framebuffer.bind();
 			} else {
-				MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+				main.beginWrite(false);
 			}
 
 			// TODO: Consider copying the depth texture content into a separate texture that won't be modified? Probably
@@ -139,7 +143,14 @@ public class CompositeRenderer {
 			quadRenderer.render();
 		}
 
-		// TODO: If there are no composite passes, we need to add a "fake" pass
+		if (passes.size() == 0) {
+			// If there are no passes, we somehow need to transfer the content of the Iris render targets into the main
+			// Minecraft framebuffer.
+			//
+			// Thus, the following call transfers the content of colortex0 and the depth buffer into the main Minecraft
+			// framebuffer.
+			FramebufferBlitter.copyFramebufferContent(this.baseline, main);
+		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
