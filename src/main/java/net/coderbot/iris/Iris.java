@@ -83,24 +83,25 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static void loadShaderPack() {
-		// Attempt to load an external shaderpack if it is available
+		//if not internal, try to load external shaderpacks
 		if (!irisConfig.isInternal()) {
-			loadExternalShaderpack(irisConfig.getShaderPackName());
-		}
-
-		// If there is no external shaderpack or it failed to load for some reason, load the internal shaders
-		if (currentPack == null) {
+			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
+				//if for whatever reason  loading an external shaderpack failed, load the internal one
+				loadInternalShaderpack();
+			}
+		} else {
+			//if internal, just load internal shaders
 			loadInternalShaderpack();
 		}
 	}
 
-	private static void loadExternalShaderpack(String name) {
+	private static boolean loadExternalShaderpack(String name) {
 		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
 
 		if (!Files.exists(shaderPackPath)) {
 			logger.warn("The shaderpack " + name + " does not have a shaders directory, falling back to internal shaders");
-			return;
+			return false;
 		}
 
 		try {
@@ -109,10 +110,11 @@ public class Iris implements ClientModInitializer {
 			logger.error(String.format("Failed to load shaderpack \"%s\"! Falling back to internal shaders", irisConfig.getShaderPackName()));
 			logger.catching(Level.ERROR, e);
 
-			return;
+			return false;
 		}
 
 		logger.info("Using shaderpack: " + name);
+		return true;
 	}
 
 	private static void loadInternalShaderpack() {
