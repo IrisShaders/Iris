@@ -39,7 +39,7 @@ public class Iris implements ClientModInitializer {
 	private static ShaderPipeline pipeline;
 	private static CompositeRenderer compositeRenderer;
 	private static IrisConfig irisConfig;
-	public static KeyBinding reloadKeybind;
+	private static KeyBinding reloadKeybind;
 
 	@Override
 	public void onInitializeClient() {
@@ -131,15 +131,7 @@ public class Iris implements ClientModInitializer {
 		//when there is a gui or a better system for changing packs at runtime
 		//or could be kept for the gui to use
 		irisConfig.initialize();
-		Path shaderPackRoot;
-		if (!irisConfig.isInternal()) {
-			shaderPackRoot = shaderpacksDirectory.resolve(irisConfig.getShaderPackName());
-		} else {
-			shaderPackRoot = FabricLoader.getInstance().getModContainer("iris").orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!"))
-					.getRootPath()
-					.resolve("shaders");
-		}
-		ShaderPack pack = new ShaderPack(shaderPackRoot.resolve("shaders"));
+		ShaderPack pack = new ShaderPack(currentPack.getPath());
 		pipeline = new ShaderPipeline(pack);
 		currentPack = pack;
 	}
