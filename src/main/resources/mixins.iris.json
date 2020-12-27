@@ -6,6 +6,7 @@
   "client": [
     "MixinGameRenderer",
     "MixinGlStateManager",
+    "MixinVideoOptionsScreen",
     "MixinImmediateVertexConsumerProvider",
     "MixinTranslationStorage",
     "MixinWorldRenderer",
@@ -17,8 +18,5 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-    "MixinVideoOptionsScreen"
-  ]
+  }
 }
