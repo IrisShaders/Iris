@@ -16,6 +16,7 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
+	private final PackDirectives packDirectives;
 	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTerrain;
@@ -27,8 +28,9 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 
-
 	public ShaderPack(Path root) throws IOException {
+		this.packDirectives = new PackDirectives();
+
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
 		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
@@ -90,21 +92,8 @@ public class ShaderPack {
 		return langMap;
 	}
 
-	public InternalTextureFormat[] getRequestedBufferFormats() {
-		// TODO: This is hardcoded to use Sildur's requested buffer formats. We need to properly parse the format
-		// directives from the shaderpack.
-		// TODO: Don't create render targets if they are unused
-		return new InternalTextureFormat[]{
-			InternalTextureFormat.RGBA16,
-			// TODO: Only use RGBA32F if gdepth is explicitly specified as opposed to colortex1
-			InternalTextureFormat.RGBA32F,
-			InternalTextureFormat.RGB10_A2,
-			InternalTextureFormat.R11F_G11F_B10F,
-			InternalTextureFormat.RGBA16,
-			InternalTextureFormat.R11F_G11F_B10F,
-			InternalTextureFormat.R11F_G11F_B10F,
-			InternalTextureFormat.R11F_G11F_B10F
-		};
+	public PackDirectives getPackDirectives() {
+		return packDirectives;
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {

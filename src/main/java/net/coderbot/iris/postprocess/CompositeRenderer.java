@@ -16,6 +16,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -38,6 +39,8 @@ public class CompositeRenderer {
 	final CenterDepthSampler centerDepthSampler;
 
 	public CompositeRenderer(ShaderPack pack) {
+		final PackDirectives packDirectives = pack.getPackDirectives();
+
 		centerDepthSampler = new CenterDepthSampler();
 		baseline = createBaselineProgram(pack);
 
@@ -55,18 +58,17 @@ public class CompositeRenderer {
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 
-		this.renderTargets = new RenderTargets(main.textureWidth, main.textureHeight, pack.getRequestedBufferFormats());
+		this.renderTargets = new RenderTargets(main.textureWidth, main.textureHeight, packDirectives.getRequestedBufferFormats());
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
 		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
-		// TODO: Hardcoding for sildurs: should clear all buffers unless otherwise specified, but we skip buffer 7
-		this.clearAltBuffers = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[]{0, 1, 2, 3, 4, 5, 6});
+		this.clearAltBuffers = createStageFramebuffer(renderTargets, stageReadsFromAlt, packDirectives.getBuffersToBeCleared().toIntArray());
 
 		// Hack to make a framebuffer that writes to the "main" buffers.
 		Arrays.fill(stageReadsFromAlt, true);
-		this.clearEverythingBuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[]{0, 1, 2, 3, 4, 5, 6});
+		this.clearEverythingBuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, packDirectives.getBuffersToBeCleared().toIntArray());
 		this.clearEverythingBuffer.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
 
 		Arrays.fill(stageReadsFromAlt, false);
