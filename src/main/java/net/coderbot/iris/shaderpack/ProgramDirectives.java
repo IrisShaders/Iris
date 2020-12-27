@@ -21,7 +21,7 @@ public class ProgramDirectives {
 
 	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource) {
 		return stageSource
-			.flatMap(fragment -> DirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
+			.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
 			.map(String::toCharArray)
 			.map(ProgramDirectives::parseDigits);
 	}
