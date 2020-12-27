@@ -8,12 +8,14 @@ import java.util.Objects;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 
@@ -32,6 +34,7 @@ public class Iris implements ClientModInitializer {
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
+	private static RenderTargets renderTargets;
 	private static CompositeRenderer compositeRenderer;
 	private static IrisConfig irisConfig;
 	public static KeyBinding reloadKeybind;
@@ -102,9 +105,17 @@ public class Iris implements ClientModInitializer {
 		logger.info("Using internal shaders");
 	}
 
+	private static RenderTargets getRenderTargets() {
+		if (renderTargets == null) {
+			renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), Objects.requireNonNull(currentPack));
+		}
+
+		return renderTargets;
+	}
+
 	public static ShaderPipeline getPipeline() {
 		if (pipeline == null) {
-			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack));
+			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack), getRenderTargets());
 		}
 
 		return pipeline;
@@ -116,7 +127,7 @@ public class Iris implements ClientModInitializer {
 
 	public static CompositeRenderer getCompositeRenderer() {
 		if (compositeRenderer == null) {
-			compositeRenderer = new CompositeRenderer(Objects.requireNonNull(currentPack));
+			compositeRenderer = new CompositeRenderer(Objects.requireNonNull(currentPack), getRenderTargets());
 		}
 
 		return compositeRenderer;

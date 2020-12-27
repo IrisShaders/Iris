@@ -5,6 +5,9 @@ import java.util.Arrays;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.shaderpack.ShaderPack;
+
+import net.minecraft.client.gl.Framebuffer;
 
 public class RenderTargets {
 	/**
@@ -17,6 +20,10 @@ public class RenderTargets {
 
 	private int cachedWidth;
 	private int cachedHeight;
+
+	public RenderTargets(Framebuffer reference, ShaderPack pack) {
+		this(reference.textureWidth, reference.textureHeight, pack.getPackDirectives().getRequestedBufferFormats());
+	}
 
 	public RenderTargets(int width, int height, InternalTextureFormat[] formats) {
 		if (formats.length > MAX_RENDER_TARGETS) {

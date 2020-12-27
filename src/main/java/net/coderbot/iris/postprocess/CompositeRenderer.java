@@ -9,7 +9,6 @@ import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -26,22 +25,15 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.util.Pair;
 
 public class CompositeRenderer {
-	private final Program baseline;
-	public final RenderTargets renderTargets;
+	private final RenderTargets renderTargets;
 
-	// TODO: Make private
-	public final GlFramebuffer clearMainBuffers;
-	public final GlFramebuffer clearAltBuffers;
 	private final ImmutableList<Pass> passes;
 
 	private final FullScreenQuadRenderer quadRenderer;
 	final CenterDepthSampler centerDepthSampler;
 
-	public CompositeRenderer(ShaderPack pack) {
-		final PackDirectives packDirectives = pack.getPackDirectives();
-
+	public CompositeRenderer(ShaderPack pack, RenderTargets renderTargets) {
 		centerDepthSampler = new CenterDepthSampler();
-		baseline = createBaselineProgram(pack);
 
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
 
@@ -55,15 +47,7 @@ public class CompositeRenderer {
 
 		pack.getCompositeFinal().map(this::createProgram).ifPresent(programs::add);
 
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-
-		this.renderTargets = new RenderTargets(main.textureWidth, main.textureHeight, packDirectives.getRequestedBufferFormats());
-
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
-
-		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(packDirectives.getBuffersToBeCleared().toIntArray());
-		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(packDirectives.getBuffersToBeCleared().toIntArray());
-		this.clearMainBuffers.addDepthAttachment(renderTargets.getDepthTexture().getTextureId());
 
 		// Initially filled with false values
 		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
@@ -74,8 +58,6 @@ public class CompositeRenderer {
 
 			pass.program = programEntry.getLeft();
 			int[] drawBuffers = directives.getDrawBuffers();
-
-			System.out.println("Draw buffers: " + new IntArrayList(drawBuffers));
 
 			boolean[] stageWritesToAlt = Arrays.copyOf(stageReadsFromAlt, RenderTargets.MAX_RENDER_TARGETS);
 
@@ -103,6 +85,7 @@ public class CompositeRenderer {
 
 		this.passes = passes.build();
 		this.quadRenderer = new FullScreenQuadRenderer();
+		this.renderTargets = renderTargets;
 	}
 
 	private static final class Pass {
@@ -121,12 +104,6 @@ public class CompositeRenderer {
 
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
-
-		/*this.writesToMain.bind();
-
-		RenderSystem.bindTexture(main.getColorAttachment());
-		baseline.use();
-		quadRenderer.render();*/
 
 		int depthAttachment = renderTargets.getDepthTexture().getTextureId();
 
@@ -205,34 +182,4 @@ public class CompositeRenderer {
 
 		return new Pair<>(builder.build(), source.getDirectives());
 	}
-
-	private Program createBaselineProgram(ShaderPack parent) {
-		ShaderPack.ProgramSource source = new ShaderPack.ProgramSource("<iris builtin baseline composite>", BASELINE_COMPOSITE_VSH, BASELINE_COMPOSITE_FSH, parent);
-
-		return createProgram(source).getLeft();
-	}
-
-	private static final String BASELINE_COMPOSITE_VSH =
-		"#version 120\n" +
-			"\n" +
-			"varying vec2 texcoord;\n" +
-			"\n" +
-			"void main() {\n" +
-			"\tgl_Position = ftransform();\n" +
-			"\ttexcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;\n" +
-			"}";
-
-	private static final String BASELINE_COMPOSITE_FSH =
-		"#version 120\n" +
-			"\n" +
-			"uniform sampler2D gcolor;\n" +
-			"\n" +
-			"varying vec2 texcoord;\n" +
-			"\n" +
-			"void main() {\n" +
-			"\tvec3 color = texture2D(gcolor, texcoord).rgb;\n" +
-			"\n" +
-			"/* DRAWBUFFERS:0 */\n" +
-			"\tgl_FragData[0] = vec4(color, 1.0); // gcolor\n" +
-			"}";
 }

@@ -3,17 +3,19 @@ package net.coderbot.iris.pipeline;
 import java.io.IOException;
 import java.util.Objects;
 
-import net.coderbot.iris.Iris;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.postprocess.CompositeRenderer;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.render.RenderLayer;
 
@@ -21,6 +23,7 @@ import net.minecraft.client.render.RenderLayer;
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
 public class ShaderPipeline {
+	private final RenderTargets renderTargets;
 	@Nullable
 	private final Pass basic;
 	@Nullable
@@ -40,21 +43,31 @@ public class ShaderPipeline {
 	@Nullable
 	private final Pass weather;
 
-	public ShaderPipeline(ShaderPack pack) {
-		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createPass).orElse(null);
-		this.textured = pack.getGbuffersTextured().map(ShaderPipeline::createPass).orElse(basic);
+	private final GlFramebuffer clearAltBuffers;
+	private final GlFramebuffer clearMainBuffers;
+
+	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
+		this.renderTargets = renderTargets;
+
+		this.basic = pack.getGbuffersBasic().map(this::createPass).orElse(null);
+		this.textured = pack.getGbuffersTextured().map(this::createPass).orElse(basic);
 		// TODO: Load textured_lit program
 		this.texturedLit = textured;
-		this.skyBasic = pack.getGbuffersSkyBasic().map(ShaderPipeline::createPass).orElse(basic);
-		this.skyTextured = pack.getGbuffersSkyTextured().map(ShaderPipeline::createPass).orElse(textured);
-		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createPass).orElse(textured);
-		this.terrain = pack.getGbuffersTerrain().map(ShaderPipeline::createPass).orElse(texturedLit);
+		this.skyBasic = pack.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
+		this.skyTextured = pack.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
+		this.clouds = pack.getGbuffersClouds().map(this::createPass).orElse(textured);
+		this.terrain = pack.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
 		// TODO: Load water, weather shaders
 		this.translucent = terrain;
 		this.weather = texturedLit;
+
+		int[] buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared().toIntArray();
+
+		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
+		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 	}
 
-	private static Pass createPass(ShaderPack.ProgramSource source) {
+	private Pass createPass(ShaderPack.ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -69,7 +82,7 @@ public class ShaderPipeline {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
-		GlFramebuffer framebuffer = Iris.getCompositeRenderer().renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
+		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
 		return new Pass(builder.build(), framebuffer);
 	}
@@ -108,6 +121,22 @@ public class ShaderPipeline {
 
 			GL20.glVertexAttrib4f(mcEntity, blockId, -1.0F, -1.0F, -1.0F);
 		}
+	}
+
+	public void prepareRenderTargets() {
+		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
+		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
+
+		clearMainBuffers.bind();
+		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+
+		clearAltBuffers.bind();
+		// Not clearing the depth buffer since there's only one of those and it was already cleared
+		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+
+		clearMainBuffers.bind();
 	}
 
 	public void beginClouds() {
