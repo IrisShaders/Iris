@@ -14,7 +14,6 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -33,7 +32,7 @@ public class CompositeRenderer {
 	final CenterDepthSampler centerDepthSampler;
 
 	public CompositeRenderer(ShaderPack pack, RenderTargets renderTargets) {
-		centerDepthSampler = new CenterDepthSampler();
+		centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
 
@@ -143,7 +142,8 @@ public class CompositeRenderer {
 		// TODO: If there are no composite passes, we need to add a "fake" pass
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
-		RenderSystem.viewport(0, 0, main.textureWidth, main.textureHeight);
+		// Also bind the "main" framebuffer if it isn't already bound.
+		main.beginWrite(true);
 		GlStateManager.useProgram(0);
 
 		// TODO: We unbind these textures but it would probably make sense to unbind the other ones too.

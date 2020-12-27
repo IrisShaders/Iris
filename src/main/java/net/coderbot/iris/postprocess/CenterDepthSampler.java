@@ -1,30 +1,32 @@
 package net.coderbot.iris.postprocess;
 
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import org.lwjgl.opengl.GL11C;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-
 public class CenterDepthSampler {
 	private final SmoothedFloat centerDepthSmooth;
+	private final GlFramebuffer depthBufferHolder;
+	private final RenderTargets renderTargets;
 	private float centerDepthSmoothSample;
 
-	public CenterDepthSampler() {
-		centerDepthSmooth = new SmoothedFloat(1.0f, CenterDepthSampler::sampleCenterDepth);
+	public CenterDepthSampler(RenderTargets renderTargets) {
+		centerDepthSmooth = new SmoothedFloat(1.0f, this::sampleCenterDepth);
+
+		// Prior to OpenGL 4.1, all framebuffers must have at least 1 color target.
+		depthBufferHolder = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		this.renderTargets = renderTargets;
 	}
 
-	private static float sampleCenterDepth() {
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-
-		// We're actually reading from the framebuffer, but it needs to be bound to the GL_FRAMEBUFFER target
-		main.beginWrite(false);
+	private float sampleCenterDepth() {
+		this.depthBufferHolder.bind();
 
 		float[] depthValue = new float[1];
 		// Read a single pixel from the depth buffer
 		// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
 		GL11C.glReadPixels(
-			main.textureWidth / 2, main.textureHeight / 2, 1, 1,
+			renderTargets.getCurrentWidth() / 2, renderTargets.getCurrentHeight() / 2, 1, 1,
 			GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
 		);
 

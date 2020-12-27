@@ -105,7 +105,7 @@ public class Iris implements ClientModInitializer {
 		logger.info("Using internal shaders");
 	}
 
-	private static RenderTargets getRenderTargets() {
+	public static RenderTargets getRenderTargets() {
 		if (renderTargets == null) {
 			renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), Objects.requireNonNull(currentPack));
 		}

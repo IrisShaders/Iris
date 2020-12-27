@@ -107,4 +107,12 @@ public class RenderTargets {
 
 		return framebuffer;
 	}
+
+	public int getCurrentWidth() {
+		return cachedWidth;
+	}
+
+	public int getCurrentHeight() {
+		return cachedHeight;
+	}
 }
