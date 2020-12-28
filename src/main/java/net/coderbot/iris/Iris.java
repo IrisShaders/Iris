@@ -106,6 +106,18 @@ public class Iris implements ClientModInitializer {
 			FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
 			zipFileSystem = zipSystem;
 			Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
+
+			Path potentialShaderDir = zipSystem.getPath("shaders");
+			//if the shaders dir was immediatly found return it
+			//otherwise, manually search through each directory path until it ends with "shaders"
+			if (Files.exists(potentialShaderDir)) {
+				return Optional.of(potentialShaderDir);
+			}
+
+			//sometimes shaderpacks have their shaders directory within another folder in the shaderpack
+			//for example Sildurs-Vibrant-Shaders.zip/shaders
+			//while other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
+			//this makes it hard to determine what is the actual shaders dir
 			return Files.walk(root)
 				.filter(Files::isDirectory)
 				.filter(path -> path.endsWith("shaders"))
