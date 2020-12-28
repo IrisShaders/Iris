@@ -8,6 +8,7 @@
 	"MixinGameRenderer",
 	"MixinGlStateManager",
 	"MixinImmediateVertexConsumerProvider",
+	"MixinParticleManager",
 	"MixinTranslationStorage",
 	"MixinWorldRenderer",
 	"texunits.MixinBufferVertexConsumer",

@@ -17,6 +17,7 @@ import org.lwjgl.opengl.GL20;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.RenderLayer;
 
 /**
@@ -254,6 +255,33 @@ public class ShaderPipeline {
 			return;
 		}
 
+		end();
+	}
+
+	public void beginParticleSheet(ParticleTextureSheet sheet) {
+		Pass pass = textured;
+
+		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_OPAQUE || sheet == ParticleTextureSheet.TERRAIN_SHEET || sheet == ParticleTextureSheet.CUSTOM) {
+			pass = texturedLit;
+		}
+
+		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT) {
+			// TODO: Should we be using some other pass? (gbuffers_water?)
+			pass = texturedLit;
+		}
+
+		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_LIT) {
+			// Yes, this seems backwards. However, in this case, these particles are always bright regardless of the
+			// lighting condition, and therefore don't use the textured_lit program.
+			pass = textured;
+		}
+
+		if (pass != null) {
+			pass.use();
+		}
+	}
+
+	public void endParticles() {
 		end();
 	}
 
