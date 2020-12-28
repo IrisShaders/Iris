@@ -10,6 +10,8 @@ public class CenterDepthSampler {
 	private final GlFramebuffer depthBufferHolder;
 	private final RenderTargets renderTargets;
 	private float centerDepthSmoothSample;
+	private boolean hasFirstSample;
+	private boolean everRetrieved;
 
 	public CenterDepthSampler(RenderTargets renderTargets) {
 		centerDepthSmooth = new SmoothedFloat(1.0f, this::sampleCenterDepth);
@@ -20,6 +22,14 @@ public class CenterDepthSampler {
 	}
 
 	private float sampleCenterDepth() {
+		if (hasFirstSample && (!everRetrieved)) {
+			// If the shaderpack isn't reading center depth values, don't bother sampling it
+			// This improves performance with most shaderpacks
+			return 0.0f;
+		}
+
+		hasFirstSample = true;
+
 		this.depthBufferHolder.bind();
 
 		float[] depthValue = new float[1];
@@ -38,6 +48,8 @@ public class CenterDepthSampler {
 	}
 
 	public float getCenterDepthSmoothSample() {
+		everRetrieved = true;
+
 		return centerDepthSmoothSample;
 	}
 }
