@@ -19,7 +19,9 @@ public class ShaderPack {
 	private final PackDirectives packDirectives;
 	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersTextured;
+	private final ProgramSource gbuffersTexturedLit;
 	private final ProgramSource gbuffersTerrain;
+	private final ProgramSource gbuffersWater;
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
@@ -33,7 +35,9 @@ public class ShaderPack {
 
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
+		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this);
 		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
+		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this);
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
@@ -64,8 +68,16 @@ public class ShaderPack {
 		return gbuffersTextured.requireValid();
 	}
 
+	public Optional<ProgramSource> getGbuffersTexturedLit() {
+		return gbuffersTexturedLit.requireValid();
+	}
+
 	public Optional<ProgramSource> getGbuffersTerrain() {
 		return gbuffersTerrain.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersWater() {
+		return gbuffersWater.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersSkyBasic() {
