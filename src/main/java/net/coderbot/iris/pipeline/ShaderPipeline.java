@@ -45,6 +45,7 @@ public class ShaderPipeline {
 
 	private final GlFramebuffer clearAltBuffers;
 	private final GlFramebuffer clearMainBuffers;
+	private final GlFramebuffer baseline;
 
 	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
 		this.renderTargets = renderTargets;
@@ -65,6 +66,7 @@ public class ShaderPipeline {
 
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 	}
 
 	private Pass createPass(ShaderPack.ProgramSource source) {
@@ -106,9 +108,9 @@ public class ShaderPipeline {
 		}
 	}
 
-	private static void end() {
+	private void end() {
 		GlProgramManager.useProgram(0);
-		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+		this.baseline.bind();
 	}
 
 	private static void setupAttributes(Pass pass) {
