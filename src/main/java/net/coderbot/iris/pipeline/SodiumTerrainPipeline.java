@@ -31,45 +31,51 @@ public class SodiumTerrainPipeline {
 		});
 
 		if (terrainVertex != null) {
-			int splitPoint = terrainVertex.indexOf("\n") + 1;
-
-			String versionString = terrainVertex.substring(0, splitPoint);
-			System.out.println("VersionString: \"" + versionString + "\n");
-
-			String body = terrainVertex.substring(splitPoint);
-			String injections = "attribute vec3 a_Pos; // The position of the vertex\n" +
-				"attribute vec4 a_Color; // The color of the vertex\n" +
-				"attribute vec2 a_TexCoord; // The block texture coordinate of the vertex\n" +
-				"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
-				"uniform mat4 u_ModelViewMatrix;\n" +
-				"uniform vec3 u_ModelScale;\n" +
-				"\n" +
-				"// The model translation for this draw call.\n" +
-				"// If multi-draw is enabled, then the model offset will come from an attribute buffer.\n" +
-				"#ifdef USE_MULTIDRAW\n" +
-				"attribute vec4 d_ModelOffset;\n" +
-				"#else\n" +
-				"uniform vec4 d_ModelOffset;\n" +
-				"#endif\n";
-
-			terrainVertex = versionString + injections + body;
-
-			terrainVertex = terrainVertex
-				.replace("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)")
-				.replace("gl_MultiTexCoord0", "vec4(a_TexCoord, 0.0, 1.0)")
-				.replace("gl_MultiTexCoord1", "vec4(a_LightCoord, 0.0, 1.0)")
-				.replace("gl_Color", "a_Color")
-				.replace("gl_ModelViewMatrix", "u_ModelViewMatrix")
-				.replace("gl_TextureMatrix[0]", "mat4(1.0)")
-				.replace("gl_TextureMatrix[1]", "mat4(1.0)");
-
-			System.out.println("Final patched source:");
-			System.out.println(terrainVertex);
+			terrainVertex = transformVertexShader(terrainVertex);
 		}
 
 		if (framebuffer == null) {
 			framebuffer = renderTargets.createFramebufferWritingToMain(new int[] {0});
 		}
+	}
+
+	private static String transformVertexShader(String shader) {
+		int splitPoint = shader.indexOf("\n") + 1;
+
+		String versionString = shader.substring(0, splitPoint);
+		System.out.println("VersionString: \"" + versionString + "\n");
+
+		String body = shader.substring(splitPoint);
+		String injections = "attribute vec3 a_Pos; // The position of the vertex\n" +
+			"attribute vec4 a_Color; // The color of the vertex\n" +
+			"attribute vec2 a_TexCoord; // The block texture coordinate of the vertex\n" +
+			"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
+			"uniform mat4 u_ModelViewMatrix;\n" +
+			"uniform vec3 u_ModelScale;\n" +
+			"\n" +
+			"// The model translation for this draw call.\n" +
+			"// If multi-draw is enabled, then the model offset will come from an attribute buffer.\n" +
+			"#ifdef USE_MULTIDRAW\n" +
+			"attribute vec4 d_ModelOffset;\n" +
+			"#else\n" +
+			"uniform vec4 d_ModelOffset;\n" +
+			"#endif\n";
+
+		shader = versionString + injections + body;
+
+		shader = shader
+			.replace("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)")
+			.replace("gl_MultiTexCoord0", "vec4(a_TexCoord, 0.0, 1.0)")
+			.replace("gl_MultiTexCoord1", "vec4(a_LightCoord, 0.0, 1.0)")
+			.replace("gl_Color", "a_Color")
+			.replace("gl_ModelViewMatrix", "u_ModelViewMatrix")
+			.replace("gl_TextureMatrix[0]", "mat4(1.0)")
+			.replace("gl_TextureMatrix[1]", "mat4(1.0)");
+
+		System.out.println("Final patched source:");
+		System.out.println(shader);
+
+		return shader;
 	}
 
 	public static SodiumTerrainPipeline create() {
