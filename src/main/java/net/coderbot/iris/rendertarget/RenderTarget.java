@@ -1,4 +1,4 @@
-package net.coderbot.iris.postprocess.target;
+package net.coderbot.iris.rendertarget;
 
 import java.nio.ByteBuffer;
 
@@ -9,7 +9,7 @@ import net.coderbot.iris.gl.texture.PixelType;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 
-public class CompositeRenderTarget {
+public class RenderTarget {
 	private final InternalTextureFormat internalFormat;
 	private final PixelFormat format;
 	private final PixelType type;
@@ -20,7 +20,7 @@ public class CompositeRenderTarget {
 
 	private static final ByteBuffer NULL_BUFFER = null;
 
-	private CompositeRenderTarget(Builder builder) {
+	private RenderTarget(Builder builder) {
 		this.isValid = true;
 
 		this.internalFormat = builder.internalFormat;
@@ -139,8 +139,8 @@ public class CompositeRenderTarget {
 			return this;
 		}
 
-		public CompositeRenderTarget build() {
-			return new CompositeRenderTarget(this);
+		public RenderTarget build() {
+			return new RenderTarget(this);
 		}
 	}
 }

@@ -17,11 +17,11 @@ import java.util.function.Supplier;
  * A given directive should only occur once in a shader file. If there are multiple occurrences of a directive with a
  * given key, the last occurrence is used.
  */
-public class DirectiveParser {
+public class CommentDirectiveParser {
 	// Directives take the following form:
 	// /* KEY:VALUE */
 
-	private DirectiveParser() {
+	private CommentDirectiveParser() {
 		// cannot be constructed
 	}
 
@@ -95,49 +95,49 @@ public class DirectiveParser {
 			test("normal text", Optional.empty(), () -> {
 				String line = "Some normal text that doesn't contain a DRAWBUFFERS directive of any sort";
 
-				return DirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 
 			test("partial directive", Optional.empty(), () -> {
 				String line = "Some normal text that doesn't contain a /* DRAWBUFFERS: directive of any sort";
 
-				return DirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 
 			test("bad spacing", Optional.empty(), () -> {
 				String line = "Some normal text that doesn't contain a /*DRAWBUFFERS:321*/ directive of any sort";
 
-				return DirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 
 			test("matchAtEnd", Optional.of("321"), () -> {
 				String line = "A line containg a drawbuffers directive: /* DRAWBUFFERS:321 */";
 
-				return DirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 
 			test("matchAtStart", Optional.of("31"), () -> {
 				String line = "/* DRAWBUFFERS:31 */ This is a line containg a drawbuffers directive";
 
-				return DirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 
 			test("matchInMiddle", Optional.of("31"), () -> {
 				String line = "This is a line /* DRAWBUFFERS:31 */ containg a drawbuffers directive";
 
-				return DirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 
 			test("emptyMatch", Optional.of(""), () -> {
 				String line = "/* DRAWBUFFERS: */ This is a line containg an invalid but still matching drawbuffers directive";
 
-				return DirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 
 			test("duplicates", Optional.of("3"), () -> {
 				String line = "/* TEST:2 */ This line contains multiple directives, the last one should be used /* TEST:3 */";
 
-				return DirectiveParser.findDirective(line, "TEST");
+				return CommentDirectiveParser.findDirective(line, "TEST");
 			});
 
 			test("lines", Optional.of("It works"), () -> {
@@ -150,7 +150,7 @@ public class DirectiveParser {
 
 				List<String> lines = Arrays.asList(linesArray);
 
-				return DirectiveParser.findDirectiveInLines(lines, "Test directive");
+				return CommentDirectiveParser.findDirectiveInLines(lines, "Test directive");
 			});
 		}
 	}
