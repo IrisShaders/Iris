@@ -1,9 +1,12 @@
 package net.coderbot.iris;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
@@ -37,6 +40,7 @@ public class Iris implements ClientModInitializer {
 	private static RenderTargets renderTargets;
 	private static CompositeRenderer compositeRenderer;
 	private static IrisConfig irisConfig;
+	private static FileSystem zipFileSystem;
 	public static KeyBinding reloadKeybind;
 
 	@Override
@@ -74,6 +78,12 @@ public class Iris implements ClientModInitializer {
 		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
 
+		if (shaderPackRoot.toString().endsWith(".zip")) {
+			Optional<Path> optionalPath = loadExternalZipShaderpack(shaderPackRoot);
+			if (optionalPath.isPresent()) {
+				shaderPackPath = optionalPath.get();
+			}
+		}
 		if (!Files.exists(shaderPackPath)) {
 			logger.warn("The shaderpack " + name + " does not have a shaders directory, falling back to internal shaders");
 			return;
@@ -89,6 +99,34 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using shaderpack: " + name);
+	}
+
+	private static Optional<Path> loadExternalZipShaderpack(Path shaderpackPath) {
+		try {
+			FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
+			zipFileSystem = zipSystem;
+			Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
+
+			Path potentialShaderDir = zipSystem.getPath("shaders");
+			//if the shaders dir was immediatly found return it
+			//otherwise, manually search through each directory path until it ends with "shaders"
+			if (Files.exists(potentialShaderDir)) {
+				return Optional.of(potentialShaderDir);
+			}
+
+			//sometimes shaderpacks have their shaders directory within another folder in the shaderpack
+			//for example Sildurs-Vibrant-Shaders.zip/shaders
+			//while other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
+			//this makes it hard to determine what is the actual shaders dir
+			return Files.walk(root)
+				.filter(Files::isDirectory)
+				.filter(path -> path.endsWith("shaders"))
+				.findFirst();
+		} catch (IOException e) {
+			logger.error("Error while finding shaderpack for zip directory {}", shaderpackPath);
+			logger.catching(Level.ERROR, e);
+		}
+		return Optional.empty();
 	}
 
 	private void loadInternalShaderpack() {
