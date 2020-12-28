@@ -8,5 +8,8 @@
   "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
   "options.iris.refreshShaderPacks": "Refresh Shader Packs",
   "options.iris.shaderPackSelection": "Shader Packs...",
-  "options.iris.shaderPackSelection.title": "Select Shader Packs"
+  "options.iris.shaderPackSelection.title": "Shader Packs",
+
+  "pack.iris.select.title": "Select",
+  "pack.iris.configure.title": "Configure"
 }

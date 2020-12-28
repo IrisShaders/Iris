@@ -1,7 +1,6 @@
 package net.coderbot.iris.gui.element;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaderpack.ShaderPackRef;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
@@ -10,10 +9,13 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.util.Formatting;
 
+import javax.naming.directory.BasicAttributes;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.stream.Collectors;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 public class ShaderPackListWidget extends AlwaysSelectedEntryListWidget<ShaderPackListWidget.ShaderPackEntry> {
     private ShaderPackEntry selected;
@@ -34,13 +36,21 @@ public class ShaderPackListWidget extends AlwaysSelectedEntryListWidget<ShaderPa
             Path path = Iris.getShaderPackDir();
             int index = 0;
             addEntry(index, "(internal)");
-            for(Path folder : Files.walk(path, 1).filter(Files::isDirectory).collect(Collectors.toList())) {
-                if(Files.exists(folder.resolve("shaders"))) {
-                    String name = folder.getFileName().toString();
-                    if(!name.equals("(internal)")) {
-                        index++;
-                        addEntry(index, name);
-                    }
+            for(Path folder : Files.walk(path, 1).filter(p -> {
+                if(Files.isDirectory(p)) {
+                    return Files.exists(p.resolve("shaders"));
+                } else if(p.toString().endsWith(".zip")) {
+                    try {
+                        FileSystem zipSystem = FileSystems.newFileSystem(p, Iris.class.getClassLoader());
+                        return Files.exists(zipSystem.getPath("shaders"));
+                    } catch (IOException ignored) {}
+                }
+                return false;
+            }).collect(Collectors.toList())) {
+                String name = folder.getFileName().toString();
+                if(!name.equals("(internal)")) {
+                    index++;
+                    addEntry(index, name);
                 }
             }
         } catch (IOException e) {

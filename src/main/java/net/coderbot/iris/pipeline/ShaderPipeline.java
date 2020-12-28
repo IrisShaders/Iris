@@ -1,56 +1,77 @@
 package net.coderbot.iris.pipeline;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.RenderLayer;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
 public class ShaderPipeline {
+	private final RenderTargets renderTargets;
 	@Nullable
-	private final Program basic;
+	private final Pass basic;
 	@Nullable
-	private final Program textured;
+	private final Pass textured;
 	@Nullable
-	private final Program texturedLit;
+	private final Pass texturedLit;
 	@Nullable
-	private final Program skyBasic;
+	private final Pass skyBasic;
 	@Nullable
-	private final Program skyTextured;
+	private final Pass skyTextured;
 	@Nullable
-	private final Program clouds;
+	private final Pass clouds;
 	@Nullable
-	private final Program terrain;
+	private final Pass terrain;
 	@Nullable
-	private final Program translucent;
+	private final Pass translucent;
 	@Nullable
-	private final Program weather;
+	private final Pass weather;
 
-	public ShaderPipeline(ShaderPack pack) {
-		this.basic = pack.getGbuffersBasic().map(ShaderPipeline::createProgram).orElse(null);
-		this.textured = pack.getGbuffersTextured().map(ShaderPipeline::createProgram).orElse(basic);
-		// TODO: Load textured_lit program
-		this.texturedLit = textured;
-		this.skyBasic = pack.getGbuffersSkyBasic().map(ShaderPipeline::createProgram).orElse(basic);
-		this.skyTextured = pack.getGbuffersSkyTextured().map(ShaderPipeline::createProgram).orElse(textured);
-		this.clouds = pack.getGbuffersClouds().map(ShaderPipeline::createProgram).orElse(textured);
-		this.terrain = pack.getGbuffersTerrain().map(ShaderPipeline::createProgram).orElse(texturedLit);
-		// TODO: Load water, weather shaders
-		this.translucent = terrain;
+	private final GlFramebuffer clearAltBuffers;
+	private final GlFramebuffer clearMainBuffers;
+	private final GlFramebuffer baseline;
+
+	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
+		this.renderTargets = renderTargets;
+
+		this.basic = pack.getGbuffersBasic().map(this::createPass).orElse(null);
+		this.textured = pack.getGbuffersTextured().map(this::createPass).orElse(basic);
+		this.texturedLit = pack.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
+		this.skyBasic = pack.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
+		this.skyTextured = pack.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
+		this.clouds = pack.getGbuffersClouds().map(this::createPass).orElse(textured);
+		this.terrain = pack.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
+		this.translucent = pack.getGbuffersWater().map(this::createPass).orElse(terrain);
+		// TODO: Load weather shaders
 		this.weather = texturedLit;
+
+		int[] buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared().toIntArray();
+
+		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
+		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 	}
 
-	private static Program createProgram(ShaderPack.ProgramSource source) {
+	private Pass createPass(ShaderPack.ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -65,20 +86,96 @@ public class ShaderPipeline {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
+		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
-		return builder.build();
+		return new Pass(builder.build(), framebuffer);
+	}
+	
+	private static final class Pass {
+		private final Program program;
+		private final GlFramebuffer framebuffer;
+
+		private Pass(Program program, GlFramebuffer framebuffer) {
+			this.program = program;
+			this.framebuffer = framebuffer;
+		}
+		
+		public void use() {
+			framebuffer.bind();
+			program.use();
+		}
+
+		public Program getProgram() {
+			return program;
+		}
+
+		public void destroy() {
+			this.program.destroy();
+			this.framebuffer.destroy();
+		}
 	}
 
-	private static void setupAttributes(Program program) {
+	public void destroy() {
+		destroyPasses(basic, textured, texturedLit, skyBasic, skyTextured, clouds, terrain, translucent, weather);
+		clearAltBuffers.destroy();
+		clearMainBuffers.destroy();
+		baseline.destroy();
+	}
+
+	private static void destroyPasses(Pass... passes) {
+		Set<Pass> destroyed = new HashSet<>();
+
+		for (Pass pass : passes) {
+			if (pass == null) {
+				continue;
+			}
+
+			if (destroyed.contains(pass)) {
+				continue;
+			}
+
+			pass.destroy();
+			destroyed.add(pass);
+		}
+	}
+
+	private void end() {
+		if (this.basic == null) {
+			GlProgramManager.useProgram(0);
+			this.baseline.bind();
+
+			return;
+		}
+
+		this.basic.use();
+	}
+
+	private static void setupAttributes(Pass pass) {
 		// TODO: Properly add these attributes into the vertex format
 
-		int mcEntity = GL20.glGetAttribLocation(program.getProgramId(), "mc_Entity");
+		int mcEntity = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), "mc_Entity");
 
 		if (mcEntity != -1) {
 			float blockId = -1.0F;
 
 			GL20.glVertexAttrib4f(mcEntity, blockId, -1.0F, -1.0F, -1.0F);
 		}
+	}
+
+	public void prepareRenderTargets() {
+		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
+		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
+
+		clearMainBuffers.bind();
+		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+
+		clearAltBuffers.bind();
+		// Not clearing the depth buffer since there's only one of those and it was already cleared
+		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+
+		clearMainBuffers.bind();
 	}
 
 	public void beginClouds() {
@@ -90,7 +187,7 @@ public class ShaderPipeline {
 	}
 
 	public void endClouds() {
-		GlProgramManager.useProgram(0);
+		end();
 	}
 
 	public void beginTerrainLayer(RenderLayer terrainLayer) {
@@ -112,7 +209,7 @@ public class ShaderPipeline {
 	}
 
 	public void endTerrainLayer(RenderLayer terrainLayer) {
-		GlProgramManager.useProgram(0);
+		end();
 	}
 
 	public void beginSky() {
@@ -140,7 +237,7 @@ public class ShaderPipeline {
 	}
 
 	public void endSky() {
-		GlProgramManager.useProgram(0);
+		end();
 	}
 
 	public void beginWeather() {
@@ -152,7 +249,7 @@ public class ShaderPipeline {
 	}
 
 	public void endWeather() {
-		GlProgramManager.useProgram(0);
+		end();
 	}
 
 	public void beginWorldBorder() {
@@ -164,7 +261,7 @@ public class ShaderPipeline {
 	}
 
 	public void endWorldBorder() {
-		GlProgramManager.useProgram(0);
+		end();
 	}
 
 	public void beginImmediateDrawing(RenderLayer layer) {
@@ -189,7 +286,34 @@ public class ShaderPipeline {
 			return;
 		}
 
-		GlProgramManager.useProgram(0);
+		end();
+	}
+
+	public void beginParticleSheet(ParticleTextureSheet sheet) {
+		Pass pass = textured;
+
+		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_OPAQUE || sheet == ParticleTextureSheet.TERRAIN_SHEET || sheet == ParticleTextureSheet.CUSTOM) {
+			pass = texturedLit;
+		}
+
+		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT) {
+			// TODO: Should we be using some other pass? (gbuffers_water?)
+			pass = texturedLit;
+		}
+
+		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_LIT) {
+			// Yes, this seems backwards. However, in this case, these particles are always bright regardless of the
+			// lighting condition, and therefore don't use the textured_lit program.
+			pass = textured;
+		}
+
+		if (pass != null) {
+			pass.use();
+		}
+	}
+
+	public void endParticles() {
+		end();
 	}
 
 	// TODO: better way to avoid this global state?
@@ -200,6 +324,7 @@ public class ShaderPipeline {
 	}
 
 	public void endWorldRender() {
+		GlProgramManager.useProgram(0);
 		isRenderingWorld = false;
 	}
 }

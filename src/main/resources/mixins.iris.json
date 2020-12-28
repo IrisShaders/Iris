@@ -6,9 +6,11 @@
   "client": [
     "gui.MixinVideoOptionsScreen",
     "gui.AccessorScreen",
+    "MixinDebugHud",
     "MixinGameRenderer",
     "MixinGlStateManager",
     "MixinImmediateVertexConsumerProvider",
+    "MixinParticleManager",
     "MixinTranslationStorage",
     "MixinWorldRenderer",
     "texunits.MixinBufferVertexConsumer",
@@ -18,6 +20,9 @@
     "texunits.MixinVertexFormats"
   ],
   "injectors": {
-    "defaultRequire": 1
-  }
+	"defaultRequire": 1
+  },
+  "mixins": [
+	"gbuffer.MixinWorldRenderer"
+  ]
 }
