@@ -62,7 +62,7 @@ public class Iris implements ClientModInitializer {
 		}
 
 
-
+		loadShaderpack();
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
