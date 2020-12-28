@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -18,10 +19,13 @@ import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -57,26 +61,50 @@ public class Iris implements ClientModInitializer {
 			logger.catching(Level.ERROR, e);
 		}
 
-		// Attempt to load an external shaderpack if it is available
-		if (!irisConfig.isInternal()) {
-			loadExternalShaderpack(irisConfig.getShaderPackName());
-		}
 
-		// If there is no external shaderpack or it failed to load for some reason, load the internal shaders
-		if (currentPack == null) {
-			loadInternalShaderpack();
-		}
 
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
+
+		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
+			if (reloadKeybind.wasPressed()){
+
+				try {
+					reload();
+					minecraftClient.worldRenderer.reload();
+
+					if (minecraftClient.player != null){
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
+					}
+
+				} catch (Exception e) {
+					Iris.logger.error("Error while reloading Shaders for Iris!", e);
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
+					}
+				}
+			}
+		});
 	}
 
-	private void loadExternalShaderpack(String name) {
+	public static void loadShaderpack() {
+		// Attempt to load an external shaderpack if it is available
+		if (!irisConfig.isInternal()) {
+			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
+				loadInternalShaderpack();
+			} else {
+				loadInternalShaderpack();
+			}
+		}
+	}
+
+	private static boolean loadExternalShaderpack(String name) {
 		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
 
 		if (!Files.exists(shaderPackPath)) {
 			logger.warn("The shaderpack " + name + " does not have a shaders directory, falling back to internal shaders");
-			return;
+			return false;
 		}
 
 		try {
@@ -85,13 +113,14 @@ public class Iris implements ClientModInitializer {
 			logger.error(String.format("Failed to load shaderpack \"%s\"! Falling back to internal shaders", irisConfig.getShaderPackName()));
 			logger.catching(Level.ERROR, e);
 
-			return;
+			return false;
 		}
 
 		logger.info("Using shaderpack: " + name);
+		return true;
 	}
 
-	private void loadInternalShaderpack() {
+	private static void loadInternalShaderpack() {
 		Path root = FabricLoader.getInstance().getModContainer("iris")
 			.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
 
@@ -103,6 +132,12 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using internal shaders");
+	}
+
+	public static void reload() throws IOException {
+		irisConfig.initialize();//allows shaderpacks to be changed at runtime
+		loadShaderpack();
+		pipeline = null;//set to null so getPipeline catches and resets it
 	}
 
 	public static RenderTargets getRenderTargets() {
