@@ -76,6 +76,7 @@ public class Iris implements ClientModInitializer {
 	private void loadExternalShaderpack(String name) {
 		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
+
 		if (shaderPackRoot.toString().endsWith(".zip")) {
 			Optional<Path> optionalPath = loadExternalZipShaderpack(shaderPackRoot);
 			if (optionalPath.isPresent()) {
