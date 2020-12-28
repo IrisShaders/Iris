@@ -57,6 +57,12 @@ public class GlFramebuffer {
 		GlStateManager.bindFramebuffer(GL30C.GL_FRAMEBUFFER, this.id);
 	}
 
+	public void bindAsReadBuffer() {
+		requireValid();
+
+		GlStateManager.bindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, this.id);
+	}
+
 	public void delete() {
 		requireValid();
 

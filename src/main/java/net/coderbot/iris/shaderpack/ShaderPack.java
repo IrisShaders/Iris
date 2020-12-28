@@ -12,9 +12,11 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
+	private final PackDirectives packDirectives;
 	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTerrain;
@@ -26,8 +28,9 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 
-
 	public ShaderPack(Path root) throws IOException {
+		this.packDirectives = new PackDirectives();
+
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
 		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
@@ -87,6 +90,10 @@ public class ShaderPack {
 
 	public Map<String, Map<String, String>> getLangMap() {
 		return langMap;
+	}
+
+	public PackDirectives getPackDirectives() {
+		return packDirectives;
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
@@ -167,6 +174,7 @@ public class ShaderPack {
 		private final String name;
 		private final String vertexSource;
 		private final String fragmentSource;
+		private final ProgramDirectives directives;
 		private final ShaderPack parent;
 
 		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
@@ -174,6 +182,7 @@ public class ShaderPack {
 			this.vertexSource = vertexSource;
 			this.fragmentSource = fragmentSource;
 			this.parent = parent;
+			this.directives = new ProgramDirectives(this);
 		}
 
 		public String getName() {
@@ -186,6 +195,10 @@ public class ShaderPack {
 
 		public Optional<String> getFragmentSource() {
 			return Optional.ofNullable(fragmentSource);
+		}
+
+		public ProgramDirectives getDirectives() {
+			return this.directives;
 		}
 
 		public ShaderPack getParent() {
