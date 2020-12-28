@@ -202,7 +202,7 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (renderTargets != null) {
-			// TODO: This breaks things: renderTargets.destroy();
+			renderTargets.destroy();
 			renderTargets = null;
 		}
 

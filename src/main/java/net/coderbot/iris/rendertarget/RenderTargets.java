@@ -44,11 +44,20 @@ public class RenderTargets {
 	}
 
 	public void destroy() {
+		// TODO: This is a hack to make things not break on reload
+		// It seems like something is holding on to colortex0/depthtex0 somewhere
+		boolean first = true;
+
 		for (RenderTarget target : targets) {
+			if (first) {
+				first = false;
+				continue;
+			}
+
 			target.destroy();
 		}
 
-		depthTexture.destroy();
+		// depthTexture.destroy();
 	}
 
 	public RenderTarget get(int index) {
