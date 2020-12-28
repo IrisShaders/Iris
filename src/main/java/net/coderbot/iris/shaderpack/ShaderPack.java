@@ -25,6 +25,8 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
+	private final ProgramSource gbuffersEntities;
+	private final ProgramSource gbuffersBlock;
 	private final ProgramSource[] composite;
 	private final ProgramSource compositeFinal;
 	private final IdMap idMap;
@@ -41,6 +43,8 @@ public class ShaderPack {
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
+		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this);
+		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this);
 
 		this.composite = new ProgramSource[16];
 
@@ -90,6 +94,14 @@ public class ShaderPack {
 
 	public Optional<ProgramSource> getGbuffersClouds() {
 		return gbuffersClouds.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersEntities() {
+		return gbuffersEntities.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersBlock() {
+		return gbuffersBlock.requireValid();
 	}
 
 	public ProgramSource[] getComposite() {
