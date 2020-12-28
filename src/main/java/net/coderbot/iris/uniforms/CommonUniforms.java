@@ -14,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.tag.FluidTags;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -61,7 +62,7 @@ public final class CommonUniforms {
 
 		if (cameraEntity.isSubmergedInWater()) {
 			return 1;
-		} else if (cameraEntity.isInLava()) {
+		} else if (cameraEntity.isSubmergedIn(FluidTags.LAVA)) {
 			return 2;
 		} else {
 			return 0;
