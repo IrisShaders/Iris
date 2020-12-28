@@ -3,33 +3,38 @@ package net.coderbot.iris.rendertarget;
 import java.nio.ByteBuffer;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import org.lwjgl.opengl.GL30C;
+import net.coderbot.iris.gl.GlResource;
+import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL13C;
 
-public class DepthTexture {
-	private final int textureId;
-
+public class DepthTexture extends GlResource {
 	public DepthTexture(int width, int height) {
-		textureId = GL30C.glGenTextures();
-		GlStateManager.bindTexture(textureId);
+		super(GL11C.glGenTextures());
+		GlStateManager.bindTexture(getGlId());
 
-		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MIN_FILTER, GL30C.GL_NEAREST);
-		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MAG_FILTER, GL30C.GL_NEAREST);
-		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_S, GL30C.GL_CLAMP_TO_EDGE);
-		GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_T, GL30C.GL_CLAMP_TO_EDGE);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_NEAREST);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_NEAREST);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
 		resize(width, height);
 
 		GlStateManager.bindTexture(0);
 	}
 
 	void resize(int width, int height) {
-		GlStateManager.bindTexture(textureId);
+		GlStateManager.bindTexture(getGlId());
 
-		GL30C.glTexImage2D(GL30C.GL_TEXTURE_2D, 0, GL30C.GL_DEPTH_COMPONENT, width, height, 0, GL30C.GL_DEPTH_COMPONENT, GL30C.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+		GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_DEPTH_COMPONENT, width, height, 0, GL11C.GL_DEPTH_COMPONENT, GL11C.GL_UNSIGNED_BYTE, (ByteBuffer) null);
 
 		GlStateManager.bindTexture(0);
 	}
 
 	public int getTextureId() {
-		return textureId;
+		return getGlId();
+	}
+
+	@Override
+	protected void destroyInternal() {
+		GL11C.glDeleteTextures(getGlId());
 	}
 }

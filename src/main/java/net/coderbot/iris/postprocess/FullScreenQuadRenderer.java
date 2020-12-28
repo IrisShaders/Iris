@@ -16,7 +16,9 @@ import net.minecraft.util.math.Matrix4f;
 public class FullScreenQuadRenderer {
 	private final VertexBuffer quad;
 
-	public FullScreenQuadRenderer() {
+	public static final FullScreenQuadRenderer INSTANCE = new FullScreenQuadRenderer();
+
+	private FullScreenQuadRenderer() {
 		this.quad = createQuad();
 	}
 

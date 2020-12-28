@@ -43,6 +43,14 @@ public class RenderTargets {
 		this.cachedHeight = height;
 	}
 
+	public void destroy() {
+		for (RenderTarget target : targets) {
+			target.destroy();
+		}
+
+		depthTexture.destroy();
+	}
+
 	public RenderTarget get(int index) {
 		return targets[index];
 	}

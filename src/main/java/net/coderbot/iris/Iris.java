@@ -143,6 +143,36 @@ public class Iris implements ClientModInitializer {
 		logger.info("Using internal shaders");
 	}
 
+	/**
+	 * Destroys and deallocates all created OpenGL resources. Useful as part of a reload.
+	 */
+	private static void destroyEverything() {
+		currentPack = null;
+
+		if (pipeline != null) {
+			pipeline.destroy();
+			pipeline = null;
+		}
+
+		if (renderTargets != null) {
+			renderTargets.destroy();
+			renderTargets = null;
+		}
+
+		if (compositeRenderer != null) {
+			compositeRenderer.destroy();
+			compositeRenderer = null;
+		}
+
+		if (zipFileSystem != null) {
+			try {
+				zipFileSystem.close();
+			} catch (IOException e) {
+				Iris.logger.error("Failed to close zip file system?", e);
+			}
+		}
+	}
+
 	public static RenderTargets getRenderTargets() {
 		if (renderTargets == null) {
 			renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), Objects.requireNonNull(currentPack));

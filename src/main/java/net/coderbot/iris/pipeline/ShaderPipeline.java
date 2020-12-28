@@ -106,6 +106,26 @@ public class ShaderPipeline {
 		public Program getProgram() {
 			return program;
 		}
+
+		public void destroy() {
+			this.program.destroy();
+			this.framebuffer.destroy();
+		}
+	}
+
+	public void destroy() {
+		destroyPasses(basic, textured, texturedLit, skyBasic, skyTextured, clouds, terrain, translucent, weather);
+		clearAltBuffers.destroy();
+		clearMainBuffers.destroy();
+		baseline.destroy();
+	}
+
+	private static void destroyPasses(Pass... passes) {
+		for (Pass pass : passes) {
+			if (pass != null) {
+				pass.destroy();
+			}
+		}
 	}
 
 	private void end() {

@@ -30,7 +30,6 @@ public class CompositeRenderer {
 	private final ImmutableList<Pass> passes;
 	private final GlFramebuffer baseline;
 
-	private final FullScreenQuadRenderer quadRenderer;
 	final CenterDepthSampler centerDepthSampler;
 
 	public CompositeRenderer(ShaderPack pack, RenderTargets renderTargets) {
@@ -85,7 +84,6 @@ public class CompositeRenderer {
 		}
 
 		this.passes = passes.build();
-		this.quadRenderer = new FullScreenQuadRenderer();
 		this.renderTargets = renderTargets;
 
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
@@ -97,6 +95,11 @@ public class CompositeRenderer {
 		boolean[] stageReadsFromAlt;
 		boolean isLastPass;
 		float viewportScale;
+
+		private void destroy() {
+			this.program.destroy();
+			this.framebuffer.destroy();
+		}
 	}
 
 	public void renderAll() {
@@ -140,7 +143,7 @@ public class CompositeRenderer {
 			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
 
 			renderPass.program.use();
-			quadRenderer.render();
+			FullScreenQuadRenderer.INSTANCE.render();
 		}
 
 		if (passes.size() == 0) {
@@ -192,5 +195,14 @@ public class CompositeRenderer {
 		PostProcessUniforms.addPostProcessUniforms(builder, this);
 
 		return new Pair<>(builder.build(), source.getDirectives());
+	}
+
+	public void destroy() {
+		baseline.destroy();
+		centerDepthSampler.destroy();
+
+		for (Pass renderPass : passes) {
+			renderPass.destroy();
+		}
 	}
 }

@@ -52,4 +52,8 @@ public class CenterDepthSampler {
 
 		return centerDepthSmoothSample;
 	}
+
+	public void destroy() {
+		depthBufferHolder.destroy();
+	}
 }
