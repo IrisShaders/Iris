@@ -40,6 +40,7 @@ public class Iris implements ClientModInitializer {
 	private static RenderTargets renderTargets;
 	private static CompositeRenderer compositeRenderer;
 	private static IrisConfig irisConfig;
+	private static FileSystem zipFileSystem;
 	public static KeyBinding reloadKeybind;
 
 	@Override
@@ -103,6 +104,7 @@ public class Iris implements ClientModInitializer {
 	private static Optional<Path> loadExternalZipShaderpack(Path shaderpackPath) {
 		try {
 			FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
+			zipFileSystem = zipSystem;
 			Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
 			return Files.walk(root)
 				.filter(Files::isDirectory)
