@@ -70,7 +70,12 @@ public class SodiumTerrainPipeline {
 			.replace("gl_Color", "a_Color")
 			.replace("gl_ModelViewMatrix", "u_ModelViewMatrix")
 			.replace("gl_TextureMatrix[0]", "mat4(1.0)")
-			.replace("gl_TextureMatrix[1]", "mat4(1.0)");
+			.replace("gl_TextureMatrix[1]", "mat4(1.0)")
+			.replace("gl_NormalMatrix", "tmp_NormalMatrix")
+			// TODO: This is a hack and makes the lighting look weird...
+			// Sodium doesn't provide shaders with vertex normals like vanilla does.
+			.replace("gl_Normal", "vec3(0.0, 1.0, 0.0)")
+			.replace("tmp_NormalMatrix", "gl_NormalMatrix");
 
 		System.out.println("Final patched source:");
 		System.out.println(shader);
