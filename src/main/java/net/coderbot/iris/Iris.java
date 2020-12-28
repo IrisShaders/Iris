@@ -1,9 +1,12 @@
 package net.coderbot.iris;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
@@ -73,7 +76,12 @@ public class Iris implements ClientModInitializer {
 	private void loadExternalShaderpack(String name) {
 		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
-
+		if (shaderPackRoot.toString().endsWith(".zip")) {
+			Optional<Path> optionalPath = loadExternalZipShaderpack(shaderPackRoot);
+			if (optionalPath.isPresent()) {
+				shaderPackPath = optionalPath.get();
+			}
+		}
 		if (!Files.exists(shaderPackPath)) {
 			logger.warn("The shaderpack " + name + " does not have a shaders directory, falling back to internal shaders");
 			return;
@@ -89,6 +97,21 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using shaderpack: " + name);
+	}
+
+	private static Optional<Path> loadExternalZipShaderpack(Path shaderpackPath) {
+		try {
+			FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
+			Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
+			return Files.walk(root)
+				.filter(Files::isDirectory)
+				.filter(path -> path.endsWith("shaders"))
+				.findFirst();
+		} catch (IOException e) {
+			logger.error("Error while finding shaderpack for zip directory {}", shaderpackPath);
+			logger.catching(Level.ERROR, e);
+		}
+		return Optional.empty();
 	}
 
 	private void loadInternalShaderpack() {
