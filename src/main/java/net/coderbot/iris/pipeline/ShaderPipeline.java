@@ -109,8 +109,14 @@ public class ShaderPipeline {
 	}
 
 	private void end() {
-		GlProgramManager.useProgram(0);
-		this.baseline.bind();
+		if (this.basic == null) {
+			GlProgramManager.useProgram(0);
+			this.baseline.bind();
+
+			return;
+		}
+
+		this.basic.use();
 	}
 
 	private static void setupAttributes(Pass pass) {
@@ -260,6 +266,7 @@ public class ShaderPipeline {
 	}
 
 	public void endWorldRender() {
+		GlProgramManager.useProgram(0);
 		isRenderingWorld = false;
 	}
 }
