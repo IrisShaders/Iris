@@ -92,9 +92,9 @@ public class Iris implements ClientModInitializer {
 		if (!irisConfig.isInternal()) {
 			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
 				loadInternalShaderpack();
-			} else {
-				loadInternalShaderpack();
 			}
+		} else {
+			loadInternalShaderpack();
 		}
 	}
 
