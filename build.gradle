@@ -17,6 +17,7 @@ dependencies {
 
 	modImplementation(fabricApi.module('fabric-resource-loader-v0', project.fabric_version))
 	modImplementation(fabricApi.module('fabric-key-binding-api-v1', project.fabric_version))
+	modImplementation(fabricApi.module('fabric-lifecycle-events-v1', project.fabric_version))
 }
 
 processResources {
