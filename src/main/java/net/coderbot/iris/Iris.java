@@ -6,9 +6,11 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 import net.coderbot.iris.config.IrisConfig;
+import net.coderbot.iris.gui.ShaderPackScreen;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.ShaderPackRef;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,20 +56,16 @@ public class Iris implements ClientModInitializer {
 			logger.catching(Level.ERROR, e);
 		}
 
-		// Attempt to load an external shaderpack if it is available
-		if (!irisConfig.isInternal()) {
-			loadExternalShaderpack(irisConfig.getShaderPackName());
-		}
-
-		// If there is no external shaderpack or it failed to load for some reason, load the internal shaders
-		if (currentPack == null) {
-			loadInternalShaderpack();
-		}
+		tryLoadShaderpack();
 
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 	}
 
-	private void loadExternalShaderpack(String name) {
+	public static Path getShaderPackDir() {
+		return shaderpacksDirectory;
+	}
+
+	private static void loadExternalShaderpack(String name) {
 		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
 
@@ -88,7 +86,7 @@ public class Iris implements ClientModInitializer {
 		logger.info("Using shaderpack: " + name);
 	}
 
-	private void loadInternalShaderpack() {
+	private static void loadInternalShaderpack() {
 		Path root = FabricLoader.getInstance().getModContainer("iris")
 			.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
 
@@ -101,6 +99,27 @@ public class Iris implements ClientModInitializer {
 
 		logger.info("Using internal shaders");
 	}
+
+	public static void tryLoadShaderpack() {
+		currentPack = null;
+
+		// Attempt to load an external shaderpack if it is available
+		if(!irisConfig.isInternal()) {
+			loadExternalShaderpack(irisConfig.getShaderPackName());
+		}
+
+		// If there is no external shaderpack or it failed to load for some reason, load the internal shaders
+		if (currentPack == null) {
+			loadInternalShaderpack();
+		}
+	}
+
+	public static void reload() {
+		tryLoadShaderpack();
+		pipeline = null;
+		compositeRenderer = null;
+	}
+
 
 	public static ShaderPipeline getPipeline() {
 		if (pipeline == null) {

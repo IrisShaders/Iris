@@ -2,5 +2,11 @@
   "iris.shaders.reloaded": "Reloaded Shaders!",
   "iris.keybind.reload": "Reload Shaders",
   "iris.keybinds": "Iris",
-  "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s"
+  "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s",
+
+  "options.iris.apply": "Apply",
+  "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
+  "options.iris.refreshShaderPacks": "Refresh Shader Packs",
+  "options.iris.shaderPackSelection": "Shader Packs...",
+  "options.iris.shaderPackSelection.title": "Select Shader Packs"
 }
