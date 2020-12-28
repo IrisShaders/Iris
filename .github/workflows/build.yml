@@ -3,15 +3,10 @@
 
 name: Java CI with Gradle
 
-on:
-  push:
-    branches: [ trunk ]
-  pull_request:
-    branches: [ trunk ]
+on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +15,18 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: Cache Gradle packages
+      uses: actions/cache@v2
+      with:
+        path: ~/.gradle/caches
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+        restore-keys: ${{ runner.os }}-gradle
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew build --stacktrace
+    - name: Upload artifacts to Github Actions  
+      uses: actions/upload-artifact@v2
+      with:
+        name: Compiled artifacts for ${{ github.sha }}
+        path: build/libs
