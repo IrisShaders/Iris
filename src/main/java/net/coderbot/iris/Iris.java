@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.google.common.base.Throwables;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -74,7 +75,8 @@ public class Iris implements ClientModInitializer {
 
 				try {
 					reload();
-					minecraftClient.worldRenderer.reload();
+					// TODO: Is this needed?
+					// minecraftClient.worldRenderer.reload();
 
 					if (minecraftClient.player != null){
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
@@ -173,9 +175,14 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static void reload() throws IOException {
-		irisConfig.initialize();//allows shaderpacks to be changed at runtime
+		// allows shaderpacks to be changed at runtime
+		irisConfig.initialize();
+
+		// Destroy all allocated resources
+		destroyEverything();
+
+		// Load the new shaderpack
 		loadShaderpack();
-		pipeline = null;//set to null so getPipeline catches and resets it
 	}
 
 	/**
@@ -189,14 +196,14 @@ public class Iris implements ClientModInitializer {
 			pipeline = null;
 		}
 
-		if (renderTargets != null) {
-			renderTargets.destroy();
-			renderTargets = null;
-		}
-
 		if (compositeRenderer != null) {
 			compositeRenderer.destroy();
 			compositeRenderer = null;
+		}
+
+		if (renderTargets != null) {
+			// TODO: This breaks things: renderTargets.destroy();
+			renderTargets = null;
 		}
 
 		if (zipFileSystem != null) {

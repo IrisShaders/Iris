@@ -59,6 +59,8 @@ public class RenderTarget {
 
 	// Package private, call CompositeRenderTargets#resizeIfNeeded instead.
 	void resize(int width, int height) {
+		requireValid();
+
 		GlStateManager.bindTexture(mainTexture);
 		resizeCurrentlyBoundTexture(width, height);
 

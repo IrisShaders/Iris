@@ -1,7 +1,9 @@
 package net.coderbot.iris.pipeline;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -121,10 +123,19 @@ public class ShaderPipeline {
 	}
 
 	private static void destroyPasses(Pass... passes) {
+		Set<Pass> destroyed = new HashSet<>();
+
 		for (Pass pass : passes) {
-			if (pass != null) {
-				pass.destroy();
+			if (pass == null) {
+				continue;
 			}
+
+			if (destroyed.contains(pass)) {
+				continue;
+			}
+
+			pass.destroy();
+			destroyed.add(pass);
 		}
 	}
 
