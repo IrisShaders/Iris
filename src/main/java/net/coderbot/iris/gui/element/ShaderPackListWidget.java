@@ -1,6 +1,8 @@
 package net.coderbot.iris.gui.element;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gui.GuiUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
@@ -8,26 +10,31 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Tickable;
+import net.minecraft.util.math.MathHelper;
 
-import javax.naming.directory.BasicAttributes;
 import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.stream.Collectors;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
-public class ShaderPackListWidget extends AlwaysSelectedEntryListWidget<ShaderPackListWidget.ShaderPackEntry> {
-    private ShaderPackEntry selected;
-
-    public ShaderPackListWidget(MinecraftClient minecraftClient, int width, int height, int top, int bottom, int entryHeight) {
-        super(minecraftClient, width, height, top, bottom, entryHeight);
+public class ShaderPackListWidget extends ShaderScreenEntryListWidget<ShaderPackListWidget.ShaderPackEntry> {
+    public ShaderPackListWidget(MinecraftClient minecraftClient, int width, int height, int top, int bottom, int left, int right) {
+        super(minecraftClient, width, height, top, bottom, left, right, 20);
         refresh();
     }
 
     @Override
     public int getRowWidth() {
-        return width - 4;
+        return width - 6;
+    }
+
+    @Override
+    protected int getRowTop(int index) {
+        return super.getRowTop(index) + 2;
     }
 
     public void refresh() {
@@ -58,18 +65,18 @@ public class ShaderPackListWidget extends AlwaysSelectedEntryListWidget<ShaderPa
         }
     }
 
+    @Override
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        super.render(matrices, mouseX, mouseY, delta);
+        GuiUtil.drawCompactScrollBar(this.width - 2, this.top + 2, this.bottom - 2, this.getMaxScroll(), this.getScrollAmount(), this.getMaxPosition(), Math.max(0, Math.min(3, this.scrollbarFade + (hovered ? delta : -delta))) / 3);
+        //GuiUtil.drawCompactScrollBar(this.width - 2, this.top + 2, this.bottom - 2, this.getMaxScroll(), this.getScrollAmount(), this.getMaxPosition(), 1f);
+        this.hovered = this.isMouseOver(mouseX, mouseY);
+    }
+
     public void addEntry(int index, String name) {
         ShaderPackEntry entry = new ShaderPackEntry(index, this, name);
         if(Iris.getIrisConfig().getShaderPackName().equals(name)) this.selected = entry;
         this.addEntry(entry);
-    }
-
-    public ShaderPackEntry getSelected() {
-        return selected;
-    }
-
-    public void select(int entry) {
-        this.selected = this.getEntry(entry);
     }
 
     public static class ShaderPackEntry extends AlwaysSelectedEntryListWidget.Entry<ShaderPackEntry> {
@@ -95,10 +102,15 @@ public class ShaderPackListWidget extends AlwaysSelectedEntryListWidget<ShaderPa
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
             int color = 0xFFFFFF;
-            MutableText text = new LiteralText(packName);
+            String name = packName;
+            if(textRenderer.getWidth(new LiteralText(name).formatted(Formatting.BOLD)) > this.list.width - 8) {
+                char[] cs = packName.toCharArray();
+                name = String.copyValueOf(Arrays.copyOfRange(cs, 0, Math.min(cs.length, (int)(((float)this.list.width - 14) / 6)) - 3))+"...";
+            }
+            MutableText text = new LiteralText(name);
             if(this.isMouseOver(mouseX, mouseY)) text = text.formatted(Formatting.BOLD);
             if(this.isSelected()) color = 0xFFF263;
-            drawCenteredText(matrices, textRenderer, text, x + entryWidth / 2, y + (entryHeight - 8) / 2, color);
+            drawCenteredText(matrices, textRenderer, text, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, color);
         }
 
         @Override

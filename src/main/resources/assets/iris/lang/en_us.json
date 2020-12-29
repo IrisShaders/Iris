@@ -11,5 +11,10 @@
   "options.iris.shaderPackSelection.title": "Shader Packs",
 
   "pack.iris.select.title": "Select",
-  "pack.iris.configure.title": "Configure"
+  "pack.iris.configure.title": "Configure",
+
+  "page.iris.notFound": "Invalid Page!",
+
+  "property.iris.boolean.true": "True",
+  "property.iris.boolean.false": "False"
 }
