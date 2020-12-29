@@ -15,23 +15,37 @@ import org.lwjgl.opengl.GL30C;
 public class SodiumTerrainPipeline {
 	String terrainVertex;
 	String terrainFragment;
+	String translucentVertex;
+	String translucentFragment;
 	GlFramebuffer framebuffer;
 	ShaderPack pack;
 
 	public SodiumTerrainPipeline(ShaderPack pack, RenderTargets renderTargets) {
-		Optional<ShaderPack.ProgramSource> source = first(pack.getGbuffersTerrain(), pack.getGbuffersTexturedLit(), pack.getGbuffersTextured(), pack.getGbuffersBasic());
+		Optional<ShaderPack.ProgramSource> terrainSource = first(pack.getGbuffersTerrain(), pack.getGbuffersTexturedLit(), pack.getGbuffersTextured(), pack.getGbuffersBasic());
+		Optional<ShaderPack.ProgramSource> translucentSource = first(pack.getGbuffersWater(), terrainSource);
 
 		this.pack = pack;
 
-		source.ifPresent(sources -> {
+		terrainSource.ifPresent(sources -> {
 			terrainVertex = sources.getVertexSource().orElse(null);
 			terrainFragment = sources.getFragmentSource().orElse(null);
 
 			framebuffer = renderTargets.createFramebufferWritingToMain(sources.getDirectives().getDrawBuffers());
 		});
 
+		translucentSource.ifPresent(sources -> {
+			translucentVertex = sources.getVertexSource().orElse(null);
+			translucentFragment = sources.getFragmentSource().orElse(null);
+
+			//framebuffer = renderTargets.createFramebufferWritingToMain(sources.getDirectives().getDrawBuffers());
+		});
+
 		if (terrainVertex != null) {
 			terrainVertex = transformVertexShader(terrainVertex);
+		}
+
+		if (translucentVertex != null) {
+			translucentVertex = transformVertexShader(translucentVertex);
 		}
 
 		if (framebuffer == null) {
@@ -93,6 +107,14 @@ public class SodiumTerrainPipeline {
 
 	public Optional<String> getTerrainFragmentShaderSource() {
 		return Optional.ofNullable(terrainFragment);
+	}
+
+	public Optional<String> getTranslucentVertexShaderSource() {
+		return Optional.ofNullable(translucentVertex);
+	}
+
+	public Optional<String> getTranslucentFragmentShaderSource() {
+		return Optional.ofNullable(translucentFragment);
 	}
 
 	public ProgramUniforms initUniforms(int programId) {
