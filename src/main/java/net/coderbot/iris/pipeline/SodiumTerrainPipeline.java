@@ -79,6 +79,7 @@ public class SodiumTerrainPipeline {
 
 		shader = shader
 			.replace("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)")
+			.replace("gl_MultiTexCoord1.xy/255.0", "a_LightCoord")
 			.replace("gl_MultiTexCoord0", "vec4(a_TexCoord, 0.0, 1.0)")
 			.replace("gl_MultiTexCoord1", "vec4(a_LightCoord, 0.0, 1.0)")
 			.replace("gl_Color", "a_Color")
