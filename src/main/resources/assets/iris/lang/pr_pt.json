@@ -1,0 +1,6 @@
+{
+  "iris.shaders.reloaded": "Shaders actualizados!",
+  "iris.keybind.reload": "Actualizar os Shaders",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "Falha na actualização de shaders: %s"
+}

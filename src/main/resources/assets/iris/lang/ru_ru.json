@@ -1,0 +1,6 @@
+{
+  "iris.shaders.reloaded": "Обновлённые шейдеры!",
+  "iris.keybind.reload": "Обновите шейдеры",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "Невозможность обновить шейдеры: %s"
+}
