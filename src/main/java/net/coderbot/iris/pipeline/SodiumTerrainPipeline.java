@@ -9,7 +9,11 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
+import net.coderbot.iris.shaderpack.transform.StringTransformations;
+import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import org.lwjgl.opengl.GL30C;
 
 public class SodiumTerrainPipeline {
@@ -53,18 +57,15 @@ public class SodiumTerrainPipeline {
 		}
 	}
 
-	private static String transformVertexShader(String shader) {
-		int splitPoint = shader.indexOf("\n") + 1;
+	private static String transformVertexShader(String base) {
+		StringTransformations transformations = new StringTransformations(base);
 
-		String versionString = shader.substring(0, splitPoint);
-		System.out.println("VersionString: \"" + versionString + "\n");
-
-		String body = shader.substring(splitPoint);
 		String injections = "attribute vec3 a_Pos; // The position of the vertex\n" +
 			"attribute vec4 a_Color; // The color of the vertex\n" +
 			"attribute vec2 a_TexCoord; // The block texture coordinate of the vertex\n" +
 			"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
 			"uniform mat4 u_ModelViewMatrix;\n" +
+			"uniform mat4 u_NormalMatrix;\n" +
 			"uniform vec3 u_ModelScale;\n" +
 			"\n" +
 			"// The model translation for this draw call.\n" +
@@ -75,27 +76,27 @@ public class SodiumTerrainPipeline {
 			"uniform vec4 d_ModelOffset;\n" +
 			"#endif\n";
 
-		shader = versionString + injections + body;
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, injections);
 
-		shader = shader
-			.replace("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)")
-			.replace("gl_MultiTexCoord1.xy/255.0", "a_LightCoord")
-			.replace("gl_MultiTexCoord0", "vec4(a_TexCoord, 0.0, 1.0)")
-			.replace("gl_MultiTexCoord1", "vec4(a_LightCoord, 0.0, 1.0)")
-			.replace("gl_Color", "a_Color")
-			.replace("gl_ModelViewMatrix", "u_ModelViewMatrix")
-			.replace("gl_TextureMatrix[0]", "mat4(1.0)")
-			.replace("gl_TextureMatrix[1]", "mat4(1.0)")
-			.replace("gl_NormalMatrix", "tmp_NormalMatrix")
-			// TODO: This is a hack and makes the lighting look weird...
-			// Sodium doesn't provide shaders with vertex normals like vanilla does.
-			.replace("gl_Normal", "vec3(0.0, 1.0, 0.0)")
-			.replace("tmp_NormalMatrix", "gl_NormalMatrix");
+		transformations.replaceExact("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
+		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
+		transformations.replaceExact("gl_MultiTexCoord0", "vec4(a_TexCoord, 0.0, 1.0)");
+		//transformations.replaceExact("gl_MultiTexCoord1", "vec4(a_LightCoord * 255.0, 0.0, 1.0)");
+		transformations.replaceExact("gl_Color", "a_Color");
+		transformations.replaceExact("gl_ModelViewMatrix", "u_ModelViewMatrix");
+		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
+		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
+		transformations.replaceExact("gl_NormalMatrix", "mat3(u_NormalMatrix)");
+		// TODO: This is a hack and makes the lighting look weird...
+		// Sodium doesn't provide shaders with vertex normals like vanilla does.
+		transformations.replaceExact("gl_Normal", "vec3(0.0, 1.0, 0.0)");
+
+		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
 		System.out.println("Final patched source:");
-		System.out.println(shader);
+		System.out.println(transformations);
 
-		return shader;
+		return transformations.toString();
 	}
 
 	public static SodiumTerrainPipeline create() {
@@ -122,6 +123,7 @@ public class SodiumTerrainPipeline {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
 		CommonUniforms.addCommonUniforms(uniforms, pack.getIdMap());
+		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();
 	}

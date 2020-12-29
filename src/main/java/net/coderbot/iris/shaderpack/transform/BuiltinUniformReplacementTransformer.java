@@ -18,7 +18,8 @@ public class BuiltinUniformReplacementTransformer {
 	}
 
 	public void apply(Transformations transformations) {
-		applyCommonCases(transformations);
+		// TODO: Disabled until I verify that the result is the same
+		// applyCommonCases(transformations);
 		applyFallbackCases(transformations);
 
 		transformations.replaceExact(NORMALIZED_PLACEHOLDER, normalizedLightmapCoords);
