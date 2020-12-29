@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms.builtin;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 
@@ -22,9 +23,8 @@ public class BuiltinReplacementUniforms {
 
 	public static void addBuiltinReplacementUniforms(UniformHolder uniforms) {
 		uniforms.uniformMatrix(UniformUpdateFrequency.ONCE, "iris_LightmapTextureMatrix", () -> {
-			// TODO: Disabled while BuiltinUniformReplacementTransformer#applyCommonCases is disabled
-			// Iris.logger.warn("A shader appears to require the lightmap texture matrix even after transformations have occurred");
-			// Iris.logger.warn("Iris handles this correctly but it indicates that the shader is doing weird things with lightmap coordinates");
+			Iris.logger.warn("A shader appears to require the lightmap texture matrix even after transformations have occurred");
+			Iris.logger.warn("Iris handles this correctly but it indicates that the shader is doing weird things with lightmap coordinates");
 
 			return lightmapTextureMatrix;
 		});
