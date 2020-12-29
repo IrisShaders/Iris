@@ -40,14 +40,14 @@ public class ShaderPackScreen extends Screen {
         super.init();
         int bottomCenter = this.width / 2 - 50;
         int topCenter = this.width / 2 - 76;
-        boolean inWorld = this.client.world == null;
+        boolean inWorld = this.client.world != null;
 
         this.shaderPacks = new ShaderPackListWidget(this.client, this.width / 2, this.height, 32, this.height - 58, 0, width / 2);
-        if(!inWorld) this.shaderPacks.method_31322(false);
+        if(inWorld) this.shaderPacks.method_31322(false);
         this.children.add(shaderPacks);
 
         this.shaderProperties = new PropertyDocumentWidget(this.client, this.width / 2, this.height, 32, this.height - 58, this.width / 2, this.width, 26);
-        if(!inWorld) this.shaderProperties.method_31322(false);
+        if(inWorld) this.shaderProperties.method_31322(false);
 
         // DUMMY PAGES ~~~
         this.shaderProperties.addPage("home", new PropertyList(
