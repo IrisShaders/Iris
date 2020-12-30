@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.google.common.base.Throwables;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -50,6 +49,18 @@ public class Iris implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
+			modContainer -> {
+				String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
+
+				// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
+				// the right fork of Sodium, it will just crash.
+				if (!versionString.equals("IRIS-SNAPSHOT")) {
+					throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but IRIS-SNAPSHOT is expected");
+				}
+			}
+		);
+
 		try {
 			Files.createDirectories(shaderpacksDirectory);
 		} catch (IOException e) {
@@ -75,8 +86,6 @@ public class Iris implements ClientModInitializer {
 
 				try {
 					reload();
-					// TODO: Is this needed?
-					// minecraftClient.worldRenderer.reload();
 
 					if (minecraftClient.player != null){
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
@@ -183,6 +192,12 @@ public class Iris implements ClientModInitializer {
 
 		// Load the new shaderpack
 		loadShaderpack();
+
+		// If Sodium is loaded, we need to reload the world renderer to properly recreate the ChunkRenderBackend
+		// Otherwise, the terrain shaders won't be changed properly.
+		if (FabricLoader.getInstance().isModLoaded("sodium")) {
+			MinecraftClient.getInstance().worldRenderer.reload();
+		}
 	}
 
 	/**
