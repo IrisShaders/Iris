@@ -1,6 +1,5 @@
 {
-  "iris.shaders.reloaded": "シェーダーが更新されました!",
-  "iris.keybind.reload": "シェーダーを更新する",
-  "iris.keybinds": "Iris",
-  "iris.shaders.reloaded.failure": "シェーダーの更新に失敗: %s"
+  "iris.shaders.reloaded": "シェーダー・リローデッド",
+  "iris.keybind.reload": "リロードシェーダー",
+  "iris.shaders.reloaded.failure": "シェーダーのリロードに失敗しました！理由： %s"
 }

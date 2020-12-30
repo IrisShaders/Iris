@@ -1,6 +1,5 @@
 {
-  "iris.shaders.reloaded": "Shaders geüpdatet!",
-  "iris.keybind.reload": "Actualiser Les Shaders",
-  "iris.keybinds": "Iris",
-  "iris.shaders.reloaded.failure": "Het niet bijwerken van shaders: %s"
+  "iris.shaders.reloaded": "Shaders opgeladen!",
+  "iris.keybind.reload": "Herladen Shaders",
+  "iris.shaders.reloaded.failure": "Mislukt om Shaders te herladen! Reden: %s"
 }
