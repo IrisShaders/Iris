@@ -3,20 +3,20 @@
   "iris.keybind.reload": "Herladen Shaders",
   "iris.shaders.reloaded.failure": "Mislukt om Shaders te herladen! Reden: %s",
 
-  "options.iris.apply": "Apply",
-  "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
-  "options.iris.refreshShaderPacks": "Refresh Shader Packs",
-  "options.iris.shaderPackSelection": "Shader Packs...",
-  "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.apply": "Solliciteer",
+  "options.iris.openShaderPackFolder": "Open Shader-pakketten Map...",
+  "options.iris.refreshShaderPacks": "Verfrissende Shader-pakketten",
+  "options.iris.shaderPackSelection": "Shader-pakketten...",
+  "options.iris.shaderPackSelection.title": "Shader-pakketten",
 
-  "option.iris.back": "Back",
+  "option.iris.back": "Terug",
 
-  "pack.iris.select.title": "Select",
-  "pack.iris.configure.title": "Configure",
+  "pack.iris.select.title": "selecteer",
+  "pack.iris.configure.title": "Configureer",
 
-  "page.iris.notFound": "Invalid Page!",
-  "page.iris.noConfig": "No Shader Options.",
+  "page.iris.notFound": "Ongeldige pagina!",
+  "page.iris.noConfig": "Geen Shader-opties.",
 
-  "property.iris.boolean.true": "True",
-  "property.iris.boolean.false": "False"
+  "property.iris.boolean.true": "Waar",
+  "property.iris.boolean.false": "Vals"
 }

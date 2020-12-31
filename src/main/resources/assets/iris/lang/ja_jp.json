@@ -3,20 +3,20 @@
   "iris.keybind.reload": "リロードシェーダー",
   "iris.shaders.reloaded.failure": "シェーダーのリロードに失敗しました！理由： %s",
 
-  "options.iris.apply": "Apply",
-  "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
-  "options.iris.refreshShaderPacks": "Refresh Shader Packs",
-  "options.iris.shaderPackSelection": "Shader Packs...",
-  "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.apply": "適用する",
+  "options.iris.openShaderPackFolder": "シェーダパックフォルダを開く...",
+  "options.iris.refreshShaderPacks": "リフレッシュシェーダパック",
+  "options.iris.shaderPackSelection": "シェーダパック...",
+  "options.iris.shaderPackSelection.title": "シェーダパック",
 
-  "option.iris.back": "Back",
+  "option.iris.back": "戻る",
 
-  "pack.iris.select.title": "Select",
-  "pack.iris.configure.title": "Configure",
+  "pack.iris.select.title": "選択してください",
+  "pack.iris.configure.title": "設定",
 
-  "page.iris.notFound": "Invalid Page!",
-  "page.iris.noConfig": "No Shader Options.",
+  "page.iris.notFound": "無効なページ!",
+  "page.iris.noConfig": "シェーダオプションはありません。",
 
-  "property.iris.boolean.true": "True",
-  "property.iris.boolean.false": "False"
+  "property.iris.boolean.true": "真",
+  "property.iris.boolean.false": "誤"
 }
