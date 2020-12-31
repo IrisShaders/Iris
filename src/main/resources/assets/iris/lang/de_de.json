@@ -1,5 +1,22 @@
 {
   "iris.shaders.reloaded": "Shader neu geladen!",
   "iris.keybind.reload": "Shader neu laden",
-  "iris.shaders.reloaded.failure": "Shader neu laden fehlgeschlagen! Grund: %s"
+  "iris.shaders.reloaded.failure": "Shader neu laden fehlgeschlagen! Grund: %s",
+
+  "options.iris.apply": "Apply",
+  "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
+  "options.iris.refreshShaderPacks": "Refresh Shader Packs",
+  "options.iris.shaderPackSelection": "Shader Packs...",
+  "options.iris.shaderPackSelection.title": "Shader Packs",
+
+  "option.iris.back": "Back",
+
+  "pack.iris.select.title": "Select",
+  "pack.iris.configure.title": "Configure",
+
+  "page.iris.notFound": "Invalid Page!",
+  "page.iris.noConfig": "No Shader Options.",
+
+  "property.iris.boolean.true": "True",
+  "property.iris.boolean.false": "False"
 }

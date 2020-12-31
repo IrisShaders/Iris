@@ -1,5 +1,22 @@
 {
   "iris.shaders.reloaded": "Shaders Rechargés!",
   "iris.keybind.reload": "Recharger Les Shaders",
-  "iris.shaders.reloaded.failure": "Échec lors du rechargement des shaders! Raison: %s"
+  "iris.shaders.reloaded.failure": "Échec lors du rechargement des shaders! Raison: %s",
+
+  "options.iris.apply": "Appliquer",
+  "options.iris.openShaderPackFolder": "Ouvrir le dossier des packs de Shaders...",
+  "options.iris.refreshShaderPacks": "Actualiser la liste des packs de Shaders",
+  "options.iris.shaderPackSelection": "Packs de Shader...",
+  "options.iris.shaderPackSelection.title": "Packs de Shader",
+
+  "option.iris.back": "Retour",
+
+  "pack.iris.select.title": "Selectionner",
+  "pack.iris.configure.title": "Configurer",
+
+  "page.iris.notFound": "Page Invalide!",
+  "page.iris.noConfig": "Pas d'options de Shaders.",
+
+  "property.iris.boolean.true": "Vrai",
+  "property.iris.boolean.false": "Faux"
 }
