@@ -153,12 +153,20 @@ public class ShaderPipeline {
 	private static void setupAttributes(Pass pass) {
 		// TODO: Properly add these attributes into the vertex format
 
-		int mcEntity = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), "mc_Entity");
+		float blockId = -1.0F;
 
-		if (mcEntity != -1) {
-			float blockId = -1.0F;
+		// TODO: We don't ever bind these attributes to an explicit location. AMD drivers are a bit flaky with automatic
+		// location assignment, so that might be something good to pursue in the future.
+		setupAttribute(pass, "mc_Entity", blockId, -1.0F, -1.0F, -1.0F);
+		setupAttribute(pass, "mc_midTexCoord", 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(pass, "at_tangent", 1.0F, 0.0F, 0.0F, 0.0F);
+	}
 
-			GL20.glVertexAttrib4f(mcEntity, blockId, -1.0F, -1.0F, -1.0F);
+	private static void setupAttribute(Pass pass, String name, float v0, float v1, float v2, float v3) {
+		int location = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), name);
+
+		if (location != -1) {
+			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
 		}
 	}
 
