@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
@@ -15,6 +16,7 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL20C;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -184,6 +186,12 @@ public class ShaderPipeline {
 		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
 
 		clearMainBuffers.bind();
+	}
+
+	public void copyCurrentDepthTexture() {
+		baseline.bind();
+		GlStateManager.bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 	}
 
 	public void beginClouds() {

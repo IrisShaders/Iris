@@ -118,6 +118,7 @@ public class CompositeRenderer {
 		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
 
 		int depthAttachment = renderTargets.getDepthTexture().getTextureId();
+		int depthAttachmentNoTranslucents = renderTargets.getDepthTextureNoTranslucents().getTextureId();
 
 		for (Pass renderPass : passes) {
 			if (!renderPass.isLastPass) {
@@ -130,10 +131,10 @@ public class CompositeRenderer {
 			// isn't an issue though.
 			bindTexture(PostProcessUniforms.DEPTH_TEX_0, depthAttachment);
 			// TODO: No translucent objects
-			bindTexture(PostProcessUniforms.DEPTH_TEX_1, depthAttachment);
+			bindTexture(PostProcessUniforms.DEPTH_TEX_1, depthAttachmentNoTranslucents);
 			// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
 			// Once we start rendering the hand before composite content, this will need to be addressed.
-			bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachment);
+			bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1]);
