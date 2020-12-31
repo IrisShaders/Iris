@@ -22,6 +22,7 @@ public class PageLinkProperty extends Property {
     @Override
     public boolean onClicked(double mouseX, double mouseY, int button) {
         if(button == 0) {
+            GuiUtil.playClickSound(1.0f);
             this.document.goTo(page);
             return true;
         }
@@ -30,7 +31,7 @@ public class PageLinkProperty extends Property {
 
     @Override
     public void render(MatrixStack matrices, int x, int y, int width, int height, int mouseX, int mouseY, boolean isHovered, float delta) {
-        int color = 0x7FA4A4A4;
+        int color = 0x8AE0E0E0;
         int bx = x + 4;
         int bw = width - 12;
         if(isHovered) {

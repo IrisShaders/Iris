@@ -176,6 +176,8 @@ public class Iris implements ClientModInitializer {
 			throw new RuntimeException("Failed to load internal shaderpack!", e);
 		}
 
+		getIrisConfig().setShaderPackName("(internal)");
+
 		logger.info("Using internal shaders");
 	}
 

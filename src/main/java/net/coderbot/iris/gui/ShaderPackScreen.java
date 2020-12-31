@@ -3,12 +3,11 @@ package net.coderbot.iris.gui;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.element.ShaderPackListWidget;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
-import net.coderbot.iris.gui.property.*;
+import net.coderbot.iris.shaderpack.ShaderPackPropertiesUtil;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
@@ -16,7 +15,7 @@ import net.minecraft.util.Util;
 import java.io.IOException;
 
 public class ShaderPackScreen extends Screen {
-    private Screen parent;
+    private final Screen parent;
 
     private ShaderPackListWidget shaderPacks;
     private PropertyDocumentWidget shaderProperties;
@@ -49,8 +48,9 @@ public class ShaderPackScreen extends Screen {
         this.shaderProperties = new PropertyDocumentWidget(this.client, this.width / 2, this.height, 32, this.height - 58, this.width / 2, this.width, 26);
         if(inWorld) this.shaderProperties.method_31322(false);
 
+        this.reloadShaderConfig();
         // DUMMY PAGES ~~~
-        this.shaderProperties.addPage("home", new PropertyList(
+        /*this.shaderProperties.addPage("home", new PropertyList(
                 new TitleProperty(new LiteralText("Dummy Config Menu").formatted(Formatting.BOLD), 0xAAFFFFFF),
                 new PageLinkProperty(this.shaderProperties, "dummy1", new LiteralText("Dummy Page 1"), PageLinkProperty.Align.LEFT),
                 new PageLinkProperty(this.shaderProperties, "dummy2", new LiteralText("Dummy Page 2"), PageLinkProperty.Align.LEFT),
@@ -58,7 +58,7 @@ public class ShaderPackScreen extends Screen {
                 new BooleanOptionProperty(this.shaderProperties, true, "dummy", new LiteralText("Dummy Boolean")),
                 new DoubleRangeOptionProperty(new Double[] {0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0}, 4, this.shaderProperties, "dummy", new LiteralText("Dummy Number")),
                 new TitleProperty(new LiteralText("Dummy Subtitle"), 0xAAFFFFFF),
-                new Property(new LiteralText("Dummy Piece of Text"))
+                new Property(new LiteralText("This menu is not functional."))
         ));
         this.shaderProperties.addPage("dummy1", new PropertyList(
                 new TitleProperty(new LiteralText("Dummy Page 1").formatted(Formatting.BOLD), 0xAAFFFFFF),
@@ -70,7 +70,7 @@ public class ShaderPackScreen extends Screen {
                 new PageLinkProperty(this.shaderProperties, "home", new LiteralText("Back"), PageLinkProperty.Align.CENTER_RIGHT),
                 new Property(new LiteralText("Have some Blue Text").formatted(Formatting.BLUE))
         ));
-        this.shaderProperties.goTo("home");
+        this.shaderProperties.goTo("home");*/
         // ~~~~~~~~~~~~~~~~
 
         this.children.add(shaderProperties);
@@ -90,7 +90,7 @@ public class ShaderPackScreen extends Screen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         if(this.client.world == null) this.renderBackground(matrices);
-        else this.fillGradient(matrices, 0, 0, width, height, 0x4B2E2E2E, 0x4B2E2E2E);
+        else this.fillGradient(matrices, 0, 0, width, height, 0x4F232323, 0x4F232323);
         this.shaderPacks.render(matrices, mouseX, mouseY, delta);
         this.shaderProperties.render(matrices, mouseX, mouseY, delta);
 
@@ -134,5 +134,11 @@ public class ShaderPackScreen extends Screen {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        this.reloadShaderConfig();
+    }
+
+    private void reloadShaderConfig() {
+        this.shaderProperties.setDocument(ShaderPackPropertiesUtil.createDocument(Iris.getIrisConfig().getShaderPackName(), Iris.getCurrentPack(), this.shaderProperties), "screen");
+        this.shaderProperties.setScrollAmount(0.0);
     }
 }

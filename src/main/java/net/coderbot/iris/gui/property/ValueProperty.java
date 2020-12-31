@@ -24,7 +24,7 @@ public abstract class ValueProperty<T> extends Property {
     public abstract boolean isDefault();
 
     public void setValue(T value) {
-        document.saveProperties();
+        this.save();
     }
 
     public void save() {

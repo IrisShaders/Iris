@@ -6,8 +6,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 public class StringOptionProperty extends OptionProperty<String> {
-    public StringOptionProperty(String[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label) {
-        super(values, defaultIndex, document, key, label);
+    public StringOptionProperty(String[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
+        super(values, defaultIndex, document, key, label, isSlider);
     }
 
     @Override

@@ -7,6 +7,9 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 
 public final class GuiUtil {
@@ -65,5 +68,9 @@ public final class GuiUtil {
         fill(x, y + height - 1, z, width, 1, colorARGB);
         fill(x, y + 1, z, 1, height - 2, colorARGB);
         fill(x + width - 1, y + 1, z, 1, height - 2, colorARGB);
+    }
+
+    public static void playClickSound(float pitch) {
+        MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, pitch));
     }
 }

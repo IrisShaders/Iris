@@ -16,8 +16,16 @@ public class Property {
         return false;
     }
 
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        return false;
+    }
+
     public void render(MatrixStack matrices, int x, int y, int width, int height, int mouseX, int mouseY, boolean isHovered, float delta) {
         this.drawText(MinecraftClient.getInstance(), label, matrices, x + 10, y + (height / 2), 0xFFFFFF, false, true, true);
+    }
+
+    public boolean charTyped(char c, int keyCode) {
+        return false;
     }
 
     public int getHeight() {

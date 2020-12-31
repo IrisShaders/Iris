@@ -6,8 +6,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 public class DoubleRangeOptionProperty extends OptionProperty<Double> {
-    public DoubleRangeOptionProperty(Double[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label) {
-        super(values, defaultIndex, document, key, label);
+    public DoubleRangeOptionProperty(Double[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
+        super(values, defaultIndex, document, key, label, isSlider);
     }
 
     @Override

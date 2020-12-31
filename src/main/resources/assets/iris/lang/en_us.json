@@ -10,10 +10,13 @@
   "options.iris.shaderPackSelection": "Shader Packs...",
   "options.iris.shaderPackSelection.title": "Shader Packs",
 
+  "option.iris.back": "Back",
+
   "pack.iris.select.title": "Select",
   "pack.iris.configure.title": "Configure",
 
   "page.iris.notFound": "Invalid Page!",
+  "page.iris.noConfig": "No Shader Options.",
 
   "property.iris.boolean.true": "True",
   "property.iris.boolean.false": "False"
