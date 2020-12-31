@@ -13,6 +13,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.rendertarget.FramebufferBlitter;
+import net.coderbot.iris.rendertarget.NoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
@@ -29,6 +30,7 @@ public class CompositeRenderer {
 
 	private final ImmutableList<Pass> passes;
 	private final GlFramebuffer baseline;
+	private final NoiseTexture noisetex;
 
 	final CenterDepthSampler centerDepthSampler;
 
@@ -87,6 +89,10 @@ public class CompositeRenderer {
 		this.renderTargets = renderTargets;
 
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+
+		// TODO: Use noiseTextureResolution here instead.
+		int noiseTextureResolution = 128;
+		this.noisetex = new NoiseTexture(noiseTextureResolution, noiseTextureResolution);
 	}
 
 	private static final class Pass {
@@ -137,6 +143,8 @@ public class CompositeRenderer {
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt[5]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
+
+			bindTexture(PostProcessUniforms.NOISE_TEX, noisetex.getTextureId());
 
 			float scaledWidth = main.textureWidth * renderPass.viewportScale;
 			float scaledHeight = main.textureHeight * renderPass.viewportScale;
@@ -200,6 +208,7 @@ public class CompositeRenderer {
 	public void destroy() {
 		baseline.destroy();
 		centerDepthSampler.destroy();
+		noisetex.destroy();
 
 		for (Pass renderPass : passes) {
 			renderPass.destroy();
