@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "Iris",
-  "description": "A new shaders mod for Minecraft",
+  "description": "A new shaders mod for Minecraft intended to be compatible with existing ShadersMod/Optifine shaders",
   "authors": [
 	"coderbot"
   ],
