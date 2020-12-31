@@ -7,6 +7,7 @@ import net.coderbot.iris.gui.element.PropertyDocumentWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import java.util.List;
 
@@ -71,6 +72,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         if(isSlider && isButtonHovered(mouseX, true)) {
             float pos = (float)((mouseX - (cachedX + (cachedWidth * 0.6) - 7)) / ((cachedWidth * 0.4)));
             this.index = Math.min((int)(pos * this.values.length), this.values.length - 1);
+            this.save();
             return true;
         }
         return false;
@@ -126,5 +128,13 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
     @Override
     public boolean isDefault() {
         return index == defaultIndex;
+    }
+
+    @FunctionalInterface
+    public interface Palette {
+        Palette DEFAULT = (index, size) -> Formatting.YELLOW;
+        Palette BOOLEAN = (index, size) -> index > 0 ? Formatting.RED : Formatting.GREEN;
+
+        Formatting getColor(int index, int size);
     }
 }

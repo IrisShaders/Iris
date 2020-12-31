@@ -1,6 +1,8 @@
 package net.coderbot.iris.gui.property;
 
+import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
@@ -11,12 +13,7 @@ public class BooleanOptionProperty extends OptionProperty<Boolean> {
     }
 
     @Override
-    public Text getValueText() {
-        return isDefault() ?
-                new TranslatableText(getValue() ? "property.iris.boolean.true" : "property.iris.boolean.false")
-        : getValue() ?
-                new TranslatableText("property.iris.boolean.true").formatted(Formatting.GREEN)
-        :
-                new TranslatableText("property.iris.boolean.false").formatted(Formatting.RED);
+    public Text createValueText(int width) {
+        return GuiUtil.trimmed(MinecraftClient.getInstance().textRenderer, getValue() ? "property.iris.boolean.true" : "property.iris.boolean.false", width, true, true, isDefault() ? Formatting.RESET : getValue() ? Formatting.GREEN : Formatting.RED);
     }
 }

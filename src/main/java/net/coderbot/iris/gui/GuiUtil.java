@@ -8,13 +8,11 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.BaseText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 
@@ -80,7 +78,12 @@ public final class GuiUtil {
         MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, pitch));
     }
 
-    /*public static TranslatableText truncatedTranslatable(TextRenderer tr, String key, int lenPixels, Formatting... formats) {
-        TranslatableText t = (TranslatableText) new TranslatableText(key).formatted(formats);
-    }*/
+    public static Text trimmed(TextRenderer tr, String text, int lenPixels, boolean translated, boolean ellipsis, Formatting... formats) {
+        String tx = translated ? I18n.translate(text) : text;
+        LiteralText t = (LiteralText) new LiteralText(tx).formatted(formats);
+        if(tr.getWidth(t) > lenPixels) {
+            return new LiteralText(tr.trimToWidth(tx, lenPixels - (ellipsis ? 8 : 0)) + (ellipsis ? "..." : "")).formatted(formats);
+        }
+        return t;
+    }
 }

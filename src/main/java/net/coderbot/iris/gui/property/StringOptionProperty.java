@@ -11,7 +11,7 @@ public class StringOptionProperty extends OptionProperty<String> {
     }
 
     @Override
-    public Text getValueText() {
+    public Text createValueText(int width) {
         return isDefault() ? new LiteralText(this.getValue()) : new LiteralText(this.getValue()).formatted(Formatting.YELLOW);
     }
 }

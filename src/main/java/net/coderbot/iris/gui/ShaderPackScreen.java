@@ -149,7 +149,7 @@ public class ShaderPackScreen extends Screen {
     }
 
     private void reloadShaderConfig() {
-        this.shaderProperties.setDocument(ShaderPackPropertiesUtil.createDocument(Iris.getIrisConfig().getShaderPackName(), Iris.getCurrentPack(), this.shaderProperties), "screen");
+        this.shaderProperties.setDocument(ShaderPackPropertiesUtil.createDocument(this.client.textRenderer, this.width / 2, Iris.getIrisConfig().getShaderPackName(), Iris.getCurrentPack(), this.shaderProperties), "screen");
         this.shaderProperties.setScrollAmount(0.0);
     }
 }
