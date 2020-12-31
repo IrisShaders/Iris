@@ -3,6 +3,7 @@ package net.coderbot.iris.gui;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
@@ -10,6 +11,11 @@ import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.BaseText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 
 public final class GuiUtil {
@@ -73,4 +79,8 @@ public final class GuiUtil {
     public static void playClickSound(float pitch) {
         MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, pitch));
     }
+
+    /*public static TranslatableText truncatedTranslatable(TextRenderer tr, String key, int lenPixels, Formatting... formats) {
+        TranslatableText t = (TranslatableText) new TranslatableText(key).formatted(formats);
+    }*/
 }

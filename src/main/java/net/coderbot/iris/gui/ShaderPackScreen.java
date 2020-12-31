@@ -45,10 +45,21 @@ public class ShaderPackScreen extends Screen {
         if(inWorld) this.shaderPacks.method_31322(false);
         this.children.add(shaderPacks);
 
+        float scrollAmount = 0.0f;
+        String page = "screen";
+
+        if(this.shaderProperties != null) {
+            scrollAmount = (float)this.shaderProperties.getScrollAmount() / this.shaderProperties.getMaxScroll();
+            page = this.shaderProperties.getCurrentPage();
+        }
+
         this.shaderProperties = new PropertyDocumentWidget(this.client, this.width / 2, this.height, 32, this.height - 58, this.width / 2, this.width, 26);
         if(inWorld) this.shaderProperties.method_31322(false);
-
         this.reloadShaderConfig();
+
+        this.shaderProperties.setScrollAmount(this.shaderProperties.getMaxScroll() * scrollAmount);
+        this.shaderProperties.goTo(page);
+
         // DUMMY PAGES ~~~
         /*this.shaderProperties.addPage("home", new PropertyList(
                 new TitleProperty(new LiteralText("Dummy Config Menu").formatted(Formatting.BOLD), 0xAAFFFFFF),
