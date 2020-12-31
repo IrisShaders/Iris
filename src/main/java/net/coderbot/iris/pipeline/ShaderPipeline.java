@@ -10,11 +10,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.rendertarget.NoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 
@@ -52,6 +54,8 @@ public class ShaderPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
+	private final NoiseTexture noiseTexture;
+
 	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
 		this.renderTargets = renderTargets;
 
@@ -71,6 +75,8 @@ public class ShaderPipeline {
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+
+		this.noiseTexture = new NoiseTexture(128, 128);
 	}
 
 	private Pass createPass(ShaderPack.ProgramSource source) {
@@ -93,7 +99,7 @@ public class ShaderPipeline {
 		return new Pass(builder.build(), framebuffer);
 	}
 	
-	private static final class Pass {
+	private final class Pass {
 		private final Program program;
 		private final GlFramebuffer framebuffer;
 
@@ -103,6 +109,11 @@ public class ShaderPipeline {
 		}
 		
 		public void use() {
+			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
+			// a given program and bind the required textures instead.
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE15);
+			GlStateManager.bindTexture(noiseTexture.getTextureId());
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 			framebuffer.bind();
 			program.use();
 		}
@@ -122,6 +133,7 @@ public class ShaderPipeline {
 		clearAltBuffers.destroy();
 		clearMainBuffers.destroy();
 		baseline.destroy();
+		noiseTexture.destroy();
 	}
 
 	private static void destroyPasses(Pass... passes) {
