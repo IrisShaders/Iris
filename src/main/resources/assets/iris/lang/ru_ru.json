@@ -3,20 +3,20 @@
   "iris.keybind.reload": "Шейдеры перезарядки",
   "iris.shaders.reloaded.failure": "Ошибка при Перезагрузке шейдеров! Причина: %s",
 
-  "options.iris.apply": "Apply",
-  "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
-  "options.iris.refreshShaderPacks": "Refresh Shader Packs",
-  "options.iris.shaderPackSelection": "Shader Packs...",
-  "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.apply": "Применить",
+  "options.iris.openShaderPackFolder": "Открытая папка шейдерного пакета...",
+  "options.iris.refreshShaderPacks": "Обновить шейдерные пакеты",
+  "options.iris.shaderPackSelection": "шейдерные пакеты...",
+  "options.iris.shaderPackSelection.title": "шейдерные пакеты",
 
-  "option.iris.back": "Back",
+  "option.iris.back": "Назад",
 
-  "pack.iris.select.title": "Select",
-  "pack.iris.configure.title": "Configure",
+  "pack.iris.select.title": "Выберите",
+  "pack.iris.configure.title": "Настроить",
 
-  "page.iris.notFound": "Invalid Page!",
-  "page.iris.noConfig": "No Shader Options.",
+  "page.iris.notFound": "Недействительная страница!",
+  "page.iris.noConfig": "Нет вариантов шейдеров.",
 
-  "property.iris.boolean.true": "True",
-  "property.iris.boolean.false": "False"
+  "property.iris.boolean.true": "Правда",
+  "property.iris.boolean.false": "Ложный"
 }
