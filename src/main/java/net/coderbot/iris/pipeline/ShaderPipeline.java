@@ -25,6 +25,7 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.util.Identifier;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -55,9 +56,11 @@ public class ShaderPipeline {
 	private final GlFramebuffer baseline;
 
 	private final NoiseTexture noiseTexture;
+	private final int waterId;
 
 	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
 		this.renderTargets = renderTargets;
+		waterId = pack.getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
 
 		this.basic = pack.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = pack.getGbuffersTextured().map(this::createPass).orElse(basic);
@@ -164,10 +167,16 @@ public class ShaderPipeline {
 		this.basic.use();
 	}
 
-	private static void setupAttributes(Pass pass) {
+	private void setupAttributes(Pass pass) {
 		// TODO: Properly add these attributes into the vertex format
 
 		float blockId = -1.0F;
+
+		// TODO: This is just making it so that all translucent content renders like water. We need to properly support
+		// mc_Entity!
+		if (pass == translucent) {
+			blockId = waterId;
+		}
 
 		// TODO: We don't ever bind these attributes to an explicit location. AMD drivers are a bit flaky with automatic
 		// location assignment, so that might be something good to pursue in the future.
