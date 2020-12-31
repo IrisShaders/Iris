@@ -3,20 +3,20 @@
   "iris.keybind.reload": "Shader neu laden",
   "iris.shaders.reloaded.failure": "Shader neu laden fehlgeschlagen! Grund: %s",
 
-  "options.iris.apply": "Solliciteer",
-  "options.iris.openShaderPackFolder": "Open Shader-pakketten Map...",
-  "options.iris.refreshShaderPacks": "Verfrissende Shader-pakketten",
-  "options.iris.shaderPackSelection": "Shader-pakketten...",
-  "options.iris.shaderPackSelection.title": "Shader-pakketten",
+  "options.iris.apply": "Anwenden",
+  "options.iris.openShaderPackFolder": "Shader-Pack-Ordner öffnen...",
+  "options.iris.refreshShaderPacks": "Shader-Packs aktualisieren",
+  "options.iris.shaderPackSelection": "Shader-Packs...",
+  "options.iris.shaderPackSelection.title": "Shader-Packs",
 
-  "option.iris.back": "Terug",
+  "option.iris.back": "Zurück",
 
-  "pack.iris.select.title": "selecteer",
-  "pack.iris.configure.title": "Configureer",
+  "pack.iris.select.title": "Wählen",
+  "pack.iris.configure.title": "Konfigurieren",
 
-  "page.iris.notFound": "Ongeldige pagina!",
-  "page.iris.noConfig": "Geen Shader-opties.",
+  "page.iris.notFound": "Ungültige Seite!",
+  "page.iris.noConfig": "Keine Shader-Optionen.",
 
-  "property.iris.boolean.true": "Waar",
-  "property.iris.boolean.false": "Vals"
+  "property.iris.boolean.true": "Wahr",
+  "property.iris.boolean.false": "Falsche"
 }
