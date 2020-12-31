@@ -17,6 +17,7 @@ public class RenderTargets {
 
 	private final RenderTarget[] targets;
 	private final DepthTexture depthTexture;
+	private final DepthTexture noTranslucents;
 
 	private int cachedWidth;
 	private int cachedHeight;
@@ -38,6 +39,7 @@ public class RenderTargets {
 		}
 
 		this.depthTexture = new DepthTexture(width, height);
+		this.noTranslucents = new DepthTexture(width, height);
 
 		this.cachedWidth = width;
 		this.cachedHeight = height;
@@ -58,6 +60,7 @@ public class RenderTargets {
 		}
 
 		// depthTexture.destroy();
+		noTranslucents.destroy();
 	}
 
 	public RenderTarget get(int index) {
@@ -66,6 +69,10 @@ public class RenderTargets {
 
 	public DepthTexture getDepthTexture() {
 		return depthTexture;
+	}
+
+	public DepthTexture getDepthTextureNoTranslucents() {
+		return noTranslucents;
 	}
 
 	public void resizeIfNeeded(int newWidth, int newHeight) {
@@ -83,6 +90,7 @@ public class RenderTargets {
 		}
 
 		depthTexture.resize(newWidth, newHeight);
+		noTranslucents.resize(newWidth, newHeight);
 	}
 
 	public GlFramebuffer createFramebufferWritingToMain(int[] drawBuffers) {

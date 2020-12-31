@@ -39,7 +39,8 @@ public final class CommonUniforms {
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
-			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness);
+			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
+			.uniform1i(ONCE, "noisetex", () -> 15);
 	}
 
 	private static float getBlindness() {
