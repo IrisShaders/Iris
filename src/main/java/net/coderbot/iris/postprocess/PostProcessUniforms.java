@@ -17,6 +17,8 @@ public class PostProcessUniforms {
 	public static final int DEPTH_TEX_1 = 11;
 	public static final int DEPTH_TEX_2 = 12;
 
+	public static final int NOISE_TEX = 15;
+
 	public static final int DEFAULT_COLOR = COLOR_TEX_0;
 	public static final int DEFAULT_DEPTH = DEPTH_TEX_0;
 
@@ -48,11 +50,11 @@ public class PostProcessUniforms {
 
 		// Depth
 		addSampler(builder, DEFAULT_DEPTH, "gdepthtex", "depthtex0");
-		addSampler(builder, 11, "depthtex1");
-		addSampler(builder, 12, "depthtex2");
+		addSampler(builder, DEPTH_TEX_1, "depthtex1");
+		addSampler(builder, DEPTH_TEX_2, "depthtex2");
 
 		// Noise
-		addSampler(builder, 15, "noisetex");
+		addSampler(builder, NOISE_TEX, "noisetex");
 
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", renderer.centerDepthSampler::getCenterDepthSmoothSample);
 	}
