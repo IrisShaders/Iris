@@ -15,9 +15,24 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	modImplementation(fabricApi.module('fabric-resource-loader-v0', project.fabric_version))
-	modImplementation(fabricApi.module('fabric-key-binding-api-v1', project.fabric_version))
-	modImplementation(fabricApi.module('fabric-lifecycle-events-v1', project.fabric_version))
+	// Critical, needed for loading our custom language files
+	includeFabricApiModule "fabric-resource-loader-v0"
+
+	// Needed for adding the reload keybinding
+	includeFabricApiModule "fabric-key-binding-api-v1"
+
+	// Needed for the END_CLIENT_TICK event
+	includeFabricApiModule "fabric-lifecycle-events-v1"
+
+	// Required by fabric-lifecycle-events-v1
+	includeFabricApiModule "fabric-api-base"
+}
+
+def includeFabricApiModule(String moduleName) {
+	Object dependency = fabricApi.module(moduleName, project.fabric_version);
+
+	dependencies.modImplementation(dependency);
+	dependencies.include(dependency);
 }
 
 processResources {
