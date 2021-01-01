@@ -13,8 +13,8 @@ For the most part, I am creating Iris in order to have fun and get more experien
 
 ## Current State
 
-* Iris is able to load basic shaderpacks. It cannot currently load shaderpacks distributed as zip files, so you need to extract them first - this will be fixed. Furthermore, many shaderpacks (such as Sildur's) have significant rendering issues currently. As I implement more of the OptiFine shader interface, these issues will go away and Iris will be able to load existing shaderpacks without causing significant rendering issues.
-* Iris does not work properly with Sodium. Sodium also renders the terrain using its own shaders, so for Iris and Sodium to work together I will need to just implement some glue code between Sodium and Iris in order to make Sodium render terrain with the shaders that Iris loads. Since Sodium and Iris are both licensed under the LGPLv3 license, and because I am on good terms with JellySquid, compatibility between Sodium and Iris is entirely possible. It's just not the highest priority at the moment, because I would like to focus on getting basic shaders working properly first.
+* Iris is able to load basic shaderpacks. It can load shaderpacks distributed as zip files. Furthermore, almost all shaderpacks except for Sildur's and some simple ones have rendering issues. As more of the OptiFine shader interface is implemented these issues will go away and Iris will be able to load existing shaderpacks without rendering issues.
+* Iris does not work properly with Sodium in the trunk branch. The sodium-compatibility branch is advancing and once it's finished it'll be merged onto the trunk branch and Sodium & Iris will be fully compatible.
 
 
 ## Goals
