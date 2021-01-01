@@ -221,31 +221,28 @@ public class ShaderPipeline {
 		end();
 	}
 
-	public void beginTerrainLayer(RenderLayer terrainLayer) {
-		if (terrainLayer == RenderLayer.getTranslucent() || terrainLayer == RenderLayer.getTripwire()) {
-			if (translucent == null) {
-				return;
-			}
-
-			translucent.use();
-			setupAttributes(translucent);
-
-			// TODO: This is just making it so that all translucent content renders like water. We need to properly support
-			// mc_Entity!
-			setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
-		} else if (terrainLayer == RenderLayer.getSolid() || terrainLayer == RenderLayer.getCutout() || terrainLayer == RenderLayer.getCutoutMipped()) {
-			if (terrain == null) {
-				return;
-			}
-
-			GlStateManager.disableBlend();
-			terrain.use();
-			setupAttributes(terrain);
+	public void beginTerrain() {
+		if (terrain == null) {
+			return;
 		}
+
+		// TODO: Don't disable blend normally, this is hardcoding for Sildur's
+		//GlStateManager.disableBlend();
+		terrain.use();
+		setupAttributes(terrain);
 	}
 
-	public void endTerrainLayer(RenderLayer terrainLayer) {
-		end();
+	public void beginTranslucentTerrain() {
+		if (translucent == null) {
+			return;
+		}
+
+		translucent.use();
+		setupAttributes(translucent);
+
+		// TODO: This is just making it so that all translucent content renders like water. We need to properly support
+		// mc_Entity!
+		setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
 	}
 
 	public void beginSky() {
@@ -300,6 +297,16 @@ public class ShaderPipeline {
 		end();
 	}
 
+	public void beginBasic() {
+		if (basic == null) {
+			return;
+		}
+
+		// TODO: This is hardcoded for Sildur's, we shouldn't disable blend normally
+		GlStateManager.disableBlend();
+		basic.use();
+	}
+
 	public void beginImmediateDrawing(RenderLayer layer) {
 		if (!isRenderingWorld) {
 			// don't mess with non-world rendering
@@ -307,12 +314,7 @@ public class ShaderPipeline {
 		}
 
 		if ((layer.isOutline() || layer == RenderLayer.getLines())) {
-			if (basic == null) {
-				return;
-			}
-
-			GlStateManager.disableBlend();
-			basic.use();
+			beginBasic();
 		} else {
 			if (texturedLit == null) {
 				return;

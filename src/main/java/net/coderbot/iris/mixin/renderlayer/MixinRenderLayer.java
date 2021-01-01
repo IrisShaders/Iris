@@ -9,7 +9,9 @@ import net.coderbot.iris.layer.UseProgramRenderPhase;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 import net.minecraft.client.render.RenderLayer;
 
@@ -44,6 +46,9 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 	@Mutable
 	private static RenderLayer TRIPWIRE;
 
+	@Unique
+	private static RenderLayer iris$LINES;
+
 	@Override
 	public Optional<GbufferProgram> getProgram() {
 		// By default, don't use shaders to render content
@@ -56,6 +61,18 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 		CUTOUT = wrap("iris:terrain_cutout", CUTOUT, GbufferProgram.TERRAIN);
 		TRANSLUCENT = wrap("iris:translucent", TRANSLUCENT, GbufferProgram.TRANSLUCENT_TERRAIN);
 		TRIPWIRE = wrap("iris:tripwire", TRIPWIRE, GbufferProgram.TRANSLUCENT_TERRAIN);
+		// TODO: figure out how to assign to RenderLayer.LINES
+		// We cannot use @Shadow easily because the type of the field is a package-private class
+		iris$LINES = wrap("iris:lines", RenderLayer.LINES, GbufferProgram.BASIC);
+	}
+
+	/**
+	 * @author coderbot
+	 * @reason Use the wrapped render layer instead.
+	 */
+	@Overwrite
+	public static RenderLayer getLines() {
+		return iris$LINES;
 	}
 
 	private static RenderLayer wrap(String name, RenderLayer wrapped, GbufferProgram program) {

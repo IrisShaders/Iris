@@ -28,7 +28,7 @@ public class IrisRenderLayerWrapper extends RenderLayer {
 		super.endDrawing();
 	}
 
-	private static final boolean isTranslucent(RenderLayer layer) {
+	private static boolean isTranslucent(RenderLayer layer) {
 		return ((RenderLayerAccessor) layer).isTranslucent();
 	}
 }
