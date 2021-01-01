@@ -15,7 +15,7 @@ public enum GbufferProgram {
 	ENTITIES,
 	ENTITIES_GLOWING,
 	ARMOR_GLINT,
-	SPIDER_EYES,
+	EYES,
 	HAND,
 	WEATHER
 }
