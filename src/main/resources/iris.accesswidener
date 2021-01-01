@@ -1,0 +1,4 @@
+accessWidener	v1	named
+
+accessible method net/minecraft/client/gl/GlShader <init> (Lnet/minecraft/client/gl/GlShader$Type;ILjava/lang/String;)V
+accessible method net/minecraft/client/gl/GlShader$Type getGlType ()I

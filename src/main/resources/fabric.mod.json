@@ -28,6 +28,8 @@
 	"mixins.iris.json"
   ],
 
+  "accessWidener": "iris.accesswidener",
+
   "depends": {
 	"fabricloader": ">=0.7.4",
 	"minecraft": "1.16.x",

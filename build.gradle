@@ -28,6 +28,11 @@ dependencies {
 	includeFabricApiModule "fabric-api-base"
 }
 
+minecraft {
+	// Iris' access widener
+	accessWidener "src/main/resources/iris.accesswidener"
+}
+
 def includeFabricApiModule(String moduleName) {
 	Object dependency = fabricApi.module(moduleName, project.fabric_version);
 

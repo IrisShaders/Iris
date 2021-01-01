@@ -4,22 +4,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.OptionalInt;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.uniform.Uniform;
-import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL21;
 
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.gl.GlShader;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static net.coderbot.iris.gl.GlShaders.createFromResource;
 
 public class ProgramBuilder extends ProgramUniforms.Builder {
 	private final GlProgram program;
@@ -37,15 +31,15 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		GlShader fragment;
 
 		try {
-			InputStream vertexSourceStream = new ByteArrayInputStream(vertexSource.getBytes(StandardCharsets.UTF_8));
-			vertex = GlShader.createFromResource(GlShader.Type.VERTEX, name + ".vsh", vertexSourceStream, "iris");
+			InputStream vertexSourceStream = new ByteArrayInputStream(checkNotNull(vertexSource).getBytes(StandardCharsets.UTF_8));
+			vertex = createFromResource(GlShader.Type.VERTEX, name + ".vsh", vertexSourceStream, "iris");
 		} catch (IOException e) {
 			throw new IOException("Failed to compile vertex shader for program " + name, e);
 		}
 
 		try {
-			InputStream fragmentSourceStream = new ByteArrayInputStream(fragmentSource.getBytes(StandardCharsets.UTF_8));
-			fragment = GlShader.createFromResource(GlShader.Type.FRAGMENT, name + ".fsh", fragmentSourceStream, "iris");
+			InputStream fragmentSourceStream = new ByteArrayInputStream(checkNotNull(fragmentSource).getBytes(StandardCharsets.UTF_8));
+			fragment = createFromResource(GlShader.Type.FRAGMENT, name + ".fsh", fragmentSourceStream, "iris");
 		} catch (IOException e) {
 			throw new IOException("Failed to compile fragment shader for program " + name, e);
 		}
@@ -98,4 +92,5 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 	public Program build() {
 		return new Program(program, super.buildUniforms());
 	}
+
 }
