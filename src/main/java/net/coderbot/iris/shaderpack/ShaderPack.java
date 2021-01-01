@@ -127,6 +127,10 @@ public class ShaderPack {
 		return packDirectives;
 	}
 
+	public Properties getShaderProperties() {
+		return this.shaderProperties;
+	}
+
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
 		String vertexSource = null;
 		String fragmentSource = null;
@@ -164,10 +168,6 @@ public class ShaderPack {
 		} catch (FileNotFoundException | NoSuchFileException e) {
 			return null;
 		}
-	}
-
-	public Properties getShaderProperties() {
-		return this.shaderProperties;
 	}
 
 	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {

@@ -36,7 +36,8 @@ public final class ShaderPackPropertiesUtil {
         for(String s : shaderProperties.stringPropertyNames()) {
             if(s.startsWith("screen.") || s.equals("screen")) {
                 PropertyList page = new PropertyList();
-                page.add(new TitleProperty(GuiUtil.trimmed(tr, s, width - 4, s.startsWith("screen."), true, Formatting.BOLD), 0xAAFFFFFF));
+                boolean subScreen = s.startsWith("screen.");
+                page.add(new TitleProperty(GuiUtil.trimmed(tr, subScreen ? s : shaderName, width - 4, subScreen, true, Formatting.BOLD), 0xAAFFFFFF));
                 String[] properties = shaderProperties.getProperty(s).split(" ");
                 for(String p : properties) {
                     if(p.equals("<profile>")) {

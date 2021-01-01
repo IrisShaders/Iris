@@ -4,6 +4,8 @@ import net.coderbot.iris.gui.element.PropertyDocumentWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 
+import java.util.Properties;
+
 public abstract class ValueProperty<T> extends Property {
     protected final String key;
     protected final PropertyDocumentWidget document;
@@ -33,15 +35,17 @@ public abstract class ValueProperty<T> extends Property {
     public abstract boolean isDefault();
 
     public void setValue(T value) {
-        this.save();
+        this.documentSave();
     }
 
-    public void save() {
+    public void documentSave() {
+        this.document.saveProperties();
+    }
+
+    public void save(Properties properties) {
         this.valueText = null;
-        // TODO: Saving to file (will add Properties or similar as an arg)
+        properties.put(this.key, this.getValue().toString());
     }
 
-    public void read() {
-        // TODO: Read value from file (will add Properties or similar as an arg), and call setValue()
-    }
+    public abstract void read(Properties properties);
 }

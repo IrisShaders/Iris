@@ -11,6 +11,7 @@ import net.minecraft.util.Formatting;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<PropertyDocumentWidget.PropertyEntry> {
     protected Map<String, PropertyList> document = new HashMap<>();
@@ -48,11 +49,12 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
 
     public void setDocument(Map<String, PropertyList> document, String homePage) {
         this.document = document;
+        // TODO: Make this the actual shader properties txt file plus the default values in the shader's config
+        Properties properties = new Properties();
         for(String page : document.keySet()) {
             for(Property p : document.get(page)) {
                 if(p instanceof ValueProperty) {
-                    // TODO: Pass a readable thing into read()
-                    ((ValueProperty<?>)p).read();
+                    ((ValueProperty<?>)p).read(properties);
                 }
             }
         }

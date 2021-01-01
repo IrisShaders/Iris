@@ -32,7 +32,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         this.index++;
         if(index >= values.length) index = 0;
         // TODO: Pass an arg, likely retrieved from this.document, into save()
-        this.save();
+        this.documentSave();
     }
 
     @Override
@@ -47,6 +47,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
             this.index = vList.indexOf(value);
         } else {
             Iris.logger.warn("Unable to set value of {} to {} - Invalid value!", key, value);
+            this.index = defaultIndex;
         }
         super.setValue(value);
     }
@@ -72,7 +73,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         if(isSlider && isButtonHovered(mouseX, true)) {
             float pos = (float)((mouseX - (cachedX + (cachedWidth * 0.6) - 7)) / ((cachedWidth * 0.4)));
             this.index = Math.min((int)(pos * this.values.length), this.values.length - 1);
-            this.save();
+            this.documentSave();
             return true;
         }
         return false;
@@ -128,13 +129,5 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
     @Override
     public boolean isDefault() {
         return index == defaultIndex;
-    }
-
-    @FunctionalInterface
-    public interface Palette {
-        Palette DEFAULT = (index, size) -> Formatting.YELLOW;
-        Palette BOOLEAN = (index, size) -> index > 0 ? Formatting.RED : Formatting.GREEN;
-
-        Formatting getColor(int index, int size);
     }
 }
