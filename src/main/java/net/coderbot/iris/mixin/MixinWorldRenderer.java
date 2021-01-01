@@ -85,12 +85,12 @@ public class MixinWorldRenderer {
 
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		Iris.getPipeline().beginTerrainLayer(renderLayer);
+		//Iris.getPipeline().beginTerrainLayer(renderLayer);
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		Iris.getPipeline().endTerrainLayer(renderLayer);
+		//Iris.getPipeline().endTerrainLayer(renderLayer);
 	}
 
 	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("HEAD"))

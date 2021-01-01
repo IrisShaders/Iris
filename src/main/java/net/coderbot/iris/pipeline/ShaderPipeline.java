@@ -156,7 +156,7 @@ public class ShaderPipeline {
 		}
 	}
 
-	private void end() {
+	public void end() {
 		if (this.basic == null) {
 			GlProgramManager.useProgram(0);
 			this.baseline.bind();

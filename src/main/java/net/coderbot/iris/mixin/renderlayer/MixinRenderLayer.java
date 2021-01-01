@@ -3,13 +3,13 @@ package net.coderbot.iris.mixin.renderlayer;
 import java.util.Optional;
 
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.layer.IrisRenderLayerWrapper;
 import net.coderbot.iris.layer.ProgramRenderLayer;
+import net.coderbot.iris.layer.UseProgramRenderPhase;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Slice;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Shadow;
 
 import net.minecraft.client.render.RenderLayer;
 
@@ -19,7 +19,30 @@ import net.fabricmc.api.Environment;
 @Environment(EnvType.CLIENT)
 @Mixin(RenderLayer.class)
 public class MixinRenderLayer implements ProgramRenderLayer {
-	private static final String BUILD = "net/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder.build (Z)Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters;";
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer SOLID;
+
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer CUTOUT_MIPPED;
+
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer CUTOUT;
+
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer TRANSLUCENT;
+
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer TRIPWIRE;
 
 	@Override
 	public Optional<GbufferProgram> getProgram() {
@@ -27,15 +50,15 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 		return Optional.empty();
 	}
 
-	@Inject(method = "<clinit>()V", at = @At(value = "INVOKE", target = BUILD), slice = @Slice(
-		from = @At(value = "CONSTANT", args = "stringValue=solid"),
-		to = @At(value = "FIELD", target = "net/minecraft/client/render/RenderLayer.CUTOUT:Lnet/minecraft/client/render/RenderLayer;")
-	), locals = LocalCapture.PRINT)
-	private static void addSolidShaders(CallbackInfo callback) {
-
+	static {
+		SOLID = wrap("iris:terrain_solid", SOLID, GbufferProgram.TERRAIN);
+		CUTOUT_MIPPED = wrap("iris:terrain_cutout_mipped", CUTOUT_MIPPED, GbufferProgram.TERRAIN);
+		CUTOUT = wrap("iris:terrain_cutout", CUTOUT, GbufferProgram.TERRAIN);
+		TRANSLUCENT = wrap("iris:translucent", TRANSLUCENT, GbufferProgram.TRANSLUCENT_TERRAIN);
+		TRIPWIRE = wrap("iris:tripwire", TRIPWIRE, GbufferProgram.TRANSLUCENT_TERRAIN);
 	}
 
-	static {
-		RenderLayer.getSolid();
+	private static RenderLayer wrap(String name, RenderLayer wrapped, GbufferProgram program) {
+		return new IrisRenderLayerWrapper(name, wrapped, new UseProgramRenderPhase(program));
 	}
 }

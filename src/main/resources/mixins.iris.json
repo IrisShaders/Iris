@@ -15,6 +15,7 @@
 	"renderlayer.MixinMultiPhaseParameters",
 	"renderlayer.MixinMultiPhaseParametersBuilder",
 	"renderlayer.MixinRenderLayer",
+	"renderlayer.RenderLayerAccessor",
 	"texunits.MixinBufferVertexConsumer",
 	"texunits.MixinGlStateManager",
 	"texunits.MixinLightmapTextureManager",
