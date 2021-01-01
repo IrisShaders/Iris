@@ -238,6 +238,7 @@ public class ShaderPipeline {
 				return;
 			}
 
+			GlStateManager.disableBlend();
 			terrain.use();
 			setupAttributes(terrain);
 		}
@@ -305,13 +306,19 @@ public class ShaderPipeline {
 			return;
 		}
 
-		if (texturedLit == null) {
-			return;
-		}
+		if ((layer.isOutline() || layer == RenderLayer.getLines())) {
+			if (basic == null) {
+				return;
+			}
 
-		texturedLit.use();
-		if ((layer.isOutline() || layer == RenderLayer.getLines()) && basic != null) {
+			GlStateManager.disableBlend();
 			basic.use();
+		} else {
+			if (texturedLit == null) {
+				return;
+			}
+
+			texturedLit.use();
 		}
 	}
 

@@ -11,6 +11,10 @@
 	"MixinParticleManager",
 	"MixinTranslationStorage",
 	"MixinWorldRenderer",
+	"gbuffer.MixinWorldRenderer",
+	"renderlayer.MixinMultiPhaseParameters",
+	"renderlayer.MixinMultiPhaseParametersBuilder",
+	"renderlayer.MixinRenderLayer",
 	"texunits.MixinBufferVertexConsumer",
 	"texunits.MixinGlStateManager",
 	"texunits.MixinLightmapTextureManager",
@@ -19,8 +23,5 @@
   ],
   "injectors": {
 	"defaultRequire": 1
-  },
-  "mixins": [
-	"gbuffer.MixinWorldRenderer"
-  ]
+  }
 }
