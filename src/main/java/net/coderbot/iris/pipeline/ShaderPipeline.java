@@ -167,16 +167,10 @@ public class ShaderPipeline {
 		this.basic.use();
 	}
 
-	private void setupAttributes(Pass pass) {
+	private static void setupAttributes(Pass pass) {
 		// TODO: Properly add these attributes into the vertex format
 
 		float blockId = -1.0F;
-
-		// TODO: This is just making it so that all translucent content renders like water. We need to properly support
-		// mc_Entity!
-		if (pass == translucent) {
-			blockId = waterId;
-		}
 
 		// TODO: We don't ever bind these attributes to an explicit location. AMD drivers are a bit flaky with automatic
 		// location assignment, so that might be something good to pursue in the future.
@@ -235,6 +229,10 @@ public class ShaderPipeline {
 
 			translucent.use();
 			setupAttributes(translucent);
+
+			// TODO: This is just making it so that all translucent content renders like water. We need to properly support
+			// mc_Entity!
+			setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
 		} else if (terrainLayer == RenderLayer.getSolid() || terrainLayer == RenderLayer.getCutout() || terrainLayer == RenderLayer.getCutoutMipped()) {
 			if (terrain == null) {
 				return;
