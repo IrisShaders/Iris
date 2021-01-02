@@ -17,6 +17,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20;
@@ -106,21 +107,33 @@ public class ShaderPipeline {
 
 		switch (program) {
 			case TERRAIN:
+				RenderSystem.enableAlphaTest();
+				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginTerrain();
 				return;
 			case TRANSLUCENT_TERRAIN:
 				beginTranslucentTerrain();
 				return;
 			case BASIC:
+				RenderSystem.enableAlphaTest();
+				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginBasic();
 				return;
 			case BEACON_BEAM:
 				beginPass(beaconBeam);
 				return;
 			case ENTITIES:
+				// TODO: Disabling blend on entities is hardcoded for Sildur's
+				GlStateManager.disableBlend();
+				RenderSystem.enableAlphaTest();
+				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginPass(entities);
 				return;
 			case ENTITIES_GLOWING:
+				// TODO: Disabling blend on entities is hardcoded for Sildur's
+				GlStateManager.disableBlend();
+				RenderSystem.enableAlphaTest();
+				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginPass(glowingEntities);
 				return;
 			case EYES:
@@ -163,7 +176,7 @@ public class ShaderPipeline {
 
 		return new Pass(builder.build(), framebuffer);
 	}
-	
+
 	private final class Pass {
 		private final Program program;
 		private final GlFramebuffer framebuffer;
@@ -172,7 +185,7 @@ public class ShaderPipeline {
 			this.program = program;
 			this.framebuffer = framebuffer;
 		}
-		
+
 		public void use() {
 			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
 			// a given program and bind the required textures instead.
@@ -222,6 +235,10 @@ public class ShaderPipeline {
 		if (!isRenderingWorld) {
 			return;
 		}
+
+		// Disable any alpha func shenanigans
+		RenderSystem.disableAlphaTest();
+		RenderSystem.defaultAlphaFunc();
 
 		if (this.basic == null) {
 			GlProgramManager.useProgram(0);
