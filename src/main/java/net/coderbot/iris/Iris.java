@@ -72,7 +72,6 @@ public class Iris implements ClientModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
 			if (reloadKeybind.wasPressed()){
-
 				try {
 					reload();
 					// TODO: Is this needed?
@@ -95,12 +94,14 @@ public class Iris implements ClientModInitializer {
 
 	public static void loadShaderpack() {
 		// Attempt to load an external shaderpack if it is available
-		if (!irisConfig.isInternal()) {
+		if (!irisConfig.isInternal() && !irisConfig.isNoOp()) {
 			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
 				loadInternalShaderpack();
 			}
-		} else {
+		} else if(irisConfig.isInternal()) {
 			loadInternalShaderpack();
+		} else {
+			loadNoOpShaderPack();
 		}
 	}
 
@@ -172,6 +173,12 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using internal shaders");
+	}
+
+	private static void loadNoOpShaderPack() {
+		currentPack = ShaderPack.NO_OP;
+
+		logger.info("Using no shaders");
 	}
 
 	public static void reload() throws IOException {

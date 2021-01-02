@@ -62,6 +62,8 @@ public class IdMap {
 	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
 		Properties properties = new Properties();
 
+		if(shaderPath == null) return Optional.empty();
+
 		try {
 			properties.load(Files.newInputStream(shaderPath.resolve(name)));
 		} catch (IOException e) {
