@@ -32,7 +32,9 @@ public class IrisConfig {
 	 */
 	public void initialize() throws IOException {
 		load();
-		save();
+		if (!Files.exists(propertiesPath)) {
+			save();
+		}
 	}
 
 	/**
