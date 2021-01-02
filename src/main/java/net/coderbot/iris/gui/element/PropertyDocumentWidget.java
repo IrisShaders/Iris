@@ -49,15 +49,13 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
 
     public void setDocument(Map<String, PropertyList> document, String homePage) {
         this.document = document;
-        // TODO: Make this the actual shader properties txt file plus the default values in the shader's config
-        Properties properties = new Properties();
-        for(String page : document.keySet()) {
+        /*for(String page : document.keySet()) {
             for(Property p : document.get(page)) {
                 if(p instanceof ValueProperty) {
-                    ((ValueProperty<?>)p).read(properties);
+
                 }
             }
-        }
+        }*/
         this.goTo(homePage);
     }
 

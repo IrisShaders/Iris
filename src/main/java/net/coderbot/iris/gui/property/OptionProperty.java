@@ -31,7 +31,6 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
     public void cycle() {
         this.index++;
         if(index >= values.length) index = 0;
-        // TODO: Pass an arg, likely retrieved from this.document, into save()
         this.documentSave();
     }
 
