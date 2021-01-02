@@ -7,9 +7,11 @@ import java.util.Set;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.rendertarget.NoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -50,6 +52,14 @@ public class ShaderPipeline {
 	private final Pass translucent;
 	@Nullable
 	private final Pass weather;
+	@Nullable
+	private final Pass beaconBeam;
+	@Nullable
+	private final Pass entities;
+	@Nullable
+	private final Pass glowingEntities;
+	@Nullable
+	private final Pass eyes;
 
 	private final GlFramebuffer clearAltBuffers;
 	private final GlFramebuffer clearMainBuffers;
@@ -72,6 +82,13 @@ public class ShaderPipeline {
 		this.translucent = pack.getGbuffersWater().map(this::createPass).orElse(terrain);
 		// TODO: Load weather shaders
 		this.weather = texturedLit;
+		// TODO: Load beacon_beam shaders
+		this.beaconBeam = textured;
+		this.entities = pack.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
+		// TODO: Load glowing entities
+		this.glowingEntities = entities;
+		// TODO: Load eyes
+		this.eyes = textured;
 
 		int[] buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared().toIntArray();
 
@@ -80,6 +97,51 @@ public class ShaderPipeline {
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		this.noiseTexture = new NoiseTexture(128, 128);
+	}
+
+	public void useProgram(GbufferProgram program) {
+		if (!isRenderingWorld) {
+			return;
+		}
+
+		switch (program) {
+			case TERRAIN:
+				beginTerrain();
+				return;
+			case TRANSLUCENT_TERRAIN:
+				beginTranslucentTerrain();
+				return;
+			case BASIC:
+				beginBasic();
+				return;
+			case BEACON_BEAM:
+				beginPass(beaconBeam);
+				return;
+			case ENTITIES:
+				beginPass(entities);
+				return;
+			case ENTITIES_GLOWING:
+				beginPass(glowingEntities);
+				return;
+			case EYES:
+				beginPass(eyes);
+				return;
+		}
+
+		// TODO
+		throw new UnsupportedOperationException("TODO");
+	}
+
+	public boolean shouldDisableVanillaEntityShadows() {
+		// TODO: Don't hardcode this for Sildur's
+		// OptiFine seems to disable vanilla shadows when the shaderpack uses shadow mapping?
+		return true;
+	}
+
+	private void beginPass(Pass pass) {
+		if (pass != null) {
+			pass.use();
+		}
 	}
 
 	private Pass createPass(ShaderPack.ProgramSource source) {
@@ -157,6 +219,10 @@ public class ShaderPipeline {
 	}
 
 	public void end() {
+		if (!isRenderingWorld) {
+			return;
+		}
+
 		if (this.basic == null) {
 			GlProgramManager.useProgram(0);
 			this.baseline.bind();
