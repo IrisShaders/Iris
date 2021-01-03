@@ -155,7 +155,7 @@ public class Iris implements ClientModInitializer {
 				.filter(path -> path.endsWith("shaders"))
 				.findFirst();
 		} catch (IOException e) {
-			if (e instanceof ZipException && e.getMessage().equals("zip END header not found")) {
+			if (e instanceof ZipException) {
 				logger.error("The shaderpack appears to be corrupted, please try downloading it again {}", shaderpackPath);
 			} else {
 				logger.error("Error while finding shaderpack for zip directory {}", shaderpackPath);
