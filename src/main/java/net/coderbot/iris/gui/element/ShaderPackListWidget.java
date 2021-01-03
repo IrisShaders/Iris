@@ -60,7 +60,7 @@ public class ShaderPackListWidget extends ShaderScreenEntryListWidget<ShaderPack
                     addEntry(index, name);
                 }
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }

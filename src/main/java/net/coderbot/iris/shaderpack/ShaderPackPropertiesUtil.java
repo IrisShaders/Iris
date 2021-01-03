@@ -37,11 +37,11 @@ public final class ShaderPackPropertiesUtil {
             if(s.startsWith("screen.") || s.equals("screen")) {
                 PropertyList page = new PropertyList();
                 boolean subScreen = s.startsWith("screen.");
-                page.add(new TitleProperty(GuiUtil.trimmed(tr, subScreen ? s : shaderName, width - 4, subScreen, true, Formatting.BOLD), 0xAAFFFFFF));
+                page.add(new TitleProperty(GuiUtil.trimmed(tr, subScreen ? s : shaderName, width - 60, subScreen, true, Formatting.BOLD), 0xAAFFFFFF));
                 String[] properties = shaderProperties.getProperty(s).split(" ");
                 for(String p : properties) {
                     if(p.equals("<profile>")) {
-                        page.add(new StringOptionProperty(new String[] {"Low", "Medium", "High", "Extreme", "Stop, my PC is already dead"}, 1, widget, p, GuiUtil.trimmed(tr, "option.iris.profile", tw, true, true), sliderOptions.contains(p)));
+                        page.add(new StringOptionProperty(new String[] {"Low", "Medium", "High", "Extreme", "This is not functional"}, 1, widget, p, GuiUtil.trimmed(tr, "option.iris.profile", tw, true, true), sliderOptions.contains(p)));
                     } else if(p.equals("<empty>")) {
                         page.add(new Property(new LiteralText("")));
                     } else if(p.startsWith("[") && p.endsWith("]")) {
@@ -49,7 +49,7 @@ public final class ShaderPackPropertiesUtil {
                         page.add(new PageLinkProperty(widget, a, GuiUtil.trimmed(tr, a, bw, true, true), PageLinkProperty.Align.LEFT));
                         child2Parent.put(a, s);
                     } else {
-                        page.add(new StringOptionProperty(new String[] {"Dummy", "Sample", "Text", "This is to test text trimming"}, 0, widget, p, GuiUtil.trimmed(tr, "option."+p, tw, true, true), sliderOptions.contains(p)));
+                        page.add(new StringOptionProperty(new String[] {"This", "Is", "Not", "Functional"}, 0, widget, p, GuiUtil.trimmed(tr, "option."+p, tw, true, true), sliderOptions.contains(p)));
                     }
                 }
                 document.put(s, page);
