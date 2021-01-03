@@ -1,5 +1,5 @@
 {
-  "iris.shaders.reloaded": "Reloaded Shaders!",
+  "iris.shaders.reloaded": "Shaders Reloaded!",
   "iris.keybind.reload": "Reload Shaders",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s"
