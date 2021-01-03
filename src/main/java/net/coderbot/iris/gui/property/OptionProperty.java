@@ -31,6 +31,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
     public void cycle() {
         this.index++;
         if(index >= values.length) index = 0;
+        this.valueText = null;
         this.documentSave();
     }
 
@@ -72,6 +73,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         if(isSlider && isButtonHovered(mouseX, true)) {
             float pos = (float)((mouseX - (cachedX + (cachedWidth * 0.6) - 7)) / ((cachedWidth * 0.4)));
             this.index = Math.min((int)(pos * this.values.length), this.values.length - 1);
+            this.valueText = null;
             this.documentSave();
             return true;
         }

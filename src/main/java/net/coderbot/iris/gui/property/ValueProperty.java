@@ -36,6 +36,7 @@ public abstract class ValueProperty<T> extends Property {
 
     public void setValue(T value) {
         this.documentSave();
+        this.valueText = null;
     }
 
     public void documentSave() {

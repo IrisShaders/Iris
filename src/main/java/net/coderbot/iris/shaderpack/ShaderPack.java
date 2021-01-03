@@ -15,6 +15,11 @@ import java.util.Properties;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.registry.BuiltinRegistries;
+import net.minecraft.util.registry.DynamicRegistryManager;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
