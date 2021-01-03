@@ -14,9 +14,11 @@
 
   "pack.iris.select.title": "selecteer",
   "pack.iris.configure.title": "Configureer",
+  "pack.iris.internal": "Interne Shaders",
 
   "page.iris.notFound": "Ongeldige pagina!",
   "page.iris.noConfig": "Geen Shader-opties.",
+  "page.iris.noShaders": "Geen Shader-pakketten geladen.",
 
   "property.iris.boolean.true": "Waar",
   "property.iris.boolean.false": "Vals"

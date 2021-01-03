@@ -1,7 +1,7 @@
 {
   "iris.shaders.reloaded": "Shaders recargados!",
   "iris.keybind.reload": "Recargar Shaders",
-  "iris.shaders.reloaded.failure": "¡Falló en la recarga de los shaders! Razón: %s",
+  "iris.shaders.reloaded.failure": "¡Falló en la recarga de los Shaders! Razón: %s",
 
   "options.iris.apply": "Aplique",
   "options.iris.openShaderPackFolder": "Abrir la carpeta de paquetes de Shaders...",
@@ -14,9 +14,11 @@
 
   "pack.iris.select.title": "Seleccione",
   "pack.iris.configure.title": "Configurar",
+  "pack.iris.internal": "Shaders internos",
 
   "page.iris.notFound": "¡Página inválida!",
   "page.iris.noConfig": "No hay opciones de Shaders.",
+  "page.iris.noShaders": "No hay ningún paquete de Shaders cargado.",
 
   "property.iris.boolean.true": "Verdadero",
   "property.iris.boolean.false": "Falso"

@@ -13,10 +13,12 @@
   "option.iris.profile": "Perfil",
 
   "pack.iris.select.title": "Seleccione",
-  "pack.iris.configure.title": "Configurar",
+  "pack.iris.configure.title": "Configurar", 
+  "pack.iris.internal": "Shaders internos",
 
   "page.iris.notFound": "Página inválida!",
   "page.iris.noConfig": "Sem Opções de Shader.",
+  "page.iris.noShaders": "Nenhum pacote de Shader carregado.",
 
   "property.iris.boolean.true": "Verdadeiro",
   "property.iris.boolean.false": "Falso"

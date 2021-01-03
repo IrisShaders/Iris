@@ -14,9 +14,11 @@
 
   "pack.iris.select.title": "Выберите",
   "pack.iris.configure.title": "Настроить",
+  "pack.iris.internal": "Внутренние шейдеры",
 
   "page.iris.notFound": "Недействительная страница!",
   "page.iris.noConfig": "Нет вариантов шейдеров.",
+  "page.iris.noShaders": "Никаких шейдеров не заряжено.",
 
   "property.iris.boolean.true": "Правда",
   "property.iris.boolean.false": "Ложный"

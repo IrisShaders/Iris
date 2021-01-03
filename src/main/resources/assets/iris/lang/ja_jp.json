@@ -14,9 +14,11 @@
 
   "pack.iris.select.title": "選択してください",
   "pack.iris.configure.title": "設定",
+  "pack.iris.internal": "内部シェーダー",
 
   "page.iris.notFound": "無効なページ!",
   "page.iris.noConfig": "シェーダオプションはありません。",
+  "page.iris.noShaders": "シェーダーパックが読み込まれていません。",
 
   "property.iris.boolean.true": "真",
   "property.iris.boolean.false": "誤"
