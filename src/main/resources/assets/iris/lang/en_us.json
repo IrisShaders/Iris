@@ -20,6 +20,9 @@
   "page.iris.notFound": "Invalid Page!",
   "page.iris.noConfig": "No Shader Options.",
   "page.iris.noShaders": "No Shader pack loaded.",
+  
+  "page.iris.notFound": "Invalid Page!",
+  "page.iris.noConfig": "No Shader Options.",
 
   "property.iris.boolean.true": "True",
   "property.iris.boolean.false": "False"

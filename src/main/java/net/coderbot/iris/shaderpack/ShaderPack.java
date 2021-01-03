@@ -2,6 +2,8 @@ package net.coderbot.iris.shaderpack;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -31,6 +33,7 @@ public class ShaderPack {
 	private final ProgramSource compositeFinal;
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
+	private final Properties shaderProperties = new Properties();
 
 	public ShaderPack(Path root) throws IOException {
 		this.packDirectives = new PackDirectives();
@@ -58,6 +61,10 @@ public class ShaderPack {
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
+
+		try {
+			shaderProperties.load(Files.newInputStream(root.resolve("shaders.properties")));
+		} catch (Exception ignored) {}
 	}
 
 	public IdMap getIdMap() {
@@ -118,6 +125,10 @@ public class ShaderPack {
 
 	public PackDirectives getPackDirectives() {
 		return packDirectives;
+	}
+
+	public Properties getShaderProperties() {
+		return this.shaderProperties;
 	}
 
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
