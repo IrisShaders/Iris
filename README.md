@@ -16,9 +16,9 @@ For the most part, I am creating Iris in order to have fun and get more experien
 * Iris is able to load basic shaderpacks. It can load shaderpacks distributed as zip files. Furthermore, almost all shaderpacks except for Sildur's and some simple ones have rendering issues. As more of the OptiFine shader interface is implemented these issues will go away and Iris will be able to load existing shaderpacks without rendering issues.
 * Iris does not work properly with Sodium in the trunk branch. The sodium-compatibility branch is advancing and once it's finished it'll be merged onto the trunk branch and Sodium & Iris will be fully compatible. The sodium-compatibility branch currently requires a modified version of Sodium (https://github.com/IrisShaders/sodium-fabric) but in the future it'll be compatible with the main version of Sodium.
 
-![Sildur's shaders](https://imgur.com/o3JmkXV)
-![Sildur's shaders with resourcepack](https://imgur.com/rPSlRQm)
-![Acid shaders](https://imgur.com/dynR54W)
+![Sildur's shaders](https://i.imgur.com/o3JmkXV.png)
+![Sildur's shaders with resourcepack](https://i.imgur.com/rPSlRQm.png)
+![Acid shaders](https://i.imgur.com/dynR54W.jpg)
 
 ## Goals
 
