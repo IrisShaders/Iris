@@ -16,6 +16,7 @@ import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -110,9 +111,13 @@ public class Iris implements ClientModInitializer {
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
 
 		if (shaderPackRoot.toString().endsWith(".zip")) {
-			Optional<Path> optionalPath = loadExternalZipShaderpack(shaderPackRoot);
+			Pair<Optional<Path>, Boolean> shaderLoad = loadExternalZipShaderpack(shaderPackRoot);
+			Optional<Path> optionalPath = shaderLoad.getLeft();
 			if (optionalPath.isPresent()) {
 				shaderPackPath = optionalPath.get();
+			}
+			if (!shaderLoad.getRight()) {
+				//TODO display warning in GUI/elsewhere
 			}
 		}
 		if (!Files.exists(shaderPackPath)) {
@@ -133,7 +138,10 @@ public class Iris implements ClientModInitializer {
 		return true;
 	}
 
-	private static Optional<Path> loadExternalZipShaderpack(Path shaderpackPath) {
+	/**
+	 * @return a pair of the path and the load status, which is false if any error occurred.
+	 */
+	private static Pair<Optional<Path>, Boolean> loadExternalZipShaderpack(Path shaderpackPath) {
 		try {
 			FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
 			zipFileSystem = zipSystem;
@@ -143,26 +151,26 @@ public class Iris implements ClientModInitializer {
 			//if the shaders dir was immediatly found return it
 			//otherwise, manually search through each directory path until it ends with "shaders"
 			if (Files.exists(potentialShaderDir)) {
-				return Optional.of(potentialShaderDir);
+				return Pair.of(Optional.of(potentialShaderDir), true);
 			}
 
 			//sometimes shaderpacks have their shaders directory within another folder in the shaderpack
 			//for example Sildurs-Vibrant-Shaders.zip/shaders
 			//while other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
 			//this makes it hard to determine what is the actual shaders dir
-			return Files.walk(root)
-				.filter(Files::isDirectory)
-				.filter(path -> path.endsWith("shaders"))
-				.findFirst();
+			return Pair.of(Files.walk(root)
+					.filter(Files::isDirectory)
+					.filter(path -> path.endsWith("shaders"))
+					.findFirst(), true);
 		} catch (IOException e) {
-			if (e instanceof ZipException && e.getMessage().equals("zip END header not found")) {
+			if (e instanceof ZipException) {
 				logger.error("The shaderpack appears to be corrupted, please try downloading it again {}", shaderpackPath);
 			} else {
 				logger.error("Error while finding shaderpack for zip directory {}", shaderpackPath);
 			}
 			logger.catching(Level.ERROR, e);
 		}
-		return Optional.empty();
+		return Pair.of(Optional.empty(), false);
 	}
 
 	private static void loadInternalShaderpack() {
