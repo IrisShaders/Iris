@@ -5,19 +5,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.postprocess.target.CompositeRenderTarget;
-import net.coderbot.iris.postprocess.target.CompositeRenderTargets;
-import net.coderbot.iris.shaderpack.DirectiveParser;
+import net.coderbot.iris.rendertarget.FramebufferBlitter;
+import net.coderbot.iris.rendertarget.NoiseTexture;
+import net.coderbot.iris.rendertarget.RenderTarget;
+import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.lwjgl.opengl.GL15C;
@@ -27,20 +26,18 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.util.Pair;
 
 public class CompositeRenderer {
-	private final Program baseline;
-	private final CompositeRenderTargets renderTargets;
+	private final RenderTargets renderTargets;
 
-	private final GlFramebuffer writesToMain;
 	private final ImmutableList<Pass> passes;
+	private final GlFramebuffer baseline;
+	private final NoiseTexture noisetex;
 
-	private final FullScreenQuadRenderer quadRenderer;
 	final CenterDepthSampler centerDepthSampler;
 
-	public CompositeRenderer(ShaderPack pack) {
-		centerDepthSampler = new CenterDepthSampler();
-		baseline = createBaselineProgram(pack);
+	public CompositeRenderer(ShaderPack pack, RenderTargets renderTargets) {
+		centerDepthSampler = new CenterDepthSampler(renderTargets);
 
-		final List<Pair<Program, int[]>> programs = new ArrayList<>();
+		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
 
 		for (ShaderPack.ProgramSource source : pack.getComposite()) {
 			if (source == null || !source.isValid()) {
@@ -52,32 +49,29 @@ public class CompositeRenderer {
 
 		pack.getCompositeFinal().map(this::createProgram).ifPresent(programs::add);
 
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-
-		this.renderTargets = new CompositeRenderTargets(main.textureWidth, main.textureHeight);
-
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
-		boolean[] stageReadsFromAlt = new boolean[CompositeRenderTargets.MAX_RENDER_TARGETS];
+		// Initially filled with false values
+		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
-		// Hack to make a framebuffer that writes to the "main" buffers.
-		Arrays.fill(stageReadsFromAlt, true);
-		this.writesToMain = createStageFramebuffer(renderTargets, stageReadsFromAlt, new int[]{0});
-
-		Arrays.fill(stageReadsFromAlt, false);
-
-		for (Pair<Program, int[]> programEntry : programs) {
+		for (Pair<Program, ProgramDirectives> programEntry : programs) {
 			Pass pass = new Pass();
+			ProgramDirectives directives = programEntry.getRight();
 
 			pass.program = programEntry.getLeft();
-			int[] drawBuffers = programEntry.getRight();
+			int[] drawBuffers = directives.getDrawBuffers();
 
-			System.out.println("Draw buffers: " + new IntArrayList(drawBuffers));
+			boolean[] stageWritesToAlt = Arrays.copyOf(stageReadsFromAlt, RenderTargets.MAX_RENDER_TARGETS);
 
-			GlFramebuffer framebuffer = createStageFramebuffer(renderTargets, stageReadsFromAlt, drawBuffers);
+			for (int i = 0; i < stageWritesToAlt.length; i++) {
+				stageWritesToAlt[i] = !stageWritesToAlt[i];
+			}
+
+			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(stageWritesToAlt, drawBuffers);
 
 			pass.stageReadsFromAlt = Arrays.copyOf(stageReadsFromAlt, stageReadsFromAlt.length);
 			pass.framebuffer = framebuffer;
+			pass.viewportScale = directives.getViewportScale();
 
 			if (programEntry == programs.get(programs.size() - 1)) {
 				pass.isLastPass = true;
@@ -92,7 +86,13 @@ public class CompositeRenderer {
 		}
 
 		this.passes = passes.build();
-		this.quadRenderer = new FullScreenQuadRenderer();
+		this.renderTargets = renderTargets;
+
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+
+		// TODO: Use noiseTextureResolution here instead.
+		int noiseTextureResolution = 128;
+		this.noisetex = new NoiseTexture(noiseTextureResolution, noiseTextureResolution);
 	}
 
 	private static final class Pass {
@@ -100,32 +100,12 @@ public class CompositeRenderer {
 		GlFramebuffer framebuffer;
 		boolean[] stageReadsFromAlt;
 		boolean isLastPass;
-	}
+		float viewportScale;
 
-	private static GlFramebuffer createStageFramebuffer(CompositeRenderTargets renderTargets, boolean[] stageReadsFromAlt, int[] drawBuffers) {
-		GlFramebuffer framebuffer = new GlFramebuffer();
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-
-		System.out.println("creating framebuffer: stageReadsFromAlt = " + new BooleanArrayList(stageReadsFromAlt));
-
-		for (int i = 0; i < CompositeRenderTargets.MAX_RENDER_TARGETS; i++) {
-			CompositeRenderTarget target = renderTargets.get(i);
-			boolean stageWritesToAlt = !stageReadsFromAlt[i];
-
-			int textureId = stageWritesToAlt ? target.getAltTexture() : target.getMainTexture();
-
-			System.out.println("  attachment " + i + " -> texture" + textureId);
-
-			framebuffer.addColorAttachment(i, textureId);
+		private void destroy() {
+			this.program.destroy();
+			this.framebuffer.destroy();
 		}
-
-		if (!framebuffer.isComplete()) {
-			throw new IllegalStateException("Unexpected error while creating framebuffer");
-		}
-
-		framebuffer.drawBuffers(drawBuffers);
-
-		return framebuffer;
 	}
 
 	public void renderAll() {
@@ -137,27 +117,24 @@ public class CompositeRenderer {
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
 
-		this.writesToMain.bind();
-
-		RenderSystem.bindTexture(main.getColorAttachment());
-		baseline.use();
-		quadRenderer.render();
+		int depthAttachment = renderTargets.getDepthTexture().getTextureId();
+		int depthAttachmentNoTranslucents = renderTargets.getDepthTextureNoTranslucents().getTextureId();
 
 		for (Pass renderPass : passes) {
 			if (!renderPass.isLastPass) {
 				renderPass.framebuffer.bind();
 			} else {
-				MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+				main.beginWrite(false);
 			}
 
 			// TODO: Consider copying the depth texture content into a separate texture that won't be modified? Probably
 			// isn't an issue though.
-			bindTexture(PostProcessUniforms.DEPTH_TEX_0, main.getDepthAttachment());
+			bindTexture(PostProcessUniforms.DEPTH_TEX_0, depthAttachment);
 			// TODO: No translucent objects
-			bindTexture(PostProcessUniforms.DEPTH_TEX_1, main.getDepthAttachment());
+			bindTexture(PostProcessUniforms.DEPTH_TEX_1, depthAttachmentNoTranslucents);
 			// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
 			// Once we start rendering the hand before composite content, this will need to be addressed.
-			bindTexture(PostProcessUniforms.DEPTH_TEX_2, main.getDepthAttachment());
+			bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1]);
@@ -168,19 +145,38 @@ public class CompositeRenderer {
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
 
+			bindTexture(PostProcessUniforms.NOISE_TEX, noisetex.getTextureId());
+
+			float scaledWidth = main.textureWidth * renderPass.viewportScale;
+			float scaledHeight = main.textureHeight * renderPass.viewportScale;
+			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
+
 			renderPass.program.use();
-			quadRenderer.render();
+			FullScreenQuadRenderer.INSTANCE.render();
 		}
 
+		if (passes.size() == 0) {
+			// If there are no passes, we somehow need to transfer the content of the Iris render targets into the main
+			// Minecraft framebuffer.
+			//
+			// Thus, the following call transfers the content of colortex0 and the depth buffer into the main Minecraft
+			// framebuffer.
+			FramebufferBlitter.copyFramebufferContent(this.baseline, main);
+		}
+
+		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
+		// Also bind the "main" framebuffer if it isn't already bound.
+		main.beginWrite(true);
 		GlStateManager.useProgram(0);
 
+		// TODO: We unbind these textures but it would probably make sense to unbind the other ones too.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
 		RenderSystem.bindTexture(0);
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
 		RenderSystem.bindTexture(0);
 	}
 
-	private static void bindRenderTarget(int textureUnit, CompositeRenderTarget target, boolean readFromAlt) {
+	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean readFromAlt) {
 		bindTexture(textureUnit, readFromAlt ? target.getAltTexture() : target.getMainTexture());
 	}
 
@@ -190,7 +186,7 @@ public class CompositeRenderer {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private Pair<Program, int[]> createProgram(ShaderPack.ProgramSource source) {
+	private Pair<Program, ProgramDirectives> createProgram(ShaderPack.ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -204,63 +200,19 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		// First try to find it in the fragment source, then in the vertex source.
-		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
-		int[] drawBuffers = findDrawbuffersDirective(source.getFragmentSource())
-			.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[]{0}));
-
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 		PostProcessUniforms.addPostProcessUniforms(builder, this);
 
-		return new Pair<>(builder.build(), drawBuffers);
+		return new Pair<>(builder.build(), source.getDirectives());
 	}
 
-	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource) {
-		return stageSource
-			.flatMap(fragment -> DirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
-			.map(String::toCharArray)
-			.map(CompositeRenderer::parseDigits);
-	}
+	public void destroy() {
+		baseline.destroy();
+		centerDepthSampler.destroy();
+		noisetex.destroy();
 
-	private static int[] parseDigits(char[] directiveChars) {
-		int[] buffers = new int[directiveChars.length];
-		int index = 0;
-
-		for (char buffer : directiveChars) {
-			buffers[index++] = Character.digit(buffer, 10);
+		for (Pass renderPass : passes) {
+			renderPass.destroy();
 		}
-
-		return buffers;
 	}
-
-	private Program createBaselineProgram(ShaderPack parent) {
-		ShaderPack.ProgramSource source = new ShaderPack.ProgramSource("<iris builtin baseline composite>", BASELINE_COMPOSITE_VSH, BASELINE_COMPOSITE_FSH, parent);
-
-		return createProgram(source).getLeft();
-	}
-
-	private static final String BASELINE_COMPOSITE_VSH =
-		"#version 120\n" +
-			"\n" +
-			"varying vec2 texcoord;\n" +
-			"\n" +
-			"void main() {\n" +
-			"\tgl_Position = ftransform();\n" +
-			"\ttexcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;\n" +
-			"}";
-
-	private static final String BASELINE_COMPOSITE_FSH =
-		"#version 120\n" +
-			"\n" +
-			"uniform sampler2D gcolor;\n" +
-			"\n" +
-			"varying vec2 texcoord;\n" +
-			"\n" +
-			"void main() {\n" +
-			"\tvec3 color = texture2D(gcolor, texcoord).rgb;\n" +
-			"\n" +
-			"/* DRAWBUFFERS:0 */\n" +
-			"\tgl_FragData[0] = vec4(color, 1.0); // gcolor\n" +
-			"}";
 }

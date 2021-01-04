@@ -15,8 +15,24 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	modImplementation(fabricApi.module('fabric-resource-loader-v0', project.fabric_version))
-	modImplementation(fabricApi.module('fabric-key-binding-api-v1', project.fabric_version))
+	// Critical, needed for loading our custom language files
+	includeFabricApiModule "fabric-resource-loader-v0"
+
+	// Needed for adding the reload keybinding
+	includeFabricApiModule "fabric-key-binding-api-v1"
+
+	// Needed for the END_CLIENT_TICK event
+	includeFabricApiModule "fabric-lifecycle-events-v1"
+
+	// Required by fabric-lifecycle-events-v1
+	includeFabricApiModule "fabric-api-base"
+}
+
+def includeFabricApiModule(String moduleName) {
+	Object dependency = fabricApi.module(moduleName, project.fabric_version);
+
+	dependencies.modImplementation(dependency);
+	dependencies.include(dependency);
 }
 
 processResources {
@@ -27,23 +43,33 @@ processResources {
 	}
 }
 
-// ensure that the encoding is set to UTF-8, no matter what the system default is
-// this fixes some edge cases with special characters not displaying correctly
-// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-tasks.withType(JavaCompile) {
-	options.encoding = "UTF-8"
+tasks.withType(JavaCompile).configureEach {
+	// ensure that the encoding is set to UTF-8, no matter what the system default is
+	// this fixes some edge cases with special characters not displaying correctly
+	// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+	// If Javadoc is generated, this must be specified in that task too.
+	it.options.encoding = "UTF-8"
+
+	// The Minecraft launcher currently installs Java 8 for users, so your mod probably wants to target Java 8 too
+	// JDK 9 introduced a new way of specifying this that will make sure no newer classes or methods are used.
+	// We'll use that if it's available, but otherwise we'll use the older option.
+	def targetVersion = 8
+	if (JavaVersion.current().isJava9Compatible()) {
+		it.options.release = targetVersion
+	}
 }
 
-// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-// if it is present.
-// If you remove this task, sources will not be generated.
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = "sources"
-	from sourceSets.main.allSource
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
 }
 
 jar {
-	from "LICENSE"
+	from("LICENSE") {
+		rename { "${it}_${project.archivesBaseName}"}
+	}
 }
 
 // configure the maven publication
@@ -60,10 +86,10 @@ publishing {
 		}
 	}
 
-	// select the repositories you want to publish to
+	// Select the repositories you want to publish to
+	// To publish to maven local, no extra repositories are necessary. Just use the task `publishToMavenLocal`.
 	repositories {
-		// uncomment to publish to the local maven
-		// mavenLocal()
+		// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
 	}
 }
 

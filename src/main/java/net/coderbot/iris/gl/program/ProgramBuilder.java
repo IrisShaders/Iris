@@ -21,20 +21,13 @@ import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.gl.GlShader;
 
-public class ProgramBuilder implements UniformHolder {
-	private final String name;
+public class ProgramBuilder extends ProgramUniforms.Builder {
 	private final GlProgram program;
-	private final List<Uniform> once;
-	private final List<Uniform> perTick;
-	private final List<Uniform> perFrame;
 
 	private ProgramBuilder(String name, GlProgram program) {
-		this.name = name;
-		this.program = program;
+		super(name, program.getProgramRef());
 
-		once = new ArrayList<>();
-		perTick = new ArrayList<>();
-		perFrame = new ArrayList<>();
+		this.program = program;
 	}
 
 	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String fragmentSource) throws IOException {
@@ -102,37 +95,7 @@ public class ProgramBuilder implements UniformHolder {
 		return new ProgramBuilder(name, program);
 	}
 
-	@Override
-	public UniformHolder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform) {
-		switch (updateFrequency) {
-			case ONCE:
-				once.add(uniform);
-				break;
-			case PER_TICK:
-				perTick.add(uniform);
-				break;
-			case PER_FRAME:
-				perFrame.add(uniform);
-				break;
-		}
-
-		return this;
-	}
-
-	@Override
-	public OptionalInt location(String name) {
-		int id = GL21.glGetUniformLocation(program.getProgramRef(), name);
-
-		if (id == -1) {
-			return OptionalInt.empty();
-		}
-
-		// TODO: Make these debug messages less spammy, or toggleable
-		Iris.logger.info("[" + this.name + "] Activating uniform: " + name);
-		return OptionalInt.of(id);
-	}
-
 	public Program build() {
-		return new Program(program, ImmutableList.copyOf(once), ImmutableList.copyOf(perTick), ImmutableList.copyOf(perFrame));
+		return new Program(program, super.buildUniforms());
 	}
 }

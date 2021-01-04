@@ -16,7 +16,9 @@ import net.minecraft.util.math.Matrix4f;
 public class FullScreenQuadRenderer {
 	private final VertexBuffer quad;
 
-	public FullScreenQuadRenderer() {
+	public static final FullScreenQuadRenderer INSTANCE = new FullScreenQuadRenderer();
+
+	private FullScreenQuadRenderer() {
 		this.quad = createQuad();
 	}
 
@@ -64,7 +66,7 @@ public class FullScreenQuadRenderer {
 	private static VertexBuffer createQuad() {
 		VertexBuffer quad = new VertexBuffer(VertexFormats.POSITION_COLOR_TEXTURE);
 
-		BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+		BufferBuilder buffer = new BufferBuilder(6 * VertexFormats.POSITION_COLOR_TEXTURE.getVertexSizeInteger());
 		buffer.begin(GL11C.GL_TRIANGLES, VertexFormats.POSITION_COLOR_TEXTURE);
 
 		// NB: Use counterclockwise order here! Otherwise these triangles will be invisible.

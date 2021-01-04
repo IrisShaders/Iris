@@ -12,28 +12,41 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
 import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
+	private final PackDirectives packDirectives;
 	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersTextured;
+	private final ProgramSource gbuffersTexturedLit;
 	private final ProgramSource gbuffersTerrain;
+	private final ProgramSource gbuffersWater;
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
+	private final ProgramSource gbuffersEntities;
+	private final ProgramSource gbuffersBlock;
 	private final ProgramSource[] composite;
 	private final ProgramSource compositeFinal;
+	private final ShaderPackConfig config;
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 
-
 	public ShaderPack(Path root) throws IOException {
+		this.packDirectives = new PackDirectives();
+		this.config = new ShaderPackConfig();//make sure config is created before program sources are created
+		this.config.load();//load config vals so preprocessor picks it up and acts on them
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
+		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this);
 		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
+		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this);
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
+		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this);
+		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this);
 
 		this.composite = new ProgramSource[16];
 
@@ -47,6 +60,12 @@ public class ShaderPack {
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
+
+		config.save();//serialize everything
+	}
+
+	public ShaderPackConfig getConfig() {
+		return config;
 	}
 
 	public IdMap getIdMap() {
@@ -61,8 +80,16 @@ public class ShaderPack {
 		return gbuffersTextured.requireValid();
 	}
 
+	public Optional<ProgramSource> getGbuffersTexturedLit() {
+		return gbuffersTexturedLit.requireValid();
+	}
+
 	public Optional<ProgramSource> getGbuffersTerrain() {
 		return gbuffersTerrain.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersWater() {
+		return gbuffersWater.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersSkyBasic() {
@@ -77,6 +104,14 @@ public class ShaderPack {
 		return gbuffersClouds.requireValid();
 	}
 
+	public Optional<ProgramSource> getGbuffersEntities() {
+		return gbuffersEntities.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersBlock() {
+		return gbuffersBlock.requireValid();
+	}
+
 	public ProgramSource[] getComposite() {
 		return composite;
 	}
@@ -89,6 +124,10 @@ public class ShaderPack {
 		return langMap;
 	}
 
+	public PackDirectives getPackDirectives() {
+		return packDirectives;
+	}
+
 	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
 		String vertexSource = null;
 		String fragmentSource = null;
@@ -98,7 +137,7 @@ public class ShaderPack {
 			vertexSource = readFile(vertexPath);
 
 			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource);
+				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource, pack.getConfig());
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
@@ -110,7 +149,7 @@ public class ShaderPack {
 			fragmentSource = readFile(fragmentPath);
 
 			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource);
+				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource, pack.getConfig());
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
@@ -167,6 +206,7 @@ public class ShaderPack {
 		private final String name;
 		private final String vertexSource;
 		private final String fragmentSource;
+		private final ProgramDirectives directives;
 		private final ShaderPack parent;
 
 		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
@@ -174,6 +214,7 @@ public class ShaderPack {
 			this.vertexSource = vertexSource;
 			this.fragmentSource = fragmentSource;
 			this.parent = parent;
+			this.directives = new ProgramDirectives(this);
 		}
 
 		public String getName() {
@@ -186,6 +227,10 @@ public class ShaderPack {
 
 		public Optional<String> getFragmentSource() {
 			return Optional.ofNullable(fragmentSource);
+		}
+
+		public ProgramDirectives getDirectives() {
+			return this.directives;
 		}
 
 		public ShaderPack getParent() {
