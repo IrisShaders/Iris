@@ -20,13 +20,11 @@ public class BooleanOptionProperty extends OptionProperty<Boolean> {
     }
 
     @Override
-    public void read(Properties properties) {
-        if(properties.containsKey(key)) {
-            String s = properties.getProperty(key);
-            if(s.equals("true") || s.equals("false")) {
-                this.setValue(Boolean.parseBoolean(s));
-                return;
-            }
+    public void setValue(String value) {
+        this.valueText = null;
+        if(value.equals("true") || value.equals("false")) {
+            this.setValue(Boolean.parseBoolean(value));
+            return;
         }
         this.index = defaultIndex;
     }

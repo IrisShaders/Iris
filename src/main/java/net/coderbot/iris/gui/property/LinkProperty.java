@@ -7,12 +7,12 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 
-public class PageLinkProperty extends Property {
+public class LinkProperty extends Property {
     protected final PropertyDocumentWidget document;
     protected final String page;
     protected final Align align;
 
-    public PageLinkProperty(PropertyDocumentWidget document, String pageName, Text label, Align align) {
+    public LinkProperty(PropertyDocumentWidget document, String pageName, Text label, Align align) {
         super(label);
         this.document = document;
         this.page = pageName;

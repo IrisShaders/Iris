@@ -17,9 +17,6 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
     protected final int defaultIndex;
     protected final boolean isSlider;
 
-    private int cachedWidth = 0;
-    private int cachedX = 0;
-
     public OptionProperty(T[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
         super(document, key, label);
         this.values = values;
@@ -32,7 +29,6 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         this.index++;
         if(index >= values.length) index = 0;
         this.valueText = null;
-        this.documentSave();
     }
 
     @Override
@@ -49,7 +45,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
             Iris.logger.warn("Unable to set value of {} to {} - Invalid value!", key, value);
             this.index = defaultIndex;
         }
-        super.setValue(value);
+        this.valueText = null;
     }
 
     protected boolean isButtonHovered(double mouseX, boolean entryHovered) {
@@ -74,7 +70,6 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
             float pos = (float)((mouseX - (cachedX + (cachedWidth * 0.6) - 7)) / ((cachedWidth * 0.4)));
             this.index = Math.min((int)(pos * this.values.length), this.values.length - 1);
             this.valueText = null;
-            this.documentSave();
             return true;
         }
         return false;
@@ -82,8 +77,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
 
     @Override
     public void render(MatrixStack matrices, int x, int y, int width, int height, int mouseX, int mouseY, boolean isHovered, float delta) {
-        this.cachedWidth = width;
-        this.cachedX = x;
+        updateCaches(width, x);
         MinecraftClient mc = MinecraftClient.getInstance();
         this.drawText(mc, label, matrices, x + 10, y + (height / 2), 0xFFFFFF, false, true, true);
         if(isSlider) this.renderSlider(mc, matrices, x, y, width, height, mouseX, mouseY, isHovered);

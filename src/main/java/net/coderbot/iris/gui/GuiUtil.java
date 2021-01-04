@@ -86,4 +86,8 @@ public final class GuiUtil {
         }
         return t;
     }
+
+    public static void drawButton(int x, int y, int width, int height, boolean selected) {
+
+    }
 }

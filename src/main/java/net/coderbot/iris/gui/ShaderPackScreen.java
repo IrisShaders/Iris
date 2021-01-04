@@ -3,7 +3,6 @@ package net.coderbot.iris.gui;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.element.ShaderPackListWidget;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
-import net.coderbot.iris.shaderpack.ShaderPackPropertiesUtil;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -59,30 +58,6 @@ public class ShaderPackScreen extends Screen {
 
         this.shaderProperties.setScrollAmount(this.shaderProperties.getMaxScroll() * scrollAmount);
         this.shaderProperties.goTo(page);
-
-        // DUMMY PAGES ~~~
-        /*this.shaderProperties.addPage("home", new PropertyList(
-                new TitleProperty(new LiteralText("Dummy Config Menu").formatted(Formatting.BOLD), 0xAAFFFFFF),
-                new PageLinkProperty(this.shaderProperties, "dummy1", new LiteralText("Dummy Page 1"), PageLinkProperty.Align.LEFT),
-                new PageLinkProperty(this.shaderProperties, "dummy2", new LiteralText("Dummy Page 2"), PageLinkProperty.Align.LEFT),
-                new StringOptionProperty(new String[] {"Alpha", "Beta", "Gamma", "Delta"}, 0, this.shaderProperties, "dummy", new LiteralText("Dummy Option")),
-                new BooleanOptionProperty(this.shaderProperties, true, "dummy", new LiteralText("Dummy Boolean")),
-                new DoubleRangeOptionProperty(new Double[] {0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0}, 4, this.shaderProperties, "dummy", new LiteralText("Dummy Number")),
-                new TitleProperty(new LiteralText("Dummy Subtitle"), 0xAAFFFFFF),
-                new Property(new LiteralText("This menu is not functional."))
-        ));
-        this.shaderProperties.addPage("dummy1", new PropertyList(
-                new TitleProperty(new LiteralText("Dummy Page 1").formatted(Formatting.BOLD), 0xAAFFFFFF),
-                new PageLinkProperty(this.shaderProperties, "home", new LiteralText("Back"), PageLinkProperty.Align.CENTER_RIGHT),
-                new StringOptionProperty(new String[] {"foo", "bar"}, 0, this.shaderProperties, "dummy", new LiteralText("Another Option"))
-        ));
-        this.shaderProperties.addPage("dummy2", new PropertyList(
-                new TitleProperty(new LiteralText("Dummy Page 2").formatted(Formatting.BOLD), 0xAAFFFFFF),
-                new PageLinkProperty(this.shaderProperties, "home", new LiteralText("Back"), PageLinkProperty.Align.CENTER_RIGHT),
-                new Property(new LiteralText("Have some Blue Text").formatted(Formatting.BLUE))
-        ));
-        this.shaderProperties.goTo("home");*/
-        // ~~~~~~~~~~~~~~~~
 
         this.children.add(shaderProperties);
 
@@ -149,7 +124,6 @@ public class ShaderPackScreen extends Screen {
     }
 
     private void reloadShaderConfig() {
-        this.shaderProperties.setDocument(ShaderPackPropertiesUtil.createDocument(this.client.textRenderer, this.width / 2, Iris.getIrisConfig().getShaderPackName(), Iris.getCurrentPack(), this.shaderProperties), "screen");
-        this.shaderProperties.setScrollAmount(0.0);
+        this.shaderProperties.setDocument(PropertyDocumentWidget.createDocument(this.client.textRenderer, this.width / 2, Iris.getIrisConfig().getShaderPackName(), Iris.getCurrentPack(), this.shaderProperties), "screen");
     }
 }

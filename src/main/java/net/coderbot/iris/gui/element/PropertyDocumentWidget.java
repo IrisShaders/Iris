@@ -1,24 +1,41 @@
 package net.coderbot.iris.gui.element;
 
-import net.coderbot.iris.gui.property.Property;
-import net.coderbot.iris.gui.property.PropertyList;
-import net.coderbot.iris.gui.property.ValueProperty;
+import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.property.*;
+import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.function.Consumer;
 
 public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<PropertyDocumentWidget.PropertyEntry> {
     protected Map<String, PropertyList> document = new HashMap<>();
     protected String currentPage = "";
+    protected int rowWidth = 0;
+    protected boolean resizedRows = false;
+
+    protected Runnable save = () -> {};
+    protected Consumer<PropertyDocumentWidget> load = doc -> {};
 
     public PropertyDocumentWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {
         super(client, width, height, top, bottom, left, right, itemHeight);
+    }
+
+    public PropertyDocumentWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right, int itemHeight, int rowWidth) {
+        this(client, width, height, top, bottom, left, right, itemHeight);
+        this.resizedRows = true;
+        this.rowWidth = rowWidth;
+    }
+
+    @Override
+    public int getRowWidth() {
+        return resizedRows ? rowWidth : super.getRowWidth();
     }
 
     public void addPage(String page, PropertyList properties) {
@@ -32,6 +49,11 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
         }
         this.currentPage = page;
         this.setScrollAmount(0.0);
+        this.getPage(currentPage).read();
+    }
+
+    public Set<String> getPages() {
+        return this.document.keySet();
     }
 
     public PropertyList getPage(String name) {
@@ -39,7 +61,19 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
     }
 
     public void saveProperties() {
-        this.getPage(currentPage).save();
+        save.run();
+    }
+
+    public void loadProperties() {
+        load.accept(this);
+    }
+
+    public void onSave(Runnable procedure) {
+        this.save = procedure;
+    }
+
+    public void onLoad(Consumer<PropertyDocumentWidget> procedure) {
+        this.load = procedure;
     }
 
     @Override
@@ -49,18 +83,58 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
 
     public void setDocument(Map<String, PropertyList> document, String homePage) {
         this.document = document;
-        /*for(String page : document.keySet()) {
-            for(Property p : document.get(page)) {
-                if(p instanceof ValueProperty) {
-
-                }
-            }
-        }*/
         this.goTo(homePage);
     }
 
     public String getCurrentPage() {
         return currentPage;
+    }
+
+    public static Map<String, PropertyList> createDocument(TextRenderer tr, int width, String shaderName, ShaderPack pack, PropertyDocumentWidget widget) {
+        Properties shaderProperties = pack.getShaderProperties();
+        Map<String, PropertyList> document = new HashMap<>();
+        Map<String, String> child2Parent = new HashMap<>();
+        int tw = (int)(width * 0.6) - 21;
+        int bw = width - 20;
+        if(shaderProperties.isEmpty() || !shaderProperties.containsKey("screen")) {
+            document.put("screen", new PropertyList(
+                    new TitleProperty(new LiteralText(shaderName).formatted(Formatting.BOLD), 0xAAFFFFFF),
+                    new Property(GuiUtil.trimmed(tr, "page.iris.noConfig", bw, true, true, Formatting.ITALIC))
+            ));
+            return document;
+        }
+        List<String> sliderOptions = new ArrayList<>();
+        for(String s : shaderProperties.stringPropertyNames()) {
+            if(s.equals("sliders")) {
+                sliderOptions.add(shaderProperties.getProperty(s));
+            }
+        }
+        for(String s : shaderProperties.stringPropertyNames()) {
+            if(s.startsWith("screen.") || s.equals("screen")) {
+                PropertyList page = new PropertyList();
+                boolean subScreen = s.startsWith("screen.");
+                page.add(new TitleProperty(GuiUtil.trimmed(tr, subScreen ? s : shaderName, width - 60, subScreen, true, Formatting.BOLD), 0xAAFFFFFF));
+                String[] properties = shaderProperties.getProperty(s).split(" ");
+                for(String p : properties) {
+                    if(p.equals("<profile>")) {
+                        page.add(new StringOptionProperty(new String[] {"Low", "Medium", "High", "Extreme", "This is not functional"}, 1, widget, p, GuiUtil.trimmed(tr, "option.iris.profile", tw, true, true), sliderOptions.contains(p)));
+                    } else if(p.equals("<empty>")) {
+                        page.add(Property.EMPTY);
+                    } else if(p.startsWith("[") && p.endsWith("]")) {
+                        String a = "screen."+String.copyValueOf(Arrays.copyOfRange(p.toCharArray(), 1, p.length() - 1));
+                        page.add(new LinkProperty(widget, a, GuiUtil.trimmed(tr, a, bw, true, true), LinkProperty.Align.LEFT));
+                        child2Parent.put(a, s);
+                    } else {
+                        page.add(new StringOptionProperty(new String[] {"This", "Is", "Not", "Functional"}, 0, widget, p, GuiUtil.trimmed(tr, "option."+p, tw, true, true), sliderOptions.contains(p)));
+                    }
+                }
+                document.put(s, page);
+            }
+        }
+        for(String child : child2Parent.keySet()) {
+            if(document.containsKey(child)) document.get(child).add(1, new LinkProperty(widget, child2Parent.get(child), new TranslatableText("option.iris.back"), LinkProperty.Align.CENTER_RIGHT));
+        }
+        return document;
     }
 
     public static class PropertyEntry extends AlwaysSelectedEntryListWidget.Entry<PropertyEntry> {

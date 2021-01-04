@@ -5,6 +5,7 @@
   "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s",
 
   "options.iris.apply": "Apply",
+  "options.iris.refresh": "Refresh",
   "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
   "options.iris.refreshShaderPacks": "Refresh Shader Packs",
   "options.iris.shaderPackSelection": "Shader Packs...",
@@ -22,5 +23,7 @@
   "page.iris.noShaders": "No shader pack loaded.",
 
   "property.iris.boolean.true": "True",
-  "property.iris.boolean.false": "False"
+  "property.iris.boolean.false": "False",
+  "property.iris.title.configScreen": "Configure Iris",
+  "property.iris.uiTheme": "UI Theme"
 }

@@ -3,10 +3,13 @@ package net.coderbot.iris.gui.property;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 
 public class Property {
     protected final Text label;
+
+    public static final Property EMPTY = new Property(new LiteralText(""));
 
     public Property(Text label) {
         this.label = label;
@@ -26,10 +29,6 @@ public class Property {
 
     public boolean charTyped(char c, int keyCode) {
         return false;
-    }
-
-    public int getHeight() {
-        return 20;
     }
 
     protected final void drawText(MinecraftClient client, Text text, MatrixStack matrices, int x, int y, int color, boolean centerX, boolean centerY, boolean shadow) {
