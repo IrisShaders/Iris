@@ -39,7 +39,7 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 
-	private static final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	public static final Path SHADERPACK_DIR = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
@@ -52,7 +52,7 @@ public class Iris implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		try {
-			Files.createDirectories(shaderpacksDirectory);
+			Files.createDirectories(SHADERPACK_DIR);
 		} catch (IOException e) {
 			Iris.logger.warn("Failed to create shaderpacks directory!");
 			Iris.logger.catching(Level.WARN, e);
@@ -106,7 +106,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static boolean loadExternalShaderpack(String name) {
-		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
+		Path shaderPackRoot = SHADERPACK_DIR.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
 
 		if (shaderPackRoot.toString().endsWith(".zip")) {
