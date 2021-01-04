@@ -15,12 +15,10 @@
 	"texunits.MixinGlStateManager",
 	"texunits.MixinLightmapTextureManager",
 	"texunits.MixinOverlayTexture",
-	"texunits.MixinVertexFormats"
+	"texunits.MixinVertexFormats",
+	"gbuffer.MixinWorldRenderer"
   ],
   "injectors": {
 	"defaultRequire": 1
-  },
-  "mixins": [
-	"gbuffer.MixinWorldRenderer"
-  ]
+  }
 }
