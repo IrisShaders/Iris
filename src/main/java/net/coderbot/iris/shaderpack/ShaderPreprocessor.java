@@ -332,6 +332,7 @@ public class ShaderPreprocessor {
 	 * Expanded version of {@link Integer#parseInt(String)} which parses float values as integers without rounding
 	 * @see Integer#parseInt(String)
 	 * @param source the source string
+	 *
 	 * @return an integer parsed
 	 */
 	private static Integer parseInt(String source) {
