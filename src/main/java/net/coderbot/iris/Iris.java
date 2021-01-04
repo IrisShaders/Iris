@@ -39,7 +39,7 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 
-	public static final Path SHADERPACKS_DIR = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	private static final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
@@ -52,7 +52,7 @@ public class Iris implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		try {
-			Files.createDirectories(SHADERPACKS_DIR);
+			Files.createDirectories(shaderpacksDirectory);
 		} catch (IOException e) {
 			Iris.logger.warn("Failed to create shaderpacks directory!");
 			Iris.logger.catching(Level.WARN, e);
@@ -70,6 +70,7 @@ public class Iris implements ClientModInitializer {
 
 		loadShaderpack();
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
+
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
 			if (reloadKeybind.wasPressed()){
 
@@ -105,7 +106,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static boolean loadExternalShaderpack(String name) {
-		Path shaderPackRoot = SHADERPACKS_DIR.resolve(name);
+		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
 		Path shaderPackPath = shaderPackRoot.resolve("shaders");
 
 		if (shaderPackRoot.toString().endsWith(".zip")) {

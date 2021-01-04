@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
+import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
@@ -29,14 +29,12 @@ public class ShaderPack {
 	private final ProgramSource gbuffersBlock;
 	private final ProgramSource[] composite;
 	private final ProgramSource compositeFinal;
-	private final ShaderPackConfig config;
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 
 	public ShaderPack(Path root) throws IOException {
 		this.packDirectives = new PackDirectives();
-		this.config = new ShaderPackConfig();//make sure config is created before program sources are created
-		this.config.load();//load config vals so preprocessor picks it up and acts on them
+
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
 		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this);
@@ -60,12 +58,6 @@ public class ShaderPack {
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
-
-		config.save();//serialize everything
-	}
-
-	public ShaderPackConfig getConfig() {
-		return config;
 	}
 
 	public IdMap getIdMap() {
@@ -137,7 +129,7 @@ public class ShaderPack {
 			vertexSource = readFile(vertexPath);
 
 			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource, pack.getConfig());
+				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource);
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
@@ -149,7 +141,7 @@ public class ShaderPack {
 			fragmentSource = readFile(fragmentPath);
 
 			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource, pack.getConfig());
+				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource);
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
