@@ -12,8 +12,9 @@ import java.util.function.Function;
 import net.coderbot.iris.shaderpack.config.Option;
 import net.coderbot.iris.shaderpack.config.OptionType;
 import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
+import org.apache.commons.lang3.StringUtils;
 
-
+//This class is now a lot bigger and now depends on each shaderpack's config instance, should we make it non static and specific per shaderpack?
 public class ShaderPreprocessor {
 	public static String process(Path rootPath, Path shaderPath, String source, ShaderPackConfig config) throws IOException {
 		StringBuilder processed = new StringBuilder();
@@ -74,8 +75,8 @@ public class ShaderPreprocessor {
 			String trimmedLine = line.trim();
 			String[] values = parseConfigLine(trimmedLine);
 
-			if (values[0].startsWith("MC_")) {
-				continue;//as per https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L649-L652, do not parse any config values from those
+			if (StringUtils.startsWith(values[0], "MC_")) { //using StringUtils for null safe
+				continue; //as per https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L649-L652, do not parse any config values from those
 			}
 
 			//parse config lines that start with #define
@@ -163,7 +164,7 @@ public class ShaderPreprocessor {
 		boolean defaultValue = !trimmedLine.startsWith("//");
 
 		String[] values = parseConfigLine(trimmedLine);
-		Option<Boolean> option = new Option<>(values[2], Arrays.asList(true, false), values[0], defaultValue);
+		Option<Boolean> option = new Option<>(values[2], Arrays.asList(true, false), values[0], defaultValue, OptionType.BOOLEAN);
 
 		option = config.processOption(option, Boolean::parseBoolean);
 
@@ -190,7 +191,7 @@ public class ShaderPreprocessor {
 
 		List<Integer> integers = parseArray(values[3], ShaderPreprocessor::parseInt);
 
-		Option<Integer> option = new Option<>(values[2], integers, values[0], value);
+		Option<Integer> option = new Option<>(values[2], integers, values[0], value, OptionType.INTEGER);
 		option = config.processOption(option, Integer::parseInt);
 
 		config.getIntegerOptions().put(option.getName(), option);
@@ -215,7 +216,7 @@ public class ShaderPreprocessor {
 		}
 
 		List<Float> allowedValues = parseArray(values[3], Float::parseFloat);
-		Option<Float> floatOption = new Option<>(values[2], allowedValues, values[0], value);
+		Option<Float> floatOption = new Option<>(values[2], allowedValues, values[0], value, OptionType.FLOAT);
 
 		floatOption = config.processOption(floatOption, Float::parseFloat);
 		config.getFloatOptions().put(floatOption.getName(), floatOption);
@@ -270,19 +271,21 @@ public class ShaderPreprocessor {
 		} else {
 			literalComment = "";
 		}
-		String name = null;
-		String defaultValue = null;
+
 		for (String element : base.split("\\s+")) {//split by any amount of whitespace
 
 			//the logic inside this for each loop is fragile imo, try to find a better solution
 			if (!element.contains("#define")) {
-
-				if (name == null) {
-					name = element;
-				} else if (defaultValue == null) {
-					defaultValue = element;
-				}
+				//ignore the actual #define part
+				continue;
 			}
+				//since base is split in order, from beginning to last
+				if (returnVal[0] == null) {//if the name is null, set it because it should be the first one
+					returnVal[0] = element;
+				} else if (returnVal[1] == null) {//if the default value is null and the name is not, then it is the default value
+					returnVal[1] = element;
+				}
+
 		}
 
 		if (!literalComment.isEmpty()) {
@@ -295,12 +298,10 @@ public class ShaderPreprocessor {
 				returnVal[3] = array;
 				String tooltip = literalComment.replace(array, "").trim();//remove the array from the comment
 				returnVal[2] = tooltip;
+			} else {
+				returnVal[2] = literalComment;
 			}
 		}
-
-		returnVal[0] = name;
-		returnVal[1] = defaultValue;
-
 
 		return returnVal;
 	}
@@ -335,7 +336,7 @@ public class ShaderPreprocessor {
 	 *
 	 * @return an integer parsed
 	 */
-	private static Integer parseInt(String source) {
+	private static int parseInt(String source) {
 
 		if (source.contains(".")) {
 

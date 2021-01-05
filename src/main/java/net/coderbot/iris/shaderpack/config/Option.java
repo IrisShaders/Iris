@@ -18,8 +18,9 @@ public class Option<T> {
 	private final List<T> allowedValues;
 	private final String name;
 	private T value;
+	private final OptionType type;
 
-	public Option(String comment, List<T> allowedValues, String name, T defaultValue) {
+	public Option(String comment, List<T> allowedValues, String name, T defaultValue, OptionType type) {
 		this.comment = comment == null ? "" : comment;
 		this.allowedValues = allowedValues;
 		this.name = name;
@@ -27,14 +28,24 @@ public class Option<T> {
 		if (!allowedValues.contains(defaultValue)) {
 			allowedValues.add(defaultValue);
 		}
+		this.type = type;
 	}
 
+	/**
+	 * Saves this option's value to the property along with the name of the property
+	 * @param properties the properties to append to
+	 */
 	public void save(Properties properties) {
 		properties.put(this.name, this.value.toString());
 	}
 
-	public void load(Properties properties, Function<String, T> deserializer) {
-		setValue(deserializer.apply(properties.getProperty(this.name)));
+	/**
+	 * Sets this Option's value to the one stored in a specific {@link Properties}
+	 * @param properties the properties to load from
+	 * @param parser converts the string to the desired type
+	 */
+	public void load(Properties properties, Function<String, T> parser) {
+		setValue(parser.apply(properties.getProperty(this.name)));
 	}
 
 	public String getName() {
@@ -47,6 +58,14 @@ public class Option<T> {
 
 	public String getComment() {
 		return comment;
+	}
+
+	/**
+	 * Returns the type of config this option holds (boolean, int, float)
+	 * @return
+	 */
+	public OptionType getType() {
+		return type;
 	}
 
 	public T getValue() {
@@ -63,8 +82,7 @@ public class Option<T> {
 				//to spammy?
 				//also probably have better error messages
 				Iris.logger.error("Cannot set {} from option {} in a config option to {} when {} is not inside the config list (elements: {})", this.value, this.name, value, value, this.allowedValues);
-				Iris.logger.warn("Please set {} to {}, please set it to something inside this list: {}", this.name, value, this.allowedValues);
-				Iris.logger.warn("Not setting {} to {}", this.value, value);
+				Iris.logger.error("You currently have set {} to {}, please set it to something inside this list: {}", this.name, value, this.allowedValues);
 				return;
 			}
 		}
