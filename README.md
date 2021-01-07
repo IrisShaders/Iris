@@ -15,6 +15,7 @@ For the most part, I am creating Iris in order to have fun and get more experien
 
 * Sildur's Vibrant Shaders and XorDev's shaderpacks work for the most part under Iris, and have been the focus of my development. However, most other shaderpacks either have severe rendering issues, or do not work at all. My current focus is to get Sildur's Vibrant Shaders and XorDev's shaderpacks to the point where they are 100% working before shifting focus to other shaderpacks. As I fix issues in these shaderpacks, other shaderpacks will very likely begin to work properly as well.
 * I am working with JellySquid to make Sodium and Iris compatible. There is a proof-of-concept for Iris/Sodium compatibility available on a [custom fork of Sodium](https://github.com/IrisShaders/sodium-fabric) and [an experimental Iris branch](https://github.com/IrisShaders/Iris/tree/sodium-compatibility). While this proof of concept is being used as a reference for compatibility work, it will likely be replaced with more solid and stable code in the future.
+* Iris is alpha quality software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment. Once Iris is ready for more widespread use, precompiled builds will be published and distributed.
 
 
 ## Goals
