@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Level;
 public class ShaderPack {
 	private final PackDirectives packDirectives;
 	private final ProgramSource gbuffersBasic;
+	private final ProgramSource gbuffersBeaconBeam;
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTexturedLit;
 	private final ProgramSource gbuffersTerrain;
@@ -26,6 +27,7 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
 	private final ProgramSource gbuffersEntities;
+	private final ProgramSource gbuffersEntityEyes;
 	private final ProgramSource gbuffersBlock;
 	private final ProgramSource[] composite;
 	private final ProgramSource compositeFinal;
@@ -36,6 +38,7 @@ public class ShaderPack {
 		this.packDirectives = new PackDirectives();
 
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
+		this.gbuffersBeaconBeam = readProgramSource(root, "gbuffers_beaconbeam", this);
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
 		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this);
 		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
@@ -44,6 +47,7 @@ public class ShaderPack {
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
 		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this);
+		this.gbuffersEntityEyes = readProgramSource(root, "gbuffers_spidereyes", this);
 		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this);
 
 		this.composite = new ProgramSource[16];
@@ -66,6 +70,10 @@ public class ShaderPack {
 
 	public Optional<ProgramSource> getGbuffersBasic() {
 		return gbuffersBasic.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersBeaconBeam() {
+		return gbuffersBeaconBeam.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersTextured() {
@@ -98,6 +106,10 @@ public class ShaderPack {
 
 	public Optional<ProgramSource> getGbuffersEntities() {
 		return gbuffersEntities.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersEntityEyes() {
+		return gbuffersEntityEyes.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersBlock() {

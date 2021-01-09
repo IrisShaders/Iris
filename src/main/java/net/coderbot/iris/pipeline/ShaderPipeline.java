@@ -83,13 +83,11 @@ public class ShaderPipeline {
 		this.translucent = pack.getGbuffersWater().map(this::createPass).orElse(terrain);
 		// TODO: Load weather shaders
 		this.weather = texturedLit;
-		// TODO: Load beacon_beam shaders
-		this.beaconBeam = textured;
+		this.beaconBeam = pack.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
 		this.entities = pack.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		// TODO: Load glowing entities
 		this.glowingEntities = entities;
-		// TODO: Load eyes
-		this.eyes = textured;
+		this.eyes = pack.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
 		int[] buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared().toIntArray();
 
