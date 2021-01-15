@@ -4,6 +4,7 @@
   "iris.shaders.reloaded.failure": "Échec lors du rechargement des Shaders! Raison: %s",
 
   "options.iris.apply": "Appliquer",
+  "options.iris.refresh": "Actualiser",
   "options.iris.openShaderPackFolder": "Ouvrir le dossier des packs de Shaders...",
   "options.iris.refreshShaderPacks": "Actualiser la liste des packs de Shaders",
   "options.iris.shaderPackSelection": "Packs de Shader...",
@@ -21,5 +22,7 @@
   "page.iris.noShaders": "Aucun pack de Shaders chargé.",
 
   "property.iris.boolean.true": "Vrai",
-  "property.iris.boolean.false": "Faux"
+  "property.iris.boolean.false": "Faux",
+  "property.iris.title.configScreen": "Configurer Iris",
+  "property.iris.uiTheme": "Thème UI"
 }

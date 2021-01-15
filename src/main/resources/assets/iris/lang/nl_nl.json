@@ -4,6 +4,7 @@
   "iris.shaders.reloaded.failure": "Mislukt om Shaders te herladen! Reden: %s",
 
   "options.iris.apply": "Solliciteer",
+  "options.iris.refresh": "Vernieuwen",
   "options.iris.openShaderPackFolder": "Open Shader-pakketten Map...",
   "options.iris.refreshShaderPacks": "Verfrissende Shader-pakketten",
   "options.iris.shaderPackSelection": "Shader-pakketten...",
@@ -21,5 +22,7 @@
   "page.iris.noShaders": "Geen Shader-pakketten geladen.",
 
   "property.iris.boolean.true": "Waar",
-  "property.iris.boolean.false": "Vals"
+  "property.iris.boolean.false": "Vals",
+  "property.iris.title.configScreen": "Iris configureren",
+  "property.iris.uiTheme": "UI Thema"
 }

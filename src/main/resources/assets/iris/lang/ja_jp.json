@@ -4,6 +4,7 @@
   "iris.shaders.reloaded.failure": "シェーダーのリロードに失敗しました！理由： %s",
 
   "options.iris.apply": "適用する",
+  "options.iris.refresh": "リフレッシュ",
   "options.iris.openShaderPackFolder": "シェーダパックフォルダを開く...",
   "options.iris.refreshShaderPacks": "リフレッシュシェーダパック",
   "options.iris.shaderPackSelection": "シェーダパック...",
@@ -21,5 +22,7 @@
   "page.iris.noShaders": "シェーダーパックが読み込まれていません。",
 
   "property.iris.boolean.true": "真",
-  "property.iris.boolean.false": "誤"
+  "property.iris.boolean.false": "誤",
+  "property.iris.title.configScreen": "アイリスの設定",
+  "property.iris.uiTheme": "UIテーマ"
 }
