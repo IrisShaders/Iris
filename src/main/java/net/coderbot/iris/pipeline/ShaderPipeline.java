@@ -99,9 +99,9 @@ public class ShaderPipeline {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
-		builder.bindAttributeLocation(0, "mc_Entity");
-		builder.bindAttributeLocation(1, "mc_midTexCoord");
-		builder.bindAttributeLocation(2, "at_tangent");
+		builder.bindAttributeLocation(10, "mc_Entity");
+		builder.bindAttributeLocation(11, "mc_midTexCoord");
+		builder.bindAttributeLocation(12, "at_tangent");
 
 		return new Pass(builder.build(), framebuffer);
 	}
