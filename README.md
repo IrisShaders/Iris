@@ -39,13 +39,15 @@ At the moment, the options for contributing are somewhat limited, and I don't ha
 
 ## Rationale
 
-### Why not Canvas?
+### What about Canvas?
 
 [Canvas](https://github.com/grondag/canvas) is an advanced shader-based renderer for Minecraft also running on Fabric, by Grondag. This raises a common question: why not contribute to Canvas instead? I have already investigated this possibility, however the goals of Canvas and Iris are in fact quite different.
 
 Canvas has the goal of creating a new shader pipeline focused on empowering mod authors with advanced graphics features, and is very promising. But this new shader pipeline is intentionally designed to not work with existing shaderpacks. Canvas wants to shed all of the backwards compatibility issues of loading existing shaderpacks, in order to achieve better performance and enable additional features for modders. For more information, see the "Why" section of the [Canvas README](https://github.com/grondag/canvas/blob/one/README.md#Why).
 
 However, Iris has a notably different goal: loading existing shader packs out of the box. While it's theoretically possible to get this working on Canvas, I personally prefer to start off making a standalone shaders mod instead of spending time trying to understand another complex rendering system in addition to Minecraft and ShadersMod/OptiFine.
+
+Canvas is progressing very rapidly, and has experimental support for things like sky shadows. [Lumi Lights](https://spiralhalo.github.io/) is a shaderpack for Canvas that offers features like bloom, godrays, reflective water, and more, and it's worth a shot if you're interested in a more stable experience than what Iris can currently offer.
 
 I think that Canvas is a great project, and some day it could very well be the dominant shader mod for Fabric. Iris is made for those who still want to play with existing OptiFine shaderpacks, because there will always be legacy shaderpack content available, even when Canvas shaderpacks become more common.
 
