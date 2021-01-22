@@ -16,6 +16,7 @@ import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL21;
+import org.lwjgl.opengl.GL21C;
 
 import net.minecraft.client.gl.GlProgram;
 import net.minecraft.client.gl.GlProgramManager;
@@ -28,6 +29,10 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		super(name, program.getProgramRef());
 
 		this.program = program;
+	}
+
+	public void bindAttributeLocation(int index, String name) {
+		GL21C.glBindAttribLocation(program.getProgramRef(), index, name);
 	}
 
 	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String fragmentSource) throws IOException {
