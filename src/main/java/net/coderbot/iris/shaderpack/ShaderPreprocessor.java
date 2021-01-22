@@ -9,10 +9,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.config.Option;
-import net.coderbot.iris.shaderpack.config.OptionType;
 import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
 import org.apache.commons.lang3.StringUtils;
+
+import static net.coderbot.iris.shaderpack.config.Option.OptionType;
 
 //This class is now a lot bigger and now depends on each shaderpack's config instance, should we make it non static and specific per shaderpack?
 public class ShaderPreprocessor {
@@ -73,9 +75,12 @@ public class ShaderPreprocessor {
 			String line = lines.get(index);
 
 			String trimmedLine = line.trim();
-			String[] values = parseConfigLine(trimmedLine);
 
-			if (StringUtils.startsWith(values[0], "MC_")) { //using StringUtils for null safe
+			if (!trimmedLine.startsWith("#define") && !trimmedLine.startsWith("//#define")) continue;
+
+			ParsedLineContainer values = parseConfigLine(trimmedLine);
+
+			if (StringUtils.startsWith(values.name, "MC_")) { //using StringUtils for null safe
 				continue; //as per https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L649-L652, do not parse any config values from those
 			}
 
@@ -101,7 +106,7 @@ public class ShaderPreprocessor {
 
 						if (integerOption != null) {
 							//replace the default value with the new one
-							String newLine = line.replaceFirst(values[1], integerOption.getValue().toString());
+							String newLine = line.replaceFirst(values.defaultValue, integerOption.getValue().toString());
 							lines.set(index, newLine);
 						}
 						System.out.println(integerOption);
@@ -112,7 +117,7 @@ public class ShaderPreprocessor {
 
 						if (option != null) {
 							//replace the default value with the new one
-							String newLine = line.replaceFirst(values[1], option.getValue().toString());
+							String newLine = line.replaceFirst(values.defaultValue, option.getValue().toString());
 							lines.set(index, newLine);
 						}
 						System.out.println(option);
@@ -143,7 +148,7 @@ public class ShaderPreprocessor {
 	 * @return the option type specifying the type of the config option
 	 */
 	private static OptionType getOptionType(String trimmedLine) {
-		String defaultValue = parseConfigLine(trimmedLine)[1];
+		String defaultValue = parseConfigLine(trimmedLine).defaultValue;
 
 		if (defaultValue == null) {
 			return OptionType.BOOLEAN;
@@ -163,8 +168,8 @@ public class ShaderPreprocessor {
 	private static Option<Boolean> createBooleanOption(String trimmedLine, ShaderPackConfig config) {
 		boolean defaultValue = !trimmedLine.startsWith("//");
 
-		String[] values = parseConfigLine(trimmedLine);
-		Option<Boolean> option = new Option<>(values[2], Arrays.asList(true, false), values[0], defaultValue, OptionType.BOOLEAN);
+		ParsedLineContainer values = parseConfigLine(trimmedLine);
+		Option<Boolean> option = new Option<>(values.comment, Arrays.asList(true, false), values.name, defaultValue, OptionType.BOOLEAN);
 
 		option = config.processOption(option, Boolean::parseBoolean);
 
@@ -179,19 +184,18 @@ public class ShaderPreprocessor {
 	 * @return the new option or null if a method was processed
 	 */
 	private static Option<Integer> createIntegerOption(String trimmedLine, ShaderPackConfig config) {
-		String[] values = parseConfigLine(trimmedLine);
+		ParsedLineContainer values = parseConfigLine(trimmedLine);
 		int value;
 
 		try {
-			value = Integer.parseInt(values[1]);
+			value = Integer.parseInt(values.defaultValue);
 		} catch (NumberFormatException e) {
-			//should we fail silently?
 			return null;
 		}
 
-		List<Integer> integers = parseArray(values[3], ShaderPreprocessor::parseInt);
+		List<Integer> integers = parseArray(values.array, ShaderPreprocessor::parseInt);
 
-		Option<Integer> option = new Option<>(values[2], integers, values[0], value, OptionType.INTEGER);
+		Option<Integer> option = new Option<>(values.comment, integers, values.name, value, OptionType.INTEGER);
 		option = config.processOption(option, Integer::parseInt);
 
 		config.getIntegerOptions().put(option.getName(), option);
@@ -205,18 +209,17 @@ public class ShaderPreprocessor {
 	 * @return a new config option - or null if there was an error while processing the option
 	 */
 	private static Option<Float> createFloatOption(String trimmedLine, ShaderPackConfig config) {
-		String[] values = parseConfigLine(trimmedLine);
+		ParsedLineContainer values = parseConfigLine(trimmedLine);
 		float value;
 
 		try {
-			value = Float.parseFloat(values[1]);
+			value = Float.parseFloat(values.defaultValue);
 		} catch (NumberFormatException e) {
-			//fails silently, maybe log something?
 			return null;
 		}
 
-		List<Float> allowedValues = parseArray(values[3], Float::parseFloat);
-		Option<Float> floatOption = new Option<>(values[2], allowedValues, values[0], value, OptionType.FLOAT);
+		List<Float> allowedValues = parseArray(values.array, Float::parseFloat);
+		Option<Float> floatOption = new Option<>(values.comment, allowedValues, values.name, value, OptionType.FLOAT);
 
 		floatOption = config.processOption(floatOption, Float::parseFloat);
 		config.getFloatOptions().put(floatOption.getName(), floatOption);
@@ -226,40 +229,13 @@ public class ShaderPreprocessor {
 	/**
 	 * Parses a config line into a string array containing data for that line
 	 * @param trimmedLine the whole line (trimmed) that needs to be
-	 * @return a string array containing the following values:
-	 * <table style="width:100%">
-	 *   <tr>
-	 *     <th>Index</th>
-	 *     <th colspan="1">Value</th>
-	 *   </tr>
-	 *   <tr>
-	 *     <th>0</th>
-	 *     <th>Name of option</th>
-	 *   </tr>
-	 *   <tr>
-	 *       <th rowspan = "2">1</th>
-	 *       <th>The default value of the option as a string.</th>
-	 *   </tr>
-	 *   <tr>
-	 *      <th>Returns null if it is a boolean option</th>
-	 *   </tr>
-	 *   <tr>
-	 *       <th rowspan = "2">2</th>
-	 *       <th>Returns the comment to be applied as a tooltip</th>
-	 *   </tr>
-	 *   <tr>
-	 *       <th>Returns null if there is no comment</th>
-	 *   </tr>
-	 *   <tr>
-	 *       <th rowspan = "2">3</th>
-	 *       <th>The allowed values for this option to be set to</th>
-	 *   </tr>
-	 *   <tr>
-	 *       <th>Returns null if there are no allowed values</th>
-	 *   </tr>
-	 * </table>
+	 * @return a line container that contains the 4 elements in a configurable option
+	 * 	      - name
+	 * 	      - default value (null if boolean option)
+	 * 	      - tooltip (null if not present)
+	 * 	      - array of allowed values for the default to be set to (null if not present. If null, it can be set to any value)
 	 */
-	private static String[] parseConfigLine(String trimmedLine) {
+	private static ParsedLineContainer parseConfigLine(String trimmedLine) {
 		String[] returnVal = new String[4];
 
 		String base = trimmedLine.startsWith("//") ? trimmedLine.substring(2) : trimmedLine;//remove the comment from the trimmed line
@@ -273,12 +249,12 @@ public class ShaderPreprocessor {
 		}
 
 		for (String element : base.split("\\s+")) {//split by any amount of whitespace
-
 			//the logic inside this for each loop is fragile imo, try to find a better solution
-			if (!element.contains("#define")) {
-				//ignore the actual #define part
+			if (element.contains("#define")) {
+				//ignore the actual #define part since we don't need it
 				continue;
 			}
+
 				//since base is split in order, from beginning to last
 				if (returnVal[0] == null) {//if the name is null, set it because it should be the first one
 					returnVal[0] = element;
@@ -303,7 +279,7 @@ public class ShaderPreprocessor {
 			}
 		}
 
-		return returnVal;
+		return new ParsedLineContainer(returnVal[0], returnVal[1], returnVal[2], returnVal[3]);
 	}
 
 	/**
@@ -381,5 +357,29 @@ public class ShaderPreprocessor {
 
 	private static String readFile(Path path) throws IOException {
 		return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+	}
+
+	private static class ParsedLineContainer {
+		public final String name;
+		public final String defaultValue;
+		public final String comment;
+		public final String array;
+
+		private ParsedLineContainer(String name, String defaultValue, String comment, String array) {
+			this.name = name;
+			this.defaultValue = defaultValue;
+			this.comment = comment;
+			this.array = array;
+		}
+
+		@Override
+		public String toString() {   //testing
+			return "ParsedLineContainer{" +
+				"name='" + name + '\'' +
+				", defaultValue=" + defaultValue +
+				", comment='" + comment + '\'' +
+				", array=" + array +
+				'}';
+		}
 	}
 }

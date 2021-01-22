@@ -99,4 +99,10 @@ public class Option<T> {
 			", value=" + value +
 			'}';
 	}
+
+	public enum OptionType {
+		INTEGER,
+		BOOLEAN,
+		FLOAT
+	}
 }
