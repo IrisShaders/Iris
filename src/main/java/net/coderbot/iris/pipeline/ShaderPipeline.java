@@ -60,6 +60,8 @@ public class ShaderPipeline {
 	@Nullable
 	private final Pass glowingEntities;
 	@Nullable
+	private final Pass glint;
+	@Nullable
 	private final Pass eyes;
 
 	private final GlFramebuffer clearAltBuffers;
@@ -87,6 +89,7 @@ public class ShaderPipeline {
 		this.entities = pack.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		// TODO: Load glowing entities
 		this.glowingEntities = entities;
+		this.glint = pack.getGbuffersGlint().map(this::createPass).orElse(textured);
 		this.eyes = pack.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
 		int[] buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared().toIntArray();
@@ -105,8 +108,8 @@ public class ShaderPipeline {
 
 		switch (program) {
 			case TERRAIN:
-				//RenderSystem.enableAlphaTest();
-				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
+				RenderSystem.enableAlphaTest();
+				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginTerrain();
 				return;
 			case TRANSLUCENT_TERRAIN:
@@ -136,6 +139,9 @@ public class ShaderPipeline {
 				return;
 			case EYES:
 				beginPass(eyes);
+				return;
+			case ARMOR_GLINT:
+				beginPass(glint);
 				return;
 		}
 

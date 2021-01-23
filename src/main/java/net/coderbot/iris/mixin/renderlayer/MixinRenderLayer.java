@@ -54,6 +54,15 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 	@Unique
 	private static RenderLayer iris$LINES;
 
+	@Shadow @Final @Mutable private static RenderLayer LEASH;
+	@Shadow @Final @Mutable private static RenderLayer ARMOR_GLINT;
+	@Shadow @Final @Mutable private static RenderLayer ARMOR_ENTITY_GLINT;
+	@Shadow @Final @Mutable private static RenderLayer GLINT_TRANSLUCENT;
+	@Shadow @Final @Mutable private static RenderLayer GLINT;
+	@Shadow @Final @Mutable private static RenderLayer DIRECT_GLINT;
+	@Shadow @Final @Mutable private static RenderLayer ENTITY_GLINT;
+	@Shadow @Final @Mutable private static RenderLayer DIRECT_ENTITY_GLINT;
+
 	@Override
 	public Optional<GbufferProgram> getProgram() {
 		// By default, don't use shaders to render content
@@ -74,7 +83,17 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 		// Should they still be rendered in terrain?
 		// TODO: TRANSLUCENT_MOVING_BLOCK, TRANSLUCENT_NO_CRUMBLING
 
-		// TODO: LEASH, WATER_MASK, ARMOR_GLINT, ARMOR_ENTITY_GLINT, GLINT_TRANSLUCENT, DIRECT_GLINT, ENTITY_GLINT, DIRECT_ENTITY_GLINT
+		LEASH = wrap("iris:leash", LEASH, GbufferProgram.BASIC);
+		// TODO: Should WATER_MASK be wrapped?
+		ARMOR_GLINT = wrapGlint("armor", ARMOR_GLINT);
+		ARMOR_ENTITY_GLINT = wrapGlint("armor_entity", ARMOR_ENTITY_GLINT);
+		GLINT_TRANSLUCENT = wrapGlint("translucent", GLINT_TRANSLUCENT);
+		GLINT = wrapGlint(null, GLINT);
+		DIRECT_GLINT = wrapGlint("direct", DIRECT_GLINT);
+		ENTITY_GLINT = wrapGlint("entity", ENTITY_GLINT);
+		DIRECT_ENTITY_GLINT = wrapGlint("direct_entity_glint", DIRECT_ENTITY_GLINT);
+
+		// TODO: crumbling, text, text_see_through, lightning, end_portal
 	}
 
 	/**
@@ -88,6 +107,18 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 
 	private static RenderLayer wrap(String name, RenderLayer wrapped, GbufferProgram program) {
 		return new IrisRenderLayerWrapper(name, wrapped, new UseProgramRenderPhase(program));
+	}
+
+	private static RenderLayer wrapGlint(String glintType, RenderLayer wrapped) {
+		String name = ((RenderPhaseAccessor) wrapped).getName();
+
+		String wrappedName = "iris:" + glintType + "_glint";
+
+		if (glintType == null) {
+			wrappedName = "iris:glint";
+		}
+
+		return wrap(wrappedName, wrapped, GbufferProgram.ARMOR_GLINT);
 	}
 
 	private static RenderLayer wrap(RenderLayer wrapped, GbufferProgram program) {

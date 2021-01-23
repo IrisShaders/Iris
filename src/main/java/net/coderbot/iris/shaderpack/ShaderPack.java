@@ -27,6 +27,7 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
 	private final ProgramSource gbuffersEntities;
+	private final ProgramSource gbuffersGlint;
 	private final ProgramSource gbuffersEntityEyes;
 	private final ProgramSource gbuffersBlock;
 	private final ProgramSource[] composite;
@@ -51,6 +52,7 @@ public class ShaderPack {
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this, shaderProperties);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this, shaderProperties);
 		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this, shaderProperties);
+		this.gbuffersGlint = readProgramSource(root, "gbuffers_armor_glint", this, shaderProperties);
 		this.gbuffersEntityEyes = readProgramSource(root, "gbuffers_spidereyes", this, shaderProperties);
 		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this, shaderProperties);
 
@@ -125,6 +127,10 @@ public class ShaderPack {
 
 	public Optional<ProgramSource> getGbuffersEntities() {
 		return gbuffersEntities.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersGlint() {
+		return gbuffersGlint.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersEntityEyes() {

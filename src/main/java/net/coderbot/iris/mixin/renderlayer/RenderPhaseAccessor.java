@@ -13,4 +13,9 @@ import net.fabricmc.api.Environment;
 public interface RenderPhaseAccessor {
 	@Accessor("name")
 	String getName();
+
+	@Accessor("TRANSLUCENT_TRANSPARENCY")
+	static RenderPhase.Transparency getTranslucentTransparency() {
+		return null;
+	}
 }

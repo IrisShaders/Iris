@@ -15,6 +15,7 @@
 	"fabulous.MixinDisableFabulousGraphics",
 	"fabulous.MixinOption",
 	"gbuffer.MixinWorldRenderer",
+	"renderlayer.MixinFixEyesTranslucency",
 	"renderlayer.MixinMultiPhaseParameters",
 	"renderlayer.MixinMultiPhaseParametersBuilder",
 	"renderlayer.MixinRenderLayer",
