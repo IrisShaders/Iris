@@ -105,16 +105,16 @@ public class ShaderPipeline {
 
 		switch (program) {
 			case TERRAIN:
-				RenderSystem.enableAlphaTest();
-				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
+				//RenderSystem.enableAlphaTest();
+				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginTerrain();
 				return;
 			case TRANSLUCENT_TERRAIN:
 				beginTranslucentTerrain();
 				return;
 			case BASIC:
-				RenderSystem.enableAlphaTest();
-				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
+				//RenderSystem.enableAlphaTest();
+				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginBasic();
 				return;
 			case BEACON_BEAM:
@@ -122,16 +122,16 @@ public class ShaderPipeline {
 				return;
 			case ENTITIES:
 				// TODO: Disabling blend on entities is hardcoded for Sildur's
-				GlStateManager.disableBlend();
+				/*GlStateManager.disableBlend();
 				RenderSystem.enableAlphaTest();
-				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
+				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);*/
 				beginPass(entities);
 				return;
 			case ENTITIES_GLOWING:
 				// TODO: Disabling blend on entities is hardcoded for Sildur's
-				GlStateManager.disableBlend();
+				/*GlStateManager.disableBlend();
 				RenderSystem.enableAlphaTest();
-				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
+				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);*/
 				beginPass(glowingEntities);
 				return;
 			case EYES:
