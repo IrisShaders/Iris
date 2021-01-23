@@ -35,33 +35,52 @@ public class ShaderPack {
 	private final Map<String, Map<String, String>> langMap;
 
 	public ShaderPack(Path root) throws IOException {
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+			.map(ShaderProperties::new)
+			.orElseGet(ShaderProperties::empty);
+
 		this.packDirectives = new PackDirectives();
 
-		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
-		this.gbuffersBeaconBeam = readProgramSource(root, "gbuffers_beaconbeam", this);
-		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
-		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this);
-		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
-		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this);
-		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
-		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
-		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
-		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this);
-		this.gbuffersEntityEyes = readProgramSource(root, "gbuffers_spidereyes", this);
-		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this);
+		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this, shaderProperties);
+		this.gbuffersBeaconBeam = readProgramSource(root, "gbuffers_beaconbeam", this, shaderProperties);
+		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this, shaderProperties);
+		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this, shaderProperties);
+		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this, shaderProperties);
+		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this, shaderProperties);
+		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this, shaderProperties);
+		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this, shaderProperties);
+		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this, shaderProperties);
+		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this, shaderProperties);
+		this.gbuffersEntityEyes = readProgramSource(root, "gbuffers_spidereyes", this, shaderProperties);
+		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this, shaderProperties);
 
 		this.composite = new ProgramSource[16];
 
 		for (int i = 0; i < this.composite.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
 
-			this.composite[i] = readProgramSource(root, "composite" + suffix, this);
+			this.composite[i] = readProgramSource(root, "composite" + suffix, this, shaderProperties);
 		}
 
-		this.compositeFinal = readProgramSource(root, "final", this);
+		this.compositeFinal = readProgramSource(root, "final", this, shaderProperties);
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
+	}
+
+	// TODO: Copy-paste from IdMap, find a way to deduplicate this
+	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
+		Properties properties = new Properties();
+
+		try {
+			properties.load(Files.newInputStream(shaderPath.resolve(name)));
+		} catch (IOException e) {
+			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+
+			return Optional.empty();
+		}
+
+		return Optional.of(properties);
 	}
 
 	public IdMap getIdMap() {
@@ -132,7 +151,7 @@ public class ShaderPack {
 		return packDirectives;
 	}
 
-	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
+	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack, ShaderProperties properties) throws IOException {
 		String vertexSource = null;
 		String fragmentSource = null;
 
@@ -160,7 +179,7 @@ public class ShaderPack {
 			throw e;
 		}
 
-		return new ProgramSource(program, vertexSource, fragmentSource, pack);
+		return new ProgramSource(program, vertexSource, fragmentSource, pack, properties);
 	}
 
 	private static String readFile(Path path) throws IOException {
@@ -213,12 +232,12 @@ public class ShaderPack {
 		private final ProgramDirectives directives;
 		private final ShaderPack parent;
 
-		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
+		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent, ShaderProperties properties) {
 			this.name = name;
 			this.vertexSource = vertexSource;
 			this.fragmentSource = fragmentSource;
 			this.parent = parent;
-			this.directives = new ProgramDirectives(this);
+			this.directives = new ProgramDirectives(this, properties);
 		}
 
 		public String getName() {

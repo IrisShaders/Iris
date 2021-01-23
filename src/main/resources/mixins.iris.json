@@ -5,12 +5,15 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
 	"MixinDebugHud",
+	"MixinEntityRenderDispatcher",
 	"MixinGameRenderer",
 	"MixinGlStateManager",
 	"MixinImmediateVertexConsumerProvider",
 	"MixinParticleManager",
 	"MixinTranslationStorage",
 	"MixinWorldRenderer",
+	"fabulous.MixinDisableFabulousGraphics",
+	"fabulous.MixinOption",
 	"gbuffer.MixinWorldRenderer",
 	"renderlayer.MixinMultiPhaseParameters",
 	"renderlayer.MixinMultiPhaseParametersBuilder",
@@ -25,8 +28,5 @@
   ],
   "injectors": {
 	"defaultRequire": 1
-  },
-  "mixins": [
-	"MixinEntityRenderDispatcher"
-  ]
+  }
 }

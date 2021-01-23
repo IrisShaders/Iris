@@ -172,6 +172,10 @@ public class ShaderPipeline {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
+		builder.bindAttributeLocation(10, "mc_Entity");
+		builder.bindAttributeLocation(11, "mc_midTexCoord");
+		builder.bindAttributeLocation(12, "at_tangent");
+
 		return new Pass(builder.build(), framebuffer);
 	}
 
@@ -253,8 +257,6 @@ public class ShaderPipeline {
 
 		float blockId = -1.0F;
 
-		// TODO: We don't ever bind these attributes to an explicit location. AMD drivers are a bit flaky with automatic
-		// location assignment, so that might be something good to pursue in the future.
 		setupAttribute(pass, "mc_Entity", blockId, -1.0F, -1.0F, -1.0F);
 		setupAttribute(pass, "mc_midTexCoord", 0.0F, 0.0F, 0.0F, 0.0F);
 		setupAttribute(pass, "at_tangent", 1.0F, 0.0F, 0.0F, 1.0F);
