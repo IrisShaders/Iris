@@ -64,6 +64,7 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 	@Shadow @Final @Mutable private static RenderLayer DIRECT_ENTITY_GLINT;
 
 	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_MOVING_BLOCK;
+	@Shadow @Final @Mutable private static RenderLayer LIGHTNING;
 
 	@Override
 	public Optional<GbufferProgram> getProgram() {
@@ -96,7 +97,7 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 		ENTITY_GLINT = wrapGlint("entity", ENTITY_GLINT);
 		DIRECT_ENTITY_GLINT = wrapGlint("direct_entity_glint", DIRECT_ENTITY_GLINT);
 
-		// TODO: crumbling, text, text_see_through, lightning, end_portal
+		LIGHTNING = wrap("iris:lightning", LIGHTNING, GbufferProgram.ENTITIES);
 	}
 
 	/**
@@ -140,6 +141,8 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 		"getEntityDecal(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
 		"getEntityNoOutline(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
 		"getEntityShadow(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
+		"getText(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
+		"getTextSeeThrough(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
 	}, cancellable = true)
 	private static void iris$wrapEntityRenderLayers(Identifier texture, CallbackInfoReturnable<RenderLayer> cir) {
 		RenderLayer base = cir.getReturnValue();
@@ -213,5 +216,14 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 		RenderLayer base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.DAMAGED_BLOCKS));
+	}
+
+	@Inject(at = @At("RETURN"), method = {
+		"getEndPortal(I)Lnet/minecraft/client/render/RenderLayer;"
+	}, cancellable = true)
+	private static void iris$wrapEndPortalRenderLayer(int layer, CallbackInfoReturnable<RenderLayer> cir) {
+		RenderLayer base = cir.getReturnValue();
+
+		cir.setReturnValue(wrap(base, GbufferProgram.BLOCK_ENTITIES));
 	}
 }
