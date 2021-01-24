@@ -64,6 +64,7 @@ public class SodiumTerrainPipeline {
 			"attribute vec4 a_Color; // The color of the vertex\n" +
 			"attribute vec2 a_TexCoord; // The block texture coordinate of the vertex\n" +
 			"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
+			"attribute vec3 a_Normal; // The vertex normal\n" +
 			"uniform mat4 u_ModelViewMatrix;\n" +
 			"uniform mat4 u_NormalMatrix;\n" +
 			"uniform vec3 u_ModelScale;\n" +
@@ -87,9 +88,7 @@ public class SodiumTerrainPipeline {
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
 		transformations.replaceExact("gl_NormalMatrix", "mat3(u_NormalMatrix)");
-		// TODO: This is a hack and makes the lighting look weird...
-		// Sodium doesn't provide shaders with vertex normals like vanilla does.
-		transformations.replaceExact("gl_Normal", "vec3(0.0, 1.0, 0.0)");
+		transformations.replaceExact("gl_Normal", "a_Normal");
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
