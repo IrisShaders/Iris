@@ -58,6 +58,8 @@ public class ShaderPipeline {
 	@Nullable
 	private final Pass entities;
 	@Nullable
+	private final Pass blockEntities;
+	@Nullable
 	private final Pass glowingEntities;
 	@Nullable
 	private final Pass glint;
@@ -87,6 +89,7 @@ public class ShaderPipeline {
 		this.weather = texturedLit;
 		this.beaconBeam = pack.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
 		this.entities = pack.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
+		this.blockEntities = pack.getGbuffersBlock().map(this::createPass).orElse(terrain);
 		// TODO: Load glowing entities
 		this.glowingEntities = entities;
 		this.glint = pack.getGbuffersGlint().map(this::createPass).orElse(textured);
@@ -108,16 +111,16 @@ public class ShaderPipeline {
 
 		switch (program) {
 			case TERRAIN:
-				RenderSystem.enableAlphaTest();
-				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
+				//RenderSystem.enableAlphaTest();
+				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginTerrain();
 				return;
 			case TRANSLUCENT_TERRAIN:
 				beginTranslucentTerrain();
 				return;
 			case BASIC:
-				//RenderSystem.enableAlphaTest();
-				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
+				RenderSystem.enableAlphaTest();
+				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginBasic();
 				return;
 			case BEACON_BEAM:
@@ -125,16 +128,19 @@ public class ShaderPipeline {
 				return;
 			case ENTITIES:
 				// TODO: Disabling blend on entities is hardcoded for Sildur's
-				/*GlStateManager.disableBlend();
-				RenderSystem.enableAlphaTest();
-				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);*/
+				//GlStateManager.disableBlend();
+				//RenderSystem.enableAlphaTest();
+				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginPass(entities);
+				return;
+			case BLOCK_ENTITIES:
+				beginPass(blockEntities);
 				return;
 			case ENTITIES_GLOWING:
 				// TODO: Disabling blend on entities is hardcoded for Sildur's
-				/*GlStateManager.disableBlend();
-				RenderSystem.enableAlphaTest();
-				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);*/
+				//GlStateManager.disableBlend();
+				//RenderSystem.enableAlphaTest();
+				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginPass(glowingEntities);
 				return;
 			case EYES:

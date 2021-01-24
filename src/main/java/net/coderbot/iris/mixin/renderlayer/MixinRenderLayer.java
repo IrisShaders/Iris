@@ -63,6 +63,8 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 	@Shadow @Final @Mutable private static RenderLayer ENTITY_GLINT;
 	@Shadow @Final @Mutable private static RenderLayer DIRECT_ENTITY_GLINT;
 
+	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_MOVING_BLOCK;
+
 	@Override
 	public Optional<GbufferProgram> getProgram() {
 		// By default, don't use shaders to render content
@@ -81,7 +83,8 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 
 		// TODO: SOLID / CUTOUT_MIPPED / CUTOUT are used for falling blocks and blocks being pushed by pistons
 		// Should they still be rendered in terrain?
-		// TODO: TRANSLUCENT_MOVING_BLOCK, TRANSLUCENT_NO_CRUMBLING
+		TRANSLUCENT_MOVING_BLOCK = wrap("iris:translucent_moving_block", TRANSLUCENT_MOVING_BLOCK, GbufferProgram.BLOCK_ENTITIES);
+		// TODO: TRANSLUCENT_NO_CRUMBLING, doesn't appear to be used
 
 		LEASH = wrap("iris:leash", LEASH, GbufferProgram.BASIC);
 		// TODO: Should WATER_MASK be wrapped?
@@ -161,7 +164,6 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 	private static void iris$wrapEntityAlpha(Identifier texture, float alpha, CallbackInfoReturnable<RenderLayer> cir) {
 		RenderLayer base = cir.getReturnValue();
 
-		// TODO: What render layer to use for this?
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
