@@ -66,6 +66,10 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_MOVING_BLOCK;
 	@Shadow @Final @Mutable private static RenderLayer LIGHTNING;
 
+	@Shadow @Final @Mutable private static RenderLayer WATER_MASK;
+
+	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_NO_CRUMBLING;
+
 	@Override
 	public Optional<GbufferProgram> getProgram() {
 		// By default, don't use shaders to render content
@@ -84,11 +88,14 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 
 		// TODO: SOLID / CUTOUT_MIPPED / CUTOUT are used for falling blocks and blocks being pushed by pistons
 		// Should they still be rendered in terrain?
+
 		TRANSLUCENT_MOVING_BLOCK = wrap("iris:translucent_moving_block", TRANSLUCENT_MOVING_BLOCK, GbufferProgram.BLOCK_ENTITIES);
-		// TODO: TRANSLUCENT_NO_CRUMBLING, doesn't appear to be used
+		// This doesn't appear to be used, but it otherwise looks to be the same as TRANSLUCENT
+		TRANSLUCENT_NO_CRUMBLING = wrap("iris:translucent_no_crumbling", TRANSLUCENT_NO_CRUMBLING, GbufferProgram.TRANSLUCENT_TERRAIN);
 
 		LEASH = wrap("iris:leash", LEASH, GbufferProgram.BASIC);
-		// TODO: Should WATER_MASK be wrapped?
+		// TODO: Is this an appropriate program? Water masks don't have a texture...
+		WATER_MASK = wrap("iris:water_mask", WATER_MASK, GbufferProgram.ENTITIES);
 		ARMOR_GLINT = wrapGlint("armor", ARMOR_GLINT);
 		ARMOR_ENTITY_GLINT = wrapGlint("armor_entity", ARMOR_ENTITY_GLINT);
 		GLINT_TRANSLUCENT = wrapGlint("translucent", GLINT_TRANSLUCENT);

@@ -109,6 +109,7 @@ public class ShaderPipeline {
 
 	public void useProgram(GbufferProgram program) {
 		if (!isRenderingWorld) {
+			// don't mess with non-world rendering
 			return;
 		}
 
@@ -253,6 +254,7 @@ public class ShaderPipeline {
 
 	public void end() {
 		if (!isRenderingWorld) {
+			// don't mess with non-world rendering
 			return;
 		}
 
@@ -267,6 +269,8 @@ public class ShaderPipeline {
 			return;
 		}
 
+		// Default to gbuffers_basic for unrecognized render layers
+		// TODO: Potentially use gbuffers_textured or gbuffers_textured_lit appropriately?
 		this.basic.use();
 	}
 
@@ -407,32 +411,6 @@ public class ShaderPipeline {
 		// TODO: This is hardcoded for Sildur's, we shouldn't disable blend normally
 		GlStateManager.disableBlend();
 		basic.use();
-	}
-
-	public void beginImmediateDrawing(RenderLayer layer) {
-		if (!isRenderingWorld) {
-			// don't mess with non-world rendering
-			return;
-		}
-
-		if ((layer.isOutline() || layer == RenderLayer.getLines())) {
-			beginBasic();
-		} else {
-			if (texturedLit == null) {
-				return;
-			}
-
-			texturedLit.use();
-		}
-	}
-
-	public void endImmediateDrawing() {
-		if (!isRenderingWorld) {
-			// don't mess with non-world rendering
-			return;
-		}
-
-		end();
 	}
 
 	public void beginParticleSheet(ParticleTextureSheet sheet) {
