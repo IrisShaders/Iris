@@ -13,12 +13,9 @@ For the most part, I am creating Iris in order to have fun and get more experien
 
 ## Current State
 
-* Iris is able to load basic shaderpacks. It can load shaderpacks distributed as zip files. Furthermore, almost all shaderpacks except for Sildur's and some simple ones have rendering issues. As more of the OptiFine shader interface is implemented these issues will go away and Iris will be able to load existing shaderpacks without rendering issues.
-* Iris does not work properly with Sodium in the trunk branch. The sodium-compatibility branch is advancing and once it's finished it'll be merged onto the trunk branch and Sodium & Iris will be fully compatible. The sodium-compatibility branch currently requires a modified version of Sodium (https://github.com/IrisShaders/sodium-fabric) but in the future it'll be compatible with the main version of Sodium.
-=======
 * Sildur's Vibrant Shaders and XorDev's shaderpacks work for the most part under Iris, and have been the focus of my development. However, most other shaderpacks either have severe rendering issues, or do not work at all. My current focus is to get Sildur's Vibrant Shaders and XorDev's shaderpacks to the point where they are 100% working before shifting focus to other shaderpacks. As I fix issues in these shaderpacks, other shaderpacks will very likely begin to work properly as well.
 * I am working with JellySquid to make Sodium and Iris compatible. There is a proof-of-concept for Iris/Sodium compatibility available on a [custom fork of Sodium](https://github.com/IrisShaders/sodium-fabric) and [an experimental Iris branch](https://github.com/IrisShaders/Iris/tree/sodium-compatibility). While this proof of concept is being used as a reference for compatibility work, it will likely be replaced with more solid and stable code in the future.
-* Iris is alpha quality software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment. Once Iris is ready for more widespread use, precompiled builds will be published and distributed.
+* Iris is alpha software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment. Once Iris is ready for more widespread use, precompiled builds will be published and distributed.
 
 ![Sildur's shaders](https://i.imgur.com/o3JmkXV.png)
 ![Sildur's shaders with resourcepack](https://i.imgur.com/rPSlRQm.png)
