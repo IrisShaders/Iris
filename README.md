@@ -64,6 +64,8 @@ OptiFine is created as a "jar mod." Remember deleting META-INF about a decade ag
 
 On the other hand, Iris is a native Fabric mod that uses carefully crafted and precise code injections driven by the [Mixin](https://github.com/SpongePowered/Mixin) bytecode patching system. Mixin is the bases of the entire Fabric modding community, and is a much more compatible way of patching the game. This alone should help alleviate many of the compatibility issue that have plagued OptiFine.
 
+## Discord
+This project has a discord that can be found here! https://discord.gg/jQJnav2jPu
 
 ## Credits
 
