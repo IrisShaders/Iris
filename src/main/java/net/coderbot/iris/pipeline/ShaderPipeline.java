@@ -289,7 +289,8 @@ public class ShaderPipeline {
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
 
-		clearMainBuffers.bind();
+		// We only want the vanilla clear color to be applied to colortex0
+		baseline.bind();
 	}
 
 	public void copyCurrentDepthTexture() {
