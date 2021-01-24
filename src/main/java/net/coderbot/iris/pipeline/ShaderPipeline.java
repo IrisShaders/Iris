@@ -52,6 +52,8 @@ public class ShaderPipeline {
 	@Nullable
 	private final Pass translucent;
 	@Nullable
+	private final Pass damagedBlock;
+	@Nullable
 	private final Pass weather;
 	@Nullable
 	private final Pass beaconBeam;
@@ -85,6 +87,7 @@ public class ShaderPipeline {
 		this.clouds = pack.getGbuffersClouds().map(this::createPass).orElse(textured);
 		this.terrain = pack.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
 		this.translucent = pack.getGbuffersWater().map(this::createPass).orElse(terrain);
+		this.damagedBlock = pack.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
 		// TODO: Load weather shaders
 		this.weather = texturedLit;
 		this.beaconBeam = pack.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
@@ -117,6 +120,9 @@ public class ShaderPipeline {
 				return;
 			case TRANSLUCENT_TERRAIN:
 				beginTranslucentTerrain();
+				return;
+			case DAMAGED_BLOCKS:
+				beginPass(damagedBlock);
 				return;
 			case BASIC:
 				RenderSystem.enableAlphaTest();

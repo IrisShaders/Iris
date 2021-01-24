@@ -22,6 +22,7 @@ public class ShaderPack {
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTexturedLit;
 	private final ProgramSource gbuffersTerrain;
+	private final ProgramSource gbuffersDamagedBlock;
 	private final ProgramSource gbuffersWater;
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
@@ -47,6 +48,7 @@ public class ShaderPack {
 		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this, shaderProperties);
 		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this, shaderProperties);
 		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this, shaderProperties);
+		this.gbuffersDamagedBlock = readProgramSource(root, "gbuffers_damagedblock", this, shaderProperties);
 		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this, shaderProperties);
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this, shaderProperties);
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this, shaderProperties);
@@ -107,6 +109,10 @@ public class ShaderPack {
 
 	public Optional<ProgramSource> getGbuffersTerrain() {
 		return gbuffersTerrain.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersDamagedBlock() {
+		return gbuffersDamagedBlock.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersWater() {

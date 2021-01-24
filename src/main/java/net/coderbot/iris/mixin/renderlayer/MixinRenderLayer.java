@@ -206,5 +206,12 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES_GLOWING));
 	}
 
+	@Inject(at = @At("RETURN"), method = {
+		"getBlockBreaking(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"
+	}, cancellable = true)
+	private static void iris$wrapBlockBreakingRenderLayer(Identifier texture, CallbackInfoReturnable<RenderLayer> cir) {
+		RenderLayer base = cir.getReturnValue();
 
+		cir.setReturnValue(wrap(base, GbufferProgram.DAMAGED_BLOCKS));
+	}
 }
