@@ -6,16 +6,15 @@ public class ProgramDirectives {
 	private int[] drawBuffers;
 	private float viewportScale;
 
-	ProgramDirectives(ShaderPack.ProgramSource source) {
+	ProgramDirectives(ShaderPack.ProgramSource source, ShaderProperties properties) {
 		// First try to find it in the fragment source, then in the vertex source.
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
 		drawBuffers = findDrawbuffersDirective(source.getFragmentSource())
 			.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[]{0}));
 		viewportScale = 1.0f;
 
-		// TODO: Sildur's hardcoding
-		if (source.getName().contains("composite3")) {
-			viewportScale = 0.25f;
+		if (properties != null) {
+			viewportScale = properties.viewportScaleOverrides.getOrDefault(source.getName(), 1.0f);
 		}
 	}
 

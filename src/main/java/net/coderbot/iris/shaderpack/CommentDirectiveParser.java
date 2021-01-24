@@ -43,13 +43,21 @@ public class CommentDirectiveParser {
 	}
 
 	public static Optional<String> findDirective(String haystack, String needle) {
-		String prefix = "/* " + needle + ":";
-		String suffix = " */";
+		String prefix = needle + ":";
+		String suffix = "*/";
 
 		// Search for the last occurrence of the directive within the text, since those take precedence.
 		int indexOfPrefix = haystack.lastIndexOf(prefix);
 
 		if (indexOfPrefix == -1) {
+			return Optional.empty();
+		}
+
+		String before = haystack.substring(0, indexOfPrefix).trim();
+
+		if (!before.endsWith("/*")) {
+			// Reject a match if it doesn't actually start with a comment marker
+			// TODO: If a line has two directives, one valid, and the other invalid, then this might not work properly
 			return Optional.empty();
 		}
 
@@ -63,8 +71,8 @@ public class CommentDirectiveParser {
 			return Optional.empty();
 		}
 
-		// Remove the suffix and everything afterwards
-		haystack = haystack.substring(0, indexOfSuffix);
+		// Remove the suffix and everything afterwards, also trim any whitespace
+		haystack = haystack.substring(0, indexOfSuffix).trim();
 
 		return Optional.of(haystack);
 	}
@@ -104,8 +112,8 @@ public class CommentDirectiveParser {
 				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 
-			test("bad spacing", Optional.empty(), () -> {
-				String line = "Some normal text that doesn't contain a /*DRAWBUFFERS:321*/ directive of any sort";
+			test("bad spacing", Optional.of("321"), () -> {
+				String line = "/*DRAWBUFFERS:321*/ OptiFine will detect this directive, but ShadersMod will not...";
 
 				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
@@ -151,6 +159,13 @@ public class CommentDirectiveParser {
 				List<String> lines = Arrays.asList(linesArray);
 
 				return CommentDirectiveParser.findDirectiveInLines(lines, "Test directive");
+			});
+
+			// OptiFine finds this directive, but ShadersMod does not...
+			test("bad spacing from BSL composite6", Optional.of("12"), () -> {
+				String line = "    /*DRAWBUFFERS:12*/";
+
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
 		}
 	}

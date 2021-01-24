@@ -5,22 +5,27 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.rendertarget.NoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL20C;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.util.Identifier;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -50,8 +55,12 @@ public class ShaderPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
+	private final NoiseTexture noiseTexture;
+	private final int waterId;
+
 	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
 		this.renderTargets = renderTargets;
+		waterId = pack.getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
 
 		this.basic = pack.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = pack.getGbuffersTextured().map(this::createPass).orElse(basic);
@@ -69,6 +78,8 @@ public class ShaderPipeline {
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+
+		this.noiseTexture = new NoiseTexture(128, 128);
 	}
 
 	private Pass createPass(ShaderPack.ProgramSource source) {
@@ -88,10 +99,14 @@ public class ShaderPipeline {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
 		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
+		builder.bindAttributeLocation(10, "mc_Entity");
+		builder.bindAttributeLocation(11, "mc_midTexCoord");
+		builder.bindAttributeLocation(12, "at_tangent");
+
 		return new Pass(builder.build(), framebuffer);
 	}
 	
-	private static final class Pass {
+	private final class Pass {
 		private final Program program;
 		private final GlFramebuffer framebuffer;
 
@@ -101,6 +116,11 @@ public class ShaderPipeline {
 		}
 		
 		public void use() {
+			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
+			// a given program and bind the required textures instead.
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE15);
+			GlStateManager.bindTexture(noiseTexture.getTextureId());
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 			framebuffer.bind();
 			program.use();
 		}
@@ -120,6 +140,7 @@ public class ShaderPipeline {
 		clearAltBuffers.destroy();
 		clearMainBuffers.destroy();
 		baseline.destroy();
+		noiseTexture.destroy();
 	}
 
 	private static void destroyPasses(Pass... passes) {
@@ -153,12 +174,18 @@ public class ShaderPipeline {
 	private static void setupAttributes(Pass pass) {
 		// TODO: Properly add these attributes into the vertex format
 
-		int mcEntity = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), "mc_Entity");
+		float blockId = -1.0F;
 
-		if (mcEntity != -1) {
-			float blockId = -1.0F;
+		setupAttribute(pass, "mc_Entity", blockId, -1.0F, -1.0F, -1.0F);
+		setupAttribute(pass, "mc_midTexCoord", 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(pass, "at_tangent", 1.0F, 0.0F, 0.0F, 1.0F);
+	}
 
-			GL20.glVertexAttrib4f(mcEntity, blockId, -1.0F, -1.0F, -1.0F);
+	private static void setupAttribute(Pass pass, String name, float v0, float v1, float v2, float v3) {
+		int location = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), name);
+
+		if (location != -1) {
+			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
 		}
 	}
 
@@ -176,6 +203,12 @@ public class ShaderPipeline {
 		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
 
 		clearMainBuffers.bind();
+	}
+
+	public void copyCurrentDepthTexture() {
+		baseline.bind();
+		GlStateManager.bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 	}
 
 	public void beginClouds() {
@@ -198,6 +231,10 @@ public class ShaderPipeline {
 
 			translucent.use();
 			setupAttributes(translucent);
+
+			// TODO: This is just making it so that all translucent content renders like water. We need to properly support
+			// mc_Entity!
+			setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
 		} else if (terrainLayer == RenderLayer.getSolid() || terrainLayer == RenderLayer.getCutout() || terrainLayer == RenderLayer.getCutoutMipped()) {
 			if (terrain == null) {
 				return;

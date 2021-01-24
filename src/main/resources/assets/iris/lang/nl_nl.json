@@ -1,0 +1,5 @@
+{
+  "iris.shaders.reloaded": "Shaders opgeladen!",
+  "iris.keybind.reload": "Herladen Shaders",
+  "iris.shaders.reloaded.failure": "Mislukt om Shaders te herladen! Reden: %s"
+}

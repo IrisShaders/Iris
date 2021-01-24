@@ -13,8 +13,9 @@ For the most part, I am creating Iris in order to have fun and get more experien
 
 ## Current State
 
-* Iris is able to load basic shaderpacks. It cannot currently load shaderpacks distributed as zip files, so you need to extract them first - this will be fixed. Furthermore, many shaderpacks (such as Sildur's) have significant rendering issues currently. As I implement more of the OptiFine shader interface, these issues will go away and Iris will be able to load existing shaderpacks without causing significant rendering issues.
-* Iris does not work properly with Sodium. Sodium also renders the terrain using its own shaders, so for Iris and Sodium to work together I will need to just implement some glue code between Sodium and Iris in order to make Sodium render terrain with the shaders that Iris loads. Since Sodium and Iris are both licensed under the LGPLv3 license, and because I am on good terms with JellySquid, compatibility between Sodium and Iris is entirely possible. It's just not the highest priority at the moment, because I would like to focus on getting basic shaders working properly first.
+* Sildur's Vibrant Shaders and XorDev's shaderpacks work for the most part under Iris, and have been the focus of my development. However, most other shaderpacks either have severe rendering issues, or do not work at all. My current focus is to get Sildur's Vibrant Shaders and XorDev's shaderpacks to the point where they are 100% working before shifting focus to other shaderpacks. As I fix issues in these shaderpacks, other shaderpacks will very likely begin to work properly as well.
+* I am working with JellySquid to make Sodium and Iris compatible. There is a proof-of-concept for Iris/Sodium compatibility available on a [custom fork of Sodium](https://github.com/IrisShaders/sodium-fabric) and [an experimental Iris branch](https://github.com/IrisShaders/Iris/tree/sodium-compatibility). While this proof of concept is being used as a reference for compatibility work, it will likely be replaced with more solid and stable code in the future.
+* Iris is alpha quality software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment. Once Iris is ready for more widespread use, precompiled builds will be published and distributed.
 
 
 ## Goals
@@ -38,13 +39,15 @@ At the moment, the options for contributing are somewhat limited, and I don't ha
 
 ## Rationale
 
-### Why not Canvas?
+### What about Canvas?
 
 [Canvas](https://github.com/grondag/canvas) is an advanced shader-based renderer for Minecraft also running on Fabric, by Grondag. This raises a common question: why not contribute to Canvas instead? I have already investigated this possibility, however the goals of Canvas and Iris are in fact quite different.
 
 Canvas has the goal of creating a new shader pipeline focused on empowering mod authors with advanced graphics features, and is very promising. But this new shader pipeline is intentionally designed to not work with existing shaderpacks. Canvas wants to shed all of the backwards compatibility issues of loading existing shaderpacks, in order to achieve better performance and enable additional features for modders. For more information, see the "Why" section of the [Canvas README](https://github.com/grondag/canvas/blob/one/README.md#Why).
 
 However, Iris has a notably different goal: loading existing shader packs out of the box. While it's theoretically possible to get this working on Canvas, I personally prefer to start off making a standalone shaders mod instead of spending time trying to understand another complex rendering system in addition to Minecraft and ShadersMod/OptiFine.
+
+Canvas is progressing very rapidly, and has experimental support for things like sky shadows. [Lumi Lights](https://spiralhalo.github.io/) is a shaderpack for Canvas that offers features like bloom, godrays, reflective water, and more, and it's worth a shot if you're interested in a more stable experience than what Iris can currently offer.
 
 I think that Canvas is a great project, and some day it could very well be the dominant shader mod for Fabric. Iris is made for those who still want to play with existing OptiFine shaderpacks, because there will always be legacy shaderpack content available, even when Canvas shaderpacks become more common.
 

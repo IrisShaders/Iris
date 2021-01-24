@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
@@ -163,7 +164,11 @@ public class Iris implements ClientModInitializer {
 				.filter(path -> path.endsWith("shaders"))
 				.findFirst();
 		} catch (IOException e) {
-			logger.error("Error while finding shaderpack for zip directory {}", shaderpackPath);
+			if (e instanceof ZipException) {
+				logger.error("The shaderpack appears to be corrupted, please try downloading it again {}", shaderpackPath);
+			} else {
+				logger.error("Error while finding shaderpack for zip directory {}", shaderpackPath);
+			}
 			logger.catching(Level.ERROR, e);
 		}
 		return Optional.empty();
