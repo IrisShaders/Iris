@@ -12,8 +12,11 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
+import net.coderbot.iris.shaderpack.directives.PackDirectives;
+import net.coderbot.iris.shaderpack.directives.ProgramDirectives;
+import net.coderbot.iris.shaderpack.parse.IdMap;
+import net.coderbot.iris.shaderpack.parse.ShaderProperties;
 import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
@@ -33,9 +36,10 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 	private final ShaderPackConfig config;
+	private final ShaderProperties shaderProperties;
 
 	public ShaderPack(Path root) throws IOException {
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
 
@@ -43,26 +47,26 @@ public class ShaderPack {
 		this.config = new ShaderPackConfig();
 		this.config.load();
 
-		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this, shaderProperties, this.config);
-		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this, shaderProperties, this.config);
-		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this, shaderProperties, this.config);
-		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this, shaderProperties, this.config);
-		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this, shaderProperties, this.config);
-		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this, shaderProperties, this.config);
-		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this, shaderProperties, this.config);
-		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this, shaderProperties, this.config);
-		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this, shaderProperties, this.config);
-		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this, shaderProperties, this.config);
+		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
+		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
+		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this);
+		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
+		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this);
+		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
+		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
+		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
+		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this);
+		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this);
 
 		this.composite = new ProgramSource[16];
 
 		for (int i = 0; i < this.composite.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
 
-			this.composite[i] = readProgramSource(root, "composite" + suffix, this, shaderProperties, this.config);
+			this.composite[i] = readProgramSource(root, "composite" + suffix, this);
 		}
 
-		this.compositeFinal = readProgramSource(root, "final", this, shaderProperties, this.config);
+		this.compositeFinal = readProgramSource(root, "final", this);
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
@@ -144,7 +148,15 @@ public class ShaderPack {
 		return packDirectives;
 	}
 
-	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack, ShaderProperties properties, ShaderPackConfig config) throws IOException {
+	public ShaderProperties getShaderProperties() {
+		return shaderProperties;
+	}
+
+	public ShaderPackConfig getConfig() {
+		return config;
+	}
+
+	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
 		String vertexSource = null;
 		String fragmentSource = null;
 
@@ -153,7 +165,7 @@ public class ShaderPack {
 			vertexSource = readFile(vertexPath);
 
 			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource, config);
+				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource, pack.getConfig());
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
@@ -165,14 +177,14 @@ public class ShaderPack {
 			fragmentSource = readFile(fragmentPath);
 
 			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource, config);
+				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource, pack.getConfig());
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
 			throw e;
 		}
 
-		return new ProgramSource(program, vertexSource, fragmentSource, pack, properties);
+		return new ProgramSource(program, vertexSource, fragmentSource, pack);
 	}
 
 	private static String readFile(Path path) throws IOException {
@@ -225,12 +237,12 @@ public class ShaderPack {
 		private final ProgramDirectives directives;
 		private final ShaderPack parent;
 
-		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent, ShaderProperties properties) {
+		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
 			this.name = name;
 			this.vertexSource = vertexSource;
 			this.fragmentSource = fragmentSource;
 			this.parent = parent;
-			this.directives = new ProgramDirectives(this, properties);
+			this.directives = new ProgramDirectives(this, parent.getShaderProperties());
 		}
 
 		public String getName() {

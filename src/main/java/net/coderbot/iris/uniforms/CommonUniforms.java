@@ -6,7 +6,7 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import java.util.Objects;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.parse.IdMap;
 import net.coderbot.iris.texunits.TextureUnit;
 
 import net.minecraft.client.MinecraftClient;

@@ -1,12 +1,17 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.directives;
 
 import java.util.Optional;
+
+import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.parse.CommentDirectiveParser;
+import net.coderbot.iris.shaderpack.parse.ShaderProperties;
 
 public class ProgramDirectives {
 	private int[] drawBuffers;
 	private float viewportScale;
 
-	ProgramDirectives(ShaderPack.ProgramSource source, ShaderProperties properties) {
+
+	public ProgramDirectives(ShaderPack.ProgramSource source, ShaderProperties properties) {
 		// First try to find it in the fragment source, then in the vertex source.
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
 		drawBuffers = findDrawbuffersDirective(source.getFragmentSource())

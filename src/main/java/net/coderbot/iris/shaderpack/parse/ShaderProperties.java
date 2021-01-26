@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.parse;
 
 import java.util.Properties;
 
@@ -7,7 +7,7 @@ import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.coderbot.iris.Iris;
 
 public class ShaderProperties {
-	Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
+	public Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 
 	private ShaderProperties() {
 		// empty

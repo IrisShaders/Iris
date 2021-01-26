@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.parse;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,7 +43,7 @@ public class IdMap {
 	 */
 	private Map<Identifier, RenderLayer> blockRenderLayerMap = Maps.newHashMap();
 
-	IdMap(Path shaderPath) {
+	public IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
 			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
