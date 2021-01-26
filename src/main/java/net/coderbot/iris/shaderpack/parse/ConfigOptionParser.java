@@ -37,7 +37,7 @@ public class ConfigOptionParser {
 
 					case BOOLEAN:
 						Option<Boolean> booleanOption = createBooleanOption(trimmedLine, config);
-						System.out.println(booleanOption);
+
 						//since we know it is a boolean option, we can simply check if the value of the boolean is false and then comment out the #defined line
 						//we can do this by simply adding a "//" to the beginning of the line
 						if (!booleanOption.getValue()) {
@@ -48,7 +48,7 @@ public class ConfigOptionParser {
 
 					case INTEGER:
 						Option<Integer> integerOption = createIntegerOption(trimmedLine, config);
-						System.out.println(integerOption);
+
 						if (integerOption != null) {
 							//replace the default value with the new one
 							return line.replaceFirst(values.defaultValue, integerOption.getValue().toString());
@@ -58,7 +58,6 @@ public class ConfigOptionParser {
 
 					case FLOAT:
 						Option<Float> option = createFloatOption(trimmedLine, config);
-						System.out.println(option);
 						if (option != null) {
 							//replace the default value with the new one
 							return line.replaceFirst(values.defaultValue, option.getValue().toString());

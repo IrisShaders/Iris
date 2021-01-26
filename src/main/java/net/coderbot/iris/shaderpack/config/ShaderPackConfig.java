@@ -68,11 +68,9 @@ public class ShaderPackConfig {
 			return;
 		}
 		shaderProperties.load(Files.newInputStream(shaderPackConfigPath));
-		System.out.println(shaderProperties);
 	}
 
 	public void save() throws IOException {
-		System.out.println(shaderProperties);
 		shaderProperties.store(Files.newOutputStream(shaderPackConfigPath), comment);
 	}
 
