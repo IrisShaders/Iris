@@ -22,8 +22,7 @@ public class ShaderPackConfig {
 	private final Map<String, Option<Float>> floatOptions = new HashMap<>();
 	private final Map<String, Option<Integer>> integerOptions = new HashMap<>();
 
-	public ShaderPackConfig() {
-		String name = Iris.getIrisConfig().getShaderPackName();
+	public ShaderPackConfig(String name) {
 		//optifine uses txt files, so we should do the same
 		shaderPackConfigPath = SHADERPACK_DIR.resolve(name + ".txt");
 		shaderProperties = new Properties();
@@ -34,7 +33,7 @@ public class ShaderPackConfig {
 		return shaderProperties;
 	}
 
-	//this 3 methods below should be used by the gui to get the available options and parse them into gui widgets
+	//this 3 methods below should be used by the gui to get the available options and then use them
 	public Map<String, Option<Boolean>> getBooleanOptions() {
 		return booleanOptions;
 	}

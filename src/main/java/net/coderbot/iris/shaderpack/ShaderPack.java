@@ -44,7 +44,7 @@ public class ShaderPack {
 			.orElseGet(ShaderProperties::empty);
 
 		this.packDirectives = new PackDirectives();
-		this.config = new ShaderPackConfig();
+		this.config = new ShaderPackConfig(Iris.getIrisConfig().getShaderPackName());
 		this.config.load();
 
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
