@@ -1,0 +1,5 @@
+{
+  "iris.shaders.reloaded": "Shader neu geladen!",
+  "iris.keybind.reload": "Shader neu laden",
+  "iris.shaders.reloaded.failure": "Shader neu laden fehlgeschlagen! Grund: %s"
+}

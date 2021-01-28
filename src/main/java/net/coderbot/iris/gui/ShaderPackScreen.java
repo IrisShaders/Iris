@@ -56,8 +56,8 @@ public class ShaderPackScreen extends Screen {
         if(inWorld) this.shaderProperties.method_31322(false);
         this.reloadShaderConfig();
 
-        this.shaderProperties.setScrollAmount(this.shaderProperties.getMaxScroll() * scrollAmount);
         this.shaderProperties.goTo(page);
+        this.shaderProperties.setScrollAmount(this.shaderProperties.getMaxScroll() * scrollAmount);
 
         this.children.add(shaderProperties);
 

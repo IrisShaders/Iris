@@ -13,6 +13,9 @@
     "MixinParticleManager",
     "MixinTranslationStorage",
     "MixinWorldRenderer",
+    "fabulous.MixinDisableFabulousGraphics",
+    "fabulous.MixinOption",
+    "gbuffer.MixinWorldRenderer",
     "texunits.MixinBufferVertexConsumer",
     "texunits.MixinGlStateManager",
     "texunits.MixinLightmapTextureManager",
@@ -21,8 +24,5 @@
   ],
   "injectors": {
 	"defaultRequire": 1
-  },
-  "mixins": [
-	"gbuffer.MixinWorldRenderer"
-  ]
+  }
 }

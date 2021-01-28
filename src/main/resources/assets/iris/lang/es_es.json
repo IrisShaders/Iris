@@ -1,0 +1,5 @@
+{
+  "iris.shaders.reloaded": "Shaders recargados!",
+  "iris.keybind.reload": "Recargar Shaders",
+  "iris.shaders.reloaded.failure": "¡Falló en la recarga de los shaders! Razón: %s"
+}

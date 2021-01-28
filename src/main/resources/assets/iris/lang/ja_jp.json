@@ -1,0 +1,5 @@
+{
+  "iris.shaders.reloaded": "シェーダー・リローデッド",
+  "iris.keybind.reload": "リロードシェーダー",
+  "iris.shaders.reloaded.failure": "シェーダーのリロードに失敗しました！理由： %s"
+}

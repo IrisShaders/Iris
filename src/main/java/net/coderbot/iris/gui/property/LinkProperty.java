@@ -34,11 +34,12 @@ public class LinkProperty extends Property {
         int color = 0x8AE0E0E0;
         int bx = x + 4;
         int bw = width - 12;
-        if(isHovered) {
+        /*if(isHovered) {
             GuiUtil.fill(bx, y, bw, height, color);
         } else {
             GuiUtil.borderedRect(bx, y, -100, bw, height, color);
-        }
+        }*/
+        GuiUtil.drawButton(bx, y, bw, height, isHovered, true);
         MinecraftClient mc = MinecraftClient.getInstance();
         int tx;
         int w = mc.textRenderer.getWidth(this.label);

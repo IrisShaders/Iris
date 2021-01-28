@@ -90,11 +90,13 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         int bx = (int)(x + (width * 0.6)) - 7;
         int bw = (int)(width * 0.4);
 
-        if(this.isButtonHovered(mouseX, isHovered)) {
+        /*if(this.isButtonHovered(mouseX, isHovered)) {
             GuiUtil.fill(bx, y, bw, height, color);
         } else {
             GuiUtil.borderedRect(bx, y, -100, bw, height, color);
-        }
+        }*/
+
+        GuiUtil.drawButton(bx, y, bw, height, this.isButtonHovered(mouseX, isHovered), false);
 
         Text vt = this.getValueText();
         this.drawText(mc, vt, matrices, (int)(x + (width * 0.8)) - (mc.textRenderer.getWidth(vt) / 2) - 7, y + (height / 2), 0xFFFFFF, false, true, true);
@@ -116,6 +118,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         } else {
             GuiUtil.borderedRect(sx, y + 4, -100, 6, height - 8, color);
         }
+
 
         Text vt = this.getValueText();
         this.drawText(mc, vt, matrices, (int)(x + (width * 0.8)) - (mc.textRenderer.getWidth(vt) / 2) - 7, y + (height / 2), 0xFFFFFF, false, true, true);
