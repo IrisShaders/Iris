@@ -70,7 +70,7 @@ public class ShaderPackScreen extends Screen {
         this.cancelButton = this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20, ScreenTexts.CANCEL, button -> this.onClose()));
         this.openFolderButton = this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20, new TranslatableText("options.iris.openShaderPackFolder"), button -> Util.getOperatingSystem().open(Iris.getShaderPackDir().toFile())));
         this.refreshButton = this.addButton(new ButtonWidget(topCenter + 78, this.height - 51, 152, 20, new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPacks.refresh()));
-        this.irisConfigButton = this.addButton(new IrisConfigScreenButtonWidget(this.width - 26, 6, button -> this.client.openScreen(new IrisConfigScreen(this))));
+        this.irisConfigButton = this.addButton(new IrisConfigScreenButtonWidget(this.width - 26, 6, button -> this.openScreen(new IrisConfigScreen(this))));
 
         if(inWorld) {
             this.wasHudHidden = this.client.options.hudHidden;
@@ -105,10 +105,14 @@ public class ShaderPackScreen extends Screen {
     }
 
     public void onClose() {
-        this.client.openScreen(this.parent);
+        this.openScreen(this.parent);
+    }
+
+    public void openScreen(Screen screen) {
         if(this.client.world != null) {
             this.client.options.hudHidden = this.wasHudHidden;
         }
+        this.client.openScreen(screen);
     }
 
     @Override
