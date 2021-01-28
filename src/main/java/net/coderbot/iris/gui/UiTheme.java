@@ -1,5 +1,5 @@
 package net.coderbot.iris.gui;
 
-public enum UITheme {
+public enum UiTheme {
     IRIS, VANILLA, SODIUM
 }

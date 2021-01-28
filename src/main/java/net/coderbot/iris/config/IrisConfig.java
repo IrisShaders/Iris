@@ -8,12 +8,11 @@ import java.util.*;
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.ShaderPackScreen;
-import net.coderbot.iris.gui.UITheme;
+import net.coderbot.iris.gui.UiTheme;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
 import net.coderbot.iris.gui.property.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 
@@ -97,13 +96,13 @@ public class IrisConfig {
 	 *
 	 * @return the selected UI Theme, or the default theme if null
 	 */
-	public UITheme getUITheme() {
+	public UiTheme getUITheme() {
 		if(uiTheme == null) this.uiTheme = "IRIS";
-		UITheme theme;
+		UiTheme theme;
 		try {
-			theme = UITheme.valueOf(uiTheme);
+			theme = UiTheme.valueOf(uiTheme);
 		} catch (Exception ignored) {
-			theme = UITheme.IRIS;
+			theme = UiTheme.IRIS;
 		}
 		this.uiTheme = theme.name();
 		return theme;

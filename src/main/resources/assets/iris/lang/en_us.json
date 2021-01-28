@@ -4,15 +4,15 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s",
 
+  "option.iris.back": "Back",
+  "option.iris.profile": "Profile",
+
   "options.iris.apply": "Apply",
   "options.iris.refresh": "Refresh",
   "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
   "options.iris.refreshShaderPacks": "Refresh Shader Packs",
   "options.iris.shaderPackSelection": "Shader Packs...",
   "options.iris.shaderPackSelection.title": "Shader Packs",
-
-  "option.iris.back": "Back",
-  "option.iris.profile": "Profile",
 
   "pack.iris.select.title": "Select",
   "pack.iris.configure.title": "Configure",
@@ -25,5 +25,7 @@
   "property.iris.boolean.true": "True",
   "property.iris.boolean.false": "False",
   "property.iris.title.configScreen": "Configure Iris",
-  "property.iris.uiTheme": "UI Theme"
+  "property.iris.uiTheme": "UI Theme",
+
+  "tooltip.iris.config": "Configure Iris"
 }

@@ -9,7 +9,7 @@ import net.minecraft.text.Text;
 public class Property {
     protected final Text label;
 
-    public static final Property EMPTY = new Property(new LiteralText(""));
+    public static final Property EMPTY = new Property(LiteralText.EMPTY);
 
     public Property(Text label) {
         this.label = label;

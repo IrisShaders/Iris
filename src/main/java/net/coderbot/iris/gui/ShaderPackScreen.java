@@ -3,10 +3,12 @@ package net.coderbot.iris.gui;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.element.ShaderPackListWidget;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
@@ -25,6 +27,8 @@ public class ShaderPackScreen extends Screen {
 
     private ButtonWidget openFolderButton;
     private ButtonWidget refreshButton;
+
+    private ButtonWidget irisConfigButton;
 
     private boolean wasHudHidden;
 
@@ -66,6 +70,7 @@ public class ShaderPackScreen extends Screen {
         this.cancelButton = this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20, ScreenTexts.CANCEL, button -> this.onClose()));
         this.openFolderButton = this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20, new TranslatableText("options.iris.openShaderPackFolder"), button -> Util.getOperatingSystem().open(Iris.getShaderPackDir().toFile())));
         this.refreshButton = this.addButton(new ButtonWidget(topCenter + 78, this.height - 51, 152, 20, new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPacks.refresh()));
+        this.irisConfigButton = this.addButton(new IrisConfigScreenButtonWidget(this.width - 26, 6, button -> this.client.openScreen(new IrisConfigScreen(this))));
 
         if(inWorld) {
             this.wasHudHidden = this.client.options.hudHidden;
@@ -86,6 +91,10 @@ public class ShaderPackScreen extends Screen {
         drawCenteredText(matrices, this.textRenderer, new TranslatableText("pack.iris.select.title").formatted(Formatting.GRAY, Formatting.ITALIC), (int)(this.width * 0.25), 21, 16777215);
         drawCenteredText(matrices, this.textRenderer, new TranslatableText("pack.iris.configure.title").formatted(Formatting.GRAY, Formatting.ITALIC), (int)(this.width * 0.75), 21, 16777215);
         super.render(matrices, mouseX, mouseY, delta);
+
+        if(irisConfigButton.isMouseOver(mouseX, mouseY)) {
+            this.renderTooltip(matrices, new TranslatableText("tooltip.iris.config"), mouseX, mouseY);
+        }
     }
 
     @Override
@@ -125,5 +134,17 @@ public class ShaderPackScreen extends Screen {
 
     private void reloadShaderConfig() {
         this.shaderProperties.setDocument(PropertyDocumentWidget.createDocument(this.client.textRenderer, this.width / 2, Iris.getIrisConfig().getShaderPackName(), Iris.getCurrentPack(), this.shaderProperties), "screen");
+    }
+
+    public static class IrisConfigScreenButtonWidget extends ButtonWidget {
+        public IrisConfigScreenButtonWidget(int x, int y, PressAction press) {
+            super(x, y, 20, 20, LiteralText.EMPTY, press);
+        }
+
+        @Override
+        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+            MinecraftClient.getInstance().getTextureManager().bindTexture(GuiUtil.WIDGETS_TEXTURE);
+            drawTexture(matrices, x, y, isMouseOver(mouseX, mouseY) ? 20 : 0, 0, 20, 20);
+        }
     }
 }

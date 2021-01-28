@@ -1,9 +1,7 @@
 package net.coderbot.iris.gui;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.config.IrisConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
@@ -13,13 +11,15 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 public final class GuiUtil {
+    public static final Identifier WIDGETS_TEXTURE = new Identifier(Iris.MODID, "textures/gui/widgets.png");
+
     public static void drawDirtTexture(MinecraftClient client, int x, int y, int z, int width, int height) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
@@ -111,12 +111,12 @@ public final class GuiUtil {
     }
 
     public static void drawButton(int x, int y, int width, int height, boolean selected, boolean isLink) {
-        UITheme theme = Iris.getIrisConfig().getUITheme();
-        if(theme == UITheme.SODIUM) {
+        UiTheme theme = Iris.getIrisConfig().getUITheme();
+        if(theme == UiTheme.SODIUM) {
             y += 1;
             height -= 2;
         }
-        if(theme == UITheme.VANILLA) {
+        if(theme == UiTheme.VANILLA) {
             MinecraftClient.getInstance().getTextureManager().bindTexture(AbstractButtonWidget.WIDGETS_LOCATION);
             int v = 46 + (selected ? 40 : 20);
             int yp = y + (int)Math.ceil((float)Math.max(0, height - 20) / 2);
@@ -124,9 +124,9 @@ public final class GuiUtil {
             texture(x + width / 2, yp, -100, width / 2, 20, 200 - (width / 2), v);
         } else {
             if(selected) {
-                fill(x, y, width, height, theme == UITheme.IRIS ? 0x8AE0E0E0 : 0xE0000000);
-                if(theme == UITheme.SODIUM && isLink) GuiUtil.fill(x, y + height, width, 1, 0xFF94E4D3);
-            } else if(theme == UITheme.IRIS) {
+                fill(x, y, width, height, theme == UiTheme.IRIS ? 0x8AE0E0E0 : 0xE0000000);
+                if(theme == UiTheme.SODIUM && isLink) GuiUtil.fill(x, y + height, width, 1, 0xFF94E4D3);
+            } else if(theme == UiTheme.IRIS) {
                 borderedRect(x, y, -100, width, height, 0x8AE0E0E0);
             } else {
                 fill(x, y, width, height, 0x90000000);
