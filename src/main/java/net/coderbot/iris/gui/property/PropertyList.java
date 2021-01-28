@@ -9,10 +9,6 @@ public class PropertyList extends ArrayList<Property> {
         this.addAll(ImmutableList.copyOf(properties));
     }
 
-    public void read() {
-        // TODO
-    }
-
     public void addAllPairs(List<? extends Property> ps) {
         for(int i = 0; i < ps.size(); i += 2) {
             Property left = ps.get(i);

@@ -49,7 +49,6 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
         }
         this.currentPage = page;
         this.setScrollAmount(0.0);
-        this.getPage(currentPage).read();
     }
 
     public Set<String> getPages() {

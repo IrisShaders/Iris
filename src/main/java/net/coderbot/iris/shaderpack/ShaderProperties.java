@@ -57,7 +57,7 @@ public class ShaderProperties {
 
 		private void set(Properties properties) {
 			for(String s : properties.stringPropertyNames()) {
-				super.setProperty(s, properties.getProperty(s));
+				super.put(s, properties.getProperty(s));
 			}
 		}
 

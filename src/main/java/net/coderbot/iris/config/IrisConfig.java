@@ -111,6 +111,8 @@ public class IrisConfig {
 
 	/**
 	 * Sets config values as read from a Properties object.
+	 *
+	 * @param properties The Properties object to read and set the config from
 	 */
 	public void read(Properties properties) {
 		shaderPackName = properties.getProperty("shaderPack", this.shaderPackName);
@@ -123,6 +125,8 @@ public class IrisConfig {
 
 	/**
 	 * Puts config values to a Properties object.
+	 *
+	 * @return the Properties object written to
 	 */
 	public Properties write() {
 		Properties properties = new Properties();
@@ -160,7 +164,7 @@ public class IrisConfig {
 	}
 
 	/**
-	 * Creates a set of pages for the mod menu config screen
+	 * Creates a set of pages for the config screen
 	 *
 	 * @return pages for the config screen as a String to PropertyList map
 	 */
