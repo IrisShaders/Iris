@@ -10,7 +10,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 
-public class IrisConfigScreen extends Screen {
+public class IrisConfigScreen extends Screen implements TransparentBackgroundScreen {
     protected final IrisConfig config = Iris.getIrisConfig();
     protected PropertyDocumentWidget configProperties;
 
@@ -20,7 +20,7 @@ public class IrisConfigScreen extends Screen {
     private ButtonWidget refreshButton;
     private ButtonWidget applyButton;
 
-    private boolean wasHudHidden;
+    private boolean initialized = false;
 
     public IrisConfigScreen(Screen parent) {
         super(new LiteralText(""));
@@ -54,11 +54,6 @@ public class IrisConfigScreen extends Screen {
         this.applyButton = this.addButton(new ButtonWidget(bottomCenter, this.height - 27, 100, 20, new TranslatableText("options.iris.apply"), button -> this.saveConfig()));
         this.refreshButton = this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20, new TranslatableText("options.iris.refresh"), button -> this.loadConfig()));
 
-        if(inWorld) {
-            this.wasHudHidden = this.client.options.hudHidden;
-            this.client.options.hudHidden = true;
-        }
-
         loadConfig();
     }
 
@@ -79,12 +74,11 @@ public class IrisConfigScreen extends Screen {
         this.configProperties.tick();
     }
 
+    @Override
     public void onClose() {
         this.client.openScreen(this.parent);
-        if(this.client.world != null) {
-            this.client.options.hudHidden = this.wasHudHidden;
-        }
     }
+
 
     private void loadConfig() {
         this.configProperties.loadProperties();
@@ -92,5 +86,10 @@ public class IrisConfigScreen extends Screen {
 
     private void saveConfig() {
         this.configProperties.saveProperties();
+    }
+
+    @Override
+    public boolean renderHud() {
+        return false;
     }
 }

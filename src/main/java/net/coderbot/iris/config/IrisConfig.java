@@ -173,7 +173,10 @@ public class IrisConfig {
 		page.add(new TitleProperty(new TranslatableText("property.iris.title.configScreen").formatted(Formatting.BOLD),
 				0x82ffffff, 0x82ff0000, 0x82ff8800, 0x82ffd800, 0x8288ff00, 0x8200d8ff, 0x823048ff, 0x829900ff, 0x82ffffff
 		));
-		page.add(new ScreenLinkProperty(widget, ShaderPackScreen::new, parent, new TranslatableText("options.iris.shaderPackSelection.title"), LinkProperty.Align.CENTER_LEFT));
+		page.add(new ScreenLinkProperty(widget, p -> {
+			parent.onClose();
+			return new ShaderPackScreen(p);
+		}, parent, new TranslatableText("options.iris.shaderPackSelection.title"), LinkProperty.Align.CENTER_LEFT));
 		page.addAllPairs(ImmutableList.of(
 				new StringOptionProperty(new String[] {"IRIS", "VANILLA", "SODIUM"}, 0, widget, "uiTheme", new TranslatableText("property.iris.uiTheme"), false)
 		));
