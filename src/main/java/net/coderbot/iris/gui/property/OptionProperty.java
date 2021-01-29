@@ -7,7 +7,6 @@ import net.coderbot.iris.gui.element.PropertyDocumentWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 import java.util.List;
 
@@ -80,21 +79,13 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         updateCaches(width, x);
         MinecraftClient mc = MinecraftClient.getInstance();
         this.drawText(mc, label, matrices, x + 10, y + (height / 2), 0xFFFFFF, false, true, true);
-        if(isSlider) this.renderSlider(mc, matrices, x, y, width, height, mouseX, mouseY, isHovered);
+        if(isSlider) this.renderSlider(mc, matrices, x, y, width, height, mouseX, isHovered);
         else this.renderButton(mc, matrices, x, y, width, height, mouseX, isHovered);
     }
 
     private void renderButton(MinecraftClient mc, MatrixStack matrices, int x, int y, int width, int height, int mouseX, boolean isHovered) {
-        int color = 0x8AE0E0E0;
-
         int bx = (int)(x + (width * 0.6)) - 7;
         int bw = (int)(width * 0.4);
-
-        /*if(this.isButtonHovered(mouseX, isHovered)) {
-            GuiUtil.fill(bx, y, bw, height, color);
-        } else {
-            GuiUtil.borderedRect(bx, y, -100, bw, height, color);
-        }*/
 
         GuiUtil.drawButton(bx, y, bw, height, this.isButtonHovered(mouseX, isHovered), false);
 
@@ -102,23 +93,12 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
         this.drawText(mc, vt, matrices, (int)(x + (width * 0.8)) - (mc.textRenderer.getWidth(vt) / 2) - 7, y + (height / 2), 0xFFFFFF, false, true, true);
     }
 
-    private void renderSlider(MinecraftClient mc, MatrixStack matrices, int x, int y, int width, int height, int mouseX, int mouseY, boolean isHovered) {
-        int color = 0x8AE0E0E0;
+    private void renderSlider(MinecraftClient mc, MatrixStack matrices, int x, int y, int width, int height, int mouseX, boolean isHovered) {
+        float progress = ((float)this.index / (this.values.length - 1));
+        int sx = (int)(x + (width * 0.6)) - 7;
+        int sw = (int)(width * 0.4);
 
-        int bx = (int)(x + (width * 0.6)) - 7;
-        int bw = (int)(width * 0.4);
-
-        GuiUtil.borderedRect(bx, y + 2, -100, bw, height - 4, color);
-        GuiUtil.fill(bx + 1, y + 3, bw - 2, height - 6, 0x73000000);
-
-        int sx = (bx + 2) + Math.round((((float)this.index / (this.values.length - 1))) * (bw - 10));
-
-        if(this.isButtonHovered(mouseX, isHovered)) {
-            GuiUtil.fill(sx, y + 4, 6, height - 8, color);
-        } else {
-            GuiUtil.borderedRect(sx, y + 4, -100, 6, height - 8, color);
-        }
-
+        GuiUtil.drawSlider(sx, y, sw, height, this.isButtonHovered(mouseX, isHovered), progress);
 
         Text vt = this.getValueText();
         this.drawText(mc, vt, matrices, (int)(x + (width * 0.8)) - (mc.textRenderer.getWidth(vt) / 2) - 7, y + (height / 2), 0xFFFFFF, false, true, true);

@@ -21,7 +21,7 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
     protected boolean resizedRows = false;
 
     protected Runnable save = () -> {};
-    protected Consumer<PropertyDocumentWidget> load = doc -> {};
+    protected Runnable load = () -> {};
 
     public PropertyDocumentWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {
         super(client, width, height, top, bottom, left, right, itemHeight);
@@ -64,14 +64,14 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
     }
 
     public void loadProperties() {
-        load.accept(this);
+        load.run();
     }
 
     public void onSave(Runnable procedure) {
         this.save = procedure;
     }
 
-    public void onLoad(Consumer<PropertyDocumentWidget> procedure) {
+    public void onLoad(Runnable procedure) {
         this.load = procedure;
     }
 

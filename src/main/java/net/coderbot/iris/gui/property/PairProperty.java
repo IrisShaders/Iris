@@ -3,7 +3,7 @@ package net.coderbot.iris.gui.property;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 
-public class PairProperty extends Property {
+public class PairProperty extends TupleProperty {
     protected final Property left;
     protected final Property right;
 
@@ -47,5 +47,10 @@ public class PairProperty extends Property {
         boolean mouseLeft = mouseX < ((float)width / 2) + x;
         left.render(matrices, x, y, w, height, mouseX, mouseY, isHovered && mouseLeft, delta);
         right.render(matrices, x + w + 4, y, w, height, mouseX, mouseY, isHovered && !mouseLeft, delta);
+    }
+
+    @Override
+    public Property[] getContainedProperties() {
+        return new Property[] {this.left, this.right};
     }
 }

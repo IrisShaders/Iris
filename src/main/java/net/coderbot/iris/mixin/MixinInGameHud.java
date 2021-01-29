@@ -1,4 +1,4 @@
-package net.coderbot.iris.mixin.gui;
+package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.gui.TransparentBackgroundScreen;
 import net.minecraft.client.MinecraftClient;

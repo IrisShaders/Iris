@@ -183,20 +183,12 @@ public class IrisConfig {
 		document.put("main", page);
 		widget.onSave(() -> {
 			Properties ps = new Properties();
-			for(Property p : widget.getPage(widget.getCurrentPage())) {
-				if(p instanceof ValueProperty) {
-					ValueProperty<?> vp = ((ValueProperty<?>)p);
+			widget.getPage(widget.getCurrentPage()).forEvery(property -> {
+				if(property instanceof ValueProperty) {
+					ValueProperty<?> vp = ((ValueProperty<?>)property);
 					ps.setProperty(vp.getKey(), vp.getValue().toString());
-				} else if(p instanceof PairProperty) {
-					Property[] l = { ((PairProperty)p).getLeft(), ((PairProperty)p).getRight() };
-					for(Property q : l) {
-						if(q instanceof ValueProperty) {
-							ValueProperty<?> vp = ((ValueProperty<?>)q);
-							ps.setProperty(vp.getKey(), vp.getValue().toString());
-						}
-					}
 				}
-			}
+			});
 			this.read(ps);
 			try {
 				this.save();
@@ -205,7 +197,7 @@ public class IrisConfig {
 				e.printStackTrace();
 			}
 		});
-		widget.onLoad(d -> {
+		widget.onLoad(() -> {
 			try {
 				this.load();
 			} catch (IOException e) {
@@ -213,23 +205,14 @@ public class IrisConfig {
 				e.printStackTrace();
 			}
 			Properties properties = this.write();
-			for(String k : d.getPages()) {
-				for(Property p : d.getPage(k)) {
-					if(p instanceof ValueProperty) {
-						ValueProperty<?> vp = ((ValueProperty<?>)p);
+			for(String k : widget.getPages()) {
+				widget.getPage(k).forEvery(property -> {
+					if(property instanceof ValueProperty) {
+						ValueProperty<?> vp = ((ValueProperty<?>)property);
 						vp.setValue(properties.getProperty(vp.getKey()));
 						vp.resetValueText();
-					} else if(p instanceof PairProperty) {
-						Property[] ps = { ((PairProperty)p).getLeft(), ((PairProperty)p).getRight() };
-						for(Property q : ps) {
-							if(q instanceof ValueProperty) {
-								ValueProperty<?> vp = ((ValueProperty<?>)q);
-								vp.setValue(properties.getProperty(vp.getKey()));
-								vp.resetValueText();
-							}
-						}
 					}
-				}
+				});
 			}
 		});
 		return document;

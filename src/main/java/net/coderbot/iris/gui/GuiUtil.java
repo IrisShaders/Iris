@@ -41,10 +41,10 @@ public final class GuiUtil {
             barHeight = MathHelper.clamp(barHeight, 32, bottom - top - 8);
             int barTop = (int)scrollAmount * (bottom - top - barHeight) / maxScroll + top;
             if (barTop < top) barTop = top;
-            int c = (((byte)(0x6E * alpha) << 24) | 0x0A0A0A);
-            int d = (((byte)(0x7A * alpha) << 24) | 0xEFEFEF);
-            GuiUtil.fill(x, top, -100, 2, bottom - top, c);
-            GuiUtil.fill(x, barTop, -100, 2, barHeight, d);
+            int backgroundColor = (((byte)(0x6E * alpha) << 24) | 0x0A0A0A);
+            int barColor = (((byte)(0x7A * alpha) << 24) | 0xEFEFEF);
+            GuiUtil.fill(x, top, -100, 2, bottom - top, backgroundColor);
+            GuiUtil.fill(x, barTop, -100, 2, barHeight, barColor);
             RenderSystem.enableTexture();
         }
     }
@@ -131,6 +131,39 @@ public final class GuiUtil {
             } else {
                 fill(x, y, width, height, 0x90000000);
             }
+        }
+    }
+
+    public static void drawSlider(int x, int y, int width, int height, boolean selected, float progress) {
+        UiTheme theme = Iris.getIrisConfig().getUITheme();
+        if(theme == UiTheme.IRIS) {
+            int color = 0x8AE0E0E0;
+
+            GuiUtil.borderedRect(x, y + 2, -100, width, height - 4, color);
+            GuiUtil.fill(x + 1, y + 3, width - 2, height - 6, 0x73000000);
+
+            int sx = (x + 2) + Math.round(progress * (width - 10));
+
+            if (selected) {
+                GuiUtil.fill(sx, y + 4, 6, height - 8, color);
+            } else {
+                GuiUtil.borderedRect(sx, y + 4, -100, 6, height - 8, color);
+            }
+        } else if(theme == UiTheme.SODIUM) {
+            // TODO. If you are reviewing this PR, this is coming soon:tm: before merge though
+        } else {
+            MinecraftClient.getInstance().getTextureManager().bindTexture(AbstractButtonWidget.WIDGETS_LOCATION);
+
+            int yp = y + (int)Math.ceil((float)Math.max(0, height - 20) / 2);
+
+            texture(x, yp, -100, width / 2, 20, 0, 46);
+            texture(x + width / 2, yp, -100, width / 2, 20, 200 - (width / 2), 46);
+
+            int sx = x + Math.round(progress * (width - 8));
+            int sv = (selected ? 2 : 1) * 20;
+
+            texture(sx, yp, -100, 4, 20, 0, 46 + sv);
+            texture(sx + 3, yp, -100, 4, 20, 196, 46 + sv);
         }
     }
 }

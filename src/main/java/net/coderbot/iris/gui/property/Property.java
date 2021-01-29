@@ -6,6 +6,13 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 
+/**
+ * An element of a document. Used for options
+ * or configuration menus. Property objects are
+ * added to a PropertyList, and PropertyLists are
+ * added to a PropertyDocumentWidget which is used
+ * in a GUI.
+ */
 public class Property {
     protected final Text label;
 
