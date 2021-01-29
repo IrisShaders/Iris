@@ -31,6 +31,7 @@ public class ShaderPack {
 	private final ProgramSource gbuffersClouds;
 	private final ProgramSource gbuffersEntities;
 	private final ProgramSource gbuffersBlock;
+	private final ProgramSource gbuffersWeather;
 	private final ProgramSource[] composite;
 	private final ProgramSource compositeFinal;
 	private final IdMap idMap;
@@ -57,6 +58,7 @@ public class ShaderPack {
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
 		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this);
 		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this);
+		this.gbuffersWeather = readProgramSource(root, "gbuffers_weather", this);
 
 		this.composite = new ProgramSource[16];
 
@@ -90,6 +92,10 @@ public class ShaderPack {
 
 	public IdMap getIdMap() {
 		return idMap;
+	}
+
+	public Optional<ProgramSource> getGbuffersWeather() {
+		return gbuffersWeather.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersBasic() {

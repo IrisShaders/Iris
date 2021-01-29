@@ -2,15 +2,94 @@ package net.coderbot.iris.shaderpack.parse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 import net.coderbot.iris.shaderpack.config.Option;
 import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
 import org.apache.commons.lang3.StringUtils;
 
+import net.minecraft.util.Util;
+
+import static net.coderbot.iris.shaderpack.parse.CommentDirectiveParser.Tests.test;
+
 public class ConfigOptionParser {
+	//Regex for matching boolean options
+	//Match if or if not the line starts with anynumber of backslashes that are more than 2 ("//")
+	//Match 0 or more whitspace after the "//"
+	//Match the #define
+	//Match 1 whitespace after that
+	//Match any letter, number, or underscore name
+	//Match 0 or more whitespace after that
+	//Match any comments on the option after that
+	private static final Pattern BOOLEAN_OPTION_PATTERN = Pattern.compile("^(//+)?\\s*#define\\s+\\w+\\s*(//.*)?$");
+	//Regex that matches for integer and float options
+	//Match 1 or more whitespace after #define
+	//match a word (name of the option)
+	//match 1 or more whitespace after the name
+	   //match a negative if there
+	   //match f or F float keyword
+	   //match 0-9
+	   //match a "." for floats
+	 //match 1 or more of the char group
+	//match 0 or more whitespace
+	//match if there is a comment following the line or not
+	private static final Pattern FLOAT_INTEGER_OPTION_PATTERN = Pattern.compile("^#define\\s+\\w+\\s+(-?[0-9.fF]+)\\s*(//.*)?$");
+	//Regex that matches for only integers and not floats
+	//Same as above but in the char class we remove the float specific checks
+		//remove matching a "."
+		//remove matching a "f" or a "F"
+	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("^#define\\s+\\w+\\s+(-?[0-9])\\s*(//.*)?");
+
+	//Testing
+	public static void main(String[] args) {
+		//boolean tests
+		test("default off boolean option", true, () -> BOOLEAN_OPTION_PATTERN.matcher("//#define Godrays").matches());
+		test("default on boolean option", true, () -> BOOLEAN_OPTION_PATTERN.matcher("#define Godrays").matches());
+		test("default off boolean option with a comment", true, () -> BOOLEAN_OPTION_PATTERN.matcher("//#define Godrays //Good Times").matches());
+		test("default on boolean option with a comment", true, () -> BOOLEAN_OPTION_PATTERN.matcher("#define Godrays //Godrays").matches());
+		test("boolean option with incorrect spacing", false, () -> BOOLEAN_OPTION_PATTERN.matcher("#defineBooleanStuff").matches());
+		test("boolean option with multiple backslash comments", true, ()-> BOOLEAN_OPTION_PATTERN.matcher("///#define Boolean").matches());
+		test("boolean option with too little comments", false, () -> BOOLEAN_OPTION_PATTERN.matcher("/#define fail").matches());//should not compile anyway
+		test("boolean option with multiple words and comment", false, () -> BOOLEAN_OPTION_PATTERN.matcher("#define FeelsBad To Be Bad //Bad").matches());
+		//float tests
+		test("float option with comment", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz").matches());
+		test("float option with wrong letter", false, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53R").matches());
+		Matcher matcher = FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 45.0 //Density Of Feeling [45 4 2]");
+		System.out.println("#define Density 45.0 //Density Of Feeling [45 4 2]");
+		System.out.println(matcher.matches());
+		System.out.println(matcher.groupCount());
+		System.out.println(matcher.group(0));
+	}
+
+	//Some shaderpacks like sildurs have #define directives that are named with the program name
+	//like #define gbuffers_textured
+	//optifine does not use these in their config so we will not as well
+	private static final Set<String> IGNORED_PROGRAM_NAMES = Util.make(new HashSet<>(), (set) -> {
+		for (int i = 0; i < 16; i++) {
+			set.add("composite" + i);
+		}
+		set.add("final");
+		set.add("deferred");
+		set.add("gbuffers_basic");
+		set.add("gbuffers_textured");
+		set.add("gbuffers_textured_lit");
+		set.add("gbuffers_terrain");
+		set.add("gbuffers_water");
+		set.add("gbuffers_skybasic");
+		set.add("gbuffers_skytextured");
+		set.add("gbuffers_clouds");
+		set.add("gbuffers_entities");
+		set.add("gbuffers_block");
+		set.add("gbuffers_weather");
+		set.add("gbuffers_hand");
+		set.add("gbuffers_shadows");
+	});
 
 	/**
 	 * Does most of the processing relating to config options here
@@ -22,12 +101,14 @@ public class ConfigOptionParser {
 
 			String trimmedLine = line.trim();
 
-			if (!trimmedLine.startsWith("#define") && !trimmedLine.startsWith("//#define")) return trimmedLine;
+			if (!trimmedLine.startsWith("#define") && !trimmedLine.startsWith("//#define")) return line;
 
 			ParsedLineContainer values = parseConfigLine(trimmedLine);
 
-			if (StringUtils.startsWith(values.name, "MC_")) { //using StringUtils for null safe
-				return trimmedLine;
+			if (values.name == null) return line;
+
+			if (values.name.startsWith("MC_") || IGNORED_PROGRAM_NAMES.contains(values.name)) {
+				return line;
 			}
 
 			//parse config lines that start with #define

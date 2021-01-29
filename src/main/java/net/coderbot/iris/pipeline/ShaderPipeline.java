@@ -71,7 +71,7 @@ public class ShaderPipeline {
 		this.terrain = pack.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
 		this.translucent = pack.getGbuffersWater().map(this::createPass).orElse(terrain);
 		// TODO: Load weather shaders
-		this.weather = texturedLit;
+		this.weather = pack.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
 
 		int[] buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared().toIntArray();
 
