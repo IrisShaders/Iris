@@ -3,26 +3,28 @@
   "iris.keybind.reload": "Recharger Les Shaders",
   "iris.shaders.reloaded.failure": "Échec lors du rechargement des Shaders! Raison: %s",
 
+  "option.iris.back": "Retour",
+  "option.iris.profile": "Profil",
+
   "options.iris.apply": "Appliquer",
   "options.iris.refresh": "Actualiser",
   "options.iris.openShaderPackFolder": "Ouvrir le dossier des packs de Shaders...",
   "options.iris.refreshShaderPacks": "Actualiser la liste des packs de Shaders",
-  "options.iris.shaderPackSelection": "Packs de Shader...",
-  "options.iris.shaderPackSelection.title": "Packs de Shader",
-
-  "option.iris.back": "Retour",
-  "option.iris.profile": "Profil",
+  "options.iris.shaderPackSelection": "Packs de Shaders...",
+  "options.iris.shaderPackSelection.title": "Packs de Shaders",
 
   "pack.iris.select.title": "Selectionner",
   "pack.iris.configure.title": "Configurer",
-  "pack.iris.internal": "Shaders Internes",
+  "pack.iris.internal": "Shaders internes",
 
-  "page.iris.notFound": "Page Invalide!",
+  "page.iris.notFound": "Page invalide!",
   "page.iris.noConfig": "Pas d'options de Shaders.",
   "page.iris.noShaders": "Aucun pack de Shaders chargé.",
 
   "property.iris.boolean.true": "Vrai",
   "property.iris.boolean.false": "Faux",
   "property.iris.title.configScreen": "Configurer Iris",
-  "property.iris.uiTheme": "Thème UI"
+  "property.iris.uiTheme": "Thème UI",
+  
+  "property.iris.config": "Configurer Iris"
 }

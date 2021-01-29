@@ -3,15 +3,15 @@
   "iris.keybind.reload": "Herladen Shaders",
   "iris.shaders.reloaded.failure": "Mislukt om Shaders te herladen! Reden: %s",
 
+  "option.iris.back": "Terug",
+  "option.iris.profile": "Profiel",
+
   "options.iris.apply": "Solliciteer",
   "options.iris.refresh": "Vernieuwen",
   "options.iris.openShaderPackFolder": "Open Shader-pakketten Map...",
   "options.iris.refreshShaderPacks": "Verfrissende Shader-pakketten",
   "options.iris.shaderPackSelection": "Shader-pakketten...",
   "options.iris.shaderPackSelection.title": "Shader-pakketten",
-
-  "option.iris.back": "Terug",
-  "option.iris.profile": "Profiel",
 
   "pack.iris.select.title": "selecteer",
   "pack.iris.configure.title": "Configureer",
@@ -24,5 +24,7 @@
   "property.iris.boolean.true": "Waar",
   "property.iris.boolean.false": "Vals",
   "property.iris.title.configScreen": "Iris configureren",
-  "property.iris.uiTheme": "UI Thema"
+  "property.iris.uiTheme": "UI Thema",
+  
+  "property.iris.config": "Iris configureren"
 }

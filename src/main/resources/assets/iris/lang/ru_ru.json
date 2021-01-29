@@ -3,15 +3,15 @@
   "iris.keybind.reload": "Шейдеры перезарядки",
   "iris.shaders.reloaded.failure": "Ошибка при Перезагрузке шейдеров! Причина: %s",
 
+  "option.iris.back": "Назад",
+  "option.iris.profile": "Профиль",
+
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
   "options.iris.openShaderPackFolder": "Открытая папка шейдерного пакета...",
   "options.iris.refreshShaderPacks": "Обновить шейдерные пакеты",
   "options.iris.shaderPackSelection": "шейдерные пакеты...",
   "options.iris.shaderPackSelection.title": "шейдерные пакеты",
-
-  "option.iris.back": "Назад",
-  "option.iris.profile": "Профиль",
 
   "pack.iris.select.title": "Выберите",
   "pack.iris.configure.title": "Настроить",
@@ -24,5 +24,7 @@
   "property.iris.boolean.true": "Правда",
   "property.iris.boolean.false": "Ложный",
   "property.iris.title.configScreen": "Настроить ирис",
-  "property.iris.uiTheme": "Tема"
+  "property.iris.uiTheme": "Tема",
+  
+  "property.iris.config": "Настроить ирис"
 }
