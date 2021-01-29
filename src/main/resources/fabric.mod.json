@@ -6,12 +6,12 @@
   "name": "Iris",
   "description": "A new shaders mod for Minecraft intended to be compatible with existing ShadersMod/Optifine shaders",
   "authors": [
-	"coderbot"
+    "coderbot"
   ],
   "contact": {
-    	"homepage": "https://github.com/IrisShaders/Iris",
-    	"sources": "https://github.com/IrisShaders/Iris.git",
-    	"issues": "https://github.com/IrisShaders/Iris/issues"
+    "homepage": "https://github.com/IrisShaders/Iris",
+    "sources": "https://github.com/IrisShaders/Iris.git",
+    "issues": "https://github.com/IrisShaders/Iris/issues"
   },
 
   "license": "LGPL-3.0-only",
@@ -19,20 +19,20 @@
 
   "environment": "client",
   "entrypoints": {
-	"client": [
-	  "net.coderbot.iris.Iris"
-	]
+    "client": [
+      "net.coderbot.iris.Iris"
+    ]
   },
 
   "mixins": [
-	"mixins.iris.json"
+    "mixins.iris.json"
   ],
 
   "depends": {
-	"fabricloader": ">=0.7.4",
-	"minecraft": "1.16.x",
-	"fabric-resource-loader-v0": ">=0.3.2",
-	"fabric-key-binding-api-v1": ">=1.0.1",
-	"fabric-lifecycle-events-v1": ">=1.2.0"
+    "fabricloader": ">=0.7.4",
+    "minecraft": "1.16.x",
+    "fabric-resource-loader-v0": ">=0.3.2",
+    "fabric-key-binding-api-v1": ">=1.0.1",
+    "fabric-lifecycle-events-v1": ">=1.2.0"
   }
 }
