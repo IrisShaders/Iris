@@ -49,16 +49,20 @@ public final class GuiUtil {
         }
     }
 
-    public static void texture(int x, int y, int z, int width, int height, float u, float v, float uw, float vh) {
+    public static void texture(int x, int y, int z, int width, int height, float u, float v, float uw, float vh, float r, float g, float b, float a) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
         RenderSystem.enableTexture();
         bufferBuilder.begin(7, VertexFormats.POSITION_TEXTURE_COLOR);
-        bufferBuilder.vertex(x, y + height, z).texture(u, v + vh).color(1f, 1f, 1f, 1f).next();
-        bufferBuilder.vertex(x + width, y + height, z).texture(u + uw, v + vh).color(1f, 1f, 1f, 1f).next();
-        bufferBuilder.vertex(x + width, y, z).texture(u + uw, v).color(1f, 1f, 1f, 1f).next();
-        bufferBuilder.vertex(x, y, z).texture(u, v).color(1f, 1f, 1f, 1f).next();
+        bufferBuilder.vertex(x, y + height, z).texture(u, v + vh).color(r, g, b, a).next();
+        bufferBuilder.vertex(x + width, y + height, z).texture(u + uw, v + vh).color(r, g, b, a).next();
+        bufferBuilder.vertex(x + width, y, z).texture(u + uw, v).color(r, g, b, a).next();
+        bufferBuilder.vertex(x, y, z).texture(u, v).color(r, g, b, a).next();
         tessellator.draw();
+    }
+
+    public static void texture(int x, int y, int z, int width, int height, float u, float v, float uw, float vh) {
+        texture(x, y, z, width, height, u, v, uw, vh, 1f, 1f, 1f, 1f);
     }
 
     public static void texture(int x, int y, int z, int width, int height, int u, int v, int uw, int vh, int texWidth, int texHeight) {
@@ -150,7 +154,13 @@ public final class GuiUtil {
                 GuiUtil.borderedRect(sx, y + 4, -100, 6, height - 8, color);
             }
         } else if(theme == UiTheme.SODIUM) {
-            // TODO. If you are reviewing this PR, this is coming soon:tm: before merge though
+
+            fill(x, y, width, height, selected ? 0xE0000000 : 0x90000000);
+
+            GuiUtil.fill(x + 2, (int)(y + (height * 0.75)), width - 4, 1, 0xFFFFFFFF);
+
+            int sx = x + 2 + Math.round(progress * (width - 7));
+            GuiUtil.fill(sx, (int)(y + (height * 0.75)) - 3, 3, 7, 0xFFFFFFFF);
         } else {
             MinecraftClient.getInstance().getTextureManager().bindTexture(AbstractButtonWidget.WIDGETS_LOCATION);
 

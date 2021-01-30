@@ -1,5 +1,6 @@
 package net.coderbot.iris.gui.element;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.property.*;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -89,7 +90,7 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
         return currentPage;
     }
 
-    public static Map<String, PropertyList> createDocument(TextRenderer tr, int width, String shaderName, ShaderPack pack, PropertyDocumentWidget widget) {
+    public static Map<String, PropertyList> createShaderpackConfigDocument(TextRenderer tr, int width, String shaderName, ShaderPack pack, PropertyDocumentWidget widget) {
         Properties shaderProperties = pack.getShaderProperties();
         Map<String, PropertyList> document = new HashMap<>();
         Map<String, String> child2Parent = new HashMap<>();
@@ -118,7 +119,7 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
                     if(p.equals("<profile>")) {
                         page.add(new StringOptionProperty(new String[] {"Low", "Medium", "High", "Extreme", "This is not functional"}, 1, widget, p, GuiUtil.trimmed(tr, "option.iris.profile", tw, true, true), sliderOptions.contains(p)));
                     } else if(p.equals("<empty>")) {
-                        page.add(Property.EMPTY);
+                        if(!Iris.getIrisConfig().getIfCondensedShaderConfig()) page.add(Property.EMPTY);
                     } else if(p.startsWith("[") && p.endsWith("]")) {
                         String a = "screen."+String.copyValueOf(Arrays.copyOfRange(p.toCharArray(), 1, p.length() - 1));
                         page.add(new LinkProperty(widget, a, GuiUtil.trimmed(tr, a, bw, true, true), LinkProperty.Align.LEFT));

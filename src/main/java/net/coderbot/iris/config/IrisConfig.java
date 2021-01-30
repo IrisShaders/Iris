@@ -6,12 +6,15 @@ import java.nio.file.Path;
 import java.util.*;
 
 import com.google.common.collect.ImmutableList;
+import javafx.beans.property.BooleanProperty;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.ShaderPackScreen;
 import net.coderbot.iris.gui.UiTheme;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
 import net.coderbot.iris.gui.property.*;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
@@ -32,6 +35,11 @@ public class IrisConfig {
 	 * The UI theme to use. Null if the default Iris UI theme is being used.
 	 */
 	private String uiTheme;
+
+	/**
+	 * Whether to display shader pack config screens in "condensed" view.
+	 */
+	private boolean condenseShaderConfig;
 
 	private Path propertiesPath;
 
@@ -108,6 +116,31 @@ public class IrisConfig {
 		return theme;
 	}
 
+
+	/**
+	 * Gets whether to use condensed view for shader pack configuration.
+	 *
+	 * @return Whether to use condensed view
+	 */
+	public boolean getIfCondensedShaderConfig() {
+		return condenseShaderConfig;
+	}
+
+	/**
+	 * Sets whether to use condensed view for shader pack configuration.
+	 *
+	 * @param condense Whether to use condensed view
+	 */
+	public void setIfCondensedShaderConfig(boolean condense) {
+		this.condenseShaderConfig = condense;
+		try {
+			save();
+		} catch (IOException e) {
+			Iris.logger.error("Error setting config for condensed shader pack config view!");
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * Sets config values as read from a Properties object.
 	 *
@@ -116,6 +149,7 @@ public class IrisConfig {
 	public void read(Properties properties) {
 		shaderPackName = properties.getProperty("shaderPack", this.shaderPackName);
 		uiTheme = properties.getProperty("uiTheme", this.uiTheme);
+		condenseShaderConfig = Boolean.parseBoolean(properties.getProperty("condenseShaderConfig"));
 
 		if (shaderPackName != null && shaderPackName.equals("(internal)")) {
 			shaderPackName = null;
@@ -132,6 +166,7 @@ public class IrisConfig {
 
 		properties.setProperty("shaderPack", getShaderPackName());
 		properties.setProperty("uiTheme", getUITheme().name());
+		properties.setProperty("condenseShaderConfig", Boolean.toString(getIfCondensedShaderConfig()));
 
 		return properties;
 	}
@@ -167,7 +202,7 @@ public class IrisConfig {
 	 *
 	 * @return pages for the config screen as a String to PropertyList map
 	 */
-	public Map<String, PropertyList> createDocument(Screen parent, PropertyDocumentWidget widget) {
+	public Map<String, PropertyList> createDocument(TextRenderer tr, Screen parent, PropertyDocumentWidget widget, int width) {
 		Map<String, PropertyList> document = new HashMap<>();
 		PropertyList page = new PropertyList();
 		page.add(new TitleProperty(new TranslatableText("property.iris.title.configScreen").formatted(Formatting.BOLD),
@@ -177,8 +212,11 @@ public class IrisConfig {
 			parent.onClose();
 			return new ShaderPackScreen(p);
 		}, parent, new TranslatableText("options.iris.shaderPackSelection.title"), LinkProperty.Align.CENTER_LEFT));
+		int optionTextWidthFull = (int)(width * 0.6) - 21;
+		int optionTextWidthHalf = (int)((width * 0.5) * 0.6) - 21;
 		page.addAllPairs(ImmutableList.of(
-				new StringOptionProperty(new String[] {"IRIS", "VANILLA", "SODIUM"}, 0, widget, "uiTheme", new TranslatableText("property.iris.uiTheme"), false)
+				new StringOptionProperty(new String[] {"IRIS", "VANILLA", "SODIUM"}, 0, widget, "uiTheme", GuiUtil.trimmed(tr, "property.iris.uiTheme", optionTextWidthHalf, true, true), false),
+				new BooleanOptionProperty(widget, false, "condenseShaderConfig", GuiUtil.trimmed(tr, "property.iris.condenseShaderConfig", optionTextWidthHalf, true, true), false)
 		));
 		document.put("main", page);
 		widget.onSave(() -> {

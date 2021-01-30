@@ -46,12 +46,12 @@ public class ShaderProperties {
 
 	private static class ImmutableProperties extends Properties {
 		@Override
-		public synchronized Object setProperty(String key, String value) {
+		public Object setProperty(String key, String value) {
 			throw new IllegalStateException("Cannot modify ImmutableProperties");
 		}
 
 		@Override
-		public synchronized Object put(Object key, Object value) {
+		public Object put(Object key, Object value) {
 			throw new IllegalStateException("Cannot modify ImmutableProperties");
 		}
 

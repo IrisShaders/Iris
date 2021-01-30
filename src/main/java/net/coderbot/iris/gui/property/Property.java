@@ -13,10 +13,23 @@ import net.minecraft.text.Text;
  * added to a PropertyDocumentWidget which is used
  * in a GUI.
  */
-public class Property {
+public abstract class Property {
     protected final Text label;
 
-    public static final Property EMPTY = new Property(LiteralText.EMPTY);
+    /**
+     * A completely empty property. When used in a
+     * shader pack config document, EMPTYs can be
+     * hidden by enabling condensed view.
+     */
+    public static final Property EMPTY = new Property(LiteralText.EMPTY) {};
+
+    /**
+     * The only difference between this and
+     * EMPTY is that it is not EMPTY, and
+     * won't be included if EMPTY is ever
+     * searched for.
+     */
+    public static final Property PLACEHOLDER = new Property(LiteralText.EMPTY) {};
 
     public Property(Text label) {
         this.label = label;

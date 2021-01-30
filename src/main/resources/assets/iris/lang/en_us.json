@@ -26,6 +26,7 @@
   "property.iris.boolean.false": "False",
   "property.iris.title.configScreen": "Configure Iris",
   "property.iris.uiTheme": "UI Theme",
+  "property.iris.condenseShaderConfig": "Condense Shader Pack Config",
 
   "tooltip.iris.config": "Configure Iris"
 }
