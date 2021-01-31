@@ -7,7 +7,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class ScreenLinkProperty extends LinkProperty {
     protected final Function<Screen, Screen> screen;

@@ -5,6 +5,9 @@ import com.google.common.collect.ImmutableList;
 import java.util.*;
 import java.util.function.Consumer;
 
+/**
+ * A Property ArrayList with some utility methods.
+ */
 public class PropertyList extends ArrayList<Property> {
     public PropertyList(Property... properties) {
         this.addAll(ImmutableList.copyOf(properties));

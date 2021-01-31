@@ -13,7 +13,6 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<PropertyDocumentWidget.PropertyEntry> {
     protected Map<String, PropertyList> document = new HashMap<>();

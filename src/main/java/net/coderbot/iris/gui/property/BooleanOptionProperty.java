@@ -4,10 +4,7 @@ import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
-
-import java.util.Properties;
 
 public class BooleanOptionProperty extends OptionProperty<Boolean> {
     public BooleanOptionProperty(PropertyDocumentWidget document, boolean defaultValue, String key, Text label, boolean isSlider) {
