@@ -4,18 +4,24 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 import java.util.Objects;
+import java.util.function.IntSupplier;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.texunits.TextureUnit;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.util.Hand;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -40,6 +46,9 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
+			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(Hand.MAIN_HAND))
+			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(Hand.OFF_HAND))
+			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
 			.uniform1i(ONCE, "noisetex", () -> 15);
 	}
 
@@ -57,6 +66,43 @@ public final class CommonUniforms {
 		}
 
 		return 0.0F;
+	}
+
+	private static float getNightVision() {
+		Entity cameraEntity = client.getCameraEntity();
+
+		if (cameraEntity instanceof LivingEntity) {
+			if (((LivingEntity)cameraEntity).getStatusEffect(StatusEffects.NIGHT_VISION) != null) {
+				return GameRenderer.getNightVisionStrength((LivingEntity) cameraEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+			}
+		}
+		return 0.0F;
+	}
+
+	private static class HeldItemLightingSupplier implements IntSupplier {
+
+		private final Hand hand;
+
+		private HeldItemLightingSupplier(Hand targetHand) {
+			this.hand = targetHand;
+		}
+
+		@Override
+		public int getAsInt() {
+			if (client.player == null) {
+				return 0;
+			}
+
+			ItemStack stack = client.player.getStackInHand(hand);
+
+			if (stack == ItemStack.EMPTY || stack == null || !(stack.getItem() instanceof BlockItem)) {
+				return 0;
+			}
+
+			BlockItem item = (BlockItem) stack.getItem();
+
+			return item.getBlock().getDefaultState().getLuminance();
+		}
 	}
 
 	private static int isEyeInWater() {
