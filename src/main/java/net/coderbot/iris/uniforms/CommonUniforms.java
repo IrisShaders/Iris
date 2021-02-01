@@ -2,6 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 import java.util.Objects;
 import java.util.function.IntSupplier;
@@ -43,13 +44,14 @@ public final class CommonUniforms {
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
+			.uniform1i(ONCE, "noisetex", () -> 15)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(Hand.MAIN_HAND))
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(Hand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
-			.uniform1i(ONCE, "noisetex", () -> 15);
+			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood);;
 	}
 
 	private static float getBlindness() {
@@ -68,15 +70,37 @@ public final class CommonUniforms {
 		return 0.0F;
 	}
 
+	private static float getPlayerMood() {
+		if (client.player == null) {
+			return 0.0F;
+		}
+		return client.player.getMoodPercentage();
+	}
+
 	private static float getNightVision() {
 		Entity cameraEntity = client.getCameraEntity();
 
 		if (cameraEntity instanceof LivingEntity) {
-			if (((LivingEntity)cameraEntity).getStatusEffect(StatusEffects.NIGHT_VISION) != null) {
-				return GameRenderer.getNightVisionStrength((LivingEntity) cameraEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+
+			LivingEntity livingEntity = (LivingEntity) cameraEntity;
+
+			if (livingEntity.getStatusEffect(StatusEffects.NIGHT_VISION) != null) {
+				return GameRenderer.getNightVisionStrength(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 			}
 		}
 		return 0.0F;
+	}
+
+	private static int isEyeInWater() {
+		FluidState submergedFluid = client.gameRenderer.getCamera().getSubmergedFluidState();
+
+		if (submergedFluid.isIn(FluidTags.WATER)) {
+			return 1;
+		} else if (submergedFluid.isIn(FluidTags.LAVA)) {
+			return 2;
+		} else {
+			return 0;
+		}
 	}
 
 	private static class HeldItemLightingSupplier implements IntSupplier {
@@ -105,15 +129,4 @@ public final class CommonUniforms {
 		}
 	}
 
-	private static int isEyeInWater() {
-		FluidState submergedFluid = client.gameRenderer.getCamera().getSubmergedFluidState();
-
-		if (submergedFluid.isIn(FluidTags.WATER)) {
-			return 1;
-		} else if (submergedFluid.isIn(FluidTags.LAVA)) {
-			return 2;
-		} else {
-			return 0;
-		}
-	}
 }

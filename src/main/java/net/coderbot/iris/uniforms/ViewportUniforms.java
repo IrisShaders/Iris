@@ -20,6 +20,8 @@ public final class ViewportUniforms {
 	 */
 	private static final Window WINDOW = Objects.requireNonNull(MinecraftClient.getInstance().getWindow());
 
+	private static final MinecraftClient client = MinecraftClient.getInstance();
+
 	// cannot be constructed
 	private ViewportUniforms() {
 	}
@@ -33,7 +35,8 @@ public final class ViewportUniforms {
 		uniforms
 			.uniform1f(PER_FRAME, "viewHeight", WINDOW::getHeight)
 			.uniform1f(PER_FRAME, "viewWidth", WINDOW::getWidth)
-			.uniform1f(PER_FRAME, "aspectRatio", ViewportUniforms::getAspectRatio);
+			.uniform1f(PER_FRAME, "aspectRatio", ViewportUniforms::getAspectRatio)
+			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma);
 	}
 
 	/**
