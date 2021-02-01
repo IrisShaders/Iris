@@ -27,10 +27,10 @@ public class ConfigOptionParser {
 	//Match any letter, number, or underscore name
 	//Match 0 or more whitespace after that
 	//Match any comments on the option after that
-	private static final Pattern BOOLEAN_OPTION_PATTERN = Pattern.compile("^(//+)?\\s*#define\\s+\\w+\\s*(//.*)?$");
+	private static final Pattern BOOLEAN_OPTION_PATTERN = Pattern.compile("^(//+)?\\s*(#define)\\s+(\\w+)\\s*(//.*)?$");
 	//Regex that matches for integer and float options
 	//Match 1 or more whitespace after #define
-	//match a word (name of the option)
+	//match a word (name of the option). Put in parenthesis for grouping
 	//match 1 or more whitespace after the name
 	   //match a negative if there
 	   //match f or F float keyword
@@ -39,12 +39,13 @@ public class ConfigOptionParser {
 	 //match 1 or more of the char group
 	//match 0 or more whitespace
 	//match if there is a comment following the line or not
-	private static final Pattern FLOAT_INTEGER_OPTION_PATTERN = Pattern.compile("^#define\\s+\\w+\\s+(-?[0-9.fF]+)\\s*(//.*)?$");
+		//match the array chars "[" and "]" if present and group them inside the comment grouping
+	private static final Pattern FLOAT_INTEGER_OPTION_PATTERN = Pattern.compile("^(#define)\\s+(\\w+)\\s+(-?[\\d.fF]+)\\s*(//.*)?$");
 	//Regex that matches for only integers and not floats
 	//Same as above but in the char class we remove the float specific checks
 		//remove matching a "."
 		//remove matching a "f" or a "F"
-	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("^#define\\s+\\w+\\s+(-?[0-9])\\s*(//.*)?");
+	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("^(#define)\\s+(\\w+)\\s+(-?\\d+)\\s*(//.*(\\[\\d*?]))?");
 
 	//Testing
 	public static void main(String[] args) {
@@ -58,13 +59,23 @@ public class ConfigOptionParser {
 		test("boolean option with too little comments", false, () -> BOOLEAN_OPTION_PATTERN.matcher("/#define fail").matches());//should not compile anyway
 		test("boolean option with multiple words and comment", false, () -> BOOLEAN_OPTION_PATTERN.matcher("#define FeelsBad To Be Bad //Bad").matches());
 		//float tests
-		test("float option with comment", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz").matches());
+		test("float option with comment", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz [1 2 3 4]").matches());
 		test("float option with wrong letter", false, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53R").matches());
-		Matcher matcher = FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 45.0 //Density Of Feeling [45 4 2]");
-		System.out.println("#define Density 45.0 //Density Of Feeling [45 4 2]");
-		System.out.println(matcher.matches());
-		System.out.println(matcher.groupCount());
-		System.out.println(matcher.group(0));
+		test("float option without comment or letter", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 0.1").matches());
+		test("float option as int", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1").matches());
+		testMatcher(FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz [1 2 3 4]"));
+	}
+
+	private static void testMatcher(Matcher matcher) {
+		if (matcher.matches()) {
+			List<String> list = new ArrayList<>();
+			for (int i = 0; i < matcher.groupCount(); i++) {
+				if (i > 0) list.add(matcher.group(i));
+			}
+			System.out.println(list);
+		} else {
+			System.out.println("Matcher failed");
+		}
 	}
 
 	//Some shaderpacks like sildurs have #define directives that are named with the program name
