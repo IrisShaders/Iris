@@ -216,7 +216,7 @@ public class IrisConfig {
 		int optionTextWidthFull = (int)(width * 0.6) - 21;
 		int optionTextWidthHalf = (int)((width * 0.5) * 0.6) - 21;
 		page.addAllPairs(ImmutableList.of(
-				new StringOptionProperty(new String[] {"IRIS", "VANILLA", "SODIUM"}, 0, widget, "uiTheme", GuiUtil.trimmed(tr, "property.iris.uiTheme", optionTextWidthHalf, true, true), false),
+				new StringOptionProperty(new String[] {"IRIS", "VANILLA", "SODIUM"}, 0, widget, "uiTheme", GuiUtil.trimmed(tr, "property.iris.uiTheme", optionTextWidthHalf, true, true), false, false),
 				new BooleanOptionProperty(widget, false, "condenseShaderConfig", GuiUtil.trimmed(tr, "property.iris.condenseShaderConfig", optionTextWidthHalf, true, true), false)
 		));
 		document.put("main", page);

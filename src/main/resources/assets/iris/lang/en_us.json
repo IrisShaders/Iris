@@ -18,7 +18,8 @@
   "pack.iris.configure.title": "Configure",
   "pack.iris.internal": "Internal Shaders",
 
-  "page.iris.notFound": "Invalid page!",
+  "page.iris.notFound": "Page Not Found",
+  "page.iris.invalid": "Invalid Page: \"%s\"",
   "page.iris.noConfig": "No shader options.",
   "page.iris.noShaders": "No shader pack loaded.",
 

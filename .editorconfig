@@ -1,0 +1,25 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+tab_width = 4
+
+[*.gradle]
+indent_style = tab
+
+[*.java]
+indent_style = tab
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.properties]
+indent_style = space
+indent_size = 2
+
+[.editorconfig]
+indent_style = space
+indent_size = 4

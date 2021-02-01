@@ -7,6 +7,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
+import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
@@ -56,7 +57,8 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
     }
 
     public PropertyList getPage(String name) {
-        return document.getOrDefault(name, new PropertyList(new Property(new TranslatableText("page.iris.notFound").formatted(Formatting.DARK_RED))));
+    	if(!currentPage.isEmpty()) return document.getOrDefault(name, new PropertyList(new TitleProperty(new TranslatableText("page.iris.notFound").formatted(Formatting.DARK_RED, Formatting.BOLD)), new LinkProperty(this, currentPage, new TranslatableText("option.iris.back"), LinkProperty.Align.CENTER_RIGHT), new Property(new TranslatableText("page.iris.invalid", name).formatted(Formatting.GRAY))));
+        return document.getOrDefault(name, new PropertyList(new TitleProperty(new TranslatableText("page.iris.notFound").formatted(Formatting.DARK_RED))));
     }
 
     public void saveProperties() {
@@ -103,20 +105,23 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
             return document;
         }
         List<String> sliderOptions = new ArrayList<>();
+		List<String> profiles = new ArrayList<>();
         for(String s : shaderProperties.stringPropertyNames()) {
             if(s.equals("sliders")) {
                 sliderOptions.add(shaderProperties.getProperty(s));
-            }
+            } else if(s.startsWith("profile.")) {
+            	profiles.add(s);
+			}
         }
         for(String s : shaderProperties.stringPropertyNames()) {
             if(s.startsWith("screen.") || s.equals("screen")) {
                 PropertyList page = new PropertyList();
                 boolean subScreen = s.startsWith("screen.");
                 page.add(new TitleProperty(GuiUtil.trimmed(tr, subScreen ? s : shaderName, width - 60, subScreen, true, Formatting.BOLD), 0xAAFFFFFF));
-                String[] properties = shaderProperties.getProperty(s).split(" ");
-                for(String p : properties) {
+                String[] screenOptions = shaderProperties.getProperty(s).split(" ");
+                for(String p : screenOptions) {
                     if(p.equals("<profile>")) {
-                        page.add(new StringOptionProperty(new String[] {"Low", "Medium", "High", "Extreme", "This is not functional"}, 1, widget, p, GuiUtil.trimmed(tr, "option.iris.profile", tw, true, true), sliderOptions.contains(p)));
+                        page.add(new StringOptionProperty(profiles.toArray(new String[0]), 1, widget, p, GuiUtil.trimmed(tr, "option.iris.profile", tw, true, true), sliderOptions.contains(p), true));
                     } else if(p.equals("<empty>")) {
                         if(!Iris.getIrisConfig().getIfCondensedShaderConfig()) page.add(Property.EMPTY);
                     } else if(p.startsWith("[") && p.endsWith("]")) {
@@ -124,7 +129,7 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
                         page.add(new LinkProperty(widget, a, GuiUtil.trimmed(tr, a, bw, true, true), LinkProperty.Align.LEFT));
                         child2Parent.put(a, s);
                     } else {
-                        page.add(new StringOptionProperty(new String[] {"This", "Is", "Not", "Functional"}, 0, widget, p, GuiUtil.trimmed(tr, "option."+p, tw, true, true), sliderOptions.contains(p)));
+                        page.add(new StringOptionProperty(new String[] {"This", "Is", "Not", "Functional"}, 0, widget, p, GuiUtil.trimmed(tr, "option."+p, tw, true, true), sliderOptions.contains(p), false));
                     }
                 }
                 document.put(s, page);

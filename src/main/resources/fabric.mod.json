@@ -28,7 +28,7 @@
     },
 
     "mixins": [
-      "mixins.iris.json"
+        "mixins.iris.json"
     ],
 
     "depends": {
@@ -37,5 +37,11 @@
         "fabric-resource-loader-v0": ">=0.3.2",
         "fabric-key-binding-api-v1": ">=1.0.1",
         "fabric-lifecycle-events-v1": ">=1.2.0"
+    },
+
+    "breaks": {
+        "canvas": "*",
+        "optifabric": "*",
+        "sodium": "*"
     }
 }
