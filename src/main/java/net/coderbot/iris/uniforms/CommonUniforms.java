@@ -27,8 +27,6 @@ import net.minecraft.util.Hand;
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
 
-	private static final Entity cameraEntity = client.getCameraEntity();
-
 	private CommonUniforms() {
 		// no construction allowed
 	}
@@ -57,6 +55,7 @@ public final class CommonUniforms {
 	}
 
 	private static float getBlindness() {
+		Entity cameraEntity = client.getCameraEntity();
 
 		if (cameraEntity instanceof LivingEntity) {
 			StatusEffectInstance blindness = ((LivingEntity) cameraEntity).getStatusEffect(StatusEffects.BLINDNESS);
@@ -79,6 +78,7 @@ public final class CommonUniforms {
 	}
 
 	private static float getNightVision() {
+		Entity cameraEntity = client.getCameraEntity();
 
 		if (cameraEntity instanceof LivingEntity) {
 
