@@ -2,12 +2,15 @@ package net.coderbot.iris.uniforms;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
+import static net.coderbot.iris.gl.uniform.Vector2iUniform.Vec2i;
 
 import java.util.Objects;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.texunits.TextureUnit;
+import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -16,6 +19,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.world.LightType;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -37,9 +41,12 @@ public final class CommonUniforms {
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
-			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
+			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
+			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
+			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
+			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(1.0f, CommonUniforms::getRainStrength))
 			.uniform1i(ONCE, "noisetex", () -> 15);
 	}
 
@@ -57,6 +64,23 @@ public final class CommonUniforms {
 		}
 
 		return 0.0F;
+	}
+
+	private static float getRainStrength() {
+		if (client.world == null) {
+			return 0f;
+		}
+
+		return client.world.getRainGradient(CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
+	private static Vec2i getEyeBrightness() {
+		if (client.cameraEntity == null || client.world == null) {
+			return Vec2i.EMPTY;
+		}
+		int blockLight = client.world.getLightLevel(LightType.BLOCK, client.cameraEntity.getBlockPos());
+		int skyLight = client.world.getLightLevel(LightType.SKY, client.cameraEntity.getBlockPos());
+		return new Vec2i(blockLight, skyLight);
 	}
 
 	private static int isEyeInWater() {
