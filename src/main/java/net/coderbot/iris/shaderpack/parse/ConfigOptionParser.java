@@ -50,52 +50,30 @@ public class ConfigOptionParser {
 		//remove matching a "."
 		//remove matching a "f" or a "F"
 	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("^(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?\\d+)\\s*(?<comment>//.*)?");
-
-	//Testing
-	public static void main(String[] args) {
-		//boolean tests
-		test("default off boolean option", true, () -> BOOLEAN_OPTION_PATTERN.matcher("//#define Godrays").matches());
-		test("default on boolean option", true, () -> BOOLEAN_OPTION_PATTERN.matcher("#define Godrays").matches());
-		test("default off boolean option with a comment", true, () -> BOOLEAN_OPTION_PATTERN.matcher("//#define Godrays //Good Times").matches());
-		test("default on boolean option with a comment", true, () -> BOOLEAN_OPTION_PATTERN.matcher("#define Godrays //Godrays").matches());
-		test("boolean option with incorrect spacing", false, () -> BOOLEAN_OPTION_PATTERN.matcher("#defineBooleanStuff").matches());
-		test("boolean option with multiple backslash comments", true, ()-> BOOLEAN_OPTION_PATTERN.matcher("///#define Boolean").matches());
-		test("boolean option with too little comments", false, () -> BOOLEAN_OPTION_PATTERN.matcher("/#define fail").matches());//should not compile anyway
-		test("boolean option with multiple words and comment", false, () -> BOOLEAN_OPTION_PATTERN.matcher("#define FeelsBad To Be Bad //Bad").matches());
-		//float tests
-		test("float option with comment", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz [1 2 3 4]").matches());
-		test("float option with wrong letter", false, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53R").matches());
-		test("float option without comment or letter", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 0.1").matches());
-		test("float option as int", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1 //jkhljhlklkjhlkjlkjhlkhj").matches());
-		//ifdef tests
-		test("ifdef with a comment after it", true, () -> IFDEF_IFNDEF_PATTERN.matcher("#ifdef Godrays //hihihi").matches());
-		test("ifdef normal", true, () -> IFDEF_IFNDEF_PATTERN.matcher("#ifdef Godrays").matches());
-		test("ifndef", true, () -> IFDEF_IFNDEF_PATTERN.matcher("#ifndef Godrays").matches());
-		test("ifndef with stuff after it", true, () -> IFDEF_IFNDEF_PATTERN.matcher("#ifndef Godrays //hi hi hi").matches());
-		//int tests
-		test("integer option", true, () -> INTEGER_OPTION_PATTERN.matcher("#define VL 5 //comments and stuff").matches());
-		test("integer with floating point option",false, () -> INTEGER_OPTION_PATTERN.matcher("#define VL 5.4F //comments").matches());
-		test("integer option with char", false, () -> INTEGER_OPTION_PATTERN.matcher("#define VL 4F").matches());
-		test("integer option without comment", true, () -> INTEGER_OPTION_PATTERN.matcher("#define Shadows 4").matches());
-		//grouping
-		testMatcher(FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz [1F 2.1 3.3 4F]"));
-		testMatcher(BOOLEAN_OPTION_PATTERN.matcher("/// #define Stuffs //Caldsfkj;laskfdjlaskjdf;lasfalskjdf"));
-		testMatcher(IFDEF_IFNDEF_PATTERN.matcher("#ifndef Godrays //godrays"));
-		testMatcher(INTEGER_OPTION_PATTERN.matcher("#define Bloom_Strength 43 //Bloom Strength [4 5 2 3]"));
-	}
-
-	private static void testMatcher(Matcher matcher) {
-		System.out.println("testing matcher with input: " + matcher);
-		if (matcher.matches()) {
-			List<String> list = new ArrayList<>();
-			for (int i = 0; i < matcher.groupCount(); i++) {
-				if (i > 0) list.add(matcher.group(i));
-			}
-			System.out.println(list);
-		} else {
-			System.out.println("Matcher failed");
+	//Some shaderpacks like sildurs have #define directives that are named with the program name
+	//like #define gbuffers_textured
+	//optifine does not use these in their config so we will not as well
+	private static final Set<String> IGNORED_PROGRAM_NAMES = Util.make(new HashSet<>(), (set) -> {
+		for (int i = 0; i < 16; i++) {
+			set.add("composite" + i);
 		}
-	}
+		set.add("composite");
+		set.add("final");
+		set.add("deferred");
+		set.add("gbuffers_basic");
+		set.add("gbuffers_textured");
+		set.add("gbuffers_textured_lit");
+		set.add("gbuffers_terrain");
+		set.add("gbuffers_water");
+		set.add("gbuffers_skybasic");
+		set.add("gbuffers_skytextured");
+		set.add("gbuffers_clouds");
+		set.add("gbuffers_entities");
+		set.add("gbuffers_block");
+		set.add("gbuffers_weather");
+		set.add("gbuffers_hand");
+		set.add("gbuffers_shadows");
+	});
 
 	public static List<String> processConfigOptions(List<String> lines, ShaderPackConfig config) {
 		for (int i = 0; i < lines.size(); i++) {
@@ -129,7 +107,7 @@ public class ConfigOptionParser {
 					}
 				}
 
-				if (!containsIfDef || name.startsWith("MC_")) {
+				if (!containsIfDef || name.startsWith("MC_") || IGNORED_PROGRAM_NAMES.contains(name)) {
 					continue;
 				}
 
@@ -159,7 +137,7 @@ public class ConfigOptionParser {
 
 					if (name == null || value == null) continue; //if null, continue
 
-					if (name.startsWith("MC_")) continue;
+					if (name.startsWith("MC_") || IGNORED_PROGRAM_NAMES.contains(name)) continue;
 
 					Option<Float> floatOption = createFloatOption(name, comment, value, config);
 
@@ -175,7 +153,7 @@ public class ConfigOptionParser {
 
 					if (name == null || value == null) continue;
 
-					if (name.startsWith("MC_")) continue;
+					if (name.startsWith("MC_") || IGNORED_PROGRAM_NAMES.contains(name)) continue;
 
 					Option<Integer> integerOption = createIntegerOption(name, comment, value, config);
 
