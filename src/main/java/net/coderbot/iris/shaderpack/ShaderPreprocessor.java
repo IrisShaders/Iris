@@ -51,9 +51,7 @@ public class ShaderPreprocessor {
 			}
 		}
 
-		for (int i = 0; i < lines.size(); i++) {
-			lines.set(i, ConfigOptionParser.processConfigOptions(lines.get(i), config));
-		}
+		ConfigOptionParser.processConfigOptions(lines, config);
 
 		return lines;
 	}

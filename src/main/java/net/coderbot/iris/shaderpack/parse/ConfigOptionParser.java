@@ -27,7 +27,12 @@ public class ConfigOptionParser {
 	//Match any letter, number, or underscore name
 	//Match 0 or more whitespace after that
 	//Match any comments on the option after that
-	private static final Pattern BOOLEAN_OPTION_PATTERN = Pattern.compile("^(//+)?\\s*(#define)\\s+(\\w+)\\s*(//.*)?$");
+	private static final Pattern BOOLEAN_OPTION_PATTERN = Pattern.compile("^(?<startingComment>//+)?\\s*(?<define>#define)\\s+(?<name>\\w+)\\s*(?<comment>//.*)?$");
+	//Regex for matching ifdef patterns for boolean options
+	//Match the ifdef or ifndef keyword
+	//match whitespace that must be there
+	//match a word that is the name of the keyword
+	private static final Pattern IFDEF_IFNDEF_PATTERN = Pattern.compile("^(?<ifdef>#ifdef|#ifndef)\\s+(?<name>\\w+)(?<other>.*)");
 	//Regex that matches for integer and float options
 	//Match 1 or more whitespace after #define
 	//match a word (name of the option). Put in parenthesis for grouping
@@ -39,13 +44,12 @@ public class ConfigOptionParser {
 	 //match 1 or more of the char group
 	//match 0 or more whitespace
 	//match if there is a comment following the line or not
-		//match the array chars "[" and "]" if present and group them inside the comment grouping
-	private static final Pattern FLOAT_INTEGER_OPTION_PATTERN = Pattern.compile("^(#define)\\s+(\\w+)\\s+(-?[\\d.fF]+)\\s*(//.*)?$");
+	private static final Pattern FLOAT_INTEGER_OPTION_PATTERN = Pattern.compile("^(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?[\\d.fF]+)\\s*(?<comment>//.*)?$");
 	//Regex that matches for only integers and not floats
 	//Same as above but in the char class we remove the float specific checks
 		//remove matching a "."
 		//remove matching a "f" or a "F"
-	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("^(#define)\\s+(\\w+)\\s+(-?\\d+)\\s*(//.*(\\[\\d*?]))?");
+	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("^(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?\\d+)\\s*(?<comment>//.*)?");
 
 	//Testing
 	public static void main(String[] args) {
@@ -62,11 +66,26 @@ public class ConfigOptionParser {
 		test("float option with comment", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz [1 2 3 4]").matches());
 		test("float option with wrong letter", false, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53R").matches());
 		test("float option without comment or letter", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 0.1").matches());
-		test("float option as int", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1").matches());
-		testMatcher(FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz [1 2 3 4]"));
+		test("float option as int", true, () -> FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1 //jkhljhlklkjhlkjlkjhlkhj").matches());
+		//ifdef tests
+		test("ifdef with a comment after it", true, () -> IFDEF_IFNDEF_PATTERN.matcher("#ifdef Godrays //hihihi").matches());
+		test("ifdef normal", true, () -> IFDEF_IFNDEF_PATTERN.matcher("#ifdef Godrays").matches());
+		test("ifndef", true, () -> IFDEF_IFNDEF_PATTERN.matcher("#ifndef Godrays").matches());
+		test("ifndef with stuff after it", true, () -> IFDEF_IFNDEF_PATTERN.matcher("#ifndef Godrays //hi hi hi").matches());
+		//int tests
+		test("integer option", true, () -> INTEGER_OPTION_PATTERN.matcher("#define VL 5 //comments and stuff").matches());
+		test("integer with floating point option",false, () -> INTEGER_OPTION_PATTERN.matcher("#define VL 5.4F //comments").matches());
+		test("integer option with char", false, () -> INTEGER_OPTION_PATTERN.matcher("#define VL 4F").matches());
+		test("integer option without comment", true, () -> INTEGER_OPTION_PATTERN.matcher("#define Shadows 4").matches());
+		//grouping
+		testMatcher(FLOAT_INTEGER_OPTION_PATTERN.matcher("#define Density 1.53F //cool stuffz [1F 2.1 3.3 4F]"));
+		testMatcher(BOOLEAN_OPTION_PATTERN.matcher("/// #define Stuffs //Caldsfkj;laskfdjlaskjdf;lasfalskjdf"));
+		testMatcher(IFDEF_IFNDEF_PATTERN.matcher("#ifndef Godrays //godrays"));
+		testMatcher(INTEGER_OPTION_PATTERN.matcher("#define Bloom_Strength 43 //Bloom Strength [4 5 2 3]"));
 	}
 
 	private static void testMatcher(Matcher matcher) {
+		System.out.println("testing matcher with input: " + matcher);
 		if (matcher.matches()) {
 			List<String> list = new ArrayList<>();
 			for (int i = 0; i < matcher.groupCount(); i++) {
@@ -78,240 +97,161 @@ public class ConfigOptionParser {
 		}
 	}
 
-	//Some shaderpacks like sildurs have #define directives that are named with the program name
-	//like #define gbuffers_textured
-	//optifine does not use these in their config so we will not as well
-	private static final Set<String> IGNORED_PROGRAM_NAMES = Util.make(new HashSet<>(), (set) -> {
-		for (int i = 0; i < 16; i++) {
-			set.add("composite" + i);
-		}
-		set.add("final");
-		set.add("deferred");
-		set.add("gbuffers_basic");
-		set.add("gbuffers_textured");
-		set.add("gbuffers_textured_lit");
-		set.add("gbuffers_terrain");
-		set.add("gbuffers_water");
-		set.add("gbuffers_skybasic");
-		set.add("gbuffers_skytextured");
-		set.add("gbuffers_clouds");
-		set.add("gbuffers_entities");
-		set.add("gbuffers_block");
-		set.add("gbuffers_weather");
-		set.add("gbuffers_hand");
-		set.add("gbuffers_shadows");
-	});
+	public static List<String> processConfigOptions(List<String> lines, ShaderPackConfig config) {
+		for (int i = 0; i < lines.size(); i++) {
 
-	/**
-	 * Does most of the processing relating to config options here
-	 * @param line the line to process
-	 * @param config the current pack shaderpack instance
-	 * @return the processed line to set the line to
-	 */
-	public static String processConfigOptions(String line, ShaderPackConfig config) {
+			String trimmedLine = lines.get(i).trim();
 
-			String trimmedLine = line.trim();
+			Matcher booleanMatcher = BOOLEAN_OPTION_PATTERN.matcher(trimmedLine);
+			Matcher numberMatcher = FLOAT_INTEGER_OPTION_PATTERN.matcher(trimmedLine);
 
-			if (!trimmedLine.startsWith("#define") && !trimmedLine.startsWith("//#define")) return line;
-
-			ParsedLineContainer values = parseConfigLine(trimmedLine);
-
-			if (values.name == null) return line;
-
-			if (values.name.startsWith("MC_") || IGNORED_PROGRAM_NAMES.contains(values.name)) {
-				return line;
-			}
-
-			//parse config lines that start with #define
-			if (trimmedLine.startsWith("#define ")) {
-				//get the option type of the line (boolean, int, float)
-				switch (getOptionType(trimmedLine)) {
-
-					case BOOLEAN:
-						Option<Boolean> booleanOption = createBooleanOption(trimmedLine, config);
-
-						//since we know it is a boolean option, we can simply check if the value of the boolean is false and then comment out the #defined line
-						//we can do this by simply adding a "//" to the beginning of the line
-						if (!booleanOption.getValue()) {
-							return "//" + line;
-						}
-
-						break;
-
-					case INTEGER:
-						Option<Integer> integerOption = createIntegerOption(trimmedLine, config);
-
-						if (integerOption != null) {
-							//replace the default value with the new one
-							return line.replaceFirst(values.defaultValue, integerOption.getValue().toString());
-						}
-
-						break;
-
-					case FLOAT:
-						Option<Float> option = createFloatOption(trimmedLine, config);
-						if (option != null) {
-							//replace the default value with the new one
-							return line.replaceFirst(values.defaultValue, option.getValue().toString());
-						}
-						break;
-
-				}
-			} else if (trimmedLine.startsWith("//#define ")) {//boolean val that is default off. Remove comments to turn on
-				//since it is default commented out, we can assume it is a boolean variable
-				if (getOptionType(trimmedLine) == Option.OptionType.BOOLEAN) {
-
-					Option<Boolean> option = createBooleanOption(trimmedLine, config);
-					//if the option was true
-					if (option.getValue()) {
-						//replace the very first comment (the one that is before the "#define") with air, being careful not to get rid of any other comments
-						return line.replaceFirst("//", "");
-					}
-				}
-			}
-		return line;
-	}
-
-	/**
-	 * Returns the option type of the #define line
-	 * Indicates how the line should be processed
-	 *
-	 * @param trimmedLine the trimmed version of the #define
-	 * @return the option type specifying the type of the config option
-	 */
-	private static Option.OptionType getOptionType(String trimmedLine) {
-		String defaultValue = parseConfigLine(trimmedLine).defaultValue;
-
-		if (defaultValue == null) {
-			return Option.OptionType.BOOLEAN;
-		} else if (defaultValue.contains(".")) {
-			return Option.OptionType.FLOAT;
-		} else {
-			return Option.OptionType.INTEGER;
-		}
-	}
-
-	/**
-	 * Creates a boolean option and processes it from the shaderpack config
-	 * @param trimmedLine the line of the config
-	 * @param config the processed pack's instance
-	 * @return an Option that is synced to the config instance and properties
-	 */
-	private static Option<Boolean> createBooleanOption(String trimmedLine, ShaderPackConfig config) {
-		boolean defaultValue = !trimmedLine.startsWith("//");
-
-		ParsedLineContainer values = parseConfigLine(trimmedLine);
-		Option<Boolean> option = new Option<>(values.comment, Arrays.asList(true, false), values.name, defaultValue, Option.OptionType.BOOLEAN);
-
-		option = config.processOption(option, Boolean::parseBoolean);
-
-		config.getBooleanOptions().put(option.getName(), option);
-		return option;
-	}
-
-	/**
-	 * Returns a integer option and sets it's value from the shaderpack config
-	 * @param trimmedLine the line that is being processed
-	 * @param config the current pack config instance
-	 * @return the new option or null if a method was processed
-	 */
-	private static Option<Integer> createIntegerOption(String trimmedLine, ShaderPackConfig config) {
-		ParsedLineContainer values = parseConfigLine(trimmedLine);
-		int value;
-
-		try {
-			value = Integer.parseInt(values.defaultValue);
-		} catch (NumberFormatException e) {
-			return null;
-		}
-
-		List<Integer> integers = parseArray(values.array, string -> (int)Float.parseFloat(string));//parse as a float and then cast to int
-
-		Option<Integer> option = new Option<>(values.comment, integers, values.name, value, Option.OptionType.INTEGER);
-		option = config.processOption(option, Integer::parseInt);
-
-		config.getIntegerOptions().put(option.getName(), option);
-		return option;
-	}
-
-	/**
-	 * Creates a float option
-	 * @param trimmedLine the line that is being processed
-	 * @param config the pack config instance
-	 * @return a new config option - or null if there was an error while processing the option
-	 */
-	private static Option<Float> createFloatOption(String trimmedLine, ShaderPackConfig config) {
-		ParsedLineContainer values = parseConfigLine(trimmedLine);
-		float value;
-
-		try {
-			value = Float.parseFloat(values.defaultValue);
-		} catch (NumberFormatException e) {
-			return null;
-		}
-
-		List<Float> allowedValues = parseArray(values.array, Float::parseFloat);
-		Option<Float> floatOption = new Option<>(values.comment, allowedValues, values.name, value, Option.OptionType.FLOAT);
-
-		floatOption = config.processOption(floatOption, Float::parseFloat);
-		config.getFloatOptions().put(floatOption.getName(), floatOption);
-		return floatOption;
-	}
-
-	/**
-	 * Parses a config line into a string array containing data for that line
-	 * @param trimmedLine the whole line (trimmed) that needs to be
-	 * @return a line container that contains the 4 elements in a configurable option
-	 * 	      - name
-	 * 	      - default value (null if boolean option)
-	 * 	      - tooltip (null if not present)
-	 * 	      - array of allowed values for the default to be set to (null if not present. If null, it can be set to any value)
-	 */
-	private static ParsedLineContainer parseConfigLine(String trimmedLine) {
-		String[] returnVal = new String[4];
-
-		String base = trimmedLine.startsWith("//") ? trimmedLine.substring(2) : trimmedLine;//remove the comment from the trimmed line
-		String literalComment;//represents the whole comment part of the line (everything with comments in the line)
-
-		if (base.contains("//")) {
-			literalComment = base.substring(base.indexOf("//"));
-			base = (base.substring(0, base.indexOf("//"))).trim();
-		} else {
-			literalComment = "";
-		}
-
-		for (String element : base.split("\\s+")) {//split by any amount of whitespace
-			//the logic inside this for each loop is fragile imo, try to find a better solution
-			if (element.contains("#define")) {
-				//ignore the actual #define part since we don't need it
+			if (!booleanMatcher.matches() && !numberMatcher.matches()) {
 				continue;
 			}
 
-			//since base is split in order, from beginning to last
-			if (returnVal[0] == null) {//if the name is null, set it because it should be the first one
-				returnVal[0] = element;
-			} else if (returnVal[1] == null) {//if the default value is null and the name is not, then it is the default value
-				returnVal[1] = element;
-			}
+			if (booleanMatcher.matches()) {
 
+				boolean containsIfDef = false;
+
+				String name = group(booleanMatcher, "name");
+				String startingComment = group(booleanMatcher, "startingComment");
+				String trailingComment = group(booleanMatcher,"comment");
+
+				if (name == null) continue; //continue if the name is not apparent. Not sure how this is possible if the regex matches, but to be safe, let's ignore it
+
+				for (String line : lines) {
+					Matcher ifdef = IFDEF_IFNDEF_PATTERN.matcher(line);
+					if (ifdef.matches()) {
+						String ifdefname = group(ifdef, "name");
+						if (name.equals(ifdefname)) {
+							containsIfDef = true;
+						}
+					}
+				}
+
+				if (!containsIfDef || name.startsWith("MC_")) {
+					continue;
+				}
+
+
+				Option<Boolean> option = createBooleanOption(name, trailingComment, startingComment, config); //create a boolean option and sync it with the config
+
+				 String line = trimmedLine; //line to be set
+
+				//if the option is true but there is a comment at the beginning
+				//this indicates that the option in config is true, but the line is false
+				if (option.getValue() && startingComment != null) {
+					line = trimmedLine.replace(startingComment, "");
+
+					//if the option is false but there is no comment at the beginning
+					//this indicates that the option in the config is false, but the line is true
+				} else if (!option.getValue() && startingComment == null) {
+					line = "//" + trimmedLine;
+				}
+				lines.set(i, line);
+
+			} else if (numberMatcher.matches()) { //matches floats and int options
+				Matcher integerMatcher = INTEGER_OPTION_PATTERN.matcher(trimmedLine); //check if it is explicitly integer
+				if (!integerMatcher.matches()) { //if it is a float
+					String name = group(numberMatcher, "name");
+					String value = group(numberMatcher, "value");
+					String comment = group(numberMatcher, "comment");
+
+					if (name == null || value == null) continue; //if null, continue
+
+					if (name.startsWith("MC_")) continue;
+
+					Option<Float> floatOption = createFloatOption(name, comment, value, config);
+
+					if (floatOption != null) {
+						String line = trimmedLine.replace(value, floatOption.getValue().toString());
+						lines.set(i, line);
+					}
+
+				} else { //if it  is a int option
+					String name = group(integerMatcher, "name");
+					String value = group(integerMatcher, "value");
+					String comment = group(integerMatcher, "comment");
+
+					if (name == null || value == null) continue;
+
+					if (name.startsWith("MC_")) continue;
+
+					Option<Integer> integerOption = createIntegerOption(name, comment, value, config);
+
+					if (integerOption != null) {
+						String line = trimmedLine.replace(value, integerOption.getValue().toString());
+						lines.set(i, line);
+					}
+				}
+			}
 		}
 
-		if (!literalComment.isEmpty()) {
-			literalComment = literalComment.substring(2);//remove the "//" from the comment itself
+		return lines;
+	}
 
-			if (literalComment.contains("[") && literalComment.contains("]")) {
+	private static Option<Boolean> createBooleanOption(String name, String comment, String startingComment, ShaderPackConfig config) {
+		boolean defaultValue = startingComment == null;//if the starting comment is not present, then it is default on, otherwise it is off
 
-				String array = literalComment.substring(literalComment.indexOf("["), literalComment.indexOf("]") + 1);
+		Option<Boolean> booleanOption = new Option<>(comment, Arrays.asList(true, false), name, defaultValue, Option.OptionType.BOOLEAN);
 
-				returnVal[3] = array;
-				String tooltip = literalComment.replace(array, "").trim();//remove the array from the comment
-				returnVal[2] = tooltip;
-			} else {
-				returnVal[2] = literalComment;
-			}
+		booleanOption = config.processOption(booleanOption, Boolean::parseBoolean);
+		config.getBooleanOptions().put(booleanOption.getName(), booleanOption);
+
+		return booleanOption;
+	}
+
+	private static Option<Float> createFloatOption(String name, String comment, String value, ShaderPackConfig config) {
+		float floatValue;
+		try {
+			floatValue = Float.parseFloat(value);
+		} catch (NumberFormatException e) {
+			return null;
+		}
+		List<Float> floats = new ArrayList<>();
+		if (comment != null && comment.contains("[") && comment.contains("]")) {
+			String array = comment.substring(comment.indexOf("["), comment.indexOf("]") + 1);
+			comment = comment.replace(array, "");
+			floats = parseArray(array, Float::parseFloat);
 		}
 
-		return new ParsedLineContainer(returnVal[0], returnVal[1], returnVal[2], returnVal[3]);
+		Option<Float> floatOption = new Option<>(comment, floats, name, floatValue, Option.OptionType.FLOAT);
+
+		floatOption = config.processOption(floatOption, Float::parseFloat);
+		config.getFloatOptions().put(floatOption.getName(), floatOption);
+
+		return floatOption;
+	}
+
+	private static Option<Integer> createIntegerOption(String name, String comment, String value, ShaderPackConfig config) {
+		int intValue;
+
+		try {
+			intValue = Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			return null;
+		}
+
+		List<Integer> integers = new ArrayList<>();
+
+		if (comment != null && comment.contains("[") && comment.contains("]")) {
+			String array = comment.substring(comment.indexOf("["), comment.indexOf("]") + 1);
+			comment = comment.replace(array, "");
+			integers = parseArray(array, Integer::parseInt);
+		}
+
+		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, Option.OptionType.INTEGER);
+
+		integerOption = config.processOption(integerOption, string -> (int)Float.parseFloat(string));//parse as float and cast to string to be flexible
+		return integerOption;
+	}
+
+	private static String group(Matcher matcher, String name) {
+		try {
+			return matcher.group(name);
+		} catch (IllegalArgumentException e) {
+			return null;
+		}
 	}
 
 	/**
@@ -337,27 +277,4 @@ public class ConfigOptionParser {
 		return list;
 	}
 
-	private static class ParsedLineContainer {
-		public final String name;
-		public final String defaultValue;
-		public final String comment;
-		public final String array;
-
-		private ParsedLineContainer(String name, String defaultValue, String comment, String array) {
-			this.name = name;
-			this.defaultValue = defaultValue;
-			this.comment = comment;
-			this.array = array;
-		}
-
-		@Override
-		public String toString() {   //testing
-			return "ParsedLineContainer{" +
-				"name='" + name + '\'' +
-				", defaultValue=" + defaultValue +
-				", comment='" + comment + '\'' +
-				", array=" + array +
-				'}';
-		}
-	}
 }

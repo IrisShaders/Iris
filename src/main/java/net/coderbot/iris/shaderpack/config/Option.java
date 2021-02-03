@@ -21,7 +21,7 @@ public class Option<T> {
 	private final OptionType type;
 
 	public Option(String comment, List<T> allowedValues, String name, T defaultValue, OptionType type) {
-		this.comment = comment == null ? "" : comment;
+		this.comment = comment == null || comment.equals("//") ? "" : comment;
 		this.allowedValues = allowedValues;
 		this.name = name;
 		this.value = defaultValue;
