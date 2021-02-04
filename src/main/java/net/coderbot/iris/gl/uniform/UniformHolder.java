@@ -12,8 +12,6 @@ import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 
-import static net.coderbot.iris.gl.uniform.Vector2iUniform.Vec2i;
-
 public interface UniformHolder {
 	UniformHolder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform);
 
@@ -50,13 +48,13 @@ public interface UniformHolder {
 	}
 
 	default UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2fUniform(id, value)));
+		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, true)));
 
 		return this;
 	}
 
-	default UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2i> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2iUniform(id, value)));
+	default UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
+		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, false)));
 
 		return this;
 	}
