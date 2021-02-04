@@ -15,7 +15,7 @@ import net.coderbot.iris.Iris;
 public class ShaderPackConfig {
 
 	public final Path shaderPackConfigPath;
-	private final Properties shaderProperties;
+	private final Properties configProperties;
 	private final String comment;
 
 	private final Map<String, Option<Boolean>> booleanOptions = new HashMap<>();
@@ -25,12 +25,12 @@ public class ShaderPackConfig {
 	public ShaderPackConfig(String name) {
 		//optifine uses txt files, so we should do the same
 		shaderPackConfigPath = SHADERPACK_DIR.resolve(name + ".txt");
-		shaderProperties = new Properties();
+		configProperties = new Properties();
 		comment = "This file stores the shaderpack configuration for the shaderpack " + name;
 	}
 
-	public Properties getShaderProperties() {
-		return shaderProperties;
+	public Properties getConfigProperties() {
+		return configProperties;
 	}
 
 	//this 3 methods below should be used by the gui to get the available options and then use them
@@ -54,23 +54,30 @@ public class ShaderPackConfig {
 	 * @return a modified option that has read it's value
 	 */
 	public <T> Option<T> processOption(Option<T> option, Function<String, T> deserializer) {
-		if (shaderProperties.containsKey(option.getName())) {
-			option.load(shaderProperties, deserializer);
+		if (configProperties.containsKey(option.getName())) {
+			option.load(configProperties, deserializer);
 		}
-		option.save(shaderProperties);
+		option.save(configProperties);
 		return option;
 	}
 
-
+	/**
+	 * Loads values from properties into the configProperties field
+	 * @throws IOException file exception
+	 */
 	public void load() throws IOException {
 		if (!Files.exists(shaderPackConfigPath)) {
 			return;
 		}
-		shaderProperties.load(Files.newInputStream(shaderPackConfigPath));
+		configProperties.load(Files.newInputStream(shaderPackConfigPath));
 	}
 
+	/**
+	 * Saves the configProperties
+	 * @throws IOException file exceptions
+	 */
 	public void save() throws IOException {
-		shaderProperties.store(Files.newOutputStream(shaderPackConfigPath), comment);
+		configProperties.store(Files.newOutputStream(shaderPackConfigPath), comment);
 	}
 
 }
