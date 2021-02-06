@@ -2,6 +2,8 @@ package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -42,10 +44,9 @@ public class MixinWorldRenderer {
 		Iris.getCompositeRenderer().renderAll();
 	}
 
-	// TODO: end sky
 	@Inject(method = RENDER_SKY, at = @At("HEAD"))
 	private void iris$renderSky$begin(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		Iris.getPipeline().beginSky();
+		GbufferPrograms.useProgram(GbufferProgram.SKY_BASIC);
 	}
 
 	@Inject(method = RENDER_SKY,
@@ -59,59 +60,63 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER_SKY,
 		at = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V"))
 	private void iris$renderSky$beginTextured(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		Iris.getPipeline().beginTexturedSky();
+		GbufferPrograms.end();
+		GbufferPrograms.useProgram(GbufferProgram.SKY_TEXTURED);
 	}
 
 	@Inject(method = RENDER_SKY,
 		slice = @Slice(from = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V")),
 		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;method_23787(F)F"))
 	private void iris$renderSky$endTextured(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		Iris.getPipeline().endTexturedSky();
+		GbufferPrograms.end();
+		GbufferPrograms.useProgram(GbufferProgram.SKY_BASIC);
 	}
 
 	@Inject(method = RENDER_SKY, at = @At("RETURN"))
 	private void iris$renderSky$end(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		Iris.getPipeline().endSky();
+		GbufferPrograms.end();
 	}
 
 	@Inject(method = RENDER_CLOUDS, at = @At("HEAD"))
 	private void iris$beginClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		Iris.getPipeline().beginClouds();
+		GbufferPrograms.useProgram(GbufferProgram.CLOUDS);
 	}
 
 	@Inject(method = RENDER_CLOUDS, at = @At("RETURN"))
 	private void iris$endClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		Iris.getPipeline().endClouds();
+		GbufferPrograms.end();
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+		// TODO: This is needed for Sodium compat
 		//Iris.getPipeline().beginTerrainLayer(renderLayer);
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+		// TODO: This is needed for Sodium compat
 		//Iris.getPipeline().endTerrainLayer(renderLayer);
 	}
 
 	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("HEAD"))
 	private void iris$beginWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
-		Iris.getPipeline().beginWeather();
+		GbufferPrograms.useProgram(GbufferProgram.WEATHER);
 	}
 
 	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("RETURN"))
 	private void iris$endWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
-		Iris.getPipeline().endWeather();
+		GbufferPrograms.end();
 	}
 
 	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("HEAD"))
 	private void iris$beginWorldBorder(Camera camera, CallbackInfo callback) {
-		Iris.getPipeline().beginWorldBorder();
+		GbufferPrograms.useProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
 	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("RETURN"))
 	private void iris$endWorldBorder(Camera camera, CallbackInfo callback) {
-		Iris.getPipeline().endWorldBorder();
+		GbufferPrograms.end();
 	}
 
 	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)

@@ -2,7 +2,8 @@ package net.coderbot.iris.mixin;
 
 import java.util.Iterator;
 
-import net.coderbot.iris.Iris;
+import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.pipeline.ShaderPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -32,13 +33,13 @@ public class MixinParticleManager {
 										LightmapTextureManager lightmapTextureManager, Camera camera, float f,
 										CallbackInfo ci, Iterator<ParticleTextureSheet> sheets, ParticleTextureSheet sheet,
 										Iterable<Particle> particles, Tessellator tessellator) {
-		Iris.getPipeline().beginParticleSheet(sheet);
+		GbufferPrograms.useProgram(ShaderPipeline.getProgramForSheet(sheet));
 	}
 
 	@Inject(method = RENDER_PARTICLES, at = @At("RETURN"))
 	private void iris$finishDrawingParticles(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate,
 										LightmapTextureManager lightmapTextureManager, Camera camera, float f,
 										CallbackInfo ci) {
-		Iris.getPipeline().endParticles();
+		GbufferPrograms.end();
 	}
 }

@@ -155,10 +155,29 @@ public class ShaderPipeline {
 			case ARMOR_GLINT:
 				beginPass(glint);
 				return;
+			case CLOUDS:
+				beginPass(clouds);
+				return;
+			case SKY_BASIC:
+				beginPass(skyBasic);
+				return;
+			case SKY_TEXTURED:
+				beginPass(skyTextured);
+				return;
+			case TEXTURED_LIT:
+				beginPass(texturedLit);
+				return;
+			case TEXTURED:
+				beginPass(textured);
+				return;
+			case WEATHER:
+				beginPass(weather);
+				return;
+			case HAND:
+			default:
+				// TODO
+				throw new UnsupportedOperationException("TODO: Unsupported gbuffer program: " + program);
 		}
-
-		// TODO
-		throw new UnsupportedOperationException("TODO");
 	}
 
 	public boolean shouldDisableVanillaEntityShadows() {
@@ -331,108 +350,19 @@ public class ShaderPipeline {
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 	}
 
-	public void beginClouds() {
-		if (clouds == null) {
-			return;
-		}
-
-		clouds.use();
-	}
-
-	public void endClouds() {
-		end();
-	}
-
-	public void beginTranslucentTerrain() {
-		if (translucent == null) {
-			return;
-		}
-
-		translucent.use();
-		setupAttributes(translucent);
-
-		// TODO: This is just making it so that all translucent content renders like water. We need to properly support
-		// mc_Entity!
-		setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
-	}
-
-	public void beginSky() {
-		if (skyBasic == null) {
-			return;
-		}
-
-		skyBasic.use();
-	}
-
-	public void beginTexturedSky() {
-		if (skyTextured == null) {
-			return;
-		}
-
-		skyTextured.use();
-	}
-
-	public void endTexturedSky() {
-		if (skyBasic == null) {
-			endSky();
-		} else {
-			skyBasic.use();
-		}
-	}
-
-	public void endSky() {
-		end();
-	}
-
-	public void beginWeather() {
-		if (weather == null) {
-			return;
-		}
-
-		weather.use();
-	}
-
-	public void endWeather() {
-		end();
-	}
-
-	public void beginWorldBorder() {
-		if (texturedLit == null) {
-			return;
-		}
-
-		texturedLit.use();
-	}
-
-	public void endWorldBorder() {
-		end();
-	}
-
-	public void beginParticleSheet(ParticleTextureSheet sheet) {
-		Pass pass = textured;
-
+	public static GbufferProgram getProgramForSheet(ParticleTextureSheet sheet) {
 		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_OPAQUE || sheet == ParticleTextureSheet.TERRAIN_SHEET || sheet == ParticleTextureSheet.CUSTOM) {
-			pass = texturedLit;
-		}
-
-		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT) {
+			return GbufferProgram.TEXTURED_LIT;
+		} else if (sheet == ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT) {
 			// TODO: Should we be using some other pass? (gbuffers_water?)
-			pass = texturedLit;
-		}
-
-		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_LIT) {
+			return GbufferProgram.TEXTURED_LIT;
+		} else {
+			// sheet == ParticleTextureSheet.PARTICLE_SHEET_LIT
+			//
 			// Yes, this seems backwards. However, in this case, these particles are always bright regardless of the
 			// lighting condition, and therefore don't use the textured_lit program.
-			pass = textured;
+			return GbufferProgram.TEXTURED;
 		}
-
-		if (pass != null) {
-			pass.use();
-		}
-	}
-
-	public void endParticles() {
-		end();
 	}
 
 	// TODO: better way to avoid this global state?
@@ -443,7 +373,7 @@ public class ShaderPipeline {
 	}
 
 	public void endWorldRender() {
-		GlProgramManager.useProgram(0);
+		end();
 		isRenderingWorld = false;
 	}
 }
