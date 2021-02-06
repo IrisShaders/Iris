@@ -10,6 +10,7 @@ public class ProgramDirectives {
 	private float viewportScale;
 	@Nullable
 	private AlphaTestOverride alphaTestOverride;
+	private boolean disableBlend;
 
 	ProgramDirectives(ShaderPack.ProgramSource source, ShaderProperties properties) {
 		// First try to find it in the fragment source, then in the vertex source.
@@ -21,6 +22,7 @@ public class ProgramDirectives {
 		if (properties != null) {
 			viewportScale = properties.viewportScaleOverrides.getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.alphaTestOverrides.get(source.getName());
+			disableBlend = properties.blendDisabled.contains(source.getName());
 		}
 	}
 
@@ -52,5 +54,9 @@ public class ProgramDirectives {
 
 	public Optional<AlphaTestOverride> getAlphaTestOverride() {
 		return Optional.ofNullable(alphaTestOverride);
+	}
+
+	public boolean shouldDisableBlend() {
+		return disableBlend;
 	}
 }

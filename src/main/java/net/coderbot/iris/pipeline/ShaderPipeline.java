@@ -135,24 +135,18 @@ public class ShaderPipeline {
 				beginPass(damagedBlock);
 				return;
 			case BASIC:
-				// TODO: Disabling blend on outlines is hardcoded for Sildur's
-				//GlStateManager.disableBlend();
 				beginPass(basic);
 				return;
 			case BEACON_BEAM:
 				beginPass(beaconBeam);
 				return;
 			case ENTITIES:
-				// TODO: Disabling blend on entities is hardcoded for Sildur's
-				//GlStateManager.disableBlend();
 				beginPass(entities);
 				return;
 			case BLOCK_ENTITIES:
 				beginPass(blockEntities);
 				return;
 			case ENTITIES_GLOWING:
-				// TODO: Disabling blend on entities is hardcoded for Sildur's
-				//GlStateManager.disableBlend();
 				beginPass(glowingEntities);
 				return;
 			case EYES:
@@ -206,18 +200,20 @@ public class ShaderPipeline {
 			Iris.logger.info("Configured alpha test override for " + source.getName() + ": " + alphaTestOverride);
 		}
 
-		return new Pass(builder.build(), framebuffer, alphaTestOverride);
+		return new Pass(builder.build(), framebuffer, alphaTestOverride, source.getDirectives().shouldDisableBlend());
 	}
 
 	private final class Pass {
 		private final Program program;
 		private final GlFramebuffer framebuffer;
 		private final AlphaTestOverride alphaTestOverride;
+		private final boolean disableBlend;
 
-		private Pass(Program program, GlFramebuffer framebuffer, AlphaTestOverride alphaTestOverride) {
+		private Pass(Program program, GlFramebuffer framebuffer, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
 			this.program = program;
 			this.framebuffer = framebuffer;
 			this.alphaTestOverride = alphaTestOverride;
+			this.disableBlend = disableBlend;
 		}
 
 		public void use() {
@@ -231,6 +227,10 @@ public class ShaderPipeline {
 
 			if (alphaTestOverride != null) {
 				alphaTestOverride.setup();
+			}
+
+			if (disableBlend) {
+				GlStateManager.disableBlend();
 			}
 		}
 

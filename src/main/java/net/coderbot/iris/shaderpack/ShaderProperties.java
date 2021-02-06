@@ -8,6 +8,8 @@ import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
@@ -15,6 +17,7 @@ import net.coderbot.iris.gl.blending.AlphaTestOverride;
 public class ShaderProperties {
 	Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
+	ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
 
 	private ShaderProperties() {
 		// empty
@@ -70,6 +73,20 @@ public class ShaderProperties {
 				}
 
 				alphaTestOverrides.put(pass, new AlphaTestOverride(function.get(), reference));
+			});
+
+			handlePassDirective("blend.", key, value, pass -> {
+				if (pass.contains(".")) {
+					Iris.logger.warn("Per-buffer pass blending directives are not supported, ignoring blend directive for " + key);
+					return;
+				}
+
+				if (!"off".equals(value)) {
+					Iris.logger.warn("Custom blending mode directives are not supported, ignoring blend directive for " + key);
+					return;
+				}
+
+				blendDisabled.add(pass);
 			});
 		});
 	}
