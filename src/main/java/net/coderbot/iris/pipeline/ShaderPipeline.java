@@ -8,6 +8,7 @@ import java.util.Set;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -17,7 +18,6 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20;
@@ -27,7 +27,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.particle.ParticleTextureSheet;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
 
 /**
@@ -115,20 +114,30 @@ public class ShaderPipeline {
 
 		switch (program) {
 			case TERRAIN:
-				//RenderSystem.enableAlphaTest();
-				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
-				beginTerrain();
+				beginPass(terrain);
+
+				if (terrain != null) {
+					setupAttributes(terrain);
+				}
 				return;
 			case TRANSLUCENT_TERRAIN:
-				beginTranslucentTerrain();
+				beginPass(translucent);
+
+				if (translucent != null) {
+					setupAttributes(translucent);
+
+					// TODO: This is just making it so that all translucent content renders like water. We need to
+					// properly support mc_Entity!
+					setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
+				}
 				return;
 			case DAMAGED_BLOCKS:
 				beginPass(damagedBlock);
 				return;
 			case BASIC:
-				RenderSystem.enableAlphaTest();
-				RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
-				beginBasic();
+				// TODO: Disabling blend on outlines is hardcoded for Sildur's
+				//GlStateManager.disableBlend();
+				beginPass(basic);
 				return;
 			case BEACON_BEAM:
 				beginPass(beaconBeam);
@@ -136,8 +145,6 @@ public class ShaderPipeline {
 			case ENTITIES:
 				// TODO: Disabling blend on entities is hardcoded for Sildur's
 				//GlStateManager.disableBlend();
-				//RenderSystem.enableAlphaTest();
-				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginPass(entities);
 				return;
 			case BLOCK_ENTITIES:
@@ -146,8 +153,6 @@ public class ShaderPipeline {
 			case ENTITIES_GLOWING:
 				// TODO: Disabling blend on entities is hardcoded for Sildur's
 				//GlStateManager.disableBlend();
-				//RenderSystem.enableAlphaTest();
-				//RenderSystem.alphaFunc(GL11.GL_GREATER, 0.1f);
 				beginPass(glowingEntities);
 				return;
 			case EYES:
@@ -195,16 +200,24 @@ public class ShaderPipeline {
 		builder.bindAttributeLocation(11, "mc_midTexCoord");
 		builder.bindAttributeLocation(12, "at_tangent");
 
-		return new Pass(builder.build(), framebuffer);
+		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
+
+		if (alphaTestOverride != null) {
+			Iris.logger.info("Configured alpha test override for " + source.getName() + ": " + alphaTestOverride);
+		}
+
+		return new Pass(builder.build(), framebuffer, alphaTestOverride);
 	}
 
 	private final class Pass {
 		private final Program program;
 		private final GlFramebuffer framebuffer;
+		private final AlphaTestOverride alphaTestOverride;
 
-		private Pass(Program program, GlFramebuffer framebuffer) {
+		private Pass(Program program, GlFramebuffer framebuffer, AlphaTestOverride alphaTestOverride) {
 			this.program = program;
 			this.framebuffer = framebuffer;
+			this.alphaTestOverride = alphaTestOverride;
 		}
 
 		public void use() {
@@ -215,6 +228,10 @@ public class ShaderPipeline {
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 			framebuffer.bind();
 			program.use();
+
+			if (alphaTestOverride != null) {
+				alphaTestOverride.setup();
+			}
 		}
 
 		public Program getProgram() {
@@ -259,8 +276,7 @@ public class ShaderPipeline {
 		}
 
 		// Disable any alpha func shenanigans
-		RenderSystem.disableAlphaTest();
-		RenderSystem.defaultAlphaFunc();
+		AlphaTestOverride.teardown();
 
 		if (this.basic == null) {
 			GlProgramManager.useProgram(0);
@@ -327,17 +343,6 @@ public class ShaderPipeline {
 		end();
 	}
 
-	public void beginTerrain() {
-		if (terrain == null) {
-			return;
-		}
-
-		// TODO: Don't disable blend normally, this is hardcoding for Sildur's
-		//GlStateManager.disableBlend();
-		terrain.use();
-		setupAttributes(terrain);
-	}
-
 	public void beginTranslucentTerrain() {
 		if (translucent == null) {
 			return;
@@ -401,16 +406,6 @@ public class ShaderPipeline {
 
 	public void endWorldBorder() {
 		end();
-	}
-
-	public void beginBasic() {
-		if (basic == null) {
-			return;
-		}
-
-		// TODO: This is hardcoded for Sildur's, we shouldn't disable blend normally
-		GlStateManager.disableBlend();
-		basic.use();
 	}
 
 	public void beginParticleSheet(ParticleTextureSheet sheet) {
