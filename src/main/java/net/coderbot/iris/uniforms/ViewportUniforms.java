@@ -35,8 +35,7 @@ public final class ViewportUniforms {
 		uniforms
 			.uniform1f(PER_FRAME, "viewHeight", WINDOW::getHeight)
 			.uniform1f(PER_FRAME, "viewWidth", WINDOW::getWidth)
-			.uniform1f(PER_FRAME, "aspectRatio", ViewportUniforms::getAspectRatio)
-			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma);
+			.uniform1f(PER_FRAME, "aspectRatio", ViewportUniforms::getAspectRatio);
 	}
 
 	/**

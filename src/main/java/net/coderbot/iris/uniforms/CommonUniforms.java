@@ -13,6 +13,7 @@ import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.texunits.TextureUnit;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -51,6 +52,7 @@ public final class CommonUniforms {
 			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(Hand.MAIN_HAND))
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(Hand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
+			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood);;
 	}
 
@@ -71,10 +73,11 @@ public final class CommonUniforms {
 	}
 
 	private static float getPlayerMood() {
-		if (client.player == null) {
+		if (!(client.cameraEntity instanceof ClientPlayerEntity)) {
 			return 0.0F;
 		}
-		return client.player.getMoodPercentage();
+
+		return ((ClientPlayerEntity)client.cameraEntity).getMoodPercentage();
 	}
 
 	private static float getNightVision() {
@@ -85,9 +88,11 @@ public final class CommonUniforms {
 			LivingEntity livingEntity = (LivingEntity) cameraEntity;
 
 			if (livingEntity.getStatusEffect(StatusEffects.NIGHT_VISION) != null) {
+
 				return GameRenderer.getNightVisionStrength(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 			}
 		}
+
 		return 0.0F;
 	}
 
