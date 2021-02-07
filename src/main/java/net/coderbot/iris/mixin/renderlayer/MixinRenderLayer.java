@@ -1,10 +1,7 @@
 package net.coderbot.iris.mixin.renderlayer;
 
-import java.util.Optional;
-
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.IrisRenderLayerWrapper;
-import net.coderbot.iris.layer.ProgramRenderLayer;
 import net.coderbot.iris.layer.UseProgramRenderPhase;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,7 +22,7 @@ import net.fabricmc.api.Environment;
 
 @Environment(EnvType.CLIENT)
 @Mixin(RenderLayer.class)
-public class MixinRenderLayer implements ProgramRenderLayer {
+public class MixinRenderLayer {
 	@Shadow
 	@Final
 	@Mutable
@@ -69,12 +66,6 @@ public class MixinRenderLayer implements ProgramRenderLayer {
 	@Shadow @Final @Mutable private static RenderLayer WATER_MASK;
 
 	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_NO_CRUMBLING;
-
-	@Override
-	public Optional<GbufferProgram> getProgram() {
-		// By default, don't use shaders to render content
-		return Optional.empty();
-	}
 
 	static {
 		SOLID = wrap("iris:terrain_solid", SOLID, GbufferProgram.TERRAIN);
