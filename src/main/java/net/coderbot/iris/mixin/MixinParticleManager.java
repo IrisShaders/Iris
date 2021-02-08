@@ -33,13 +33,13 @@ public class MixinParticleManager {
 										LightmapTextureManager lightmapTextureManager, Camera camera, float f,
 										CallbackInfo ci, Iterator<ParticleTextureSheet> sheets, ParticleTextureSheet sheet,
 										Iterable<Particle> particles, Tessellator tessellator) {
-		GbufferPrograms.useProgram(ShaderPipeline.getProgramForSheet(sheet));
+		GbufferPrograms.push(ShaderPipeline.getProgramForSheet(sheet));
 	}
 
 	@Inject(method = RENDER_PARTICLES, at = @At("RETURN"))
 	private void iris$finishDrawingParticles(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate,
 										LightmapTextureManager lightmapTextureManager, Camera camera, float f,
 										CallbackInfo ci) {
-		GbufferPrograms.end();
+		GbufferPrograms.pop();
 	}
 }

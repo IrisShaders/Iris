@@ -1,9 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -74,6 +72,8 @@ public class ShaderPipeline {
 	private final NoiseTexture noiseTexture;
 	private final int waterId;
 
+	private static final List<GbufferProgram> programStack = new ArrayList<>();
+
 	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
 		this.renderTargets = renderTargets;
 		waterId = pack.getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
@@ -106,12 +106,44 @@ public class ShaderPipeline {
 		this.noiseTexture = new NoiseTexture(128, 128);
 	}
 
-	public void useProgram(GbufferProgram program) {
+	public void pushProgram(GbufferProgram program) {
 		if (!isRenderingWorld) {
 			// don't mess with non-world rendering
 			return;
 		}
 
+		programStack.add(program);
+		useProgram(program);
+
+		System.out.println("[" + programStack.size() + "] Push: " + program);
+	}
+
+	public void popProgram() {
+		if (!isRenderingWorld) {
+			// don't mess with non-world rendering
+			return;
+		}
+
+		// Disable any alpha func shenanigans
+		AlphaTestOverride.teardown();
+
+		if (programStack.isEmpty()) {
+			// Use fixed-function rendering.
+			// Either the shaderpack lacks a gbuffers_basic program, or we just finished world rendering.
+			teardownProgram();
+			return;
+		}
+
+		// Equivalent to pop(), but a bit more verbose.
+		// This shouldn't have the same performance issues that remove() normally has since we're removing from the end
+		// every time.
+		GbufferProgram popped = programStack.remove(programStack.size() - 1);
+
+		useProgram(popped);
+		System.out.println("[" + programStack.size() + "] Pop: " + popped);
+	}
+
+	private void useProgram(GbufferProgram program) {
 		switch (program) {
 			case TERRAIN:
 				beginPass(terrain);
@@ -178,6 +210,11 @@ public class ShaderPipeline {
 				// TODO
 				throw new UnsupportedOperationException("TODO: Unsupported gbuffer program: " + program);
 		}
+	}
+
+	private void teardownProgram() {
+		GlProgramManager.useProgram(0);
+		this.baseline.bind();
 	}
 
 	public boolean shouldDisableVanillaEntityShadows() {
@@ -288,27 +325,6 @@ public class ShaderPipeline {
 		}
 	}
 
-	public void end() {
-		if (!isRenderingWorld) {
-			// don't mess with non-world rendering
-			return;
-		}
-
-		// Disable any alpha func shenanigans
-		AlphaTestOverride.teardown();
-
-		if (this.basic == null) {
-			GlProgramManager.useProgram(0);
-			this.baseline.bind();
-
-			return;
-		}
-
-		// Default to gbuffers_basic for unrecognized render layers
-		// TODO: Potentially use gbuffers_textured or gbuffers_textured_lit appropriately?
-		this.basic.use();
-	}
-
 	private static void setupAttributes(Pass pass) {
 		// TODO: Properly add these attributes into the vertex format
 
@@ -370,10 +386,23 @@ public class ShaderPipeline {
 
 	public void beginWorldRender() {
 		isRenderingWorld = true;
+
+		if (!programStack.isEmpty()) {
+			throw new IllegalStateException("Program stack before the start of rendering, something has gone very wrong!");
+		}
+
+		// Default to rendering with BASIC for all unknown content.
+		// This probably isn't the best approach, but it works for now.
+		pushProgram(GbufferProgram.BASIC);
 	}
 
 	public void endWorldRender() {
-		end();
+		popProgram();
+
+		if (!programStack.isEmpty()) {
+			throw new IllegalStateException("Program stack not empty at end of rendering, something has gone very wrong!");
+		}
+
 		isRenderingWorld = false;
 	}
 }
