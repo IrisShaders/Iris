@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack.config;
+package net.coderbot.iris.shaderpack;
 
 import static net.coderbot.iris.Iris.SHADERPACK_DIR;
 
@@ -8,9 +8,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Function;
-
-import net.coderbot.iris.Iris;
 
 public class ShaderPackConfig {
 
@@ -49,13 +46,12 @@ public class ShaderPackConfig {
 	/**
 	 * Process a new option and adds it to the shader properties to be serialized
 	 * @param option the option to process
-	 * @param deserializer the function that converts a string to the desired type
 	 * @param <T> the type of the Option
 	 * @return a modified option that has read it's value
 	 */
-	public <T> Option<T> processOption(Option<T> option, Function<String, T> deserializer) {
+	public <T> Option<T> processOption(Option<T> option) {
 		if (configProperties.containsKey(option.getName())) {
-			option.load(configProperties, deserializer);
+			option.load(configProperties);
 		}
 		option.save(configProperties);
 		return option;

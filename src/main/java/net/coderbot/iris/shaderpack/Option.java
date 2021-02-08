@@ -1,11 +1,9 @@
-package net.coderbot.iris.shaderpack.config;
+package net.coderbot.iris.shaderpack;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import net.coderbot.iris.Iris;
 
@@ -21,10 +19,10 @@ public class Option<T> {
 	private final List<T> allowedValues;
 	private final String name;
 	private T value;
-	private final OptionType type;
 	private final T defaultValue;
+	private final Function<String, T> deserializer;
 
-	public Option(String comment, List<T> allowedValues, String name, T defaultValue, OptionType type) {
+	public Option(String comment, List<T> allowedValues, String name, T defaultValue, Function<String, T> parser) {
 		this.comment = comment == null ? "" : comment.trim();
 		this.allowedValues = allowedValues;
 		this.name = name;
@@ -34,8 +32,8 @@ public class Option<T> {
 		if (!allowedValues.contains(defaultValue) && !allowedValues.isEmpty()) {
 			allowedValues.add(defaultValue);
 		}
-		this.type = type;
 		this.defaultValue = defaultValue;
+		this.deserializer = parser;
 	}
 
 	/**
@@ -49,10 +47,9 @@ public class Option<T> {
 	/**
 	 * Sets this Option's value to the one stored in a specific {@link Properties}
 	 * @param properties the properties to load from
-	 * @param parser converts the string to the desired type
 	 */
-	public void load(Properties properties, Function<String, T> parser) {
-		setValue(parser.apply(properties.getProperty(this.name)));
+	public void load(Properties properties) {
+		setValue(getDeserializer().apply(properties.getProperty(this.name)));
 	}
 
 	public String getName() {
@@ -80,15 +77,7 @@ public class Option<T> {
 	 * @return comment that is split sentences
 	 */
 	public List<String> getComment() {
-		return Arrays.stream(comment.split("\\.\\s")).map(string -> string.endsWith(".") ? string.substring(0, string.length() - 1) : string).collect(Collectors.toList());//remove periods from the end, idk if needed
-	}
-
-	/**
-	 * Returns the type of config this option holds (boolean, int, float)
-	 * @return current option type
-	 */
-	public OptionType getType() {
-		return type;
+		return Arrays.asList(comment.split("\\.\\s"));
 	}
 
 	/**
@@ -116,6 +105,14 @@ public class Option<T> {
 	}
 
 	/**
+	 * Returns the function that parses the value of this option from a string
+	 * @return the parser function that accepts a string
+	 */
+	public Function<String, T> getDeserializer() {
+		return deserializer;
+	}
+
+	/**
 	 * Returns the Default Value of this option
 	 *
 	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L133">Gui Note: Shift Clicking</a>
@@ -137,9 +134,4 @@ public class Option<T> {
 			'}';
 	}
 
-	public enum OptionType {
-		INTEGER,
-		BOOLEAN,
-		FLOAT
-	}
 }

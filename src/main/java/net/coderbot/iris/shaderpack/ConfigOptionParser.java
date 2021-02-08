@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack.parse;
+package net.coderbot.iris.shaderpack;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,9 +9,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-import net.coderbot.iris.shaderpack.config.Option;
-import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
 
 import net.minecraft.util.Util;
 
@@ -189,9 +186,9 @@ public class ConfigOptionParser {
 	private static Option<Boolean> createBooleanOption(String name, String comment, String startingComment, ShaderPackConfig config) {
 		boolean defaultValue = startingComment == null;//if the starting comment is not present, then it is default on, otherwise it is off
 
-		Option<Boolean> booleanOption = new Option<>(comment, Arrays.asList(true, false), name, defaultValue, Option.OptionType.BOOLEAN);
+		Option<Boolean> booleanOption = new Option<>(comment, Arrays.asList(true, false), name, defaultValue, Boolean::parseBoolean);
 
-		booleanOption = config.processOption(booleanOption, Boolean::parseBoolean);
+		booleanOption = config.processOption(booleanOption);
 		config.getBooleanOptions().put(booleanOption.getName(), booleanOption);
 
 		return booleanOption;
@@ -219,9 +216,9 @@ public class ConfigOptionParser {
 			floats = parseArray(array, Float::parseFloat);
 		}
 
-		Option<Float> floatOption = new Option<>(comment, floats, name, floatValue, Option.OptionType.FLOAT);
+		Option<Float> floatOption = new Option<>(comment, floats, name, floatValue, Float::parseFloat);
 
-		floatOption = config.processOption(floatOption, Float::parseFloat);
+		floatOption = config.processOption(floatOption);
 		config.getFloatOptions().put(floatOption.getName(), floatOption);
 
 		return floatOption;
@@ -252,9 +249,9 @@ public class ConfigOptionParser {
 			integers = parseArray(array, Integer::parseInt);
 		}
 
-		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, Option.OptionType.INTEGER);
+		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, (string) -> (int)Float.parseFloat(string));//parse as float and cast to string to be flexible
 
-		integerOption = config.processOption(integerOption, string -> (int)Float.parseFloat(string));//parse as float and cast to string to be flexible
+		integerOption = config.processOption(integerOption);
 		return integerOption;
 	}
 

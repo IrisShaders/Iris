@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack.directives;
+package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
