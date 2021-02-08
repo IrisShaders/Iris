@@ -19,4 +19,16 @@ public class FramebufferBlitter {
 		GL30C.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
 			GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
 	}
+
+	public static void copyDepthBufferContent(GlFramebuffer from, Framebuffer to) {
+		from.bindAsReadBuffer();
+		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, to.fbo);
+
+		int width = to.textureWidth;
+		int height = to.textureHeight;
+
+		// TODO: Support OpenGL 2.1?
+		GL30C.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
+				GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
+	}
 }

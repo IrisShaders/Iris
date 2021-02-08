@@ -4,23 +4,28 @@
   "package": "net.coderbot.iris.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-	"MixinDebugHud",
-	"MixinGameRenderer",
-	"MixinGlStateManager",
-	"MixinImmediateVertexConsumerProvider",
-	"MixinParticleManager",
-	"MixinTranslationStorage",
-	"MixinWorldRenderer",
-	"texunits.MixinBufferVertexConsumer",
-	"texunits.MixinGlStateManager",
-	"texunits.MixinLightmapTextureManager",
-	"texunits.MixinOverlayTexture",
-	"texunits.MixinVertexFormats"
+    "MixinDebugHud",
+    "MixinEntityRenderDispatcher",
+    "MixinGameRenderer",
+    "MixinGlStateManager",
+    "MixinImmediateVertexConsumerProvider",
+    "MixinParticleManager",
+    "MixinTranslationStorage",
+    "MixinWorldRenderer",
+    "fabulous.MixinDisableFabulousGraphics",
+    "fabulous.MixinOption",
+    "gbuffer.MixinWorldRenderer",
+    "renderlayer.MixinFixEyesTranslucency",
+    "renderlayer.MixinRenderLayer",
+    "renderlayer.RenderLayerAccessor",
+    "renderlayer.RenderPhaseAccessor",
+    "texunits.MixinBufferVertexConsumer",
+    "texunits.MixinGlStateManager",
+    "texunits.MixinLightmapTextureManager",
+    "texunits.MixinOverlayTexture",
+    "texunits.MixinVertexFormats"
   ],
   "injectors": {
-	"defaultRequire": 1
-  },
-  "mixins": [
-	"gbuffer.MixinWorldRenderer"
-  ]
+    "defaultRequire": 1
+  }
 }
