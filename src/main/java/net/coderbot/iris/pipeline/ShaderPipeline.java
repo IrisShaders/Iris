@@ -88,13 +88,11 @@ public class ShaderPipeline {
 		this.terrain = pack.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
 		this.translucent = pack.getGbuffersWater().map(this::createPass).orElse(terrain);
 		this.damagedBlock = pack.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
-		// TODO: Load weather shaders
-		this.weather = texturedLit;
+		this.weather = pack.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
 		this.beaconBeam = pack.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
 		this.entities = pack.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = pack.getGbuffersBlock().map(this::createPass).orElse(terrain);
-		// TODO: Load glowing entities
-		this.glowingEntities = entities;
+		this.glowingEntities = pack.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
 		this.glint = pack.getGbuffersGlint().map(this::createPass).orElse(textured);
 		this.eyes = pack.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
@@ -285,6 +283,8 @@ public class ShaderPipeline {
 			framebuffer.bind();
 			program.use();
 
+			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
+			// that.
 			if (alphaTestOverride != null) {
 				alphaTestOverride.setup();
 			}

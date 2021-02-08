@@ -27,7 +27,9 @@ public class ShaderPack {
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
+	private final ProgramSource gbuffersWeather;
 	private final ProgramSource gbuffersEntities;
+	private final ProgramSource gbuffersEntitiesGlowing;
 	private final ProgramSource gbuffersGlint;
 	private final ProgramSource gbuffersEntityEyes;
 	private final ProgramSource gbuffersBlock;
@@ -53,7 +55,9 @@ public class ShaderPack {
 		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this, shaderProperties);
 		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this, shaderProperties);
 		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this, shaderProperties);
+		this.gbuffersWeather = readProgramSource(root, "gbuffers_weather", this, shaderProperties);
 		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this, shaderProperties);
+		this.gbuffersEntitiesGlowing = readProgramSource(root, "gbuffers_entities_glowing", this, shaderProperties);
 		this.gbuffersGlint = readProgramSource(root, "gbuffers_armor_glint", this, shaderProperties);
 		this.gbuffersEntityEyes = readProgramSource(root, "gbuffers_spidereyes", this, shaderProperties);
 		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this, shaderProperties);
@@ -131,8 +135,16 @@ public class ShaderPack {
 		return gbuffersClouds.requireValid();
 	}
 
+	public Optional<ProgramSource> getGbuffersWeather() {
+		return gbuffersWeather.requireValid();
+	}
+
 	public Optional<ProgramSource> getGbuffersEntities() {
 		return gbuffersEntities.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersEntitiesGlowing() {
+		return gbuffersEntitiesGlowing.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersGlint() {
