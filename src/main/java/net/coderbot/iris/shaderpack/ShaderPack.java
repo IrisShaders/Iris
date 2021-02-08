@@ -217,7 +217,7 @@ public class ShaderPack {
 			throw e;
 		}
 
-		return new ProgramSource(program, vertexSource, fragmentSource, pack, pack.getShaderProperties());
+		return new ProgramSource(program, vertexSource, fragmentSource, pack);
 	}
 
 	private static String readFile(Path path) throws IOException {
@@ -270,12 +270,12 @@ public class ShaderPack {
 		private final ProgramDirectives directives;
 		private final ShaderPack parent;
 
-		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent, ShaderProperties properties) {
+		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
 			this.name = name;
 			this.vertexSource = vertexSource;
 			this.fragmentSource = fragmentSource;
 			this.parent = parent;
-			this.directives = new ProgramDirectives(this, properties);
+			this.directives = new ProgramDirectives(this, parent.getShaderProperties());
 		}
 
 		public String getName() {
