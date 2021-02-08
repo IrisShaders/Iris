@@ -124,9 +124,6 @@ public class ShaderPipeline {
 			return;
 		}
 
-		// Disable any alpha func shenanigans
-		AlphaTestOverride.teardown();
-
 		if (programStack.isEmpty()) {
 			Iris.logger.fatal("Tried to pop from an empty program stack!");
 			Iris.logger.fatal("Program stack log: " + programStackLog);
@@ -137,6 +134,12 @@ public class ShaderPipeline {
 		// This shouldn't have the same performance issues that remove() normally has since we're removing from the end
 		// every time.
 		GbufferProgram popped = programStack.remove(programStack.size() - 1);
+		Pass poppedPass = getPass(popped);
+
+		if (poppedPass != null) {
+			poppedPass.stopUsing();
+		}
+
 		programStackLog.add("pop:" + popped);
 
 		if (programStack.isEmpty()) {
@@ -151,72 +154,62 @@ public class ShaderPipeline {
 		useProgram(toUse);
 	}
 
-	private void useProgram(GbufferProgram program) {
+	private Pass getPass(GbufferProgram program) {
 		switch (program) {
 			case TERRAIN:
-				beginPass(terrain);
-
-				if (terrain != null) {
-					setupAttributes(terrain);
-				}
-				return;
+				return terrain;
 			case TRANSLUCENT_TERRAIN:
-				beginPass(translucent);
-
-				if (translucent != null) {
-					setupAttributes(translucent);
-
-					// TODO: This is just making it so that all translucent content renders like water. We need to
-					// properly support mc_Entity!
-					setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
-				}
-				return;
+				return translucent;
 			case DAMAGED_BLOCKS:
-				beginPass(damagedBlock);
-				return;
+				return damagedBlock;
 			case BASIC:
-				beginPass(basic);
-				return;
+				return basic;
 			case BEACON_BEAM:
-				beginPass(beaconBeam);
-				return;
+				return beaconBeam;
 			case ENTITIES:
-				beginPass(entities);
-				return;
+				return entities;
 			case BLOCK_ENTITIES:
-				beginPass(blockEntities);
-				return;
+				return blockEntities;
 			case ENTITIES_GLOWING:
-				beginPass(glowingEntities);
-				return;
+				return glowingEntities;
 			case EYES:
-				beginPass(eyes);
-				return;
+				return eyes;
 			case ARMOR_GLINT:
-				beginPass(glint);
-				return;
+				return glint;
 			case CLOUDS:
-				beginPass(clouds);
-				return;
+				return clouds;
 			case SKY_BASIC:
-				beginPass(skyBasic);
-				return;
+				return skyBasic;
 			case SKY_TEXTURED:
-				beginPass(skyTextured);
-				return;
+				return skyTextured;
 			case TEXTURED_LIT:
-				beginPass(texturedLit);
-				return;
+				return texturedLit;
 			case TEXTURED:
-				beginPass(textured);
-				return;
+				return textured;
 			case WEATHER:
-				beginPass(weather);
-				return;
+				return weather;
 			case HAND:
 			default:
 				// TODO
 				throw new UnsupportedOperationException("TODO: Unsupported gbuffer program: " + program);
+		}
+	}
+
+	private void useProgram(GbufferProgram program) {
+		beginPass(getPass(program));
+
+		if (program == GbufferProgram.TERRAIN) {
+			if (terrain != null) {
+				setupAttributes(terrain);
+			}
+		} else if (program == GbufferProgram.TRANSLUCENT_TERRAIN) {
+			if (translucent != null) {
+				setupAttributes(translucent);
+
+				// TODO: This is just making it so that all translucent content renders like water. We need to
+				// properly support mc_Entity!
+				setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
+			}
 		}
 	}
 
@@ -298,6 +291,12 @@ public class ShaderPipeline {
 
 			if (disableBlend) {
 				GlStateManager.disableBlend();
+			}
+		}
+
+		public void stopUsing() {
+			if (alphaTestOverride != null) {
+				AlphaTestOverride.teardown();
 			}
 		}
 
