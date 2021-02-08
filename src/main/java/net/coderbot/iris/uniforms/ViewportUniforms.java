@@ -20,6 +20,8 @@ public final class ViewportUniforms {
 	 */
 	private static final Window WINDOW = Objects.requireNonNull(MinecraftClient.getInstance().getWindow());
 
+	private static final MinecraftClient client = MinecraftClient.getInstance();
+
 	// cannot be constructed
 	private ViewportUniforms() {
 	}
