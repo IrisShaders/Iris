@@ -73,6 +73,7 @@ public class ShaderPipeline {
 	private final int waterId;
 
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
+	private static final List<String> programStackLog = new ArrayList<>();
 
 	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
 		this.renderTargets = renderTargets;
@@ -114,8 +115,7 @@ public class ShaderPipeline {
 
 		programStack.add(program);
 		useProgram(program);
-
-		System.out.println("[" + programStack.size() + "] Push: " + program);
+		programStackLog.add("push:" + program);
 	}
 
 	public void popProgram() {
@@ -128,19 +128,27 @@ public class ShaderPipeline {
 		AlphaTestOverride.teardown();
 
 		if (programStack.isEmpty()) {
-			// Use fixed-function rendering.
-			// Either the shaderpack lacks a gbuffers_basic program, or we just finished world rendering.
-			teardownProgram();
-			return;
+			Iris.logger.fatal("Tried to pop from an empty program stack!");
+			Iris.logger.fatal("Program stack log: " + programStackLog);
+			throw new IllegalStateException("Tried to pop from an empty program stack!");
 		}
 
 		// Equivalent to pop(), but a bit more verbose.
 		// This shouldn't have the same performance issues that remove() normally has since we're removing from the end
 		// every time.
 		GbufferProgram popped = programStack.remove(programStack.size() - 1);
+		programStackLog.add("pop:" + popped);
 
-		useProgram(popped);
-		System.out.println("[" + programStack.size() + "] Pop: " + popped);
+		if (programStack.isEmpty()) {
+			// No remaining program, use fixed-function rendering
+			teardownProgram();
+			return;
+		}
+
+		// Use the previous program
+		GbufferProgram toUse = programStack.get(programStack.size() - 1);
+
+		useProgram(toUse);
 	}
 
 	private void useProgram(GbufferProgram program) {
@@ -226,6 +234,9 @@ public class ShaderPipeline {
 	private void beginPass(Pass pass) {
 		if (pass != null) {
 			pass.use();
+		} else {
+			GlProgramManager.useProgram(0);
+			this.baseline.bind();
 		}
 	}
 
@@ -400,9 +411,12 @@ public class ShaderPipeline {
 		popProgram();
 
 		if (!programStack.isEmpty()) {
+			Iris.logger.fatal("Program stack not empty at end of rendering, something has gone very wrong!");
+			Iris.logger.fatal("Program stack log: " + programStackLog);
 			throw new IllegalStateException("Program stack not empty at end of rendering, something has gone very wrong!");
 		}
 
 		isRenderingWorld = false;
+		programStackLog.clear();
 	}
 }

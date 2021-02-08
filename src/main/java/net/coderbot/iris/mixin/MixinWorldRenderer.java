@@ -6,6 +6,7 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
@@ -30,6 +31,9 @@ public class MixinWorldRenderer {
 	private static final String RENDER_LAYER = "renderLayer(Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/util/math/MatrixStack;DDD)V";
 	private static final String RENDER_CLOUDS = "renderClouds(Lnet/minecraft/client/util/math/MatrixStack;FDDD)V";
 
+	@Unique
+	private boolean skyTextureEnabled;
+
 	@Inject(method = RENDER, at = @At("HEAD"))
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
@@ -46,7 +50,16 @@ public class MixinWorldRenderer {
 
 	@Inject(method = RENDER_SKY, at = @At("HEAD"))
 	private void iris$renderSky$begin(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		GbufferPrograms.push(GbufferProgram.SKY_BASIC);
+		GbufferPrograms.push(GbufferProgram.SKY_TEXTURED);
+		skyTextureEnabled = true;
+	}
+
+	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableTexture()V"))
+	private void iris$renderSky$disableTexture(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		if (skyTextureEnabled) {
+			skyTextureEnabled = false;
+			GbufferPrograms.push(GbufferProgram.SKY_BASIC);
+		}
 	}
 
 	@Inject(method = RENDER_SKY,
@@ -57,17 +70,12 @@ public class MixinWorldRenderer {
 		new HorizonRenderer().renderHorizon(matrices);
 	}
 
-	@Inject(method = RENDER_SKY,
-		at = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V"))
-	private void iris$renderSky$beginTextured(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		GbufferPrograms.push(GbufferProgram.SKY_TEXTURED);
-	}
-
-	@Inject(method = RENDER_SKY,
-		slice = @Slice(from = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/client/texture/TextureManager;bindTexture(Lnet/minecraft/util/Identifier;)V")),
-		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;method_23787(F)F"))
-	private void iris$renderSky$endTextured(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		GbufferPrograms.pop();
+	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableTexture()V"))
+	private void iris$renderSky$enableTexture(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		if (!skyTextureEnabled) {
+			skyTextureEnabled = true;
+			GbufferPrograms.pop();
+		}
 	}
 
 	@Inject(method = RENDER_SKY, at = @At("RETURN"))
