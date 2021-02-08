@@ -23,6 +23,31 @@ import net.fabricmc.api.Environment;
 @Environment(EnvType.CLIENT)
 @Mixin(RenderLayer.class)
 public class MixinRenderLayer {
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer SOLID;
+
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer CUTOUT_MIPPED;
+
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer CUTOUT;
+
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer TRANSLUCENT;
+
+	@Shadow
+	@Final
+	@Mutable
+	private static RenderLayer TRIPWIRE;
+
 	@Unique
 	private static RenderLayer iris$LINES;
 
@@ -43,6 +68,11 @@ public class MixinRenderLayer {
 	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_NO_CRUMBLING;
 
 	static {
+		SOLID = wrap("iris:terrain_solid", SOLID, GbufferProgram.TERRAIN);
+		CUTOUT_MIPPED = wrap("iris:terrain_cutout_mipped", CUTOUT_MIPPED, GbufferProgram.TERRAIN);
+		CUTOUT = wrap("iris:terrain_cutout", CUTOUT, GbufferProgram.TERRAIN);
+		TRANSLUCENT = wrap("iris:translucent", TRANSLUCENT, GbufferProgram.TRANSLUCENT_TERRAIN);
+		TRIPWIRE = wrap("iris:tripwire", TRIPWIRE, GbufferProgram.TRANSLUCENT_TERRAIN);
 		// TODO: figure out how to assign to RenderLayer.LINES
 		// We cannot use @Shadow easily because the type of the field is a package-private class
 		iris$LINES = wrap("iris:lines", RenderLayer.LINES, GbufferProgram.BASIC);
