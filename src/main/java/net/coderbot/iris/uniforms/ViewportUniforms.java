@@ -21,6 +21,8 @@ public final class ViewportUniforms {
 	 */
 	private static final Framebuffer FRAMEBUFFER = Objects.requireNonNull(MinecraftClient.getInstance().getFramebuffer());
 
+	private static final MinecraftClient client = MinecraftClient.getInstance();
+
 	// cannot be constructed
 	private ViewportUniforms() {
 	}
