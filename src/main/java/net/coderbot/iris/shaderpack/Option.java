@@ -74,10 +74,12 @@ public class Option<T> {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L128">Optifine Doc For Tooltip</a>
 	 *
 	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L129">Gui Note: Tooltip Coloring</a>
+	 *
+	 * The list returned should be applied as a tooltip
 	 * @return comment that is split sentences
 	 */
 	public List<String> getComment() {
-		return Arrays.asList(comment.split("\\.\\s"));
+		return Arrays.asList(comment.split("\\.\\s*"));
 	}
 
 	/**
@@ -131,7 +133,8 @@ public class Option<T> {
 			", allowedValues=" + allowedValues +
 			", name='" + name + '\'' +
 			", value=" + value +
+			", defaultValue=" + defaultValue +
+			", commentAsList=" + getComment() +
 			'}';
 	}
-
 }
