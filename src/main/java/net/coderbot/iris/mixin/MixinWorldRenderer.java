@@ -75,13 +75,13 @@ public class MixinWorldRenderer {
 	private void iris$renderSky$enableTexture(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		if (!skyTextureEnabled) {
 			skyTextureEnabled = true;
-			GbufferPrograms.pop();
+			GbufferPrograms.pop(GbufferProgram.SKY_BASIC);
 		}
 	}
 
 	@Inject(method = RENDER_SKY, at = @At("RETURN"))
 	private void iris$renderSky$end(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		GbufferPrograms.pop();
+		GbufferPrograms.pop(GbufferProgram.SKY_TEXTURED);
 	}
 
 	@Inject(method = RENDER_CLOUDS, at = @At("HEAD"))
@@ -91,7 +91,7 @@ public class MixinWorldRenderer {
 
 	@Inject(method = RENDER_CLOUDS, at = @At("RETURN"))
 	private void iris$endClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		GbufferPrograms.pop();
+		GbufferPrograms.pop(GbufferProgram.CLOUDS);
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
@@ -108,9 +108,9 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		if (renderLayer == RenderLayer.getSolid() || renderLayer == RenderLayer.getCutout() || renderLayer == RenderLayer.getCutoutMipped()) {
-			GbufferPrograms.pop();
+			GbufferPrograms.pop(GbufferProgram.TERRAIN);
 		} else if (renderLayer == RenderLayer.getTranslucent() || renderLayer == RenderLayer.getTripwire()) {
-			GbufferPrograms.pop();
+			GbufferPrograms.pop(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
 			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderLayer);
 		}
@@ -123,7 +123,7 @@ public class MixinWorldRenderer {
 
 	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("RETURN"))
 	private void iris$endWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
-		GbufferPrograms.pop();
+		GbufferPrograms.pop(GbufferProgram.WEATHER);
 	}
 
 	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("HEAD"))
@@ -133,7 +133,7 @@ public class MixinWorldRenderer {
 
 	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("RETURN"))
 	private void iris$endWorldBorder(Camera camera, CallbackInfo callback) {
-		GbufferPrograms.pop();
+		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 	}
 
 	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)

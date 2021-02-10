@@ -7,7 +7,7 @@ public class GbufferPrograms {
 		Iris.getPipeline().pushProgram(program);
 	}
 
-	public static void pop() {
-		Iris.getPipeline().popProgram();
+	public static void pop(GbufferProgram program) {
+		Iris.getPipeline().popProgram(program);
 	}
 }
