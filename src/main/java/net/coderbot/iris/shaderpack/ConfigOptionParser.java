@@ -252,6 +252,7 @@ public class ConfigOptionParser {
 		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, (string) -> (int)Float.parseFloat(string));//parse as float and cast to string to be flexible
 
 		integerOption = config.processOption(integerOption);
+		config.getIntegerOptions().put(integerOption.getName(), integerOption);
 		return integerOption;
 	}
 
