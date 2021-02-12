@@ -116,7 +116,7 @@ public class ShaderPipeline {
 		programStackLog.add("push:" + program);
 	}
 
-	public void popProgram() {
+	public void popProgram(GbufferProgram expected) {
 		if (!isRenderingWorld) {
 			// don't mess with non-world rendering
 			return;
@@ -132,6 +132,13 @@ public class ShaderPipeline {
 		// This shouldn't have the same performance issues that remove() normally has since we're removing from the end
 		// every time.
 		GbufferProgram popped = programStack.remove(programStack.size() - 1);
+
+		if (popped != expected) {
+			Iris.logger.fatal("Program stack in invalid state, popped " + popped + " but expected to pop " + expected);
+			Iris.logger.fatal("Program stack content after pop: " + programStack);
+			throw new IllegalStateException("Program stack in invalid state, popped " + popped + " but expected to pop " + expected);
+		}
+
 		Pass poppedPass = getPass(popped);
 
 		if (poppedPass != null) {
@@ -407,11 +414,12 @@ public class ShaderPipeline {
 	}
 
 	public void endWorldRender() {
-		popProgram();
+		popProgram(GbufferProgram.BASIC);
 
 		if (!programStack.isEmpty()) {
 			Iris.logger.fatal("Program stack not empty at end of rendering, something has gone very wrong!");
 			Iris.logger.fatal("Program stack log: " + programStackLog);
+			Iris.logger.fatal("Program stack content: " + programStack);
 			throw new IllegalStateException("Program stack not empty at end of rendering, something has gone very wrong!");
 		}
 
