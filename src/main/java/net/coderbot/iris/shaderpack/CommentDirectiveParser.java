@@ -79,8 +79,8 @@ public class CommentDirectiveParser {
 
 	// Test code for directive parsing. It's a bit homegrown but it works.
 	@SuppressWarnings("unused")
-	static class Tests {
-		static <T> void test(String name, T expected, Supplier<T> testCase) {
+	private static class Tests {
+		private static <T> void test(String name, T expected, Supplier<T> testCase) {
 			T actual;
 
 			try {
