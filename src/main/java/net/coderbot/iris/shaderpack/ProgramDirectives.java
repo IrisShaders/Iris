@@ -2,9 +2,15 @@ package net.coderbot.iris.shaderpack;
 
 import java.util.Optional;
 
+import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import org.jetbrains.annotations.Nullable;
+
 public class ProgramDirectives {
 	private int[] drawBuffers;
 	private float viewportScale;
+	@Nullable
+	private AlphaTestOverride alphaTestOverride;
+	private boolean disableBlend;
 
 	ProgramDirectives(ShaderPack.ProgramSource source, ShaderProperties properties) {
 		// First try to find it in the fragment source, then in the vertex source.
@@ -15,6 +21,8 @@ public class ProgramDirectives {
 
 		if (properties != null) {
 			viewportScale = properties.viewportScaleOverrides.getOrDefault(source.getName(), 1.0f);
+			alphaTestOverride = properties.alphaTestOverrides.get(source.getName());
+			disableBlend = properties.blendDisabled.contains(source.getName());
 		}
 	}
 
@@ -42,5 +50,13 @@ public class ProgramDirectives {
 
 	public float getViewportScale() {
 		return viewportScale;
+	}
+
+	public Optional<AlphaTestOverride> getAlphaTestOverride() {
+		return Optional.ofNullable(alphaTestOverride);
+	}
+
+	public boolean shouldDisableBlend() {
+		return disableBlend;
 	}
 }

@@ -162,6 +162,11 @@ public class CompositeRenderer {
 			// Thus, the following call transfers the content of colortex0 and the depth buffer into the main Minecraft
 			// framebuffer.
 			FramebufferBlitter.copyFramebufferContent(this.baseline, main);
+		} else {
+			// We still need to copy the depth buffer content as finalized in the gbuffer pass to the main framebuffer.
+			//
+			// This is needed for things like on-screen overlays to work properly.
+			FramebufferBlitter.copyDepthBufferContent(this.baseline, main);
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
