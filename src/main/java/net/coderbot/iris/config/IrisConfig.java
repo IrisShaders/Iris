@@ -3,11 +3,13 @@ package net.coderbot.iris.config;
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.ScreenStack;
 import net.coderbot.iris.gui.ShaderPackScreen;
 import net.coderbot.iris.gui.UiTheme;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
 import net.coderbot.iris.gui.property.*;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.TranslatableText;
@@ -209,14 +211,11 @@ public class IrisConfig {
 		page.add(new TitleProperty(new TranslatableText("property.iris.title.configScreen").formatted(Formatting.BOLD),
 				0x82ffffff, 0x82ff0000, 0x82ff8800, 0x82ffd800, 0x8288ff00, 0x8200d8ff, 0x823048ff, 0x829900ff, 0x82ffffff
 		));
-		page.add(new ScreenLinkProperty(widget, p -> {
-			parent.onClose();
-			return new ShaderPackScreen(p);
-		}, parent, new TranslatableText("options.iris.shaderPackSelection.title"), LinkProperty.Align.CENTER_LEFT));
+		page.add(new FunctionalButtonProperty(widget, () -> MinecraftClient.getInstance().openScreen(new ShaderPackScreen(parent)), new TranslatableText("options.iris.shaderPackSelection.title"), LinkProperty.Align.CENTER_LEFT));
 		int optionTextWidthFull = (int)(width * 0.6) - 21;
 		int optionTextWidthHalf = (int)((width * 0.5) * 0.6) - 21;
 		page.addAllPairs(ImmutableList.of(
-				new StringOptionProperty(new String[] {"IRIS", "VANILLA", "SODIUM"}, 0, widget, "uiTheme", GuiUtil.trimmed(tr, "property.iris.uiTheme", optionTextWidthHalf, true, true), false, false),
+				new StringOptionProperty(ImmutableList.of(UiTheme.IRIS.name(), UiTheme.VANILLA.name(), UiTheme.AQUA.name()), 0, widget, "uiTheme", GuiUtil.trimmed(tr, "property.iris.uiTheme", optionTextWidthHalf, true, true), false, false),
 				new BooleanOptionProperty(widget, false, "condenseShaderConfig", GuiUtil.trimmed(tr, "property.iris.condenseShaderConfig", optionTextWidthHalf, true, true), false)
 		));
 		document.put("main", page);

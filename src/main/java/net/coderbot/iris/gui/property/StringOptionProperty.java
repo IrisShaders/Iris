@@ -6,10 +6,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.List;
+
 public class StringOptionProperty extends OptionProperty<String> {
 	protected final boolean translated;
 
-    public StringOptionProperty(String[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider, boolean displayTranslated) {
+    public StringOptionProperty(List<String> values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider, boolean displayTranslated) {
         super(values, defaultIndex, document, key, label, isSlider);
         this.translated = displayTranslated;
     }

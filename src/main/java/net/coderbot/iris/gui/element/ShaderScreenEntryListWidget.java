@@ -3,12 +3,13 @@ package net.coderbot.iris.gui.element;
 import net.coderbot.iris.gui.GuiUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.screen.TickableElement;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
 
 import java.util.Optional;
 
-public abstract class ShaderScreenEntryListWidget<E extends AlwaysSelectedEntryListWidget.Entry<E>> extends AlwaysSelectedEntryListWidget<E> {
+public abstract class ShaderScreenEntryListWidget<E extends AlwaysSelectedEntryListWidget.Entry<E>> extends AlwaysSelectedEntryListWidget<E> implements TickableElement {
     protected E selected;
 
     protected int scrollbarFade = 0;
@@ -25,6 +26,7 @@ public abstract class ShaderScreenEntryListWidget<E extends AlwaysSelectedEntryL
         return width - 4;
     }
 
+    @Override
     public void tick() {
         if(hovered) {
             if(scrollbarFade < 3) scrollbarFade++;

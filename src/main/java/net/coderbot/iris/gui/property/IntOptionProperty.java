@@ -6,8 +6,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.List;
+
 public class IntOptionProperty extends OptionProperty<Integer> {
-    public IntOptionProperty(Integer[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
+    public IntOptionProperty(List<Integer> values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
         super(values, defaultIndex, document, key, label, isSlider);
     }
 

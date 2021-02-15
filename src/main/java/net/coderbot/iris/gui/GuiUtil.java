@@ -116,7 +116,7 @@ public final class GuiUtil {
 
     public static void drawButton(int x, int y, int width, int height, boolean selected, boolean isLink) {
         UiTheme theme = Iris.getIrisConfig().getUITheme();
-        if(theme == UiTheme.SODIUM) {
+        if(theme == UiTheme.AQUA) {
             y += 1;
             height -= 2;
         }
@@ -129,7 +129,7 @@ public final class GuiUtil {
         } else {
             if(selected) {
                 fill(x, y, width, height, theme == UiTheme.IRIS ? 0x8AE0E0E0 : 0xE0000000);
-                if(theme == UiTheme.SODIUM && isLink) GuiUtil.fill(x, y + height, width, 1, 0xFF94E4D3);
+                if(theme == UiTheme.AQUA && isLink) GuiUtil.fill(x, y + height, width, 1, 0xFF94E4D3);
             } else if(theme == UiTheme.IRIS) {
                 borderedRect(x, y, -100, width, height, 0x8AE0E0E0);
             } else {
@@ -153,7 +153,7 @@ public final class GuiUtil {
             } else {
                 GuiUtil.borderedRect(sx, y + 4, -100, 6, height - 8, color);
             }
-        } else if(theme == UiTheme.SODIUM) {
+        } else if(theme == UiTheme.AQUA) {
 
             fill(x, y, width, height, selected ? 0xE0000000 : 0x90000000);
 

@@ -11,12 +11,12 @@ import net.minecraft.text.Text;
 import java.util.List;
 
 public abstract class OptionProperty<T> extends ValueProperty<T> {
-    protected T[] values;
+    protected List<T> values;
     protected int index;
     protected final int defaultIndex;
     protected final boolean isSlider;
 
-    public OptionProperty(T[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
+    public OptionProperty(List<T> values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
         super(document, key, label);
         this.values = values;
         this.index = defaultIndex;
@@ -26,20 +26,19 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
 
     public void cycle() {
         this.index++;
-        if(index >= values.length) index = 0;
+        if(index >= values.size()) index = 0;
         this.valueText = null;
     }
 
     @Override
     public T getValue() {
-        return values[index];
+        return values.get(index);
     }
 
     @Override
     public void setValue(T value) {
-        List<T> vList = Lists.newArrayList(values);
-        if(vList.contains(value)) {
-            this.index = vList.indexOf(value);
+        if(values.contains(value)) {
+            this.index = values.indexOf(value);
         } else {
             Iris.logger.warn("Unable to set value of {} to {} - Invalid value!", key, value);
             this.index = defaultIndex;
@@ -67,7 +66,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if(isSlider && isButtonHovered(mouseX, true)) {
             float pos = (float)((mouseX - (cachedX + (cachedWidth * 0.6) - 7)) / ((cachedWidth * 0.4)));
-            this.index = Math.min((int)(pos * this.values.length), this.values.length - 1);
+            this.index = Math.min((int)(pos * this.values.size()), this.values.size() - 1);
             this.valueText = null;
             return true;
         }
@@ -94,7 +93,7 @@ public abstract class OptionProperty<T> extends ValueProperty<T> {
     }
 
     private void renderSlider(MinecraftClient mc, MatrixStack matrices, int x, int y, int width, int height, int mouseX, boolean isHovered) {
-        float progress = ((float)this.index / (this.values.length - 1));
+        float progress = ((float)this.index / (this.values.size() - 1));
         int sx = (int)(x + (width * 0.6)) - 7;
         int sw = (int)(width * 0.4);
 

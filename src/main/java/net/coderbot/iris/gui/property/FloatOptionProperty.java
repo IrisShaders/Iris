@@ -6,8 +6,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.List;
+
 public class FloatOptionProperty extends OptionProperty<Float> {
-    public FloatOptionProperty(Float[] values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
+    public FloatOptionProperty(List<Float> values, int defaultIndex, PropertyDocumentWidget document, String key, Text label, boolean isSlider) {
         super(values, defaultIndex, document, key, label, isSlider);
     }
 

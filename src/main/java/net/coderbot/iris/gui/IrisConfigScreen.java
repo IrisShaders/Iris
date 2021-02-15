@@ -3,6 +3,7 @@ package net.coderbot.iris.gui;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -25,6 +26,7 @@ public class IrisConfigScreen extends Screen implements TransparentBackgroundScr
     public IrisConfigScreen(Screen parent) {
         super(new LiteralText(""));
         this.parent = parent;
+		ScreenStack.push(parent);
     }
 
     @Override
@@ -69,15 +71,10 @@ public class IrisConfigScreen extends Screen implements TransparentBackgroundScr
     }
 
     @Override
-    public void tick() {
-        super.tick();
-        this.configProperties.tick();
-    }
-
-    @Override
     public void onClose() {
-        this.client.openScreen(this.parent);
-    }
+    	ScreenStack.pull(this.getClass());
+		client.openScreen(ScreenStack.pop());
+	}
 
 
     private void loadConfig() {

@@ -1,11 +1,13 @@
 package net.coderbot.iris.gui.element;
 
+import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.property.*;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.screen.TickableElement;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
@@ -121,7 +123,7 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
                 String[] screenOptions = shaderProperties.getProperty(s).split(" ");
                 for(String p : screenOptions) {
                     if(p.equals("<profile>")) {
-                        page.add(new StringOptionProperty(profiles.toArray(new String[0]), 1, widget, p, GuiUtil.trimmed(tr, "option.iris.profile", tw, true, true), sliderOptions.contains(p), true));
+                        page.add(new StringOptionProperty(profiles, 1, widget, p, GuiUtil.trimmed(tr, "option.iris.profile", tw, true, true), sliderOptions.contains(p), true));
                     } else if(p.equals("<empty>")) {
                         if(!Iris.getIrisConfig().getIfCondensedShaderConfig()) page.add(Property.EMPTY);
                     } else if(p.startsWith("[") && p.endsWith("]")) {
@@ -129,7 +131,7 @@ public class PropertyDocumentWidget extends ShaderScreenEntryListWidget<Property
                         page.add(new LinkProperty(widget, a, GuiUtil.trimmed(tr, a, bw, true, true), LinkProperty.Align.LEFT));
                         child2Parent.put(a, s);
                     } else {
-                        page.add(new StringOptionProperty(new String[] {"This", "Is", "Not", "Functional"}, 0, widget, p, GuiUtil.trimmed(tr, "option."+p, tw, true, true), sliderOptions.contains(p), false));
+                        page.add(new StringOptionProperty(ImmutableList.of("This", "Is", "Not", "Functional"), 0, widget, p, GuiUtil.trimmed(tr, "option."+p, tw, true, true), sliderOptions.contains(p), false));
                     }
                 }
                 document.put(s, page);

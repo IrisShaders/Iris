@@ -2,25 +2,23 @@ package net.coderbot.iris.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gui.element.ShaderPackListWidget;
 import net.coderbot.iris.gui.element.PropertyDocumentWidget;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
+import net.minecraft.client.gui.screen.TickableElement;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
 import java.io.IOException;
 
 public class ShaderPackScreen extends Screen implements TransparentBackgroundScreen {
-    private final Screen parent;
-
     private ShaderPackListWidget shaderPacks;
     private PropertyDocumentWidget shaderProperties;
 
@@ -37,7 +35,7 @@ public class ShaderPackScreen extends Screen implements TransparentBackgroundScr
 
     public ShaderPackScreen(Screen parent) {
         super(new TranslatableText("options.iris.shaderPackSelection.title"));
-        this.parent = parent;
+        ScreenStack.push(parent);
     }
 
     @Override
@@ -58,7 +56,7 @@ public class ShaderPackScreen extends Screen implements TransparentBackgroundScr
         this.cancelButton = this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20, ScreenTexts.CANCEL, button -> this.onClose()));
         this.openFolderButton = this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20, new TranslatableText("options.iris.openShaderPackFolder"), button -> Util.getOperatingSystem().open(Iris.getShaderPackDir().toFile())));
         this.refreshButton = this.addButton(new ButtonWidget(topCenter + 78, this.height - 51, 152, 20, new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPacks.refresh()));
-        this.irisConfigButton = this.addButton(new IrisConfigScreenButtonWidget(this.width - 26, 6, button -> this.client.openScreen(new IrisConfigScreen(this))));
+        this.irisConfigButton = this.addButton(new IrisConfigScreenButtonWidget(this.width - 26, 6, button -> client.openScreen(new IrisConfigScreen(this))));
 
         this.condensedConfigButton = this.addButton(new ShaderConfigScreenViewOptionButtonWidget(this.width - 23, 35, 0, 20, Iris.getIrisConfig().getIfCondensedShaderConfig(), button -> {
             condensedConfigButton.selected = !condensedConfigButton.selected;
@@ -97,16 +95,9 @@ public class ShaderPackScreen extends Screen implements TransparentBackgroundScr
     }
 
     @Override
-    public void tick() {
-        super.tick();
-        this.shaderPacks.tick();
-        this.shaderProperties.tick();
-        this.condensedConfigButton.tick();
-    }
-
-    @Override
     public void onClose() {
-        this.client.openScreen(this.parent);
+		ScreenStack.pull(this.getClass());
+		client.openScreen(ScreenStack.pop());
     }
 
     private void applyChanges() {
@@ -147,12 +138,19 @@ public class ShaderPackScreen extends Screen implements TransparentBackgroundScr
         this.shaderProperties.setDocument(PropertyDocumentWidget.createShaderpackConfigDocument(this.client.textRenderer, this.width / 2, Iris.getIrisConfig().getShaderPackName(), Iris.getCurrentPack(), this.shaderProperties), "screen");
     }
 
-    @Override
+	@Override
+	public void tick() {
+		for(Element e : this.children) {
+			if(e instanceof TickableElement) ((TickableElement)e).tick();
+		}
+	}
+
+	@Override
     public boolean renderHud() {
         return false;
     }
 
-    public static class IrisConfigScreenButtonWidget extends ButtonWidget {
+	public static class IrisConfigScreenButtonWidget extends ButtonWidget {
         public IrisConfigScreenButtonWidget(int x, int y, PressAction press) {
             super(x, y, 20, 20, LiteralText.EMPTY, press);
         }
@@ -164,7 +162,7 @@ public class ShaderPackScreen extends Screen implements TransparentBackgroundScr
         }
     }
 
-    public static class ShaderConfigScreenViewOptionButtonWidget extends ButtonWidget {
+    public static class ShaderConfigScreenViewOptionButtonWidget extends ButtonWidget implements TickableElement {
         private int u;
         private int v;
         private int fadeTicks;
@@ -189,6 +187,7 @@ public class ShaderPackScreen extends Screen implements TransparentBackgroundScr
             //GuiUtil.texture(x, y, -100, 18, 13, /*u + (isMouseOver(mouseX, mouseY) ? 18 : 0), v + (selected ? 13 : 0)*/0,0, 18, 13, 1f, 1f, 1f, alpha);
         }
 
+		@Override
         public void tick() {
             if(areaHovered) {
                 if(fadeTicks < 3) fadeTicks++;
