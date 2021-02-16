@@ -17,7 +17,8 @@
   "pack.iris.configure.title": "Настроить",
   "pack.iris.internal": "Внутренние шейдеры",
 
-  "page.iris.notFound": "Недействительная страница!",
+  "page.iris.notFound": "не найденная страница!",
+  "page.iris.invalid": "Недействительная страница: \"%s\"",
   "page.iris.noConfig": "Нет вариантов шейдеров.",
   "page.iris.noShaders": "Никаких шейдеров не заряжено.",
 
@@ -25,6 +26,7 @@
   "property.iris.boolean.false": "Ложный",
   "property.iris.title.configScreen": "Настроить ирис",
   "property.iris.uiTheme": "Tема",
+  "property.iris.condenseShaderConfig": "Компактная конфигурация шейдерного пакета",
   
   "property.iris.config": "Настроить ирис"
 }

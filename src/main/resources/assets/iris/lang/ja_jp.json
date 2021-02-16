@@ -17,7 +17,8 @@
   "pack.iris.configure.title": "設定",
   "pack.iris.internal": "内部シェーダー",
 
-  "page.iris.notFound": "無効なページ!",
+  "page.iris.notFound": "見つからないページ!",
+  "page.iris.invalid": "無効なページ: \"%s\"",
   "page.iris.noConfig": "シェーダオプションはありません。",
   "page.iris.noShaders": "シェーダーパックが読み込まれていません。",
 
@@ -25,6 +26,7 @@
   "property.iris.boolean.false": "誤",
   "property.iris.title.configScreen": "アイリスの設定",
   "property.iris.uiTheme": "UIテーマ",
+  "property.iris.condenseShaderConfig": "コンパクトシェーダパック設定",
   
   "property.iris.config": "アイリスの設定"
 }
