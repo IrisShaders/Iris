@@ -17,9 +17,9 @@ public class ShaderPackConfig {
 	private final Properties configProperties;
 	private final String comment;
 
-	private final Set<Option<Boolean>> booleanOptions = new HashSet<>();
-	private final Set<Option<Float>> floatOptions = new HashSet<>();
-	private final Set<Option<Integer>> integerOptions = new HashSet<>();
+	private final Map<String, Option<Boolean>> booleanOptions = new HashMap<>();
+	private final Map<String, Option<Float>> floatOptions = new HashMap<>();
+	private final Map<String, Option<Integer>> integerOptions = new HashMap<>();
 
 	public ShaderPackConfig(String name) {
 		//optifine uses txt files, so we should do the same
@@ -34,27 +34,39 @@ public class ShaderPackConfig {
 
 	//this 3 methods below should be used by the gui to get the available options and then use them
 	public Iterable<Option<Boolean>> getBooleanOptions() {
-		return booleanOptions;
+		return booleanOptions.values();
 	}
 
 	public Iterable<Option<Float>> getFloatOptions() {
-		return floatOptions;
+		return floatOptions.values();
 	}
 
 	public Iterable<Option<Integer>> getIntegerOptions() {
-		return integerOptions;
+		return integerOptions.values();
+	}
+
+	public Option<Boolean> getBooleanOption(String key) {
+		return booleanOptions.get(key);
+	}
+
+	public Option<Integer> getIntegerOption(String key) {
+		return integerOptions.get(key);
+	}
+
+	public Option<Float> getFloatOption(String key) {
+		return floatOptions.get(key);
 	}
 
 	void addBooleanOption(Option<Boolean> option) {
-		booleanOptions.add(option);
+		booleanOptions.put(option.getName(), option);
 	}
 
 	void addIntegerOption(Option<Integer> option) {
-		integerOptions.add(option);
+		integerOptions.put(option.getName(), option);
 	}
 
 	void addFloatOption(Option<Float> option) {
-		floatOptions.add(option);
+		floatOptions.put(option.getName(), option);
 	}
 
 	/**
