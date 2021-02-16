@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 public class ShaderPackConfig {
 
@@ -15,9 +17,9 @@ public class ShaderPackConfig {
 	private final Properties configProperties;
 	private final String comment;
 
-	private final Map<String, Option<Boolean>> booleanOptions = new HashMap<>();
-	private final Map<String, Option<Float>> floatOptions = new HashMap<>();
-	private final Map<String, Option<Integer>> integerOptions = new HashMap<>();
+	private final Set<Option<Boolean>> booleanOptions = new HashSet<>();
+	private final Set<Option<Float>> floatOptions = new HashSet<>();
+	private final Set<Option<Integer>> integerOptions = new HashSet<>();
 
 	public ShaderPackConfig(String name) {
 		//optifine uses txt files, so we should do the same
@@ -31,16 +33,28 @@ public class ShaderPackConfig {
 	}
 
 	//this 3 methods below should be used by the gui to get the available options and then use them
-	public Map<String, Option<Boolean>> getBooleanOptions() {
+	public Iterable<Option<Boolean>> getBooleanOptions() {
 		return booleanOptions;
 	}
 
-	public Map<String, Option<Float>> getFloatOptions() {
+	public Iterable<Option<Float>> getFloatOptions() {
 		return floatOptions;
 	}
 
-	public Map<String, Option<Integer>> getIntegerOptions() {
+	public Iterable<Option<Integer>> getIntegerOptions() {
 		return integerOptions;
+	}
+
+	void addBooleanOption(Option<Boolean> option) {
+		booleanOptions.add(option);
+	}
+
+	void addIntegerOption(Option<Integer> option) {
+		integerOptions.add(option);
+	}
+
+	void addFloatOption(Option<Float> option) {
+		floatOptions.add(option);
 	}
 
 	/**

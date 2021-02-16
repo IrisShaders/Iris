@@ -13,41 +13,51 @@ import java.util.regex.Pattern;
 import net.minecraft.util.Util;
 
 public class ConfigOptionParser {
-	//Regex for matching boolean options
-	//Match if or if not the line starts with anynumber of backslashes that are more than 2 ("//")
-	//Match 0 or more whitspace after the "//"
-	//Match the #define
-	//Match 1 whitespace after that
-	//Match any letter, number, or underscore name
-	//Match 0 or more whitespace after that
-	//Match any comments on the option after that
+	/*
+	 Regex for matching boolean options
+	  Match if or if not the line starts with anynumber of backslashes that are more than 2 ("//")
+	  Match 0 or more whitspace after the "//"
+	  Match the #define
+	  Match 1 whitespace after that
+	  Match any letter, number, or underscore name
+	  Match 0 or more whitespace after that
+	  Match any comments on the option after that
+	 */
 	private static final Pattern BOOLEAN_OPTION_PATTERN = Pattern.compile("^(?<startingComment>//+)?\\s*(?<define>#define)\\s+(?<name>\\w+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?$");
-	//Regex for matching ifdef patterns for boolean options
-	//Match the ifdef or ifndef keyword
-	//match whitespace that must be there
-	//match a word that is the name of the keyword
+	/*
+	  Regex for matching ifdef patterns for boolean options
+	  Match the ifdef or ifndef keyword
+	  match whitespace that must be there
+	  match a word that is the name of the keyword
+	 */
 	private static final Pattern IFDEF_IFNDEF_PATTERN = Pattern.compile("^(?<ifdef>#ifdef|#ifndef)\\s+(?<name>\\w+)(?<other>.*)");
-	//Regex that matches for integer and float options
-	//Match 1 or more whitespace after #define
-	//match a word (name of the option). Put in parenthesis for grouping
-	//match 1 or more whitespace after the name
-	   //match a negative if there
-	   //match f or F float keyword
-	   //match 0-9
-	   //match a "." for floats
-	 //match 1 or more of the char group
-	//match 0 or more whitespace
-	//match if there is a comment following the line or not
+	/*
+	   Regex that matches for integer and float options
+	   Match 1 or more whitespace after #define
+	   match a word (name of the option). Put in parenthesis for grouping
+	   match 1 or more whitespace after the name
+	      match a negative if there
+	      match f or F float keyword
+	      match 0-9
+	      match a "." for floats
+	   match 1 or more of the char group
+	   match 0 or more whitespace
+	   match if there is a comment following the line or not
+	 */
 	private static final Pattern FLOAT_INTEGER_OPTION_PATTERN = Pattern.compile("^(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?[\\d.fF]+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?$");
-	//Regex that matches for only integers and not floats
-	//Same as above but in the char class we remove the float specific checks
-		//remove matching a "."
-		//remove matching a "f" or a "F"
+	/*
+	 Regex that matches for only integers and not floats
+	 Same as above but in the char class we remove the float specific checks
+		remove matching a "."
+		remove matching a "f" or a "F"
+	 */
 	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("^(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?\\d+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?$");
-	//Some shaderpacks like sildurs have #define directives that are named with the program name
-	//like #define gbuffers_textured
-	//optifine does not use these in their config so we will not as well
-	//TODO figure what optifine does with these program defined names and implement
+	/*
+	Some shaderpacks like sildurs have #define directives that are named with the program name
+	like #define gbuffers_textured
+	optifine does not use these in their config so we will not as well
+	TODO figure what optifine does with these program defined names and implement
+	 */
 	private static final Set<String> IGNORED_PROGRAM_NAMES = Util.make(new HashSet<>(), (set) -> {
 		for (int i = 0; i < 16; i++) {
 			set.add("composite" + i);
@@ -189,7 +199,7 @@ public class ConfigOptionParser {
 		Option<Boolean> booleanOption = new Option<>(comment, Arrays.asList(true, false), name, defaultValue, Boolean::parseBoolean);
 
 		booleanOption = config.processOption(booleanOption);
-		config.getBooleanOptions().put(booleanOption.getName(), booleanOption);
+		config.addBooleanOption(booleanOption);
 
 		return booleanOption;
 	}
@@ -219,7 +229,7 @@ public class ConfigOptionParser {
 		Option<Float> floatOption = new Option<>(comment, floats, name, floatValue, Float::parseFloat);
 
 		floatOption = config.processOption(floatOption);
-		config.getFloatOptions().put(floatOption.getName(), floatOption);
+		config.addFloatOption(floatOption);
 
 		return floatOption;
 	}
@@ -252,7 +262,7 @@ public class ConfigOptionParser {
 		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, (string) -> (int)Float.parseFloat(string));//parse as float and cast to string to be flexible
 
 		integerOption = config.processOption(integerOption);
-		config.getIntegerOptions().put(integerOption.getName(), integerOption);
+		config.addIntegerOption(integerOption);
 		return integerOption;
 	}
 
