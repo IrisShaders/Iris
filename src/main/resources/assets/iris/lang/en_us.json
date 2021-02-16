@@ -18,7 +18,8 @@
   "pack.iris.configure.title": "Configure",
   "pack.iris.internal": "Internal Shaders",
 
-  "page.iris.notFound": "Invalid page!",
+  "page.iris.notFound": "Page Not Found",
+  "page.iris.invalid": "Invalid Page: \"%s\"",
   "page.iris.noConfig": "No shader options.",
   "page.iris.noShaders": "No shader pack loaded.",
 
@@ -26,6 +27,7 @@
   "property.iris.boolean.false": "False",
   "property.iris.title.configScreen": "Configure Iris",
   "property.iris.uiTheme": "UI Theme",
+  "property.iris.condenseShaderConfig": "Compact Shader Pack Config",
 
   "tooltip.iris.config": "Configure Iris"
 }
