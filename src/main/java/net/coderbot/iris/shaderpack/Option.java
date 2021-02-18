@@ -18,9 +18,9 @@ public class Option<T> {
 	private final String comment;
 	private final List<T> allowedValues;
 	private final String name;
-	private T value;
 	private final T defaultValue;
 	private final Function<String, T> deserializer;
+	private T value;
 
 	public Option(String comment, List<T> allowedValues, String name, T defaultValue, Function<String, T> parser) {
 		this.comment = comment == null ? "" : comment.trim();
@@ -38,6 +38,7 @@ public class Option<T> {
 
 	/**
 	 * Saves this option's value to the property along with the name of the property
+	 *
 	 * @param properties the properties to append to
 	 */
 	public void save(Properties properties) {
@@ -46,6 +47,7 @@ public class Option<T> {
 
 	/**
 	 * Sets this Option's value to the one stored in a specific {@link Properties}
+	 *
 	 * @param properties the properties to load from
 	 */
 	public void load(Properties properties) {
@@ -60,9 +62,8 @@ public class Option<T> {
 	 * Returns the list of allowed values that {@link Option#value can be set to}
 	 * Please check if a value is in this list before calling {@link Option#setValue(Object)}
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L132">Gui Note: Left and Right Clicking</a>
-	 *
 	 * @return the list of allowed values
+	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L132">Gui Note: Left and Right Clicking</a>
 	 */
 	public List<T> getAllowedValues() {
 		return allowedValues;
@@ -71,12 +72,11 @@ public class Option<T> {
 	/**
 	 * Returns the comment of this option that is split based on the regex for ". "
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L128">Optifine Doc For Tooltip</a>
-	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L129">Gui Note: Tooltip Coloring</a>
-	 *
-	 * The list returned should be applied as a tooltip
 	 * @return comment that is split sentences
+	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L128">Optifine Doc For Tooltip</a>
+	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L129">Gui Note: Tooltip Coloring</a>
+	 * <p>
+	 * The list returned should be applied as a tooltip
 	 */
 	public List<String> getComment() {
 		return Arrays.asList(comment.split("\\.\\s*"));
@@ -84,6 +84,7 @@ public class Option<T> {
 
 	/**
 	 * Returns the current value of this option
+	 *
 	 * @return current value
 	 */
 	public T getValue() {
@@ -92,6 +93,7 @@ public class Option<T> {
 
 	/**
 	 * Sets the value of this config option, adhering to the rules of the allowedvalues list
+	 *
 	 * @param value the value to set this option to
 	 */
 	public void setValue(T value) {
@@ -108,6 +110,7 @@ public class Option<T> {
 
 	/**
 	 * Returns the function that parses the value of this option from a string
+	 *
 	 * @return the parser function that accepts a string
 	 */
 	public Function<String, T> getDeserializer() {
@@ -117,9 +120,8 @@ public class Option<T> {
 	/**
 	 * Returns the Default Value of this option
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L133">Gui Note: Shift Clicking</a>
-	 *
 	 * @return the default value
+	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.properties#L133">Gui Note: Shift Clicking</a>
 	 */
 	public T getDefaultValue() {
 		return defaultValue;

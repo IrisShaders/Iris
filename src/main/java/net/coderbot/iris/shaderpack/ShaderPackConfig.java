@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 public class ShaderPackConfig {
 
@@ -71,8 +69,9 @@ public class ShaderPackConfig {
 
 	/**
 	 * Process a new option and adds it to the shader properties to be serialized
+	 *
 	 * @param option the option to process
-	 * @param <T> the type of the Option
+	 * @param <T>    the type of the Option
 	 * @return a modified option that has read it's value
 	 */
 	public <T> Option<T> processOption(Option<T> option) {
@@ -85,6 +84,7 @@ public class ShaderPackConfig {
 
 	/**
 	 * Loads values from properties into the configProperties field
+	 *
 	 * @throws IOException file exception
 	 */
 	public void load() throws IOException {
@@ -96,6 +96,7 @@ public class ShaderPackConfig {
 
 	/**
 	 * Saves the configProperties
+	 *
 	 * @throws IOException file exceptions
 	 */
 	public void save() throws IOException {
