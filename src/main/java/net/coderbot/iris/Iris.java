@@ -49,6 +49,17 @@ public class Iris implements ClientModInitializer {
 	private static FileSystem zipFileSystem;
 	public static KeyBinding reloadKeybind;
 
+
+	/**
+	 * Controls whether directional shading was previously disabled
+	 */
+	private static boolean wasDisablingDirectionalShading = false;
+
+	/**
+	 * Controls whether BakedQuad will or will not use directional shading.
+	 */
+	private static boolean disableDirectionalShading = false;
+
 	@Override
 	public void onInitializeClient() {
 		try {
@@ -69,6 +80,8 @@ public class Iris implements ClientModInitializer {
 
 
 		loadShaderpack();
+		wasDisablingDirectionalShading = disableDirectionalShading;
+
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
@@ -130,6 +143,8 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using shaderpack: " + name);
+		disableDirectionalShading = true;
+
 		return true;
 	}
 
@@ -177,9 +192,12 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using internal shaders");
+		disableDirectionalShading = false;
 	}
 
 	public static void reload() throws IOException {
+		wasDisablingDirectionalShading = disableDirectionalShading;
+
 		// allows shaderpacks to be changed at runtime
 		irisConfig.initialize();
 
@@ -188,6 +206,11 @@ public class Iris implements ClientModInitializer {
 
 		// Load the new shaderpack
 		loadShaderpack();
+
+		if (wasDisablingDirectionalShading != disableDirectionalShading) {
+			// Re-render all of the chunks due to the change in directional shading setting
+			MinecraftClient.getInstance().worldRenderer.reload();
+		}
 	}
 
 	/**
@@ -250,5 +273,9 @@ public class Iris implements ClientModInitializer {
 
 	public static IrisConfig getIrisConfig() {
 		return irisConfig;
+	}
+
+	public static boolean shouldDisableDirectionalShading() {
+		return disableDirectionalShading;
 	}
 }
