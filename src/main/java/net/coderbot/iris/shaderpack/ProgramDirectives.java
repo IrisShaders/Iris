@@ -15,6 +15,7 @@ public class ProgramDirectives {
 	ProgramDirectives(ShaderPack.ProgramSource source, ShaderProperties properties) {
 		// First try to find it in the fragment source, then in the vertex source.
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
+		// TODO: ShadersMod appears to default to all buffers? Investigate this more closely.
 		drawBuffers = findDrawbuffersDirective(source.getFragmentSource())
 			.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[]{0}));
 		viewportScale = 1.0f;

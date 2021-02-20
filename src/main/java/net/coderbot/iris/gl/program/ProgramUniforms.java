@@ -1,19 +1,17 @@
 package net.coderbot.iris.gl.program;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.OptionalInt;
+import java.nio.IntBuffer;
+import java.util.*;
 
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.Uniform;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import org.lwjgl.opengl.GL21;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL20C;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GlProgram;
 
 public class ProgramUniforms {
 	private final ImmutableList<Uniform> perTick;
@@ -71,6 +69,7 @@ public class ProgramUniforms {
 		private final List<Uniform> once;
 		private final List<Uniform> perTick;
 		private final List<Uniform> perFrame;
+		private final Set<String> uniformNames;
 
 		protected Builder(String name, int program) {
 			this.name = name;
@@ -79,6 +78,7 @@ public class ProgramUniforms {
 			once = new ArrayList<>();
 			perTick = new ArrayList<>();
 			perFrame = new ArrayList<>();
+			uniformNames = new HashSet<>();
 		}
 
 		@Override
@@ -100,11 +100,13 @@ public class ProgramUniforms {
 
 		@Override
 		public OptionalInt location(String name) {
-			int id = GL21.glGetUniformLocation(program, name);
+			int id = GL20C.glGetUniformLocation(program, name);
 
 			if (id == -1) {
 				return OptionalInt.empty();
 			}
+
+			uniformNames.add(name);
 
 			// TODO: Make these debug messages less spammy, or toggleable
 			Iris.logger.info("[" + this.name + "] Activating uniform: " + name);
@@ -112,6 +114,23 @@ public class ProgramUniforms {
 		}
 
 		public ProgramUniforms buildUniforms() {
+			// Check for any unsupported uniforms and warn about them so that we can easily figure out what uniforms we
+			// need to add.
+			int activeUniforms = GL20C.glGetProgrami(program, GL20C.GL_ACTIVE_UNIFORMS);
+			IntBuffer sizeBuf = BufferUtils.createIntBuffer(1);
+			IntBuffer typeBuf = BufferUtils.createIntBuffer(1);
+
+			for (int index = 0; index < activeUniforms; index++) {
+				String name = GL20C.glGetActiveUniform(program, index, 128, sizeBuf, typeBuf);
+
+				int size = sizeBuf.get(0);
+				int type = typeBuf.get(0);
+
+				if (!name.startsWith("gl_") && !uniformNames.contains(name)) {
+					Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + name + " of size " + size + " and type " + type);
+				}
+			}
+
 			return new ProgramUniforms(ImmutableList.copyOf(once), ImmutableList.copyOf(perTick), ImmutableList.copyOf(perFrame));
 		}
 	}
