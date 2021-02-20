@@ -38,6 +38,7 @@
 
   "breaks": {
     "canvas": "*",
-    "optifabric": "*"
+    "optifabric": "*",
+    "physicsmod": "*"
   }
 }

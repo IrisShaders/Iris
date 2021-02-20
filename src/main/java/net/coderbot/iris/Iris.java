@@ -48,6 +48,17 @@ public class Iris implements ClientModInitializer {
 	private static FileSystem zipFileSystem;
 	public static KeyBinding reloadKeybind;
 
+
+	/**
+	 * Controls whether directional shading was previously disabled
+	 */
+	private static boolean wasDisablingDirectionalShading = false;
+
+	/**
+	 * Controls whether BakedQuad will or will not use directional shading.
+	 */
+	private static boolean disableDirectionalShading = false;
+
 	@Override
 	public void onInitializeClient() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
@@ -80,6 +91,8 @@ public class Iris implements ClientModInitializer {
 
 
 		loadShaderpack();
+		wasDisablingDirectionalShading = disableDirectionalShading;
+
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
@@ -139,6 +152,8 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using shaderpack: " + name);
+		disableDirectionalShading = true;
+
 		return true;
 	}
 
@@ -186,9 +201,12 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using internal shaders");
+		disableDirectionalShading = false;
 	}
 
 	public static void reload() throws IOException {
+		wasDisablingDirectionalShading = disableDirectionalShading;
+
 		// allows shaderpacks to be changed at runtime
 		irisConfig.initialize();
 
@@ -200,7 +218,8 @@ public class Iris implements ClientModInitializer {
 
 		// If Sodium is loaded, we need to reload the world renderer to properly recreate the ChunkRenderBackend
 		// Otherwise, the terrain shaders won't be changed properly.
-		if (FabricLoader.getInstance().isModLoaded("sodium")) {
+		// We also need to re-render all of the chunks if there is a change in the directional shading setting
+		if (FabricLoader.getInstance().isModLoaded("sodium") || wasDisablingDirectionalShading != disableDirectionalShading) {
 			MinecraftClient.getInstance().worldRenderer.reload();
 		}
 	}
@@ -265,5 +284,9 @@ public class Iris implements ClientModInitializer {
 
 	public static IrisConfig getIrisConfig() {
 		return irisConfig;
+	}
+
+	public static boolean shouldDisableDirectionalShading() {
+		return disableDirectionalShading;
 	}
 }
