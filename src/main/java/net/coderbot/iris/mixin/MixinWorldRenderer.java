@@ -99,7 +99,6 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		if (renderLayer == RenderLayer.getSolid() || renderLayer == RenderLayer.getCutout() || renderLayer == RenderLayer.getCutoutMipped()) {
-			Iris.logger.info("begin terrain layer");
 			GbufferPrograms.push(GbufferProgram.TERRAIN);
 		} else if (renderLayer == RenderLayer.getTranslucent() || renderLayer == RenderLayer.getTripwire()) {
 			GbufferPrograms.push(GbufferProgram.TRANSLUCENT_TERRAIN);
@@ -111,7 +110,6 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		if (renderLayer == RenderLayer.getSolid() || renderLayer == RenderLayer.getCutout() || renderLayer == RenderLayer.getCutoutMipped()) {
-			Iris.logger.info("end terrain layer");
 			GbufferPrograms.pop(GbufferProgram.TERRAIN);
 		} else if (renderLayer == RenderLayer.getTranslucent() || renderLayer == RenderLayer.getTripwire()) {
 			GbufferPrograms.pop(GbufferProgram.TRANSLUCENT_TERRAIN);

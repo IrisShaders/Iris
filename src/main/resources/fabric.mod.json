@@ -39,6 +39,7 @@
   "breaks": {
     "canvas": "*",
     "optifabric": "*",
-    "sodium": "*"
+    "sodium": "*",
+    "physicsmod": "*"
   }
 }
