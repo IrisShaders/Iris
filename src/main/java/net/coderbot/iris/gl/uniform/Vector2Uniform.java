@@ -24,7 +24,7 @@ public class Vector2Uniform extends Uniform {
 	public void update() {
 		Vec2f newValue = value.get();
 
-		if (!newValue.equals(cachedValue)) {
+		if (cachedValue == null || !newValue.equals(cachedValue)) {
 			cachedValue = newValue;
 			if (floatingPoint) {
 				GL20.glUniform2f(this.location, newValue.x, newValue.y);
