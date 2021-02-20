@@ -119,12 +119,22 @@ public final class CommonUniforms {
 		Entity cameraEntity = client.getCameraEntity();
 
 		if (cameraEntity instanceof LivingEntity) {
-
 			LivingEntity livingEntity = (LivingEntity) cameraEntity;
 
 			if (livingEntity.getStatusEffect(StatusEffects.NIGHT_VISION) != null) {
-
 				return GameRenderer.getNightVisionStrength(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+			}
+		}
+
+		// Conduit power gives the player a sort-of night vision effect when underwater.
+		// This lets existing shaderpacks be compatible with conduit power automatically.
+		//
+		// Yes, this should be the player entity, to match LightmapTextureManager.
+		if (client.player != null && client.player.hasStatusEffect(StatusEffects.CONDUIT_POWER)) {
+			float underwaterVisibility = client.player.getUnderwaterVisibility();
+
+			if (underwaterVisibility > 0.0f) {
+				return underwaterVisibility;
 			}
 		}
 
