@@ -34,6 +34,8 @@ public class ShadowMatrices {
 
 	private static final class Tests {
 		public static void main(String[] args) {
+			// const float shadowDistance = 32.0;
+			// /* SHADOWHPL:32.0 */
 			float[] expected = new float[] {
 				0.03125f, 0f, 0f, 0f,
 				0f, 0.03125f, 0f, 0f,
@@ -42,6 +44,17 @@ public class ShadowMatrices {
 			};
 
 			test("ortho projection hpl=32", expected, createOrthoMatrix(32.0f));
+
+			// const float shadowDistance = 110.0;
+			// /* SHADOWHPL:110.0 */
+			float[] expected110 = new float[] {
+					0.00909090880304575f, 0, 0, 0,
+					0, 0.00909090880304575f, 0, 0,
+					0, 0, -0.007814026437699795f, 0,
+					0, 0, -1.000390648841858f, 1
+			};
+
+			test("ortho projection hpl=110", expected110, createOrthoMatrix(110.0f));
 
 			float[] expectedModelViewAtDawn = new float[] {
 				// column 1
