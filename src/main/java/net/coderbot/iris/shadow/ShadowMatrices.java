@@ -4,7 +4,6 @@ import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.Matrix4f;
 
 import java.nio.FloatBuffer;
-import java.util.Arrays;
 
 public class ShadowMatrices {
 	private static final float NEAR = 0.05f;
@@ -25,11 +24,50 @@ public class ShadowMatrices {
 		};
 	}
 
-	public static void createModelViewMatrix(Matrix4f target, float shadowAngle) {
+	public static void createBaselineModelViewMatrix(Matrix4f target, float shadowAngle) {
+		float skyAngle;
+
+		if (shadowAngle < 0.25f) {
+			skyAngle = shadowAngle + 0.75f;
+		} else {
+			skyAngle = shadowAngle - 0.25f;
+		}
+
 		target.loadIdentity();
 		target.multiply(Matrix4f.translate(0.0f, 0.0f, -100.0f));
 		target.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(90.0F));
-		target.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(90.0f + shadowAngle * -360.0f));
+		target.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(skyAngle * -360.0f));
+	}
+
+	public static void snapModelViewToGrid(Matrix4f target, float shadowIntervalSize, double cameraX, double cameraY, double cameraZ) {
+		// Calculate where we are within each grid "cell"
+		// These values will be in the range of (-shadowIntervalSize, shadowIntervalSize)
+		//
+		// It looks like it's intended for these to be within the range [0, shadowIntervalSize), however since the
+		// expression (-2.0f % 32.0f) returns -2.0f, negative inputs will result in negative outputs.
+		float offsetX = (float) cameraX % shadowIntervalSize;
+		float offsetY = (float) cameraY % shadowIntervalSize;
+		float offsetZ = (float) cameraZ % shadowIntervalSize;
+
+		// Halve the size of each grid cell in order to move to the center of it.
+		float halfIntervalSize = shadowIntervalSize / 2.0f;
+
+		// Shift by -halfIntervalSize
+		//
+		// It's clear that the intent of the algorithm was to place the values into the range:
+		// [-shadowIntervalSize/2, shadowIntervalSize), however due to the previously-mentioned behavior with negatives,
+		// it's possible that values will lie in the range (-3shadowIntervalSize/2, shadowIntervalSize/2).
+		offsetX -= halfIntervalSize;
+		offsetY -= halfIntervalSize;
+		offsetZ -= halfIntervalSize;
+
+		target.multiply(Matrix4f.translate(offsetX, offsetY, offsetZ));
+	}
+
+	public static void createModelViewMatrix(Matrix4f target, float shadowAngle, float shadowIntervalSize,
+											 double cameraX, double cameraY, double cameraZ) {
+		createBaselineModelViewMatrix(target, shadowAngle);
+		snapModelViewToGrid(target, shadowIntervalSize, cameraX, cameraY, cameraZ);
 	}
 
 	private static final class Tests {
@@ -73,17 +111,19 @@ public class ShadowMatrices {
 				5.960464477539063E-8f,
 				0,
 				// column 4
-				0,
-				0,
-				-100,
-				1,
+				0.38002151250839233f,
+				1.0264281034469604f,
+				-100.4463119506836f,
+				1
 			};
 
 			Matrix4f modelView = new Matrix4f();
-			// shadow angle = 0 implies dawn
-			// This is odd, why is it not zero to get close? Need to go back and check the source numbers...
-			// 0.03455 ~= 12 degrees
-			createModelViewMatrix(modelView, 0.03455f);
+
+			// NB: At dawn, the shadow angle is NOT zero.
+			// When DayTime=0, skyAngle = 282 degrees.
+			// Thus, sunAngle = shadowAngle = 0.03451777f
+			createModelViewMatrix(modelView, 0.03451777f, 2.0f,
+					0.646045982837677f, 82.53274536132812f, -514.0264282226562f);
 
 			test("model view at dawn", expectedModelViewAtDawn, toFloatArray(modelView));
 		}
@@ -96,7 +136,7 @@ public class ShadowMatrices {
 		}
 
 		private static void test(String name, float[] expected, float[] created) {
-			if (!Arrays.equals(expected, created)) {
+			if (!areMatricesEqualWithinEpsilon(expected, created)) {
 				System.err.println("test " + name + " failed: ");
 				System.err.println("    expected: ");
 				System.err.print(printMatrix(expected, 8));
@@ -105,6 +145,16 @@ public class ShadowMatrices {
 			} else {
 				System.out.println("test " + name + " passed");
 			}
+		}
+
+		private static boolean areMatricesEqualWithinEpsilon(float[] expected, float[] created) {
+			for (int i = 0; i < 16; i++) {
+				if (Math.abs(expected[i] - created[i]) > 0.0005f) {
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		private static String printMatrix(float[] matrix, int spaces) {
