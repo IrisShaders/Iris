@@ -202,9 +202,19 @@ public class MixinRenderLayer {
 	private static void iris$wrapGlowingOutline(Identifier texture, RenderPhase.Cull cull, CallbackInfoReturnable<RenderLayer> cir) {
 		RenderLayer base = cir.getReturnValue();
 
-		// TODO: This only appears to be used for part of glowing entities. Verify that it's used for all
-		// glowing stuff.
-		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES_GLOWING));
+		// Note that instead of using GbufferProgram.ENTITIES_GLOWING here, we're using GbufferProgram.NONE. This is
+		// intentional!
+		//
+		// Few shaderpacks implement the glowing effect correctly, if at all. The issue is that implementing it properly
+		// requires using up a buffer / image. Shaderpacks can use at most 8 buffers (or, 16 on very recent versions of
+		// OptiFine), so throwing away an entire buffer just for the glowing effect is a hard compromise to make.
+		//
+		// As it turns out, the implementation of the Glowing effect in Vanilla works fine for the most part. It uses a
+		// framebuffer that is completely separate from that of shaderpack rendering, and the effect is only applied
+		// once the world has finished rendering.
+		//
+		// TODO: Allow shaderpacks to override this if they do in fact implement the glowing effect properly
+		cir.setReturnValue(wrap(base, GbufferProgram.NONE));
 	}
 
 	@Inject(at = @At("RETURN"), method = {

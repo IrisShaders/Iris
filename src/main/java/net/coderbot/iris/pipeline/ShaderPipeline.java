@@ -139,10 +139,12 @@ public class ShaderPipeline {
 			throw new IllegalStateException("Program stack in invalid state, popped " + popped + " but expected to pop " + expected);
 		}
 
-		Pass poppedPass = getPass(popped);
+		if (popped != GbufferProgram.NONE) {
+			Pass poppedPass = getPass(popped);
 
-		if (poppedPass != null) {
-			poppedPass.stopUsing();
+			if (poppedPass != null) {
+				poppedPass.stopUsing();
+			}
 		}
 
 		programStackLog.add("pop:" + popped);
@@ -201,6 +203,13 @@ public class ShaderPipeline {
 	}
 
 	private void useProgram(GbufferProgram program) {
+		if (program == GbufferProgram.NONE) {
+			// Note that we don't unbind the framebuffer here. Uses of GbufferProgram.NONE
+			// are responsible for ensuring that the framebuffer is switched properly.
+			GlProgramManager.useProgram(0);
+			return;
+		}
+
 		beginPass(getPass(program));
 
 		if (program == GbufferProgram.TERRAIN) {
