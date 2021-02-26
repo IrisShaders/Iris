@@ -104,7 +104,6 @@ public class CompositeRenderer {
 
 		private void destroy() {
 			this.program.destroy();
-			this.framebuffer.destroy();
 		}
 	}
 
@@ -212,8 +211,6 @@ public class CompositeRenderer {
 	}
 
 	public void destroy() {
-		baseline.destroy();
-		centerDepthSampler.destroy();
 		noisetex.destroy();
 
 		for (Pass renderPass : passes) {

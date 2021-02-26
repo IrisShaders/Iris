@@ -322,15 +322,11 @@ public class ShaderPipeline {
 
 		public void destroy() {
 			this.program.destroy();
-			this.framebuffer.destroy();
 		}
 	}
 
 	public void destroy() {
 		destroyPasses(basic, textured, texturedLit, skyBasic, skyTextured, clouds, terrain, translucent, weather);
-		clearAltBuffers.destroy();
-		clearMainBuffers.destroy();
-		baseline.destroy();
 		noiseTexture.destroy();
 	}
 
