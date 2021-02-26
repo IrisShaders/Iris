@@ -28,7 +28,6 @@ public class FullScreenQuadRenderer {
 
 	public void begin() {
 		RenderSystem.disableDepthTest();
-		RenderSystem.disableTexture();
 
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.pushMatrix();
