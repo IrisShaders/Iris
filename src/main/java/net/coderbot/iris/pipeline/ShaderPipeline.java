@@ -11,7 +11,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.rendertarget.NoiseTexture;
+import net.coderbot.iris.rendertarget.BuiltinNoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -69,7 +69,6 @@ public class ShaderPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
-	private final NoiseTexture noiseTexture;
 	private final int waterId;
 
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
@@ -101,8 +100,6 @@ public class ShaderPipeline {
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
-
-		this.noiseTexture = new NoiseTexture(128, 128);
 	}
 
 	public void pushProgram(GbufferProgram program) {
@@ -256,7 +253,7 @@ public class ShaderPipeline {
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
 				source.getFragmentSource().orElse(null));
-		} catch (IOException e) {
+		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
@@ -294,7 +291,7 @@ public class ShaderPipeline {
 			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
 			// a given program and bind the required textures instead.
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE15);
-			GlStateManager.bindTexture(noiseTexture.getTextureId());
+			BuiltinNoiseTexture.bind();
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 			framebuffer.bind();
 			program.use();
@@ -327,7 +324,6 @@ public class ShaderPipeline {
 
 	public void destroy() {
 		destroyPasses(basic, textured, texturedLit, skyBasic, skyTextured, clouds, terrain, translucent, weather);
-		noiseTexture.destroy();
 	}
 
 	private static void destroyPasses(Pass... passes) {
