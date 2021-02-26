@@ -366,6 +366,9 @@ public class ShaderPipeline {
 	}
 
 	public void prepareRenderTargets() {
+		// Make sure we're using texture unit 0 for this.
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
 

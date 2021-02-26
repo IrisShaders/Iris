@@ -110,14 +110,23 @@ public class CompositeRenderer {
 	public void renderAll() {
 		centerDepthSampler.endWorldRendering();
 
-		// Make sure we're using texture unit 0
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+		final Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
+		final int baseWidth = main.textureWidth;
+		final int baseHeight = main.textureHeight;
 
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
-
+		// Prepare "static" textures (ones that do not change during gbuffer rendering)
 		int depthAttachment = renderTargets.getDepthTexture().getTextureId();
 		int depthAttachmentNoTranslucents = renderTargets.getDepthTextureNoTranslucents().getTextureId();
+
+		bindTexture(PostProcessUniforms.DEPTH_TEX_0, depthAttachment);
+		bindTexture(PostProcessUniforms.DEPTH_TEX_1, depthAttachmentNoTranslucents);
+		// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
+		// Once we start rendering the hand before composite content, this will need to be addressed.
+		bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
+
+		bindTexture(PostProcessUniforms.NOISE_TEX, noisetex.getTextureId());
+
+		FullScreenQuadRenderer.INSTANCE.begin();
 
 		for (Pass renderPass : passes) {
 			if (!renderPass.isLastPass) {
@@ -125,15 +134,6 @@ public class CompositeRenderer {
 			} else {
 				main.beginWrite(false);
 			}
-
-			// TODO: Consider copying the depth texture content into a separate texture that won't be modified? Probably
-			// isn't an issue though.
-			bindTexture(PostProcessUniforms.DEPTH_TEX_0, depthAttachment);
-			// TODO: No translucent objects
-			bindTexture(PostProcessUniforms.DEPTH_TEX_1, depthAttachmentNoTranslucents);
-			// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
-			// Once we start rendering the hand before composite content, this will need to be addressed.
-			bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1]);
@@ -144,15 +144,15 @@ public class CompositeRenderer {
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6]);
 			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
 
-			bindTexture(PostProcessUniforms.NOISE_TEX, noisetex.getTextureId());
-
-			float scaledWidth = main.textureWidth * renderPass.viewportScale;
-			float scaledHeight = main.textureHeight * renderPass.viewportScale;
+			float scaledWidth = baseWidth * renderPass.viewportScale;
+			float scaledHeight = baseHeight * renderPass.viewportScale;
 			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
 
 			renderPass.program.use();
-			FullScreenQuadRenderer.INSTANCE.render();
+			FullScreenQuadRenderer.INSTANCE.renderQuad();
 		}
+
+		FullScreenQuadRenderer.end();
 
 		if (passes.size() == 0) {
 			// If there are no passes, we somehow need to transfer the content of the Iris render targets into the main

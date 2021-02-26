@@ -22,37 +22,35 @@ public class FullScreenQuadRenderer {
 		this.quad = createQuad();
 	}
 
-	/**
-	 * Renders a quad to the screen. Textures are enabled if they aren't already enabled, and identity modelview /
-	 * projection matrices will be used.
-	 */
 	public void render() {
 		begin();
 
-		RenderSystem.enableTexture();
 		renderQuad();
 
 		end();
 	}
 
-	private void begin() {
+	public void begin() {
 		RenderSystem.disableDepthTest();
+		RenderSystem.enableTexture();
 
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
-	}
 
-	private void renderQuad() {
 		quad.bind();
 		VertexFormats.POSITION_COLOR_TEXTURE.startDrawing(0L);
-		quad.draw(IDENTITY, GL11C.GL_TRIANGLES);
-		VertexFormats.POSITION_COLOR_TEXTURE.endDrawing();
-		VertexBuffer.unbind();
 	}
 
-	private void end() {
+	public void renderQuad() {
+		quad.draw(IDENTITY, GL11C.GL_TRIANGLES);
+	}
+
+	public static void end() {
+		VertexFormats.POSITION_COLOR_TEXTURE.endDrawing();
+		VertexBuffer.unbind();
+
 		RenderSystem.enableDepthTest();
 
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
