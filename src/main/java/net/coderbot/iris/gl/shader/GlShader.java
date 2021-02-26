@@ -20,7 +20,7 @@ public class GlShader extends GlResource {
     private final String name;
 
     public GlShader(ShaderType type, String name, String src, ShaderConstants constants) {
-    	super(createShader(type, src, name, constants));
+    	super(createShader(type, name, src, constants));
 
         this.name = name;
     }

@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL20C;
 public class ProgramCreator {
 	private static final Logger LOGGER = LogManager.getLogger(ProgramCreator.class);
 
-	public int create(String name, GlShader... shaders) {
+	public static int create(String name, GlShader... shaders) {
 		int program = GL20C.glCreateProgram();
 
 		for (GlShader shader : shaders) {

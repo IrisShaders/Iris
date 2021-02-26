@@ -253,7 +253,7 @@ public class ShaderPipeline {
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
 				source.getFragmentSource().orElse(null));
-		} catch (IOException e) {
+		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
