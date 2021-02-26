@@ -1,6 +1,8 @@
 package net.coderbot.iris.rendertarget;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -18,6 +20,8 @@ public class RenderTargets {
 	private final RenderTarget[] targets;
 	private final DepthTexture depthTexture;
 	private final DepthTexture noTranslucents;
+
+	private final List<GlFramebuffer> ownedFramebuffers;
 
 	private int cachedWidth;
 	private int cachedHeight;
@@ -43,23 +47,20 @@ public class RenderTargets {
 
 		this.cachedWidth = width;
 		this.cachedHeight = height;
+
+		this.ownedFramebuffers = new ArrayList<>();
 	}
 
 	public void destroy() {
-		// TODO: This is a hack to make things not break on reload
-		// It seems like something is holding on to colortex0/depthtex0 somewhere
-		boolean first = true;
+		for (GlFramebuffer owned : ownedFramebuffers) {
+			owned.destroy();
+		}
 
 		for (RenderTarget target : targets) {
-			if (first) {
-				first = false;
-				continue;
-			}
-
 			target.destroy();
 		}
 
-		// depthTexture.destroy();
+		depthTexture.destroy();
 		noTranslucents.destroy();
 	}
 
@@ -115,6 +116,7 @@ public class RenderTargets {
 
 	public GlFramebuffer createColorFramebuffer(boolean[] stageWritesToAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
+		ownedFramebuffers.add(framebuffer);
 
 		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
 			RenderTarget target = this.get(i);
