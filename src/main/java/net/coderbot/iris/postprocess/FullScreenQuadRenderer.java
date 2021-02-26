@@ -38,9 +38,11 @@ public class FullScreenQuadRenderer {
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+		
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		quad.bind();
-		VertexFormats.POSITION_COLOR_TEXTURE.startDrawing(0L);
+		VertexFormats.POSITION_TEXTURE.startDrawing(0L);
 	}
 
 	public void renderQuad() {
@@ -48,7 +50,7 @@ public class FullScreenQuadRenderer {
 	}
 
 	public static void end() {
-		VertexFormats.POSITION_COLOR_TEXTURE.endDrawing();
+		VertexFormats.POSITION_TEXTURE.endDrawing();
 		VertexBuffer.unbind();
 
 		RenderSystem.enableDepthTest();
@@ -62,10 +64,10 @@ public class FullScreenQuadRenderer {
 	 * Creates and uploads a vertex buffer containing a single full-screen quad
 	 */
 	private static VertexBuffer createQuad() {
-		VertexBuffer quad = new VertexBuffer(VertexFormats.POSITION_COLOR_TEXTURE);
+		VertexBuffer quad = new VertexBuffer(VertexFormats.POSITION_TEXTURE);
 
-		BufferBuilder buffer = new BufferBuilder(6 * VertexFormats.POSITION_COLOR_TEXTURE.getVertexSizeInteger());
-		buffer.begin(GL11C.GL_TRIANGLES, VertexFormats.POSITION_COLOR_TEXTURE);
+		BufferBuilder buffer = new BufferBuilder(6 * VertexFormats.POSITION_TEXTURE.getVertexSizeInteger());
+		buffer.begin(GL11C.GL_TRIANGLES, VertexFormats.POSITION_TEXTURE);
 
 		// NB: Use counterclockwise order here! Otherwise these triangles will be invisible.
 
@@ -88,9 +90,6 @@ public class FullScreenQuadRenderer {
 	private static void vertex(BufferBuilder buffer, boolean plusX, boolean up) {
 		// These coordinates are provided in clip space, and therefore range from -1.0 to 1.0 to fill the entire screen.
 		buffer.vertex(plusX ? 1.0F : -1.0F, up ? 1.0F : -1.0F, 0.0);
-
-		// Each vertex will always be white.
-		buffer.color(1.0F, 1.0F, 1.0F, 1.0F);
 
 		// Texture coordinates are in the range of 0.0 to 1.0
 		buffer.texture(plusX ? 1.0F : 0.0F, up ? 1.0F : 0.0F);
