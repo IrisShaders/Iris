@@ -12,6 +12,8 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.texunits.TextureUnit;
 
+import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
+import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.GameRenderer;
@@ -60,7 +62,7 @@ public final class CommonUniforms {
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
 			// TODO: This should be smoothed, but not smoothing it is better than nothing.
-			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", CommonUniforms::getEyeBrightness)
+			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness))
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			// TODO: This should be smoothed, but not smoothing it is better than nothing.
 			.uniform1f(PER_TICK, "wetness", CommonUniforms::getRainStrength)
