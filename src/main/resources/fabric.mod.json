@@ -25,7 +25,8 @@
   },
 
   "mixins": [
-    "mixins.iris.json"
+    "mixins.iris.json",
+    "mixins.iris.yeetphysicsmod.json"
   ],
 
   "depends": {
@@ -39,7 +40,6 @@
   "breaks": {
     "canvas": "*",
     "optifabric": "*",
-    "sodium": "*",
-    "physicsmod": "*"
+    "sodium": "*"
   }
 }
