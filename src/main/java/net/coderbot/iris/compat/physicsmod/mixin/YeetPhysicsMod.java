@@ -86,11 +86,15 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 		// endDrawing is a member of RenderPhase.
 		String endDrawing = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23518", "()V");
 
-		redirect(found, renderLayer, startDrawing, "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectStartDrawing");
-		redirect(found, renderLayer, endDrawing, "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectEndDrawing");
+		// getSolid is a member of RenderLayer.
+		String getSolid = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_1921", "method_23577", "()Lnet/minecraft/class_1921;");
+
+		redirect(found, renderLayer, startDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectStartDrawing", "(L" + renderLayer + ";)V");
+		redirect(found, renderLayer, endDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectEndDrawing", "(L" + renderLayer + ";)V");
+		redirect(found, renderLayer, getSolid, "()L" + renderLayer + ";", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "getTargetRenderLayer", "()L" + renderLayer + ";");
 	}
 
-	private static void redirect(MethodNode found, String owner, String name, String replacementOwner, String replacementName) {
+	private static void redirect(MethodNode found, String owner, String name, String desc, String replacementOwner, String replacementName, String replacementDesc) {
 		AbstractInsnNode foundInstruction = null;
 
 		for (AbstractInsnNode node : found.instructions) {
@@ -100,22 +104,17 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 
 			MethodInsnNode methodInsn = (MethodInsnNode) node;
 
-			// INVOKEVIRTUAL net/minecraft/client/render/RenderLayer.endDrawing ()V
-			// INVOKEVIRTUAL net/minecraft/client/render/RenderLayer.startDrawing ()V
-
-			System.out.println(methodInsn.owner + "." + methodInsn.name + methodInsn.desc);
-
-			if (owner.equals(methodInsn.owner) && name.equals(methodInsn.name) && "()V".equals(methodInsn.desc)) {
+			if (owner.equals(methodInsn.owner) && name.equals(methodInsn.name) && desc.equals(methodInsn.desc)) {
 				foundInstruction = node;
 				break;
 			}
 		}
 
 		if (foundInstruction == null) {
-			throw new IllegalStateException();
+			throw new IllegalStateException("Failed to redirect a method call in PhysicsMod rendering");
 		}
 
-		MethodInsnNode redirection = new MethodInsnNode(Opcodes.INVOKESTATIC, replacementOwner, replacementName, "(L" + owner + ";)V", false);
+		MethodInsnNode redirection = new MethodInsnNode(Opcodes.INVOKESTATIC, replacementOwner, replacementName, replacementDesc, false);
 
 		found.instructions.insertBefore(foundInstruction, redirection);
 		found.instructions.remove(foundInstruction);
