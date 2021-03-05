@@ -4,6 +4,7 @@
   "package": "net.coderbot.iris.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "MixinBakedQuad",
     "MixinDebugHud",
     "MixinEntityRenderDispatcher",
     "MixinGameRenderer",

@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -33,6 +33,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import org.lwjgl.opengl.GL20C;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
@@ -48,6 +49,17 @@ public class Iris implements ClientModInitializer {
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
 	public static KeyBinding reloadKeybind;
+
+
+	/**
+	 * Controls whether directional shading was previously disabled
+	 */
+	private static boolean wasDisablingDirectionalShading = false;
+
+	/**
+	 * Controls whether BakedQuad will or will not use directional shading.
+	 */
+	private static boolean disableDirectionalShading = false;
 
 	@Override
 	public void onInitializeClient() {
@@ -69,6 +81,8 @@ public class Iris implements ClientModInitializer {
 
 
 		loadShaderpack();
+		wasDisablingDirectionalShading = disableDirectionalShading;
+
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
@@ -130,6 +144,8 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using shaderpack: " + name);
+		disableDirectionalShading = true;
+
 		return true;
 	}
 
@@ -177,9 +193,12 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using internal shaders");
+		disableDirectionalShading = false;
 	}
 
 	public static void reload() throws IOException {
+		wasDisablingDirectionalShading = disableDirectionalShading;
+
 		// allows shaderpacks to be changed at runtime
 		irisConfig.initialize();
 
@@ -188,6 +207,11 @@ public class Iris implements ClientModInitializer {
 
 		// Load the new shaderpack
 		loadShaderpack();
+
+		if (wasDisablingDirectionalShading != disableDirectionalShading) {
+			// Re-render all of the chunks due to the change in directional shading setting
+			MinecraftClient.getInstance().worldRenderer.reload();
+		}
 	}
 
 	/**
@@ -196,21 +220,51 @@ public class Iris implements ClientModInitializer {
 	private static void destroyEverything() {
 		currentPack = null;
 
-		if (pipeline != null) {
-			pipeline.destroy();
-			pipeline = null;
+		// Unbind all textures
+		//
+		// This is necessary because we don't want destroyed render target textures to remain bound to certain texture
+		// units. Vanilla appears to properly rebind all textures as needed, and we do so too, so this does not cause
+		// issues elsewhere.
+		//
+		// Without this code, there will be weird issues when reloading certain shaderpacks.
+		for (int i = 0; i < 16; i++) {
+			GlStateManager.activeTexture(GL20C.GL_TEXTURE0 + i);
+			GlStateManager.bindTexture(0);
 		}
 
-		if (compositeRenderer != null) {
-			compositeRenderer.destroy();
-			compositeRenderer = null;
-		}
+		// Set the active texture unit to unit 0
+		//
+		// This seems to be what most code expects. It's a sane default in any case.
+		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
+		// Destroy our render targets
+		//
+		// While it's possible to just clear them instead, we'd need to investigate whether or not this would help
+		// performance.
 		if (renderTargets != null) {
 			renderTargets.destroy();
 			renderTargets = null;
 		}
 
+		// Destroy the old world rendering pipeline
+		//
+		// This destroys all of the loaded gbuffer programs as well.
+		if (pipeline != null) {
+			pipeline.destroy();
+			pipeline = null;
+		}
+
+		// Destroy the composite rendering pipeline
+		//
+		// This destroys all of the loaded composite programs as well.
+		if (compositeRenderer != null) {
+			compositeRenderer.destroy();
+			compositeRenderer = null;
+		}
+
+		// Close the zip filesystem that the shaderpack was loaded from
+		//
+		// This prevents a FileSystemAlreadyExistsException when reloading shaderpacks.
 		if (zipFileSystem != null) {
 			try {
 				zipFileSystem.close();
@@ -250,5 +304,9 @@ public class Iris implements ClientModInitializer {
 
 	public static IrisConfig getIrisConfig() {
 		return irisConfig;
+	}
+
+	public static boolean shouldDisableDirectionalShading() {
+		return disableDirectionalShading;
 	}
 }

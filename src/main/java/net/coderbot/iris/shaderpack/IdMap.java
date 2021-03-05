@@ -107,6 +107,12 @@ public class IdMap {
 			}
 
 			for (String part : value.split(" ")) {
+				if (part.contains("=")) {
+					// Avoid tons of logspam for now
+					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
+					continue;
+				}
+
 				try {
 					Identifier identifier = new Identifier(part);
 

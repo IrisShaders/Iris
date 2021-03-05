@@ -25,7 +25,8 @@
   },
 
   "mixins": [
-    "mixins.iris.json"
+    "mixins.iris.json",
+    "mixins.iris.yeetphysicsmod.json"
   ],
 
   "depends": {

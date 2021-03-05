@@ -12,6 +12,8 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.texunits.TextureUnit;
 
+import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
+import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.GameRenderer;
@@ -24,6 +26,10 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.LightType;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -46,14 +52,29 @@ public final class CommonUniforms {
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1i(ONCE, "noisetex", () -> 15)
-			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getY())
+			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(Hand.MAIN_HAND))
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(Hand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
-			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood);;
+			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
+			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
+			// TODO: This should be smoothed, but not smoothing it is better than nothing.
+			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness))
+			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
+			// TODO: This should be smoothed, but not smoothing it is better than nothing.
+			.uniform1f(PER_TICK, "wetness", CommonUniforms::getRainStrength)
+			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
+	}
+
+	private static Vec3d getSkyColor() {
+		if (client.world == null || client.cameraEntity == null) {
+			return Vec3d.ZERO;
+		}
+
+		return client.world.method_23777(client.cameraEntity.getBlockPos(), CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
 	private static float getBlindness() {
@@ -80,16 +101,49 @@ public final class CommonUniforms {
 		return ((ClientPlayerEntity)client.cameraEntity).getMoodPercentage();
 	}
 
+	private static float getRainStrength() {
+		if (client.world == null) {
+			return 0f;
+		}
+
+		return client.world.getRainGradient(CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
+	private static Vec2f getEyeBrightness() {
+		if (client.cameraEntity == null || client.world == null) {
+			return Vec2f.ZERO;
+		}
+
+		Vec3d feet = client.cameraEntity.getPos();
+		Vec3d eyes = new Vec3d(feet.x, client.cameraEntity.getEyeY(), feet.z);
+		BlockPos eyeBlockPos = new BlockPos(eyes);
+
+		int blockLight = client.world.getLightLevel(LightType.BLOCK, eyeBlockPos);
+		int skyLight = client.world.getLightLevel(LightType.SKY, eyeBlockPos);
+
+		return new Vec2f(blockLight * 16.0f, skyLight * 16.0f);
+	}
+
 	private static float getNightVision() {
 		Entity cameraEntity = client.getCameraEntity();
 
 		if (cameraEntity instanceof LivingEntity) {
-
 			LivingEntity livingEntity = (LivingEntity) cameraEntity;
 
 			if (livingEntity.getStatusEffect(StatusEffects.NIGHT_VISION) != null) {
-
 				return GameRenderer.getNightVisionStrength(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+			}
+		}
+
+		// Conduit power gives the player a sort-of night vision effect when underwater.
+		// This lets existing shaderpacks be compatible with conduit power automatically.
+		//
+		// Yes, this should be the player entity, to match LightmapTextureManager.
+		if (client.player != null && client.player.hasStatusEffect(StatusEffects.CONDUIT_POWER)) {
+			float underwaterVisibility = client.player.getUnderwaterVisibility();
+
+			if (underwaterVisibility > 0.0f) {
+				return underwaterVisibility;
 			}
 		}
 

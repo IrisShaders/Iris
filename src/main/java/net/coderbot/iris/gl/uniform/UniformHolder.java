@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 
 public interface UniformHolder {
@@ -42,6 +43,18 @@ public interface UniformHolder {
 
 	default UniformHolder uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value) {
 		location(name).ifPresent(id -> addUniform(updateFrequency, new BooleanUniform(id, value)));
+
+		return this;
+	}
+
+	default UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
+		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, true)));
+
+		return this;
+	}
+
+	default UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
+		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, false)));
 
 		return this;
 	}
