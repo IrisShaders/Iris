@@ -44,8 +44,6 @@ public class Iris implements ClientModInitializer {
 
 	private static ShaderPack currentPack;
 	private static ShaderPipeline pipeline;
-	private static RenderTargets renderTargets;
-	private static CompositeRenderer compositeRenderer;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
 	public static KeyBinding reloadKeybind;
@@ -237,29 +235,12 @@ public class Iris implements ClientModInitializer {
 		// This seems to be what most code expects. It's a sane default in any case.
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
-		// Destroy our render targets
-		//
-		// While it's possible to just clear them instead, we'd need to investigate whether or not this would help
-		// performance.
-		if (renderTargets != null) {
-			renderTargets.destroy();
-			renderTargets = null;
-		}
-
 		// Destroy the old world rendering pipeline
 		//
-		// This destroys all of the loaded gbuffer programs as well.
+		// This destroys all loaded shader programs and all of the render targets.
 		if (pipeline != null) {
 			pipeline.destroy();
 			pipeline = null;
-		}
-
-		// Destroy the composite rendering pipeline
-		//
-		// This destroys all of the loaded composite programs as well.
-		if (compositeRenderer != null) {
-			compositeRenderer.destroy();
-			compositeRenderer = null;
 		}
 
 		// Close the zip filesystem that the shaderpack was loaded from
@@ -274,17 +255,9 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	public static RenderTargets getRenderTargets() {
-		if (renderTargets == null) {
-			renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), Objects.requireNonNull(currentPack));
-		}
-
-		return renderTargets;
-	}
-
 	public static ShaderPipeline getPipeline() {
 		if (pipeline == null) {
-			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack), getRenderTargets());
+			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack));
 		}
 
 		return pipeline;
@@ -292,14 +265,6 @@ public class Iris implements ClientModInitializer {
 
 	public static ShaderPack getCurrentPack() {
 		return currentPack;
-	}
-
-	public static CompositeRenderer getCompositeRenderer() {
-		if (compositeRenderer == null) {
-			compositeRenderer = new CompositeRenderer(Objects.requireNonNull(currentPack), getRenderTargets());
-		}
-
-		return compositeRenderer;
 	}
 
 	public static IrisConfig getIrisConfig() {

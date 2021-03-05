@@ -49,8 +49,7 @@ public class MixinWorldRenderer {
 	// Inject a bit early so that we can end our rendering in time.
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;method_23792()V"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		Iris.getPipeline().endWorldRender();
-		Iris.getCompositeRenderer().renderAll();
+		Iris.getPipeline().finalizeWorldRendering();
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY))

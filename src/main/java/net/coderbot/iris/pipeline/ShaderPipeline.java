@@ -11,6 +11,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.rendertarget.BuiltinNoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -69,14 +70,18 @@ public class ShaderPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
+	private final CompositeRenderer compositeRenderer;
+
 	private final int waterId;
 
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
 
-	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
-		this.renderTargets = renderTargets;
-		waterId = pack.getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
+	public ShaderPipeline(ShaderPack pack) {
+		Objects.requireNonNull(pack);
+
+		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), pack);
+		this.waterId = pack.getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
 
 		this.basic = pack.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = pack.getGbuffersTextured().map(this::createPass).orElse(basic);
@@ -100,6 +105,8 @@ public class ShaderPipeline {
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+
+		this.compositeRenderer = new CompositeRenderer(pack, renderTargets);
 	}
 
 	public void pushProgram(GbufferProgram program) {
@@ -330,6 +337,17 @@ public class ShaderPipeline {
 
 	public void destroy() {
 		destroyPasses(basic, textured, texturedLit, skyBasic, skyTextured, clouds, terrain, translucent, weather);
+
+		// Destroy the composite rendering pipeline
+		//
+		// This destroys all of the loaded composite programs as well.
+		compositeRenderer.destroy();
+
+		// Destroy our render targets
+		//
+		// While it's possible to just clear them instead and reuse them, we'd need to investigate whether or not this
+		// would help performance.
+		renderTargets.destroy();
 	}
 
 	private static void destroyPasses(Pass... passes) {
@@ -423,7 +441,7 @@ public class ShaderPipeline {
 		pushProgram(GbufferProgram.BASIC);
 	}
 
-	public void endWorldRender() {
+	public void finalizeWorldRendering() {
 		popProgram(GbufferProgram.BASIC);
 
 		if (!programStack.isEmpty()) {
@@ -435,5 +453,7 @@ public class ShaderPipeline {
 
 		isRenderingWorld = false;
 		programStackLog.clear();
+
+		compositeRenderer.renderAll();
 	}
 }
