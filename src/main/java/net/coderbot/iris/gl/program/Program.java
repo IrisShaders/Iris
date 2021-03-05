@@ -1,28 +1,26 @@
 package net.coderbot.iris.gl.program;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.GlResource;
 
-import net.minecraft.client.gl.GlProgram;
-import net.minecraft.client.gl.GlProgramManager;
+import org.lwjgl.opengl.GL20C;
 
 public final class Program extends GlResource {
 	private final ProgramUniforms uniforms;
 
-	Program(GlProgram glProgram, ProgramUniforms uniforms) {
-		super(glProgram.getProgramRef());
+	Program(int program, ProgramUniforms uniforms) {
+		super(program);
 
 		this.uniforms = uniforms;
 	}
 
 	public void use() {
-		GlProgramManager.useProgram(getGlId());
+		GL20C.glUseProgram(getGlId());
 
 		uniforms.update();
 	}
 
 	public void destroyInternal() {
-		GlStateManager.deleteProgram(getGlId());
+		GL20C.glDeleteProgram(getGlId());
 	}
 
 	/**

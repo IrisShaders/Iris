@@ -12,10 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.rendertarget.FramebufferBlitter;
-import net.coderbot.iris.rendertarget.NoiseTexture;
-import net.coderbot.iris.rendertarget.RenderTarget;
-import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.rendertarget.*;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -30,7 +27,6 @@ public class CompositeRenderer {
 
 	private final ImmutableList<Pass> passes;
 	private final GlFramebuffer baseline;
-	private final NoiseTexture noisetex;
 
 	final CenterDepthSampler centerDepthSampler;
 
@@ -89,10 +85,6 @@ public class CompositeRenderer {
 		this.renderTargets = renderTargets;
 
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
-
-		// TODO: Use noiseTextureResolution here instead.
-		int noiseTextureResolution = 128;
-		this.noisetex = new NoiseTexture(noiseTextureResolution, noiseTextureResolution);
 	}
 
 	private static final class Pass {
@@ -124,7 +116,8 @@ public class CompositeRenderer {
 		// Once we start rendering the hand before composite content, this will need to be addressed.
 		bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
-		bindTexture(PostProcessUniforms.NOISE_TEX, noisetex.getTextureId());
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.NOISE_TEX);
+		BuiltinNoiseTexture.bind();
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 
@@ -199,7 +192,7 @@ public class CompositeRenderer {
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
 				source.getFragmentSource().orElse(null));
-		} catch (IOException e) {
+		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
@@ -211,8 +204,6 @@ public class CompositeRenderer {
 	}
 
 	public void destroy() {
-		noisetex.destroy();
-
 		for (Pass renderPass : passes) {
 			renderPass.destroy();
 		}
