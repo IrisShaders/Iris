@@ -22,14 +22,14 @@ public class ConfigOptionParser {
 	  Match 0 or more whitespace after that
 	  Match any comments on the option after that
 	 */
-	private static final Pattern BOOLEAN_OPTION_PATTERN = Pattern.compile("^(?<startingComment>//+)?\\s*(?<define>#define)\\s+(?<name>\\w+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?$");
+	private static final Pattern BOOLEAN_OPTION_PATTERN = Pattern.compile("(?<startingComment>//+)?\\s*(?<define>#define)\\s+(?<name>\\w+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?");
 	/*
 	  Regex for matching ifdef patterns for boolean options
 	  Match the ifdef or ifndef keyword
 	  match whitespace that must be there
 	  match a word that is the name of the keyword
 	 */
-	private static final Pattern IFDEF_IFNDEF_PATTERN = Pattern.compile("^(?<ifdef>#ifdef|#ifndef)\\s+(?<name>\\w+)(?<other>.*)");
+	private static final Pattern IFDEF_IFNDEF_PATTERN = Pattern.compile("(?<ifdef>#ifdef|#ifndef)\\s+(?<name>\\w+)");
 	/*
 	   Regex that matches for integer and float options
 	   Match 1 or more whitespace after #define
@@ -43,14 +43,14 @@ public class ConfigOptionParser {
 	   match 0 or more whitespace
 	   match if there is a comment following the line or not
 	 */
-	private static final Pattern FLOAT_INTEGER_OPTION_PATTERN = Pattern.compile("^(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?[\\d.fF]+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?$");
+	private static final Pattern FLOAT_INTEGER_OPTION_PATTERN = Pattern.compile("(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?[\\d.fF]+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?");
 	/*
 	 Regex that matches for only integers and not floats
 	 Same as above but in the char class we remove the float specific checks
 		remove matching a "."
 		remove matching a "f" or a "F"
 	 */
-	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("^(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?\\d+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?$");
+	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?\\d+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?");
 	/*
 	Some shaderpacks like sildurs have #define directives that are named with the program name
 	like #define gbuffers_textured
@@ -161,7 +161,7 @@ public class ConfigOptionParser {
 	 */
 	private static boolean containsIfDef(List<String> lines, String name) {
 		for (String line : lines) {
-			Matcher ifdef = IFDEF_IFNDEF_PATTERN.matcher(line);
+			Matcher ifdef = IFDEF_IFNDEF_PATTERN.matcher(line.trim());
 			if (ifdef.matches()) {
 				String ifdefname = group(ifdef, "name");
 				if (name.equals(ifdefname)) {
