@@ -13,10 +13,8 @@ import net.coderbot.iris.pipeline.ShaderPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +42,8 @@ public class Iris implements ClientModInitializer {
 	private static final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
+	private static String currentPackName;
+
 	private static ShaderPipeline pipeline;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
@@ -113,6 +113,7 @@ public class Iris implements ClientModInitializer {
 			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
 				logger.warn("Falling back to internal shaders because the external shaderpack could not be loaded");
 				loadInternalShaderpack();
+				currentPackName = "(internal) [fallback, check your logs for errors]";
 			}
 		} else {
 			loadInternalShaderpack();
@@ -174,6 +175,7 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using shaderpack: " + name);
+		currentPackName = name;
 		disableDirectionalShading = true;
 
 		return true;
@@ -213,6 +215,7 @@ public class Iris implements ClientModInitializer {
 		}
 
 		logger.info("Using internal shaders");
+		currentPackName = "(internal)";
 		disableDirectionalShading = false;
 	}
 
@@ -318,6 +321,10 @@ public class Iris implements ClientModInitializer {
 
 	public static ShaderPack getCurrentPack() {
 		return currentPack;
+	}
+
+	public static String getCurrentPackName() {
+		return currentPackName;
 	}
 
 	public static IrisConfig getIrisConfig() {
