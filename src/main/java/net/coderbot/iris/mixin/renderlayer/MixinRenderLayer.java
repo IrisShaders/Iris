@@ -112,8 +112,6 @@ public class MixinRenderLayer {
 	}
 
 	private static RenderLayer wrapGlint(String glintType, RenderLayer wrapped) {
-		String name = ((RenderPhaseAccessor) wrapped).getName();
-
 		String wrappedName = "iris:" + glintType + "_glint";
 
 		if (glintType == null) {
