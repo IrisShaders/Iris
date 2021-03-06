@@ -39,9 +39,6 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At("HEAD"))
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
-		// TODO: This makes BSL reflections less wacky but makes the sky not bob with everything else on Sildur's
-		// Closer investigation is necessary
-		// CapturedRenderingState.INSTANCE.setGbufferProjection(gameRenderer.getBasicProjectionMatrix(camera, tickDelta, true));
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		Iris.checkDimension();
 		Iris.getPipeline().beginWorldRender();
