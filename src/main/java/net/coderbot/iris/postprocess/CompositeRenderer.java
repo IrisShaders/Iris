@@ -24,11 +24,14 @@ import org.lwjgl.opengl.GL15C;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.util.Pair;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
 
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
 
 	private final ImmutableList<Pass> passes;
+	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
 
 	final CenterDepthSampler centerDepthSampler;
@@ -91,16 +94,30 @@ public class CompositeRenderer {
 			willBeCleared[buffer] = true;
 		});
 
-		for (int i = 0; i < stageReadsFromAlt.length; i++) {
-			if (stageReadsFromAlt[i] && !willBeCleared[i]) {
-				Iris.logger.warn("The content of buffer " + i + " needs to be persisted across frames in a way that Iris does not currently support");
-			}
-		}
-
 		this.passes = passes.build();
 		this.renderTargets = renderTargets;
 
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+
+		// TODO: We don't actually fully swap the content, we merely copy it from alt to main
+		// This works for the most part, but it's not perfect. A better approach would be creating secondary
+		// framebuffers for every other frame, but that would be a lot more complex...
+		ImmutableList.Builder<SwapPass> swapPasses = ImmutableList.builder();
+
+		for (int i = 0; i < stageReadsFromAlt.length; i++) {
+			if (stageReadsFromAlt[i] && !willBeCleared[i]) {
+				SwapPass swap = new SwapPass();
+				swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {i});
+				swap.from.readBuffer(i);
+				swap.targetTexture = renderTargets.get(i).getMainTexture();
+
+				swapPasses.add(swap);
+			}
+		}
+
+		this.swapPasses = swapPasses.build();
+
+		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 	}
 
 	private static final class Pass {
@@ -113,6 +130,11 @@ public class CompositeRenderer {
 		private void destroy() {
 			this.program.destroy();
 		}
+	}
+
+	private static final class SwapPass {
+		GlFramebuffer from;
+		int targetTexture;
 	}
 
 	public void renderAll() {
@@ -175,6 +197,14 @@ public class CompositeRenderer {
 			//
 			// This is needed for things like on-screen overlays to work properly.
 			FramebufferBlitter.copyDepthBufferContent(this.baseline, main);
+
+			for (SwapPass swapPass : swapPasses) {
+				swapPass.from.bindAsReadBuffer();
+
+				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+				RenderSystem.bindTexture(swapPass.targetTexture);
+				GL20C.glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
+			}
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.

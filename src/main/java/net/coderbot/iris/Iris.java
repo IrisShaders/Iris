@@ -18,6 +18,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -221,6 +222,21 @@ public class Iris implements ClientModInitializer {
 	private static void destroyEverything() {
 		currentPack = null;
 
+		destroyPipeline();
+
+		// Close the zip filesystem that the shaderpack was loaded from
+		//
+		// This prevents a FileSystemAlreadyExistsException when reloading shaderpacks.
+		if (zipFileSystem != null) {
+			try {
+				zipFileSystem.close();
+			} catch (IOException e) {
+				Iris.logger.error("Failed to close zip file system?", e);
+			}
+		}
+	}
+
+	private static void destroyPipeline() {
 		// Unbind all textures
 		//
 		// This is necessary because we don't want destroyed render target textures to remain bound to certain texture
@@ -245,34 +261,21 @@ public class Iris implements ClientModInitializer {
 			pipeline.destroy();
 			pipeline = null;
 		}
-
-		// Close the zip filesystem that the shaderpack was loaded from
-		//
-		// This prevents a FileSystemAlreadyExistsException when reloading shaderpacks.
-		if (zipFileSystem != null) {
-			try {
-				zipFileSystem.close();
-			} catch (IOException e) {
-				Iris.logger.error("Failed to close zip file system?", e);
-			}
-		}
 	}
 
-	private static DimensionId lastDimension = DimensionId.OVERWORLD;
+	public static DimensionId lastDimension = DimensionId.OVERWORLD;
 
-	public static ShaderPipeline getPipeline() {
+	public static void checkDimension() {
 		ClientWorld world = MinecraftClient.getInstance().world;
 
 		if (world != null) {
 			DimensionId currentDimension = DimensionId.OVERWORLD;
 
-			DimensionType current = world.getDimension();
-			Registry<DimensionType> dimensionTypes = world.getRegistryManager().getDimensionTypes();
-			RegistryKey<DimensionType> id = dimensionTypes.getKey(current).orElseThrow(RuntimeException::new);
+			RegistryKey<World> worldRegistryKey = world.getRegistryKey();
 
-			if (id.equals(DimensionType.THE_END_REGISTRY_KEY)) {
+			if (worldRegistryKey.equals(World.END)) {
 				currentDimension = DimensionId.END;
-			} else if (id.equals(DimensionType.THE_NETHER_REGISTRY_KEY)) {
+			} else if (worldRegistryKey.equals(World.NETHER)) {
 				currentDimension = DimensionId.NETHER;
 			}
 
@@ -280,10 +283,12 @@ public class Iris implements ClientModInitializer {
 				Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
 
 				lastDimension = currentDimension;
-				pipeline = null;
+				destroyPipeline();
 			}
 		}
+	}
 
+	public static ShaderPipeline getPipeline() {
 		if (pipeline == null) {
 			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack).getProgramSet(lastDimension));
 		}
