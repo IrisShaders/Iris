@@ -9,12 +9,15 @@ import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.ints.IntList;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.rendertarget.*;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
-import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.ProgramSet;
+import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.lwjgl.opengl.GL15C;
 
@@ -30,12 +33,12 @@ public class CompositeRenderer {
 
 	final CenterDepthSampler centerDepthSampler;
 
-	public CompositeRenderer(ShaderPack pack, RenderTargets renderTargets) {
+	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets) {
 		centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
 
-		for (ShaderPack.ProgramSource source : pack.getComposite()) {
+		for (ProgramSource source : pack.getComposite()) {
 			if (source == null || !source.isValid()) {
 				continue;
 			}
@@ -78,6 +81,19 @@ public class CompositeRenderer {
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
 				stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
+			}
+		}
+
+		IntList buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared();
+		boolean[] willBeCleared = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+
+		buffersToBeCleared.forEach((int buffer) -> {
+			willBeCleared[buffer] = true;
+		});
+
+		for (int i = 0; i < stageReadsFromAlt.length; i++) {
+			if (stageReadsFromAlt[i] && !willBeCleared[i]) {
+				Iris.logger.warn("The content of buffer " + i + " needs to be persisted across frames in a way that Iris does not currently support");
 			}
 		}
 
@@ -183,7 +199,7 @@ public class CompositeRenderer {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private Pair<Program, ProgramDirectives> createProgram(ShaderPack.ProgramSource source) {
+	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -197,7 +213,7 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
 		PostProcessUniforms.addPostProcessUniforms(builder, this);
 
 		return new Pair<>(builder.build(), source.getDirectives());

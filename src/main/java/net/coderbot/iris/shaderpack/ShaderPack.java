@@ -1,10 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,73 +10,41 @@ import java.util.Properties;
 
 import net.coderbot.iris.Iris;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 public class ShaderPack {
-	private final PackDirectives packDirectives;
-	private final ProgramSource gbuffersBasic;
-	private final ProgramSource gbuffersBeaconBeam;
-	private final ProgramSource gbuffersTextured;
-	private final ProgramSource gbuffersTexturedLit;
-	private final ProgramSource gbuffersTerrain;
-	private final ProgramSource gbuffersDamagedBlock;
-	private final ProgramSource gbuffersWater;
-	private final ProgramSource gbuffersSkyBasic;
-	private final ProgramSource gbuffersSkyTextured;
-	private final ProgramSource gbuffersClouds;
-	private final ProgramSource gbuffersWeather;
-	private final ProgramSource gbuffersEntities;
-	private final ProgramSource gbuffersEntitiesGlowing;
-	private final ProgramSource gbuffersGlint;
-	private final ProgramSource gbuffersEntityEyes;
-	private final ProgramSource gbuffersBlock;
-	private final ProgramSource[] composite;
-	private final ProgramSource compositeFinal;
+	private final ProgramSet base;
+	@Nullable
+	private final ProgramSet overworld;
+	private final ProgramSet nether;
+	private final ProgramSet end;
+
 	private final IdMap idMap;
-	private final ShaderPackConfig config;
-	private final ShaderProperties shaderProperties;
 	private final Map<String, Map<String, String>> langMap;
 
 	public ShaderPack(Path root) throws IOException {
-		this.shaderProperties = loadProperties(root, "shaders.properties")
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
-		this.config = new ShaderPackConfig(Iris.getIrisConfig().getShaderPackName());
 
-		config.load();
-
-		this.packDirectives = new PackDirectives();
-
-		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
-		this.gbuffersBeaconBeam = readProgramSource(root, "gbuffers_beaconbeam", this);
-		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
-		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this);
-		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
-		this.gbuffersDamagedBlock = readProgramSource(root, "gbuffers_damagedblock", this);
-		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this);
-		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
-		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
-		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
-		this.gbuffersWeather = readProgramSource(root, "gbuffers_weather", this);
-		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this);
-		this.gbuffersEntitiesGlowing = readProgramSource(root, "gbuffers_entities_glowing", this);
-		this.gbuffersGlint = readProgramSource(root, "gbuffers_armor_glint", this);
-		this.gbuffersEntityEyes = readProgramSource(root, "gbuffers_spidereyes", this);
-		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this);
-
-		this.composite = new ProgramSource[16];
-
-		for (int i = 0; i < this.composite.length; i++) {
-			String suffix = i == 0 ? "" : Integer.toString(i);
-
-			this.composite[i] = readProgramSource(root, "composite" + suffix, this);
-		}
-
-		this.compositeFinal = readProgramSource(root, "final", this);
+		this.base = new ProgramSet(root, root, shaderProperties, this);
+		this.overworld = loadOverrides(root, "world0", shaderProperties, this);
+		this.nether = loadOverrides(root, "world-1", shaderProperties, this);
+		this.end = loadOverrides(root, "world1", shaderProperties, this);
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
+	}
 
-		config.save();
+	@Nullable
+	private static ProgramSet loadOverrides(Path root, String subfolder, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
+		Path sub = root.resolve(subfolder);
+
+		if (Files.exists(sub)) {
+			return new ProgramSet(sub, root, shaderProperties, pack);
+		}
+
+		return null;
 	}
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
@@ -97,135 +62,32 @@ public class ShaderPack {
 		return Optional.of(properties);
 	}
 
+	public ProgramSet getProgramSet(DimensionId dimension) {
+		ProgramSet overrides;
+
+		switch (dimension) {
+			case OVERWORLD:
+				overrides = overworld;
+				break;
+			case NETHER:
+				overrides = nether;
+				break;
+			case END:
+				overrides = end;
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown dimension " + dimension);
+		}
+
+		return ProgramSet.merged(base, overrides);
+	}
+
 	public IdMap getIdMap() {
 		return idMap;
 	}
 
-	public Optional<ProgramSource> getGbuffersBasic() {
-		return gbuffersBasic.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersBeaconBeam() {
-		return gbuffersBeaconBeam.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersTextured() {
-		return gbuffersTextured.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersTexturedLit() {
-		return gbuffersTexturedLit.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersTerrain() {
-		return gbuffersTerrain.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersDamagedBlock() {
-		return gbuffersDamagedBlock.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersWater() {
-		return gbuffersWater.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersSkyBasic() {
-		return gbuffersSkyBasic.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersSkyTextured() {
-		return gbuffersSkyTextured.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersClouds() {
-		return gbuffersClouds.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersWeather() {
-		return gbuffersWeather.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersEntities() {
-		return gbuffersEntities.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersEntitiesGlowing() {
-		return gbuffersEntitiesGlowing.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersGlint() {
-		return gbuffersGlint.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersEntityEyes() {
-		return gbuffersEntityEyes.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersBlock() {
-		return gbuffersBlock.requireValid();
-	}
-
-	public ProgramSource[] getComposite() {
-		return composite;
-	}
-
-	public Optional<ProgramSource> getCompositeFinal() {
-		return compositeFinal.requireValid();
-	}
-
 	public Map<String, Map<String, String>> getLangMap() {
 		return langMap;
-	}
-
-	public PackDirectives getPackDirectives() {
-		return packDirectives;
-	}
-
-	public ShaderPackConfig getConfig() {
-		return config;
-	}
-
-	public ShaderProperties getShaderProperties() {
-		return shaderProperties;
-	}
-
-	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
-		String vertexSource = null;
-		String fragmentSource = null;
-
-		try {
-			Path vertexPath = root.resolve(program + ".vsh");
-			vertexSource = readFile(vertexPath);
-
-			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource, pack.getConfig());
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		try {
-			Path fragmentPath = root.resolve(program + ".fsh");
-			fragmentSource = readFile(fragmentPath);
-
-			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource, pack.getConfig());
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		return new ProgramSource(program, vertexSource, fragmentSource, pack);
-	}
-
-	private static String readFile(Path path) throws IOException {
-		try {
-			return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-		} catch (FileNotFoundException | NoSuchFileException e) {
-			return null;
-		}
 	}
 
 	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {
@@ -261,53 +123,5 @@ public class ShaderPack {
 		});
 
 		return allLanguagesMap;
-	}
-
-	public static class ProgramSource {
-		private final String name;
-		private final String vertexSource;
-		private final String fragmentSource;
-		private final ProgramDirectives directives;
-		private final ShaderPack parent;
-
-		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
-			this.name = name;
-			this.vertexSource = vertexSource;
-			this.fragmentSource = fragmentSource;
-			this.parent = parent;
-			this.directives = new ProgramDirectives(this, parent.getShaderProperties());
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public Optional<String> getVertexSource() {
-			return Optional.ofNullable(vertexSource);
-		}
-
-		public Optional<String> getFragmentSource() {
-			return Optional.ofNullable(fragmentSource);
-		}
-
-		public ProgramDirectives getDirectives() {
-			return this.directives;
-		}
-
-		public ShaderPack getParent() {
-			return parent;
-		}
-
-		public boolean isValid() {
-			return vertexSource != null && fragmentSource != null;
-		}
-
-		public Optional<ProgramSource> requireValid() {
-			if (this.isValid()) {
-				return Optional.of(this);
-			} else {
-				return Optional.empty();
-			}
-		}
 	}
 }
