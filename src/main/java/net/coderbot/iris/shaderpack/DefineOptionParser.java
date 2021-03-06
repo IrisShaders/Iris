@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 import net.minecraft.util.Util;
 
-public class ConfigOptionParser {
+public class DefineOptionParser {
 	/*
 	 Regex for matching boolean options
 	  Match if or if not the line starts with anynumber of backslashes that are more than 2 ("//")
@@ -109,7 +109,6 @@ public class ConfigOptionParser {
 				Option<Boolean> option = createBooleanOption(name, trailingComment, startingComment, config); //create a boolean option and sync it with the config
 
 				lines.set(i, applyBooleanOption(option, trimmedLine, startingComment));
-				System.out.println(option);
 
 			} else if (numberMatcher.matches()) { //matches floats and int options
 				Matcher integerMatcher = INTEGER_OPTION_PATTERN.matcher(trimmedLine); //check if it is explicitly integer
@@ -127,7 +126,6 @@ public class ConfigOptionParser {
 					if (floatOption != null) {
 						String line = trimmedLine.replace(value, floatOption.getValue().toString());
 						lines.set(i, line);
-						System.out.println(floatOption);
 					}
 
 				} else { //if it  is a int option
@@ -144,11 +142,12 @@ public class ConfigOptionParser {
 					if (integerOption != null) {
 						String line = trimmedLine.replace(value, integerOption.getValue().toString());
 						lines.set(i, line);
-						System.out.println(integerOption);
 					}
 				}
 			}
 		}
+
+		ConstOptionParser.processConstOptions(lines, config);
 
 	}
 
@@ -214,7 +213,7 @@ public class ConfigOptionParser {
 	 * @param config  config instance to sync to
 	 * @return new float option
 	 */
-	private static Option<Float> createFloatOption(String name, String comment, String value, ShaderPackConfig config) {
+	static Option<Float> createFloatOption(String name, String comment, String value, ShaderPackConfig config) {
 		float floatValue;
 		try {
 			floatValue = Float.parseFloat(value);
@@ -245,7 +244,7 @@ public class ConfigOptionParser {
 	 * @param config  config instance to sync the value of the option with
 	 * @return a new synced option
 	 */
-	private static Option<Integer> createIntegerOption(String name, String comment, String value, ShaderPackConfig config) {
+	static Option<Integer> createIntegerOption(String name, String comment, String value, ShaderPackConfig config) {
 		int intValue;
 
 		try {
@@ -278,7 +277,7 @@ public class ConfigOptionParser {
 	 * @see Matcher#group(String)
 	 * @see Matcher#getMatchedGroupIndex(String)  this throws the exception that we catch
 	 */
-	private static String group(Matcher matcher, String name) {
+	static String group(Matcher matcher, String name) {
 		try {
 			return matcher.group(name);
 		} catch (IllegalArgumentException e) {

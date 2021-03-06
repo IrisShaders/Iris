@@ -48,7 +48,7 @@ public class ShaderPreprocessor {
 			}
 		}
 
-		ConfigOptionParser.processConfigOptions(lines, config);
+		DefineOptionParser.processConfigOptions(lines, config);
 
 		return lines;
 	}
