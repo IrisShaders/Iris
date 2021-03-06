@@ -63,7 +63,7 @@ public class ShaderPack {
 	}
 
 	public ProgramSet getProgramSet() {
-		return base;
+		return ProgramSet.merged(base, nether);
 	}
 
 	public IdMap getIdMap() {

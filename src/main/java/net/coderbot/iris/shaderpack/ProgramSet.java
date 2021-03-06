@@ -30,7 +30,7 @@ public class ProgramSet {
 	private final ProgramSource compositeFinal;
 
 	private final ShaderPack pack;
-	
+
 	public ProgramSet(Path root, Path inclusionRoot, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
 		this.packDirectives = new PackDirectives();
 		this.pack = pack;
@@ -61,6 +61,60 @@ public class ProgramSet {
 		}
 
 		this.compositeFinal = readProgramSource(root, inclusionRoot, "final", this, shaderProperties);
+	}
+
+	private ProgramSet(ProgramSet base, ProgramSet overrides) {
+		this.pack = base.pack;
+
+		if (this.pack != overrides.pack) {
+			throw new IllegalStateException();
+		}
+
+		// TODO: Merge this properly!
+		this.packDirectives = base.packDirectives;
+
+		this.gbuffersBasic = merge(base.gbuffersBasic, overrides.gbuffersBasic);
+		this.gbuffersBeaconBeam = merge(base.gbuffersBeaconBeam, overrides.gbuffersBeaconBeam);
+		this.gbuffersTextured = merge(base.gbuffersTextured, overrides.gbuffersTextured);
+		this.gbuffersTexturedLit = merge(base.gbuffersTexturedLit, overrides.gbuffersTexturedLit);
+		this.gbuffersTerrain = merge(base.gbuffersTerrain, overrides.gbuffersTerrain);
+		this.gbuffersDamagedBlock = merge(base.gbuffersDamagedBlock, overrides.gbuffersDamagedBlock);
+		this.gbuffersWater = merge(base.gbuffersWater, overrides.gbuffersWater);
+		this.gbuffersSkyBasic = merge(base.gbuffersSkyBasic, overrides.gbuffersSkyBasic);
+		this.gbuffersSkyTextured = merge(base.gbuffersSkyTextured, overrides.gbuffersSkyTextured);
+		this.gbuffersClouds = merge(base.gbuffersClouds, overrides.gbuffersClouds);
+		this.gbuffersWeather = merge(base.gbuffersWeather, overrides.gbuffersWeather);
+		this.gbuffersEntities = merge(base.gbuffersEntities, overrides.gbuffersEntities);
+		this.gbuffersEntitiesGlowing = merge(base.gbuffersEntitiesGlowing, overrides.gbuffersEntitiesGlowing);
+		this.gbuffersGlint = merge(base.gbuffersGlint, overrides.gbuffersGlint);
+		this.gbuffersEntityEyes = merge(base.gbuffersEntityEyes, overrides.gbuffersEntityEyes);
+		this.gbuffersBlock = merge(base.gbuffersBlock, overrides.gbuffersBlock);
+
+		this.composite = new ProgramSource[16];
+
+		for (int i = 0; i < this.composite.length; i++) {
+			String suffix = i == 0 ? "" : Integer.toString(i);
+
+			this.composite[i] = merge(base.composite[i], overrides.composite[i]);
+		}
+
+		this.compositeFinal = merge(base.compositeFinal, overrides.compositeFinal);
+	}
+
+	private static ProgramSource merge(ProgramSource base, ProgramSource override) {
+		if (override != null) {
+			return override;
+		}
+
+		return base;
+	}
+
+	public static ProgramSet merged(ProgramSet base, ProgramSet overrides) {
+		if (overrides == null) {
+			return base;
+		}
+
+		return new ProgramSet(base, overrides);
 	}
 
 	public Optional<ProgramSource> getGbuffersBasic() {
