@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.ShaderPack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,10 +33,20 @@ public class MixinTranslationStorage {
 
 	@Inject(method = "get", at = @At("HEAD"), cancellable = true)
 	private void iris$addLanguageEntries(String key, CallbackInfoReturnable<String> cir) {
+		ShaderPack pack = Iris.getCurrentPack();
+
+		if (pack == null) {
+			// If no shaderpack is loaded, do not try to process language overrides.
+			//
+			// This prevents a cryptic NullPointerException when shaderpack loading fails for some reason.
+			return;
+		}
+
 		//minecraft loads us language code by default, and any other code will be right after it
 		//so we also check if the user is loading a special language, and if the shaderpack has support for that language
 		//if they do, we load that, but if they do not, we load "en_us" instead
-		Map<String, Map<String, String>> languageMap = Iris.getCurrentPack().getLangMap();
+		Map<String, Map<String, String>> languageMap = pack.getLangMap();
+
 		if (!translations.containsKey(key)) {
 			languageCodes.forEach(code -> {
 				Map<String, String> translations = languageMap.get(code);
