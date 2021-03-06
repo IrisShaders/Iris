@@ -94,24 +94,28 @@ public class CompositeRenderer {
 			willBeCleared[buffer] = true;
 		});
 
-		for (int i = 0; i < stageReadsFromAlt.length; i++) {
-			if (stageReadsFromAlt[i] && !willBeCleared[i]) {
-				Iris.logger.warn("The content of buffer " + i + " needs to be persisted across frames in a way that Iris does not currently support");
-			}
-		}
-
 		this.passes = passes.build();
 		this.renderTargets = renderTargets;
 
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
-		// TODO: Hardcoded for sildurs
-		SwapPass swap = new SwapPass();
-		swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {7});
-		swap.from.readBuffer(7);
-		swap.targetTexture = renderTargets.get(7).getMainTexture();
+		// TODO: We don't actually fully swap the content, we merely copy it from alt to main
+		// This works for the most part, but it's not perfect. A better approach would be creating secondary
+		// framebuffers for every other frame, but that would be a lot more complex...
+		ImmutableList.Builder<SwapPass> swapPasses = ImmutableList.builder();
 
-		swapPasses = ImmutableList.of(swap);
+		for (int i = 0; i < stageReadsFromAlt.length; i++) {
+			if (stageReadsFromAlt[i] && !willBeCleared[i]) {
+				SwapPass swap = new SwapPass();
+				swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {i});
+				swap.from.readBuffer(i);
+				swap.targetTexture = renderTargets.get(i).getMainTexture();
+
+				swapPasses.add(swap);
+			}
+		}
+
+		this.swapPasses = swapPasses.build();
 
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 	}
