@@ -25,7 +25,9 @@
   },
 
   "mixins": [
-    "mixins.iris.json"
+    "mixins.iris.json",
+    "mixins.iris.yeetphysicsmod.json",
+    "mixins.iris.fantastic.json"
   ],
 
   "depends": {
@@ -38,7 +40,6 @@
 
   "breaks": {
     "canvas": "*",
-    "optifabric": "*",
-    "physicsmod": "*"
+    "optifabric": "*"
   }
 }

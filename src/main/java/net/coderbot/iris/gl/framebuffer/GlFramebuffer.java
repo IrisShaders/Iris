@@ -41,6 +41,12 @@ public class GlFramebuffer extends GlResource {
 		GL30C.glDrawBuffers(glBuffers);
 	}
 
+	public void readBuffer(int buffer) {
+		bind();
+
+		GL30C.glReadBuffer(GL30C.GL_COLOR_ATTACHMENT0 + buffer);
+	}
+
 	public int getColorAttachment(int index) {
 		return attachments.get(index);
 	}
@@ -51,6 +57,10 @@ public class GlFramebuffer extends GlResource {
 
 	public void bindAsReadBuffer() {
 		GlStateManager.bindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, getGlId());
+	}
+
+	public void bindAsDrawBuffer() {
+		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, getGlId());
 	}
 
 	protected void destroyInternal() {
