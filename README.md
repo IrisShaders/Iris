@@ -27,8 +27,6 @@ For the most part, I am creating Iris in order to have fun and get more experien
 
 * Iris is alpha software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment. Once Iris is ready for more widespread use, precompiled builds will be published and distributed.
 
-
-
 ![Sildur's shaders](https://i.imgur.com/o3JmkXV.png)
 ![Sildur's shaders with resourcepack](https://i.imgur.com/rPSlRQm.png)
 ![Acid shaders](https://i.imgur.com/dynR54W.jpg)
