@@ -21,27 +21,32 @@ public class ShaderPack {
 
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
+	private final ShaderPackConfig config;
+	private final ShaderProperties shaderProperties;
 
 	public ShaderPack(Path root) throws IOException {
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
+		this.config = new ShaderPackConfig(Iris.getIrisConfig().getShaderPackName());
+		this.config.load();
 
-		this.base = new ProgramSet(root, root, shaderProperties, this);
-		this.overworld = loadOverrides(root, "world0", shaderProperties, this);
-		this.nether = loadOverrides(root, "world-1", shaderProperties, this);
-		this.end = loadOverrides(root, "world1", shaderProperties, this);
+		this.base = new ProgramSet(root, root, this);
+		this.overworld = loadOverrides(root, "world0", this);
+		this.nether = loadOverrides(root, "world-1", this);
+		this.end = loadOverrides(root, "world1", this);
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
+		this.config.save();
 	}
 
 	@Nullable
-	private static ProgramSet loadOverrides(Path root, String subfolder, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
+	private static ProgramSet loadOverrides(Path root, String subfolder, ShaderPack pack) throws IOException {
 		Path sub = root.resolve(subfolder);
 
 		if (Files.exists(sub)) {
-			return new ProgramSet(sub, root, shaderProperties, pack);
+			return new ProgramSet(sub, root, pack);
 		}
 
 		return null;
@@ -88,6 +93,14 @@ public class ShaderPack {
 
 	public Map<String, Map<String, String>> getLangMap() {
 		return langMap;
+	}
+
+	public ShaderProperties getShaderProperties() {
+		return shaderProperties;
+	}
+
+	public ShaderPackConfig getConfig() {
+		return config;
 	}
 
 	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {
