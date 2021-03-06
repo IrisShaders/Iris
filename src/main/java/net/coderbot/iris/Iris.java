@@ -158,7 +158,7 @@ public class Iris implements ClientModInitializer {
 			Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
 
 			Path potentialShaderDir = zipSystem.getPath("shaders");
-			//if the shaders dir was immediatly found return it
+			//if the shaders dir was immediately found return it
 			//otherwise, manually search through each directory path until it ends with "shaders"
 			if (Files.exists(potentialShaderDir)) {
 				return Optional.of(potentialShaderDir);
