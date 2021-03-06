@@ -62,8 +62,24 @@ public class ShaderPack {
 		return Optional.of(properties);
 	}
 
-	public ProgramSet getProgramSet() {
-		return ProgramSet.merged(base, nether);
+	public ProgramSet getProgramSet(DimensionId dimension) {
+		ProgramSet overrides;
+
+		switch (dimension) {
+			case OVERWORLD:
+				overrides = overworld;
+				break;
+			case NETHER:
+				overrides = nether;
+				break;
+			case END:
+				overrides = end;
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown dimension " + dimension);
+		}
+
+		return ProgramSet.merged(base, overrides);
 	}
 
 	public IdMap getIdMap() {

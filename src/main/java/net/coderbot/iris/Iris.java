@@ -13,9 +13,12 @@ import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
-import net.coderbot.iris.postprocess.CompositeRenderer;
-import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -255,9 +258,34 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
+	private static DimensionId lastDimension = DimensionId.OVERWORLD;
+
 	public static ShaderPipeline getPipeline() {
+		ClientWorld world = MinecraftClient.getInstance().world;
+
+		if (world != null) {
+			DimensionId currentDimension = DimensionId.OVERWORLD;
+
+			DimensionType current = world.getDimension();
+			Registry<DimensionType> dimensionTypes = world.getRegistryManager().getDimensionTypes();
+			RegistryKey<DimensionType> id = dimensionTypes.getKey(current).orElseThrow(RuntimeException::new);
+
+			if (id.equals(DimensionType.THE_END_REGISTRY_KEY)) {
+				currentDimension = DimensionId.END;
+			} else if (id.equals(DimensionType.THE_NETHER_REGISTRY_KEY)) {
+				currentDimension = DimensionId.NETHER;
+			}
+
+			if (currentDimension != lastDimension) {
+				Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
+
+				lastDimension = currentDimension;
+				pipeline = null;
+			}
+		}
+
 		if (pipeline == null) {
-			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack).getProgramSet());
+			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack).getProgramSet(lastDimension));
 		}
 
 		return pipeline;
