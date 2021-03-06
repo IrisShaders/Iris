@@ -1,11 +1,13 @@
 package net.coderbot.iris.rendertarget;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.PackDirectives;
 
 import net.minecraft.client.gl.Framebuffer;
 
@@ -19,11 +21,13 @@ public class RenderTargets {
 	private final DepthTexture depthTexture;
 	private final DepthTexture noTranslucents;
 
+	private final List<GlFramebuffer> ownedFramebuffers;
+
 	private int cachedWidth;
 	private int cachedHeight;
 
-	public RenderTargets(Framebuffer reference, ShaderPack pack) {
-		this(reference.textureWidth, reference.textureHeight, pack.getPackDirectives().getRequestedBufferFormats());
+	public RenderTargets(Framebuffer reference, PackDirectives directives) {
+		this(reference.textureWidth, reference.textureHeight, directives.getRequestedBufferFormats());
 	}
 
 	public RenderTargets(int width, int height, InternalTextureFormat[] formats) {
@@ -43,23 +47,20 @@ public class RenderTargets {
 
 		this.cachedWidth = width;
 		this.cachedHeight = height;
+
+		this.ownedFramebuffers = new ArrayList<>();
 	}
 
 	public void destroy() {
-		// TODO: This is a hack to make things not break on reload
-		// It seems like something is holding on to colortex0/depthtex0 somewhere
-		boolean first = true;
+		for (GlFramebuffer owned : ownedFramebuffers) {
+			owned.destroy();
+		}
 
 		for (RenderTarget target : targets) {
-			if (first) {
-				first = false;
-				continue;
-			}
-
 			target.destroy();
 		}
 
-		// depthTexture.destroy();
+		depthTexture.destroy();
 		noTranslucents.destroy();
 	}
 
@@ -115,6 +116,7 @@ public class RenderTargets {
 
 	public GlFramebuffer createColorFramebuffer(boolean[] stageWritesToAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
+		ownedFramebuffers.add(framebuffer);
 
 		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
 			RenderTarget target = this.get(i);

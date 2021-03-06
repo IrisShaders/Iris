@@ -2,7 +2,16 @@
 
 *A new shaders mod for Minecraft intended to be compatible with existing ShadersMod/Optifine shaders*
 
-## What is Iris?
+## How can I use this?
+
+Iris is alpha quality software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment.
+
+That being said... **If you want to test out compiled alpha builds of the mod, please consider becoming a [Patron](https://www.patreon.com/coderbot), which will give you access to compiled downloads**. Alternatively, developers who know what they are doing can compile the mod themselves.
+
+**No support will be provided for users who cannot figure out how to properly compile the mod themselves.**
+
+
+## What is Iris, anyways?
 
 Iris is an experiment in loading shaderpacks on Fabric. After making minimal progress trying to hack karyonix's ShadersMod codebase on to newer versions, I finally asked: *How hard is it to load a basic shaderpack on Fabric from scratch?* As it turns out, nowhere near as hard as I expected! Thus, Iris was born.
 
@@ -15,7 +24,10 @@ For the most part, I am creating Iris in order to have fun and get more experien
 
 * Sildur's Vibrant Shaders and XorDev's shaderpacks work for the most part under Iris, and have been the focus of my development. However, most other shaderpacks either have severe rendering issues, or do not work at all. My current focus is to get Sildur's Vibrant Shaders and XorDev's shaderpacks to the point where they are 100% working before shifting focus to other shaderpacks. As I fix issues in these shaderpacks, other shaderpacks will very likely begin to work properly as well.
 * I am working with JellySquid to make Sodium and Iris compatible. There is a proof-of-concept for Iris/Sodium compatibility available on a [custom fork of Sodium](https://github.com/IrisShaders/sodium-fabric) and [an experimental Iris branch](https://github.com/IrisShaders/Iris/tree/sodium-compatibility). While this proof of concept is being used as a reference for compatibility work, it will likely be replaced with more solid and stable code in the future.
+
 * Iris is alpha software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment. Once Iris is ready for more widespread use, precompiled builds will be published and distributed.
+
+
 
 ![Sildur's shaders](https://i.imgur.com/o3JmkXV.png)
 ![Sildur's shaders with resourcepack](https://i.imgur.com/rPSlRQm.png)
@@ -32,8 +44,7 @@ Iris also intends to have full feature parity with OptiFine shaderpacks. You sho
 
 At the moment, I have no intention of adding additional features to OptiFine shaderpacks. My primary goal is to reach feature parity with OptiFine, so that, at least in the area of shaders, the transition from OptiFine to Iris is seamless.
 
-I also don't currently plan to port to Forge at the moment, because for one, OptiFine already works just fine with Forge. JellySquid has written up an [excellent document](https://gist.github.com/jellysquid3/629eb84a74ab326046faf971150dc6c3) on why she does not support Forge, and I agree for the most part as well. At the end of the day, this is a hobby project for fun, and supporting modern Forge just isn't fun for me. Hopefully you can understand.
-
+Iris will never support Forge. I only have a limited amount of time to dedicate towards Iris, and supporting Forge would take time away from other things that are more important and fun. Between the fact that the lead developers of Forge are not pleasant people to work with and the fact that Forge was just never intended to support the kinds of things that Iris does, maintaining a Forge port just does not make sense.
 
 ## How can I help?
 
@@ -65,7 +76,7 @@ The fundamental flaw with OptiFabric is that it is a massive *hack*. I call it a
 
 OptiFine is created as a "jar mod." Remember deleting META-INF about a decade ago (Wow, I feel old now) and copying the files from that one new mod directly into your `minecraft.jar`? Effectively, that's what Optifine now does every time you start the game. That means that it directly patches a decompiled version of Minecraft, then at runtime it overwrites the vanilla classes (units of code) with its own modified versions. This is about as invasive and incompatible as it sounds. Perhaps unsurprisingly, Optifine is *notorious* for having [many](https://github.com/TerraformersMC/Terrestria/issues/178), [many](https://github.com/jellysquid3/lithium-fabric/issues/73), [*many*](https://www.reddit.com/r/feedthebeast/comments/6ueyla/112_optifine_incompatible_with_some_mods/) incompatibilities with other mods.
 
-On the other hand, Iris is a native Fabric mod that uses carefully crafted and precise code injections driven by the [Mixin](https://github.com/SpongePowered/Mixin) bytecode patching system. Mixin is the bases of the entire Fabric modding community, and is a much more compatible way of patching the game. This alone should help alleviate many of the compatibility issue that have plagued OptiFine.
+On the other hand, Iris is a native Fabric mod that uses carefully crafted and precise code injections driven by the [Mixin](https://github.com/SpongePowered/Mixin) bytecode patching system. Mixin is the basis of the entire Fabric modding community, and is a much more compatible way of patching the game. This alone should help alleviate many of the compatibility issue that have plagued OptiFine.
 
 ## Discord
 This project has a discord that can be found here! https://discord.gg/jQJnav2jPu

@@ -20,8 +20,8 @@ public class PackDirectives {
 		return new InternalTextureFormat[]{
 			InternalTextureFormat.RGBA16,
 			// TODO: Only use RGBA32F if gdepth is explicitly specified as opposed to colortex1
-			InternalTextureFormat.RGBA32F,
 			InternalTextureFormat.RGB10_A2,
+			InternalTextureFormat.RGBA16,
 			InternalTextureFormat.R11F_G11F_B10F,
 			InternalTextureFormat.RGBA16,
 			InternalTextureFormat.R11F_G11F_B10F,
