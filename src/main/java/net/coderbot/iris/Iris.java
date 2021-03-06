@@ -47,7 +47,7 @@ public class Iris implements ClientModInitializer {
 	private static ShaderPipeline pipeline;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
-	public static KeyBinding reloadKeybind;
+	private static KeyBinding reloadKeybind;
 
 
 	/**
