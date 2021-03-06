@@ -43,6 +43,7 @@ public class MixinWorldRenderer {
 		// Closer investigation is necessary
 		// CapturedRenderingState.INSTANCE.setGbufferProjection(gameRenderer.getBasicProjectionMatrix(camera, tickDelta, true));
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
+		Iris.checkDimension();
 		Iris.getPipeline().beginWorldRender();
 	}
 
