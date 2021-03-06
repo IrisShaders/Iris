@@ -8,11 +8,9 @@ import java.util.Objects;
 import java.util.function.IntSupplier;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.parse.IdMap;
 import net.coderbot.iris.texunits.TextureUnit;
 
-import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;

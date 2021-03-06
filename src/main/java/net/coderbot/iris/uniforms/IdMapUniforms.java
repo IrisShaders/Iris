@@ -6,7 +6,7 @@ import java.util.function.IntSupplier;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.parse.IdMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;

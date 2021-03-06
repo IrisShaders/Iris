@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.parse;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.config;
 
 import static net.coderbot.iris.Iris.SHADERPACK_DIR;
 
@@ -55,15 +55,15 @@ public class ShaderPackConfig {
 		return floatOptions.get(key);
 	}
 
-	void addBooleanOption(Option<Boolean> option) {
+	public void addBooleanOption(Option<Boolean> option) {
 		booleanOptions.put(option.getName(), option);
 	}
 
-	void addIntegerOption(Option<Integer> option) {
+	public void addIntegerOption(Option<Integer> option) {
 		integerOptions.put(option.getName(), option);
 	}
 
-	void addFloatOption(Option<Float> option) {
+	public void addFloatOption(Option<Float> option) {
 		floatOptions.put(option.getName(), option);
 	}
 

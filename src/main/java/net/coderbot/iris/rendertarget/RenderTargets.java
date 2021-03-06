@@ -7,7 +7,7 @@ import java.util.List;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.shaderpack.directive.PackDirectives;
 
 import net.minecraft.client.gl.Framebuffer;
 

@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.config;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.parse;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -9,7 +9,10 @@ import java.util.regex.Pattern;
 
 import net.minecraft.util.Util;
 
-import static net.coderbot.iris.shaderpack.DefineOptionParser.*;
+import static net.coderbot.iris.shaderpack.parse.DefineOptionParser.*;
+
+import net.coderbot.iris.shaderpack.config.Option;
+import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
 
 public class ConstOptionParser {
 
@@ -86,7 +89,6 @@ public class ConstOptionParser {
 				Option<Boolean> booleanOption = createConstBooleanOption(name, value, comment, config);
 
 				lines.set(i, trimmedLine.replace(value, booleanOption.getValue().toString()));
-				System.out.println(booleanOption);
 			} else if (floatMatcher.matches()) {
 				String name = group(floatMatcher, "name");
 				String value = group(floatMatcher, "value");
@@ -103,7 +105,6 @@ public class ConstOptionParser {
 
 				if (floatOption != null) {
 					lines.set(i, trimmedLine.replace(value, floatOption.getValue().toString()));
-					System.out.println(floatOption);
 				}
 
 			} else if (intMatcher.matches()) {
@@ -122,7 +123,6 @@ public class ConstOptionParser {
 
 				if (integerOption != null) {
 					lines.set(i, trimmedLine.replace(value, integerOption.getValue().toString()));
-					System.out.println(integerOption);
 				}
 			}
 		}

@@ -41,7 +41,7 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 
-	private static final Path SHADERPACK_DIR = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	public static final Path SHADERPACK_DIR = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;

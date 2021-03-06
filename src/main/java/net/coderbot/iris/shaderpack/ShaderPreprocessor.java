@@ -7,6 +7,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
+import net.coderbot.iris.shaderpack.parse.DefineOptionParser;
+
 public class ShaderPreprocessor {
 	public static String process(Path rootPath, Path shaderPath, String source, ShaderPackConfig config) throws IOException {
 		StringBuilder processed = new StringBuilder();
