@@ -160,7 +160,7 @@ public class ShaderPipeline {
 			throw new IllegalStateException("Program stack in invalid state, popped " + popped + " but expected to pop " + expected);
 		}
 
-		if (popped != GbufferProgram.NONE) {
+		if (popped != GbufferProgram.NONE && popped != GbufferProgram.CLEAR) {
 			Pass poppedPass = getPass(popped);
 
 			if (poppedPass != null) {
@@ -228,6 +228,14 @@ public class ShaderPipeline {
 			// Note that we don't unbind the framebuffer here. Uses of GbufferProgram.NONE
 			// are responsible for ensuring that the framebuffer is switched properly.
 			GlProgramManager.useProgram(0);
+			return;
+		} else if (program == GbufferProgram.CLEAR) {
+			// We only want the vanilla clear color to be applied to colortex0.
+			baseline.bind();
+
+			// No geometry should actually be rendered in the CLEAR step, but disable programs to be sure.
+			GlProgramManager.useProgram(0);
+
 			return;
 		}
 
@@ -425,9 +433,6 @@ public class ShaderPipeline {
 		// Not clearing the depth buffer since there's only one of those and it was already cleared
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
-
-		// We only want the vanilla clear color to be applied to colortex0
-		baseline.bind();
 	}
 
 	public void copyCurrentDepthTexture() {
