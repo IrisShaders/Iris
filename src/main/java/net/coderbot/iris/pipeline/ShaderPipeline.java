@@ -410,7 +410,7 @@ public class ShaderPipeline {
 		}
 	}
 
-	public void prepareRenderTargets() {
+	private void prepareRenderTargets() {
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
@@ -467,6 +467,9 @@ public class ShaderPipeline {
 		if (!programStack.isEmpty()) {
 			throw new IllegalStateException("Program stack before the start of rendering, something has gone very wrong!");
 		}
+
+		// Get ready for world rendering
+		prepareRenderTargets();
 
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.
