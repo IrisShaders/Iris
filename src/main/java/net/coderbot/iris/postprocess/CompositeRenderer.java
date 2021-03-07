@@ -235,7 +235,7 @@ public class CompositeRenderer {
 		RenderSystem.bindTexture(texture);
 	}
 
-	// TODO: Don't just copy this from ShaderPipeline
+	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());

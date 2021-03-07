@@ -32,7 +32,7 @@ import net.minecraft.util.Identifier;
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
-public class ShaderPipeline implements WorldRenderingPipeline {
+public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final RenderTargets renderTargets;
 	@Nullable
 	private final Pass basic;
@@ -79,7 +79,7 @@ public class ShaderPipeline implements WorldRenderingPipeline {
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
 
-	public ShaderPipeline(ProgramSet programs) {
+	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives());
