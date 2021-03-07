@@ -300,26 +300,36 @@ public class Iris implements ClientModInitializer {
 
 	public static DimensionId lastDimension = DimensionId.OVERWORLD;
 
-	public static void checkDimension() {
+	public static DimensionId getCurrentDimension() {
 		ClientWorld world = MinecraftClient.getInstance().world;
 
 		if (world != null) {
-			DimensionId currentDimension = DimensionId.OVERWORLD;
-
 			RegistryKey<World> worldRegistryKey = world.getRegistryKey();
 
 			if (worldRegistryKey.equals(World.END)) {
-				currentDimension = DimensionId.END;
+				return DimensionId.END;
 			} else if (worldRegistryKey.equals(World.NETHER)) {
-				currentDimension = DimensionId.NETHER;
+				return DimensionId.NETHER;
+			} else {
+				return DimensionId.OVERWORLD;
 			}
+		} else {
+			// This prevents us from reloading the shaderpack unless we need to. Otherwise, if the player is in the
+			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the world
+			// because the code thinks that the dimension changed.
+			return lastDimension;
+		}
+	}
 
-			if (currentDimension != lastDimension) {
-				Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
+	public static void checkDimension() {
+		DimensionId currentDimension = getCurrentDimension();
 
-				lastDimension = currentDimension;
-				destroyPipeline();
-			}
+		if (currentDimension != lastDimension) {
+			Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
+
+			lastDimension = currentDimension;
+			destroyPipeline();
+			getPipeline();
 		}
 	}
 
