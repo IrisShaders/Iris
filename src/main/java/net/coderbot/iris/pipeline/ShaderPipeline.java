@@ -16,6 +16,7 @@ import net.coderbot.iris.rendertarget.BuiltinNoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
@@ -71,6 +72,7 @@ public class ShaderPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
+	private final EmptyShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer compositeRenderer;
 
 	private final int waterId;
@@ -107,7 +109,8 @@ public class ShaderPipeline {
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets);
+		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
+		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer);
 	}
 
 	public void pushProgram(GbufferProgram program) {
@@ -306,7 +309,12 @@ public class ShaderPipeline {
 			// a given program and bind the required textures instead.
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE15);
 			BuiltinNoiseTexture.bind();
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE4);
+			GlStateManager.bindTexture(shadowMapRenderer.getDepthTextureId());
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE5);
+			GlStateManager.bindTexture(shadowMapRenderer.getDepthTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
+
 			framebuffer.bind();
 			program.use();
 
@@ -349,6 +357,9 @@ public class ShaderPipeline {
 		// While it's possible to just clear them instead and reuse them, we'd need to investigate whether or not this
 		// would help performance.
 		renderTargets.destroy();
+
+		// Destroy the shadow map renderer and its render targets
+		shadowMapRenderer.destroy();
 	}
 
 	private static void destroyPasses(Pass... passes) {
