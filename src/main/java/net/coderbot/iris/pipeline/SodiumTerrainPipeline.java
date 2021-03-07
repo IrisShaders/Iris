@@ -65,6 +65,7 @@ public class SodiumTerrainPipeline {
 			"uniform mat4 u_ModelViewMatrix;\n" +
 			"uniform mat4 u_NormalMatrix;\n" +
 			"uniform vec3 u_ModelScale;\n" +
+			"uniform vec2 u_TextureScale;\n" +
 			"\n" +
 			"// The model translation for this draw call.\n" +
 			"// If multi-draw is enabled, then the model offset will come from an attribute buffer.\n" +
@@ -78,7 +79,7 @@ public class SodiumTerrainPipeline {
 
 		transformations.replaceExact("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
 		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
-		transformations.replaceExact("gl_MultiTexCoord0", "vec4(a_TexCoord, 0.0, 1.0)");
+		transformations.replaceExact("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
 		//transformations.replaceExact("gl_MultiTexCoord1", "vec4(a_LightCoord * 255.0, 0.0, 1.0)");
 		transformations.replaceExact("gl_Color", "a_Color");
 		transformations.replaceExact("gl_ModelViewMatrix", "u_ModelViewMatrix");
