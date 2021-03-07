@@ -275,6 +275,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		return true;
 	}
 
+	@Override
+	public boolean shouldDisableDirectionalShading() {
+		return true;
+	}
+
 	private void beginPass(Pass pass) {
 		if (pass != null) {
 			pass.use();

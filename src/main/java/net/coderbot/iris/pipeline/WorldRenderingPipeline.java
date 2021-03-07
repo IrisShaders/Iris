@@ -10,4 +10,5 @@ public interface WorldRenderingPipeline {
 	void finalizeWorldRendering();
 
 	boolean shouldDisableVanillaEntityShadows();
+	boolean shouldDisableDirectionalShading();
 }
