@@ -461,6 +461,7 @@ public class ShaderPipeline {
 
 		if (!isRenderingWorld) {
 			Iris.logger.warn("beginWorldRender was called but we are not currently rendering a world?");
+			return;
 		}
 
 		if (!programStack.isEmpty()) {
@@ -477,6 +478,7 @@ public class ShaderPipeline {
 
 		if (!isRenderingWorld) {
 			Iris.logger.warn("finalizeWorldRendering was called but we are not currently rendering a world?");
+			return;
 		}
 
 		popProgram(GbufferProgram.BASIC);
