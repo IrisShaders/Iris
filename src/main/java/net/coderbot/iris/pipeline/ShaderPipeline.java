@@ -1,6 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import java.io.IOException;
 import java.util.*;
 
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -33,7 +32,7 @@ import net.minecraft.util.Identifier;
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
-public class ShaderPipeline {
+public class ShaderPipeline implements WorldRenderingPipeline {
 	private final RenderTargets renderTargets;
 	@Nullable
 	private final Pass basic;
@@ -122,6 +121,7 @@ public class ShaderPipeline {
 		}
 	}
 
+	@Override
 	public void pushProgram(GbufferProgram program) {
 		checkWorld();
 
@@ -135,6 +135,7 @@ public class ShaderPipeline {
 		programStackLog.add("push:" + program);
 	}
 
+	@Override
 	public void popProgram(GbufferProgram expected) {
 		checkWorld();
 
@@ -267,6 +268,7 @@ public class ShaderPipeline {
 		this.baseline.bind();
 	}
 
+	@Override
 	public boolean shouldDisableVanillaEntityShadows() {
 		// TODO: Don't hardcode this for Sildur's
 		// OptiFine seems to disable vanilla shadows when the shaderpack uses shadow mapping?
@@ -435,7 +437,10 @@ public class ShaderPipeline {
 		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
 	}
 
-	public void copyCurrentDepthTexture() {
+	@Override
+	public void beginTranslucents() {
+		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
+		// all non-translucent content, as required.
 		baseline.bind();
 		GlStateManager.bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
@@ -459,7 +464,8 @@ public class ShaderPipeline {
 	// TODO: better way to avoid this global state?
 	private boolean isRenderingWorld = false;
 
-	public void beginWorldRender() {
+	@Override
+	public void beginWorldRendering() {
 		isRenderingWorld = true;
 
 		checkWorld();
@@ -481,6 +487,7 @@ public class ShaderPipeline {
 		pushProgram(GbufferProgram.BASIC);
 	}
 
+	@Override
 	public void finalizeWorldRendering() {
 		checkWorld();
 

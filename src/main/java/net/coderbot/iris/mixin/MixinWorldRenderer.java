@@ -42,7 +42,7 @@ public class MixinWorldRenderer {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		Iris.checkDimension();
-		Iris.getPipeline().beginWorldRender();
+		Iris.getPipeline().beginWorldRendering();
 	}
 
 	// Inject a bit early so that we can end our rendering in time.
@@ -160,7 +160,7 @@ public class MixinWorldRenderer {
 	}*/
 
 	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
-	private void iris$copyCurrentDepthTexture(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		Iris.getPipeline().copyCurrentDepthTexture();
+	private void iris$beginTranslucents(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		Iris.getPipeline().beginTranslucents();
 	}
 }

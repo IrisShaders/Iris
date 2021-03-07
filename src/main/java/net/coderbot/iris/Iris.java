@@ -10,6 +10,7 @@ import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.ShaderPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.world.ClientWorld;
@@ -44,7 +45,7 @@ public class Iris implements ClientModInitializer {
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 
-	private static ShaderPipeline pipeline;
+	private static WorldRenderingPipeline pipeline;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
 	private static KeyBinding reloadKeybind;
@@ -280,8 +281,9 @@ public class Iris implements ClientModInitializer {
 		// Destroy the old world rendering pipeline
 		//
 		// This destroys all loaded shader programs and all of the render targets.
-		if (pipeline != null) {
-			pipeline.destroy();
+		if (pipeline instanceof ShaderPipeline) {
+			// TODO: Don't cast this to ShaderPipeline?
+			((ShaderPipeline) pipeline).destroy();
 			pipeline = null;
 		}
 	}
@@ -321,7 +323,7 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	public static ShaderPipeline getPipeline() {
+	public static WorldRenderingPipeline getPipeline() {
 		if (pipeline == null) {
 			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack).getProgramSet(lastDimension));
 		}
