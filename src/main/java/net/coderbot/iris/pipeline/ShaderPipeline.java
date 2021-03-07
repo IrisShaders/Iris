@@ -113,7 +113,18 @@ public class ShaderPipeline {
 		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer);
 	}
 
+	private void checkWorld() {
+		// If we're not in a world, then obviously we cannot possibly be rendering a world.
+		if (MinecraftClient.getInstance().world == null) {
+			isRenderingWorld = false;
+			programStackLog.clear();
+			programStack.clear();
+		}
+	}
+
 	public void pushProgram(GbufferProgram program) {
+		checkWorld();
+
 		if (!isRenderingWorld) {
 			// don't mess with non-world rendering
 			return;
@@ -125,6 +136,8 @@ public class ShaderPipeline {
 	}
 
 	public void popProgram(GbufferProgram expected) {
+		checkWorld();
+
 		if (!isRenderingWorld) {
 			// don't mess with non-world rendering
 			return;
@@ -444,6 +457,12 @@ public class ShaderPipeline {
 	public void beginWorldRender() {
 		isRenderingWorld = true;
 
+		checkWorld();
+
+		if (!isRenderingWorld) {
+			Iris.logger.warn("beginWorldRender was called but we are not currently rendering a world?");
+		}
+
 		if (!programStack.isEmpty()) {
 			throw new IllegalStateException("Program stack before the start of rendering, something has gone very wrong!");
 		}
@@ -454,6 +473,12 @@ public class ShaderPipeline {
 	}
 
 	public void finalizeWorldRendering() {
+		checkWorld();
+
+		if (!isRenderingWorld) {
+			Iris.logger.warn("finalizeWorldRendering was called but we are not currently rendering a world?");
+		}
+
 		popProgram(GbufferProgram.BASIC);
 
 		if (!programStack.isEmpty()) {
