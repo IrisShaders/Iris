@@ -3,38 +3,35 @@ package net.coderbot.iris.pipeline;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
-import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.ProgramSet;
+import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-import org.lwjgl.opengl.GL30C;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
 	String terrainFragment;
 	String translucentVertex;
 	String translucentFragment;
-	GlFramebuffer framebuffer;
-	ShaderPack pack;
+	//GlFramebuffer framebuffer;
+	ProgramSet programSet;
 
-	public SodiumTerrainPipeline(ShaderPack pack, RenderTargets renderTargets) {
-		Optional<ShaderPack.ProgramSource> terrainSource = first(pack.getGbuffersTerrain(), pack.getGbuffersTexturedLit(), pack.getGbuffersTextured(), pack.getGbuffersBasic());
-		Optional<ShaderPack.ProgramSource> translucentSource = first(pack.getGbuffersWater(), terrainSource);
+	public SodiumTerrainPipeline(ProgramSet programSet) {
+		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 
-		this.pack = pack;
+		this.programSet = programSet;
 
 		terrainSource.ifPresent(sources -> {
 			terrainVertex = sources.getVertexSource().orElse(null);
 			terrainFragment = sources.getFragmentSource().orElse(null);
 
-			framebuffer = renderTargets.createFramebufferWritingToMain(sources.getDirectives().getDrawBuffers());
+			//framebuffer = renderTargets.createFramebufferWritingToMain(sources.getDirectives().getDrawBuffers());
 		});
 
 		translucentSource.ifPresent(sources -> {
@@ -52,9 +49,9 @@ public class SodiumTerrainPipeline {
 			translucentVertex = transformVertexShader(translucentVertex);
 		}
 
-		if (framebuffer == null) {
+		/*if (framebuffer == null) {
 			framebuffer = renderTargets.createFramebufferWritingToMain(new int[] {0});
-		}
+		}*/
 	}
 
 	private static String transformVertexShader(String base) {
@@ -99,7 +96,7 @@ public class SodiumTerrainPipeline {
 	}
 
 	public static SodiumTerrainPipeline create() {
-		return new SodiumTerrainPipeline(Objects.requireNonNull(Iris.getCurrentPack()), Iris.getRenderTargets());
+		return new SodiumTerrainPipeline(Objects.requireNonNull(Iris.getCurrentPack().getProgramSet(Iris.getCurrentDimension())));
 	}
 
 	public Optional<String> getTerrainVertexShaderSource() {
@@ -121,19 +118,19 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		CommonUniforms.addCommonUniforms(uniforms, pack.getIdMap());
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap());
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();
 	}
 
-	public void bindFramebuffer() {
+	/*public void bindFramebuffer() {
 		this.framebuffer.bind();
 	}
 
 	public void unbindFramebuffer() {
 		GlStateManager.bindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
-	}
+	}*/
 
 	@SafeVarargs
 	private static <T> Optional<T> first(Optional<T>... candidates) {
