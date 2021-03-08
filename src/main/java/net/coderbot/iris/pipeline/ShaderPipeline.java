@@ -16,6 +16,7 @@ import net.coderbot.iris.rendertarget.BuiltinNoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
@@ -72,7 +73,7 @@ public class ShaderPipeline {
 	private final GlFramebuffer baseline;
 
 	private final CompositeRenderer compositeRenderer;
-	public ShadowRenderer shadowRenderer;
+	private final ShadowRenderer shadowMapRenderer;
 
 	private final int waterId;
 
@@ -108,11 +109,22 @@ public class ShaderPipeline {
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets);
-		this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null));
+		this.shadowMapRenderer = new ShadowRenderer(programs.getShadow().orElse(null));
+		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer);
+	}
+
+	private void checkWorld() {
+		// If we're not in a world, then obviously we cannot possibly be rendering a world.
+		if (MinecraftClient.getInstance().world == null) {
+			isRenderingWorld = false;
+			programStackLog.clear();
+			programStack.clear();
+		}
 	}
 
 	public void pushProgram(GbufferProgram program) {
+		checkWorld();
+
 		if (!isRenderingWorld || isRenderingShadow) {
 			// don't mess with non-world rendering
 			return;
@@ -124,6 +136,8 @@ public class ShaderPipeline {
 	}
 
 	public void popProgram(GbufferProgram expected) {
+		checkWorld();
+
 		if (!isRenderingWorld || isRenderingShadow) {
 			// don't mess with non-world rendering
 			return;
@@ -146,7 +160,7 @@ public class ShaderPipeline {
 			throw new IllegalStateException("Program stack in invalid state, popped " + popped + " but expected to pop " + expected);
 		}
 
-		if (popped != GbufferProgram.NONE) {
+		if (popped != GbufferProgram.NONE && popped != GbufferProgram.CLEAR) {
 			Pass poppedPass = getPass(popped);
 
 			if (poppedPass != null) {
@@ -214,6 +228,14 @@ public class ShaderPipeline {
 			// Note that we don't unbind the framebuffer here. Uses of GbufferProgram.NONE
 			// are responsible for ensuring that the framebuffer is switched properly.
 			GlProgramManager.useProgram(0);
+			return;
+		} else if (program == GbufferProgram.CLEAR) {
+			// We only want the vanilla clear color to be applied to colortex0.
+			baseline.bind();
+
+			// No geometry should actually be rendered in the CLEAR step, but disable programs to be sure.
+			GlProgramManager.useProgram(0);
+
 			return;
 		}
 
@@ -308,10 +330,12 @@ public class ShaderPipeline {
 			// a given program and bind the required textures instead.
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE15);
 			BuiltinNoiseTexture.bind();
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE4);
-			GlStateManager.bindTexture(shadowRenderer.getDepthTexture().getTextureId());
+			GlStateManager.bindTexture(shadowMapRenderer.getDepthTextureId());
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE5);
+			GlStateManager.bindTexture(shadowMapRenderer.getDepthTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
+
 			framebuffer.bind();
 			program.use();
 
@@ -355,7 +379,8 @@ public class ShaderPipeline {
 		// would help performance.
 		renderTargets.destroy();
 
-		shadowRenderer.destroy();
+		// Destroy the shadow map renderer and its render targets
+		shadowMapRenderer.destroy();
 	}
 
 	private static void destroyPasses(Pass... passes) {
@@ -393,7 +418,7 @@ public class ShaderPipeline {
 		}
 	}
 
-	public void prepareRenderTargets() {
+	private void prepareRenderTargets() {
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
@@ -408,9 +433,6 @@ public class ShaderPipeline {
 		// Not clearing the depth buffer since there's only one of those and it was already cleared
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
-
-		// We only want the vanilla clear color to be applied to colortex0
-		baseline.bind();
 	}
 
 	public void copyCurrentDepthTexture() {
@@ -440,9 +462,19 @@ public class ShaderPipeline {
 	public void beginWorldRender() {
 		isRenderingWorld = true;
 
+		checkWorld();
+
+		if (!isRenderingWorld) {
+			Iris.logger.warn("beginWorldRender was called but we are not currently rendering a world?");
+			return;
+		}
+
 		if (!programStack.isEmpty()) {
 			throw new IllegalStateException("Program stack before the start of rendering, something has gone very wrong!");
 		}
+
+		// Get ready for world rendering
+		prepareRenderTargets();
 
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.
@@ -450,6 +482,13 @@ public class ShaderPipeline {
 	}
 
 	public void finalizeWorldRendering() {
+		checkWorld();
+
+		if (!isRenderingWorld) {
+			Iris.logger.warn("finalizeWorldRendering was called but we are not currently rendering a world?");
+			return;
+		}
+
 		popProgram(GbufferProgram.BASIC);
 
 		if (!programStack.isEmpty()) {

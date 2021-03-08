@@ -2,6 +2,7 @@ package net.coderbot.iris.layer;
 
 public enum GbufferProgram {
 	NONE,
+	CLEAR,
 	BASIC,
 	TEXTURED,
 	TEXTURED_LIT,

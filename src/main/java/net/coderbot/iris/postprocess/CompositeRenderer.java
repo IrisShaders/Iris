@@ -14,6 +14,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.rendertarget.*;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -33,10 +34,11 @@ public class CompositeRenderer {
 	private final ImmutableList<Pass> passes;
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
+	private final ShadowRenderer shadowMapRenderer;
 
 	final CenterDepthSampler centerDepthSampler;
 
-	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets) {
+	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, ShadowRenderer shadowMapRenderer) {
 		centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
@@ -118,6 +120,8 @@ public class CompositeRenderer {
 		this.swapPasses = swapPasses.build();
 
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+
+		this.shadowMapRenderer = shadowMapRenderer;
 	}
 
 	private static final class Pass {
@@ -154,12 +158,8 @@ public class CompositeRenderer {
 		// Once we start rendering the hand before composite content, this will need to be addressed.
 		bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
-		bindTexture(4, Iris.getPipeline().shadowRenderer.getDepthTexture().getTextureId());
-		// We have to do this or else shadow hardware filtering breaks entirely!
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
-		// Make sure that things are smoothed
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+		bindTexture(PostProcessUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
+		bindTexture(PostProcessUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.NOISE_TEX);
 		BuiltinNoiseTexture.bind();
