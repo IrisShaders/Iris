@@ -51,6 +51,11 @@ public class MixinWorldRenderer {
 		Iris.getCompositeRenderer().renderAll();
 	}
 
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V"))
+	private void iris$renderTerrainShadows(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		Iris.getPipeline().shadowRenderer.renderShadows((WorldRendererAccessor) this);
+	}
+
 	@Inject(method = RENDER_SKY, at = @At("HEAD"))
 	private void iris$renderSky$begin(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		GbufferPrograms.push(GbufferProgram.SKY_TEXTURED);

@@ -49,6 +49,9 @@ public final class CommonUniforms {
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1i(ONCE, "noisetex", () -> 15)
+			// TODO: This is not really what we want. We should have a separate texture unit for water shadows.
+			.uniform1i(ONCE, "shadowtex0", () -> 4)
+			.uniform1i(ONCE, "shadowtex1", () -> 4)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)

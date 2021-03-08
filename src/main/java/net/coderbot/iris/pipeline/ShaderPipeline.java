@@ -75,6 +75,8 @@ public class ShaderPipeline {
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
 
+	public ShadowRenderer shadowRenderer;
+
 	public ShaderPipeline(ShaderPack pack, RenderTargets renderTargets) {
 		this.renderTargets = renderTargets;
 		waterId = pack.getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
@@ -103,10 +105,12 @@ public class ShaderPipeline {
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		this.noiseTexture = new NoiseTexture(128, 128);
+
+		this.shadowRenderer = new ShadowRenderer(pack.getShadow().orElse(null));
 	}
 
 	public void pushProgram(GbufferProgram program) {
-		if (!isRenderingWorld) {
+		if (!isRenderingWorld || isRenderingShadow) {
 			// don't mess with non-world rendering
 			return;
 		}
@@ -117,7 +121,7 @@ public class ShaderPipeline {
 	}
 
 	public void popProgram(GbufferProgram expected) {
-		if (!isRenderingWorld) {
+		if (!isRenderingWorld || isRenderingShadow) {
 			// don't mess with non-world rendering
 			return;
 		}
@@ -287,6 +291,9 @@ public class ShaderPipeline {
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE15);
 			GlStateManager.bindTexture(noiseTexture.getTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE4);
+			GlStateManager.bindTexture(shadowRenderer.getDepthTexture().getTextureId());
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 			framebuffer.bind();
 			program.use();
 
@@ -323,6 +330,7 @@ public class ShaderPipeline {
 		clearMainBuffers.destroy();
 		baseline.destroy();
 		noiseTexture.destroy();
+		shadowRenderer.destroy();
 	}
 
 	private static void destroyPasses(Pass... passes) {
@@ -425,5 +433,15 @@ public class ShaderPipeline {
 
 		isRenderingWorld = false;
 		programStackLog.clear();
+	}
+
+	private boolean isRenderingShadow = false;
+
+	public void beginShadowRender() {
+		isRenderingShadow = true;
+	}
+
+	public void endShadowRender() {
+		isRenderingShadow = false;
 	}
 }

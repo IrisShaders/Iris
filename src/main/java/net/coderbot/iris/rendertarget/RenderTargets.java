@@ -113,10 +113,22 @@ public class RenderTargets {
 		return framebuffer;
 	}
 
+	public GlFramebuffer createBaselineFramebuffer() {
+		boolean[] stageWritesToAlt = new boolean[1];
+
+		Arrays.fill(stageWritesToAlt, false);
+
+		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToAlt, new int[] {0});
+
+		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
+
+		return framebuffer;
+	}
+
 	public GlFramebuffer createColorFramebuffer(boolean[] stageWritesToAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
 
-		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
+		for (int i = 0; i < stageWritesToAlt.length; i++) {
 			RenderTarget target = this.get(i);
 
 			int textureId = stageWritesToAlt[i] ? target.getAltTexture() : target.getMainTexture();

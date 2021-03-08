@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 
+import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.shadow.ShadowMatrices;
 import net.minecraft.util.math.Matrix4f;
 
 public final class MatrixUniforms {
@@ -14,7 +16,11 @@ public final class MatrixUniforms {
 
 	public static void addMatrixUniforms(UniformHolder uniforms) {
 		addMatrix(uniforms, "ModelView", CapturedRenderingState.INSTANCE::getGbufferModelView);
+		// TODO: In some cases, gbufferProjectionInverse takes on a value much different than OptiFine...
+		// We need to audit Mojang's linear algebra.
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
+		addShadowMatrix(uniforms, "ModelView", () -> ShadowRenderer.MODELVIEW.copy());
+		addShadowArrayMatrix(uniforms, "Projection", MatrixUniforms::getShadowProjection);
 	}
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
@@ -22,6 +28,23 @@ public final class MatrixUniforms {
 			.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)
 			.uniformMatrix(PER_FRAME, "gbuffer" + name + "Inverse", new Inverted(supplier))
 			.uniformMatrix(PER_FRAME, "gbufferPrevious" + name, new Previous(supplier));
+	}
+
+	private static void addShadowMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
+		uniforms
+				.uniformMatrix(PER_FRAME, "shadow" + name, supplier)
+				.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
+	}
+
+	private static void addShadowArrayMatrix(UniformHolder uniforms, String name, Supplier<float[]> supplier) {
+		uniforms
+				.uniformMatrixFromArray(PER_FRAME, "shadow" + name, supplier);
+				// TODO: shadowProjectionInverse
+				//.uniformMatrixFromArray(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
+	}
+
+	private static float[] getShadowProjection() {
+		return ShadowMatrices.createOrthoMatrix(ShadowRenderer.HALF_PLANE_LENGTH);
 	}
 
 	private static class Inverted implements Supplier<Matrix4f> {

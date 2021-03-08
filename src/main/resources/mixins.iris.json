@@ -13,6 +13,7 @@
     "MixinParticleManager",
     "MixinTranslationStorage",
     "MixinWorldRenderer",
+    "WorldRendererAccessor",
     "fabulous.MixinDisableFabulousGraphics",
     "fabulous.MixinOption",
     "gbuffer.MixinWorldRenderer",

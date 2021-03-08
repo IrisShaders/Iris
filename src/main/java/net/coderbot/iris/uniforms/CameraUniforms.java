@@ -31,7 +31,7 @@ public class CameraUniforms {
 		return client.options.viewDistance * 16;
 	}
 
-	private static Vec3d getCameraPosition() {
+	public static Vec3d getCameraPosition() {
 		return client.gameRenderer.getCamera().getPos();
 	}
 
