@@ -17,6 +17,9 @@ import org.apache.logging.log4j.Level;
 
 public class ShaderPack {
 	private final PackDirectives packDirectives;
+
+	private final ProgramSource shadow;
+
 	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersBeaconBeam;
 	private final ProgramSource gbuffersTextured;
@@ -44,6 +47,8 @@ public class ShaderPack {
 			.orElseGet(ShaderProperties::empty);
 
 		this.packDirectives = new PackDirectives();
+
+		this.shadow = readProgramSource(root, "shadow", this, shaderProperties);
 
 		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this, shaderProperties);
 		this.gbuffersBeaconBeam = readProgramSource(root, "gbuffers_beaconbeam", this, shaderProperties);
@@ -93,6 +98,10 @@ public class ShaderPack {
 
 	public IdMap getIdMap() {
 		return idMap;
+	}
+
+	public Optional<ProgramSource> getShadow() {
+		return shadow.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersBasic() {
