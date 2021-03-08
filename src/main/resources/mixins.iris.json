@@ -25,7 +25,8 @@
     "texunits.MixinGlStateManager",
     "texunits.MixinLightmapTextureManager",
     "texunits.MixinOverlayTexture",
-    "texunits.MixinVertexFormats"
+    "texunits.MixinVertexFormats",
+    "MixinModelViewBobbing"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -25,8 +25,3 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew build --stacktrace
-    - name: Upload artifacts to Github Actions  
-      uses: actions/upload-artifact@v2
-      with:
-        name: Compiled artifacts for ${{ github.sha }}
-        path: build/libs

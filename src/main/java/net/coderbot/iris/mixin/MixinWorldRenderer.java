@@ -27,9 +27,11 @@ import net.fabricmc.api.Environment;
 @Environment(EnvType.CLIENT)
 public class MixinWorldRenderer {
 	private static final String RENDER = "render(Lnet/minecraft/client/util/math/MatrixStack;FJZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lnet/minecraft/client/render/LightmapTextureManager;Lnet/minecraft/util/math/Matrix4f;)V";
-	private static final String RENDER_SKY = "renderSky(Lnet/minecraft/client/util/math/MatrixStack;F)V";
+	private static final String RENDER_SKY = "Lnet/minecraft/client/render/WorldRenderer;renderSky(Lnet/minecraft/client/util/math/MatrixStack;F)V";
 	private static final String RENDER_LAYER = "renderLayer(Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/util/math/MatrixStack;DDD)V";
-	private static final String RENDER_CLOUDS = "renderClouds(Lnet/minecraft/client/util/math/MatrixStack;FDDD)V";
+	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/render/WorldRenderer;renderClouds(Lnet/minecraft/client/util/math/MatrixStack;FDDD)V";
+	private static final String RENDER_WEATHER = "Lnet/minecraft/client/render/WorldRenderer;renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V";
+	private static final String RENDER_WORLD_BORDER = "Lnet/minecraft/client/render/WorldRenderer;renderWorldBorder(Lnet/minecraft/client/render/Camera;)V";
 
 	@Unique
 	private boolean skyTextureEnabled;
@@ -37,18 +39,15 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At("HEAD"))
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
-		// TODO: This makes BSL reflections less wacky but makes the sky not bob with everything else on Sildur's
-		// Closer investigation is necessary
-		// CapturedRenderingState.INSTANCE.setGbufferProjection(gameRenderer.getBasicProjectionMatrix(camera, tickDelta, true));
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
+		Iris.checkDimension();
 		Iris.getPipeline().beginWorldRender();
 	}
 
 	// Inject a bit early so that we can end our rendering in time.
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;method_23792()V"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		Iris.getPipeline().endWorldRender();
-		Iris.getCompositeRenderer().renderAll();
+		Iris.getPipeline().finalizeWorldRendering();
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V"))
@@ -56,8 +55,8 @@ public class MixinWorldRenderer {
 		Iris.getPipeline().shadowRenderer.renderShadows((WorldRendererAccessor) this);
 	}
 
-	@Inject(method = RENDER_SKY, at = @At("HEAD"))
-	private void iris$renderSky$begin(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY))
+	private void iris$beginSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GbufferPrograms.push(GbufferProgram.SKY_TEXTURED);
 		skyTextureEnabled = true;
 	}
@@ -86,18 +85,18 @@ public class MixinWorldRenderer {
 		}
 	}
 
-	@Inject(method = RENDER_SKY, at = @At("RETURN"))
-	private void iris$renderSky$end(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
+	private void iris$endSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GbufferPrograms.pop(GbufferProgram.SKY_TEXTURED);
 	}
 
-	@Inject(method = RENDER_CLOUDS, at = @At("HEAD"))
-	private void iris$beginClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS))
+	private void iris$beginClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GbufferPrograms.push(GbufferProgram.CLOUDS);
 	}
 
-	@Inject(method = RENDER_CLOUDS, at = @At("RETURN"))
-	private void iris$endClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))
+	private void iris$endClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GbufferPrograms.pop(GbufferProgram.CLOUDS);
 	}
 
@@ -123,23 +122,23 @@ public class MixinWorldRenderer {
 		}
 	}
 
-	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("HEAD"))
-	private void iris$beginWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER))
+	private void iris$beginWeather(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GbufferPrograms.push(GbufferProgram.WEATHER);
 	}
 
-	@Inject(method = "renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V", at = @At("RETURN"))
-	private void iris$endWeather(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
+	private void iris$endWeather(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GbufferPrograms.pop(GbufferProgram.WEATHER);
 	}
 
-	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("HEAD"))
-	private void iris$beginWorldBorder(Camera camera, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER))
+	private void iris$beginWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
 	}
 
-	@Inject(method = "renderWorldBorder(Lnet/minecraft/client/render/Camera;)V", at = @At("RETURN"))
-	private void iris$endWorldBorder(Camera camera, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER, shift = At.Shift.AFTER))
+	private void iris$endWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 	}
 
@@ -154,7 +153,7 @@ public class MixinWorldRenderer {
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(blockEntity2);
 	}*/
 
-	@Inject(method = RENDER, at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/WorldRenderer;transparencyShader:Lnet/minecraft/client/gl/ShaderEffect;"))
+	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
 	private void iris$copyCurrentDepthTexture(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		Iris.getPipeline().copyCurrentDepthTexture();
 	}
