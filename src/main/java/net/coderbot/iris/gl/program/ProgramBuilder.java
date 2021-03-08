@@ -23,14 +23,21 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		GL21C.glBindAttribLocation(program, index, name);
 	}
 
-	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String fragmentSource) {
+	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String geometrySource, @Nullable String fragmentSource) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 
 		GlShader vertex;
+		GlShader geometry;
 		GlShader fragment;
 
 		try {
 			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, EMPTY_CONSTANTS);
+		} catch (RuntimeException e) {
+			throw new RuntimeException("Failed to compile vertex shader for program " + name, e);
+		}
+
+		try {
+			geometry = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource, EMPTY_CONSTANTS);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile vertex shader for program " + name, e);
 		}
@@ -41,9 +48,10 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			throw new RuntimeException("Failed to compile fragment shader for program " + name, e);
 		}
 
-		int programId = ProgramCreator.create(name, vertex, fragment);
+		int programId = ProgramCreator.create(name, vertex, geometry, fragment);
 
 		vertex.destroy();
+		geometry.destroy();
 		fragment.destroy();
 
 		return new ProgramBuilder(name, programId);
