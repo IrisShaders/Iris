@@ -5,11 +5,14 @@ import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.gl.shader.StandardMacros;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL21C;
 
 public class ProgramBuilder extends ProgramUniforms.Builder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
+
+	private static final ShaderConstants MACRO_CONSTANTS = StandardMacros.addStandardMacros(ShaderConstants.builder()).build();
 
 	private final int program;
 
@@ -30,13 +33,13 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		GlShader fragment;
 
 		try {
-			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, EMPTY_CONSTANTS);
+			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile vertex shader for program " + name, e);
 		}
 
 		try {
-			fragment = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource, EMPTY_CONSTANTS);
+			fragment = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile fragment shader for program " + name, e);
 		}
