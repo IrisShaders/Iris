@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -26,6 +27,8 @@ import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
 
 import java.util.Objects;
 
@@ -50,6 +53,18 @@ public class ShadowRenderer {
 		} else {
 			this.shadowProgram = null;
 		}
+
+		GlStateManager.activeTexture(GL20C.GL_TEXTURE4);
+		GlStateManager.bindTexture(getDepthTextureId());
+
+		// We have to do this or else shadow hardware filtering breaks entirely!
+		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
+		// Make sure that things are smoothed
+		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+
+		GlStateManager.bindTexture(0);
+		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
@@ -161,8 +176,8 @@ public class ShadowRenderer {
 		return getWorld().isDay();
 	}
 
-	public DepthTexture getDepthTexture() {
-		return targets.getDepthTexture();
+	public int getDepthTextureId() {
+		return targets.getDepthTexture().getTextureId();
 	}
 
 	public void destroy() {

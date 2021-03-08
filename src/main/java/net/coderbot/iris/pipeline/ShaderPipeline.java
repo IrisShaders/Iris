@@ -11,6 +11,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.rendertarget.BuiltinNoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -454,6 +455,10 @@ public class ShaderPipeline {
 			// lighting condition, and therefore don't use the textured_lit program.
 			return GbufferProgram.TEXTURED;
 		}
+	}
+
+	public void renderShadows(WorldRendererAccessor worldRenderer) {
+		this.shadowMapRenderer.renderShadows(worldRenderer);
 	}
 
 	// TODO: better way to avoid this global state?
