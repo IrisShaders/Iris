@@ -109,7 +109,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
-		this.shadowMapRenderer = new ShadowRenderer(programs.getShadow().orElse(null));
+		this.shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null));
 		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer);
 	}
 

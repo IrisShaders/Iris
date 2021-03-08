@@ -37,11 +37,14 @@ public class ShadowRenderer {
 	private static final int RESOLUTION = 1024;
 	public static Matrix4f MODELVIEW;
 
+	private final WorldRenderingPipeline pipeline;
 	private final RenderTargets targets;
 	private final GlFramebuffer shadowFb;
 	private final Program shadowProgram;
 
-	public ShadowRenderer(ProgramSource shadow) {
+	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow) {
+		this.pipeline = pipeline;
+
 		this.targets = new RenderTargets(RESOLUTION, RESOLUTION, new InternalTextureFormat[]{
 			InternalTextureFormat.RGBA
 		});
@@ -88,7 +91,8 @@ public class ShadowRenderer {
 	}
 
 	public void renderShadows(WorldRendererAccessor worldRenderer) {
-		Iris.getPipeline().pushProgram(GbufferProgram.TERRAIN);
+		pipeline.pushProgram(GbufferProgram.NONE);
+		pipeline.beginShadowRender();
 
 		// Create our camera
 		MinecraftClient client = MinecraftClient.getInstance();
@@ -110,8 +114,6 @@ public class ShadowRenderer {
 		} else {
 			GlProgramManager.useProgram(0);
 		}
-
-		Iris.getPipeline().beginShadowRender();
 
 		// Set up and clear our framebuffer
 		shadowFb.bind();
@@ -136,9 +138,9 @@ public class ShadowRenderer {
 		RenderSystem.popMatrix();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 
-		Iris.getPipeline().endShadowRender();
+		pipeline.endShadowRender();
 		// Note: This unbinds the shadow framebuffer
-		Iris.getPipeline().popProgram(GbufferProgram.TERRAIN);
+		pipeline.popProgram(GbufferProgram.NONE);
 
 		// Restore the old viewport
 		RenderSystem.viewport(0, 0, client.getWindow().getFramebufferWidth(), client.getWindow().getFramebufferHeight());
