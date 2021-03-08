@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
-import net.coderbot.iris.pipeline.ShaderPipeline;
+import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -46,7 +46,7 @@ public class MixinParticleManager {
 										LightmapTextureManager lightmapTextureManager, Camera camera, float f,
 										CallbackInfo ci, Iterator<ParticleTextureSheet> sheets, ParticleTextureSheet sheet,
 										Iterable<Particle> particles, Tessellator tessellator) {
-		GbufferPrograms.push(ShaderPipeline.getProgramForSheet(sheet));
+		GbufferPrograms.push(DeferredWorldRenderingPipeline.getProgramForSheet(sheet));
 
 		if (lastSheet != null) {
 			throw new IllegalStateException("Particle rendering in weird state: lastSheet != null, lastSheet = " + lastSheet);
@@ -59,7 +59,7 @@ public class MixinParticleManager {
 	private void iris$postDrawParticleSheet(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate,
 											 LightmapTextureManager lightmapTextureManager, Camera camera, float f,
 											 CallbackInfo ci) {
-		GbufferPrograms.pop(ShaderPipeline.getProgramForSheet(Objects.requireNonNull(lastSheet)));
+		GbufferPrograms.pop(DeferredWorldRenderingPipeline.getProgramForSheet(Objects.requireNonNull(lastSheet)));
 		lastSheet = null;
 	}
 

@@ -7,10 +7,10 @@ import java.util.Optional;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.config.IrisConfig;
-import net.coderbot.iris.pipeline.ShaderPipeline;
+import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.shaderpack.DimensionId;
+import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.registry.Registry;
@@ -34,7 +34,6 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
-import org.lwjgl.opengl.GL20C;
 
 @Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
@@ -45,22 +44,12 @@ public class Iris implements ClientModInitializer {
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
+	private static boolean internal;
 
-	private static ShaderPipeline pipeline;
+	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
-	public static KeyBinding reloadKeybind;
-
-
-	/**
-	 * Controls whether directional shading was previously disabled
-	 */
-	private static boolean wasDisablingDirectionalShading = false;
-
-	/**
-	 * Controls whether BakedQuad will or will not use directional shading.
-	 */
-	private static boolean disableDirectionalShading = false;
+	private static KeyBinding reloadKeybind;
 
 	@Override
 	public void onInitializeClient() {
@@ -82,7 +71,6 @@ public class Iris implements ClientModInitializer {
 
 
 		loadShaderpack();
-		wasDisablingDirectionalShading = disableDirectionalShading;
 
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 
@@ -107,6 +95,8 @@ public class Iris implements ClientModInitializer {
 				}
 			}
 		});
+
+		pipelineManager = new PipelineManager(Iris::createPipeline);
 	}
 
 	public static void loadShaderpack() {
@@ -178,7 +168,7 @@ public class Iris implements ClientModInitializer {
 
 		logger.info("Using shaderpack: " + name);
 		currentPackName = name;
-		disableDirectionalShading = true;
+		internal = false;
 
 		return true;
 	}
@@ -218,12 +208,10 @@ public class Iris implements ClientModInitializer {
 
 		logger.info("Using internal shaders");
 		currentPackName = "(internal)";
-		disableDirectionalShading = false;
+		internal = true;
 	}
 
 	public static void reload() throws IOException {
-		wasDisablingDirectionalShading = disableDirectionalShading;
-
 		// allows shaderpacks to be changed at runtime
 		irisConfig.initialize();
 
@@ -232,11 +220,6 @@ public class Iris implements ClientModInitializer {
 
 		// Load the new shaderpack
 		loadShaderpack();
-
-		if (wasDisablingDirectionalShading != disableDirectionalShading) {
-			// Re-render all of the chunks due to the change in directional shading setting
-			MinecraftClient.getInstance().worldRenderer.reload();
-		}
 	}
 
 	/**
@@ -245,7 +228,7 @@ public class Iris implements ClientModInitializer {
 	private static void destroyEverything() {
 		currentPack = null;
 
-		destroyPipeline();
+		pipelineManager.destroyPipeline();
 
 		// Close the zip filesystem that the shaderpack was loaded from
 		//
@@ -261,64 +244,44 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	private static void destroyPipeline() {
-		// Unbind all textures
-		//
-		// This is necessary because we don't want destroyed render target textures to remain bound to certain texture
-		// units. Vanilla appears to properly rebind all textures as needed, and we do so too, so this does not cause
-		// issues elsewhere.
-		//
-		// Without this code, there will be weird issues when reloading certain shaderpacks.
-		for (int i = 0; i < 16; i++) {
-			GlStateManager.activeTexture(GL20C.GL_TEXTURE0 + i);
-			GlStateManager.bindTexture(0);
-		}
-
-		// Set the active texture unit to unit 0
-		//
-		// This seems to be what most code expects. It's a sane default in any case.
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
-
-		// Destroy the old world rendering pipeline
-		//
-		// This destroys all loaded shader programs and all of the render targets.
-		if (pipeline != null) {
-			pipeline.destroy();
-			pipeline = null;
-		}
-	}
-
 	public static DimensionId lastDimension = DimensionId.OVERWORLD;
 
-	public static void checkDimension() {
+	public static DimensionId getCurrentDimension() {
 		ClientWorld world = MinecraftClient.getInstance().world;
 
 		if (world != null) {
-			DimensionId currentDimension = DimensionId.OVERWORLD;
-
 			RegistryKey<World> worldRegistryKey = world.getRegistryKey();
 
 			if (worldRegistryKey.equals(World.END)) {
-				currentDimension = DimensionId.END;
+				return DimensionId.END;
 			} else if (worldRegistryKey.equals(World.NETHER)) {
-				currentDimension = DimensionId.NETHER;
+				return DimensionId.NETHER;
+			} else {
+				return DimensionId.OVERWORLD;
 			}
-
-			if (currentDimension != lastDimension) {
-				Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
-
-				lastDimension = currentDimension;
-				destroyPipeline();
-			}
+		} else {
+			// This prevents us from reloading the shaderpack unless we need to. Otherwise, if the player is in the
+			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the world
+			// because the code thinks that the dimension changed.
+			return lastDimension;
 		}
 	}
 
-	public static ShaderPipeline getPipeline() {
-		if (pipeline == null) {
-			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack).getProgramSet(lastDimension));
+	private static WorldRenderingPipeline createPipeline(DimensionId dimensionId) {
+		ProgramSet programs = Objects.requireNonNull(currentPack).getProgramSet(dimensionId);
+
+		if (internal) {
+			return new InternalWorldRenderingPipeline(programs);
+		} else {
+			return new DeferredWorldRenderingPipeline(programs);
 		}
 
-		return pipeline;
+		// note: uncommenting this line and commenting the above lines will completely disable shader-based rendering
+		// return new FixedFunctionWorldRenderingPipeline();
+	}
+
+	public static PipelineManager getPipelineManager() {
+		return pipelineManager;
 	}
 
 	public static ShaderPack getCurrentPack() {
@@ -331,9 +294,5 @@ public class Iris implements ClientModInitializer {
 
 	public static IrisConfig getIrisConfig() {
 		return irisConfig;
-	}
-
-	public static boolean shouldDisableDirectionalShading() {
-		return disableDirectionalShading;
 	}
 }

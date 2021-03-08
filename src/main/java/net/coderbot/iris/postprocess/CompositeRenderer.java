@@ -16,6 +16,7 @@ import net.coderbot.iris.rendertarget.*;
 import net.coderbot.iris.shaderpack.directive.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import org.lwjgl.opengl.GL15C;
 
@@ -31,10 +32,11 @@ public class CompositeRenderer {
 	private final ImmutableList<Pass> passes;
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
+	private final EmptyShadowMapRenderer shadowMapRenderer;
 
 	final CenterDepthSampler centerDepthSampler;
 
-	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets) {
+	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, EmptyShadowMapRenderer shadowMapRenderer) {
 		centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
@@ -116,6 +118,8 @@ public class CompositeRenderer {
 		this.swapPasses = swapPasses.build();
 
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+
+		this.shadowMapRenderer = shadowMapRenderer;
 	}
 
 	private static final class Pass {
@@ -151,6 +155,9 @@ public class CompositeRenderer {
 		// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
 		// Once we start rendering the hand before composite content, this will need to be addressed.
 		bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
+
+		bindTexture(PostProcessUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
+		bindTexture(PostProcessUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.NOISE_TEX);
 		BuiltinNoiseTexture.bind();
@@ -226,7 +233,7 @@ public class CompositeRenderer {
 		RenderSystem.bindTexture(texture);
 	}
 
-	// TODO: Don't just copy this from ShaderPipeline
+	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
