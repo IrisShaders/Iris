@@ -183,7 +183,6 @@ public class ShadowRenderer {
 	}
 
 	public void destroy() {
-		this.shadowFb.destroy();
 		this.targets.destroy();
 		this.shadowProgram.destroy();
 	}
