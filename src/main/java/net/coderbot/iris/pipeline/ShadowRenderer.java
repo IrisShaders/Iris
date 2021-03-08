@@ -33,8 +33,8 @@ import org.lwjgl.opengl.GL30C;
 import java.util.Objects;
 
 public class ShadowRenderer {
-	public static final float HALF_PLANE_LENGTH = 80F;
-	private static final int RESOLUTION = 1024;
+	public static final float HALF_PLANE_LENGTH = 110F;
+	private static final int RESOLUTION = 3072;
 	public static Matrix4f MODELVIEW;
 
 	private final WorldRenderingPipeline pipeline;
