@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.DimensionId;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.opengl.GL20C;
 
@@ -34,6 +35,15 @@ public class PipelineManager {
 
 		if (pipeline == null) {
 			pipeline = pipelineFactory.apply(lastDimension);
+
+			// If Sodium is loaded, we need to reload the world renderer to properly recreate the ChunkRenderBackend
+			// Otherwise, the terrain shaders won't be changed properly.
+			// We also need to re-render all of the chunks if there is a change in the directional shading setting
+			//
+			// TODO: Don't trigger a reload if this is the first time the world is being rendered
+			if (FabricLoader.getInstance().isModLoaded("sodium")) {
+				MinecraftClient.getInstance().worldRenderer.reload();
+			}
 		}
 
 		boolean disableDirectionalShading = pipeline.shouldDisableDirectionalShading();
