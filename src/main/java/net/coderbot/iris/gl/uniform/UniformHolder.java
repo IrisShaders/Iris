@@ -88,4 +88,10 @@ public interface UniformHolder {
 
 		return this;
 	}
+
+	default UniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
+		location(name).ifPresent(id -> addUniform(updateFrequency, new MatrixFromFloatArrayUniform(id, value)));
+
+		return this;
+	}
 }
