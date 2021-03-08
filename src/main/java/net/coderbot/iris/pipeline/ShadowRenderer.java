@@ -11,7 +11,7 @@ import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
-import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -27,7 +27,6 @@ import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class ShadowRenderer {
@@ -39,7 +38,7 @@ public class ShadowRenderer {
 	private final GlFramebuffer shadowFb;
 	private final Program shadowProgram;
 
-	public ShadowRenderer(ShaderPack.ProgramSource shadow) {
+	public ShadowRenderer(ProgramSource shadow) {
 		this.targets = new RenderTargets(RESOLUTION, RESOLUTION, new InternalTextureFormat[]{
 			InternalTextureFormat.RGBA
 		});
@@ -54,7 +53,7 @@ public class ShadowRenderer {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private Pair<Program, ProgramDirectives> createProgram(ShaderPack.ProgramSource source) {
+	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -63,12 +62,12 @@ public class ShadowRenderer {
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
 					source.getFragmentSource().orElse(null));
-		} catch (IOException e) {
+		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getIdMap());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
 
 		return new Pair<>(builder.build(), source.getDirectives());
 	}

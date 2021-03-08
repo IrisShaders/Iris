@@ -109,7 +109,7 @@ public class ShaderPipeline {
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		this.compositeRenderer = new CompositeRenderer(programs, renderTargets);
-		this.shadowRenderer = new ShadowRenderer(pack.getShadow().orElse(null));
+		this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null));
 	}
 
 	public void pushProgram(GbufferProgram program) {
