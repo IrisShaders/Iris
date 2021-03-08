@@ -25,7 +25,7 @@ public class MixinEntityRenderDispatcher {
 	private static void iris$maybeSuppressEntityShadow(MatrixStack matrices, VertexConsumerProvider vertexConsumers,
 													   Entity entity, float opacity, float tickDelta, WorldView world,
 													   float radius, CallbackInfo ci) {
-		if (Iris.getPipeline().shouldDisableVanillaEntityShadows()) {
+		if (Iris.getPipelineManager().getPipeline().shouldDisableVanillaEntityShadows()) {
 			ci.cancel();
 		}
 	}

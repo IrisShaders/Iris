@@ -4,6 +4,7 @@ import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -36,19 +37,24 @@ public class MixinWorldRenderer {
 
 	@Unique
 	private boolean skyTextureEnabled;
+	
+	@Unique
+	private WorldRenderingPipeline pipeline;
 
 	@Inject(method = RENDER, at = @At("HEAD"))
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
-		Iris.checkDimension();
-		Iris.getPipeline().beginWorldRender();
+		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
+		
+		pipeline.beginWorldRendering();
 	}
 
 	// Inject a bit early so that we can end our rendering in time.
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;method_23792()V"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		Iris.getPipeline().finalizeWorldRendering();
+		pipeline.finalizeWorldRendering();
+		pipeline = null;
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V"))
@@ -58,17 +64,17 @@ public class MixinWorldRenderer {
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR))
 	private void iris$beforeClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.push(GbufferProgram.CLEAR);
+		pipeline.pushProgram(GbufferProgram.CLEAR);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER))
 	private void iris$afterClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.pop(GbufferProgram.CLEAR);
+		pipeline.popProgram(GbufferProgram.CLEAR);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY))
 	private void iris$beginSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.push(GbufferProgram.SKY_TEXTURED);
+		pipeline.pushProgram(GbufferProgram.SKY_TEXTURED);
 		skyTextureEnabled = true;
 	}
 
@@ -76,7 +82,7 @@ public class MixinWorldRenderer {
 	private void iris$renderSky$disableTexture(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		if (skyTextureEnabled) {
 			skyTextureEnabled = false;
-			GbufferPrograms.push(GbufferProgram.SKY_BASIC);
+			pipeline.pushProgram(GbufferProgram.SKY_BASIC);
 		}
 	}
 
@@ -92,31 +98,31 @@ public class MixinWorldRenderer {
 	private void iris$renderSky$enableTexture(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		if (!skyTextureEnabled) {
 			skyTextureEnabled = true;
-			GbufferPrograms.pop(GbufferProgram.SKY_BASIC);
+			pipeline.popProgram(GbufferProgram.SKY_BASIC);
 		}
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
 	private void iris$endSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.pop(GbufferProgram.SKY_TEXTURED);
+		pipeline.popProgram(GbufferProgram.SKY_TEXTURED);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS))
 	private void iris$beginClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.push(GbufferProgram.CLOUDS);
+		pipeline.pushProgram(GbufferProgram.CLOUDS);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))
 	private void iris$endClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.pop(GbufferProgram.CLOUDS);
+		pipeline.popProgram(GbufferProgram.CLOUDS);
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		if (renderLayer == RenderLayer.getSolid() || renderLayer == RenderLayer.getCutout() || renderLayer == RenderLayer.getCutoutMipped()) {
-			GbufferPrograms.push(GbufferProgram.TERRAIN);
+			pipeline.pushProgram(GbufferProgram.TERRAIN);
 		} else if (renderLayer == RenderLayer.getTranslucent() || renderLayer == RenderLayer.getTripwire()) {
-			GbufferPrograms.push(GbufferProgram.TRANSLUCENT_TERRAIN);
+			pipeline.pushProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
 			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderLayer);
 		}
@@ -125,9 +131,9 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		if (renderLayer == RenderLayer.getSolid() || renderLayer == RenderLayer.getCutout() || renderLayer == RenderLayer.getCutoutMipped()) {
-			GbufferPrograms.pop(GbufferProgram.TERRAIN);
+			pipeline.popProgram(GbufferProgram.TERRAIN);
 		} else if (renderLayer == RenderLayer.getTranslucent() || renderLayer == RenderLayer.getTripwire()) {
-			GbufferPrograms.pop(GbufferProgram.TRANSLUCENT_TERRAIN);
+			pipeline.popProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
 			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderLayer);
 		}
@@ -135,22 +141,22 @@ public class MixinWorldRenderer {
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER))
 	private void iris$beginWeather(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.push(GbufferProgram.WEATHER);
+		pipeline.pushProgram(GbufferProgram.WEATHER);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
 	private void iris$endWeather(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.pop(GbufferProgram.WEATHER);
+		pipeline.popProgram(GbufferProgram.WEATHER);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER))
 	private void iris$beginWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
+		pipeline.pushProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER, shift = At.Shift.AFTER))
 	private void iris$endWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
+		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
 	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
@@ -165,7 +171,7 @@ public class MixinWorldRenderer {
 	}*/
 
 	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
-	private void iris$copyCurrentDepthTexture(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		Iris.getPipeline().copyCurrentDepthTexture();
+	private void iris$beginTranslucents(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		pipeline.beginTranslucents();
 	}
 }
