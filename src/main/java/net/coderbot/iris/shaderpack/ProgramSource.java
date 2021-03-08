@@ -2,8 +2,6 @@ package net.coderbot.iris.shaderpack;
 
 import java.util.Optional;
 
-import net.coderbot.iris.shaderpack.directive.ProgramDirectives;
-
 public class ProgramSource {
 	private final String name;
 	private final String vertexSource;

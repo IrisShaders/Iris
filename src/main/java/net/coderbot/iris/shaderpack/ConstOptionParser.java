@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack.parse;
+package net.coderbot.iris.shaderpack;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -9,10 +9,7 @@ import java.util.regex.Pattern;
 
 import net.minecraft.util.Util;
 
-import static net.coderbot.iris.shaderpack.parse.DefineOptionParser.*;
-
-import net.coderbot.iris.shaderpack.config.Option;
-import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
+import static net.coderbot.iris.shaderpack.DefineOptionParser.*;
 
 public class ConstOptionParser {
 

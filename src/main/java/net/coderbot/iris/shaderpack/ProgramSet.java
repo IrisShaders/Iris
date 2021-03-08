@@ -8,8 +8,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import net.coderbot.iris.shaderpack.directive.PackDirectives;
-
 public class ProgramSet {
 	private final PackDirectives packDirectives;
 
@@ -199,10 +197,6 @@ public class ProgramSet {
 		return gbuffersDamagedBlock.requireValid();
 	}
 
-	public Optional<ProgramSource> getGbuffersWater() {
-		return gbuffersWater.requireValid();
-	}
-
 	public Optional<ProgramSource> getGbuffersSkyBasic() {
 		return gbuffersSkyBasic.requireValid();
 	}
@@ -245,6 +239,10 @@ public class ProgramSet {
 
 	public ProgramSource[] getDeferred() {
 		return deferred;
+	}
+
+	public Optional<ProgramSource> getGbuffersWater() {
+		return gbuffersWater.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersHandWater() {

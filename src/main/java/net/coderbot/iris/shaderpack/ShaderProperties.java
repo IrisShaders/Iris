@@ -15,9 +15,9 @@ import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 
 public class ShaderProperties {
-	public Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
-	public Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
-	public ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
+	Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
+	Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
+	ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
 
 	private ShaderProperties() {
 		// empty

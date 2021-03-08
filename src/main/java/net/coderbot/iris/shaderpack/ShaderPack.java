@@ -9,8 +9,6 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
-import net.coderbot.iris.shaderpack.parse.IdMap;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 

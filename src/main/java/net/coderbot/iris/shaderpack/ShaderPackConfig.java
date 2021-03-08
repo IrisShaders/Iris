@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack.config;
+package net.coderbot.iris.shaderpack;
 
 import static net.coderbot.iris.Iris.SHADERPACK_DIR;
 

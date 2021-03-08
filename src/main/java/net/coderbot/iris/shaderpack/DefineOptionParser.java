@@ -1,4 +1,4 @@
-package net.coderbot.iris.shaderpack.parse;
+package net.coderbot.iris.shaderpack;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,9 +8,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import net.coderbot.iris.shaderpack.config.Option;
-import net.coderbot.iris.shaderpack.config.ShaderPackConfig;
 
 import net.minecraft.util.Util;
 

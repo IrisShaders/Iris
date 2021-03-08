@@ -1,11 +1,8 @@
-package net.coderbot.iris.shaderpack.directive;
+package net.coderbot.iris.shaderpack;
 
 import java.util.Optional;
 
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shaderpack.ShaderProperties;
-import net.coderbot.iris.shaderpack.parse.CommentDirectiveParser;
 import org.jetbrains.annotations.Nullable;
 
 public class ProgramDirectives {
@@ -15,7 +12,7 @@ public class ProgramDirectives {
 	private AlphaTestOverride alphaTestOverride;
 	private boolean disableBlend;
 
-	public ProgramDirectives(ProgramSource source, ShaderProperties properties) {
+	ProgramDirectives(ProgramSource source, ShaderProperties properties) {
 		// First try to find it in the fragment source, then in the vertex source.
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
 		// TODO: ShadersMod appears to default to all buffers? Investigate this more closely.
