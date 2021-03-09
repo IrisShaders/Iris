@@ -17,7 +17,7 @@ import net.minecraft.util.Util;
 
 public class StandardMacros {
 
-	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)");
+	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)(.*)");
 
 
 	public static ShaderConstants.Builder addStandardMacros(ShaderConstants.Builder builder) {
