@@ -184,6 +184,9 @@ public class ShadowRenderer {
 
 	public void destroy() {
 		this.targets.destroy();
-		this.shadowProgram.destroy();
+
+		if (this.shadowProgram != null) {
+			this.shadowProgram.destroy();
+		}
 	}
 }
