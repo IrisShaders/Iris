@@ -7,12 +7,25 @@ import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
+
+import static net.coderbot.iris.gl.shader.StandardMacros.*;
 
 public class ProgramBuilder extends ProgramUniforms.Builder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
-	private static final ShaderConstants MACRO_CONSTANTS = StandardMacros.addStandardMacros(ShaderConstants.builder()).build();
+	private static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
+		.define(getOsString())
+		.define("MC_VERSION", getMcVersion())
+		.define("MC_GL_VERSION", getGlVersion(GL20C.GL_VERSION))
+		.define("MC_GLSL_VERSION", getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+		.define(getRenderer())
+		.define(getVendor())
+		.defineAll(getGlExtensions())
+		.build();
+
+
 
 	private final int program;
 

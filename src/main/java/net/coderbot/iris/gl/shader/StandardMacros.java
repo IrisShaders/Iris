@@ -1,11 +1,12 @@
 package net.coderbot.iris.gl.shader;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
@@ -20,32 +21,13 @@ public class StandardMacros {
 	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)(.*)");
 
 
-	public static ShaderConstants.Builder addStandardMacros(ShaderConstants.Builder builder) {
-		String os = getOsString();
-		String glVersion = getGlVersion(GL20C.GL_VERSION);
-		String renderer = getRenderer();
-		String glslVersion = getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION);
-		String vendor = getVendor();
-		String mcversion = getMcVersion();
-
-		builder.define("MC_VERSION", mcversion);
-		builder.define(os);
-		builder.define("MC_GL_VERSION", glVersion);
-		builder.define("MC_GLSL_VERSION", glslVersion);
-		builder.define(renderer);
-		builder.define(vendor);
-		addGlExtensions(builder);
-
-		return builder;
-	}
-
 	/**
 	 * Gets the current mc version String in a 5 digit format
 	 *
 	 * @return mc version string
 	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L677">Optifine Doc</a>
 	 */
-	private static String getMcVersion() {
+	public static String getMcVersion() {
 		String version = SharedConstants.getGameVersion().getReleaseTarget(); //release target so snapshots are set to the higher version
 
 		Matcher matcher = SEMVER_PATTERN.matcher(version);
@@ -80,7 +62,7 @@ public class StandardMacros {
 	 * @return the string based on the current OS
 	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L687-L692">Optifine Doc</a>
 	 */
-	private static String getOsString() {
+	public static String getOsString() {
 		switch (Util.getOperatingSystem()) {
 			case OSX:
 				return "MC_OS_MAC";
@@ -103,7 +85,7 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L679-L681">Optifine Doc for GL Version</a>
 	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L683-L685">Optifine Doc for GLSL Version</a>
 	 */
-	private static String getGlVersion(int name) {
+	public static String getGlVersion(int name) {
 		String info = GL20.glGetString(name);
 
 		Matcher matcher = SEMVER_PATTERN.matcher(Objects.requireNonNull(info));
@@ -132,7 +114,7 @@ public class StandardMacros {
 	 * @param name    name of the group
 	 * @return the section of the matcher that is a group, or null, if that matcher does not contain said group
 	 */
-	private static String group(Matcher matcher, String name) {
+	public static String group(Matcher matcher, String name) {
 		try {
 			return matcher.group(name);
 		} catch (IllegalArgumentException | IllegalStateException exception) {
@@ -145,14 +127,12 @@ public class StandardMacros {
 	 * This is done by calling {@link GL11#glGetString} with the arg {@link GL11#GL_EXTENSIONS}
 	 *
 	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L713-L716">Optifine Doc</a>
+	 * @return list of activated extensions prefixed with "MC_"
 	 */
-	private static void addGlExtensions(ShaderConstants.Builder builder) {
+	public static List<String> getGlExtensions() {
 		String[] extensions = Objects.requireNonNull(GL11.glGetString(GL11.GL_EXTENSIONS)).split("\\s+");
 
-		for (String extension : extensions) {
-			builder.define("MC_" + extension);
-		}
-
+		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toList());
 	}
 
 	/**
@@ -160,7 +140,7 @@ public class StandardMacros {
 	 *
 	 * @return graphics driver prefixed with "MC_GL_RENDERER_"
 	 */
-	private static String getRenderer() {
+	public static String getRenderer() {
 		String renderer = Objects.requireNonNull(GL11.glGetString(GL11C.GL_RENDERER)).toLowerCase(Locale.ROOT);
 		if (renderer.startsWith("amd")) {
 			return "MC_GL_RENDERER_RADEON";
@@ -186,7 +166,7 @@ public class StandardMacros {
 		return "MC_GL_RENDERER_OTHER";
 	}
 
-	private static String getVendor() {
+	public static String getVendor() {
 		String vendor = Objects.requireNonNull(GL11.glGetString(GL11C.GL_VENDOR)).toLowerCase(Locale.ROOT);
 		if (vendor.startsWith("ati")) {
 			return "MC_GL_VENDOR_ATI";
