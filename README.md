@@ -69,7 +69,7 @@ The fundamental flaw with OptiFabric is that it is a massive *hack*. I call it a
 
 OptiFine is created as a "jar mod." Remember deleting META-INF about a decade ago (Wow, I feel old now) and copying the files from that one new mod directly into your `minecraft.jar`? Effectively, that's what Optifine now does every time you start the game. That means that it directly patches a decompiled version of Minecraft, then at runtime it overwrites the vanilla classes (units of code) with its own modified versions. This is about as invasive and incompatible as it sounds. Perhaps unsurprisingly, Optifine is *notorious* for having [many](https://github.com/TerraformersMC/Terrestria/issues/178), [many](https://github.com/jellysquid3/lithium-fabric/issues/73), [*many*](https://www.reddit.com/r/feedthebeast/comments/6ueyla/112_optifine_incompatible_with_some_mods/) incompatibilities with other mods.
 
-On the other hand, Iris is a native Fabric mod that uses carefully crafted and precise code injections driven by the [Mixin](https://github.com/SpongePowered/Mixin) bytecode patching system. Mixin is the basis of the entire Fabric modding community, and is a much more compatible way of patching the game. This alone should help alleviate many of the compatibility issue that have plagued OptiFine.
+On the other hand, Iris is a native Fabric mod that uses carefully crafted and precise code injections driven by the [Mixin](https://github.com/SpongePowered/Mixin) bytecode patching system. Mixin is the basis of the entire Fabric modding community, and is a much more compatible way of patching the game. This alone should help alleviate many of the compatibility issues that have plagued OptiFine.
 
 
 ## Credits
