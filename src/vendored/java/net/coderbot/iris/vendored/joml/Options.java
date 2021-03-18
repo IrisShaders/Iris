@@ -47,7 +47,7 @@ public final class Options {
     /**
      * Whether <i>not</i> to use sun.misc.Unsafe when copying memory with MemUtil.
      */
-    public static final boolean NO_UNSAFE = hasOption(System.getProperty("joml.nounsafe", "false"));
+    public static final boolean NO_UNSAFE = true; //hasOption(System.getProperty("joml.nounsafe", "false"));
     /**
      * Whether to <i>force</i> the use of sun.misc.Unsafe when copying memory with MemUtil.
      */
