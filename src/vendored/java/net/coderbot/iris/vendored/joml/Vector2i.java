@@ -27,10 +27,10 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-//#endif
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -167,7 +167,7 @@ public class Vector2i implements Externalizable, Cloneable, Vector2ic {
         this.y = xy[1];
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Create a new {@link Vector2i} and read this vector from the supplied
      * {@link ByteBuffer} at the current buffer
@@ -239,7 +239,7 @@ public class Vector2i implements Externalizable, Cloneable, Vector2ic {
     public Vector2i(int index, IntBuffer buffer) {
         MemUtil.INSTANCE.get(this, index, buffer);
     }
-//#endif
+
 
     public int x() {
         return this.x;
@@ -355,7 +355,7 @@ public class Vector2i implements Externalizable, Cloneable, Vector2ic {
         return this;
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Read this vector from the supplied {@link ByteBuffer} at the current
      * buffer {@link ByteBuffer#position() position}.
@@ -431,28 +431,7 @@ public class Vector2i implements Externalizable, Cloneable, Vector2ic {
         MemUtil.INSTANCE.get(this, index, buffer);
         return this;
     }
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Set the values of this vector by reading 2 integer values from off-heap memory,
-     * starting at the given address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *              the off-heap memory address to read the vector values from
-     * @return this
-     */
-    public Vector2i setFromAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.get(this, address);
-        return this;
-    }
-//#endif
 
     public int get(int component) throws IllegalArgumentException {
         switch (component) {
@@ -489,7 +468,7 @@ public class Vector2i implements Externalizable, Cloneable, Vector2ic {
         return this;
     }
 
-//#ifdef __HAS_NIO__
+
     public ByteBuffer get(ByteBuffer buffer) {
         MemUtil.INSTANCE.put(this, buffer.position(), buffer);
         return buffer;
@@ -509,16 +488,7 @@ public class Vector2i implements Externalizable, Cloneable, Vector2ic {
         MemUtil.INSTANCE.put(this, index, buffer);
         return buffer;
     }
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    public Vector2ic getToAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.put(this, address);
-        return this;
-    }
-//#endif
 
     /**
      * Subtract the supplied vector from this one and store the result in

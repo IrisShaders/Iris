@@ -23,10 +23,10 @@
  */
 package net.coderbot.iris.vendored.joml;
 
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
-//#endif
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -133,7 +133,7 @@ public class Matrix2d implements Externalizable, Cloneable, Matrix2dc {
         this.m11 = m11;
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Create a new {@link Matrix2d} by reading its 4 double components from the given {@link DoubleBuffer}
      * at the buffer's current position.
@@ -148,7 +148,7 @@ public class Matrix2d implements Externalizable, Cloneable, Matrix2dc {
     public Matrix2d(DoubleBuffer buffer) {
         MemUtil.INSTANCE.get(this, buffer.position(), buffer);
     }
-//#endif
+
 
     /**
      * Create a new {@link Matrix2d} and initialize its two columns using the supplied vectors.
@@ -632,7 +632,7 @@ public class Matrix2d implements Externalizable, Cloneable, Matrix2dc {
         return (double) Math.atan2(m01, m11);
     }
 
-    //#ifdef __HAS_NIO__
+
     public DoubleBuffer get(DoubleBuffer buffer) {
         return get(buffer.position(), buffer);
     }
@@ -668,16 +668,7 @@ public class Matrix2d implements Externalizable, Cloneable, Matrix2dc {
         MemUtil.INSTANCE.putTransposed(this, index, buffer);
         return buffer;
     }
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    public Matrix2dc getToAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.put(this, address);
-        return this;
-    }
-//#endif
 
     public double[] get(double[] arr, int offset) {
         MemUtil.INSTANCE.copy(this, arr, offset);
@@ -688,7 +679,7 @@ public class Matrix2d implements Externalizable, Cloneable, Matrix2dc {
         return get(arr, 0);
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Set the values of this matrix by reading 4 double values from the given {@link DoubleBuffer} in column-major order,
      * starting at its current position.
@@ -760,27 +751,7 @@ public class Matrix2d implements Externalizable, Cloneable, Matrix2dc {
         MemUtil.INSTANCE.get(this, index, buffer);
         return this;
     }
-//#endif
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Set the values of this matrix by reading 4 double values from off-heap memory in column-major order,
-     * starting at the given address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     *
-     * @param address
-     *              the off-heap memory address to read the matrix values from in column-major order
-     * @return this
-     */
-    public Matrix2d setFromAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.get(this, address);
-        return this;
-    }
-//#endif
+
 
     /**
      * Set all values within this matrix to zero.

@@ -440,7 +440,7 @@ public class Math {
 // iris: since we compile against java 8, we don't have fma
 //        if (Runtime.HAS_Math_fma)
 //            return java.lang.Math.fma(a, b, c);
-//#endif
+
         return a * b + c;
     }
 
@@ -449,7 +449,7 @@ public class Math {
 // iris: since we compile against java 8, we don't have fma
 //        if (Runtime.HAS_Math_fma)
 //            return java.lang.Math.fma(a, b, c);
-//#endif
+
         return a * b + c;
     }
 
@@ -566,7 +566,7 @@ public class Math {
 //#else
         // code from java.lang.Integer.signum(int)
         r = (v >> 31) | (-v >>> 31);
-//#endif
+
         return r;
     }
     public static int signum(long v) {
@@ -576,7 +576,7 @@ public class Math {
 //#else
         // code from java.lang.Long.signum(long)
         r = (int) ((v >> 63) | (-v >>> 63));
-//#endif
+
         return r;
     }
 }

@@ -36,7 +36,7 @@ public final class Runtime {
     public static final boolean HAS_floatToRawIntBits = hasFloatToRawIntBits();
     public static final boolean HAS_doubleToRawLongBits = hasDoubleToRawLongBits();
     public static final boolean HAS_Long_rotateLeft = hasLongRotateLeft();
-//#endif
+
 //#ifdef __HAS_MATH_FMA__
     public static final boolean HAS_Math_fma = Options.USE_MATH_FMA && hasMathFma();
 
@@ -48,7 +48,7 @@ public final class Runtime {
             return false;
         }
     }
-//#endif
+
 
     private Runtime() {
     }
@@ -80,20 +80,20 @@ public final class Runtime {
             return false;
         }
     }
-//#endif
+
 
     public static int floatToIntBits(float flt) {
 //#ifndef __GWT__
         if (HAS_floatToRawIntBits)
             return floatToIntBits1_3(flt);
-//#endif
+
         return floatToIntBits1_2(flt);
     }
 //#ifndef __GWT__
     private static int floatToIntBits1_3(float flt) {
         return Float.floatToRawIntBits(flt);
     }
-//#endif
+
     private static int floatToIntBits1_2(float flt) {
         return Float.floatToIntBits(flt);
     }
@@ -102,14 +102,14 @@ public final class Runtime {
 //#ifndef __GWT__
         if (HAS_doubleToRawLongBits)
             return doubleToLongBits1_3(dbl);
-//#endif
+
         return doubleToLongBits1_2(dbl);
     }
 //#ifndef __GWT__
     private static long doubleToLongBits1_3(double dbl) {
         return Double.doubleToRawLongBits(dbl);
     }
-//#endif
+
     private static long doubleToLongBits1_2(double dbl) {
         return Double.doubleToLongBits(dbl);
     }

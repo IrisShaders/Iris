@@ -28,7 +28,7 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 //#ifndef __GWT__
 import java.util.Locale;
-//#endif
+
 
 /**
  * Utility class for reading system properties.
@@ -42,17 +42,6 @@ public final class Options {
      * and a proxy should be created on calls to readOnlyView().
      */
     public static final boolean DEBUG = hasOption(System.getProperty("joml.debug", "false"));
-
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Whether <i>not</i> to use sun.misc.Unsafe when copying memory with MemUtil.
-     */
-    public static final boolean NO_UNSAFE = true; //hasOption(System.getProperty("joml.nounsafe", "false"));
-    /**
-     * Whether to <i>force</i> the use of sun.misc.Unsafe when copying memory with MemUtil.
-     */
-    public static final boolean FORCE_UNSAFE = hasOption(System.getProperty("joml.forceUnsafe", "false"));
-//#endif
 
     /**
      * Whether fast approximations of some java.lang.Math operations should be used.
@@ -69,14 +58,6 @@ public final class Options {
      */
     public static final int SIN_LOOKUP_BITS = Integer.parseInt(System.getProperty("joml.sinLookup.bits", "14"));
 
-//#ifndef __GWT__
-    /**
-     * Whether to use a {@link NumberFormat} producing scientific notation output when formatting matrix,
-     * vector and quaternion components to strings.
-     */
-    public static final boolean useNumberFormat = hasOption(System.getProperty("joml.format", "true"));
-//#endif
-
 //#ifdef __HAS_MATH_FMA__
     /**
      * Whether to try using java.lang.Math.fma() in most matrix/vector/quaternion operations if it is available.
@@ -84,18 +65,16 @@ public final class Options {
      * for the emulation with `java.util.BigDecimal`, though.
      */
     public static final boolean USE_MATH_FMA = hasOption(System.getProperty("joml.useMathFma", "false"));
-//#endif
 
-//#ifndef __GWT__
-    /**
-     * When {@link #useNumberFormat} is <code>true</code> then this determines the number of decimal digits
-     * produced in the formatted numbers.
-     */
-//#else
+	/**
+	 * Whether to use a {@link NumberFormat} producing scientific notation output when formatting matrix,
+	 * vector and quaternion components to strings.
+	 */
+	public static final boolean useNumberFormat = hasOption(System.getProperty("joml.format", "true"));
+
     /**
      * Determines the number of decimal digits produced in the formatted numbers.
      */
-//#endif
     public static final int numberFormatDecimals = Integer.parseInt(System.getProperty("joml.format.decimals", "3"));
 
     /**
@@ -108,18 +87,16 @@ public final class Options {
 
     private static NumberFormat decimalFormat() {
         NumberFormat df;
-//#ifndef __GWT__
+
         if (useNumberFormat) {
-//#endif
             char[] prec = new char[numberFormatDecimals];
             Arrays.fill(prec, '0');
             df = new DecimalFormat(" 0." + new String(prec) + "E0;-");
-//#ifndef __GWT__
         } else {
             df = NumberFormat.getNumberInstance(Locale.ENGLISH);
             df.setGroupingUsed(false);
         }
-//#endif
+
         return df;
     }
 

@@ -84,18 +84,18 @@ public class Random {
         private static long rotl_JDK4(final long x, final int k) {
             return (x << k) | (x >>> (64 - k));
         }
-//#endif
+
         private static long rotl_JDK5(final long x, final int k) {
             return Long.rotateLeft(x, k);
         }
         private static long rotl(final long x, final int k) {
 //#ifndef __GWT__
             if (Runtime.HAS_Long_rotateLeft)
-//#endif
+
                 return rotl_JDK5(x, k);
 //#ifndef __GWT__
             return rotl_JDK4(x, k);
-//#endif
+
         }
         private void rotateLeft(long s0, long s1) {
             _s0 = rotl(s0, 55) ^ s1 ^ (s1 << 14);

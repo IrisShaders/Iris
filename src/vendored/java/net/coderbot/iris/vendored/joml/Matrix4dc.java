@@ -23,11 +23,11 @@
  */
 package net.coderbot.iris.vendored.joml;
 
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
-//#endif
+
 import java.util.*;
 
 /**
@@ -991,7 +991,7 @@ public interface Matrix4dc {
      */
     Quaterniond getNormalizedRotation(Quaterniond dest);
 
-//#ifdef __HAS_NIO__
+
     /**
      * Store this matrix in column-major order into the supplied {@link DoubleBuffer} at the current
      * buffer {@link DoubleBuffer#position() position}.
@@ -1095,21 +1095,6 @@ public interface Matrix4dc {
      */
     ByteBuffer get(int index, ByteBuffer buffer);
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Store this matrix in column-major order at the given off-heap address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *            the off-heap address where to store this matrix
-     * @return this
-     */
-    Matrix4dc getToAddress(long address);
-//#endif
-
     /**
      * Store the elements of this matrix as float values in column-major order into the supplied {@link ByteBuffer} at the current
      * buffer {@link ByteBuffer#position() position}.
@@ -1147,7 +1132,7 @@ public interface Matrix4dc {
      * @return the passed in buffer
      */
     ByteBuffer getFloats(int index, ByteBuffer buffer);
-//#endif
+
 
     /**
      * Store this matrix into the supplied double array in column-major order at the given offset.
@@ -1203,7 +1188,7 @@ public interface Matrix4dc {
      */
     float[] get(float[] arr);
 
-//#ifdef __HAS_NIO__
+
     /**
      * Store the transpose of this matrix in column-major order into the supplied {@link DoubleBuffer} at the current
      * buffer {@link DoubleBuffer#position() position}.
@@ -1331,7 +1316,7 @@ public interface Matrix4dc {
      * @return the passed in buffer
      */
     ByteBuffer get4x3Transposed(int index, ByteBuffer buffer);
-//#endif
+
 
     /**
      * Transform/multiply the given vector by this matrix and store the result in that vector.

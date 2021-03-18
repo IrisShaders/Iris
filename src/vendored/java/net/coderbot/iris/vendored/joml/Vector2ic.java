@@ -23,10 +23,10 @@
  */
 package net.coderbot.iris.vendored.joml;
 
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-//#endif
+
 
 /**
  * Interface to a read-only view of a 2-dimensional vector of integers.
@@ -45,7 +45,7 @@ public interface Vector2ic {
      */
     int y();
 
-//#ifdef __HAS_NIO__
+
     /**
      * Store this vector into the supplied {@link ByteBuffer} at the current
      * buffer {@link ByteBuffer#position() position}.
@@ -109,22 +109,7 @@ public interface Vector2ic {
      * @return the passed in buffer
      */
     IntBuffer get(int index, IntBuffer buffer);
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Store this vector at the given off-heap memory address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *            the off-heap address where to store this vector
-     * @return this
-     */
-    Vector2ic getToAddress(long address);
-//#endif
 
     /**
      * Subtract the supplied vector from this one and store the result in

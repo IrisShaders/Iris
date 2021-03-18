@@ -27,11 +27,11 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
-//#endif
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -161,7 +161,7 @@ public class Matrix3d implements Externalizable, Cloneable, Matrix3dc {
         this.m22 = m22;
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Create a new {@link Matrix3d} by reading its 9 double components from the given {@link DoubleBuffer}
      * at the buffer's current position.
@@ -176,7 +176,7 @@ public class Matrix3d implements Externalizable, Cloneable, Matrix3dc {
     public Matrix3d(DoubleBuffer buffer) {
         MemUtil.INSTANCE.get(this, buffer.position(), buffer);
     }
-//#endif
+
 
     /**
      * Create a new {@link Matrix3d} and initialize its three columns using the supplied vectors.
@@ -1052,7 +1052,7 @@ public class Matrix3d implements Externalizable, Cloneable, Matrix3dc {
         return dest.setFromNormalized(this);
     }
 
-//#ifdef __HAS_NIO__
+
     public DoubleBuffer get(DoubleBuffer buffer) {
         return get(buffer.position(), buffer);
     }
@@ -1088,16 +1088,7 @@ public class Matrix3d implements Externalizable, Cloneable, Matrix3dc {
         MemUtil.INSTANCE.putf(this, index, buffer);
         return buffer;
     }
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    public Matrix3dc getToAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.put(this, address);
-        return this;
-    }
-//#endif
 
     public double[] get(double[] arr, int offset) {
         arr[offset+0] = m00;
@@ -1133,7 +1124,7 @@ public class Matrix3d implements Externalizable, Cloneable, Matrix3dc {
         return get(arr, 0);
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Set the values of this matrix by reading 9 double values from the given {@link DoubleBuffer} in column-major order,
      * starting at its current position.
@@ -1275,27 +1266,7 @@ public class Matrix3d implements Externalizable, Cloneable, Matrix3dc {
         MemUtil.INSTANCE.getf(this, index, buffer);
         return this;
     }
-//#endif
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Set the values of this matrix by reading 9 double values from off-heap memory in column-major order,
-     * starting at the given address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *              the off-heap memory address to read the matrix values from in column-major order
-     * @return this
-     */
-    public Matrix3d setFromAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.get(this, address);
-        return this;
-    }
-//#endif
+
 
     /**
      * Set the three columns of this matrix to the supplied vectors, respectively.

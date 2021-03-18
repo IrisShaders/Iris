@@ -27,10 +27,10 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-//#endif
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -134,7 +134,7 @@ public class Matrix4x3f implements Externalizable, Cloneable, Matrix4x3fc {
         determineProperties();
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Create a new {@link Matrix4x3f} by reading its 12 float components from the given {@link FloatBuffer}
      * at the buffer's current position.
@@ -150,7 +150,7 @@ public class Matrix4x3f implements Externalizable, Cloneable, Matrix4x3fc {
         MemUtil.INSTANCE.get(this, buffer.position(), buffer);
         determineProperties();
     }
-//#endif
+
 
     /**
      * Create a new {@link Matrix4x3f} and initialize its four columns using the supplied vectors.
@@ -1175,7 +1175,7 @@ public class Matrix4x3f implements Externalizable, Cloneable, Matrix4x3fc {
         return set(m, 0);
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Set the values of this matrix by reading 12 float values from the given {@link FloatBuffer} in column-major order,
      * starting at its current position.
@@ -1247,27 +1247,7 @@ public class Matrix4x3f implements Externalizable, Cloneable, Matrix4x3fc {
         MemUtil.INSTANCE.get(this, index, buffer);
         return determineProperties();
     }
-//#endif
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Set the values of this matrix by reading 12 float values from off-heap memory in column-major order,
-     * starting at the given address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *              the off-heap memory address to read the matrix values from in column-major order
-     * @return this
-     */
-    public Matrix4x3f setFromAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.get(this, address);
-        return determineProperties();
-    }
-//#endif
+
 
     public float determinant() {
         return (m00 * m11 - m01 * m10) * m22
@@ -1693,7 +1673,7 @@ public class Matrix4x3f implements Externalizable, Cloneable, Matrix4x3fc {
         return dest.setFromNormalized(this);
     }
 
-//#ifdef __HAS_NIO__
+
     public FloatBuffer get(FloatBuffer buffer) {
         return get(buffer.position(), buffer);
     }
@@ -1711,16 +1691,7 @@ public class Matrix4x3f implements Externalizable, Cloneable, Matrix4x3fc {
         MemUtil.INSTANCE.put(this, index, buffer);
         return buffer;
     }
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    public Matrix4x3fc getToAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.put(this, address);
-        return this;
-    }
-//#endif
 
     public float[] get(float[] arr, int offset) {
         MemUtil.INSTANCE.copy(this, arr, offset);
@@ -1740,7 +1711,7 @@ public class Matrix4x3f implements Externalizable, Cloneable, Matrix4x3fc {
         return get4x4(arr, 0);
     }
 
-//#ifdef __HAS_NIO__
+
     public FloatBuffer get4x4(FloatBuffer buffer) {
         return get4x4(buffer.position(), buffer);
     }
@@ -1794,7 +1765,7 @@ public class Matrix4x3f implements Externalizable, Cloneable, Matrix4x3fc {
         MemUtil.INSTANCE.putTransposed(this, index, buffer);
         return buffer;
     }
-//#endif
+
 
     public float[] getTransposed(float[] arr, int offset) {
         arr[offset+0]  = m00;

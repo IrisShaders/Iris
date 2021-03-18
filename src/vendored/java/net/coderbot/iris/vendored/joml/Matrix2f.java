@@ -23,10 +23,10 @@
  */
 package net.coderbot.iris.vendored.joml;
 
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-//#endif
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -107,7 +107,7 @@ public class Matrix2f implements Externalizable, Cloneable, Matrix2fc {
         this.m11 = m11;
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Create a new {@link Matrix2f} by reading its 4 float components from the given {@link FloatBuffer}
      * at the buffer's current position.
@@ -122,7 +122,7 @@ public class Matrix2f implements Externalizable, Cloneable, Matrix2fc {
     public Matrix2f(FloatBuffer buffer) {
         MemUtil.INSTANCE.get(this, buffer.position(), buffer);
     }
-//#endif
+
 
     /**
      * Create a new {@link Matrix2f} and initialize its two columns using the supplied vectors.
@@ -533,7 +533,7 @@ public class Matrix2f implements Externalizable, Cloneable, Matrix2fc {
         return Math.atan2(m01, m11);
     }
 
-//#ifdef __HAS_NIO__
+
     public FloatBuffer get(FloatBuffer buffer) {
         return get(buffer.position(), buffer);
     }
@@ -569,15 +569,7 @@ public class Matrix2f implements Externalizable, Cloneable, Matrix2fc {
         MemUtil.INSTANCE.putTransposed(this, index, buffer);
         return buffer;
     }
-//#endif
-//#ifdef __HAS_UNSAFE__
-    public Matrix2fc getToAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.put(this, address);
-        return this;
-    }
-//#endif
+
 
     public float[] get(float[] arr, int offset) {
         MemUtil.INSTANCE.copy(this, arr, offset);
@@ -588,7 +580,7 @@ public class Matrix2f implements Externalizable, Cloneable, Matrix2fc {
         return get(arr, 0);
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Set the values of this matrix by reading 4 float values from the given {@link FloatBuffer} in column-major order,
      * starting at its current position.
@@ -660,28 +652,7 @@ public class Matrix2f implements Externalizable, Cloneable, Matrix2fc {
         MemUtil.INSTANCE.get(this, index, buffer);
         return this;
     }
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Set the values of this matrix by reading 4 float values from off-heap memory in column-major order,
-     * starting at the given address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     *
-     * @param address
-     *              the off-heap memory address to read the matrix values from in column-major order
-     * @return this
-     */
-    public Matrix2f setFromAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.get(this, address);
-        return this;
-    }
-//#endif
 
     /**
      * Set all values within this matrix to zero.

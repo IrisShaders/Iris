@@ -23,10 +23,10 @@
  */
 package net.coderbot.iris.vendored.joml;
 
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-//#endif
+
 
 /**
  * Interface to a read-only view of a 3-dimensional vector of integers.
@@ -50,7 +50,7 @@ public interface Vector3ic {
      */
     int z();
 
-//#ifdef __HAS_NIO__
+
     /**
      * Store this vector into the supplied {@link IntBuffer} at the current
      * buffer {@link IntBuffer#position() position}.
@@ -114,22 +114,7 @@ public interface Vector3ic {
      * @return the passed in buffer
      */
     ByteBuffer get(int index, ByteBuffer buffer);
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Store this vector at the given off-heap memory address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *            the off-heap address where to store this vector
-     * @return this
-     */
-    Vector3ic getToAddress(long address);
-//#endif
 
     /**
      * Subtract the supplied vector from this one and store the result in

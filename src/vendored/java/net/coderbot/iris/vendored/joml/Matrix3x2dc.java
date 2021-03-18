@@ -23,10 +23,10 @@
  */
 package net.coderbot.iris.vendored.joml;
 
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
-//#endif
+
 import java.util.*;
 
 /**
@@ -210,7 +210,7 @@ public interface Matrix3x2dc {
      */
     Matrix3x2d get(Matrix3x2d dest);
 
-//#ifdef __HAS_NIO__
+
     /**
      * Store this matrix in column-major order into the supplied {@link DoubleBuffer} at the current
      * buffer {@link DoubleBuffer#position() position}.
@@ -402,22 +402,7 @@ public interface Matrix3x2dc {
      * @return the passed in buffer
      */
     ByteBuffer get4x4(int index, ByteBuffer buffer);
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Store this matrix in column-major order at the given off-heap address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *            the off-heap address where to store this matrix
-     * @return this
-     */
-    Matrix3x2dc getToAddress(long address);
-//#endif
 
     /**
      * Store this matrix into the supplied double array in column-major order at the given offset.

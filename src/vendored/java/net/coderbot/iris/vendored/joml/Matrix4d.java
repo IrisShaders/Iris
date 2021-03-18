@@ -27,11 +27,11 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
-//#endif
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -187,7 +187,7 @@ public class Matrix4d implements Externalizable, Cloneable, Matrix4dc {
         determineProperties();
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Create a new {@link Matrix4d} by reading its 16 double components from the given {@link DoubleBuffer}
      * at the buffer's current position.
@@ -203,7 +203,7 @@ public class Matrix4d implements Externalizable, Cloneable, Matrix4dc {
         MemUtil.INSTANCE.get(this, buffer.position(), buffer);
         determineProperties();
     }
-//#endif
+
 
     /**
      * Create a new {@link Matrix4d} and initialize its four columns using the supplied vectors.
@@ -2588,7 +2588,7 @@ public class Matrix4d implements Externalizable, Cloneable, Matrix4dc {
         return set(m, 0);
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Set the values of this matrix by reading 16 double values from the given {@link DoubleBuffer} in column-major order,
      * starting at its current position.
@@ -2732,28 +2732,7 @@ public class Matrix4d implements Externalizable, Cloneable, Matrix4dc {
         MemUtil.INSTANCE.getf(this, index, buffer);
         return determineProperties();
     }
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Set the values of this matrix by reading 16 double values from off-heap memory in column-major order,
-     * starting at the given address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *              the off-heap memory address to read the matrix values from in column-major order
-     * @return this
-     */
-    public Matrix4d setFromAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.get(this, address);
-        return determineProperties();
-    }
-//#endif
 
     /**
      * Set the four columns of this matrix to the supplied vectors, respectively.
@@ -3435,7 +3414,7 @@ public class Matrix4d implements Externalizable, Cloneable, Matrix4dc {
         return dest.setFromNormalized(this);
     }
 
-//#ifdef __HAS_NIO__
+
     public DoubleBuffer get(DoubleBuffer dest) {
         MemUtil.INSTANCE.put(this, dest.position(), dest);
         return dest;
@@ -3475,15 +3454,7 @@ public class Matrix4d implements Externalizable, Cloneable, Matrix4dc {
         MemUtil.INSTANCE.putf(this, index, dest);
         return dest;
     }
-//#endif
-//#ifdef __HAS_UNSAFE__
-    public Matrix4dc getToAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.put(this, address);
-        return this;
-    }
-//#endif
+
 
     public double[] get(double[] dest, int offset) {
         dest[offset+0]  = m00;
@@ -3533,7 +3504,7 @@ public class Matrix4d implements Externalizable, Cloneable, Matrix4dc {
         return get(dest, 0);
     }
 
-//#ifdef __HAS_NIO__
+
     public DoubleBuffer getTransposed(DoubleBuffer dest) {
         MemUtil.INSTANCE.putTransposed(this, dest.position(), dest);
         return dest;
@@ -3573,7 +3544,7 @@ public class Matrix4d implements Externalizable, Cloneable, Matrix4dc {
         MemUtil.INSTANCE.put4x3Transposed(this, index, dest);
         return dest;
     }
-//#endif
+
 
     /**
      * Set all the values within this matrix to 0.

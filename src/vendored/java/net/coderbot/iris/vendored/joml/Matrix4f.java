@@ -27,10 +27,10 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-//#endif
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -178,7 +178,7 @@ public class Matrix4f implements Externalizable, Cloneable, Matrix4fc {
             .determineProperties();
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Create a new {@link Matrix4f} by reading its 16 float components from the given {@link FloatBuffer}
      * at the buffer's current position.
@@ -194,7 +194,7 @@ public class Matrix4f implements Externalizable, Cloneable, Matrix4fc {
         MemUtil.INSTANCE.get(this, buffer.position(), buffer);
         determineProperties();
     }
-//#endif
+
 
     /**
      * Create a new {@link Matrix4f} and initialize its four columns using the supplied vectors.
@@ -2323,7 +2323,7 @@ public class Matrix4f implements Externalizable, Cloneable, Matrix4fc {
         return setTransposed(m, 0);
     }
 
-//#ifdef __HAS_NIO__
+
     /**
      * Set the values of this matrix by reading 16 float values from the given {@link FloatBuffer} in column-major order,
      * starting at its current position.
@@ -2429,47 +2429,7 @@ public class Matrix4f implements Externalizable, Cloneable, Matrix4fc {
         MemUtil.INSTANCE.getTransposed(this, buffer.position(), buffer);
         return determineProperties();
     }
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Set the values of this matrix by reading 16 float values from off-heap memory in column-major order,
-     * starting at the given address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *              the off-heap memory address to read the matrix values from in column-major order
-     * @return this
-     */
-    public Matrix4f setFromAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.get(this, address);
-        return determineProperties();
-    }
-
-    /**
-     * Set the values of this matrix by reading 16 float values from off-heap memory in row-major order,
-     * starting at the given address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *              the off-heap memory address to read the matrix values from in row-major order
-     * @return this
-     */
-    public Matrix4f setTransposedFromAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.getTransposed(this, address);
-        return determineProperties();
-    }
-//#endif
 
     /**
      * Set the four columns of this matrix to the supplied vectors, respectively.
@@ -3244,7 +3204,7 @@ public class Matrix4f implements Externalizable, Cloneable, Matrix4fc {
         return dest.setFromNormalized(this);
     }
 
-//#ifdef __HAS_NIO__
+
     public FloatBuffer get(FloatBuffer buffer) {
         MemUtil.INSTANCE.put(this, buffer.position(), buffer);
         return buffer;
@@ -3344,15 +3304,7 @@ public class Matrix4f implements Externalizable, Cloneable, Matrix4fc {
         MemUtil.INSTANCE.put4x3Transposed(this, index, buffer);
         return buffer;
     }
-//#endif
-//#ifdef __HAS_UNSAFE__
-    public Matrix4fc getToAddress(long address) {
-        if (Options.NO_UNSAFE)
-            throw new UnsupportedOperationException("Not supported when using joml.nounsafe");
-        MemUtil.MemUtilUnsafe.put(this, address);
-        return this;
-    }
-//#endif
+
 
     public float[] get(float[] arr, int offset) {
         MemUtil.INSTANCE.copy(this, arr, offset);

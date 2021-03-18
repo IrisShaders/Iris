@@ -23,11 +23,11 @@
  */
 package net.coderbot.iris.vendored.joml;
 
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
-//#endif
+
 import java.util.*;
 
 /**
@@ -499,7 +499,7 @@ public interface Matrix4x3dc {
      */
     Quaterniond getNormalizedRotation(Quaterniond dest);
 
-//#ifdef __HAS_NIO__
+
     /**
      * Store this matrix in column-major order into the supplied {@link DoubleBuffer} at the current
      * buffer {@link DoubleBuffer#position() position}.
@@ -640,22 +640,7 @@ public interface Matrix4x3dc {
      * @return the passed in buffer
      */
     ByteBuffer getFloats(int index, ByteBuffer buffer);
-//#endif
 
-//#ifdef __HAS_UNSAFE__
-    /**
-     * Store this matrix in column-major order at the given off-heap address.
-     * <p>
-     * This method will throw an {@link UnsupportedOperationException} when JOML is used with `-Djoml.nounsafe`.
-     * <p>
-     * <em>This method is unsafe as it can result in a crash of the JVM process when the specified address range does not belong to this process.</em>
-     * 
-     * @param address
-     *            the off-heap address where to store this matrix
-     * @return this
-     */
-    Matrix4x3dc getToAddress(long address);
-//#endif
 
     /**
      * Store this matrix into the supplied double array in column-major order at the given offset.
@@ -769,7 +754,7 @@ public interface Matrix4x3dc {
      */
     float[] get4x4(float[] arr);
 
-//#ifdef __HAS_NIO__
+
     /**
      * Store a 4x4 matrix in column-major order into the supplied {@link DoubleBuffer} at the current
      * buffer {@link DoubleBuffer#position() position}, where the upper 4x3 submatrix is <code>this</code> and the last row is <code>(0, 0, 0, 1)</code>.
@@ -973,7 +958,7 @@ public interface Matrix4x3dc {
      * @return the passed in buffer
      */
     ByteBuffer getTransposedFloats(int index, ByteBuffer buffer);
-//#endif
+
 
     /**
      * Store this matrix into the supplied float array in row-major order at the given offset.

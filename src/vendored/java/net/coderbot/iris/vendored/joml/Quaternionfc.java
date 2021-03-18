@@ -23,10 +23,10 @@
  */
 package net.coderbot.iris.vendored.joml;
 
-//#ifdef __HAS_NIO__
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-//#endif
+
 import java.util.*;
 
 /**
@@ -208,7 +208,7 @@ public interface Quaternionfc {
      */
     Quaternionf get(Quaternionf dest);
 
-//#ifdef __HAS_NIO__
+
     /**
      * Store the 3x3 float matrix representation of <code>this</code> quaternion in column-major order into the given {@link ByteBuffer}.
      * <p>
@@ -274,7 +274,7 @@ public interface Quaternionfc {
      * @return dest
      */
     FloatBuffer getAsMatrix4x3f(FloatBuffer dest);
-//#endif
+
 
     /**
      * Multiply this quaternion by <code>q</code> and store the result in <code>dest</code>.
