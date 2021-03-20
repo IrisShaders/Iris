@@ -44,7 +44,7 @@ public class ProgramSource {
 	}
 
 	public boolean isValid() {
-		return vertexSource != null && geometrySource != null && fragmentSource != null;
+		return vertexSource != null && fragmentSource != null;
 	}
 
 	public Optional<ProgramSource> requireValid() {
