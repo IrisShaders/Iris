@@ -7,6 +7,7 @@ import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -46,6 +47,7 @@ public class Iris implements ClientModInitializer {
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
+	private static KeyBinding shaderpackScreenKeybind;
 	private static KeyBinding reloadKeybind;
 
 	@Override
@@ -81,11 +83,14 @@ public class Iris implements ClientModInitializer {
 
 		loadShaderpack();
 
+		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.shaderPackSelection", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			if (reloadKeybind.wasPressed()){
-
+			if (shaderpackScreenKeybind.wasPressed()) {
+				minecraftClient.openScreen(new ShaderPackScreen(minecraftClient.currentScreen));
+			}
+			else if (reloadKeybind.wasPressed()) {
 				try {
 					reload();
 
