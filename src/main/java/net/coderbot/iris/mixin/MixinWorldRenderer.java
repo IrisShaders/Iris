@@ -2,10 +2,14 @@ package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.minecraft.client.render.*;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,16 +17,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(WorldRenderer.class)
 @Environment(EnvType.CLIENT)
@@ -165,8 +165,17 @@ public class MixinWorldRenderer {
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(blockEntity2);
 	}*/
 
-	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
-	private void iris$beginTranslucents(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void iris$beginTranslucents(MatrixStack matrices, float tickDelta, long limitTime,
+										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
+										LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
+										CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
+										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
+										VertexConsumerProvider.Immediate immediate) {
+		if (immediate instanceof FlushableVertexConsumerProvider) {
+			((FlushableVertexConsumerProvider) immediate).flushNonTranslucentContent();
+		}
+
 		pipeline.beginTranslucents();
 	}
 }
