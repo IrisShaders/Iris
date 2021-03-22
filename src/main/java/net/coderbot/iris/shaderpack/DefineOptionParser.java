@@ -258,7 +258,7 @@ public class DefineOptionParser {
 		if (comment != null && comment.contains("[") && comment.contains("]")) {
 			String array = comment.substring(comment.indexOf("["), comment.indexOf("]") + 1);
 			comment = comment.replace(array, "");
-			integers = parseArray(array, Integer::parseInt);
+			integers = parseArray(array, s -> (int)Float.parseFloat(s));
 		}
 
 		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, (string) -> (int) Float.parseFloat(string));//parse as float and cast to string to be flexible
