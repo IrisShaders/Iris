@@ -13,7 +13,7 @@ public class ProgramCreator {
 		int program = GL20C.glCreateProgram();
 
 		for (GlShader shader : shaders) {
-			GL20C.glAttachShader(program, shader.getHandle());
+			if(shader != null) GL20C.glAttachShader(program, shader.getHandle());
 		}
 
 		GL20C.glLinkProgram(program);
