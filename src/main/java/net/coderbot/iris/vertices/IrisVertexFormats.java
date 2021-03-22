@@ -25,6 +25,9 @@ public class IrisVertexFormats {
 		elements.add(VertexFormats.LIGHT_ELEMENT);
 		elements.add(VertexFormats.NORMAL_ELEMENT);
 		elements.add(VertexFormats.PADDING_ELEMENT);
+		elements.add(ENTITY_ELEMENT);
+		elements.add(MID_TEXTURE_ELEMENT);
+		elements.add(TANGENT_ELEMENT);
 
 		TERRAIN = new VertexFormat(elements.build());
 	}

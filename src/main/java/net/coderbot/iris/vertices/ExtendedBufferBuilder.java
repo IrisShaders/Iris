@@ -33,17 +33,6 @@ public class ExtendedBufferBuilder extends BufferBuilder {
 	}
 
 	@Override
-	public void nextElement() {
-		super.nextElement();
-
-		while (this.getCurrentElement() == IrisVertexFormats.TANGENT_ELEMENT ||
-				this.getCurrentElement() == IrisVertexFormats.ENTITY_ELEMENT ||
-				this.getCurrentElement() == IrisVertexFormats.MID_TEXTURE_ELEMENT) {
-			super.nextElement();
-		}
-	}
-
-	@Override
 	public void reset() {
 		super.reset();
 
@@ -54,6 +43,20 @@ public class ExtendedBufferBuilder extends BufferBuilder {
 
 	@Override
 	public void next() {
+		this.putShort(0, (short) -1);
+		this.putShort(2, (short) -1);
+		this.putShort(4, (short) -1);
+		this.putShort(6, (short) -1);
+		this.nextElement();
+		this.putFloat(0, 0F);
+		this.putFloat(4, 0F);
+		this.nextElement();
+		this.putFloat(0, 1F);
+		this.putFloat(4, 0F);
+		this.putFloat(8, 0F);
+		this.putFloat(12, 1F);
+		this.nextElement();
+
 		super.next();
 
 		vertexCount += 1;

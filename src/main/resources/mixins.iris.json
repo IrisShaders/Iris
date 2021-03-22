@@ -25,7 +25,8 @@
     "texunits.MixinOverlayTexture",
     "texunits.MixinVertexFormats",
     "MixinModelViewBobbing",
-    "MixinTweakFarPlane"
+    "MixinTweakFarPlane",
+    "MixinBlockBufferBuilderStorage"
   ],
   "injectors": {
     "defaultRequire": 1

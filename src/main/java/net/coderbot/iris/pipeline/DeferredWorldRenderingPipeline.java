@@ -412,9 +412,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		float blockId = -1.0F;
 
-		setupAttribute(pass, "mc_Entity", blockId, -1.0F, -1.0F, -1.0F);
-		setupAttribute(pass, "mc_midTexCoord", 0.0F, 0.0F, 0.0F, 0.0F);
-		setupAttribute(pass, "at_tangent", 1.0F, 0.0F, 0.0F, 1.0F);
+		//setupAttribute(pass, "mc_Entity", blockId, -1.0F, -1.0F, -1.0F);
+		//setupAttribute(pass, "mc_midTexCoord", 0.0F, 0.0F, 0.0F, 0.0F);
+		//setupAttribute(pass, "at_tangent", 1.0F, 0.0F, 0.0F, 1.0F);
 	}
 
 	private static void setupAttribute(Pass pass, String name, float v0, float v1, float v2, float v3) {
