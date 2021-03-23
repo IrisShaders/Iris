@@ -69,6 +69,8 @@ public final class CelestialUniforms {
 		// This is the same transformation applied by renderSky, however, it's been moved to here.
 		// This is because we need the result of it before it's actually performed in vanilla.
 		celestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
+		// TODO: Don't hardcode the sunPathRotation here
+		celestial.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
 		celestial.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
 
 		position.transform(celestial);
@@ -93,7 +95,10 @@ public final class CelestialUniforms {
 	}
 
 	private static boolean isDay() {
-		return getWorld().isDay();
+		// Determine whether it is day or night based on the sky angle.
+		//
+		// World#isDay appears to do some nontrivial calculations that appear to not entirely work for us here.
+		return getSunAngle() <= 0.5;
 	}
 
 	private static ClientWorld getWorld() {
