@@ -5,8 +5,8 @@ import org.lwjgl.opengl.GL15;
 public enum TextureUnit {
 	TERRAIN(0),
 	LIGHTMAP(1),
-	// TODO: Relocate this to a different texture unit, this is used by the normal map for normal shaders
-	OVERLAY(2);
+	// TODO: Relocate this to a different texture unit, this is used by depthtex0...
+	OVERLAY(6);
 
 	private final int samplerId;
 	private final int unitId;

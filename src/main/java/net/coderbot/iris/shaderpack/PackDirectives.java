@@ -4,26 +4,32 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.rendertarget.RenderTargets;
 
 import java.util.Arrays;
 import java.util.OptionalInt;
 
 public class PackDirectives {
 	private InternalTextureFormat[] requestedTextureFormats;
-	private IntList buffersToBeCleared;
+	private boolean[] clearBuffers;
 
 	PackDirectives() {
-		requestedTextureFormats = new InternalTextureFormat[8];
+		requestedTextureFormats = new InternalTextureFormat[RenderTargets.MAX_RENDER_TARGETS];
 		Arrays.fill(requestedTextureFormats, InternalTextureFormat.RGBA);
 
-		// TODO: Don't assume that there are only 8 buffers
-		buffersToBeCleared = new IntArrayList(new int[]{0, 1, 2, 3, 4, 5, 6, 7});
+		clearBuffers = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+		Arrays.fill(clearBuffers, true);
 	}
 
-	// TODO: These are currently hardcoded to work with Sildur's. They will need to be properly parsed from shaders.properties.
-	// Some of these values also come from individual shader files, such as the requested buffer formats.
-
 	public IntList getBuffersToBeCleared() {
+		IntList buffersToBeCleared = new IntArrayList();
+
+		for (int i = 0; i < clearBuffers.length; i++) {
+			if (clearBuffers[i]) {
+				buffersToBeCleared.add(i);
+			}
+		}
+
 		return buffersToBeCleared;
 	}
 
@@ -49,7 +55,9 @@ public class PackDirectives {
 		} else if (type == ConstDirectiveParser.Type.BOOL && key.endsWith("Clear") && value.equals("false")) {
 			String bufferName = key.substring(0, key.length() - "Clear".length());
 
-			bufferNameToIndex(bufferName).ifPresent(buffersToBeCleared::removeInt);
+			bufferNameToIndex(bufferName).ifPresent(index -> {
+				clearBuffers[index] = false;
+			});
 		}
 	}
 
