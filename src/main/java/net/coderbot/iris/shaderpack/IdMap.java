@@ -1,14 +1,13 @@
 package net.coderbot.iris.shaderpack;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -18,6 +17,9 @@ import org.apache.logging.log4j.Level;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
+
+import static java.lang.Integer.parseInt;
+import static net.coderbot.iris.gl.shader.StandardMacros.*;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -34,16 +36,18 @@ public class IdMap {
 	private final Object2IntMap<Identifier> entityIdMap;
 
 	/**
-	 * a map that contains the identifier of an item to the integer value parsed in block.properties
+	 * A map that contains the identifier of an item to the integer value parsed in block.properties
 	 */
-	private Map<Identifier, Integer> blockPropertiesMap = Maps.newHashMap();
+	private Map<Identifier, Integer> blockPropertiesMap = new HashMap<>();
 
 	/**
-	 * a map that contains render layers for blocks in block.properties
+	 * A map that contains render layers for blocks in block.properties
 	 */
-	private Map<Identifier, RenderLayer> blockRenderLayerMap = Maps.newHashMap();
+	private Map<Identifier, RenderLayer> blockRenderLayerMap = new HashMap<>();
 
-	IdMap(Path shaderPath) {
+	private static final ImmutableMap<String, String> MACRO_CONSTANTS = ImmutableMap.of("MC_VERSION", getMcVersion());
+
+	public IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
 			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
@@ -59,18 +63,171 @@ public class IdMap {
 		// TODO: Properly override block render layers
 	}
 
+	/**
+	 * Loads properties from a properties file in a shaderpack path
+	 */
 	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
-		Properties properties = new Properties();
+		if (shaderPath == null) return Optional.empty();
 
+		String fileContents = readProperties(shaderPath, name);
+		if (fileContents == null) return Optional.empty();
+
+		List<String> lines = parseProperties(name, fileContents);
+
+		StringBuilder processed = new StringBuilder();
+		for (String line : lines) {
+			processed.append(line);
+			processed.append('\n');
+		}
+
+		StringReader propertiesReader = new StringReader(processed.toString());
+		Properties properties = new Properties();
 		try {
-			properties.load(Files.newInputStream(shaderPath.resolve(name)));
+			properties.load(propertiesReader);
 		} catch (IOException e) {
-			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+			Iris.logger.error("Error loading " + name + " at " + shaderPath);
+			Iris.logger.catching(Level.ERROR, e);
 
 			return Optional.empty();
 		}
 
 		return Optional.of(properties);
+	}
+
+	private static String readProperties(Path shaderPath, String name) {
+		try {
+			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+
+			return null;
+		}
+	}
+
+	private static List<String> parseProperties(String name, String fileContents) {
+		List<String> lines = new ArrayList<>();
+
+		boolean currentlyParsingConditionalProperties = false;
+		String currentConditional = null;
+
+		for (String line : fileContents.split("\\R")) {
+			String trimmedLine = line.trim();
+
+			if (trimmedLine.startsWith("#if ")) {
+				String[] splitLine = trimmedLine.split(" ");
+
+				if (splitLine.length < 4) continue;
+
+				currentConditional = splitLine[0];
+
+				String variable = splitLine[1];
+				if (MACRO_CONSTANTS.containsKey(variable)) {
+					String operator = splitLine[2];
+					String value = splitLine[3];
+					switch (operator) {
+						case "==":
+							if (value.equals(MACRO_CONSTANTS.get(variable))) {
+								currentlyParsingConditionalProperties = true;
+								continue;
+							}
+							break;
+						case "!=":
+							if (!value.equals(MACRO_CONSTANTS.get(variable))) {
+								currentlyParsingConditionalProperties = true;
+								continue;
+							}
+							break;
+						case ">":
+							try {
+								int intValue = Integer.parseInt(value);
+								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
+								if (macroIntValue > intValue) {
+									currentlyParsingConditionalProperties = true;
+									continue;
+								}
+							} catch (NumberFormatException e) {
+								Iris.logger.error("Cannot compare non-integer condition value and macro value with > in " + name);
+							}
+							break;
+						case ">=":
+							try {
+								int intValue = Integer.parseInt(value);
+								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
+								if (macroIntValue >= intValue) {
+									currentlyParsingConditionalProperties = true;
+									continue;
+								}
+							} catch (NumberFormatException e) {
+								Iris.logger.error("Cannot compare non-integer condition value and macro value with >= in " + name);
+							}
+							break;
+						case "<":
+							try {
+								int intValue = Integer.parseInt(value);
+								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
+								if (macroIntValue < intValue) {
+									currentlyParsingConditionalProperties = true;
+									continue;
+								}
+							} catch (NumberFormatException e) {
+								Iris.logger.error("Cannot compare non-integer condition value and macro value with < in " + name);
+							}
+							break;
+						case "<=":
+							try {
+								int intValue = Integer.parseInt(value);
+								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
+								if (macroIntValue <= intValue) {
+									currentlyParsingConditionalProperties = true;
+									continue;
+								}
+							} catch (NumberFormatException e) {
+								Iris.logger.error("Cannot compare non-integer condition value and macro value with <= in " + name);
+							}
+							break;
+						default: {
+							Iris.logger.error("Invalid operator " + operator + " in " + name);
+							continue;
+						}
+					}
+				} else {
+					Iris.logger.warn("Unknown variable name " + variable + " in " + name);
+					currentlyParsingConditionalProperties = false;
+				}
+
+				continue;
+			}
+
+			else if (trimmedLine.startsWith("#else")) {
+				if (Objects.equals(currentConditional, "#if")) {
+					currentConditional = "#else";
+					currentlyParsingConditionalProperties = !currentlyParsingConditionalProperties;
+				} else {
+					Iris.logger.error("#else without #if in " + name);
+				}
+
+				continue;
+			}
+
+			else if (trimmedLine.startsWith("#endif")) {
+				if (Objects.equals(currentConditional, "#if") || Objects.equals(currentConditional, "#else")) {
+					currentConditional = null;
+					currentlyParsingConditionalProperties = false;
+				} else {
+					Iris.logger.error("#endif without #if in " + name);
+				}
+
+				continue;
+			}
+
+			if ((Objects.equals(currentConditional, "#if") || Objects.equals(currentConditional, "#else")) && !currentlyParsingConditionalProperties) {
+				continue;
+			}
+
+			lines.add(line);
+		}
+		
+		return lines;
 	}
 
 	private static Object2IntMap<Identifier> parseItemIdMap(Properties properties) {
@@ -99,7 +256,7 @@ public class IdMap {
 			int intId;
 
 			try {
-				intId = Integer.parseInt(key.substring(keyPrefix.length()));
+				intId = parseInt(key.substring(keyPrefix.length()));
 			} catch (NumberFormatException e) {
 				// Not a valid property line
 				Iris.logger.warn("Failed to parse line in " + fileName + ": invalid key " + key);
@@ -128,7 +285,7 @@ public class IdMap {
 	}
 
 	/**
-	 * parses entries from item.properties and entities.properties
+	 * Parses a render layer map
 	 */
 	private static Map<Identifier, RenderLayer> parseRenderLayerMap(Properties properties, String keyPrefix, String fileName) {
 		// TODO: Most of this is copied from parseIdMap, it would be nice to reduce duplication.

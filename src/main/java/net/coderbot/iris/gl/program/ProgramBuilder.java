@@ -5,7 +5,6 @@ import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.gl.shader.StandardMacros;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
@@ -13,8 +12,6 @@ import org.lwjgl.opengl.GL21C;
 import static net.coderbot.iris.gl.shader.StandardMacros.*;
 
 public class ProgramBuilder extends ProgramUniforms.Builder {
-	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
-
 	private static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
 		.define(getOsString())
 		.define("MC_VERSION", getMcVersion())
@@ -24,8 +21,6 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		.define(getVendor())
 		.defineAll(getGlExtensions())
 		.build();
-
-
 
 	private final int program;
 
