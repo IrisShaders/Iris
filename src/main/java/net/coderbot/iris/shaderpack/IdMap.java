@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -19,7 +18,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
 
 import static java.lang.Integer.parseInt;
-import static net.coderbot.iris.gl.shader.StandardMacros.*;
+import static net.coderbot.iris.shaderpack.PropertiesPreprocessor.parseProperties;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -44,8 +43,6 @@ public class IdMap {
 	 * A map that contains render layers for blocks in block.properties
 	 */
 	private Map<Identifier, RenderLayer> blockRenderLayerMap = new HashMap<>();
-
-	private static final ImmutableMap<String, String> MACRO_CONSTANTS = ImmutableMap.of("MC_VERSION", getMcVersion());
 
 	public IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
@@ -102,132 +99,6 @@ public class IdMap {
 
 			return null;
 		}
-	}
-
-	private static List<String> parseProperties(String name, String fileContents) {
-		List<String> lines = new ArrayList<>();
-
-		boolean currentlyParsingConditionalProperties = false;
-		String currentConditional = null;
-
-		for (String line : fileContents.split("\\R")) {
-			String trimmedLine = line.trim();
-
-			if (trimmedLine.startsWith("#if ")) {
-				String[] splitLine = trimmedLine.split(" ");
-
-				if (splitLine.length < 4) continue;
-
-				currentConditional = splitLine[0];
-
-				String variable = splitLine[1];
-				if (MACRO_CONSTANTS.containsKey(variable)) {
-					String operator = splitLine[2];
-					String value = splitLine[3];
-					switch (operator) {
-						case "==":
-							if (value.equals(MACRO_CONSTANTS.get(variable))) {
-								currentlyParsingConditionalProperties = true;
-								continue;
-							}
-							break;
-						case "!=":
-							if (!value.equals(MACRO_CONSTANTS.get(variable))) {
-								currentlyParsingConditionalProperties = true;
-								continue;
-							}
-							break;
-						case ">":
-							try {
-								int intValue = Integer.parseInt(value);
-								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
-								if (macroIntValue > intValue) {
-									currentlyParsingConditionalProperties = true;
-									continue;
-								}
-							} catch (NumberFormatException e) {
-								Iris.logger.error("Cannot compare non-integer condition value and macro value with > in " + name);
-							}
-							break;
-						case ">=":
-							try {
-								int intValue = Integer.parseInt(value);
-								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
-								if (macroIntValue >= intValue) {
-									currentlyParsingConditionalProperties = true;
-									continue;
-								}
-							} catch (NumberFormatException e) {
-								Iris.logger.error("Cannot compare non-integer condition value and macro value with >= in " + name);
-							}
-							break;
-						case "<":
-							try {
-								int intValue = Integer.parseInt(value);
-								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
-								if (macroIntValue < intValue) {
-									currentlyParsingConditionalProperties = true;
-									continue;
-								}
-							} catch (NumberFormatException e) {
-								Iris.logger.error("Cannot compare non-integer condition value and macro value with < in " + name);
-							}
-							break;
-						case "<=":
-							try {
-								int intValue = Integer.parseInt(value);
-								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
-								if (macroIntValue <= intValue) {
-									currentlyParsingConditionalProperties = true;
-									continue;
-								}
-							} catch (NumberFormatException e) {
-								Iris.logger.error("Cannot compare non-integer condition value and macro value with <= in " + name);
-							}
-							break;
-						default: {
-							Iris.logger.error("Invalid operator " + operator + " in " + name);
-							continue;
-						}
-					}
-				} else {
-					Iris.logger.warn("Unknown variable name " + variable + " in " + name);
-					currentlyParsingConditionalProperties = false;
-				}
-
-				continue;
-			}
-
-			else if (trimmedLine.startsWith("#else")) {
-				if (Objects.equals(currentConditional, "#if")) {
-					currentConditional = "#else";
-					currentlyParsingConditionalProperties = !currentlyParsingConditionalProperties;
-				} else {
-					Iris.logger.error("#else without #if in " + name);
-				}
-
-				continue;
-			}
-
-			else if (trimmedLine.startsWith("#endif")) {
-				if (Objects.equals(currentConditional, "#if") || Objects.equals(currentConditional, "#else")) {
-					currentConditional = null;
-					currentlyParsingConditionalProperties = false;
-				} else {
-					Iris.logger.error("#endif without #if in " + name);
-				}
-
-				continue;
-			}
-
-			if ((Objects.equals(currentConditional, "#if") || Objects.equals(currentConditional, "#else")) && !currentlyParsingConditionalProperties) {
-				continue;
-			}
-
-			lines.add(line);
-		}
-		
-		return lines;
 	}
 
 	private static Object2IntMap<Identifier> parseItemIdMap(Properties properties) {
