@@ -6,14 +6,19 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 
-import java.nio.IntBuffer;
+import java.nio.ByteBuffer;
 
 public class SingleColorTexture extends GlResource {
-	public SingleColorTexture(int color) {
+	public SingleColorTexture(int red, int green, int blue, int alpha) {
 		super(GL11C.glGenTextures());
 		GlStateManager.bindTexture(getGlId());
 
-		IntBuffer pixel = createBuffer(color);
+		ByteBuffer pixel = BufferUtils.createByteBuffer(4);
+		pixel.put((byte) red);
+		pixel.put((byte) green);
+		pixel.put((byte) blue);
+		pixel.put((byte) alpha);
+		pixel.position(0);
 
 		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
 		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
@@ -22,14 +27,6 @@ public class SingleColorTexture extends GlResource {
 		GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGBA, 1, 1, 0, GL11C.GL_RGBA, GL11C.GL_UNSIGNED_BYTE, pixel);
 
 		GlStateManager.bindTexture(0);
-	}
-
-	private IntBuffer createBuffer(int color) {
-		IntBuffer pixel = BufferUtils.createIntBuffer(1);
-		pixel.put(color);
-		pixel.position(0);
-
-		return pixel;
 	}
 
 	public int getTextureId() {

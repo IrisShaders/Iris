@@ -126,8 +126,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		GlStateManager.pixelStore(GL20C.GL_UNPACK_ALIGNMENT, 4);
 
 		// Create some placeholder PBR textures for now
-		normals = new SingleColorTexture(0xFF7F7FFF);
-		specular = new SingleColorTexture(0);
+		normals = new SingleColorTexture(127, 127, 255, 255);
+		specular = new SingleColorTexture(0, 0, 0, 0);
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
 		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
