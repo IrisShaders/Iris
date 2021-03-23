@@ -95,7 +95,10 @@ public final class CelestialUniforms {
 	}
 
 	private static boolean isDay() {
-		return getWorld().isDay();
+		// Determine whether it is day or night based on the sky angle.
+		//
+		// World#isDay appears to do some nontrivial calculations that appear to not entirely work for us here.
+		return getSunAngle() <= 0.5;
 	}
 
 	private static ClientWorld getWorld() {
