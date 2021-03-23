@@ -108,7 +108,7 @@ public class ConstDirectiveParser {
 			return Optional.empty();
 		}
 
-		String value = remaining.substring(0, equalsIndex).trim();
+		String value = remaining.substring(0, semicolonIndex).trim();
 
 		// The value must be a "word" (alphanumeric & underscore characters)
 		if (!isWord(value)) {
