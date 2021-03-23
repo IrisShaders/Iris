@@ -1,5 +1,6 @@
 package net.coderbot.iris.shaderpack;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -8,6 +9,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
 
 import net.minecraft.util.Util;
 
@@ -224,7 +227,15 @@ public class DefineOptionParser {
 		if (comment != null && comment.contains("[") && comment.contains("]")) {
 			String array = comment.substring(comment.indexOf("["), comment.indexOf("]") + 1);
 			comment = comment.replace(array, "");
-			floats = parseArray(array, Float::parseFloat);
+
+			floats = parseArray(array, (val) -> {
+				int secondDotIndex = StringUtils.ordinalIndexOf(val,"." , 2);
+				if (secondDotIndex != -1) {
+					val = val.substring(0, secondDotIndex);
+				}
+
+				return Float.parseFloat(val);
+			});
 		}
 
 		Option<Float> floatOption = new Option<>(comment, floats, name, floatValue, Float::parseFloat);
@@ -258,7 +269,14 @@ public class DefineOptionParser {
 		if (comment != null && comment.contains("[") && comment.contains("]")) {
 			String array = comment.substring(comment.indexOf("["), comment.indexOf("]") + 1);
 			comment = comment.replace(array, "");
-			integers = parseArray(array, s -> (int)Float.parseFloat(s));
+			integers = parseArray(array, (val) -> {
+				int secondDotIndex = StringUtils.ordinalIndexOf(val,"." , 2);
+				if (secondDotIndex != -1) {
+					val = val.substring(0, secondDotIndex);
+				}
+
+				return (int) Float.parseFloat(val);
+			});
 		}
 
 		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, (string) -> (int) Float.parseFloat(string));//parse as float and cast to string to be flexible
