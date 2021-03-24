@@ -1,15 +1,11 @@
 package net.coderbot.iris.mixin.vertices;
 
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.coderbot.iris.vertices.QuadView;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.render.*;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -154,38 +150,14 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		}
 	}
 
-	@Inject(method = "next()V", at = @At("RETURN"))
-	private void iris$afterNext(CallbackInfo ci) {
-		if (!extending) {
-			return;
-		}
-	}
-
 	@Override
-	public void beginBlock(BlockState state) {
-		this.currentBlock = resolveBlockId(state);
+	public void beginBlock(short block) {
+		this.currentBlock = block;
 	}
 
 	@Override
 	public void endBlock() {
 		this.currentBlock = -1;
-	}
-
-	@Unique
-	private static short resolveBlockId(BlockState state) {
-		// TODO: This is not thread safe! It could crash during shader reloads...
-		Identifier id = Registry.BLOCK.getId(state.getBlock());
-		return (short) (int) Iris.getCurrentPack().getIdMap().getBlockProperties().getOrDefault(id, -1);
-	}
-
-	private void extendVertexData() {
-		quad.setup(this.buffer, this.elementOffset, this.format.getVertexSize());
-		NormalHelper.computeFaceNormal(this.normal, quad);
-
-
-
-		// TODO: Use captured data to compute the tangent and miduv properties
-		// TODO: Also compute correct vertex normals
 	}
 
 	private void computeTangents() {
