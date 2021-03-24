@@ -25,14 +25,7 @@
     "texunits.MixinOverlayTexture",
     "texunits.MixinVertexFormats",
     "MixinModelViewBobbing",
-    "MixinTweakFarPlane",
-    "MixinBlockBufferBuilderStorage",
-    "vertices.MixinBufferBuilder",
-    "vertices.MixinVertexFormats",
-    "vertices.MixinVertexFormatElement",
-    "vertices.MixinGlStateManager",
-    "vertices.MixinChunkRebuildTask",
-    "vertices.MixinVertexFormat"
+    "MixinTweakFarPlane"
   ],
   "injectors": {
     "defaultRequire": 1

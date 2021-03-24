@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.coderbot.iris.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinBlockBufferBuilderStorage",
+    "vertices.MixinBufferBuilder",
+    "vertices.MixinVertexFormats",
+    "vertices.MixinVertexFormatElement",
+    "vertices.MixinGlStateManager",
+    "vertices.MixinChunkRebuildTask",
+    "vertices.MixinVertexFormat"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

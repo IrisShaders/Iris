@@ -272,21 +272,21 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		if (program == GbufferProgram.TERRAIN) {
 			if (terrain != null) {
-				//setupAttributes(terrain);
+				setupAttributes(terrain);
 			}
 		} else if (program == GbufferProgram.TRANSLUCENT_TERRAIN) {
 			if (translucent != null) {
-				//setupAttributes(translucent);
+				setupAttributes(translucent);
 
 				// TODO: This is just making it so that all translucent content renders like water. We need to
 				// properly support mc_Entity!
-				//setupAttribute(translucent, "mc_Entity", 10, waterId, -1.0F, -1.0F, -1.0F);
+				setupAttribute(translucent, "mc_Entity", 10, waterId, -1.0F, -1.0F, -1.0F);
 			}
 		}
 
 		if (program != GbufferProgram.TRANSLUCENT_TERRAIN && pass != null && pass == translucent) {
 			// Make sure that other stuff sharing the same program isn't rendered like water
-			//setupAttribute(translucent, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
+			setupAttribute(translucent, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
 		}
 	}
 
