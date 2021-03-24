@@ -26,7 +26,11 @@
     "texunits.MixinVertexFormats",
     "MixinModelViewBobbing",
     "MixinTweakFarPlane",
-    "MixinBlockBufferBuilderStorage"
+    "MixinBlockBufferBuilderStorage",
+    "vertices.MixinBufferBuilder",
+    "vertices.MixinVertexFormats",
+    "vertices.MixinVertexFormatElement",
+    "vertices.MixinGlStateManager"
   ],
   "injectors": {
     "defaultRequire": 1

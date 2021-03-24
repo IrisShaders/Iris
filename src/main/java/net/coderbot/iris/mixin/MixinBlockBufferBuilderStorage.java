@@ -21,12 +21,12 @@ public class MixinBlockBufferBuilderStorage {
 
 	@Inject(method = "get(Lnet/minecraft/client/render/RenderLayer;)Lnet/minecraft/client/render/BufferBuilder;", at = @At("RETURN"), cancellable = true)
 	public void iris$extendBufferBuilder(RenderLayer layer, CallbackInfoReturnable<BufferBuilder> cir) {
-		if (!(cir.getReturnValue() instanceof ExtendedBufferBuilder)) {
+		/*if (!(cir.getReturnValue() instanceof ExtendedBufferBuilder)) {
 			ExtendedBufferBuilder extended = new ExtendedBufferBuilder(layer.getExpectedBufferSize());
 
 			builders.put(layer, extended);
 
 			cir.setReturnValue(extended);
-		}
+		}*/
 	}
 }
