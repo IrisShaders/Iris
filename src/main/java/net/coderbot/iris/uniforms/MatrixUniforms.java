@@ -34,7 +34,7 @@ public final class MatrixUniforms {
 	private static void addShadowMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
 		uniforms
 				.uniformMatrix(PER_FRAME, "shadow" + name, supplier)
-				.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted.Inverted(supplier));
+				.uniformJomlMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
 	}
 
 	private static void addShadowArrayMatrix(UniformHolder uniforms, String name, Supplier<float[]> supplier) {
