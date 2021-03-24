@@ -158,6 +158,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 	@Unique
 	private static short resolveBlockId(BlockState state) {
+		// TODO: This is not thread safe! It could crash during shader reloads...
 		Identifier id = Registry.BLOCK.getId(state.getBlock());
 		return (short) (int) Iris.getCurrentPack().getIdMap().getBlockProperties().getOrDefault(id, -1);
 	}
