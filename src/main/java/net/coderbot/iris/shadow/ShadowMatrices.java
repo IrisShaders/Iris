@@ -37,6 +37,8 @@ public class ShadowMatrices {
 		target.multiply(Matrix4f.translate(0.0f, 0.0f, -100.0f));
 		target.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(90.0F));
 		target.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(skyAngle * -360.0f));
+		// TODO: Don't hardcode the sunPathRotation
+		target.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-40.0F));
 	}
 
 	public static void snapModelViewToGrid(Matrix4f target, float shadowIntervalSize, double cameraX, double cameraY, double cameraZ) {
