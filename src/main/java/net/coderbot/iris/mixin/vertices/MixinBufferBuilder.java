@@ -16,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Dynamically and transparently extends the vanilla vertex formats with additional data
+ */
 @Mixin(BufferBuilder.class)
 public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder  {
 	@Unique
@@ -244,6 +247,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 		int stride = this.format.getVertexSize();
 
+		// TODO: Use packed tangents in the vertex format
 		/*buffer.putInt(this.elementOffset - 16, tangent);
 		buffer.putInt(this.elementOffset - 16 - stride, tangent);
 		buffer.putInt(this.elementOffset - 16 - stride * 2, tangent);

@@ -29,11 +29,15 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
+/**
+ * Captures and tracks the current block being rendered
+ */
 @Mixin(targets = "net.minecraft.client.render.chunk.ChunkBuilder$BuiltChunk$RebuildTask")
 public class MixinChunkRebuildTask {
 	@Unique
 	private BlockSensitiveBufferBuilder lastBufferBuilder;
 
+	// Resolve the ID map on the main thread to avoid thread safety issues
 	@Unique
 	private IdMap idMap = getIdMap();
 
@@ -54,7 +58,6 @@ public class MixinChunkRebuildTask {
 			return -1;
 		}
 
-		// TODO: This is not thread safe! It could crash during shader reloads...
 		Identifier id = Registry.BLOCK.getId(state.getBlock());
 		return (short) (int) idMap.getBlockProperties().getOrDefault(id, -1);
 	}

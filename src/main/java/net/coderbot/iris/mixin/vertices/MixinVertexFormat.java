@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Redirect all attempts to render with POSITION_COLOR_TEXTURE_LIGHT_NORMAL to render with the properly extended vertex
+ * format.
+ */
 @Mixin(VertexFormat.class)
 public class MixinVertexFormat {
 	@Inject(method = "startDrawing(J)V", at = @At("HEAD"), cancellable = true)
