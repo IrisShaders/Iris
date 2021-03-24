@@ -30,9 +30,11 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * Captures and tracks the current block being rendered
+ * Captures and tracks the current block being rendered.
+ *
+ * Uses a priority of 999 so that we apply before Indigo's mixins.
  */
-@Mixin(targets = "net.minecraft.client.render.chunk.ChunkBuilder$BuiltChunk$RebuildTask")
+@Mixin(targets = "net.minecraft.client.render.chunk.ChunkBuilder$BuiltChunk$RebuildTask", priority = 999)
 public class MixinChunkRebuildTask {
 	private static final String RENDER = "Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk$RebuildTask;render(FFFLnet/minecraft/client/render/chunk/ChunkBuilder$ChunkData;Lnet/minecraft/client/render/chunk/BlockBufferBuilderStorage;)Ljava/util/Set;";
 
