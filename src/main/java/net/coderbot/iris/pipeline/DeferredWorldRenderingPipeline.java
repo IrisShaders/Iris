@@ -253,6 +253,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			GlProgramManager.useProgram(0);
 			return;
 		} else if (program == GbufferProgram.CLEAR) {
+			// Ensure that Minecraft's main framebuffer is cleared, or else very odd issues will happen with shaders
+			// that have composites that don't write to all pixels.
+			MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
+			RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT | GL20C.GL_DEPTH_BUFFER_BIT, false);
+
 			// We only want the vanilla clear color to be applied to colortex0.
 			baseline.bind();
 
