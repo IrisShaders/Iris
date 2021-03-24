@@ -13,6 +13,7 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.rendertarget.BuiltinNoiseTexture;
+import net.coderbot.iris.rendertarget.SingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
@@ -72,8 +73,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
-	private final CompositeRenderer compositeRenderer;
 	private final ShadowRenderer shadowMapRenderer;
+	private final CompositeRenderer compositeRenderer;
+	private final SingleColorTexture normals;
+	private final SingleColorTexture specular;
 
 	private final int waterId;
 
@@ -108,6 +111,25 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+
+		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
+		GlStateManager.activeTexture(GL20C.GL_TEXTURE2);
+
+		// Ensure that the pixel storage mode is in a sane state, otherwise the uploaded texture data will be quite
+		// incorrect.
+		//
+		// It is likely that this also avoids the crashes on AMD that I previously experienced with texture creation.
+		//
+		// This code is from Canvas: https://github.com/grondag/canvas/commit/f0ab652d7a8b7cc9febf0209bee15cffce9eac83
+		GlStateManager.pixelStore(GL20C.GL_UNPACK_ROW_LENGTH, 0);
+		GlStateManager.pixelStore(GL20C.GL_UNPACK_SKIP_ROWS, 0);
+		GlStateManager.pixelStore(GL20C.GL_UNPACK_SKIP_PIXELS, 0);
+		GlStateManager.pixelStore(GL20C.GL_UNPACK_ALIGNMENT, 4);
+
+		// Create some placeholder PBR textures for now
+		normals = new SingleColorTexture(127, 127, 255, 255);
+		specular = new SingleColorTexture(0, 0, 0, 0);
+		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
 		this.shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null));
 		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer);
@@ -232,6 +254,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			GlProgramManager.useProgram(0);
 			return;
 		} else if (program == GbufferProgram.CLEAR) {
+			// Ensure that Minecraft's main framebuffer is cleared, or else very odd issues will happen with shaders
+			// that have composites that don't write to all pixels.
+			MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
+			RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT | GL20C.GL_DEPTH_BUFFER_BIT, false);
+
 			// We only want the vanilla clear color to be applied to colortex0.
 			baseline.bind();
 
@@ -254,13 +281,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 				// TODO: This is just making it so that all translucent content renders like water. We need to
 				// properly support mc_Entity!
-				setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
+				setupAttribute(translucent, "mc_Entity", 10, waterId, -1.0F, -1.0F, -1.0F);
 			}
 		}
 
 		if (program != GbufferProgram.TRANSLUCENT_TERRAIN && pass != null && pass == translucent) {
 			// Make sure that other stuff sharing the same program isn't rendered like water
-			setupAttribute(translucent, "mc_Entity", -1.0F, -1.0F, -1.0F, -1.0F);
+			setupAttribute(translucent, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
 		}
 	}
 
@@ -338,6 +365,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// a given program and bind the required textures instead.
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE15);
 			BuiltinNoiseTexture.bind();
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE2);
+			GlStateManager.bindTexture(normals.getTextureId());
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE3);
+			GlStateManager.bindTexture(specular.getTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE4);
 			GlStateManager.bindTexture(shadowMapRenderer.getDepthTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE5);
@@ -413,15 +444,19 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		float blockId = -1.0F;
 
-		setupAttribute(pass, "mc_Entity", blockId, -1.0F, -1.0F, -1.0F);
-		setupAttribute(pass, "mc_midTexCoord", 0.0F, 0.0F, 0.0F, 0.0F);
-		setupAttribute(pass, "at_tangent", 1.0F, 0.0F, 0.0F, 1.0F);
+		setupAttribute(pass, "mc_Entity", 10, blockId, -1.0F, -1.0F, -1.0F);
+		setupAttribute(pass, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(pass, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
 	}
 
-	private static void setupAttribute(Pass pass, String name, float v0, float v1, float v2, float v3) {
+	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
 		int location = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), name);
 
 		if (location != -1) {
+			if (location != expectedLocation) {
+				throw new IllegalStateException();
+			}
+
 			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
 		}
 	}

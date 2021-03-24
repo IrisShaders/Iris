@@ -2,6 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
+import java.nio.FloatBuffer;
 import java.util.function.Supplier;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
@@ -26,28 +27,28 @@ public final class MatrixUniforms {
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
 		uniforms
 			.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)
-			.uniformMatrix(PER_FRAME, "gbuffer" + name + "Inverse", new Inverted(supplier))
+			.uniformJomlMatrix(PER_FRAME, "gbuffer" + name + "Inverse", new Inverted(supplier))
 			.uniformMatrix(PER_FRAME, "gbufferPrevious" + name, new Previous(supplier));
 	}
 
 	private static void addShadowMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
 		uniforms
 				.uniformMatrix(PER_FRAME, "shadow" + name, supplier)
-				.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
+				.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted.Inverted(supplier));
 	}
 
 	private static void addShadowArrayMatrix(UniformHolder uniforms, String name, Supplier<float[]> supplier) {
 		uniforms
 				.uniformMatrixFromArray(PER_FRAME, "shadow" + name, supplier);
-				// TODO: shadowProjectionInverse
-				//.uniformMatrixFromArray(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
+		// TODO: shadowProjectionInverse
+		//.uniformMatrixFromArray(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
 	}
 
 	private static float[] getShadowProjection() {
 		return ShadowMatrices.createOrthoMatrix(ShadowRenderer.HALF_PLANE_LENGTH);
 	}
 
-	private static class Inverted implements Supplier<Matrix4f> {
+	private static class Inverted implements Supplier<net.coderbot.iris.vendored.joml.Matrix4f> {
 		private final Supplier<Matrix4f> parent;
 
 		Inverted(Supplier<Matrix4f> parent) {
@@ -55,13 +56,18 @@ public final class MatrixUniforms {
 		}
 
 		@Override
-		public Matrix4f get() {
+		public net.coderbot.iris.vendored.joml.Matrix4f get() {
 			// PERF: Don't copy + allocate this matrix every time?
 			Matrix4f copy = parent.get().copy();
 
-			copy.invert();
+			FloatBuffer buffer = FloatBuffer.allocate(16);
+			copy.writeToBuffer(buffer);
+			buffer.rewind();
 
-			return copy;
+			net.coderbot.iris.vendored.joml.Matrix4f matrix4f = new net.coderbot.iris.vendored.joml.Matrix4f(buffer);
+			matrix4f.invert();
+
+			return matrix4f;
 		}
 	}
 

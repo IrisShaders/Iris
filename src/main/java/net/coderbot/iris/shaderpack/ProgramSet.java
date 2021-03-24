@@ -6,6 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class ProgramSet {
@@ -76,6 +79,8 @@ public class ProgramSet {
 
 		this.composite = readProgramArray(root, inclusionRoot, "composite", shaderProperties);
 		this.compositeFinal = readProgramSource(root, inclusionRoot, "final", this, shaderProperties);
+
+		locateDirectives();
 	}
 
 	private ProgramSource[] readProgramArray(Path root, Path inclusionRoot, String name, ShaderProperties shaderProperties) throws IOException {
@@ -97,8 +102,7 @@ public class ProgramSet {
 			throw new IllegalStateException();
 		}
 
-		// TODO: Merge this properly!
-		this.packDirectives = base.packDirectives;
+		this.packDirectives = new PackDirectives();
 
 		this.shadow = merge(base.shadow, overrides.shadow);
 
@@ -129,6 +133,8 @@ public class ProgramSet {
 
 		this.composite = merge(base.composite, overrides.composite);
 		this.compositeFinal = merge(base.compositeFinal, overrides.compositeFinal);
+
+		locateDirectives();
 	}
 
 	private static ProgramSource[] merge(ProgramSource[] base, ProgramSource[] override) {
@@ -159,6 +165,38 @@ public class ProgramSet {
 		}
 
 		return new ProgramSet(base, overrides);
+	}
+
+	private void locateDirectives() {
+		List<ProgramSource> programs = new ArrayList<>();
+
+		programs.add(shadow);
+		programs.addAll(Arrays.asList(shadowcomp));
+		programs.addAll(Arrays.asList(prepare));
+
+		programs.addAll (Arrays.asList(
+				gbuffersBasic, gbuffersBeaconBeam, gbuffersTextured, gbuffersTexturedLit, gbuffersTerrain,
+				gbuffersDamagedBlock, gbuffersSkyBasic, gbuffersSkyTextured, gbuffersClouds, gbuffersWeather,
+				gbuffersEntities, gbuffersEntitiesGlowing, gbuffersGlint, gbuffersEntityEyes, gbuffersBlock,
+				gbuffersHand
+		));
+
+		programs.addAll(Arrays.asList(deferred));
+		programs.add(gbuffersWater);
+		programs.add(gbuffersHandWater);
+		programs.addAll(Arrays.asList(composite));
+		programs.add(compositeFinal);
+
+		for (ProgramSource source : programs) {
+			if (source == null) {
+				continue;
+			}
+
+			source
+				.getFragmentSource()
+				.map(ConstDirectiveParser::findDirectives)
+				.ifPresent(lines -> lines.forEach(packDirectives::accept));
+		}
 	}
 
 	public Optional<ProgramSource> getShadow() {

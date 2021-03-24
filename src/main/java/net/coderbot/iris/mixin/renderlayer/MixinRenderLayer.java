@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.client.render.RenderLayer;
@@ -66,6 +67,14 @@ public class MixinRenderLayer {
 	@Shadow @Final @Mutable private static RenderLayer WATER_MASK;
 
 	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_NO_CRUMBLING;
+
+	@Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;alpha(Lnet/minecraft/client/render/RenderPhase$Alpha;)Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;"))
+	private static RenderLayer.MultiPhaseParameters.Builder iris$tweakCutoutAlpha(RenderLayer.MultiPhaseParameters.Builder builder, RenderPhase.Alpha alpha) {
+		// OptiFine makes CUTOUT and CUTOUT_MIPPED use an alpha test of 0.1 instead of 0.5.
+		//
+		// We must replicate this behavior or else there will be issues.
+		return builder.alpha(new RenderPhase.Alpha(0.1F));
+	}
 
 	static {
 		SOLID = wrap("iris:terrain_solid", SOLID, GbufferProgram.TERRAIN);

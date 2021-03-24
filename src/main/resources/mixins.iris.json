@@ -25,7 +25,8 @@
     "texunits.MixinLightmapTextureManager",
     "texunits.MixinOverlayTexture",
     "texunits.MixinVertexFormats",
-    "MixinModelViewBobbing"
+    "MixinModelViewBobbing",
+    "MixinTweakFarPlane"
   ],
   "injectors": {
     "defaultRequire": 1

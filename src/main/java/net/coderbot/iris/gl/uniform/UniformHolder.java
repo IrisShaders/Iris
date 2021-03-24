@@ -89,6 +89,12 @@ public interface UniformHolder {
 		return this;
 	}
 
+	default UniformHolder uniformJomlMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<net.coderbot.iris.vendored.joml.Matrix4f> value) {
+		location(name).ifPresent(id -> addUniform(updateFrequency, new JomlMatrixUniform(id, value)));
+
+		return this;
+	}
+
 	default UniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
 		location(name).ifPresent(id -> addUniform(updateFrequency, new MatrixFromFloatArrayUniform(id, value)));
 
