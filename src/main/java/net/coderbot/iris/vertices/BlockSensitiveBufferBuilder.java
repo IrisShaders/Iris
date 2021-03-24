@@ -4,4 +4,5 @@ import net.minecraft.block.BlockState;
 
 public interface BlockSensitiveBufferBuilder {
 	void beginBlock(BlockState state);
+	void endBlock();
 }

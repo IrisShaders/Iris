@@ -166,6 +166,11 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		this.currentBlock = resolveBlockId(state);
 	}
 
+	@Override
+	public void endBlock() {
+		this.currentBlock = -1;
+	}
+
 	@Unique
 	private static short resolveBlockId(BlockState state) {
 		// TODO: This is not thread safe! It could crash during shader reloads...
