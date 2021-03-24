@@ -17,10 +17,10 @@ public class MixinVertexFormats {
 	@Unique
 	private static final VertexFormatElement TANGENT_ELEMENT;
 
-	@Shadow
+	/*@Shadow
 	@Final
 	@Mutable
-	public static final VertexFormat POSITION_COLOR_TEXTURE_LIGHT_NORMAL;
+	public static final VertexFormat POSITION_COLOR_TEXTURE_LIGHT_NORMAL;*/
 
 	static {
 		ENTITY_ELEMENT = new VertexFormatElement(10, VertexFormatElement.Format.FLOAT, VertexFormatElement.Type.GENERIC, 4);
@@ -40,6 +40,6 @@ public class MixinVertexFormats {
 		elements.add(MID_TEXTURE_ELEMENT);
 		elements.add(TANGENT_ELEMENT);
 
-		POSITION_COLOR_TEXTURE_LIGHT_NORMAL = new VertexFormat(elements.build());
+		//POSITION_COLOR_TEXTURE_LIGHT_NORMAL = new VertexFormat(elements.build());
 	}
 }

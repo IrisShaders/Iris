@@ -3,15 +3,14 @@ package net.coderbot.iris.mixin.vertices;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
+import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.coderbot.iris.vertices.QuadView;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferVertexConsumer;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -56,13 +55,24 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Shadow
 	private int elementOffset;
 
+	@Shadow
+	private @Nullable VertexFormatElement currentElement;
+
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
-		extending = format == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL;
+		extending = format == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL || format == IrisVertexFormats.TERRAIN;
 		vertexCount = 0;
 
 		if (extending) {
 			normalOffset = format.getElements().indexOf(VertexFormats.NORMAL_ELEMENT);
+		}
+	}
+
+	@Inject(method = "begin", at = @At("RETURN"))
+	private void iris$afterBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
+		if (extending) {
+			this.format = IrisVertexFormats.TERRAIN;
+			this.currentElement = IrisVertexFormats.TERRAIN.getElements().get(0);
 		}
 	}
 

@@ -31,7 +31,8 @@
     "vertices.MixinVertexFormats",
     "vertices.MixinVertexFormatElement",
     "vertices.MixinGlStateManager",
-    "vertices.MixinChunkRebuildTask"
+    "vertices.MixinChunkRebuildTask",
+    "vertices.MixinVertexFormat"
   ],
   "injectors": {
     "defaultRequire": 1

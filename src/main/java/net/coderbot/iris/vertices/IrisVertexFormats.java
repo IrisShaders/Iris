@@ -13,9 +13,9 @@ public class IrisVertexFormats {
 	public static final VertexFormat TERRAIN;
 
 	static {
-		ENTITY_ELEMENT = new VertexFormatElement(10, VertexFormatElement.Format.SHORT, VertexFormatElement.Type.GENERIC, 4);
+		ENTITY_ELEMENT = new VertexFormatElement(10, VertexFormatElement.Format.FLOAT, VertexFormatElement.Type.GENERIC, 4);
 		MID_TEXTURE_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Format.FLOAT, VertexFormatElement.Type.GENERIC, 2);
-		TANGENT_ELEMENT = new VertexFormatElement(12, VertexFormatElement.Format.SHORT, VertexFormatElement.Type.GENERIC, 4);
+		TANGENT_ELEMENT = new VertexFormatElement(12, VertexFormatElement.Format.FLOAT, VertexFormatElement.Type.GENERIC, 4);
 
 		ImmutableList.Builder<VertexFormatElement> elements = ImmutableList.builder();
 
