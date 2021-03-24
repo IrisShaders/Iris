@@ -7,6 +7,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.coderbot.iris.Iris;
+import org.apache.logging.log4j.Level;
+
 public class ShaderPreprocessor {
 	public static String process(Path rootPath, Path shaderPath, String source, ShaderPackConfig config) throws IOException {
 		StringBuilder processed = new StringBuilder();
@@ -48,7 +51,12 @@ public class ShaderPreprocessor {
 			}
 		}
 
-		DefineOptionParser.processConfigOptions(lines, config);
+		try {
+			DefineOptionParser.processConfigOptions(lines, config);
+		} catch (Exception e) {
+			Iris.logger.error("Error while processing config options for file {}", shaderPath.toString());
+			Iris.logger.catching(Level.ERROR, e);
+		}
 
 		return lines;
 	}
