@@ -1,12 +1,17 @@
 package net.coderbot.iris.mixin.vertices;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.coderbot.iris.vertices.QuadView;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferVertexConsumer;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -17,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.nio.ByteBuffer;
 
 @Mixin(BufferBuilder.class)
-public abstract class MixinBufferBuilder implements BufferVertexConsumer {
+public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder  {
 	@Unique
 	boolean extending;
 
@@ -32,6 +37,9 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer {
 
 	@Unique
 	private int normalOffset;
+
+	@Unique
+	private short currentBlock;
 
 	@Shadow
 	private boolean field_21594;
@@ -80,8 +88,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer {
 			return;
 		}
 
-		// TODO: Hardcoded Sildur's water id
-		this.putFloat(0, 10008.0F);
+		this.putFloat(0, currentBlock);
 		this.putFloat(4, (short) -1);
 		this.putFloat(8, (short) -1);
 		this.putFloat(12, (short) -1);
@@ -119,6 +126,22 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer {
 		buffer.putInt(this.elementOffset - 4 - extendedDataLength - stride * 3, packedNormal);
 
 		computeTangents();
+
+		float midU = 0;
+		float midV = 0;
+
+		for (int vertex = 0; vertex < 4; vertex++) {
+			midU += quad.u(vertex);
+			midV += quad.v(vertex);
+		}
+
+		midU *= 0.25;
+		midV *= 0.25;
+
+		for (int vertex = 0; vertex < 4; vertex++) {
+			buffer.putFloat(this.elementOffset - 24 - stride * vertex, midU);
+			buffer.putFloat(this.elementOffset - 20 - stride * vertex, midV);
+		}
 	}
 
 	@Inject(method = "next()V", at = @At("RETURN"))
@@ -126,6 +149,17 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer {
 		if (!extending) {
 			return;
 		}
+	}
+
+	@Override
+	public void beginBlock(BlockState state) {
+		this.currentBlock = resolveBlockId(state);
+	}
+
+	@Unique
+	private static short resolveBlockId(BlockState state) {
+		Identifier id = Registry.BLOCK.getId(state.getBlock());
+		return (short) (int) Iris.getCurrentPack().getIdMap().getBlockProperties().getOrDefault(id, -1);
 	}
 
 	private void extendVertexData() {
