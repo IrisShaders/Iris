@@ -55,7 +55,7 @@ public class ShaderPreprocessor {
 			DefineOptionParser.processConfigOptions(lines, config);
 		} catch (Exception e) {
 			Iris.logger.error("Error while processing config options for file {}", shaderPath.toString());
-			Iris.logger.catching(Level.ERROR, e);
+			Iris.logger.error(e.getMessage());
 		}
 
 		return lines;
