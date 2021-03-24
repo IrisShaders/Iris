@@ -52,6 +52,8 @@ public final class CommonUniforms {
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1i(ONCE, "noisetex", () -> 15)
+			.uniform1i(ONCE, "normals", () -> 2)
+			.uniform1i(ONCE, "specular", () -> 3)
 			.uniform1i(ONCE, "shadowtex0", () -> 4)
 			.uniform1i(ONCE, "shadowtex1", () -> 5)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
@@ -63,11 +65,9 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
-			// TODO: This should be smoothed, but not smoothing it is better than nothing.
 			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness))
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-			// TODO: This should be smoothed, but not smoothing it is better than nothing.
-			.uniform1f(PER_TICK, "wetness", CommonUniforms::getRainStrength)
+			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
 	}
 

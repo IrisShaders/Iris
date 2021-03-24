@@ -2,10 +2,15 @@ package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,16 +18,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(WorldRenderer.class)
 @Environment(EnvType.CLIENT)
@@ -87,6 +88,13 @@ public class MixinWorldRenderer {
 			to = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
 	private void iris$renderSky$drawHorizon(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		new HorizonRenderer().renderHorizon(matrices);
+	}
+
+	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getSkyAngle(F)F"),
+		slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/client/util/math/Vector3f;POSITIVE_Y:Lnet/minecraft/client/util/math/Vector3f;")))
+	private void iris$renderSky$tiltSun(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		// TODO: Don't hardcode the sunPathRotation here
+		matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
 	}
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableTexture()V"))
@@ -165,8 +173,17 @@ public class MixinWorldRenderer {
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(blockEntity2);
 	}*/
 
-	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
-	private void iris$beginTranslucents(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void iris$beginTranslucents(MatrixStack matrices, float tickDelta, long limitTime,
+										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
+										LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
+										CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
+										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
+										VertexConsumerProvider.Immediate immediate) {
+		if (immediate instanceof FlushableVertexConsumerProvider) {
+			((FlushableVertexConsumerProvider) immediate).flushNonTranslucentContent();
+		}
+
 		pipeline.beginTranslucents();
 	}
 }

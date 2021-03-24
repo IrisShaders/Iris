@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.5-SNAPSHOT'
+	id 'fabric-loom' version '0.6-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -59,6 +59,21 @@ tasks.withType(JavaCompile).configureEach {
 	}
 }
 
+sourceSets {
+	vendored {
+		java {
+			compileClasspath += main.compileClasspath
+		}
+	}
+
+	main {
+		java {
+			compileClasspath += vendored.output
+			runtimeClasspath += vendored.output
+		}
+	}
+}
+
 java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 	// if it is present.
@@ -70,6 +85,8 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
+
+	from sourceSets.vendored.output
 }
 
 // configure the maven publication
