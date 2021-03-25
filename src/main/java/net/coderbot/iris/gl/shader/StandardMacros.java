@@ -25,7 +25,7 @@ public class StandardMacros {
 	 * Gets the current mc version String in a 5 digit format
 	 *
 	 * @return mc version string
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L677">Optifine Doc</a>
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L696-L699">Optifine Doc</a>
 	 */
 	public static String getMcVersion() {
 		String version = SharedConstants.getGameVersion().getReleaseTarget(); //release target so snapshots are set to the higher version
@@ -62,7 +62,7 @@ public class StandardMacros {
 	 * Returns the current OS String
 	 *
 	 * @return the string based on the current OS
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L687-L692">Optifine Doc</a>
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714">Optifine Doc</a>
 	 */
 	public static String getOsString() {
 		switch (Util.getOperatingSystem()) {
@@ -84,8 +84,8 @@ public class StandardMacros {
 	 *
 	 * @param name the name of the gl attribute to parse
 	 * @return current gl version stripped of semantic versioning
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L679-L681">Optifine Doc for GL Version</a>
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L683-L685">Optifine Doc for GLSL Version</a>
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L701-L703">Optifine Doc for GL Version</a>
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L705-L707">Optifine Doc for GLSL Version</a>
 	 */
 	public static String getGlVersion(int name) {
 		String info = GL20.glGetString(name);
@@ -132,7 +132,7 @@ public class StandardMacros {
 	 * Returns the list of currently enabled GL extensions
 	 * This is done by calling {@link GL11#glGetString} with the arg {@link GL11#GL_EXTENSIONS}
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L713-L716">Optifine Doc</a>
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L735-L738">Optifine Doc</a>
 	 * @return list of activated extensions prefixed with "MC_"
 	 */
 	public static List<String> getGlExtensions() {
@@ -146,6 +146,8 @@ public class StandardMacros {
 
 	/**
 	 * Returns the graphics driver being used
+	 *
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L725-L733">Optifine Doc</a>
 	 *
 	 * @return graphics driver prefixed with "MC_GL_RENDERER_"
 	 */
@@ -175,6 +177,13 @@ public class StandardMacros {
 		return "MC_GL_RENDERER_OTHER";
 	}
 
+	/**
+	 * Returns a string indicating the graphics card being used
+	 *
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L716-L723"></a>
+	 *
+	 * @return the graphics card prefixed with "MC_GL_VENDOR_"
+	 */
 	public static String getVendor() {
 		String vendor = Objects.requireNonNull(GL11.glGetString(GL11C.GL_VENDOR)).toLowerCase(Locale.ROOT);
 		if (vendor.startsWith("ati")) {
