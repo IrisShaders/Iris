@@ -154,6 +154,12 @@ public final class CommonUniforms {
 	}
 
 	private static int isEyeInWater() {
+		// Note: With certain utility / cheat mods, this method will return air even when the player is submerged when
+		// the "No Overlay" feature is enabled.
+		//
+		// I'm not sure what the best way to deal with this is, but the current approach seems to be an acceptable one -
+		// after all, disabling the overlay results in the intended effect of it not really looking like you're
+		// underwater on most shaderpacks. For now, I will leave this as-is, but it is something to keep in mind.
 		FluidState submergedFluid = client.gameRenderer.getCamera().getSubmergedFluidState();
 
 		if (submergedFluid.isIn(FluidTags.WATER)) {
