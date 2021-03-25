@@ -52,7 +52,13 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			throw new RuntimeException("Failed to compile fragment shader for program " + name, e);
 		}
 
-		int programId = ProgramCreator.create(name, vertex, geometry, fragment);
+		int programId;
+		
+		if(geometry != null) {
+			programId = ProgramCreator.create(name, vertex, geometry, fragment);
+		} else {
+			programId = ProgramCreator.create(name, vertex, fragment);
+		}
 
 		vertex.destroy();
 		if (geometry != null) { geometry.destroy(); }
