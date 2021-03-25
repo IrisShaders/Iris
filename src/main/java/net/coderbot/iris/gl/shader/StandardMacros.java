@@ -36,15 +36,17 @@ public class StandardMacros {
 
 		String[] splitVersion = version.split("\\.");
 
+		if (splitVersion.length < 2) throw new IllegalStateException("Could not parse game version into a 5 digit format!");
+
 		String major = splitVersion[0];
 		String minor = splitVersion[1];
-		String bugfix = splitVersion[2];
+		String bugfix;
 
-		if (bugfix == null) {
+		if (splitVersion.length < 3) {
 			bugfix = "00";
+		} else {
+			bugfix = splitVersion[2];
 		}
-
-		if (minor == null || major == null) throw new IllegalStateException("Could not parse game version into a 5 digit format!");
 
 		if (minor.length() == 1) {
 			minor = 0 + minor;
@@ -99,9 +101,12 @@ public class StandardMacros {
 		String minor = group(matcher, "minor");
 		String bugfix = group(matcher, "bugfix");
 
-		if (bugfix == null) { //if bugfix is not there, it is 0
+		if (bugfix == null) {
+			//if bugfix is not there, it is 0
 			bugfix = "0";
 		}
+
+		if (major == null || minor == null) throw new IllegalStateException("Could not parse GL Version into 5 digit format!");
 
 		return major + minor + bugfix;
 
