@@ -2,20 +2,19 @@ package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.ImmutableMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.shader.StandardMacros;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static net.coderbot.iris.gl.shader.StandardMacros.getMcVersion;
-
 public class PropertiesPreprocessor {
-	private static final ImmutableMap<String, String> MACRO_CONSTANTS = ImmutableMap.of("MC_VERSION", getMcVersion());
+	private static final ImmutableMap<String, String> MACRO_CONSTANTS = ImmutableMap.of("MC_VERSION", StandardMacros.getMcVersion());
 	
-	public static List<String> parseProperties(String fileName, String fileContents) {
+	public static String process(String fileName, String fileContents) {
 		List<String> lines = new ArrayList<>();
 
-		boolean currentlyParsingConditionalProperties = false;
+		boolean currentConditionPassed = false;
 		String currentConditional = null;
 
 		for (String line : fileContents.split("\\R")) {
@@ -25,6 +24,10 @@ public class PropertiesPreprocessor {
 				String[] splitLine = trimmedLine.split(" ");
 
 				if (splitLine.length < 4) continue;
+				if (Objects.equals(currentConditional, "#if")) {
+					Iris.logger.error("Nested if conditions in " + fileName + " are not supported yet, but the current shaderpack is trying to use them!");
+					continue;
+				}
 
 				currentConditional = splitLine[0];
 
@@ -35,13 +38,13 @@ public class PropertiesPreprocessor {
 					switch (operator) {
 						case "==":
 							if (value.equals(MACRO_CONSTANTS.get(variable))) {
-								currentlyParsingConditionalProperties = true;
+								currentConditionPassed = true;
 								continue;
 							}
 							break;
 						case "!=":
 							if (!value.equals(MACRO_CONSTANTS.get(variable))) {
-								currentlyParsingConditionalProperties = true;
+								currentConditionPassed = true;
 								continue;
 							}
 							break;
@@ -50,7 +53,7 @@ public class PropertiesPreprocessor {
 								int intValue = Integer.parseInt(value);
 								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
 								if (macroIntValue > intValue) {
-									currentlyParsingConditionalProperties = true;
+									currentConditionPassed = true;
 									continue;
 								}
 							} catch (NumberFormatException e) {
@@ -62,7 +65,7 @@ public class PropertiesPreprocessor {
 								int intValue = Integer.parseInt(value);
 								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
 								if (macroIntValue >= intValue) {
-									currentlyParsingConditionalProperties = true;
+									currentConditionPassed = true;
 									continue;
 								}
 							} catch (NumberFormatException e) {
@@ -74,7 +77,7 @@ public class PropertiesPreprocessor {
 								int intValue = Integer.parseInt(value);
 								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
 								if (macroIntValue < intValue) {
-									currentlyParsingConditionalProperties = true;
+									currentConditionPassed = true;
 									continue;
 								}
 							} catch (NumberFormatException e) {
@@ -86,7 +89,7 @@ public class PropertiesPreprocessor {
 								int intValue = Integer.parseInt(value);
 								int macroIntValue = Integer.parseInt(MACRO_CONSTANTS.get(variable));
 								if (macroIntValue <= intValue) {
-									currentlyParsingConditionalProperties = true;
+									currentConditionPassed = true;
 									continue;
 								}
 							} catch (NumberFormatException e) {
@@ -100,7 +103,7 @@ public class PropertiesPreprocessor {
 					}
 				} else {
 					Iris.logger.warn("Unknown variable fileName " + variable + " in " + fileName);
-					currentlyParsingConditionalProperties = false;
+					currentConditionPassed = false;
 				}
 
 				continue;
@@ -109,7 +112,7 @@ public class PropertiesPreprocessor {
 			else if (trimmedLine.startsWith("#else")) {
 				if (Objects.equals(currentConditional, "#if")) {
 					currentConditional = "#else";
-					currentlyParsingConditionalProperties = !currentlyParsingConditionalProperties;
+					currentConditionPassed = !currentConditionPassed;
 				} else {
 					Iris.logger.error("#else without #if in " + fileName);
 				}
@@ -120,7 +123,7 @@ public class PropertiesPreprocessor {
 			else if (trimmedLine.startsWith("#endif")) {
 				if (Objects.equals(currentConditional, "#if") || Objects.equals(currentConditional, "#else")) {
 					currentConditional = null;
-					currentlyParsingConditionalProperties = false;
+					currentConditionPassed = false;
 				} else {
 					Iris.logger.error("#endif without #if in " + fileName);
 				}
@@ -128,13 +131,26 @@ public class PropertiesPreprocessor {
 				continue;
 			}
 
-			if ((Objects.equals(currentConditional, "#if") || Objects.equals(currentConditional, "#else")) && !currentlyParsingConditionalProperties) {
+			else if (trimmedLine.startsWith("#elif")) {
+				Iris.logger.error("#elif conditions in " + fileName + " are not yet supported, but the current shaderpack is trying to use them!");
+				continue;
+			}
+
+			if ((Objects.equals(currentConditional, "#if") || Objects.equals(currentConditional, "#else")) && !currentConditionPassed) {
 				continue;
 			}
 
 			lines.add(line);
 		}
 
-		return lines;
+		StringBuilder processed = new StringBuilder();
+		for (String line : lines) {
+			processed.append(line);
+			processed.append('\n');
+		}
+
+		return processed.toString();
 	}
+
+
 }

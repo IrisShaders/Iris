@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -16,9 +17,6 @@ import org.apache.logging.log4j.Level;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
-
-import static java.lang.Integer.parseInt;
-import static net.coderbot.iris.shaderpack.PropertiesPreprocessor.parseProperties;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -44,7 +42,7 @@ public class IdMap {
 	 */
 	private Map<Identifier, RenderLayer> blockRenderLayerMap = new HashMap<>();
 
-	public IdMap(Path shaderPath) {
+	IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
 			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
@@ -64,20 +62,18 @@ public class IdMap {
 	 * Loads properties from a properties file in a shaderpack path
 	 */
 	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
-		if (shaderPath == null) return Optional.empty();
-
-		String fileContents = readProperties(shaderPath, name);
-		if (fileContents == null) return Optional.empty();
-
-		List<String> lines = parseProperties(name, fileContents);
-
-		StringBuilder processed = new StringBuilder();
-		for (String line : lines) {
-			processed.append(line);
-			processed.append('\n');
+		if (shaderPath == null) {
+			return Optional.empty();
 		}
 
-		StringReader propertiesReader = new StringReader(processed.toString());
+		String fileContents = readProperties(shaderPath, name);
+		if (fileContents == null) {
+			return Optional.empty();
+		}
+
+		String processed = PropertiesPreprocessor.process(name, fileContents);
+
+		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
 		try {
 			properties.load(propertiesReader);
@@ -94,8 +90,13 @@ public class IdMap {
 	private static String readProperties(Path shaderPath, String name) {
 		try {
 			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.UTF_8);
-		} catch (IOException e) {
+		} catch (NoSuchFileException e) {
 			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+
+			return null;
+		} catch (IOException e) {
+			Iris.logger.error("An IOException occurred reading " + name + " from the current shaderpack");
+			Iris.logger.catching(Level.ERROR, e);
 
 			return null;
 		}
@@ -127,7 +128,7 @@ public class IdMap {
 			int intId;
 
 			try {
-				intId = parseInt(key.substring(keyPrefix.length()));
+				intId = Integer.parseInt(key.substring(keyPrefix.length()));
 			} catch (NumberFormatException e) {
 				// Not a valid property line
 				Iris.logger.warn("Failed to parse line in " + fileName + ": invalid key " + key);
