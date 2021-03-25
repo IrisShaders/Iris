@@ -4,6 +4,8 @@
   "package": "net.coderbot.iris.mixin.fantastic",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "MixinBarrierParticle",
+    "MixinBlockDustParticle",
     "MixinFireworkSparkParticle",
     "MixinParticleManager",
     "MixinWorldRenderer"

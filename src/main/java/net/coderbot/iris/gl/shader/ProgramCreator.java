@@ -12,6 +12,12 @@ public class ProgramCreator {
 	public static int create(String name, GlShader... shaders) {
 		int program = GL20C.glCreateProgram();
 
+		// TODO: This is *really* hardcoded, we need to refactor this to support external calls
+		// to glBindAttribLocation
+		GL20C.glBindAttribLocation(program, 10, "mc_Entity");
+		GL20C.glBindAttribLocation(program, 11, "mc_midTexCoord");
+		GL20C.glBindAttribLocation(program, 12, "at_tangent");
+
 		for (GlShader shader : shaders) {
 			GL20C.glAttachShader(program, shader.getHandle());
 		}
