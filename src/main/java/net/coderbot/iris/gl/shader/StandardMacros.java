@@ -30,21 +30,21 @@ public class StandardMacros {
 	public static String getMcVersion() {
 		String version = SharedConstants.getGameVersion().getReleaseTarget(); //release target so snapshots are set to the higher version
 
-		Matcher matcher = SEMVER_PATTERN.matcher(version);
-
-		if (!matcher.matches()) {
-			return null;
+		if (version == null) {
+			throw new IllegalStateException("Could not get the current minecraft version!");
 		}
 
-		String major = group(matcher, "major");
-		String minor = group(matcher, "minor");
-		String bugfix = group(matcher, "bugfix");
+		String[] splitVersion = version.split("\\.");
+
+		String major = splitVersion[0];
+		String minor = splitVersion[1];
+		String bugfix = splitVersion[2];
 
 		if (bugfix == null) {
 			bugfix = "00";
 		}
 
-		if (minor == null || major == null) return null;
+		if (minor == null || major == null) throw new IllegalStateException("Could not parse game version into a 5 digit format!");
 
 		if (minor.length() == 1) {
 			minor = 0 + minor;
@@ -87,11 +87,12 @@ public class StandardMacros {
 	 */
 	public static String getGlVersion(int name) {
 		String info = GL20.glGetString(name);
+		System.out.println("GL Version: " + info);
 
 		Matcher matcher = SEMVER_PATTERN.matcher(Objects.requireNonNull(info));
 
 		if (!matcher.matches()) {
-			return null;
+			throw new IllegalStateException("Could not parse GL version into 5 digit format");
 		}
 
 		String major = group(matcher, "major");
@@ -131,6 +132,9 @@ public class StandardMacros {
 	 */
 	public static List<String> getGlExtensions() {
 		String[] extensions = Objects.requireNonNull(GL11.glGetString(GL11.GL_EXTENSIONS)).split("\\s+");
+
+		//TODO note that we do not add extensions based on if the shader uses them and if they are supported
+		//see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
 
 		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toList());
 	}

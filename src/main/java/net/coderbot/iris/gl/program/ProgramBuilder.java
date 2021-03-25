@@ -10,19 +10,17 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 
-import static net.coderbot.iris.gl.shader.StandardMacros.*;
-
 public class ProgramBuilder extends ProgramUniforms.Builder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
 	private static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
-		.define(getOsString())
-		.define("MC_VERSION", getMcVersion())
-		.define("MC_GL_VERSION", getGlVersion(GL20C.GL_VERSION))
-		.define("MC_GLSL_VERSION", getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
-		.define(getRenderer())
-		.define(getVendor())
-		.defineAll(getGlExtensions())
+		.define(StandardMacros.getOsString())
+		.define("MC_VERSION", StandardMacros.getMcVersion())
+		.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
+		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+		.define(StandardMacros.getRenderer())
+		.define(StandardMacros.getVendor())
+		.defineAll(StandardMacros.getGlExtensions())
 		.build();
 
 
