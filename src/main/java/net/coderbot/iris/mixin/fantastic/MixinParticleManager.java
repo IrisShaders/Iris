@@ -1,7 +1,6 @@
 package net.coderbot.iris.mixin.fantastic;
 
 import com.google.common.collect.ImmutableList;
-import net.coderbot.iris.fantastic.IrisParticleTextureSheets;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleManager;
 import net.minecraft.client.particle.ParticleManager;
@@ -54,7 +53,6 @@ public class MixinParticleManager implements PhasedParticleManager {
 
 	static {
 		OPAQUE_PARTICLE_TEXTURE_SHEETS = ImmutableList.of(
-			IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET,
 			ParticleTextureSheet.PARTICLE_SHEET_OPAQUE,
 			ParticleTextureSheet.PARTICLE_SHEET_LIT,
 			ParticleTextureSheet.CUSTOM,

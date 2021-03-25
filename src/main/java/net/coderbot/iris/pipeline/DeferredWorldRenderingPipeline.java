@@ -253,11 +253,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			GlProgramManager.useProgram(0);
 			return;
 		} else if (program == GbufferProgram.CLEAR) {
-			// Ensure that Minecraft's main framebuffer is cleared, or else very odd issues will happen with shaders
-			// that have composites that don't write to all pixels.
-			MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
-			RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT | GL20C.GL_DEPTH_BUFFER_BIT, false);
-
 			// We only want the vanilla clear color to be applied to colortex0.
 			baseline.bind();
 
@@ -280,13 +275,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 				// TODO: This is just making it so that all translucent content renders like water. We need to
 				// properly support mc_Entity!
-				setupAttribute(translucent, "mc_Entity", 10, waterId, -1.0F, -1.0F, -1.0F);
+				setupAttribute(translucent, "mc_Entity", waterId, -1.0F, -1.0F, -1.0F);
 			}
 		}
 
 		if (program != GbufferProgram.TRANSLUCENT_TERRAIN && pass != null && pass == translucent) {
 			// Make sure that other stuff sharing the same program isn't rendered like water
-			setupAttribute(translucent, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
+			setupAttribute(translucent, "mc_Entity", -1.0F, -1.0F, -1.0F, -1.0F);
 		}
 	}
 
@@ -443,19 +438,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		float blockId = -1.0F;
 
-		setupAttribute(pass, "mc_Entity", 10, blockId, -1.0F, -1.0F, -1.0F);
-		setupAttribute(pass, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
-		setupAttribute(pass, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
+		setupAttribute(pass, "mc_Entity", blockId, -1.0F, -1.0F, -1.0F);
+		setupAttribute(pass, "mc_midTexCoord", 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(pass, "at_tangent", 1.0F, 0.0F, 0.0F, 1.0F);
 	}
 
-	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
+	private static void setupAttribute(Pass pass, String name, float v0, float v1, float v2, float v3) {
 		int location = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), name);
 
 		if (location != -1) {
-			if (location != expectedLocation) {
-				throw new IllegalStateException();
-			}
-
 			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
 		}
 	}
