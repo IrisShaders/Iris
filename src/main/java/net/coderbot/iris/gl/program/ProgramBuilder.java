@@ -52,7 +52,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 
 		if (geometrySource != null) {
 			try {
-				geometry = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource, EMPTY_CONSTANTS);
+				geometry = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource, MACRO_CONSTANTS);
 			} catch (RuntimeException e) {
 				throw new RuntimeException("Failed to compile geometry shader for program " + name, e);
 			}

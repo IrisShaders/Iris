@@ -28,7 +28,10 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L696-L699">Optifine Doc</a>
 	 */
 	public static String getMcVersion() {
-		String version = SharedConstants.getGameVersion().getReleaseTarget(); //release target so snapshots are set to the higher version
+		String version = SharedConstants.getGameVersion().getReleaseTarget();
+			// release target so snapshots are set to the higher version
+			//
+			// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
 
 		if (version == null) {
 			throw new IllegalStateException("Could not get the current minecraft version!");
@@ -36,7 +39,9 @@ public class StandardMacros {
 
 		String[] splitVersion = version.split("\\.");
 
-		if (splitVersion.length < 2) throw new IllegalStateException("Could not parse game version into a 5 digit format!");
+		if (splitVersion.length < 2) {
+			throw new IllegalStateException("Could not parse game version \"" + version +  "\" into a 5 digit format!");
+		}
 
 		String major = splitVersion[0];
 		String minor = splitVersion[1];
@@ -72,7 +77,7 @@ public class StandardMacros {
 				return "MC_OS_LINUX";
 			case WINDOWS:
 				return "MC_OS_WINDOWS";
-			case SOLARIS: //Note: Optifine doesn't have a macro for Solaris. https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L689-L692
+			case SOLARIS: // Note: Optifine doesn't have a macro for Solaris. https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714
 			case UNKNOWN:
 			default:
 				return "MC_OS_UNKNOWN";
@@ -102,11 +107,13 @@ public class StandardMacros {
 		String bugfix = group(matcher, "bugfix");
 
 		if (bugfix == null) {
-			//if bugfix is not there, it is 0
+			// if bugfix is not there, it is 0
 			bugfix = "0";
 		}
 
-		if (major == null || minor == null) throw new IllegalStateException("Could not parse GL Version into 5 digit format!");
+		if (major == null || minor == null) {
+			throw new IllegalStateException("Could not parse GL Version into 5 digit format!");
+		}
 
 		return major + minor + bugfix;
 
@@ -138,8 +145,8 @@ public class StandardMacros {
 	public static List<String> getGlExtensions() {
 		String[] extensions = Objects.requireNonNull(GL11.glGetString(GL11.GL_EXTENSIONS)).split("\\s+");
 
-		//TODO note that we do not add extensions based on if the shader uses them and if they are supported
-		//see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
+		// TODO note that we do not add extensions based on if the shader uses them and if they are supported
+		// see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
 
 		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toList());
 	}
