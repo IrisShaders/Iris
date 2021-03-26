@@ -342,7 +342,7 @@ public class ProgramSet {
 			throw e;
 		}
 
-		return new ProgramSource(program, vertexSource, fragmentSource, programSet, pack.getShaderProperties());
+		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, pack.getShaderProperties());
 	}
 
 	private static String readFile(Path path) throws IOException {
