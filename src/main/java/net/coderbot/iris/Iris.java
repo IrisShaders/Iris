@@ -266,24 +266,26 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static WorldRenderingPipeline createPipeline(DimensionId dimensionId) {
-		ProgramSet programs = Objects.requireNonNull(currentPack).getProgramSet(dimensionId);
+		if (currentPack == null) {
+			// completely disable shader-based rendering
+			return new FixedFunctionWorldRenderingPipeline();
+		}
+
+		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
 		if (internal) {
 			return new InternalWorldRenderingPipeline(programs);
 		} else {
 			return new DeferredWorldRenderingPipeline(programs);
 		}
-
-		// note: uncommenting this line and commenting the above lines will completely disable shader-based rendering
-		// return new FixedFunctionWorldRenderingPipeline();
 	}
 
 	public static PipelineManager getPipelineManager() {
 		return pipelineManager;
 	}
 
-	public static ShaderPack getCurrentPack() {
-		return currentPack;
+	public static Optional<ShaderPack> getCurrentPack() {
+		return Optional.ofNullable(currentPack);
 	}
 
 	public static String getCurrentPackName() {
