@@ -65,12 +65,12 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 
 		int programId;
 		
-		if (compute != null) {
+		if (compute != null && geometry != null) {
+			programId = ProgramCreator.create(name, compute, vertex, geometry, fragment);
+		} else if (compute != null) {
 			programId = ProgramCreator.create(name, compute, vertex, fragment);
 		} else if (geometry != null) {
 			programId = ProgramCreator.create(name, vertex, geometry, fragment);
-		} else if (compute != null && geometry != null) {
-			programId = ProgramCreator.create(name, compute, vertex, geometry, fragment);
 		} else {
 			programId = ProgramCreator.create(name, vertex, fragment);
 		}
