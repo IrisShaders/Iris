@@ -18,9 +18,7 @@ public class ShaderConstants {
     public static ShaderConstants fromStringList(List<String> defines) {
         Builder builder = new Builder();
 
-        for (String define : defines) {
-            builder.define(define);
-        }
+        builder.defineAll(defines);
 
         return builder.build();
     }
@@ -38,19 +36,33 @@ public class ShaderConstants {
 
         }
 
-        public void define(String name) {
-            this.define(name, EMPTY_VALUE);
+        public Builder define(String name) {
+
+			this.define(Objects.requireNonNull(name), EMPTY_VALUE);
+            return this;
         }
 
-        public void define(String name, String value) {
+        public Builder define(String name, String value) {
             String prev = this.constants.get(name);
 
             if (prev != null) {
                 throw new IllegalArgumentException("Constant " + name + " is already defined with value " + prev);
             }
 
-            this.constants.put(name, value);
+			this.constants.put(Objects.requireNonNull(name), Objects.requireNonNull(value));
+
+            return this;
         }
+
+        public Builder defineAll(List<String> names) {
+        	names.forEach(this::define);
+        	return this;
+		}
+
+		public Builder defineAll(Map<String, String> defines) {
+        	defines.forEach(this::define);
+        	return this;
+		}
 
         public ShaderConstants build() {
             List<String> defines = new ArrayList<>(this.constants.size());
