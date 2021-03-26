@@ -35,7 +35,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			try {
 				compute = new GlShader(ShaderType.COMPUTE, name + ".csh", computeSource, EMPTY_CONSTANTS);
 			} catch (RuntimeException e) {
-				throw new RuntimeException("Failed to compile geometry shader for program " + name, e);
+				throw new RuntimeException("Failed to compile compute shader for program " + name, e);
 			}
 		} else {
 			compute = null;
