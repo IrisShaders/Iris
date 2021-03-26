@@ -47,7 +47,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 
 		if (computeSource != null) {
 			try {
-				compute = new GlShader(ShaderType.COMPUTE, name + ".csh", computeSource, EMPTY_CONSTANTS);
+				compute = new GlShader(ShaderType.COMPUTE, name + ".csh", computeSource, MACRO_CONSTANTS);
 			} catch (RuntimeException e) {
 				throw new RuntimeException("Failed to compile compute shader for program " + name, e);
 			}
