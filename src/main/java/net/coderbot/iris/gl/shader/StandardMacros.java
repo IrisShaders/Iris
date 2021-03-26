@@ -40,7 +40,7 @@ public class StandardMacros {
 		String[] splitVersion = version.split("\\.");
 
 		if (splitVersion.length < 2) {
-			throw new IllegalStateException("Could not parse game version \"" + version +  "\" into a 5 digit format!");
+			throw new IllegalStateException("Could not parse game version \"" + version +  "\"");
 		}
 
 		String major = splitVersion[0];
@@ -94,12 +94,11 @@ public class StandardMacros {
 	 */
 	public static String getGlVersion(int name) {
 		String info = GL20.glGetString(name);
-		System.out.println("GL Version: " + info);
 
 		Matcher matcher = SEMVER_PATTERN.matcher(Objects.requireNonNull(info));
 
 		if (!matcher.matches()) {
-			throw new IllegalStateException("Could not parse GL version into 5 digit format");
+			throw new IllegalStateException("Could not parse GL version from \"" + info + "\"");
 		}
 
 		String major = group(matcher, "major");
@@ -112,7 +111,7 @@ public class StandardMacros {
 		}
 
 		if (major == null || minor == null) {
-			throw new IllegalStateException("Could not parse GL Version into 5 digit format!");
+			throw new IllegalStateException("Could not parse GL version from \"" + info + "\"");
 		}
 
 		return major + minor + bugfix;
