@@ -1,14 +1,13 @@
 package net.coderbot.iris.shaderpack;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
-import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -34,14 +33,14 @@ public class IdMap {
 	private final Object2IntMap<Identifier> entityIdMap;
 
 	/**
-	 * a map that contains the identifier of an item to the integer value parsed in block.properties
+	 * A map that contains the identifier of an item to the integer value parsed in block.properties
 	 */
-	private Map<Identifier, Integer> blockPropertiesMap = Maps.newHashMap();
+	private Map<Identifier, Integer> blockPropertiesMap = new HashMap<>();
 
 	/**
-	 * a map that contains render layers for blocks in block.properties
+	 * A map that contains render layers for blocks in block.properties
 	 */
-	private Map<Identifier, RenderLayer> blockRenderLayerMap = Maps.newHashMap();
+	private Map<Identifier, RenderLayer> blockRenderLayerMap = new HashMap<>();
 
 	IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
@@ -59,18 +58,44 @@ public class IdMap {
 		// TODO: Properly override block render layers
 	}
 
+	/**
+	 * Loads properties from a properties file in a shaderpack path
+	 */
 	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
-		Properties properties = new Properties();
+		String fileContents = readProperties(shaderPath, name);
+		if (fileContents == null) {
+			return Optional.empty();
+		}
 
+		String processed = PropertiesPreprocessor.process(name, fileContents);
+
+		StringReader propertiesReader = new StringReader(processed);
+		Properties properties = new Properties();
 		try {
-			properties.load(Files.newInputStream(shaderPath.resolve(name)));
+			properties.load(propertiesReader);
 		} catch (IOException e) {
-			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+			Iris.logger.error("Error loading " + name + " at " + shaderPath);
+			Iris.logger.catching(Level.ERROR, e);
 
 			return Optional.empty();
 		}
 
 		return Optional.of(properties);
+	}
+
+	private static String readProperties(Path shaderPath, String name) {
+		try {
+			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.UTF_8);
+		} catch (NoSuchFileException e) {
+			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+
+			return null;
+		} catch (IOException e) {
+			Iris.logger.error("An IOException occurred reading " + name + " from the current shaderpack");
+			Iris.logger.catching(Level.ERROR, e);
+
+			return null;
+		}
 	}
 
 	private static Object2IntMap<Identifier> parseItemIdMap(Properties properties) {
@@ -128,7 +153,7 @@ public class IdMap {
 	}
 
 	/**
-	 * parses entries from item.properties and entities.properties
+	 * Parses a render layer map
 	 */
 	private static Map<Identifier, RenderLayer> parseRenderLayerMap(Properties properties, String keyPrefix, String fileName) {
 		// TODO: Most of this is copied from parseIdMap, it would be nice to reduce duplication.

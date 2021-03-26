@@ -46,16 +46,10 @@ public final class CommonUniforms {
 		CelestialUniforms.addCelestialUniforms(uniforms);
 		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
 		MatrixUniforms.addMatrixUniforms(uniforms);
+		SamplerUniforms.addCommonSamplerUniforms(uniforms);
 
 		uniforms
-			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
-			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
-			.uniform1i(ONCE, "noisetex", () -> 15)
-			.uniform1i(ONCE, "normals", () -> 2)
-			.uniform1i(ONCE, "specular", () -> 3)
-			.uniform1i(ONCE, "shadowtex0", () -> 4)
-			.uniform1i(ONCE, "shadowtex1", () -> 5)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
@@ -153,6 +147,12 @@ public final class CommonUniforms {
 	}
 
 	private static int isEyeInWater() {
+		// Note: With certain utility / cheat mods, this method will return air even when the player is submerged when
+		// the "No Overlay" feature is enabled.
+		//
+		// I'm not sure what the best way to deal with this is, but the current approach seems to be an acceptable one -
+		// after all, disabling the overlay results in the intended effect of it not really looking like you're
+		// underwater on most shaderpacks. For now, I will leave this as-is, but it is something to keep in mind.
 		FluidState submergedFluid = client.gameRenderer.getCamera().getSubmergedFluidState();
 
 		if (submergedFluid.isIn(FluidTags.WATER)) {
