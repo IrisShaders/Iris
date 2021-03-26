@@ -23,7 +23,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		GL21C.glBindAttribLocation(program, index, name);
 	}
 
-	public static ProgramBuilder begin(String name, @Nullable computeSource, @Nullable String vertexSource, @Nullable String geometrySource, @Nullable String fragmentSource) {
+	public static ProgramBuilder begin(String name, @Nullable String computeSource, @Nullable String vertexSource, @Nullable String geometrySource, @Nullable String fragmentSource) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 
 		GlShader compute;
