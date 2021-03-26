@@ -14,10 +14,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
-import net.coderbot.iris.uniforms.CameraUniforms;
-import net.coderbot.iris.uniforms.CapturedRenderingState;
-import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.SamplerUniforms;
+import net.coderbot.iris.uniforms.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.render.RenderLayer;
@@ -169,15 +166,11 @@ public class ShadowRenderer {
 	private static float getShadowAngle() {
 		float shadowAngle = getSunAngle();
 
-		if (!isDay()) {
+		if (!CelestialUniforms.isDay()) {
 			shadowAngle -= 0.5F;
 		}
 
 		return shadowAngle;
-	}
-
-	private static boolean isDay() {
-		return getWorld().isDay();
 	}
 
 	public int getDepthTextureId() {
