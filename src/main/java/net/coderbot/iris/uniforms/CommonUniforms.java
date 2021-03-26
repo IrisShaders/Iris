@@ -46,17 +46,10 @@ public final class CommonUniforms {
 		CelestialUniforms.addCelestialUniforms(uniforms);
 		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
 		MatrixUniforms.addMatrixUniforms(uniforms);
+		SamplerUniforms.addCommonSamplerUniforms(uniforms);
 
 		uniforms
-			.uniform1i(ONCE, "tex", TextureUnit.TERRAIN::getSamplerId)
-			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
-			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
-			.uniform1i(ONCE, "noisetex", () -> 15)
-			.uniform1i(ONCE, "normals", () -> 2)
-			.uniform1i(ONCE, "specular", () -> 3)
-			.uniform1i(ONCE, "shadowtex0", () -> 4)
-			.uniform1i(ONCE, "shadowtex1", () -> 5)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
