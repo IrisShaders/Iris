@@ -98,6 +98,16 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static void loadShaderpack() {
+		if (!irisConfig.areShadersEnabled()) {
+			logger.info("Shaders are disabled because enableShaders is set to false in iris.properties");
+
+			currentPack = null;
+			currentPackName = "(off)";
+			internal = false;
+
+			return;
+		}
+
 		// Attempt to load an external shaderpack if it is available
 		if (!irisConfig.isInternal()) {
 			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {

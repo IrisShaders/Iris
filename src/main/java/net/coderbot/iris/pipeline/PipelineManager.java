@@ -98,7 +98,8 @@ public class PipelineManager {
 		if (pipeline instanceof DeferredWorldRenderingPipeline) {
 			// TODO: Don't cast this to DeferredWorldRenderingPipeline?
 			((DeferredWorldRenderingPipeline) pipeline).destroy();
-			pipeline = null;
 		}
+
+		pipeline = null;
 	}
 }
