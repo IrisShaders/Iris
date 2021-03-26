@@ -13,12 +13,14 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.rendertarget.BuiltinNoiseTexture;
+import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.SingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.SamplerUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
@@ -324,7 +326,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
+			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
 				source.getFragmentSource().orElse(null));
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
@@ -332,6 +334,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
+		SamplerUniforms.addWorldSamplerUniforms(builder);
+		SamplerUniforms.addDepthSamplerUniforms(builder);
 		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
 		builder.bindAttributeLocation(10, "mc_Entity");
@@ -363,16 +367,29 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		public void use() {
 			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
 			// a given program and bind the required textures instead.
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE15);
+			GlStateManager.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
 			BuiltinNoiseTexture.bind();
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE2);
 			GlStateManager.bindTexture(normals.getTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE3);
 			GlStateManager.bindTexture(specular.getTextureId());
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE4);
-			GlStateManager.bindTexture(shadowMapRenderer.getDepthTextureId());
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE5);
-			GlStateManager.bindTexture(shadowMapRenderer.getDepthTextureId());
+
+			bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
+			bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4));
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5));
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6));
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7));
+
+			int depthAttachment = renderTargets.getDepthTexture().getTextureId();
+			int depthAttachmentNoTranslucents = renderTargets.getDepthTextureNoTranslucents().getTextureId();
+
+			bindTexture(SamplerUniforms.DEPTH_TEX_0, depthAttachment);
+			bindTexture(SamplerUniforms.DEPTH_TEX_1, depthAttachmentNoTranslucents);
+			// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
+			// Once we start rendering the hand before composite content, this will need to be addressed.
+			bindTexture(SamplerUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
+
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 
 			framebuffer.bind();
@@ -402,6 +419,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		public void destroy() {
 			this.program.destroy();
 		}
+	}
+
+	private static void bindRenderTarget(int textureUnit, RenderTarget target) {
+		bindTexture(textureUnit, target.getMainTexture());
+	}
+
+	private static void bindTexture(int textureUnit, int texture) {
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + textureUnit);
+		RenderSystem.bindTexture(texture);
 	}
 
 	public void destroy() {

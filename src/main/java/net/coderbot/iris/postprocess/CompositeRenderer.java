@@ -1,6 +1,5 @@
 package net.coderbot.iris.postprocess;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,17 +8,18 @@ import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.Iris;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.rendertarget.*;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.SamplerUniforms;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
@@ -148,20 +148,20 @@ public class CompositeRenderer {
 		final int baseWidth = main.textureWidth;
 		final int baseHeight = main.textureHeight;
 
-		// Prepare "static" textures (ones that do not change during gbuffer rendering)
+		// Prepare "static" textures (ones that do not change during composite rendering)
 		int depthAttachment = renderTargets.getDepthTexture().getTextureId();
 		int depthAttachmentNoTranslucents = renderTargets.getDepthTextureNoTranslucents().getTextureId();
 
-		bindTexture(PostProcessUniforms.DEPTH_TEX_0, depthAttachment);
-		bindTexture(PostProcessUniforms.DEPTH_TEX_1, depthAttachmentNoTranslucents);
+		bindTexture(SamplerUniforms.DEPTH_TEX_0, depthAttachment);
+		bindTexture(SamplerUniforms.DEPTH_TEX_1, depthAttachmentNoTranslucents);
 		// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
 		// Once we start rendering the hand before composite content, this will need to be addressed.
-		bindTexture(PostProcessUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
+		bindTexture(SamplerUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
-		bindTexture(PostProcessUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
-		bindTexture(PostProcessUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
+		bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
+		bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
 
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.NOISE_TEX);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
 		BuiltinNoiseTexture.bind();
 
 		FullScreenQuadRenderer.INSTANCE.begin();
@@ -173,14 +173,14 @@ public class CompositeRenderer {
 				main.beginWrite(false);
 			}
 
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0]);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1]);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt[2]);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt[3]);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt[4]);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt[5]);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6]);
-			bindRenderTarget(PostProcessUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt[2]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt[3]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt[4]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt[5]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
 
 			float scaledWidth = baseWidth * renderPass.viewportScale;
 			float scaledHeight = baseHeight * renderPass.viewportScale;
@@ -220,9 +220,9 @@ public class CompositeRenderer {
 		GlStateManager.useProgram(0);
 
 		// TODO: We unbind these textures but it would probably make sense to unbind the other ones too.
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_DEPTH);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEFAULT_DEPTH);
 		RenderSystem.bindTexture(0);
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + PostProcessUniforms.DEFAULT_COLOR);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEFAULT_COLOR);
 		RenderSystem.bindTexture(0);
 	}
 
@@ -243,7 +243,7 @@ public class CompositeRenderer {
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
+			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
 				source.getFragmentSource().orElse(null));
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
@@ -251,7 +251,10 @@ public class CompositeRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
-		PostProcessUniforms.addPostProcessUniforms(builder, this);
+		SamplerUniforms.addCompositeSamplerUniforms(builder);
+		SamplerUniforms.addDepthSamplerUniforms(builder);
+
+		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
 
 		return new Pair<>(builder.build(), source.getDirectives());
 	}
