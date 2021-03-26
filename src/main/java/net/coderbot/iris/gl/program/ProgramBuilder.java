@@ -23,12 +23,23 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		GL21C.glBindAttribLocation(program, index, name);
 	}
 
-	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String geometrySource, @Nullable String fragmentSource) {
+	public static ProgramBuilder begin(String name, @Nullable computeSource, @Nullable String vertexSource, @Nullable String geometrySource, @Nullable String fragmentSource) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 
+		GlShader compute;
 		GlShader vertex;
 		GlShader geometry;
 		GlShader fragment;
+
+		if (computeSource != null) {
+			try {
+				compute = new GlShader(ShaderType.COMPUTE, name + ".csh", computeSource, EMPTY_CONSTANTS);
+			} catch (RuntimeException e) {
+				throw new RuntimeException("Failed to compile geometry shader for program " + name, e);
+			}
+		} else {
+			compute = null;
+		}
 
 		try {
 			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, EMPTY_CONSTANTS);
@@ -54,10 +65,18 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 
 		int programId;
 		
-		if (geometry != null) {
+		if (compute != null) {
+			programId = ProgramCreator.create(name, compute, vertex, fragment);
+		} else if (geometry != null) {
 			programId = ProgramCreator.create(name, vertex, geometry, fragment);
+		} else if (compute != null && geometry != null) {
+			programId = ProgramCreator.create(name, compute, vertex, geometry, fragment);
 		} else {
 			programId = ProgramCreator.create(name, vertex, fragment);
+		}
+
+		if (compute != null) {
+			compute.destroy();
 		}
 
 		vertex.destroy();

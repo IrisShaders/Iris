@@ -304,9 +304,22 @@ public class ProgramSet {
 	}
 
 	private static ProgramSource readProgramSource(Path root, Path inclusionRoot, String program, ProgramSet programSet, ShaderProperties properties) throws IOException {
+		String computeSource = null;
 		String vertexSource = null;
 		String geometrySource = null;
 		String fragmentSource = null;
+
+		try {
+			Path computePath = root.resolve(program + ".csh");
+			computeSource = readFile(computePath);
+
+			if (computeSource != null) {
+				computeSource = ShaderPreprocessor.process(inclusionRoot, computePath, computeSource);
+			}
+		} catch (IOException e) {
+			// TODO: Better handling?
+			throw e;
+		}
 
 		try {
 			Path vertexPath = root.resolve(program + ".vsh");
@@ -344,7 +357,7 @@ public class ProgramSet {
 			throw e;
 		}
 
-		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties);
+		return new ProgramSource(program, computeSource, vertexSource, geometrySource, fragmentSource, programSet, properties);
 	}
 
 	private static String readFile(Path path) throws IOException {

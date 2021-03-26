@@ -238,12 +238,13 @@ public class CompositeRenderer {
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source) {
 		// TODO: Properly handle empty shaders
+		Objects.requireNonNull(source.getComputeSource());
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
+			builder = ProgramBuilder.begin(source.getName(), source.getComputeSource().orElse(null), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
 				source.getFragmentSource().orElse(null));
 		} catch (RuntimeException e) {
 			// TODO: Better error handling

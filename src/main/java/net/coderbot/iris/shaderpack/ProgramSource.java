@@ -4,14 +4,16 @@ import java.util.Optional;
 
 public class ProgramSource {
 	private final String name;
+	private final String computeSource;
 	private final String vertexSource;
 	private final String geometrySource;
 	private final String fragmentSource;
 	private final ProgramDirectives directives;
 	private final ProgramSet parent;
 
-	public ProgramSource(String name, String vertexSource, String geometrySource, String fragmentSource, ProgramSet parent, ShaderProperties properties) {
+	public ProgramSource(String name, String computeSource, String vertexSource, String geometrySource, String fragmentSource, ProgramSet parent, ShaderProperties properties) {
 		this.name = name;
+		this.computeSource = computeSource;
 		this.vertexSource = vertexSource;
 		this.geometrySource = geometrySource;
 		this.fragmentSource = fragmentSource;
@@ -21,6 +23,10 @@ public class ProgramSource {
 
 	public String getName() {
 		return name;
+	}
+
+	public Optional<String> getComputeSource() {
+		return Optional.ofNullable(computeSource);
 	}
 
 	public Optional<String> getVertexSource() {
