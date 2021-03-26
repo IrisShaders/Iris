@@ -17,6 +17,7 @@ import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.render.RenderLayer;
@@ -78,7 +79,7 @@ public class ShadowRenderer {
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null),
+			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
 					source.getFragmentSource().orElse(null));
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
@@ -86,6 +87,7 @@ public class ShadowRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
+		SamplerUniforms.addWorldSamplerUniforms(builder);
 
 		return new Pair<>(builder.build(), source.getDirectives());
 	}
