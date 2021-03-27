@@ -31,6 +31,7 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -84,11 +85,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
 
+	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
+
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives());
-		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
+		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
 
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);

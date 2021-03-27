@@ -188,7 +188,11 @@ public class IdMap {
 			for (String part : value.split(" ")) {
 
 				// adds block state entries if present
-				addBlockStates(part, idMap, intId);
+				boolean bl = addBlockStates(part, idMap, intId);
+				if (bl) {
+					// if the blockstate was sucessfully parsed, continue parsing ids
+					continue;
+				}
 
 				try {
 					Identifier identifier = new Identifier(part);
@@ -204,7 +208,7 @@ public class IdMap {
 		return Object2IntMaps.unmodifiable(idMap);
 	}
 
-	private static void addBlockStates(String entry, Object2IntMap<BlockState> idMap, int intId) {
+	private static boolean addBlockStates(String entry, Object2IntMap<BlockState> idMap, int intId) {
 		String[] splitStates = entry.split(":");
 
 		// make sure we only get the part of the string that is part of the block id, not the state
@@ -224,7 +228,7 @@ public class IdMap {
 		// so we just continue the iteration
 		if (idParts.size() > 2) {
 			Iris.logger.warn("block property \"" + entry + "\" could not be parsed!");
-			return;
+			return false;
 		}
 
 
@@ -266,6 +270,9 @@ public class IdMap {
 			}
 
 			idMap.put(state, intId);
+			return true;
+		} else {
+			return false;
 		}
 	}
 
