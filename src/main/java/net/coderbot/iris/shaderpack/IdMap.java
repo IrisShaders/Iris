@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.Iris;
 import org.apache.logging.log4j.Level;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.state.property.Property;
@@ -197,7 +198,11 @@ public class IdMap {
 				try {
 					Identifier identifier = new Identifier(part);
 
-					idMap.put(Registry.BLOCK.get(identifier).getDefaultState(), intId);
+					Block block = Registry.BLOCK.get(identifier);
+
+					block.getStateManager().getStates().forEach(state -> {
+						idMap.put(state, intId);
+					});
 				} catch (InvalidIdentifierException e) {
 					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
