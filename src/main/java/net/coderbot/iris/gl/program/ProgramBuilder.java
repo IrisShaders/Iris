@@ -48,8 +48,6 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		try {
 			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
-			Iris.setPackOff();
-			Iris.loadShaderpack();
 			Iris.logger.error("Failed to compile vertex shader for program " + name, e);
 			vertex = null;
 		}
@@ -58,8 +56,6 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			try {
 				geometry = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource, MACRO_CONSTANTS);
 			} catch (RuntimeException e) {
-				Iris.setPackOff();
-				Iris.loadShaderpack();
 				Iris.logger.error("Failed to compile geometry shader for program " + name, e);
 				geometry = null;
 			}
@@ -70,8 +66,6 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		try {
 			fragment = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
-			Iris.setPackOff();
-			Iris.loadShaderpack();
 			Iris.logger.error("Failed to compile fragment shader for program " + name, e);
 			fragment = null;
 		}

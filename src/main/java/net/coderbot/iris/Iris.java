@@ -97,14 +97,6 @@ public class Iris implements ClientModInitializer {
 		pipelineManager = new PipelineManager(Iris::createPipeline);
 	}
 
-	public static void setPackOff() {
-		currentPack = null;
-		currentPackName = "(off)";
-		internal = false;
-
-		return;
-	}
-
 	public static void loadShaderpack() {
 		if (!irisConfig.areShadersEnabled()) {
 			logger.info("Shaders are disabled because enableShaders is set to false in iris.properties");
