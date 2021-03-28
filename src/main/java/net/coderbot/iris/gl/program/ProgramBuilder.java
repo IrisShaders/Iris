@@ -49,6 +49,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
 			Iris.setPackOff();
+			Iris.loadShaderpack();
 			Iris.logger.error("Failed to compile vertex shader for program " + name, e);
 			vertex = null;
 		}
@@ -58,6 +59,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 				geometry = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource, MACRO_CONSTANTS);
 			} catch (RuntimeException e) {
 				Iris.setPackOff();
+				Iris.loadShaderpack();
 				Iris.logger.error("Failed to compile geometry shader for program " + name, e);
 				geometry = null;
 			}
@@ -69,25 +71,32 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			fragment = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
 			Iris.setPackOff();
+			Iris.loadShaderpack();
 			Iris.logger.error("Failed to compile fragment shader for program " + name, e);
 			fragment = null;
 		}
 
 		int programId;
-		
-		if (geometry != null) {
+
+		if (vertex != null && geometry != null && fragment != null) {
 			programId = ProgramCreator.create(name, vertex, geometry, fragment);
-		} else {
+		} else if (vertex != null && geometry == null && fragment != null) {
 			programId = ProgramCreator.create(name, vertex, fragment);
+		} else {
+			programId = ProgramCreator.create(name, null);
 		}
 
-		vertex.destroy();
+		if (vertex != null) {
+			vertex.destroy();
+		}
 
 		if (geometry != null) {
 			geometry.destroy();
 		}
 
-		fragment.destroy();
+		if (fragment != null) {
+			fragment.destroy();
+		}
 
 		return new ProgramBuilder(name, programId);
 	}
