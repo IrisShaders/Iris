@@ -1,6 +1,7 @@
 package net.coderbot.iris.gl.program;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderConstants;
@@ -47,14 +48,16 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		try {
 			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
-			throw new RuntimeException("Failed to compile vertex shader for program " + name, e);
+			Iris.setPackOff();
+			Iris.logger.error("Failed to compile vertex shader for program " + name, e);
 		}
 
 		if (geometrySource != null) {
 			try {
 				geometry = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource, MACRO_CONSTANTS);
 			} catch (RuntimeException e) {
-				throw new RuntimeException("Failed to compile geometry shader for program " + name, e);
+				Iris.setPackOff();
+				Iris.logger.error("Failed to compile geometry shader for program " + name, e);
 			}
 		} else {
 			geometry = null;
@@ -63,7 +66,8 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		try {
 			fragment = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
-			throw new RuntimeException("Failed to compile fragment shader for program " + name, e);
+			Iris.setPackOff();
+			Iris.logger.error("Failed to compile fragment shader for program " + name, e);
 		}
 
 		int programId;
