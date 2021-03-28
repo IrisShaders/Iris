@@ -50,6 +50,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		} catch (RuntimeException e) {
 			Iris.setPackOff();
 			Iris.logger.error("Failed to compile vertex shader for program " + name, e);
+			vertex = null;
 		}
 
 		if (geometrySource != null) {
@@ -58,6 +59,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			} catch (RuntimeException e) {
 				Iris.setPackOff();
 				Iris.logger.error("Failed to compile geometry shader for program " + name, e);
+				geometry = null;
 			}
 		} else {
 			geometry = null;
@@ -68,6 +70,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		} catch (RuntimeException e) {
 			Iris.setPackOff();
 			Iris.logger.error("Failed to compile fragment shader for program " + name, e);
+			fragment = null;
 		}
 
 		int programId;
