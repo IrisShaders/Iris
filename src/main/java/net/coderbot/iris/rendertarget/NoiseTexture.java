@@ -5,6 +5,7 @@ import java.util.Random;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.GlResource;
+import net.coderbot.iris.gl.texture.TextureUploadHelper;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 
@@ -36,6 +37,8 @@ public class NoiseTexture extends GlResource {
 		GlStateManager.bindTexture(getGlId());
 
 		ByteBuffer pixels = generateNoise();
+
+		TextureUploadHelper.resetTextureUploadState();
 		GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGB, width, height, 0, GL11C.GL_RGB, GL11C.GL_UNSIGNED_BYTE, pixels);
 
 		GlStateManager.bindTexture(0);

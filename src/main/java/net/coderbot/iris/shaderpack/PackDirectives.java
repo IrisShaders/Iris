@@ -12,6 +12,7 @@ import java.util.OptionalInt;
 public class PackDirectives {
 	private InternalTextureFormat[] requestedTextureFormats;
 	private boolean[] clearBuffers;
+	private int noiseTextureResolution;
 
 	PackDirectives() {
 		requestedTextureFormats = new InternalTextureFormat[RenderTargets.MAX_RENDER_TARGETS];
@@ -19,6 +20,8 @@ public class PackDirectives {
 
 		clearBuffers = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 		Arrays.fill(clearBuffers, true);
+
+		noiseTextureResolution = 256;
 	}
 
 	public IntList getBuffersToBeCleared() {
@@ -37,6 +40,10 @@ public class PackDirectives {
 		// TODO: If gdepth is directly referenced and no format override is provided, use RGBA32F
 
 		return requestedTextureFormats;
+	}
+
+	public int getNoiseTextureResolution() {
+		return noiseTextureResolution;
 	}
 
 	void accept(ConstDirectiveParser.ConstDirective directive) {
@@ -58,6 +65,8 @@ public class PackDirectives {
 			bufferNameToIndex(bufferName).ifPresent(index -> {
 				clearBuffers[index] = false;
 			});
+		} else if (type == ConstDirectiveParser.Type.INT && key.equals("noiseTextureResolution")) {
+			noiseTextureResolution = Integer.parseInt(value);
 		}
 	}
 
