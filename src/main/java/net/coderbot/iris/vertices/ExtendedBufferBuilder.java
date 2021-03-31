@@ -15,11 +15,11 @@ public class ExtendedBufferBuilder extends BufferBuilder {
 	}
 
 	@Override
-	public void begin(int drawMode, VertexFormat format) {
+	public void begin(VertexFormat.DrawMode drawMode, VertexFormat format) {
 		this.originalFormat = format;
 		this.vertexCount = 0;
 
-		if (drawMode != GL11C.GL_QUADS) {
+		if (drawMode != VertexFormat.DrawMode.QUADS) {
 			throw new IllegalArgumentException("Unexpected draw mode: " + drawMode);
 		}
 

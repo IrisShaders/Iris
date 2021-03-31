@@ -16,6 +16,7 @@ import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -70,7 +71,7 @@ public final class CommonUniforms {
 			return Vec3d.ZERO;
 		}
 
-		return client.world.method_23777(client.cameraEntity.getBlockPos(), CapturedRenderingState.INSTANCE.getTickDelta());
+		return client.world.method_23777(client.cameraEntity.getPos(), CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
 	private static float getBlindness() {
@@ -153,13 +154,14 @@ public final class CommonUniforms {
 		// I'm not sure what the best way to deal with this is, but the current approach seems to be an acceptable one -
 		// after all, disabling the overlay results in the intended effect of it not really looking like you're
 		// underwater on most shaderpacks. For now, I will leave this as-is, but it is something to keep in mind.
-		FluidState submergedFluid = client.gameRenderer.getCamera().getSubmergedFluidState();
+		CameraSubmersionType submersionType = client.gameRenderer.getCamera().getSubmersionType();
 
-		if (submergedFluid.isIn(FluidTags.WATER)) {
+		if (submersionType == CameraSubmersionType.WATER) {
 			return 1;
-		} else if (submergedFluid.isIn(FluidTags.LAVA)) {
+		} else if (submersionType == CameraSubmersionType.LAVA) {
 			return 2;
 		} else {
+			// TODO: handle CameraSubmersionType.POWDERED_SNOW
 			return 0;
 		}
 	}

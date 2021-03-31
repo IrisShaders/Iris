@@ -58,7 +58,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private @Nullable VertexFormatElement currentElement;
 
 	@Inject(method = "begin", at = @At("HEAD"))
-	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
+	private void iris$onBegin(VertexFormat.DrawMode drawMode, VertexFormat format, CallbackInfo ci) {
 		extending = format == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL || format == IrisVertexFormats.TERRAIN;
 		vertexCount = 0;
 
@@ -68,7 +68,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	}
 
 	@Inject(method = "begin", at = @At("RETURN"))
-	private void iris$afterBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
+	private void iris$afterBegin(VertexFormat.DrawMode drawMode, VertexFormat format, CallbackInfo ci) {
 		if (extending) {
 			this.format = IrisVertexFormats.TERRAIN;
 			this.currentElement = IrisVertexFormats.TERRAIN.getElements().get(0);
@@ -81,7 +81,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		vertexCount = 0;
 	}
 
-	@Inject(method = "method_23918(Lnet/minecraft/client/render/VertexFormat;)V", at = @At("RETURN"))
+	@Inject(method = "setFormat(Lnet/minecraft/client/render/VertexFormat;)V", at = @At("RETURN"))
 	private void iris$preventHardcodedVertexWriting(VertexFormat format, CallbackInfo ci) {
 		if (!extending) {
 			return;

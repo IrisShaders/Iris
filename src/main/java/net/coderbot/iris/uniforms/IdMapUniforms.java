@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -79,7 +80,7 @@ public final class IdMapUniforms {
 
 		ClientWorld world = Objects.requireNonNull(MinecraftClient.getInstance().world);
 
-		Block blockAt = world.getBlockState(entity.getPos()).getBlock();
+		BlockState blockAt = world.getBlockState(entity.getPos());
 
 		if (!entity.getType().supports(blockAt)) {
 			// Somehow the block here isn't compatible with the block entity at this location.
@@ -87,7 +88,7 @@ public final class IdMapUniforms {
 			return -1;
 		}
 
-		return blockIdMap.getOrDefault(Registry.BLOCK.getId(blockAt), -1);
+		return blockIdMap.getOrDefault(Registry.BLOCK.getId(blockAt.getBlock()), -1);
 	}
 
 	/**

@@ -7,10 +7,10 @@ import java.util.Objects;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 
 /**
  * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#celestial-bodies">Uniforms: Celestial bodies</a>
@@ -68,10 +68,10 @@ public final class CelestialUniforms {
 
 		// This is the same transformation applied by renderSky, however, it's been moved to here.
 		// This is because we need the result of it before it's actually performed in vanilla.
-		celestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
+		celestial.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
 		// TODO: Don't hardcode the sunPathRotation here
-		celestial.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
-		celestial.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
+		celestial.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
+		celestial.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
 
 		position.transform(celestial);
 
@@ -86,7 +86,7 @@ public final class CelestialUniforms {
 
 		// Apply the fixed -90.0F degrees rotation to mirror the same transformation in renderSky.
 		// But, notably, skip the rotation by the skyAngle.
-		preCelestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
+		preCelestial.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
 
 		// Use this matrix to transform the vector.
 		upVector.transform(preCelestial);

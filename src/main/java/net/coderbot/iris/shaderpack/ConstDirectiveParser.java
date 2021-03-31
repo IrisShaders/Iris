@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public class ConstDirectiveParser {
 	public static List<ConstDirective> findDirectives(String source) {
-		List<ConstDirective> directives = new ArrayList();
+		List<ConstDirective> directives = new ArrayList<>();
 
 		// Match any valid newline sequence
 		// https://stackoverflow.com/a/31060125

@@ -3,24 +3,23 @@ package net.coderbot.iris.gl.uniform;
 import java.util.function.Supplier;
 
 import org.lwjgl.opengl.GL21;
-
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 
 public class Vector3Uniform extends Uniform {
-	private final Vector3f cachedValue;
-	private final Supplier<Vector3f> value;
+	private final Vec3f cachedValue;
+	private final Supplier<Vec3f> value;
 
-	Vector3Uniform(int location, Supplier<Vector3f> value) {
+	Vector3Uniform(int location, Supplier<Vec3f> value) {
 		super(location);
 
-		this.cachedValue = new Vector3f();
+		this.cachedValue = new Vec3f();
 		this.value = value;
 	}
 
 	static Vector3Uniform converted(int location, Supplier<Vec3d> value) {
-		Vector3f held = new Vector3f();
+		Vec3f held = new Vec3f();
 
 		return new Vector3Uniform(location, () -> {
 			Vec3d updated = value.get();
@@ -32,7 +31,7 @@ public class Vector3Uniform extends Uniform {
 	}
 
 	static Vector3Uniform truncated(int location, Supplier<Vector4f> value) {
-		Vector3f held = new Vector3f();
+		Vec3f held = new Vec3f();
 
 		return new Vector3Uniform(location, () -> {
 			Vector4f updated = value.get();
@@ -45,7 +44,7 @@ public class Vector3Uniform extends Uniform {
 
 	@Override
 	public void update() {
-		Vector3f newValue = value.get();
+		Vec3f newValue = value.get();
 
 		if (!newValue.equals(cachedValue)) {
 			cachedValue.set(newValue.getX(), newValue.getY(), newValue.getZ());
