@@ -7,6 +7,7 @@ import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,8 +20,8 @@ public class MixinBlockDustParticle {
 	@Unique
 	private boolean isOpaque;
 
-	@Inject(method = "<init>(Lnet/minecraft/client/world/ClientWorld;DDDDDDLnet/minecraft/block/BlockState;)V", at = @At("RETURN"))
-	private void iris$resolveTranslucency(ClientWorld world, double x, double y, double z, double velocityX, double velocityY, double velocityZ, BlockState blockState, CallbackInfo callback) {
+	@Inject(method = "<init>(Lnet/minecraft/client/world/ClientWorld;DDDDDDLnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;)V", at = @At("RETURN"))
+	private void iris$resolveTranslucency(ClientWorld world, double x, double y, double z, double velocityX, double velocityY, double velocityZ, BlockState blockState, BlockPos pos, CallbackInfo callback) {
 		RenderLayer layer = RenderLayers.getBlockLayer(blockState);
 
 		if (layer == RenderLayer.getSolid() || layer == RenderLayer.getCutout() || layer == RenderLayer.getCutoutMipped()) {
