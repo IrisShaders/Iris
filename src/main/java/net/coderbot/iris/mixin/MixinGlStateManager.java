@@ -1,11 +1,12 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-@Mixin(GlStateManager.class)
+@Mixin({GlStateManager.class, RenderSystem.class})
 public class MixinGlStateManager {
 	private static final int MAX_TEXTURE_IMAGE_UNITS = 32;
 
