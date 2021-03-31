@@ -27,7 +27,9 @@ public class FullScreenQuadRenderer {
 	}
 
 	public void begin() {
-		RenderSystem.disableDepthTest();
+		// TODO(21w10a): restore composite rendering
+		throw new IllegalStateException("Composite rendering doesn't work on 21w10a");
+		/*RenderSystem.disableDepthTest();
 
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.pushMatrix();
@@ -39,15 +41,19 @@ public class FullScreenQuadRenderer {
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, quadBuffer);
-		VertexFormats.POSITION_TEXTURE.startDrawing(0L);
+		VertexFormats.POSITION_TEXTURE.startDrawing(0L);*/
 	}
 
 	public void renderQuad() {
-		GL20C.glDrawArrays(GL20C.GL_TRIANGLE_STRIP, 0, 4);
+		// TODO(21w10a): restore composite rendering
+		throw new IllegalStateException("Composite rendering doesn't work on 21w10a");
+		/*GL20C.glDrawArrays(GL20C.GL_TRIANGLE_STRIP, 0, 4);*/
 	}
 
 	public static void end() {
-		VertexFormats.POSITION_TEXTURE.endDrawing();
+		// TODO(21w10a): restore composite rendering
+		throw new IllegalStateException("Composite rendering doesn't work on 21w10a");
+		/*VertexFormats.POSITION_TEXTURE.endDrawing();
 		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
 
 		RenderSystem.enableDepthTest();
@@ -55,7 +61,7 @@ public class FullScreenQuadRenderer {
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.popMatrix();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
-		RenderSystem.popMatrix();
+		RenderSystem.popMatrix();*/
 	}
 
 	/**

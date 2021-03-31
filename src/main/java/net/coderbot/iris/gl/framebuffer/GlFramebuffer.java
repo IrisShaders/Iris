@@ -10,7 +10,7 @@ public class GlFramebuffer extends GlResource {
 	private Int2IntMap attachments;
 
 	public GlFramebuffer() {
-		super(GlStateManager.genFramebuffers());
+		super(GlStateManager.genFramebuffer());
 
 		this.attachments = new Int2IntArrayMap();
 
@@ -64,7 +64,7 @@ public class GlFramebuffer extends GlResource {
 	}
 
 	protected void destroyInternal() {
-		GlStateManager.deleteFramebuffers(getGlId());
+		GlStateManager.deleteFramebuffer(getGlId());
 	}
 
 	public boolean isComplete() {

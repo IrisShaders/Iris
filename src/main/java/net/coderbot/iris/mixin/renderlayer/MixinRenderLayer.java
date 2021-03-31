@@ -68,13 +68,14 @@ public class MixinRenderLayer {
 
 	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_NO_CRUMBLING;
 
+	/*TODO(21w10a) figure out how to fix this
 	@Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;alpha(Lnet/minecraft/client/render/RenderPhase$Alpha;)Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;"))
 	private static RenderLayer.MultiPhaseParameters.Builder iris$tweakCutoutAlpha(RenderLayer.MultiPhaseParameters.Builder builder, RenderPhase.Alpha alpha) {
 		// OptiFine makes CUTOUT and CUTOUT_MIPPED use an alpha test of 0.1 instead of 0.5.
 		//
 		// We must replicate this behavior or else there will be issues.
 		return builder.alpha(new RenderPhase.Alpha(0.1F));
-	}
+	}*/
 
 	static {
 		SOLID = wrap("iris:terrain_solid", SOLID, GbufferProgram.TERRAIN);
@@ -166,14 +167,15 @@ public class MixinRenderLayer {
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
-	@Inject(at = @At("RETURN"), method = {
+	// TODO(21w10a): Address getEntityAlpha
+	/*@Inject(at = @At("RETURN"), method = {
 		"getEntityAlpha(Lnet/minecraft/util/Identifier;F)Lnet/minecraft/client/render/RenderLayer;",
 	}, cancellable = true)
 	private static void iris$wrapEntityAlpha(Identifier texture, float alpha, CallbackInfoReturnable<RenderLayer> cir) {
 		RenderLayer base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
-	}
+	}*/
 
 	@Inject(at = @At("RETURN"), method = {
 		"getBeaconBeam(Lnet/minecraft/util/Identifier;Z)Lnet/minecraft/client/render/RenderLayer;"
@@ -203,7 +205,8 @@ public class MixinRenderLayer {
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
-	@Inject(at = @At("RETURN"), method = {
+	// TODO(21w10a): Figure out getOutline
+	/*@Inject(at = @At("RETURN"), method = {
 		"getOutline(Lnet/minecraft/util/Identifier;Lnet/minecraft/client/render/RenderPhase$Cull;)Lnet/minecraft/client/render/RenderLayer;",
 	}, cancellable = true)
 	private static void iris$wrapGlowingOutline(Identifier texture, RenderPhase.Cull cull, CallbackInfoReturnable<RenderLayer> cir) {
@@ -222,7 +225,7 @@ public class MixinRenderLayer {
 		//
 		// TODO: Allow shaderpacks to override this if they do in fact implement the glowing effect properly
 		cir.setReturnValue(wrap(base, GbufferProgram.NONE));
-	}
+	}*/
 
 	@Inject(at = @At("RETURN"), method = {
 		"getBlockBreaking(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"
@@ -233,12 +236,13 @@ public class MixinRenderLayer {
 		cir.setReturnValue(wrap(base, GbufferProgram.DAMAGED_BLOCKS));
 	}
 
-	@Inject(at = @At("RETURN"), method = {
+	// TODO(21w10a): Figure out getEndPortal
+	/*@Inject(at = @At("RETURN"), method = {
 		"getEndPortal(I)Lnet/minecraft/client/render/RenderLayer;"
 	}, cancellable = true)
 	private static void iris$wrapEndPortalRenderLayer(int layer, CallbackInfoReturnable<RenderLayer> cir) {
 		RenderLayer base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.BLOCK_ENTITIES));
-	}
+	}*/
 }

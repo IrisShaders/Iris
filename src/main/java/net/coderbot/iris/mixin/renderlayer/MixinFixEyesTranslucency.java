@@ -20,6 +20,7 @@ public class MixinFixEyesTranslucency {
 	// Thus, Float.MIN_VALUE allows us to use such a ridiculously tiny value (1.4E-45F) that it is for all intents and
 	// purposes zero, except when it comes to Minecraft's hardcoded `alpha > 0.0` check. Otherwise, it works just fine
 	// for the alpha test.
+	/*TODO(21w10a) figure out how to replce this
 	@Unique
 	private static final RenderPhase.Alpha REJECT_ZERO_ALPHA = new RenderPhase.Alpha(Float.MIN_VALUE);
 
@@ -27,5 +28,5 @@ public class MixinFixEyesTranslucency {
 		target = "Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;transparency(Lnet/minecraft/client/render/RenderPhase$Transparency;)Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;"))
 	private static RenderLayer.MultiPhaseParameters.Builder iris$fixEyesTranslucency(RenderLayer.MultiPhaseParameters.Builder instance, RenderPhase.Transparency ignored) {
 		return instance.transparency(RenderPhaseAccessor.getTranslucentTransparency()).alpha(REJECT_ZERO_ALPHA);
-	}
+	}*/
 }

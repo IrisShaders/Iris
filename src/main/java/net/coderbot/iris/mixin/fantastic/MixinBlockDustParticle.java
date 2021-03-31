@@ -32,7 +32,7 @@ public class MixinBlockDustParticle {
 	@Inject(method = "getType()Lnet/minecraft/client/particle/ParticleTextureSheet;", at = @At("HEAD"), cancellable = true)
 	private void iris$overrideParticleSheet(CallbackInfoReturnable<ParticleTextureSheet> cir) {
 		if (isOpaque) {
-			cir.setReturnValue(IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET);
+			// TODO(21w10a): cir.setReturnValue(IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET);
 		}
 	}
 }

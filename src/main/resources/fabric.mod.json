@@ -33,7 +33,7 @@
 
   "depends": {
     "fabricloader": ">=0.7.4",
-    "minecraft": "1.17-alpha.21.8.b",
+    "minecraft": "1.17-alpha.21.11.a",
     "fabric-resource-loader-v0": ">=0.3.2",
     "fabric-key-binding-api-v1": ">=1.0.1",
     "fabric-lifecycle-events-v1": ">=1.2.0"

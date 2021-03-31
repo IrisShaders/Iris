@@ -111,7 +111,8 @@ public class HorizonRenderer {
 	}
 
 	public void renderHorizon(MatrixStack matrices) {
-		BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+		// TODO(21w10a) Restore horizon rendering
+		/*BufferBuilder buffer = Tessellator.getInstance().getBuffer();
 
 		// Build the horizon quads into a buffer
 		buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
@@ -123,6 +124,6 @@ public class HorizonRenderer {
 		RenderSystem.loadIdentity();
 		RenderSystem.multMatrix(matrices.peek().getModel());
 		BufferRenderer.draw(buffer);
-		RenderSystem.popMatrix();
+		RenderSystem.popMatrix();*/
 	}
 }

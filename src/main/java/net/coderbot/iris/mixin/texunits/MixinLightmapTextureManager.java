@@ -18,6 +18,7 @@ import net.fabricmc.api.Environment;
 @Mixin(LightmapTextureManager.class)
 @Environment(EnvType.CLIENT)
 public class MixinLightmapTextureManager {
+	/*TODO(21w10a): Replace texunit hooks
 	@ModifyConstant(method = "disable()V", constant = @Constant(intValue = GL15.GL_TEXTURE2), require = 1)
 	private int iris$fixLightmapTextureUnit$disable(int texUnit) {
 		return TextureUnit.LIGHTMAP.getUnitId();
@@ -26,5 +27,5 @@ public class MixinLightmapTextureManager {
 	@ModifyConstant(method = "enable()V", constant = @Constant(intValue = GL15.GL_TEXTURE2), require = 1)
 	private int iris$fixLightmapTextureUnit$enable(int texUnit) {
 		return TextureUnit.LIGHTMAP.getUnitId();
-	}
+	}*/
 }

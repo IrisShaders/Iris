@@ -10,7 +10,8 @@ import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.texture.TextureManager;
 
 public class IrisParticleTextureSheets {
-	public static final ParticleTextureSheet OPAQUE_TERRAIN_SHEET = new ParticleTextureSheet() {
+	// TODO(21w10a): Restore opaque terrain sheet
+	/*public static final ParticleTextureSheet OPAQUE_TERRAIN_SHEET = new ParticleTextureSheet() {
 		public void begin(BufferBuilder bufferBuilder, TextureManager textureManager) {
 			RenderSystem.disableBlend();
 			RenderSystem.depthMask(true);
@@ -26,5 +27,5 @@ public class IrisParticleTextureSheets {
 		public String toString() {
 			return "OPAQUE_TERRAIN_SHEET";
 		}
-	};
+	};*/
 }

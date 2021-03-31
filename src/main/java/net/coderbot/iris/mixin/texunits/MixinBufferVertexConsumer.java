@@ -28,17 +28,19 @@ public interface MixinBufferVertexConsumer {
 	 * @reason FabricMC Mixin does not support injections into interfaces
 	 * @author coderbot16
 	 */
+	/*TODO(21w10a): Replace texunit hooks
 	@Overwrite
 	default VertexConsumer overlay(int u, int v) {
 		return ((BufferVertexConsumer) this).texture((short) u, (short) v, TextureUnit.OVERLAY.getSamplerId());
-	}
+	}*/
 
 	/**
 	 * @reason FabricMC Mixin does not support injections into interfaces
 	 * @author coderbot16
 	 */
+	/*TODO(21w10a): Replace texunit hooks
 	@Overwrite
 	default VertexConsumer light(int u, int v) {
 		return ((BufferVertexConsumer) this).texture((short) u, (short) v, TextureUnit.LIGHTMAP.getSamplerId());
-	}
+	}*/
 }

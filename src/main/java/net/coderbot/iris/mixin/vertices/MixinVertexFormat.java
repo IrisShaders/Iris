@@ -14,10 +14,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(VertexFormat.class)
 public class MixinVertexFormat {
-	@Inject(method = "startDrawing(J)V", at = @At("HEAD"), cancellable = true)
-	private void iris$onStartDrawing(long pointer, CallbackInfo ci) {
+	@Inject(method = "startDrawing()V", at = @At("HEAD"), cancellable = true)
+	private void iris$onStartDrawing(CallbackInfo ci) {
 		if ((Object) this == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL) {
-			IrisVertexFormats.TERRAIN.startDrawing(pointer);
+			IrisVertexFormats.TERRAIN.startDrawing();
 
 			ci.cancel();
 		}

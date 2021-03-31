@@ -12,13 +12,15 @@ public class AlphaTestOverride {
 	}
 
 	public void setup() {
-		GlStateManager.enableAlphaTest();
-		GlStateManager.alphaFunc(function.getGlId(), reference);
+		// TODO(21w10a): Replace alpha test
+		throw new IllegalStateException("Cannot setup alpha state on core profile");
+		/*GlStateManager.enableAlphaTest();
+		GlStateManager.alphaFunc(function.getGlId(), reference);*/
 	}
 
 	public static void teardown() {
-		GlStateManager.disableAlphaTest();
-		GlStateManager.alphaFunc(AlphaTestFunction.GREATER.getGlId(), 0.1F);
+		// TODO(21w10a): Replace alpha test
+		throw new IllegalStateException("Cannot teardown alpha state on core profile");
 	}
 
 	@Override
@@ -33,7 +35,8 @@ public class AlphaTestOverride {
 
 		@Override
 		public void setup() {
-			GlStateManager.disableAlphaTest();
+			// no-op, alpha test doesn't exist on core profile
+			// TODO(21w10a): GlStateManager.disableAlphaTest();
 		}
 
 		@Override

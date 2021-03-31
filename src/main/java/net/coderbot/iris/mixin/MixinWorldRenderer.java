@@ -74,6 +74,8 @@ public class MixinWorldRenderer {
 		skyTextureEnabled = true;
 	}
 
+	// TODO(21w10a): Restore sky render hooks
+	/*
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableTexture()V"))
 	private void iris$renderSky$disableTexture(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		if (skyTextureEnabled) {
@@ -103,7 +105,7 @@ public class MixinWorldRenderer {
 			skyTextureEnabled = true;
 			pipeline.popProgram(GbufferProgram.SKY_BASIC);
 		}
-	}
+	}*/
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
 	private void iris$endSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
@@ -120,6 +122,8 @@ public class MixinWorldRenderer {
 		pipeline.popProgram(GbufferProgram.CLOUDS);
 	}
 
+	// TODO(21w10a): Restore render layer hooks
+	/*
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderLayer renderLayer, MatrixStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		if (renderLayer == RenderLayer.getSolid() || renderLayer == RenderLayer.getCutout() || renderLayer == RenderLayer.getCutoutMipped()) {
@@ -140,7 +144,7 @@ public class MixinWorldRenderer {
 		} else {
 			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderLayer);
 		}
-	}
+	}*/
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER))
 	private void iris$beginWeather(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
