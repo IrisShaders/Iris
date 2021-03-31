@@ -20,7 +20,7 @@ public final class MatrixUniforms {
 		// TODO: In some cases, gbufferProjectionInverse takes on a value much different than OptiFine...
 		// We need to audit Mojang's linear algebra.
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
-		addShadowMatrix(uniforms, "ModelView", () -> ShadowRenderer.MODELVIEW.copy());
+		addShadowMatrix(uniforms, "ModelView", () -> ShadowRenderer.creatShadowModelView().peek().getModel().copy());
 		addShadowArrayMatrix(uniforms, "Projection", MatrixUniforms::getShadowProjection);
 	}
 

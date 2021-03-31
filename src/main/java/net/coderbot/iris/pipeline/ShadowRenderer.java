@@ -89,12 +89,8 @@ public class ShadowRenderer {
 		return new Pair<>(builder.build(), source.getDirectives());
 	}
 
-	public void renderShadows(WorldRendererAccessor worldRenderer) {
-		pipeline.pushProgram(GbufferProgram.NONE);
-		pipeline.beginShadowRender();
-
-		// Create our camera
-		MinecraftClient client = MinecraftClient.getInstance();
+	public static MatrixStack creatShadowModelView() {
+		// Determine the camera position
 		Vec3d cameraPos = CameraUniforms.getCameraPosition();
 
 		double cameraX = cameraPos.getX();
@@ -105,6 +101,23 @@ public class ShadowRenderer {
 		MatrixStack modelView = new MatrixStack();
 		ShadowMatrices.createModelViewMatrix(modelView.peek().getModel(), getShadowAngle(), 2.0f, cameraX, cameraY, cameraZ);
 
+		return modelView;
+	}
+
+	public void renderShadows(WorldRendererAccessor worldRenderer) {
+		pipeline.pushProgram(GbufferProgram.NONE);
+		pipeline.beginShadowRender();
+
+		// Determine the camera position
+		MinecraftClient client = MinecraftClient.getInstance();
+		Vec3d cameraPos = CameraUniforms.getCameraPosition();
+
+		double cameraX = cameraPos.getX();
+		double cameraY = cameraPos.getY();
+		double cameraZ = cameraPos.getZ();
+
+		// Create our camera
+		MatrixStack modelView = creatShadowModelView();
 		MODELVIEW = modelView.peek().getModel().copy();
 
 		// Set up the shadow program
