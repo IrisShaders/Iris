@@ -4,6 +4,7 @@ public class StringTransformations implements Transformations {
 	private String prefix;
 	private StringBuilder injections;
 	private String body;
+	private StringBuilder suffix;
 
 	public StringTransformations(String base) {
 		int versionStringStart = base.indexOf("#version");
@@ -20,6 +21,7 @@ public class StringTransformations implements Transformations {
 		this.prefix = prefix + base.substring(0, splitPoint);
 		this.injections = new StringBuilder();
 		this.body = base.substring(splitPoint);
+		this.suffix = new StringBuilder("\n");
 	}
 
 	@Override
@@ -42,6 +44,9 @@ public class StringTransformations implements Transformations {
 		if (at == InjectionPoint.AFTER_VERSION) {
 			injections.append(line);
 			injections.append('\n');
+		} else if (at == InjectionPoint.END) {
+			suffix.append(line);
+			suffix.append('\n');
 		} else {
 			throw new IllegalArgumentException("Unsupported injection point: " + at);
 		}
@@ -58,10 +63,11 @@ public class StringTransformations implements Transformations {
 		prefix = prefix.replace(from, to);
 		injections = new StringBuilder(injections.toString().replace(from, to));
 		body = body.replace(from, to);
+		suffix = new StringBuilder(suffix.toString().replace(from, to));
 	}
 
 	@Override
 	public String toString() {
-		return prefix + injections + body;
+		return prefix + injections + body + suffix;
 	}
 }

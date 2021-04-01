@@ -8,6 +8,7 @@ public interface Transformations {
 	void replaceExact(String from, String to);
 
 	enum InjectionPoint {
-		AFTER_VERSION
+		AFTER_VERSION,
+		END
 	}
 }

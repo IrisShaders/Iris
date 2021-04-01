@@ -23,8 +23,8 @@ public class NewShaderTests {
 	public static Shader test(ProgramSet programSet) throws IOException {
 		ProgramSource source = programSet.getGbuffersTextured().flatMap(ProgramSource::requireValid).orElseGet(() -> programSet.getGbuffersBasic().flatMap(ProgramSource::requireValid).orElseThrow(RuntimeException::new));
 
-		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
-		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
+		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, 0.1F);
+		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, 0.1F);
 
 		// TODO: Assert that the unpatched programs do not contain any "#moj_import" statements
 

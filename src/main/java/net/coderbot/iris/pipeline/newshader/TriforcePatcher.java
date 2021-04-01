@@ -6,10 +6,27 @@ import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforcePatcher {
-	public static String patch(String source, ShaderType type) {
+	public static String patch(String source, ShaderType type, float alpha) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		fixVersion(transformations);
+
+		if (type == ShaderType.FRAGMENT && alpha > 0.0) {
+			if (transformations.contains("irisMain")) {
+				throw new IllegalStateException("Shader already contains \"irisMain\"???");
+			}
+
+			// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
+			// end.
+			transformations.replaceExact("main", "irisMain");
+			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
+					"    irisMain();\n" +
+					"\n" +
+					"    if (gl_FragData[0].a < " + alpha + ") {\n" +
+					"        discard;\n" +
+					"    }\n" +
+					"}");
+		}
 
 		// TODO: More solid way to handle texture matrices
 		transformations.replaceExact("gl_TextureMatrix[0]", "TextureMat");
