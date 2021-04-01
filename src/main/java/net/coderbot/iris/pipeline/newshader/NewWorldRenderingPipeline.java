@@ -7,21 +7,59 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.minecraft.client.render.Shader;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
+	private final Shader skyBasic;
+	private final Shader skyBasicColor;
+	private final Shader skyTextured;
 	private final Shader terrainSolid;
 	private final Shader terrainCutout;
 	private final Shader terrainCutoutMipped;
 	private final Shader terrainTranslucent;
+	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
-		ProgramSource source = programSet.getGbuffersTextured().flatMap(ProgramSource::requireValid).orElseGet(() -> programSet.getGbuffersBasic().flatMap(ProgramSource::requireValid).orElseThrow(RuntimeException::new));
+		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
 
-		this.terrainSolid = NewShaderTests.create("gbuffers_textured_solid", source, 0.0F);
-		this.terrainCutout = NewShaderTests.create("gbuffers_textured_cutout", source, 0.1F);
-		this.terrainCutoutMipped = NewShaderTests.create("gbuffers_textured_cutout_mipped", source, 0.5F);
-		// TODO: Once this isn't the same as terrain, don't forget about destroying it.
-		this.terrainTranslucent = terrainSolid;
+		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
+
+		// TODO: Resolve hasColorAttrib based on the vertex format
+		this.skyBasic = NewShaderTests.create("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), 0.0F, false);
+		this.skyBasicColor = NewShaderTests.create("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), 0.0F, true);
+		this.skyTextured = NewShaderTests.create("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), 0.0F, false);
+		this.terrainSolid = NewShaderTests.create("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), 0.0F, true);
+		this.terrainCutout = NewShaderTests.create("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), 0.1F, true);
+		this.terrainCutoutMipped = NewShaderTests.create("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), 0.5F, true);
+
+		if (translucentSource != terrainSource) {
+			this.terrainTranslucent = NewShaderTests.create("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), 0.0F, true);
+		} else {
+			this.terrainTranslucent = this.terrainSolid;
+		}
+	}
+
+	@SafeVarargs
+	private static <T> Optional<T> first(Optional<T>... candidates) {
+		for (Optional<T> candidate : candidates) {
+			if (candidate.isPresent()) {
+				return candidate;
+			}
+		}
+
+		return Optional.empty();
+	}
+
+	@Override
+	public void setPhase(WorldRenderingPhase phase) {
+		this.phase = phase;
+	}
+
+	@Override
+	public WorldRenderingPhase getPhase() {
+		return phase;
 	}
 
 	@Override
@@ -60,6 +98,21 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
+	public Shader getSkyBasic() {
+		return skyBasic;
+	}
+
+	@Override
+	public Shader getSkyBasicColor() {
+		return skyBasicColor;
+	}
+
+	@Override
+	public Shader getSkyTextured() {
+		return skyTextured;
+	}
+
+	@Override
 	public Shader getTerrain() {
 		return terrainSolid;
 	}
@@ -82,9 +135,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void destroy() {
 		// NB: If you forget this, shader reloads won't work!
+		skyBasic.close();
+		skyBasicColor.close();
+		skyTextured.close();
+
 		terrainSolid.close();
 		terrainCutout.close();
 		terrainCutoutMipped.close();
-		// TODO: Don't forget about translucent when it actually differs from terrain...
+
+		if (terrainTranslucent != terrainSolid) {
+			terrainTranslucent.close();
+		}
 	}
 }

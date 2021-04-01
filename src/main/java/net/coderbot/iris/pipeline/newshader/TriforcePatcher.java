@@ -6,7 +6,7 @@ import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforcePatcher {
-	public static String patch(String source, ShaderType type, float alpha) {
+	public static String patch(String source, ShaderType type, float alpha, boolean hasChunkOffset, boolean hasColorAttrib) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		fixVersion(transformations);
@@ -66,30 +66,40 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ProjectionMatrix ProjMat");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ProjMat;");
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV0;");
+		if (type == ShaderType.VERTEX) {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV0;");
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in ivec2 UV2;");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in ivec2 UV2;");
+		}
 
 		// TODO: Patching should take in mind cases where there are not color or normal vertex attributes
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color (Color * ColorModulator)");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec4 Color;");
+
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec4 ColorModulator;");
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal Normal");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Normal;");
+		if (hasColorAttrib) {
+			// TODO: Handle the fragment shader here
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color (Color * ColorModulator)");
+
+			if (type == ShaderType.VERTEX) {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec4 Color;");
+			}
+		} else {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color ColorModulator");
+		}
+
+		if (type == ShaderType.VERTEX) {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal Normal");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Normal;");
+		}
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_NormalMatrix mat3(transpose(inverse(gl_ModelViewMatrix)))");
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Vertex vec4(Position, 1.0)");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Position;");
-
-		boolean hasChunkOffset = true;
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ModelViewMat;");
 
 		if (hasChunkOffset) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ModelViewMat;");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec3 ChunkOffset;");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "mat4 _iris_internal_translate(vec3 offset) {\n" +
 					"    // NB: Column-major order\n" +
@@ -100,13 +110,17 @@ public class TriforcePatcher {
 					"}");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix (ModelViewMat * _iris_internal_translate(ChunkOffset))");
 		} else {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ModelViewMat;");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix ModelViewMat");
 		}
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+
+		if (type == ShaderType.VERTEX) {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Vertex vec4(Position, 1.0)");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Position;");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+		}
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define attribute in");

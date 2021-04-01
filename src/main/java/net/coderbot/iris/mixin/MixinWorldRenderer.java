@@ -6,6 +6,7 @@ import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.render.*;
 import net.minecraft.util.math.Vec3d;
@@ -28,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(WorldRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinWorldRenderer {
+	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V";
 	private static final String RENDER = "render(Lnet/minecraft/client/util/math/MatrixStack;FJZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lnet/minecraft/client/render/LightmapTextureManager;Lnet/minecraft/util/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
 	private static final String RENDER_SKY = "Lnet/minecraft/client/render/WorldRenderer;renderSky(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/math/Matrix4f;F)V";
@@ -49,12 +51,14 @@ public class MixinWorldRenderer {
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 		
 		pipeline.beginWorldRendering();
+		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}
 
 	// Inject a bit early so that we can end our rendering in time.
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;method_23792()V"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.finalizeWorldRendering();
+		pipeline.setPhase(WorldRenderingPhase.NOT_RENDERING_WORLD);
 		pipeline = null;
 	}
 
@@ -67,13 +71,12 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER))
 	private void iris$afterClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.CLEAR);
-	}
-
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY))
-	private void iris$beginSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		pipeline.pushProgram(GbufferProgram.SKY_TEXTURED);
-		skyTextureEnabled = true;
 	}*/
+
+	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=sky"))
+	private void iris$beginSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		pipeline.setPhase(WorldRenderingPhase.SKY);
+	}
 
 	// TODO(21w10a): Restore sky render hooks
 	/*
@@ -91,16 +94,16 @@ public class MixinWorldRenderer {
 			to = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
 	private void iris$renderSky$drawHorizon(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		new HorizonRenderer().renderHorizon(matrices);
-	}
+	}*/
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getSkyAngle(F)F"),
 		slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/util/math/Vec3f;POSITIVE_Y:Lnet/minecraft/util/math/Vec3f;")))
-	private void iris$renderSky$tiltSun(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+	private void iris$renderSky$tiltSun(MatrixStack matrices, Matrix4f projectionMatrix, float f, CallbackInfo callback) {
 		// TODO: Don't hardcode the sunPathRotation here
-		matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
+		// TODO(20w10a): matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
 	}
 
-	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableTexture()V"))
+	/*@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableTexture()V"))
 	private void iris$renderSky$enableTexture(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		if (!skyTextureEnabled) {
 			skyTextureEnabled = true;
@@ -109,12 +112,13 @@ public class MixinWorldRenderer {
 	}*/
 
 	// TODO(21w10a): Deal with render hooks
-	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
 	private void iris$endSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		pipeline.popProgram(GbufferProgram.SKY_TEXTURED);
+		// After the sky has rendered, there isn't a clear phase.
+		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS))
+	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS))
 	private void iris$beginClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.CLOUDS);
 	}

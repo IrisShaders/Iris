@@ -3,6 +3,7 @@ package net.coderbot.iris.mixin;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.render.Shader;
@@ -35,6 +36,27 @@ public class MixinGameRenderer {
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 	}
 
+	@Inject(method = "getPositionShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
+	private static void iris$overridePositionShader(CallbackInfoReturnable<Shader> cir) {
+		if (isPhase(WorldRenderingPhase.SKY)) {
+			override(CoreWorldRenderingPipeline::getSkyBasic, cir);
+		}
+	}
+
+	@Inject(method = "getPositionColorShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
+	private static void iris$overridePositionColorShader(CallbackInfoReturnable<Shader> cir) {
+		if (isPhase(WorldRenderingPhase.SKY)) {
+			override(CoreWorldRenderingPipeline::getSkyBasicColor, cir);
+		}
+	}
+
+	@Inject(method = "getPositionTexShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
+	private static void iris$overridePositionTexShader(CallbackInfoReturnable<Shader> cir) {
+		if (isPhase(WorldRenderingPhase.SKY)) {
+			override(CoreWorldRenderingPipeline::getSkyTextured, cir);
+		}
+	}
+
 	@Inject(method = "getRenderTypeSolidShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideSolidShader(CallbackInfoReturnable<Shader> cir) {
 		override(CoreWorldRenderingPipeline::getTerrain, cir);
@@ -58,6 +80,16 @@ public class MixinGameRenderer {
 	@Inject(method = "getRenderTypeTripwireShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTripwireShader(CallbackInfoReturnable<Shader> cir) {
 		override(CoreWorldRenderingPipeline::getTranslucent, cir);
+	}
+
+	private static boolean isPhase(WorldRenderingPhase phase) {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+
+		if (pipeline instanceof CoreWorldRenderingPipeline) {
+			return ((CoreWorldRenderingPipeline) pipeline).getPhase() == phase;
+		} else {
+			return false;
+		}
 	}
 
 	private static void override(Function<CoreWorldRenderingPipeline, Shader> getter, CallbackInfoReturnable<Shader> cir) {

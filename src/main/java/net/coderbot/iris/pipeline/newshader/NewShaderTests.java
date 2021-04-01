@@ -20,9 +20,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class NewShaderTests {
-	public static Shader create(String name, ProgramSource source, float alpha) throws IOException{
-		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha);
-		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha);
+	public static Shader create(String name, ProgramSource source, float alpha, boolean hasColorAttrib) throws IOException{
+		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, hasColorAttrib);
+		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, hasColorAttrib);
 
 		// TODO: Assert that the unpatched programs do not contain any "#moj_import" statements
 
