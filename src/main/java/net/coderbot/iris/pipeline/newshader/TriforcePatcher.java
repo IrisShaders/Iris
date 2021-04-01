@@ -104,6 +104,10 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix ModelViewMat");
 		}
 
+		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define attribute in");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define varying out");
