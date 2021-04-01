@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -97,7 +98,9 @@ public class TriforcePatcher {
 
 		if (type == ShaderType.FRAGMENT) {
 			if (transformations.contains("gl_FragColor")) {
-				throw new UnsupportedOperationException("[Triforce Patcher] gl_FragColor is not supported yet, please use gl_FragData!");
+				// TODO: Find a way to properly support gl_FragColor
+				Iris.logger.warn("[Triforce Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FragColor iris_FragData[0]");
 			}
 
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FragData iris_FragData");
@@ -106,6 +109,7 @@ public class TriforcePatcher {
 
 		// TODO: Add similar functions for all legacy texture sampling functions
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }");
 
 		System.out.println(transformations.toString());
 
