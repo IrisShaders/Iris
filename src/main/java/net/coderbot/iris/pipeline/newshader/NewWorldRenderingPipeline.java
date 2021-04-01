@@ -50,7 +50,22 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public Shader getTextured() {
+	public Shader getTerrain() {
+		return textured;
+	}
+
+	@Override
+	public Shader getTerrainCutout() {
+		return textured;
+	}
+
+	@Override
+	public Shader getTerrainCutoutMipped() {
+		return textured;
+	}
+
+	@Override
+	public Shader getTranslucent() {
 		return textured;
 	}
 

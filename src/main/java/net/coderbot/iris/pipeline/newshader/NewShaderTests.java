@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 
 public class NewShaderTests {
 	public static Shader test(ProgramSet programSet) throws IOException {
-		ProgramSource source = programSet.getGbuffersTextured().flatMap(ProgramSource::requireValid).orElse(programSet.getGbuffersBasic().flatMap(ProgramSource::requireValid).orElseThrow(RuntimeException::new));
+		ProgramSource source = programSet.getGbuffersTextured().flatMap(ProgramSource::requireValid).orElseGet(() -> programSet.getGbuffersBasic().flatMap(ProgramSource::requireValid).orElseThrow(RuntimeException::new));
 
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);

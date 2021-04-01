@@ -18,6 +18,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.function.Function;
+
 @Mixin(GameRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinGameRenderer {
@@ -35,10 +37,34 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getRenderTypeSolidShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideSolidShader(CallbackInfoReturnable<Shader> cir) {
+		override(CoreWorldRenderingPipeline::getTerrain, cir);
+	}
+
+	@Inject(method = "getRenderTypeCutoutShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideCutoutShader(CallbackInfoReturnable<Shader> cir) {
+		override(CoreWorldRenderingPipeline::getTerrainCutout, cir);
+	}
+
+	@Inject(method = "getRenderTypeCutoutMippedShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideCutoutMippedShader(CallbackInfoReturnable<Shader> cir) {
+		override(CoreWorldRenderingPipeline::getTerrainCutoutMipped, cir);
+	}
+
+	@Inject(method = "getRenderTypeTranslucentShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideTranslucentShader(CallbackInfoReturnable<Shader> cir) {
+		override(CoreWorldRenderingPipeline::getTranslucent, cir);
+	}
+
+	@Inject(method = "getRenderTypeTripwireShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideTripwireShader(CallbackInfoReturnable<Shader> cir) {
+		override(CoreWorldRenderingPipeline::getTranslucent, cir);
+	}
+
+	private static void override(Function<CoreWorldRenderingPipeline, Shader> getter, CallbackInfoReturnable<Shader> cir) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			Shader override = ((CoreWorldRenderingPipeline) pipeline).getTextured();
+			Shader override = getter.apply(((CoreWorldRenderingPipeline) pipeline));
 
 			if (override != null) {
 				cir.setReturnValue(override);
