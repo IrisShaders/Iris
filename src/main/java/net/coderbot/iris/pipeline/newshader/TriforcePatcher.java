@@ -19,7 +19,12 @@ public class TriforcePatcher {
 
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FogFragCoord iris_FogFragCoord");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "out float iris_FogFragCoord;");
+
+		if (type == ShaderType.VERTEX) {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "out float iris_FogFragCoord;");
+		} else if (type == ShaderType.FRAGMENT) {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in float iris_FogFragCoord;");
+		}
 
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ProjectionMatrix ProjMat");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ProjMat;");
@@ -28,7 +33,7 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV0;");
 
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV2;");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in ivec2 UV2;");
 
 		// TODO: Patching should take in mind cases where there are not color or normal vertex attributes
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color (Color * ColorModulator)");
