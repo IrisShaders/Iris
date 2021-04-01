@@ -9,6 +9,7 @@ import java.util.zip.ZipException;
 import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.pipeline.*;
+import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -283,10 +284,18 @@ public class Iris implements ClientModInitializer {
 
 		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
-		if (internal) {
+		// TODO(21w10a): Bring back the old world rendering pipelines
+		/*if (internal) {
 			return new InternalWorldRenderingPipeline(programs);
 		} else {
 			return new DeferredWorldRenderingPipeline(programs);
+		}*/
+
+		try {
+			return new NewWorldRenderingPipeline(programs);
+		} catch (Exception e) {
+			Iris.logger.error("Couldn't load NewWorldRenderingPipeline, falling back to vanilla shaders.", e);
+			return new FixedFunctionWorldRenderingPipeline();
 		}
 	}
 

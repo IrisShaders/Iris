@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.opengl.GL20C;
@@ -98,6 +99,8 @@ public class PipelineManager {
 		if (pipeline instanceof DeferredWorldRenderingPipeline) {
 			// TODO: Don't cast this to DeferredWorldRenderingPipeline?
 			((DeferredWorldRenderingPipeline) pipeline).destroy();
+		} else if (pipeline instanceof CoreWorldRenderingPipeline) {
+			((CoreWorldRenderingPipeline) pipeline).destroy();
 		}
 
 		pipeline = null;

@@ -58,7 +58,8 @@ public class MixinWorldRenderer {
 		pipeline = null;
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR))
+	// TODO(21w10a): Deal with render hooks
+	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR))
 	private void iris$beforeClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.CLEAR);
 	}
@@ -72,7 +73,7 @@ public class MixinWorldRenderer {
 	private void iris$beginSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.SKY_TEXTURED);
 		skyTextureEnabled = true;
-	}
+	}*/
 
 	// TODO(21w10a): Restore sky render hooks
 	/*
@@ -107,7 +108,8 @@ public class MixinWorldRenderer {
 		}
 	}*/
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
+	// TODO(21w10a): Deal with render hooks
+	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
 	private void iris$endSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.SKY_TEXTURED);
 	}
@@ -120,7 +122,7 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))
 	private void iris$endClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.CLOUDS);
-	}
+	}*/
 
 	// TODO(21w10a): Restore render layer hooks
 	/*
@@ -146,7 +148,8 @@ public class MixinWorldRenderer {
 		}
 	}*/
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER))
+	// TODO(21w10a): Deal with render hooks
+	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER))
 	private void iris$beginWeather(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.WEATHER);
 	}
@@ -164,7 +167,7 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER, shift = At.Shift.AFTER))
 	private void iris$endWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
-	}
+	}*/
 
 	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
 	/*@Inject(method = "renderEntity", at = @At("HEAD"))
