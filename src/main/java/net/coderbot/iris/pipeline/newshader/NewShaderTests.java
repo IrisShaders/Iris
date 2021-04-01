@@ -3,6 +3,8 @@ package net.coderbot.iris.pipeline.newshader;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.minecraft.client.render.Shader;
 import net.minecraft.resource.Resource;
@@ -58,7 +60,11 @@ public class NewShaderTests {
 		ResourceFactory shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
 
 		// TODO: Not always the same vertex format.
-		return new Shader(shaderResourceFactory, "gbuffers_textured", IrisVertexFormats.TERRAIN);
+		return new ExtendedShader(shaderResourceFactory, "gbuffers_textured", IrisVertexFormats.TERRAIN, uniforms -> {
+			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap());
+			SamplerUniforms.addWorldSamplerUniforms(uniforms);
+			SamplerUniforms.addDepthSamplerUniforms(uniforms);
+		});
 	}
 
 	private static class IrisProgramResourceFactory implements ResourceFactory {

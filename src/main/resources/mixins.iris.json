@@ -12,6 +12,7 @@
     "MixinImmediateVertexConsumerProvider",
     "MixinTranslationStorage",
     "MixinWorldRenderer",
+    "MixinShader",
     "fabulous.MixinDisableFabulousGraphics",
     "fabulous.MixinOption",
     "renderlayer.MixinFixEyesTranslucency",
