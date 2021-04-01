@@ -17,6 +17,25 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_LightmapTextureMatrix;");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 TextureMat;");
 
+		// TODO: Other fog things
+		// TODO: fogDensity isn't actually implemented!
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform float fogDensity;\n" +
+				"uniform float FogStart;\n" +
+				"uniform float FogEnd;\n" +
+				"uniform vec4 FogColor;\n" +
+				"\n" +
+				"struct iris_FogParameters {\n" +
+				"    vec4 color;\n" +
+				"    float density;\n" +
+				"    float start;\n" +
+				"    float end;\n" +
+				"    float scale;\n" +
+				"};\n" +
+				"\n" +
+				"iris_FogParameters iris_Fog = iris_FogParameters(FogColor, fogDensity, FogStart, FogEnd, 1.0 / (FogEnd - FogStart));\n" +
+				"\n" +
+				"#define gl_Fog iris_Fog");
+
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FogFragCoord iris_FogFragCoord");
 
