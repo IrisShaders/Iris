@@ -1,10 +1,10 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.minecraft.client.render.Shader;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceFactory;
 import net.minecraft.resource.metadata.ResourceMetadataReader;
@@ -20,8 +20,8 @@ public class NewShaderTests {
 	public static Shader test(ProgramSet programSet) throws IOException {
 		ProgramSource source = programSet.getGbuffersTextured().flatMap(ProgramSource::requireValid).orElseThrow(RuntimeException::new);
 
-		String vertex = source.getVertexSource().orElseThrow(RuntimeException::new);
-		String fragment = source.getFragmentSource().orElseThrow(RuntimeException::new);
+		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
+		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
 
 		// TODO: Assert that the unpatched programs do not contain any "#moj_import" statements
 
