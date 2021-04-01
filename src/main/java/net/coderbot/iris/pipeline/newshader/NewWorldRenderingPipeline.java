@@ -3,15 +3,25 @@ package net.coderbot.iris.pipeline.newshader;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.ProgramSet;
+import net.coderbot.iris.shaderpack.ProgramSource;
 import net.minecraft.client.render.Shader;
 
 import java.io.IOException;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
-	private final Shader textured;
+	private final Shader terrainSolid;
+	private final Shader terrainCutout;
+	private final Shader terrainCutoutMipped;
+	private final Shader terrainTranslucent;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
-		this.textured = NewShaderTests.test(programSet);
+		ProgramSource source = programSet.getGbuffersTextured().flatMap(ProgramSource::requireValid).orElseGet(() -> programSet.getGbuffersBasic().flatMap(ProgramSource::requireValid).orElseThrow(RuntimeException::new));
+
+		this.terrainSolid = NewShaderTests.create("gbuffers_textured_solid", source, 0.0F);
+		this.terrainCutout = NewShaderTests.create("gbuffers_textured_cutout", source, 0.1F);
+		this.terrainCutoutMipped = NewShaderTests.create("gbuffers_textured_cutout_mipped", source, 0.5F);
+		// TODO: Once this isn't the same as terrain, don't forget about destroying it.
+		this.terrainTranslucent = terrainSolid;
 	}
 
 	@Override
@@ -51,27 +61,30 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public Shader getTerrain() {
-		return textured;
+		return terrainSolid;
 	}
 
 	@Override
 	public Shader getTerrainCutout() {
-		return textured;
+		return terrainCutout;
 	}
 
 	@Override
 	public Shader getTerrainCutoutMipped() {
-		return textured;
+		return terrainCutoutMipped;
 	}
 
 	@Override
 	public Shader getTranslucent() {
-		return textured;
+		return terrainTranslucent;
 	}
 
 	@Override
 	public void destroy() {
 		// NB: If you forget this, shader reloads won't work!
-		textured.close();
+		terrainSolid.close();
+		terrainCutout.close();
+		terrainCutoutMipped.close();
+		// TODO: Don't forget about translucent when it actually differs from terrain...
 	}
 }

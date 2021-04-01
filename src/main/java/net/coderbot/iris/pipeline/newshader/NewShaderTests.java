@@ -20,11 +20,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class NewShaderTests {
-	public static Shader test(ProgramSet programSet) throws IOException {
-		ProgramSource source = programSet.getGbuffersTextured().flatMap(ProgramSource::requireValid).orElseGet(() -> programSet.getGbuffersBasic().flatMap(ProgramSource::requireValid).orElseThrow(RuntimeException::new));
-
-		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, 0.1F);
-		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, 0.1F);
+	public static Shader create(String name, ProgramSource source, float alpha) throws IOException{
+		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha);
+		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha);
 
 		// TODO: Assert that the unpatched programs do not contain any "#moj_import" statements
 
@@ -34,8 +32,8 @@ public class NewShaderTests {
 				"        \"srcrgb\": \"srcalpha\",\n" +
 				"        \"dstrgb\": \"1-srcalpha\"\n" +
 				"    },\n" +
-				"    \"vertex\": \"gbuffers_textured\",\n" +
-				"    \"fragment\": \"gbuffers_textured\",\n" +
+				"    \"vertex\": \"" + name + "\",\n" +
+				"    \"fragment\": \"" + name + "\",\n" +
 				"    \"attributes\": [\n" +
 				"        \"Position\",\n" +
 				"        \"Color\",\n" +
@@ -62,7 +60,7 @@ public class NewShaderTests {
 		ResourceFactory shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
 
 		// TODO: Not always the same vertex format.
-		return new ExtendedShader(shaderResourceFactory, "gbuffers_textured", IrisVertexFormats.TERRAIN, uniforms -> {
+		return new ExtendedShader(shaderResourceFactory, name, IrisVertexFormats.TERRAIN, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap());
 			SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			SamplerUniforms.addDepthSamplerUniforms(uniforms);
