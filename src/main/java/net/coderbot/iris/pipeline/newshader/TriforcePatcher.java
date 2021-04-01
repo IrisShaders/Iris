@@ -62,6 +62,9 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal Normal");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Normal;");
 
+		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_NormalMatrix mat3(transpose(inverse(gl_ModelViewMatrix)))");
+
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Vertex vec4(Position, 1.0)");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Position;");
 
