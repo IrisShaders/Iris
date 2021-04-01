@@ -5,6 +5,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
+import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.minecraft.client.render.Shader;
 import net.minecraft.resource.Resource;
@@ -47,6 +48,7 @@ public class NewShaderTests {
 				"        { \"name\": \"Sampler2\" }\n" +
 				"    ],\n" +
 				"    \"uniforms\": [\n" +
+				"        { \"name\": \"TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
 				"        { \"name\": \"ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
 				"        { \"name\": \"ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
 				"        { \"name\": \"ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
@@ -64,6 +66,7 @@ public class NewShaderTests {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap());
 			SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			SamplerUniforms.addDepthSamplerUniforms(uniforms);
+			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 		});
 	}
 

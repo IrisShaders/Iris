@@ -10,8 +10,14 @@ public class TriforcePatcher {
 
 		fixVersion(transformations);
 
-		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
+		// TODO: More solid way to handle texture matrices
+		transformations.replaceExact("gl_TextureMatrix[0]", "TextureMat");
+		transformations.replaceExact("gl_TextureMatrix[1]", "iris_LightmapTextureMatrix");
 
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_LightmapTextureMatrix;");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 TextureMat;");
+
+		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FogFragCoord iris_FogFragCoord");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "out float iris_FogFragCoord;");
 
@@ -32,9 +38,26 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal Normal");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Normal;");
 
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Vertex vec4(Position, 1.0)");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Position;");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ModelViewMat;");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec3 ChunkOffset;");
+
+		boolean hasChunkOffset = true;
+
+		if (hasChunkOffset) {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ModelViewMat;");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec3 ChunkOffset;");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "mat4 _iris_internal_translate(vec3 offset) {\n" +
+					"    // NB: Column-major order\n" +
+					"    return mat4(1.0, 0.0, 0.0, 0.0,\n" +
+					"                0.0, 1.0, 0.0, 0.0,\n" +
+					"                0.0, 0.0, 1.0, 0.0,\n" +
+					"                offset.x, offset.y, offset.z, 1.0);\n" +
+					"}");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix (ModelViewMat * _iris_internal_translate(ChunkOffset))");
+		} else {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ModelViewMat;");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix ModelViewMat");
+		}
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define attribute in");
