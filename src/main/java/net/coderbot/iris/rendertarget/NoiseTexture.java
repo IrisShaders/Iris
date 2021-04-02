@@ -8,6 +8,7 @@ import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.texture.TextureUploadHelper;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
+import org.lwjgl.opengl.GL20C;
 
 /**
  * An extremely simple noise texture. Each color channel contains a uniform random value from 0 to 255. Essentially just
@@ -25,6 +26,11 @@ public class NoiseTexture extends GlResource {
 		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
 		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_REPEAT);
 		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_REPEAT);
+
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LEVEL, 0);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_LOD, 0);
+		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LOD,0);
+		GL11C.glTexParameterf(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
 		resize(width, height);
 
 		GlStateManager.bindTexture(0);
