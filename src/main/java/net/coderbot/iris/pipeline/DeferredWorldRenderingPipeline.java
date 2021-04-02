@@ -11,7 +11,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.postprocess.CompositeRenderer;
-import net.coderbot.iris.rendertarget.BuiltinNoiseTexture;
+import net.coderbot.iris.rendertarget.NoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.SingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -79,8 +79,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final CompositeRenderer compositeRenderer;
 	private final SingleColorTexture normals;
 	private final SingleColorTexture specular;
+	private final NoiseTexture noise;
 
 	private final int waterId;
+	private final float sunPathRotation;
 
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
@@ -92,6 +94,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives());
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
+		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
@@ -119,20 +122,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE2);
 
-		// Ensure that the pixel storage mode is in a sane state, otherwise the uploaded texture data will be quite
-		// incorrect.
-		//
-		// It is likely that this also avoids the crashes on AMD that I previously experienced with texture creation.
-		//
-		// This code is from Canvas: https://github.com/grondag/canvas/commit/f0ab652d7a8b7cc9febf0209bee15cffce9eac83
-		GlStateManager.pixelStore(GL20C.GL_UNPACK_ROW_LENGTH, 0);
-		GlStateManager.pixelStore(GL20C.GL_UNPACK_SKIP_ROWS, 0);
-		GlStateManager.pixelStore(GL20C.GL_UNPACK_SKIP_PIXELS, 0);
-		GlStateManager.pixelStore(GL20C.GL_UNPACK_ALIGNMENT, 4);
-
 		// Create some placeholder PBR textures for now
 		normals = new SingleColorTexture(127, 127, 255, 255);
 		specular = new SingleColorTexture(0, 0, 0, 0);
+
+		final int noiseTextureResolution = programs.getPackDirectives().getNoiseTextureResolution();
+		noise = new NoiseTexture(noiseTextureResolution, noiseTextureResolution);
+
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
 		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
@@ -312,6 +308,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		return true;
 	}
 
+	@Override
+	public float getSunPathRotation() {
+		return sunPathRotation;
+	}
+
 	private void beginPass(Pass pass) {
 		if (pass != null) {
 			pass.use();
@@ -335,7 +336,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
 		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
@@ -370,7 +371,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
 			// a given program and bind the required textures instead.
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
-			BuiltinNoiseTexture.bind();
+			GlStateManager.bindTexture(noise.getTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE2);
 			GlStateManager.bindTexture(normals.getTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE3);
@@ -448,6 +449,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		// Destroy the shadow map renderer and its render targets
 		shadowMapRenderer.destroy();
+
+		// Destroy the static samplers (specular, normals, and noise)
+		specular.destroy();
+		normals.destroy();
+		noise.destroy();
 	}
 
 	private static void destroyPasses(Pass... passes) {

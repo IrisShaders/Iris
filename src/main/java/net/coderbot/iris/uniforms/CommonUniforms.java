@@ -10,6 +10,7 @@ import java.util.function.IntSupplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.texunits.TextureUnit;
 
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
@@ -38,12 +39,12 @@ public final class CommonUniforms {
 		// no construction allowed
 	}
 
-	public static void addCommonUniforms(UniformHolder uniforms, IdMap idMap) {
+	public static void addCommonUniforms(UniformHolder uniforms, IdMap idMap, PackDirectives directives) {
 		CameraUniforms.addCameraUniforms(uniforms);
 		ViewportUniforms.addViewportUniforms(uniforms);
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
-		CelestialUniforms.addCelestialUniforms(uniforms);
+		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
 		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
 		MatrixUniforms.addMatrixUniforms(uniforms);
 		SamplerUniforms.addCommonSamplerUniforms(uniforms);
