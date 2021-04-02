@@ -81,6 +81,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final NoiseTexture noise;
 
 	private final int waterId;
+	private final float sunPathRotation;
 
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
@@ -90,6 +91,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives());
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
+		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
@@ -303,6 +305,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		return true;
 	}
 
+	@Override
+	public float getSunPathRotation() {
+		return sunPathRotation;
+	}
+
 	private void beginPass(Pass pass) {
 		if (pass != null) {
 			pass.use();
@@ -326,7 +333,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
 		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());

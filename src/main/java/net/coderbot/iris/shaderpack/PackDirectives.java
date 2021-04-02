@@ -13,6 +13,7 @@ public class PackDirectives {
 	private InternalTextureFormat[] requestedTextureFormats;
 	private boolean[] clearBuffers;
 	private int noiseTextureResolution;
+	private float sunPathRotation;
 
 	PackDirectives() {
 		requestedTextureFormats = new InternalTextureFormat[RenderTargets.MAX_RENDER_TARGETS];
@@ -22,6 +23,7 @@ public class PackDirectives {
 		Arrays.fill(clearBuffers, true);
 
 		noiseTextureResolution = 256;
+		sunPathRotation = 0.0F;
 	}
 
 	public IntList getBuffersToBeCleared() {
@@ -46,6 +48,10 @@ public class PackDirectives {
 		return noiseTextureResolution;
 	}
 
+	public float getSunPathRotation() {
+		return sunPathRotation;
+	}
+
 	void accept(ConstDirectiveParser.ConstDirective directive) {
 		final ConstDirectiveParser.Type type = directive.getType();
 		final String key = directive.getKey();
@@ -67,6 +73,8 @@ public class PackDirectives {
 			});
 		} else if (type == ConstDirectiveParser.Type.INT && key.equals("noiseTextureResolution")) {
 			noiseTextureResolution = Integer.parseInt(value);
+		} else if (type == ConstDirectiveParser.Type.FLOAT && key.equals("sunPathRotation")) {
+			sunPathRotation = Float.parseFloat(value);
 		}
 	}
 
