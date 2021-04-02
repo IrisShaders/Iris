@@ -61,7 +61,7 @@ public class NewShaderTests {
 		ResourceFactory shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, uniforms -> {
-			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap());
+			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());
 			SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
