@@ -70,7 +70,7 @@ public final class CelestialUniforms {
 		// This is because we need the result of it before it's actually performed in vanilla.
 		celestial.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
 		// TODO: Don't hardcode the sunPathRotation here
-		celestial.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
+		// TODO(20w10a): celestial.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
 		celestial.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
 
 		position.transform(celestial);

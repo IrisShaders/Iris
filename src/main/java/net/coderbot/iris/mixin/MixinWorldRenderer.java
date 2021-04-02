@@ -86,15 +86,14 @@ public class MixinWorldRenderer {
 			skyTextureEnabled = false;
 			pipeline.pushProgram(GbufferProgram.SKY_BASIC);
 		}
-	}
+	}*/
 
 	@Inject(method = RENDER_SKY,
-		at = @At(value = "INVOKE:FIRST", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableFog()V"),
-		slice = @Slice(from = @At(value = "FIELD:FIRST", target = "Lnet/minecraft/client/render/WorldRenderer;lightSkyBuffer:Lnet/minecraft/client/gl/VertexBuffer;"),
-			to = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
-	private void iris$renderSky$drawHorizon(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
-		new HorizonRenderer().renderHorizon(matrices);
-	}*/
+		at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;getShader()Lnet/minecraft/client/render/Shader;", shift = At.Shift.AFTER),
+		slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
+	private void iris$renderSky$drawHorizon(MatrixStack matrices, Matrix4f projectionMatrix, float f, CallbackInfo callback) {
+		new HorizonRenderer().renderHorizon(matrices.peek().getModel().copy(), projectionMatrix.copy(), GameRenderer.getPositionShader());
+	}
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getSkyAngle(F)F"),
 		slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/util/math/Vec3f;POSITIVE_Y:Lnet/minecraft/util/math/Vec3f;")))

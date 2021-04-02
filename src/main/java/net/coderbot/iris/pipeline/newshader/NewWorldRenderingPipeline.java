@@ -4,7 +4,9 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.minecraft.client.render.Shader;
+import net.minecraft.client.render.VertexFormats;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -27,15 +29,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 
 		// TODO: Resolve hasColorAttrib based on the vertex format
-		this.skyBasic = NewShaderTests.create("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), 0.0F, false);
-		this.skyBasicColor = NewShaderTests.create("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), 0.0F, true);
-		this.skyTextured = NewShaderTests.create("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), 0.0F, false);
-		this.terrainSolid = NewShaderTests.create("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), 0.0F, true);
-		this.terrainCutout = NewShaderTests.create("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), 0.1F, true);
-		this.terrainCutoutMipped = NewShaderTests.create("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), 0.5F, true);
+		this.skyBasic = NewShaderTests.create("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), 0.0F, VertexFormats.POSITION, false);
+		this.skyBasicColor = NewShaderTests.create("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), 0.0F, VertexFormats.POSITION_COLOR, true);
+		this.skyTextured = NewShaderTests.create("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), 0.0F, VertexFormats.POSITION_TEXTURE, false);
+		this.terrainSolid = NewShaderTests.create("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), 0.0F, IrisVertexFormats.TERRAIN, true);
+		this.terrainCutout = NewShaderTests.create("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), 0.1F, IrisVertexFormats.TERRAIN, true);
+		this.terrainCutoutMipped = NewShaderTests.create("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), 0.5F, IrisVertexFormats.TERRAIN, true);
 
 		if (translucentSource != terrainSource) {
-			this.terrainTranslucent = NewShaderTests.create("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), 0.0F, true);
+			this.terrainTranslucent = NewShaderTests.create("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), 0.0F, IrisVertexFormats.TERRAIN, true);
 		} else {
 			this.terrainTranslucent = this.terrainSolid;
 		}

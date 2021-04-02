@@ -8,6 +8,7 @@ import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.minecraft.client.render.Shader;
+import net.minecraft.client.render.VertexFormat;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceFactory;
 import net.minecraft.resource.metadata.ResourceMetadataReader;
@@ -20,7 +21,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class NewShaderTests {
-	public static Shader create(String name, ProgramSource source, float alpha, boolean hasColorAttrib) throws IOException{
+	public static Shader create(String name, ProgramSource source, float alpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException{
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, hasColorAttrib);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, hasColorAttrib);
 
@@ -59,8 +60,7 @@ public class NewShaderTests {
 
 		ResourceFactory shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
 
-		// TODO: Not always the same vertex format.
-		return new ExtendedShader(shaderResourceFactory, name, IrisVertexFormats.TERRAIN, uniforms -> {
+		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap());
 			SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			SamplerUniforms.addDepthSamplerUniforms(uniforms);
