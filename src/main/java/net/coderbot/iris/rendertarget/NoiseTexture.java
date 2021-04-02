@@ -45,6 +45,9 @@ public class NoiseTexture extends GlResource {
 		ByteBuffer pixels = generateNoise();
 
 		TextureUploadHelper.resetTextureUploadState();
+
+		// Since we're using tightly-packed RGB data, we must use an alignment of 1 byte instead of the usual 4 bytes.
+		GlStateManager.pixelStore(GL20C.GL_UNPACK_ALIGNMENT, 1);
 		GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGB, width, height, 0, GL11C.GL_RGB, GL11C.GL_UNSIGNED_BYTE, pixels);
 
 		GlStateManager.bindTexture(0);
