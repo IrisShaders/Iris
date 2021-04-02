@@ -96,10 +96,9 @@ public class MixinWorldRenderer {
 	}
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getSkyAngle(F)F"),
-		slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/util/math/Vec3f;POSITIVE_Y:Lnet/minecraft/util/math/Vec3f;")))
-	private void iris$renderSky$tiltSun(MatrixStack matrices, Matrix4f projectionMatrix, float f, CallbackInfo callback) {
-		// TODO: Don't hardcode the sunPathRotation here
-		// TODO(20w10a): matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(-40.0F));
+		slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/client/util/math/Vector3f;POSITIVE_Y:Lnet/minecraft/client/util/math/Vector3f;")))
+	private void iris$renderSky$tiltSun(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(pipeline.getSunPathRotation()));
 	}
 
 	/*@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableTexture()V"))
