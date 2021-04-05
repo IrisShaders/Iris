@@ -45,20 +45,19 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 				true);
 	}
 	
-	public CachedUniform addVariable(Type type, String name, String expression) throws Exception {
+	public CachedUniform addVariable(Type type, String name, ExpressionToken expression) throws Exception {
 		if (this.variables.containsKey(name))
 			throw new Exception("Duplicated variable: " + name);
 		if (this.inputHolder.containsKey(name))
 			throw new Exception("Variable shadows: " + name);
 		
-		ExpressionToken ast = IrisOptions.parser.parse(expression).simplify();
-		Expression expr = this.resolver.resolveExpression(type, ast);
+		Expression expr = this.resolver.resolveExpression(type, expression);
 		CachedUniform uniform = CachedUniform.forExpression(type, expr, this);
 		this.variables.put(name, uniform);
 		return uniform;
 	}
 	
-	public CachedUniform addUniform(Type type, String name, String expression, int location) throws Exception {
+	public CachedUniform addUniform(Type type, String name, ExpressionToken expression, int location) throws Exception {
 		CachedUniform uniform = this.addVariable(type, name, expression);
 		uniform.setLocation(location);
 		return uniform;
@@ -106,7 +105,12 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 				return;
 			}
 			
-			variables.put(name, new Variable(parsedType, name, expression, isUniform));
+			try{
+				ExpressionToken ast = IrisOptions.parser.parse(expression).simplify();
+				variables.put(name, new Variable(parsedType, name, ast, isUniform));
+			}catch (Exception e){
+				Iris.logger.warn("Failed to parse custom variable/uniform");
+			}
 		}
 		
 		public CustomUniforms build(
@@ -127,10 +131,10 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 					} else {
 						customUniforms.addVariable(variable.type, variable.name, variable.expression);
 					}
-					Iris.logger.info("Was able to parse uniform " + variable.name + " = " + variable.expression);
+					Iris.logger.info("Was able to resolve uniform " + variable.name + " = " + variable.expression);
 				} catch (Exception e) {
 					Iris.logger
-							.warn("Failed to parse uniform " + variable.name + ", reason: " + e
+							.warn("Failed to resolve uniform " + variable.name + ", reason: " + e
 									.getMessage() + " ( = " + variable.expression + ")");
 					Iris.logger.catching(e);
 				}
@@ -162,10 +166,10 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 		private static class Variable {
 			final public Type type;
 			final public String name;
-			final public String expression;
+			final public ExpressionToken expression;
 			final public boolean uniform;
 			
-			public Variable(Type type, String name, String expression, boolean uniform) {
+			public Variable(Type type, String name, ExpressionToken expression, boolean uniform) {
 				this.type = type;
 				this.name = name;
 				this.expression = expression;
