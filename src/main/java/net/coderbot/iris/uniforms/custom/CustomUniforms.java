@@ -72,6 +72,11 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 	}
 	
 	@Override
+	public boolean hasVariable(String name) {
+		return this.inputHolder.containsKey(name) || this.variables.containsKey(name);
+	}
+	
+	@Override
 	public Expression getVariable(String name) {
 		// TODO: just add the function return as an argument
 		final CachedUniform inputUniform = this.inputHolder.getUniform(name);

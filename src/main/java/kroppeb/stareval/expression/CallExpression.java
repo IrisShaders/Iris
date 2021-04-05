@@ -4,7 +4,7 @@ import kroppeb.stareval.function.FunctionContext;
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.TypedFunction;
 
-public class CallExpression implements Expression{
+public class CallExpression implements Expression {
 	final private TypedFunction function;
 	final private Expression[] arguments;
 	
@@ -18,7 +18,7 @@ public class CallExpression implements Expression{
 		function.evaluateTo(arguments, context, functionReturn);
 	}
 	
-	private boolean isConstant(){
+	private boolean isConstant() {
 		for (Expression i : arguments) {
 			if (!(i instanceof ConstantExpression)) {
 				return false;
@@ -39,30 +39,33 @@ public class CallExpression implements Expression{
 			}
 		 */
 		
-		if(this.function.isPure() && isConstant()){
+		if (this.function.isPure() && isConstant()) {
 			this.evaluateTo(context, functionReturn);
 			return function.getReturnType().createConstant(functionReturn);
 		}
 		
 		Expression[] partialEvaluatedParams = new Expression[this.arguments.length];
-		boolean allSimplified = true;
+		boolean allFullySimplified = true;
 		boolean noneSimplified = true;
-		for(int i =0; i < this.arguments.length; i++){
+		for (int i = 0; i < this.arguments.length; i++) {
 			Expression simplified = this.arguments[i].partialEval(context, functionReturn);
-			if(simplified == this.arguments[i]){
+			if (simplified instanceof ConstantExpression) {
 				noneSimplified = false;
-			}else{
-				allSimplified = false;
+			} else {
+				allFullySimplified = false;
+				if(simplified != this.arguments[i]){
+					noneSimplified = false;
+				}
 			}
 			partialEvaluatedParams[i] = simplified;
 		}
 		
-		if(this.function.isPure() && allSimplified){
+		if (this.function.isPure() && allFullySimplified) {
 			this.function.evaluateTo(partialEvaluatedParams, context, functionReturn);
 			return this.function.getReturnType().createConstant(functionReturn);
 		}
 		
-		if(noneSimplified){
+		if (noneSimplified) {
 			return this;
 		}
 		

@@ -193,7 +193,12 @@ functions:
 			if (type == null)
 				throw new RuntimeException("Unknown variable: " + name);
 			if (type.equals(targetType))
-				return (c, r) -> c.getVariable(name).evaluateTo(c, r);
+				return new Expression() {
+					@Override
+					public void evaluateTo(FunctionContext c, FunctionReturn r) {
+						c.getVariable(name).evaluateTo(c, r);
+					}
+				};
 			if (!allowImplicit)
 				return null;
 			castable = (c, r) -> c.getVariable(name).evaluateTo(c, r);
