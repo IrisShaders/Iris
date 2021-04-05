@@ -17,4 +17,56 @@ public class CallExpression implements Expression{
 	public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
 		function.evaluateTo(arguments, context, functionReturn);
 	}
+	
+	private boolean isConstant(){
+		for (Expression i : arguments) {
+			if (!(i instanceof ConstantExpression)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	@Override
+	public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
+		// the dirty way would be this
+		/*
+			try{
+				this.evaluateTo(context, functionReturn);
+				return this.function.getReturnType().createConstant(functionReturn);
+			}catch(Exception e){
+				return this;
+			}
+		 */
+		
+		if(this.function.isPure() && isConstant()){
+			this.evaluateTo(context, functionReturn);
+			return function.getReturnType().createConstant(functionReturn);
+		}
+		
+		Expression[] partialEvaluatedParams = new Expression[this.arguments.length];
+		boolean allSimplified = true;
+		boolean noneSimplified = true;
+		for(int i =0; i < this.arguments.length; i++){
+			Expression simplified = this.arguments[i].partialEval(context, functionReturn);
+			if(simplified == this.arguments[i]){
+				noneSimplified = false;
+			}else{
+				allSimplified = false;
+			}
+			partialEvaluatedParams[i] = simplified;
+		}
+		
+		if(this.function.isPure() && allSimplified){
+			this.function.evaluateTo(partialEvaluatedParams, context, functionReturn);
+			return this.function.getReturnType().createConstant(functionReturn);
+		}
+		
+		if(noneSimplified){
+			return this;
+		}
+		
+		return new CallExpression(this.function, partialEvaluatedParams);
+		
+	}
 }

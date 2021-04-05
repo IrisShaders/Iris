@@ -1,10 +1,26 @@
 package kroppeb.stareval.function;
 
+import kroppeb.stareval.expression.ConstantExpression;
+
 abstract public class Type {
 	
-	abstract public static class Primitive extends Type{}
+	public abstract ConstantExpression createConstant(FunctionReturn functionReturn);
 	
-	public static class ObjectType extends Type{
+	abstract public static class Primitive extends Type {
+	}
+	
+	public static class ObjectType extends Type {
+		
+		@Override
+		public ConstantExpression createConstant(FunctionReturn functionReturn) {
+			Object object = functionReturn.objectReturn;
+			return new ConstantExpression(this) {
+				@Override
+				public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
+					functionReturn.objectReturn = object;
+				}
+			};
+		}
 		
 		@Override
 		public Object createArray(int length) {
@@ -29,7 +45,18 @@ abstract public class Type {
 		}
 	}
 	
-	public static class Boolean extends Primitive{
+	public static class Boolean extends Primitive {
+		@Override
+		public ConstantExpression createConstant(FunctionReturn functionReturn) {
+			boolean value = functionReturn.booleanReturn;
+			return new ConstantExpression(this) {
+				@Override
+				public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
+					functionReturn.booleanReturn = value;
+				}
+			};
+		}
+		
 		@Override
 		public Object createArray(int length) {
 			return new boolean[length];
@@ -52,7 +79,19 @@ abstract public class Type {
 			return "bool";
 		}
 	}
-	public static class Int extends Primitive{
+	
+	public static class Int extends Primitive {
+		@Override
+		public ConstantExpression createConstant(FunctionReturn functionReturn) {
+			int value = functionReturn.intReturn;
+			return new ConstantExpression(this) {
+				@Override
+				public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
+					functionReturn.intReturn = value;
+				}
+			};
+		}
+		
 		@Override
 		public Object createArray(int length) {
 			return new int[length];
@@ -75,7 +114,18 @@ abstract public class Type {
 			return "int";
 		}
 	}
-	public static class Float extends Primitive{
+	
+	public static class Float extends Primitive {
+		@Override
+		public ConstantExpression createConstant(FunctionReturn functionReturn) {
+			float value = functionReturn.floatReturn;
+			return new ConstantExpression(this) {
+				@Override
+				public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
+					functionReturn.floatReturn = value;
+				}
+			};
+		}
 		@Override
 		public Object createArray(int length) {
 			return new float[length];
@@ -106,7 +156,9 @@ abstract public class Type {
 	public static Primitive[] AllPrimitives = new Primitive[]{Type.Boolean, Type.Int, Type.Float};
 	
 	public abstract Object createArray(int length);
+	
 	public abstract void setValueFromReturn(Object array, int index, FunctionReturn value);
+	
 	public abstract void getValueFromArray(Object array, int index, FunctionReturn value);
 	
 	public abstract String toString();
