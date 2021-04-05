@@ -1,17 +1,16 @@
 package net.coderbot.iris.gl.program;
 
-import java.nio.IntBuffer;
-import java.util.*;
-
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.Uniform;
-import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.minecraft.client.MinecraftClient;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20C;
 
-import net.minecraft.client.MinecraftClient;
+import java.nio.IntBuffer;
+import java.util.*;
 
 public class ProgramUniforms {
 	private final ImmutableList<Uniform> perTick;
@@ -62,7 +61,7 @@ public class ProgramUniforms {
 		return new Builder(name, program);
 	}
 
-	public static class Builder implements UniformHolder {
+	public static class Builder implements LocationalUniformHolder {
 		private final String name;
 		private final int program;
 
@@ -82,7 +81,7 @@ public class ProgramUniforms {
 		}
 
 		@Override
-		public UniformHolder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform) {
+		public Builder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform) {
 			switch (updateFrequency) {
 				case ONCE:
 					once.add(uniform);

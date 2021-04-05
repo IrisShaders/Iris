@@ -1,25 +1,27 @@
 package net.coderbot.iris.shaderpack;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMaps;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.coderbot.iris.Iris;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
+import org.apache.logging.log4j.Level;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.*;
-
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMaps;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.coderbot.iris.Iris;
-import org.apache.logging.log4j.Level;
-
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.InvalidIdentifierException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 
 /**
- * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
+ * A utility class for net.coderbot.iris.parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
  */
 public class IdMap {
 	/**

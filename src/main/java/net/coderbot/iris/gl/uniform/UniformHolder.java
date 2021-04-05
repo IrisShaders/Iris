@@ -1,97 +1,40 @@
 package net.coderbot.iris.gl.uniform;
 
-import java.util.OptionalInt;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
-
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
+
 public interface UniformHolder {
-	UniformHolder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform);
-
-	OptionalInt location(String name);
-
-	default UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, value)));
-
-		return this;
-	}
-
-	default UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, () -> (float) value.getAsInt())));
-
-		return this;
-	}
-
-	default UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, DoubleSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, () -> (float) value.getAsDouble())));
-
-		return this;
-	}
-
-	default UniformHolder uniform1i(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new IntUniform(id, value)));
-
-		return this;
-	}
-
-	default UniformHolder uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new BooleanUniform(id, value)));
-
-		return this;
-	}
-
-	default UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, true)));
-
-		return this;
-	}
-
-	default UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, false)));
-
-		return this;
-	}
-
-	default UniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector3Uniform(id, value)));
-
-		return this;
-	}
-
-	default UniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.truncated(id, value)));
-
-		return this;
-	}
-
-	default UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3d> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.converted(id, value)));
-
-		return this;
-	}
-
-	default UniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector4Uniform(id, value)));
-
-		return this;
-	}
-
-	default UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new MatrixUniform(id, value)));
-
-		return this;
-	}
-
-	default UniformHolder uniformJomlMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<net.coderbot.iris.vendored.joml.Matrix4f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new JomlMatrixUniform(id, value)));
-
-		return this;
-	}
+	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value);
+	
+	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value);
+	
+	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, DoubleSupplier value);
+	
+	UniformHolder uniform1i(UniformUpdateFrequency updateFrequency, String name, IntSupplier value);
+	
+	UniformHolder uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value);
+	
+	UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value);
+	
+	UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value);
+	
+	UniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value);
+	
+	UniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value);
+	
+	UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3d> value);
+	
+	UniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value);
+	
+	UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value);
+	
+	UniformHolder uniformJomlMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<net.coderbot.iris.vendored.joml.Matrix4f> value);
 }

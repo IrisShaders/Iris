@@ -1,17 +1,7 @@
 package net.coderbot.iris.uniforms;
 
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
-
-import java.util.Objects;
-import java.util.function.IntSupplier;
-
-import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.shaderpack.IdMap;
-import net.coderbot.iris.texunits.TextureUnit;
-
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.MinecraftClient;
@@ -31,6 +21,12 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.LightType;
 
+import java.util.Objects;
+import java.util.function.IntSupplier;
+
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
+
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
 
@@ -38,7 +34,7 @@ public final class CommonUniforms {
 		// no construction allowed
 	}
 
-	public static void addCommonUniforms(UniformHolder uniforms, IdMap idMap) {
+	public static void addCommonUniforms(LocationalUniformHolder uniforms, IdMap idMap) {
 		CameraUniforms.addCameraUniforms(uniforms);
 		ViewportUniforms.addViewportUniforms(uniforms);
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);

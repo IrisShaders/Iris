@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.texunits.TextureUnit;
@@ -32,7 +33,7 @@ public class SamplerUniforms {
 		// no construction allowed
 	}
 
-	public static void addCommonSamplerUniforms(UniformHolder uniforms) {
+	public static void addCommonSamplerUniforms(LocationalUniformHolder uniforms) {
 		// Generic always-accessible samplers
 		addSampler(uniforms, COLOR_TEX_4, "gaux1", "colortex4");
 		addSampler(uniforms, COLOR_TEX_5, "gaux2", "colortex5");
