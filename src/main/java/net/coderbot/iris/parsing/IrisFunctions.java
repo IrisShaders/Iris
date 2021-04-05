@@ -2,6 +2,7 @@ package net.coderbot.iris.parsing;
 
 import kroppeb.stareval.expression.Expression;
 import kroppeb.stareval.function.*;
+import net.coderbot.iris.vendored.joml.Matrix4f;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
@@ -736,7 +737,7 @@ public class IrisFunctions {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
-							functionReturn.floatReturn = ((Vector2f) functionReturn.objectReturn).x;
+							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).x;
 						}
 					});
 				}
@@ -820,6 +821,25 @@ public class IrisFunctions {
 							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).w;
 						}
 					});
+				}
+			}
+			
+			{
+				// matrix access
+				for(int i = 0; i<4; i++) {
+					for (String access : accessNames[i]) {
+						int finalI = i;
+						IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+								VectorType.VEC4,
+								new Type[]{MatrixType.MAT4}
+						) {
+							@Override
+							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+								params[0].evaluateTo(context, functionReturn);
+								functionReturn.objectReturn = ((Matrix4f) functionReturn.objectReturn).getColumn(finalI, new Vector4f());
+							}
+						});
+					}
 				}
 			}
 		}

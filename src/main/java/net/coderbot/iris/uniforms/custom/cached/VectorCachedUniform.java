@@ -11,11 +11,12 @@ import java.util.function.Supplier;
 public abstract class VectorCachedUniform<T> extends CachedUniform {
 	
 	final private Supplier<T> supplier;
-	protected T cached;
+	final protected T cached;
 	
-	public VectorCachedUniform(UniformUpdateFrequency updateFrequency, Supplier<@NotNull T> supplier) {
+	public VectorCachedUniform(UniformUpdateFrequency updateFrequency, T cache, Supplier<@NotNull T> supplier) {
 		super(updateFrequency);
 		this.supplier = supplier;
+		this.cached = cache;
 	}
 	
 	abstract protected void setFrom(T other);
@@ -27,7 +28,7 @@ public abstract class VectorCachedUniform<T> extends CachedUniform {
 			Iris.logger.warn("Cached Uniform supplier gave null back");
 			return false;
 		}
-		if (this.cached != null && this.cached.equals(other)){
+		if (this.cached.equals(other)){
 			this.setFrom(other);
 			return true;
 		}
@@ -36,6 +37,7 @@ public abstract class VectorCachedUniform<T> extends CachedUniform {
 	
 	@Override
 	public void writeTo(FunctionReturn functionReturn){
+		
 		functionReturn.objectReturn = this.cached;
 	}
 	

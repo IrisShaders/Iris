@@ -8,13 +8,15 @@ import net.coderbot.iris.gl.uniform.FloatSupplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.uniforms.custom.cached.*;
+import net.coderbot.iris.vendored.joml.Matrix4f;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
-import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import org.lwjgl.BufferUtils;
 
+import java.nio.FloatBuffer;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -145,16 +147,21 @@ public class CustomUniformFixedInputUniformsHolder {
 		
 		@Override
 		public UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String
-				name, Supplier<Matrix4f> value) {
-			// TODO: support matrices
-			return this;
+				name, Supplier<net.minecraft.util.math.Matrix4f> value) {
+			Matrix4f held = new Matrix4f();
+			
+			FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+			return this.put(name, new Float4MatrixCachedUniform(updateFrequency, () -> {
+				value.get().writeToBuffer(buffer);
+				held.set(buffer);
+				return held;
+			}));
 		}
 		
 		@Override
 		public UniformHolder uniformJomlMatrix(UniformUpdateFrequency updateFrequency, String
-				name, Supplier<net.coderbot.iris.vendored.joml.Matrix4f> value) {
-			// TODO: support matrices
-			return this;
+				name, Supplier<Matrix4f> value) {
+			return this.put(name, new Float4MatrixCachedUniform(updateFrequency, value));
 		}
 		
 		public CustomUniformFixedInputUniformsHolder build() {

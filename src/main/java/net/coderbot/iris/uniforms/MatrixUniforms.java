@@ -1,13 +1,12 @@
 package net.coderbot.iris.uniforms;
 
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.minecraft.util.math.Matrix4f;
 
 import java.nio.FloatBuffer;
 import java.util.function.Supplier;
 
-import net.coderbot.iris.gl.uniform.UniformHolder;
-
-import net.minecraft.util.math.Matrix4f;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 public final class MatrixUniforms {
 	private MatrixUniforms() {
