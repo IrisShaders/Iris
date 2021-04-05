@@ -1,6 +1,7 @@
 package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
@@ -34,6 +35,24 @@ public final class CommonUniforms {
 		// no construction allowed
 	}
 
+	public static void generalCommonUniforms(UniformHolder uniforms){
+		uniforms
+				.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
+				.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
+				.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
+				.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
+				.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(Hand.MAIN_HAND))
+				.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(Hand.OFF_HAND))
+				.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
+				.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
+				.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
+				.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
+				.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness))
+				.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
+				.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength))
+				.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
+	}
+	
 	public static void addCommonUniforms(LocationalUniformHolder uniforms, IdMap idMap) {
 		CameraUniforms.addCameraUniforms(uniforms);
 		ViewportUniforms.addViewportUniforms(uniforms);
@@ -44,21 +63,7 @@ public final class CommonUniforms {
 		MatrixUniforms.addMatrixUniforms(uniforms);
 		SamplerUniforms.addCommonSamplerUniforms(uniforms);
 
-		uniforms
-			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
-			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
-			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
-			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
-			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(Hand.MAIN_HAND))
-			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(Hand.OFF_HAND))
-			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
-			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
-			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
-			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
-			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness))
-			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength))
-			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
+		CommonUniforms.generalCommonUniforms(uniforms);
 	}
 
 	private static Vec3d getSkyColor() {

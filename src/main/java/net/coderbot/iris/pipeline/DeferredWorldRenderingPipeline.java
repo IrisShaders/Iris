@@ -7,7 +7,6 @@ import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.rendertarget.NoiseTexture;
@@ -348,12 +347,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				CelestialUniforms::addCelestialUniforms,
 				holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
 				MatrixUniforms::addMatrixUniforms,
-				holder -> {
-					// FIXME: Temp solution to reduce errors
-					holder.uniform1f(UniformUpdateFrequency.ONCE, "wetness", ()->0.0f);
-					holder.uniform1i(UniformUpdateFrequency.ONCE, "biome", ()->0);
-					holder.uniform1f(UniformUpdateFrequency.ONCE, "blindness", ()->0.0f);
-				}
+				CommonUniforms::generalCommonUniforms
 				);
 		GlFramebuffer framebuffer = renderTargets
 				.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
