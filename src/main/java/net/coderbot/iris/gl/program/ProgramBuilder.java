@@ -8,22 +8,23 @@ import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 
 public class ProgramBuilder extends ProgramUniforms.Builder {
+
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
 	private static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
-		.define(StandardMacros.getOsString())
-		.define("MC_VERSION", StandardMacros.getMcVersion())
-		.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
-		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
-		.define(StandardMacros.getRenderer())
-		.define(StandardMacros.getVendor())
-		.defineAll(StandardMacros.getGlExtensions())
-		.build();
-
+			.define(StandardMacros.getOsString())
+			.define("MC_VERSION", StandardMacros.getMcVersion())
+			.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
+			.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+			.define(StandardMacros.getRenderer())
+			.define(StandardMacros.getVendor())
+			.defineAll(StandardMacros.getGlExtensions())
+			.build();
 
 
 	private final int program;
@@ -77,7 +78,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		} else if (vertex != null && geometry == null && fragment != null) {
 			programId = ProgramCreator.create(name, vertex, fragment);
 		} else {
-			programId = ProgramCreator.create(name, null);
+			programId = ProgramCreator.create(name, (GlShader[]) null);
 		}
 
 		if (vertex != null) {
@@ -95,7 +96,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		return new ProgramBuilder(name, programId);
 	}
 
-	public Program build() {
+		public Program build() {
 		return new Program(program, super.buildUniforms());
 	}
 }
