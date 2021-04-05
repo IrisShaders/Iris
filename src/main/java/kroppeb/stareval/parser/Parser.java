@@ -2,6 +2,8 @@ package kroppeb.stareval.parser;
 
 
 import kroppeb.stareval.token.*;
+import net.minecraft.client.util.CharPredicate;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +33,7 @@ public class Parser {
 	}
 	
 	private Token pop() throws Exception {
-		if(stack.isEmpty()) {
+		if (stack.isEmpty()) {
 			throw new Exception();
 		}
 		return stack.remove(stack.size() - 1);
@@ -40,9 +42,9 @@ public class Parser {
 	private void push(Token token) throws Exception {
 		Token top = this.peek();
 		if (token instanceof ExpressionToken) {
-			if(token instanceof ArgsToken && top instanceof CallBaseToken){
+			if (token instanceof ArgsToken && top instanceof CallBaseToken) {
 				pop();
-				push(new CallToken(((CallBaseToken) top).id, ((ArgsToken)token).tokens));
+				push(new CallToken(((CallBaseToken) top).id, ((ArgsToken) token).tokens));
 				return;
 			}
 			if (top instanceof UnaryOperatorToken) {
@@ -139,102 +141,96 @@ public class Parser {
 		final Parser state = new Parser();
 
 outerLoop:
-		while(input.canRead()) {
+		while (input.canRead()) {
 			char c = input.read();
 			
 			if (isIdStart(c)) {
-				input.mark();
-				while (input.canRead()) {
-					c = input.peek();
-					if (!isIdPart(c)) {
-						break;
-					}
-					input.skip();
-				}
-				
-				final String id = input.substring();
-				
-				if (c == '(') {
-					state.push(new CallBaseToken(id));
-					continue outerLoop;
-				}
-				
-				AccessableToken token = new IdToken(id);
-				
-				if (c == '.') {
-					do {
-						input.skip();
-						if (input.canRead()) {
-							input.mark();
-							c = input.read();
-							if (!isIdPart(c)) {
-								throw new Exception("expected a valid access");
-							} else {
-								while (input.canRead()) {
-									c = input.peek();
-									if (!isIdPart(c)) {
-										break;
-									}
-									input.skip();
-								}
-								token = new AccessToken(token, input.substring());
-							}
-						} else {
-							throw new Error("can't end with '.'");
-						}
-					} while (c == '.');
-				}
-				
+				Token token = parseIdGroup(input);
 				state.push(token);
-				continue outerLoop;
-			} else if (isNumber(c) || c == '.') {
-				// start net.coderbot.iris.parsing a number
-				input.mark();
-				
-				while (input.canRead()) {
-					c = input.peek();
-					if (!(isNumber(c) || c == '.' || isLetter(c))) {
-						break;
-					}
-					input.skip();
-				}
-				final String numberString = input.substring();
+			} else if (isNumberStart(c)) {
+				// start parsing a number
+				final String numberString = readWhile(input, Parser::isNumberPart);
 				state.push(new NumberToken(numberString));
-				continue outerLoop;
-				
 			} else if (c == '(') {
 				state.push(new UnfinishedArgsToken());
 			} else if (c == ',') {
 				state.commaReduce();
 			} else if (c == ')') {
 				state.bracketReduce();
-			}  else {
-				if(state.peek() instanceof ExpressionToken){
+			} else {
+				if (state.peek() instanceof ExpressionToken) {
 					// maybe binary operator
 					OpResolver<BinaryOp> resolver = options.binaryOpResolvers.get(c);
-					if(resolver != null){
+					if (resolver != null) {
 						state.push(new BinaryOperatorToken(resolver.check(input)));
-						continue outerLoop;
+						continue;
 					}
 				} else {
 					// maybe unary operator
 					OpResolver<UnaryOp> resolver = options.unaryOpResolvers.get(c);
-					if(resolver != null){
+					if (resolver != null) {
 						state.push(new UnaryOperatorToken(resolver.check(input)));
-						continue outerLoop;
+						continue;
 					}
 				}
-				
 				
 				throw new Exception("unknown char: '" + c + "'");
 			}
 		}
 		ExpressionToken result = state.expressionReducePop();
-		if(!state.stack.isEmpty()){
+		if (!state.stack.isEmpty()) {
 			throw new Exception("stack isn't empty: " + state.stack + " top: " + result);
 		}
 		
 		return result;
+	}
+	
+	@NotNull
+	private static Token parseIdGroup(StringReader input) throws Exception {
+		final String id = readWhile(input, Parser::isIdPart);
+		if(!input.canRead())
+			return new IdToken(id);
+		
+		char c = input.peek();
+		
+		if (c == '(') {
+			// TODO do we really need to make this a separate token?
+			//		I think I did it cause something with the access
+			return new CallBaseToken(id);
+		}
+		
+		AccessableToken token = new IdToken(id);
+		
+		if (c == '.') {
+			do {
+				input.skip();
+				if (input.canRead()) {
+					if (!isAccessStart(input.read())) {
+						throw new Exception("expected a valid access");
+					}
+					
+					token = new AccessToken(token, readWhile(input, Parser::isAccessPart));
+				} else {
+					throw new Error("can't end with '.'");
+				}
+			} while (input.canRead() && input.peek() == '.');
+		}
+		return token;
+	}
+	
+	/**
+	 * The returned value add the last value btw;
+	 */
+	private static String readWhile(StringReader input, CharPredicate predicate) {
+		input.mark();
+		while (input.canRead()) {
+			if (!predicate.test(input.peek())) {
+				break;
+			}
+			input.skip();
+		}
+		
+		return input.substring();
 	}
 	
 	static boolean isNumber(final char c) {
@@ -253,11 +249,27 @@ outerLoop:
 		return isLowerCaseLetter(c) || isUpperCaseLetter(c);
 	}
 	
-	static boolean isIdStart(final char c){
+	static boolean isIdStart(final char c) {
 		return isLetter(c) || c == '_';
 	}
 	
-	static boolean isIdPart(final char c){
+	static boolean isIdPart(final char c) {
 		return isIdStart(c) || isNumber(c);
+	}
+	
+	static boolean isNumberStart(final char c) {
+		return isNumber(c) || c == '.';
+	}
+	
+	static boolean isNumberPart(final char c) {
+		return isNumberStart(c) || isLetter(c);
+	}
+	
+	static boolean isAccessStart(final char c) {
+		return isIdStart(c) || isNumber(c);
+	}
+	
+	static boolean isAccessPart(final char c) {
+		return isAccessStart(c);
 	}
 }
