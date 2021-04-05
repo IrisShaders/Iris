@@ -179,11 +179,18 @@ functions:
 		} else if (expression instanceof NumberToken) {
 			NumberToken token = (NumberToken) expression;
 			ConstantExpression exp = resolveNumber(token.number);
-			if (exp.getType().equals(targetType))
+			if (exp.getType().equals(targetType)) {
+				log("[DEBUG] resolved constant %s to type %s", token.number, targetType);
 				return exp;
+			}
 			// TODO: implicit casting is split up too much
-			if (!allowImplicit)
+			if (!allowImplicit) {
+				log("[DEBUG] failed to resolve constant %s (of type %s) to type %s without implicit casts",
+						token.number, exp.getType(), targetType);
 				return null;
+			}
+			log("[DEBUG] trying implicit casts to resolve constant %s (of type %s) to type %s",
+					token.number, exp.getType(), targetType);
 			castable = exp;
 			innerType = exp.getType();
 		} else if (expression instanceof IdToken) {
@@ -206,6 +213,8 @@ functions:
 						name, type, targetType);
 				return null;
 			}
+			log("[DEBUG] trying implicit casts to resolve variable %s (of type %s) to type %s",
+					name, type, targetType);
 			castable = (c, r) -> c.getVariable(name).evaluateTo(c, r);
 			innerType = type;
 		} else {
