@@ -133,6 +133,7 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 					Iris.logger
 							.warn("Failed to parse uniform " + variable.name + ", reason: " + e
 									.getMessage() + " ( = " + variable.expression + ")");
+					Iris.logger.catching(e);
 				}
 			}
 			return customUniforms;

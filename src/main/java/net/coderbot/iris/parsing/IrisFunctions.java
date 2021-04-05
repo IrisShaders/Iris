@@ -694,6 +694,136 @@ public class IrisFunctions {
 			});
 		}
 		
+		// accessors
+		{
+			// is this the best way to do these?
+			String[][] accessNames = new String[][]{
+					new String[]{"0", "r", "x", "s"},
+					new String[]{"1", "g", "y", "t"},
+					new String[]{"2", "b", "z", "p"},
+					new String[]{"3", "a", "w", "q"}
+			};
+			
+			{
+				// access$0
+				for (String access : accessNames[0]) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC2}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector2f) functionReturn.objectReturn).x;
+						}
+					});
+					
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC3}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector3f) functionReturn.objectReturn).x;
+						}
+					});
+					
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC4}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector2f) functionReturn.objectReturn).x;
+						}
+					});
+				}
+			}
+			
+			{
+				// access$1
+				for (String access : accessNames[1]) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC2}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector2f) functionReturn.objectReturn).y;
+						}
+					});
+					
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC3}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector3f) functionReturn.objectReturn).y;
+						}
+					});
+					
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC4}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).y;
+						}
+					});
+				}
+			}
+			
+			{
+				// access$2
+				for (String access : accessNames[2]) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC3}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector3f) functionReturn.objectReturn).z;
+						}
+					});
+					
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC4}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).z;
+						}
+					});
+				}
+			}
+			
+			{
+				// access$3
+				for (String access : accessNames[3]) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Float,
+							new Type[]{VectorType.VEC4}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).w;
+						}
+					});
+				}
+			}
+		}
+		
 		functions = builder.build();
 	}
 	
