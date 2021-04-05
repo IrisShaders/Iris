@@ -77,14 +77,24 @@ functions:
 			boolean allowNonImplicit,
 			boolean allowImplicit) {
 		
+		log("[DEBUG] resolving function %s with args %s to type %s",
+				name, inner, targetType);
+		
 		Expression result = null;
 		
 		if (allowNonImplicit) {
 			result = resolveCallExpressionInternal(targetType, name, inner, false);
 		}
 		
-		if (result != null || !allowImplicit)
+		if (result != null) {
+			log("[DEBUG] resolved function %s with args %s to type %s directly",
+					name, inner, targetType);
 			return result;
+		} else if (!allowImplicit) {
+			log("[DEBUG] Failed to resolve function %s with args %s to type %s directly",
+					name, inner, targetType);
+			return null;
+		}
 		
 		List<? extends TypedFunction> casts = this.functionResolver.resolve("<cast>", targetType);
 		
@@ -96,11 +106,20 @@ functions:
 				throw new RuntimeException("Ambiguity");
 			result = new CallExpression(f, new Expression[]{u});
 		}
-		if (result != null)
+		if (result != null) {
+			log("[DEBUG] resolved function %s with args %s to type %s using only final cast",
+					name, inner, targetType);
 			return result;
+		}
 		
 		result = resolveCallExpressionInternal(targetType, name, inner, true);
-		
+		if(result != null){
+			log("[DEBUG] resolved function %s with args %s to type %s using implicit inner casts",
+					name, inner, targetType);
+		}else{
+			log("[DEBUG] failed to resolve function %s with args %s to type %s",
+					name, inner, targetType);
+		}
 		return result;
 	}
 	
@@ -163,7 +182,7 @@ functions:
 			if (exp.getType().equals(targetType))
 				return exp;
 			// TODO: implicit casting is split up too much
-			if(!allowImplicit)
+			if (!allowImplicit)
 				return null;
 			castable = exp;
 			innerType = exp.getType();
@@ -175,9 +194,10 @@ functions:
 				throw new RuntimeException("Unknown variable: " + name);
 			if (type.equals(targetType))
 				return (c, r) -> c.getVariable(name).evaluateTo(c, r);
-			if(!allowImplicit)
+			if (!allowImplicit)
 				return null;
-			castable = (c, r) -> c.getVariable(name).evaluateTo(c, r);;
+			castable = (c, r) -> c.getVariable(name).evaluateTo(c, r);
+			;
 			innerType = type;
 		} else {
 			throw new RuntimeException("unexpected token: " + expression.toString());
@@ -186,7 +206,7 @@ functions:
 		List<? extends TypedFunction> casts = this.functionResolver.resolve("<cast>", targetType);
 		
 		for (TypedFunction f : casts) {
-			if(f.getParameterTypes()[0].equals(innerType)){
+			if (f.getParameterTypes()[0].equals(innerType)) {
 				return new CallExpression(f, new Expression[]{castable});
 			}
 		}
@@ -202,9 +222,18 @@ functions:
 				final int val;
 				if (str.length() >= 2 && str.charAt(0) == '0') {
 					switch (str.charAt(1)) {
-						case 'b': { val = Integer.parseInt(str.substring(2), 2); break;}
-						case 'x': { val = Integer.parseInt(str.substring(2), 16);break;}
-						default : { val = Integer.parseInt(str.substring(1), 8);break;}
+						case 'b': {
+							val = Integer.parseInt(str.substring(2), 2);
+							break;
+						}
+						case 'x': {
+							val = Integer.parseInt(str.substring(2), 16);
+							break;
+						}
+						default: {
+							val = Integer.parseInt(str.substring(1), 8);
+							break;
+						}
 					}
 				} else
 					val = Integer.parseInt(str);
