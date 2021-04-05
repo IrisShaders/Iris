@@ -1,6 +1,7 @@
 package net.coderbot.iris.parsing;
 
 import kroppeb.stareval.parser.BinaryOp;
+import kroppeb.stareval.parser.Parser;
 import kroppeb.stareval.parser.ParserOptions;
 import kroppeb.stareval.parser.UnaryOp;
 
@@ -23,6 +24,7 @@ public class IrisOptions {
 	static final UnaryOp Negate = new UnaryOp("negate");
 	
 	public static final ParserOptions options;
+	public static final Parser parser;
 	
 	static {
 		final ParserOptions.Builder builder = new ParserOptions.Builder();
@@ -51,5 +53,7 @@ public class IrisOptions {
 		builder.addUnaryOp("-", Negate);
 		
 		options = builder.build();
+		
+		parser = new Parser(options);
 	}
 }

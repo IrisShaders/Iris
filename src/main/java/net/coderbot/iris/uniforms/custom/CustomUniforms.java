@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import kroppeb.stareval.expression.Expression;
 import kroppeb.stareval.function.FunctionContext;
 import kroppeb.stareval.function.Type;
-import kroppeb.stareval.parser.Parser;
 import kroppeb.stareval.resolver.ExpressionResolver;
 import kroppeb.stareval.token.ExpressionToken;
 import net.coderbot.iris.Iris;
@@ -52,7 +51,7 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 		if (this.inputHolder.containsKey(name))
 			throw new Exception("Variable shadows: " + name);
 		
-		ExpressionToken ast = Parser.parse(expression, IrisOptions.options).simplify();
+		ExpressionToken ast = IrisOptions.parser.parse(expression).simplify();
 		Expression expr = this.resolver.resolveExpression(type, ast);
 		CachedUniform uniform = CachedUniform.forExpression(type, expr, this);
 		this.variables.put(name, uniform);
