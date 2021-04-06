@@ -12,8 +12,8 @@ public class BooleanCachedUniform extends CachedUniform {
 	final private BooleanSupplier supplier;
 	private boolean cached;
 	
-	public BooleanCachedUniform(UniformUpdateFrequency updateFrequency, BooleanSupplier supplier) {
-		super(updateFrequency);
+	public BooleanCachedUniform(String name, UniformUpdateFrequency updateFrequency, BooleanSupplier supplier) {
+		super(name, updateFrequency);
 		this.supplier = supplier;
 	}
 	

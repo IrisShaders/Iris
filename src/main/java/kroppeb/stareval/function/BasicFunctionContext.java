@@ -2,6 +2,7 @@ package kroppeb.stareval.function;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import kroppeb.stareval.expression.Expression;
+import kroppeb.stareval.expression.VariableExpression;
 
 import java.util.Map;
 
@@ -13,11 +14,11 @@ public class BasicFunctionContext implements FunctionContext {
 	}
 	
 	public void setIntVariable(String name, int value){
-		variables.put(name, (c,r) -> r.intReturn = value);
+		setVariable(name, (VariableExpression) (c, r) -> r.intReturn = value);
 	}
 	
 	public void setFloatVariable(String name, float value){
-		variables.put(name, (c,r) -> r.floatReturn = value);
+		setVariable(name, (VariableExpression) (c,r) -> r.floatReturn = value);
 	}
 	
 	@Override
@@ -26,5 +27,10 @@ public class BasicFunctionContext implements FunctionContext {
 		if(expression == null)
 			throw new RuntimeException("Variable hasn't been set: " + name);
 		return expression;
+	}
+	
+	@Override
+	public boolean hasVariable(String name) {
+		return variables.containsKey(name);
 	}
 }

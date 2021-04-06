@@ -1,30 +1,10 @@
 package kroppeb.stareval.expression;
 
-import kroppeb.stareval.function.FunctionContext;
-import kroppeb.stareval.function.FunctionReturn;
-import kroppeb.stareval.function.Type;
+import java.util.Collection;
 
-public class VariableExpression implements Expression {
-	final private String name;
-	final private Type type;
-	
-	public VariableExpression(String name, Type type) {
-		this.name = name;
-		this.type = type;
-	}
-	
+public interface VariableExpression extends Expression {
 	@Override
-	public void evaluateTo(FunctionContext c, FunctionReturn r) {
-		c.getVariable(name).evaluateTo(c, r);
-	}
-	
-	@Override
-	public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
-		if(context.hasVariable(this.name)){
-			context.getVariable(this.name).evaluateTo(context, functionReturn);
-			return type.createConstant(functionReturn);
-		}else{
-			return this;
-		}
+	default void listVariables(Collection<? super Expression> variables) {
+		variables.add(this);
 	}
 }

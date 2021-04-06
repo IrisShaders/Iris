@@ -6,6 +6,8 @@ import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
 import kroppeb.stareval.function.TypedFunction;
 
+import java.util.Collection;
+
 public class VectorizedFunction implements TypedFunction {
 	final TypedFunction inner;
 	final int size;
@@ -70,6 +72,12 @@ public class VectorizedFunction implements TypedFunction {
 		@Override
 		public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
 			parameterType.getValueFromArray(vector, index, functionReturn);
+		}
+		
+		
+		@Override
+		public void listVariables(Collection<? super Expression> variables) {
+			throw new IllegalStateException();
 		}
 	}
 }

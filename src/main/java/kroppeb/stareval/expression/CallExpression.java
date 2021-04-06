@@ -4,6 +4,8 @@ import kroppeb.stareval.function.FunctionContext;
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.TypedFunction;
 
+import java.util.Collection;
+
 public class CallExpression implements Expression {
 	final private TypedFunction function;
 	final private Expression[] arguments;
@@ -16,6 +18,13 @@ public class CallExpression implements Expression {
 	@Override
 	public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
 		function.evaluateTo(arguments, context, functionReturn);
+	}
+	
+	@Override
+	public void listVariables(Collection<? super Expression> variables) {
+		for (Expression argument : this.arguments) {
+			argument.listVariables(variables);
+		}
 	}
 	
 	private boolean isConstant() {

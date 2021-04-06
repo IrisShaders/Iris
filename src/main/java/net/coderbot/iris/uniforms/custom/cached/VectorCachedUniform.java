@@ -13,8 +13,8 @@ public abstract class VectorCachedUniform<T> extends CachedUniform {
 	final private Supplier<T> supplier;
 	final protected T cached;
 	
-	public VectorCachedUniform(UniformUpdateFrequency updateFrequency, T cache, Supplier<@NotNull T> supplier) {
-		super(updateFrequency);
+	public VectorCachedUniform(String name, UniformUpdateFrequency updateFrequency, T cache, Supplier<@NotNull T> supplier) {
+		super(name, updateFrequency);
 		this.supplier = supplier;
 		this.cached = cache;
 	}

@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import kroppeb.stareval.expression.CallExpression;
 import kroppeb.stareval.expression.ConstantExpression;
 import kroppeb.stareval.expression.Expression;
+import kroppeb.stareval.expression.VariableExpression;
 import kroppeb.stareval.function.*;
 import kroppeb.stareval.token.*;
 
@@ -113,10 +114,10 @@ functions:
 		}
 		
 		result = resolveCallExpressionInternal(targetType, name, inner, true);
-		if(result != null){
+		if (result != null) {
 			log("[DEBUG] resolved function %s with args %s to type %s using implicit inner casts",
 					name, inner, targetType);
-		}else{
+		} else {
 			log("[DEBUG] failed to resolve function %s with args %s to type %s",
 					name, inner, targetType);
 		}
@@ -192,17 +193,18 @@ functions:
 			Type type = this.variableTypeMap.apply(name);
 			if (type == null)
 				throw new RuntimeException("Unknown variable: " + name);
-			if (type.equals(targetType))
-				return new Expression() {
-					@Override
-					public void evaluateTo(FunctionContext c, FunctionReturn r) {
-						c.getVariable(name).evaluateTo(c, r);
-					}
-				};
-			if (!allowImplicit)
+			if (type.equals(targetType)) {
+				log("[DEBUG] resolved variable %s to type %s", name, targetType);
+				// TODO: We should add a variable provider (and have this as default)
+				return (VariableExpression) (c, r) -> c.getVariable(name).evaluateTo(c, r);
+			}
+			if (!allowImplicit) {
+				log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
+						name, type, targetType);
 				return null;
-			castable = (c, r) -> c.getVariable(name).evaluateTo(c, r);
-			;
+			}
+			// TODO see above
+			castable = (VariableExpression)(c, r) -> c.getVariable(name).evaluateTo(c, r);
 			innerType = type;
 		} else {
 			throw new RuntimeException("unexpected token: " + expression.toString());
@@ -212,9 +214,12 @@ functions:
 		
 		for (TypedFunction f : casts) {
 			if (f.getParameterTypes()[0].equals(innerType)) {
+				log("[DEBUG] resolved %s to type %s using implicit casts",
+						expression, targetType);
 				return new CallExpression(f, new Expression[]{castable});
 			}
 		}
+		log("[DEBUG] failed to resolved %s to type %s, even using implicit casts");
 		return null;
 	}
 	

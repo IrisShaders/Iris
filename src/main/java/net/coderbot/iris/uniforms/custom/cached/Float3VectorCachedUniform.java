@@ -9,8 +9,8 @@ import java.util.function.Supplier;
 
 public class Float3VectorCachedUniform extends VectorCachedUniform<Vector3f> {
 	
-	public Float3VectorCachedUniform(UniformUpdateFrequency updateFrequency, Supplier<Vector3f> supplier) {
-		super(updateFrequency, new Vector3f(), supplier);
+	public Float3VectorCachedUniform(String name, UniformUpdateFrequency updateFrequency, Supplier<Vector3f> supplier) {
+		super(name, updateFrequency, new Vector3f(), supplier);
 	}
 	
 	@Override

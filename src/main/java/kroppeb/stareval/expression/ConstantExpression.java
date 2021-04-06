@@ -2,7 +2,9 @@ package kroppeb.stareval.expression;
 
 import kroppeb.stareval.function.Type;
 
-public abstract class ConstantExpression implements Expression{
+import java.util.Collection;
+
+public abstract class ConstantExpression implements Expression {
 	private final Type type;
 	
 	protected ConstantExpression(Type type) {
@@ -11,5 +13,9 @@ public abstract class ConstantExpression implements Expression{
 	
 	public Type getType() {
 		return type;
+	}
+	
+	@Override
+	public void listVariables(Collection<? super Expression> variables) {
 	}
 }

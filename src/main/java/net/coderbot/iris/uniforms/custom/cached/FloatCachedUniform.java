@@ -11,8 +11,8 @@ public class FloatCachedUniform extends CachedUniform {
 	final private FloatSupplier supplier;
 	private float cached;
 	
-	public FloatCachedUniform(UniformUpdateFrequency updateFrequency, FloatSupplier supplier) {
-		super(updateFrequency);
+	public FloatCachedUniform(String name, UniformUpdateFrequency updateFrequency, FloatSupplier supplier) {
+		super(name, updateFrequency);
 		this.supplier = supplier;
 	}
 	

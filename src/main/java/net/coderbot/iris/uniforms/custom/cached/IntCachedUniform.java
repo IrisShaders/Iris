@@ -12,8 +12,8 @@ public class IntCachedUniform extends CachedUniform {
 	final private IntSupplier supplier;
 	private int cached;
 	
-	public IntCachedUniform(UniformUpdateFrequency updateFrequency, IntSupplier supplier) {
-		super(updateFrequency);
+	public IntCachedUniform(String name, UniformUpdateFrequency updateFrequency, IntSupplier supplier) {
+		super(name, updateFrequency);
 		this.supplier = supplier;
 	}
 	
