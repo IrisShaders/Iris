@@ -170,7 +170,7 @@ public class CustomUniforms implements FunctionContext {
 	public void push(Object pass){
 		Object2IntMap<CachedUniform> uniforms = this.locationMap.get(pass);
 		if(uniforms != null) {
-			uniforms.forEach(CachedUniform::push);
+			uniforms.forEach(CachedUniform::pushIfChanged);
 		}
 	}
 	
