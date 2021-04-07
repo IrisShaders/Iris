@@ -25,8 +25,8 @@ public class IntCachedUniform extends CachedUniform {
 	}
 	
 	@Override
-	protected void push(){
-		GL21.glUniform1i(this.getLocation(), this.cached);
+	public void push(int location){
+		GL21.glUniform1i(location, this.cached);
 	}
 	
 	@Override

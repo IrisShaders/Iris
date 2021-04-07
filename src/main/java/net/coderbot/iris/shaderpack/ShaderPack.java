@@ -23,7 +23,7 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 	
-	public final CustomUniforms.Factory customUniforms;
+	public final CustomUniforms.Builder customUniforms;
 
 	public ShaderPack(Path root) throws IOException {
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")

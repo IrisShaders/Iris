@@ -8,10 +8,7 @@ import net.coderbot.iris.gl.uniform.FloatSupplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.uniforms.custom.cached.*;
-import net.coderbot.iris.vendored.joml.Matrix4f;
-import net.coderbot.iris.vendored.joml.Vector2f;
-import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.*;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.BufferUtils;
@@ -106,8 +103,12 @@ public class CustomUniformFixedInputUniformsHolder {
 		
 		@Override
 		public Builder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
-			// TODO: support int vectors
-			return this;
+			Vector2i held = new Vector2i();
+			return this.put(name, new Int2VectorCachedUniform(name, updateFrequency, () ->{
+				Vec2f vec = value.get();
+				held.set((int)vec.x, (int)vec.y);
+				return held;
+			}));
 		}
 		
 		@Override

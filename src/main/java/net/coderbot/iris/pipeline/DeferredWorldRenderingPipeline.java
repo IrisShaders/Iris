@@ -85,13 +85,24 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
 	
-	private final CustomUniforms.Factory customUniforms;
+	private final CustomUniforms customUniforms;
 	
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 		
 		// TODO should we clear this at the end of the constructor?
-		this.customUniforms = programs.getPack().customUniforms;
+		this.customUniforms = programs.getPack().customUniforms.build(
+				CameraUniforms::addCameraUniforms,
+				ViewportUniforms::addViewportUniforms,
+				WorldTimeUniforms::addWorldTimeUniforms,
+				SystemTimeUniforms::addSystemTimeUniforms,
+				CelestialUniforms::addCelestialUniforms,
+				holder -> IdMapUniforms.addIdMapUniforms(holder, programs.getPack().getIdMap()),
+				MatrixUniforms::addMatrixUniforms,
+				CommonUniforms::generalCommonUniforms,
+				// FIXME: temp biome
+				holder -> holder.uniform1i(UniformUpdateFrequency.ONCE, "biome", () -> 0)
+		);
 		
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(),
 				programs.getPackDirectives());
@@ -135,6 +146,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		
 		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
 		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer);
+		
+		
+		// first optimization pass
+		// this.customUniforms.optimise();
 	}
 	
 	private void checkWorld() {
@@ -335,23 +350,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 		
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
+		SamplerUniforms.addCommonSamplerUniforms(builder);
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
 		
-		this.customUniforms.buildTo(
-				builder,
-				CameraUniforms::addCameraUniforms,
-				ViewportUniforms::addViewportUniforms,
-				WorldTimeUniforms::addWorldTimeUniforms,
-				SystemTimeUniforms::addSystemTimeUniforms,
-				CelestialUniforms::addCelestialUniforms,
-				holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
-				MatrixUniforms::addMatrixUniforms,
-				CommonUniforms::generalCommonUniforms,
-				// FIXME: temp biome
-				holder -> holder.uniform1i(UniformUpdateFrequency.ONCE, "biome", () -> 0)
-				);
+		this.customUniforms.assignTo(builder);
+		
+		
 		GlFramebuffer framebuffer = renderTargets
 				.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 		
@@ -365,7 +370,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			Iris.logger.info("Configured alpha test override for " + source.getName() + ": " + alphaTestOverride);
 		}
 		
-		return new Pass(builder.build(), framebuffer, alphaTestOverride, source.getDirectives().shouldDisableBlend());
+		Pass pass = new Pass(builder.build(), framebuffer, alphaTestOverride,
+				source.getDirectives().shouldDisableBlend());
+		
+		// tell the customUniforms that those locations belong to this pass
+		this.customUniforms.mapholderToPass(builder, pass);
+		return pass;
 	}
 	
 	private final class Pass {
@@ -411,6 +421,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			
 			framebuffer.bind();
 			program.use();
+			
+			
+			// temp: always update custom uniforms
+			DeferredWorldRenderingPipeline.this.customUniforms.update();
+			// push the custom uniforms
+			DeferredWorldRenderingPipeline.this.customUniforms.push(this);
 			
 			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
 			// that.
@@ -572,6 +588,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		
 		// Get ready for world rendering
 		prepareRenderTargets();
+		
 		
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.

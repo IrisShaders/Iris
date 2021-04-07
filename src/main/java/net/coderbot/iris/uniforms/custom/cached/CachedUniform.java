@@ -14,30 +14,24 @@ import net.coderbot.iris.vendored.joml.Vector4f;
 public abstract class CachedUniform implements VariableExpression {
 	private final String name;
 	private final UniformUpdateFrequency updateFrequency;
-	private int location = -1;
+	private boolean changed = true;
 	
 	public CachedUniform(String name, UniformUpdateFrequency updateFrequency) {
 		this.name = name;
 		this.updateFrequency = updateFrequency;
 	}
 	
-	public void setLocation(int location) {
-		this.location = location;
-	}
-	
-	public int getLocation() {
-		return location;
+	public void markUnchanged(){
+		this.changed = false;
 	}
 	
 	public void update() {
-		if (doUpdate() && this.location != -1) {
-			this.push();
-		}
+		this.changed = doUpdate();
 	}
 	
 	protected abstract boolean doUpdate();
 	
-	protected abstract void push();
+	public abstract void push(int location);
 	
 	@Override
 	public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {

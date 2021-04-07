@@ -25,8 +25,8 @@ public class BooleanCachedUniform extends CachedUniform {
 	}
 	
 	@Override
-	protected void push(){
-		GL21.glUniform1i(this.getLocation(), this.cached?1:0);
+	public void push(int location){
+		GL21.glUniform1i(location, this.cached?1:0);
 	}
 	
 	@Override
