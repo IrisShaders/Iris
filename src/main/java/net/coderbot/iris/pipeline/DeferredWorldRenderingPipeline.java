@@ -423,8 +423,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			program.use();
 			
 			
-			// temp: always update custom uniforms
-			DeferredWorldRenderingPipeline.this.customUniforms.update();
 			// push the custom uniforms
 			DeferredWorldRenderingPipeline.this.customUniforms.push(this);
 			
@@ -589,6 +587,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// Get ready for world rendering
 		prepareRenderTargets();
 		
+		// Update custom uniforms
+		DeferredWorldRenderingPipeline.this.customUniforms.update();
 		
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.
