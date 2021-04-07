@@ -16,6 +16,6 @@ public abstract class ConstantExpression implements Expression {
 	}
 	
 	@Override
-	public void listVariables(Collection<? super Expression> variables) {
+	public void listVariables(Collection<? super VariableExpression> variables) {
 	}
 }

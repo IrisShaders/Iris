@@ -196,15 +196,36 @@ functions:
 			if (type.equals(targetType)) {
 				log("[DEBUG] resolved variable %s to type %s", name, targetType);
 				// TODO: We should add a variable provider (and have this as default)
-				return (VariableExpression) (c, r) -> c.getVariable(name).evaluateTo(c, r);
+				//       doing so would remove the need for a FunctionContext.
+				return new VariableExpression() {
+					@Override
+					public void evaluateTo(FunctionContext c, FunctionReturn r) {
+						c.getVariable(name).evaluateTo(c, r);
+					}
+					
+					@Override
+					public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
+						return context.hasVariable(name)?context.getVariable(name):this;
+					}
+				};
 			}
 			if (!allowImplicit) {
 				log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
 						name, type, targetType);
 				return null;
 			}
-			// TODO see above
-			castable = (VariableExpression)(c, r) -> c.getVariable(name).evaluateTo(c, r);
+			// TODO duplicate of above
+			castable = new VariableExpression() {
+				@Override
+				public void evaluateTo(FunctionContext c, FunctionReturn r) {
+					c.getVariable(name).evaluateTo(c, r);
+				}
+				
+				@Override
+				public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
+					return context.hasVariable(name)?context.getVariable(name):this;
+				}
+			};
 			innerType = type;
 		} else {
 			throw new RuntimeException("unexpected token: " + expression.toString());

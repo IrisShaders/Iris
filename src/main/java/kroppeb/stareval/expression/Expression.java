@@ -12,5 +12,5 @@ public interface Expression {
 		return this;
 	}
 	
-	void listVariables(Collection<? super Expression> variables);
+	void listVariables(Collection<? super VariableExpression> variables);
 }

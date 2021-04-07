@@ -1,19 +1,17 @@
 package net.coderbot.iris.uniforms.custom.cached;
 
 import kroppeb.stareval.expression.Expression;
+import kroppeb.stareval.expression.VariableExpression;
 import kroppeb.stareval.function.FunctionContext;
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.parsing.VectorType;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
 
-import java.util.Collection;
-
-public abstract class CachedUniform implements Expression {
+public abstract class CachedUniform implements VariableExpression {
 	private final String name;
 	private final UniformUpdateFrequency updateFrequency;
 	private int location = -1;
@@ -44,11 +42,6 @@ public abstract class CachedUniform implements Expression {
 	@Override
 	public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
 		this.writeTo(functionReturn);
-	}
-	
-	@Override
-	public void listVariables(Collection<? super Expression> variables) {
-		variables.add(this);
 	}
 	
 	public abstract void writeTo(FunctionReturn functionReturn);
@@ -88,8 +81,7 @@ public abstract class CachedUniform implements Expression {
 				return (Vector4f) held.objectReturn;
 			});
 		}else{
-			Iris.logger.warn("Custom uniforms of type: " + type + " are currently not supported");
-			return null;
+			throw new IllegalArgumentException("Custom uniforms of type: " + type + " are currently not supported");
 		}
 	}
 	

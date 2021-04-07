@@ -1,7 +1,5 @@
 package net.coderbot.iris.shaderpack;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.apache.logging.log4j.Level;
@@ -14,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.BiConsumer;
 
 public class ShaderPack {
 	private final ProgramSet base;
@@ -56,22 +53,7 @@ public class ShaderPack {
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
-		// FIXME: remove order dependency
-		//  suggestion by https://stackoverflow.com/a/17011319/8707677
-		Properties properties = new Properties(){
-			private transient final Map<Object, Object> map = Object2ObjectMaps.synchronize (
-					new Object2ObjectLinkedOpenHashMap<>());
-			@Override
-			public synchronized Object put(Object key, Object value) {
-				map.put(key, value);
-				return super.put(key,value);
-			}
-			
-			@Override
-			public synchronized void forEach(BiConsumer<? super Object, ? super Object> action) {
-				this.map.forEach(action);
-			}
-		};
+		Properties properties = new Properties();
 
 		try {
 			properties.load(Files.newInputStream(shaderPath.resolve(name)));

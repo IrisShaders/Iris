@@ -17,6 +17,7 @@ import net.minecraft.util.math.Vec3d;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -50,6 +51,10 @@ public class CustomUniformFixedInputUniformsHolder {
 		for (CachedUniform value : this.inputVariables.values()) {
 			value.update();
 		}
+	}
+	
+	public Collection<CachedUniform> getAll() {
+		return this.inputVariables.values();
 	}
 	
 	public static class Builder implements UniformHolder {

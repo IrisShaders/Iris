@@ -4,7 +4,7 @@ import java.util.Collection;
 
 public interface VariableExpression extends Expression {
 	@Override
-	default void listVariables(Collection<? super Expression> variables) {
+	default void listVariables(Collection<? super VariableExpression> variables) {
 		variables.add(this);
 	}
 }

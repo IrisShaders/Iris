@@ -1,6 +1,7 @@
 package net.coderbot.iris.parsing;
 
 import kroppeb.stareval.expression.Expression;
+import kroppeb.stareval.expression.VariableExpression;
 import kroppeb.stareval.function.FunctionContext;
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
@@ -73,7 +74,7 @@ public class BooleanVectorizedFunction implements TypedFunction {
 		}
 		
 		@Override
-		public void listVariables(Collection<? super Expression> variables) {
+		public void listVariables(Collection<? super VariableExpression> variables) {
 			throw new IllegalStateException();
 		}
 	}
