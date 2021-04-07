@@ -28,7 +28,7 @@ public abstract class VectorCachedUniform<T> extends CachedUniform {
 			Iris.logger.warn("Cached Uniform supplier gave null back");
 			return false;
 		}
-		if (this.cached.equals(other)){
+		if (!this.cached.equals(other)){
 			this.setFrom(other);
 			return true;
 		}
