@@ -149,7 +149,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		
 		
 		// first optimization pass
-		// this.customUniforms.optimise();
+		this.customUniforms.optimise();
 	}
 	
 	private void checkWorld() {
