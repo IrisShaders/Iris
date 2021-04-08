@@ -62,8 +62,7 @@ public class MixinChunkRebuildTask {
 			return -1;
 		}
 
-		Identifier id = Registry.BLOCK.getId(state.getBlock());
-		return (short) (int) idMap.getBlockProperties().getOrDefault(id, -1);
+		return (short) (int) idMap.getBlockProperties().getOrDefault(state, -1);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/block/BlockRenderManager;renderFluid(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/fluid/FluidState;)Z"), locals = LocalCapture.CAPTURE_FAILHARD)
