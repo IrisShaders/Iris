@@ -6,15 +6,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
@@ -331,12 +327,6 @@ public class IdMap {
 				idMap.put(state, intId);
 			}
 		}
-	}
-
-	private static <T extends Comparable<T>> BlockState parsePropertyValue(Property<T> property, String string, BlockState state) {
-		Optional<T> optional = property.parse(string);
-		return optional.map(t -> state.with(property, t)).orElse(null);
-
 	}
 
 	/**
