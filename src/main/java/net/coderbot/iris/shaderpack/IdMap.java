@@ -52,7 +52,7 @@ public class IdMap {
 	/**
 	 * A map that contains render layers for blocks in block.properties
 	 */
-	private Map<Identifier, RenderLayer> blockRenderLayerMap = new HashMap<>();
+	private Map<Identifier, RenderLayer> blockRenderLayerMap;
 
 	IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
@@ -68,6 +68,14 @@ public class IdMap {
 		});
 
 		// TODO: Properly override block render layers
+
+		if (blockPropertiesMap == null) {
+			blockPropertiesMap = Object2IntMaps.emptyMap();
+		}
+
+		if (blockRenderLayerMap == null) {
+			blockRenderLayerMap = Collections.emptyMap();
+		}
 	}
 
 	/**
