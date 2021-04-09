@@ -24,7 +24,7 @@ public class ShadowMatrices {
 		};
 	}
 
-	public static void createBaselineModelViewMatrix(Matrix4f target, float shadowAngle) {
+	public static void createBaselineModelViewMatrix(Matrix4f target, float shadowAngle, float sunPathRotation) {
 		float skyAngle;
 
 		if (shadowAngle < 0.25f) {
@@ -37,8 +37,7 @@ public class ShadowMatrices {
 		target.multiply(Matrix4f.translate(0.0f, 0.0f, -100.0f));
 		target.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(90.0F));
 		target.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(skyAngle * -360.0f));
-		// TODO: Don't hardcode the sunPathRotation
-		target.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-40.0F));
+		target.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(sunPathRotation));
 	}
 
 	public static void snapModelViewToGrid(Matrix4f target, float shadowIntervalSize, double cameraX, double cameraY, double cameraZ) {
@@ -67,8 +66,8 @@ public class ShadowMatrices {
 	}
 
 	public static void createModelViewMatrix(Matrix4f target, float shadowAngle, float shadowIntervalSize,
-											 double cameraX, double cameraY, double cameraZ) {
-		createBaselineModelViewMatrix(target, shadowAngle);
+											 float sunPathRotation, double cameraX, double cameraY, double cameraZ) {
+		createBaselineModelViewMatrix(target, shadowAngle, sunPathRotation);
 		snapModelViewToGrid(target, shadowIntervalSize, cameraX, cameraY, cameraZ);
 	}
 
@@ -125,7 +124,7 @@ public class ShadowMatrices {
 			// When DayTime=0, skyAngle = 282 degrees.
 			// Thus, sunAngle = shadowAngle = 0.03451777f
 			createModelViewMatrix(modelView, 0.03451777f, 2.0f,
-					0.646045982837677f, 82.53274536132812f, -514.0264282226562f);
+					0.0f, 0.646045982837677f, 82.53274536132812f, -514.0264282226562f);
 
 			test("model view at dawn", expectedModelViewAtDawn, toFloatArray(modelView));
 		}

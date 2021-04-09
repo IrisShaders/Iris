@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 
 import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.minecraft.util.math.Matrix4f;
 
@@ -15,12 +16,12 @@ public final class MatrixUniforms {
 	private MatrixUniforms() {
 	}
 
-	public static void addMatrixUniforms(UniformHolder uniforms) {
+	public static void addMatrixUniforms(UniformHolder uniforms, PackDirectives directives) {
 		addMatrix(uniforms, "ModelView", CapturedRenderingState.INSTANCE::getGbufferModelView);
 		// TODO: In some cases, gbufferProjectionInverse takes on a value much different than OptiFine...
 		// We need to audit Mojang's linear algebra.
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
-		addShadowMatrix(uniforms, "ModelView", () -> ShadowRenderer.creatShadowModelView().peek().getModel().copy());
+		addShadowMatrix(uniforms, "ModelView", () -> ShadowRenderer.creatShadowModelView(directives.getSunPathRotation()).peek().getModel().copy());
 		addShadowArrayMatrix(uniforms, "Projection", MatrixUniforms::getShadowProjection);
 	}
 

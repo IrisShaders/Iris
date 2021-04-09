@@ -2,15 +2,14 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
-import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
@@ -39,8 +38,9 @@ public class ShadowRenderer {
 	private final RenderTargets targets;
 	private final GlFramebuffer shadowFb;
 	private final Program shadowProgram;
+	private final float sunPathRotation;
 
-	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow) {
+	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives) {
 		this.pipeline = pipeline;
 
 		this.targets = new RenderTargets(RESOLUTION, RESOLUTION, new InternalTextureFormat[]{
@@ -50,10 +50,12 @@ public class ShadowRenderer {
 		this.shadowFb = targets.createBaselineFramebuffer();
 
 		if (shadow != null) {
-			this.shadowProgram = createProgram(shadow).getLeft();
+			this.shadowProgram = createProgram(shadow, directives).getLeft();
 		} else {
 			this.shadowProgram = null;
 		}
+
+		this.sunPathRotation = directives.getSunPathRotation();
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE4);
 		GlStateManager.bindTexture(getDepthTextureId());
@@ -69,7 +71,7 @@ public class ShadowRenderer {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source) {
+	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source, PackDirectives directives) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -83,13 +85,13 @@ public class ShadowRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives);
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 
 		return new Pair<>(builder.build(), source.getDirectives());
 	}
 
-	public static MatrixStack creatShadowModelView() {
+	public static MatrixStack creatShadowModelView(float sunPathRotation) {
 		// Determine the camera position
 		Vec3d cameraPos = CameraUniforms.getCameraPosition();
 
@@ -99,7 +101,7 @@ public class ShadowRenderer {
 
 		// Set up our modelview matrix stack
 		MatrixStack modelView = new MatrixStack();
-		ShadowMatrices.createModelViewMatrix(modelView.peek().getModel(), getShadowAngle(), 2.0f, cameraX, cameraY, cameraZ);
+		ShadowMatrices.createModelViewMatrix(modelView.peek().getModel(), getShadowAngle(), 2.0f, sunPathRotation, cameraX, cameraY, cameraZ);
 
 		return modelView;
 	}
@@ -117,7 +119,7 @@ public class ShadowRenderer {
 		double cameraZ = cameraPos.getZ();
 
 		// Create our camera
-		MatrixStack modelView = creatShadowModelView();
+		MatrixStack modelView = creatShadowModelView(this.sunPathRotation);
 		MODELVIEW = modelView.peek().getModel().copy();
 
 		// Set up the shadow program
