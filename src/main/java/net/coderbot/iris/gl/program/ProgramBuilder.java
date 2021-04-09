@@ -47,7 +47,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		vertex = buildShader(ShaderType.VERTEX, name + ".vsh", vertexSource);
 
 		if (geometrySource != null) {
-				geometry = buildShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource);
+			geometry = buildShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource);
 		} else {
 			geometry = null;
 		}
