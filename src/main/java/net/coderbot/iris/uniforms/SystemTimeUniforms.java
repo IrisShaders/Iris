@@ -81,6 +81,12 @@ public final class SystemTimeUniforms {
 			// Advance the current frameTimeCounter by the amount of time the last frame took.
 			frameTimeCounter += lastFrameTime;
 
+			// Prevent the frameTimeCounter from getting too large, since that causes issues with some shaderpacks
+			// This means that it should reset every hour.
+			if (frameTimeCounter >= 3600.0F) {
+				frameTimeCounter = 0.0F;
+			}
+
 			// Finally, update the "last start time" value.
 			lastStartTime = OptionalLong.of(frameStartTime);
 		}
