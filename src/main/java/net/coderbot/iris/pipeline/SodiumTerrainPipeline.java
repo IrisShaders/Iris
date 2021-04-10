@@ -97,8 +97,10 @@ public class SodiumTerrainPipeline {
 		return transformations.toString();
 	}
 
-	public static SodiumTerrainPipeline create() {
-		return new SodiumTerrainPipeline(Objects.requireNonNull(Iris.getCurrentPack().getProgramSet(Iris.getCurrentDimension())));
+	public static Optional<SodiumTerrainPipeline> create() {
+		return Iris.getCurrentPack().map(
+			pack -> new SodiumTerrainPipeline(Objects.requireNonNull(pack.getProgramSet(Iris.getCurrentDimension())))
+		);
 	}
 
 	public Optional<String> getTerrainVertexShaderSource() {
@@ -120,7 +122,7 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap());
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives());
 		SamplerUniforms.addWorldSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
