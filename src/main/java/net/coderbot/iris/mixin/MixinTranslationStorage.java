@@ -21,7 +21,7 @@ import net.minecraft.resource.ResourceManager;
 @Mixin(TranslationStorage.class)
 public class MixinTranslationStorage {
 
-	//this is needed to keep track of which language code we need to grab our lang files from
+	// This is needed to keep track of which language code we need to grab our lang files from
 	private static List<String> languageCodes = new ArrayList<>();
 
 	private static final String LOAD = "load(Lnet/minecraft/resource/ResourceManager;Ljava/util/List;)Lnet/minecraft/client/resource/language/TranslationStorage;";
@@ -33,7 +33,7 @@ public class MixinTranslationStorage {
 
 	@Inject(method = "get", at = @At("HEAD"), cancellable = true)
 	private void iris$addLanguageEntries(String key, CallbackInfoReturnable<String> cir) {
-		ShaderPack pack = Iris.getCurrentPack();
+		ShaderPack pack = Iris.getCurrentPack().orElse(null);
 
 		if (pack == null) {
 			// If no shaderpack is loaded, do not try to process language overrides.
@@ -42,9 +42,10 @@ public class MixinTranslationStorage {
 			return;
 		}
 
-		//minecraft loads us language code by default, and any other code will be right after it
-		//so we also check if the user is loading a special language, and if the shaderpack has support for that language
-		//if they do, we load that, but if they do not, we load "en_us" instead
+		// Minecraft loads the "en_us" language code by default, and any other code will be right after it.
+		//
+		// So we also check if the user is loading a special language, and if the shaderpack has support for that
+		// language. If they do, we load that, but if they do not, we load "en_us" instead.
 		Map<String, Map<String, String>> languageMap = pack.getLangMap();
 
 		if (!translations.containsKey(key)) {
@@ -64,8 +65,10 @@ public class MixinTranslationStorage {
 
 	@Inject(method = LOAD, at = @At("HEAD"))
 	private static void check(ResourceManager resourceManager, List<LanguageDefinition> definitions, CallbackInfoReturnable<TranslationStorage> cir) {
-		languageCodes.clear();// make sure the language codes dont carry over!
-		//Reverse order due to how minecraft has English and then the primary language in the language definitions list
+		// make sure the language codes dont carry over!
+		languageCodes.clear();
+
+		// Reverse order due to how minecraft has English and then the primary language in the language definitions list
 		new LinkedList<>(definitions).descendingIterator().forEachRemaining(languageDefinition -> {
 			languageCodes.add(languageDefinition.getCode());
 		});

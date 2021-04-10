@@ -18,10 +18,17 @@ public class IrisConfig {
 	 * The path to the current shaderpack. Null if the internal shaderpack is being used.
 	 */
 	private String shaderPackName;
+
+	/**
+	 * Whether or not shaders are used for rendering. False to disable all shader-based rendering, true to enable it.
+	 */
+	private boolean enableShaders;
+
 	private Path propertiesPath;
 
 	public IrisConfig() {
 		shaderPackName = null;
+		enableShaders = true;
 		propertiesPath = FabricLoader.getInstance().getConfigDir().resolve("iris.properties");
 	}
 
@@ -60,6 +67,15 @@ public class IrisConfig {
 	}
 
 	/**
+	 * Determines whether or not shaders are used for rendering.
+	 *
+	 * @return False to disable all shader-based rendering, true to enable shader-based rendering.
+	 */
+	public boolean areShadersEnabled() {
+		return enableShaders;
+	}
+
+	/**
 	 * loads the config file and then populates the string, int, and boolean entries with the parsed entries
 	 *
 	 * @throws IOException if the file cannot be loaded
@@ -73,6 +89,7 @@ public class IrisConfig {
 		Properties properties = new Properties();
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
+		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
 
 		if (shaderPackName != null && shaderPackName.equals("(internal)")) {
 			shaderPackName = null;
@@ -87,6 +104,7 @@ public class IrisConfig {
 	public void save() throws IOException {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName());
+		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
 	}
 }

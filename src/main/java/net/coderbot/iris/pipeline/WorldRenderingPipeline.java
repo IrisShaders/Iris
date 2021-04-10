@@ -11,4 +11,8 @@ public interface WorldRenderingPipeline {
 
 	boolean shouldDisableVanillaEntityShadows();
 	boolean shouldDisableDirectionalShading();
+
+	default float getSunPathRotation() {
+		return 0.0F;
+	}
 }
