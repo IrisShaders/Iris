@@ -37,6 +37,7 @@ public class ProgramCreator {
 			int result = GL20C.glGetProgrami(program, GL20C.GL_LINK_STATUS);
 
 			if (result != GL20C.GL_TRUE) {
+				throw new RuntimeException("Shader program linking failed, see log for details");
 			}
 
 			return program;
