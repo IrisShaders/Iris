@@ -256,13 +256,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		} else if (program == GbufferProgram.CLEAR) {
 			// Ensure that Minecraft's main framebuffer is cleared, or else very odd issues will happen with shaders
 			// that have composites that don't write to all pixels.
+			//
+			// NB: colortex0 should not be cleared to the fog color! This causes a lot of issues on shaderpacks like
+			// Sildur's Vibrant Shaders. Instead, it should be cleared to solid black like the other buffers. The
+			// horizon rendered by HorizonRenderer ensures that shaderpacks that don't override the sky rendering don't
+			// have issues, and this also gives shaderpacks more control over sky rendering in general.
 			MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
-			RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT | GL20C.GL_DEPTH_BUFFER_BIT, false);
-
-			// We only want the vanilla clear color to be applied to colortex0.
-			baseline.bind();
-
-			// No geometry should actually be rendered in the CLEAR step, but disable programs to be sure.
 			GlProgramManager.useProgram(0);
 
 			return;
