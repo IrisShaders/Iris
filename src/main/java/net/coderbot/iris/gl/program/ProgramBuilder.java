@@ -1,11 +1,13 @@
 package net.coderbot.iris.gl.program;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.shader.StandardMacros;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
@@ -81,7 +83,9 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		try {
 			return new GlShader(shaderType, name, source, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
-			throw new RuntimeException("Failed to compile " + shaderType + " shader for program " + name, e);
+			Iris.logger.error("Failed to compile " + shaderType + " shader for program " + name);
+			Iris.logger.catching(Level.ERROR, e);
 		}
+		return new GlShader(null, null, null, MACRO_CONSTANTS);
 	}
 }
