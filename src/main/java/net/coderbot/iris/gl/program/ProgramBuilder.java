@@ -86,6 +86,6 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			Iris.logger.error("Failed to compile " + shaderType + " shader for program " + name);
 			Iris.logger.catching(Level.ERROR, e);
 		}
-		return new GlShader(null, null, null, MACRO_CONSTANTS);
+		return null;
 	}
 }
