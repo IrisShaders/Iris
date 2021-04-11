@@ -7,6 +7,7 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.minecraft.client.options.GameOptions;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.Vec3d;
@@ -15,6 +16,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -72,6 +74,12 @@ public class MixinWorldRenderer {
 	private void iris$beginSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.SKY_TEXTURED);
 		skyTextureEnabled = true;
+	}
+
+	@Redirect(method = RENDER, at = @At(value = "FIELD", target = "Lnet/minecraft/client/options/GameOptions;viewDistance:I"),
+	          slice = @Slice(from = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V")))
+	private int iris$alwaysRenderSky(GameOptions options) {
+		return Math.max(options.viewDistance, 4);
 	}
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableTexture()V"))
