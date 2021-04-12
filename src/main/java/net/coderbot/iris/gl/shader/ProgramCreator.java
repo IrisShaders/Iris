@@ -4,6 +4,7 @@ package net.coderbot.iris.gl.shader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
 
 public class ProgramCreator {
@@ -12,7 +13,7 @@ public class ProgramCreator {
 	public static int create(String name, GlShader... shaders) {
 		int program = GL20C.glCreateProgram();
 
-		if (shaders == null) {
+		if (name == "null.fsh" || name == "null.gsh" || name == "null.vsh") {
 			GL20C.glDeleteProgram(program);
 		} else {
 
@@ -23,7 +24,7 @@ public class ProgramCreator {
 			GL20C.glBindAttribLocation(program, 12, "at_tangent");
 
 			for (GlShader shader : shaders) {
-				GL20C.glAttachShader(program, shader.getHandle());
+					GL20C.glAttachShader(program, shader.getHandle());
 			}
 
 			GL20C.glLinkProgram(program);

@@ -2,6 +2,7 @@
 
 package net.coderbot.iris.gl.shader;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.GlResource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +42,8 @@ public class GlShader extends GlResource {
 		int result = GL20C.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
 
 		if (result != GL20C.GL_TRUE) {
-			throw new RuntimeException("Shader compilation failed, see log for details");
+			Iris.logger.error("Shader compilation failed, see log for details");
+			return -1;
 		}
 
 		return handle;
