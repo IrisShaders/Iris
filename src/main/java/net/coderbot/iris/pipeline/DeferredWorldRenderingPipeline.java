@@ -347,7 +347,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				CelestialUniforms::addCelestialUniforms,
 				holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
 				MatrixUniforms::addMatrixUniforms,
-				CommonUniforms::generalCommonUniforms
+				CommonUniforms::generalCommonUniforms,
+				BiomeParameters::biomeParameters
 				);
 		GlFramebuffer framebuffer = renderTargets
 				.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
