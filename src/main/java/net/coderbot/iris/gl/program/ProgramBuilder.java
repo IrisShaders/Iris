@@ -57,11 +57,13 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		fragment = buildShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource);
 
 		int programId;
-		
-		if (geometry != null) {
+
+		if (vertex != null && geometry != null && fragment != null) {
 			programId = ProgramCreator.create(name, vertex, geometry, fragment);
-		} else {
+		} else if (geometry == null) {
 			programId = ProgramCreator.create(name, vertex, fragment);
+		} else {
+			programId = 0;
 		}
 
 		vertex.destroy();
@@ -86,6 +88,6 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			Iris.logger.error("Failed to compile " + shaderType + " shader for program " + name);
 			Iris.logger.catching(Level.ERROR, e);
 		}
-		return null;
+		return new GlShader(shaderType.ERROR, "null", "", MACRO_CONSTANTS);
 	}
 }
