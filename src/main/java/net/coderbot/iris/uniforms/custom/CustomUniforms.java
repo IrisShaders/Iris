@@ -178,17 +178,10 @@ public class CustomUniforms implements FunctionContext {
 	 * This function will do the following:
 	 * <ul>
 	 *     <li>
-	 *         TODO: Remove unused uniforms
+	 *         Remove unused uniforms
 	 *     </li>
 	 *     <li>
-	 *         TODO: Create separate execution lines for each renderpass
-	 *     </li>
-	 * </ul>
-	 *
-	 * There are a few things that have to be done in the ONCE execution line:
-	 * <ul>
-	 *     <li>
-	 *         TODO: Partial evaluation of all the variables
+	 *         TODO: Create separate push lists for each renderpass
 	 *     </li>
 	 *     <li>
 	 *         TODO: Sort the others in the correct execution line <p/>
