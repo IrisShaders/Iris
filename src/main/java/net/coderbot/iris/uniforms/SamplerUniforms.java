@@ -33,6 +33,7 @@ public class SamplerUniforms {
 		// no construction allowed
 	}
 
+	// Needs to use a LocationalUniformHolder as we need a way to figure out if `watershadow` is used or not.
 	public static void addCommonSamplerUniforms(LocationalUniformHolder uniforms) {
 		// Generic always-accessible samplers
 		addSampler(uniforms, COLOR_TEX_4, "gaux1", "colortex4");

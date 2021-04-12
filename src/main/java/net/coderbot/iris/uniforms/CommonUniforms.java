@@ -37,6 +37,7 @@ public final class CommonUniforms {
 		// no construction allowed
 	}
 
+	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
 	public static void addCommonUniforms(LocationalUniformHolder uniforms, IdMap idMap, PackDirectives directives) {
 		CameraUniforms.addCameraUniforms(uniforms);
 		ViewportUniforms.addViewportUniforms(uniforms);
