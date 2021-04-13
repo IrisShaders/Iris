@@ -170,7 +170,7 @@ public class IrisFunctions {
 				
 				IrisFunctions.<F2FFunction>add("sin", (a) -> (float) Math.sin(a));
 				IrisFunctions.<F2FFunction>add("cos", (a) -> (float) Math.cos(a));
-				IrisFunctions.<F2FFunction>add("cos", (a) -> (float) Math.tan(a));
+				IrisFunctions.<F2FFunction>add("tan", (a) -> (float) Math.tan(a));
 				IrisFunctions.<F2FFunction>add("asin", (a) -> (float) Math.asin(a));
 				IrisFunctions.<F2FFunction>add("acos", (a) -> (float) Math.acos(a));
 				IrisFunctions.<F2FFunction>add("atan", (a) -> (float) Math.atan(a));
