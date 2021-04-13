@@ -13,9 +13,9 @@ public class ProgramCreator {
 	public static int create(String name, GlShader... shaders) {
 		int program = GL20C.glCreateProgram();
 
-		if (name == "null.fsh" || name == "null.gsh" || name == "null.vsh") {
+		/*if (name == "null.fsh" || name == "null.gsh" || name == "null.vsh") {
 			GL20C.glDeleteProgram(program);
-		} else {
+		} else {*/
 
 			// TODO: This is *really* hardcoded, we need to refactor this to support external calls
 			// to glBindAttribLocation
@@ -43,6 +43,6 @@ public class ProgramCreator {
 
 			return program;
 		}
-		return 0;
-	}
+	//	return 0;
+	//}
 }

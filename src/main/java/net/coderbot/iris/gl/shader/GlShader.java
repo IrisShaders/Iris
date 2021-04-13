@@ -43,7 +43,7 @@ public class GlShader extends GlResource {
 
 		if (result != GL20C.GL_TRUE) {
 			Iris.logger.error("Shader compilation failed, see log for details");
-			return -1;
+			GL20C.glDeleteShader(type.id);
 		}
 
 		return handle;
