@@ -39,9 +39,10 @@ class TokenStack {
 	 * Executes following reduce steps:
 	 * <ul>
 	 *     <li>{@link IdToken} | {@link ArgsToken} => {@link CallToken}</li>
+	 *     <li>{@link ExpressionToken} | {@link BinaryOperatorToken} => {@link PartialBinaryExpressionToken}</li>
 	 *     <li>{@link UnaryOperatorToken}, {@link ExpressionToken} | {@link BinaryOperatorToken} => {@link UnaryExpressionToken} | {@link BinaryOperatorToken}</li>
 	 *     <li>
-	 *         {@link ExpressionToken}, {@link BinaryOperatorToken}, {@link ExpressionToken} | {@link BinaryOperatorToken} <br/>
+	 *         {@link PartialBinaryExpressionToken}, {@link ExpressionToken} | {@link BinaryOperatorToken} <br/>
 	 *         where the operator on the stack has a higher or equal priority to the one being added, the 3 items on the
 	 *         stack get popped, merged to a {@link BinaryExpressionToken} and placed on the stack.
 	 *         The new token is then pushed again.
@@ -54,42 +55,41 @@ class TokenStack {
 		if (token instanceof ArgsToken && top instanceof IdToken) {
 			this.pop();
 			push(new CallToken(((IdToken) top).id, ((ArgsToken) token).tokens));
-			return;
 		} else if (token instanceof BinaryOperatorToken) {
+			BinaryOperatorToken binOpToken = (BinaryOperatorToken) token;
+
 			// bin ops need to follow an expression
+			// should have been guaranteed by the parser.
 			assert top instanceof ExpressionToken;
+			ExpressionToken b = (ExpressionToken) top;
+			this.pop();
 
 
-			if (stack.size() >= 2) {
-				Token other = this.peek(1);
-				if (other instanceof BinaryOperatorToken &&
-						((BinaryOperatorToken) other).op.priority <= ((BinaryOperatorToken) token).op.priority) {
-					// stack[ 'a', '*', 'b'], token = '+'
-					ExpressionToken b = (ExpressionToken) this.pop();
-					this.pop();
-					// each binop token requires an ExpressionToken on the stack (could merge them instead?)
-					ExpressionToken a = (ExpressionToken) this.pop();
+			Token other = this.peek(); // can be null
+			if (other instanceof PriorityOperatorToken &&
+					((PriorityOperatorToken) other).getPriority() <= binOpToken.op.priority) {
+				// stack[ {'a', '*' }, 'b'], token = '+'
+				// stack[ {'a', '+' }, 'b'], token = '+'
+				// stack[ {'-'}, 'b'], token = '+'
 
-					// merge op
-					this.stack.add(new BinaryExpressionToken(((BinaryOperatorToken) other).op, a, b));
-					// retry pushing this token
-					this.push(token);
-					return;
-				} else if (other instanceof UnaryOperatorToken) {
-					// stack['-', 'b'], token = '*'
-					ExpressionToken b = (ExpressionToken) this.pop();
-					this.pop();
+				// does not match
+				// stack[ {'a', '+' }, 'b'], token = '*'
 
-					// merge op
-					this.stack.add(new UnaryExpressionToken(((UnaryOperatorToken) other).op, b));
-					// retry pushing this token
-					this.push(token);
-					return;
-				}
+				// pop `other`
+				this.pop();
+				PriorityOperatorToken otherOp = (PriorityOperatorToken) other;
+
+				// merge op
+				this.stack.add(otherOp.resolveWith(b));
+
+				// retry pushing this token
+				this.push(token);
+			} else {
+				this.stack.add(new PartialBinaryExpressionToken(b, binOpToken.op));
 			}
+		} else {
+			this.stack.add(token);
 		}
-
-		this.stack.add(token);
 	}
 
 	/**
@@ -104,18 +104,10 @@ class TokenStack {
 		ExpressionToken token = (ExpressionToken) pop();
 		while (stack.size() >= 1) {
 			Token x = peek(0);
-			Token a = peek(1); // can be null
 
-
-			if (x instanceof BinaryOperatorToken) {
-				// a should have been asserted when x got added
-				assert a instanceof ExpressionToken;
-
-				pop(2);
-				token = new BinaryExpressionToken(((BinaryOperatorToken) x).op, (ExpressionToken) a, token);
-			} else if (x instanceof UnaryOperatorToken) {
+			if (x instanceof PriorityOperatorToken) {
 				pop(1);
-				token = new UnaryExpressionToken(((UnaryOperatorToken) x).op, token);
+				token = ((PriorityOperatorToken) x).resolveWith(token);
 			} else {
 				break;
 			}

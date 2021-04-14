@@ -1,12 +1,24 @@
 5
+-5
+thunk
+-thunk
+!thunk
+- ! thunk
+- - thunk
+a - a
+a - - a
+a + ! a
+a * ! a
+- a - a
+- a - - a
+- a + ! a
+- a * ! a
+a - - - - - - - - - - - - - - - a
+- - - - - - - - - - - - - - - - - - a - - - - - - - - - - - - - - - a
 17 / 30 % 6
 12.0 + stone
 ohno()
-!uwu
-!uwu - - uwu
 !uwu()
-a - - - - - - - - - - - - - - - a
-thunk
 smooth(3, 17, 15)
 !smooth(3, 17, 15)
 (3)
