@@ -26,6 +26,9 @@ dependencies {
 
 	// Required by fabric-lifecycle-events-v1
 	includeFabricApiModule "fabric-api-base"
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.7.0"
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
 
 def includeFabricApiModule(String moduleName) {
@@ -112,4 +115,8 @@ publishing {
 
 runClient {
 	jvmArgs "-Dmixin.debug.export=true"
+}
+
+test {
+	useJUnitPlatform()
 }
