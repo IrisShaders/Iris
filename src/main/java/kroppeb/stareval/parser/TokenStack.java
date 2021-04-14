@@ -58,54 +58,46 @@ class TokenStack {
 		} else if (token instanceof BinaryOperatorToken) {
 			BinaryOperatorToken binOpToken = (BinaryOperatorToken) token;
 
-			// bin ops need to follow an expression
-			// should have been guaranteed by the parser.
-			assert top instanceof ExpressionToken;
-			ExpressionToken b = (ExpressionToken) top;
-			this.pop();
+			// reduce the expressions to the needed priority level
+			ExpressionToken left = this.expressionReducePop(binOpToken.op.priority);
+			// stack[ {'a', '*'}, 'b'], token = '+' -> stack[], left = {'a', '*', 'b'}
+			//                                      -> stack[{{'a', '*', 'b'}, '+'}]
+			// stack[ {'a', '+'}, 'b'], token = '+' -> stack[], left = {'a', '+', 'b'}
+			//                                      -> stack[{{'a', '+', 'b'}, '+'}]
+			// stack[ {     '-'}, 'b'], token = '+' -> stack[], left = {'-', 'b'}
+			//                                      -> stack[{{     '-', 'b'}, '+'}]
 
+			// stack[ {'a', '+'}, 'b'], token = '*' -> stack[{'a', '+'}], left = {'b'}
+			//                                      -> stack[{'a', '+'}, {'b', '*'}]
 
-			Token other = this.peek(); // can be null
-			if (other instanceof PriorityOperatorToken &&
-					((PriorityOperatorToken) other).getPriority() <= binOpToken.op.priority) {
-				// stack[ {'a', '*' }, 'b'], token = '+'
-				// stack[ {'a', '+' }, 'b'], token = '+'
-				// stack[ {'-'}, 'b'], token = '+'
+			this.stack.add(new PartialBinaryExpressionToken(left, binOpToken.op));
 
-				// does not match
-				// stack[ {'a', '+' }, 'b'], token = '*'
-
-				// pop `other`
-				this.pop();
-				PriorityOperatorToken otherOp = (PriorityOperatorToken) other;
-
-				// merge op
-				this.stack.add(otherOp.resolveWith(b));
-
-				// retry pushing this token
-				this.push(token);
-			} else {
-				this.stack.add(new PartialBinaryExpressionToken(b, binOpToken.op));
-			}
 		} else {
 			this.stack.add(token);
 		}
 	}
 
 	/**
+	 * @see #expressionReducePop(int)
+	 */
+	ExpressionToken expressionReducePop() throws Exception {
+		return expressionReducePop(Integer.MAX_VALUE);
+	}
+
+	/**
 	 * Pops an expression after trying to reduce the stack.
 	 * Executes following reduce steps:
 	 * <ul>
-	 *     <li>{@link UnaryOperatorToken}, {@link ExpressionToken} => {@link BinaryExpressionToken}</li>
-	 *     <li>{@link ExpressionToken}, {@link BinaryOperatorToken}, {@link ExpressionToken} => {@link BinaryExpressionToken}</li>
+	 *     <li>{@link PriorityOperatorToken}, {@link ExpressionToken} => {@link ExpressionToken}
+	 *     as long as the {@code priority} of the {@link PriorityOperatorToken} is stricter than the given priority</li>
 	 * </ul>
 	 */
-	ExpressionToken expressionReducePop() throws Exception {
+	ExpressionToken expressionReducePop(int priority) throws Exception {
 		ExpressionToken token = (ExpressionToken) pop();
 		while (stack.size() >= 1) {
 			Token x = peek(0);
 
-			if (x instanceof PriorityOperatorToken) {
+			if (x instanceof PriorityOperatorToken && ((PriorityOperatorToken) x).getPriority() <= priority) {
 				pop(1);
 				token = ((PriorityOperatorToken) x).resolveWith(token);
 			} else {
