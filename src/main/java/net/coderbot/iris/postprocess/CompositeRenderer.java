@@ -35,7 +35,7 @@ public class CompositeRenderer {
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
 	private final EmptyShadowMapRenderer shadowMapRenderer;
-	private final NoiseTexture noiseTexture;
+	private final NativeImageBackedNoiseTexture noiseTexture;
 
 	final CenterDepthSampler centerDepthSampler;
 
@@ -125,7 +125,7 @@ public class CompositeRenderer {
 		this.shadowMapRenderer = shadowMapRenderer;
 
 		final int noiseTextureResolution = pack.getPackDirectives().getNoiseTextureResolution();
-		this.noiseTexture = new NoiseTexture(noiseTextureResolution, noiseTextureResolution);
+		this.noiseTexture = new NativeImageBackedNoiseTexture(noiseTextureResolution);
 	}
 
 	private static final class Pass {
@@ -167,7 +167,7 @@ public class CompositeRenderer {
 
 		bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
 		bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
-		bindTexture(SamplerUniforms.NOISE_TEX, noiseTexture.getTextureId());
+		bindTexture(SamplerUniforms.NOISE_TEX, noiseTexture.getGlId());
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 
@@ -269,6 +269,6 @@ public class CompositeRenderer {
 			renderPass.destroy();
 		}
 
-		noiseTexture.destroy();
+		noiseTexture.close();
 	}
 }
