@@ -40,9 +40,8 @@ public final class MatrixUniforms {
 
 	private static void addShadowArrayMatrix(UniformHolder uniforms, String name, Supplier<float[]> supplier) {
 		uniforms
-				.uniformMatrixFromArray(PER_FRAME, "shadow" + name, supplier);
-		// TODO: shadowProjectionInverse
-		//.uniformMatrixFromArray(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
+				.uniformMatrixFromArray(PER_FRAME, "shadow" + name, supplier)
+				.uniformJomlMatrix(PER_FRAME, "shadow" + name + "Inverse", new InvertedArrayMatrix(supplier));
 	}
 
 	private static float[] getShadowProjection() {
@@ -63,6 +62,26 @@ public final class MatrixUniforms {
 
 			FloatBuffer buffer = FloatBuffer.allocate(16);
 			copy.writeToBuffer(buffer);
+			buffer.rewind();
+
+			net.coderbot.iris.vendored.joml.Matrix4f matrix4f = new net.coderbot.iris.vendored.joml.Matrix4f(buffer);
+			matrix4f.invert();
+
+			return matrix4f;
+		}
+	}
+
+	private static class InvertedArrayMatrix implements Supplier<net.coderbot.iris.vendored.joml.Matrix4f> {
+		private final Supplier<float[]> parent;
+
+		InvertedArrayMatrix(Supplier<float[]> parent) {
+			this.parent = parent;
+		}
+
+		@Override
+		public net.coderbot.iris.vendored.joml.Matrix4f get() {
+			FloatBuffer buffer = FloatBuffer.allocate(16);
+			buffer.put(parent.get());
 			buffer.rewind();
 
 			net.coderbot.iris.vendored.joml.Matrix4f matrix4f = new net.coderbot.iris.vendored.joml.Matrix4f(buffer);
