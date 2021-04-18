@@ -10,6 +10,9 @@ That being said... **If you want to test out compiled alpha builds of the mod, p
 
 **No support will be provided for users who cannot figure out how to properly compile the mod themselves.**
 
+Build:
+
+- `gradlew build`
 
 ## What is Iris, anyways?
 
