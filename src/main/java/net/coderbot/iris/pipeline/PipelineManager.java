@@ -40,21 +40,19 @@ public class PipelineManager {
 
 			pipeline = pipelineFactory.apply(lastDimension);
 
+			boolean disableDirectionalShading = pipeline.shouldDisableDirectionalShading();
+
+			if (wasDisablingDirectionalShading != disableDirectionalShading) {
+				// Re-render all of the chunks due to the change in directional shading setting
+				DirectionalShadingHelper.shouldDisableDirectionalShading = disableDirectionalShading;
+				wasDisablingDirectionalShading = disableDirectionalShading;
+			}
+
 			// TODO: Do not always reload on shaderpack changes, and only reload if the block ID mapping changes
 			//
 			// If the block ID mapping changes and the world render is not reloaded, then things won't work correctly.
 			MinecraftClient.getInstance().worldRenderer.reload();
 		}
-
-		/*boolean disableDirectionalShading = pipeline.shouldDisableDirectionalShading();
-
-		if (wasDisablingDirectionalShading != disableDirectionalShading) {
-			// Re-render all of the chunks due to the change in directional shading setting
-			DirectionalShadingHelper.shouldDisableDirectionalShading = disableDirectionalShading;
-			wasDisablingDirectionalShading = disableDirectionalShading;
-
-			MinecraftClient.getInstance().worldRenderer.reload();
-		}*/
 
 		return pipeline;
 	}
