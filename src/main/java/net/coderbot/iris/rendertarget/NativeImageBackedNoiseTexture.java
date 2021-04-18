@@ -26,6 +26,7 @@ public class NativeImageBackedNoiseTexture extends NativeImageBackedTexture {
 		return image;
 	}
 
+	@Override
 	public void upload() {
 		NativeImage image = Objects.requireNonNull(getImage());
 
