@@ -12,7 +12,8 @@ That being said... **If you want to test out compiled alpha builds of the mod, p
 
 Build:
 
-- `gradlew build`
+- `chmod +x ./gradlew`
+- `./gradlew build`
 
 ## What is Iris, anyways?
 
