@@ -11,7 +11,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.postprocess.CompositeRenderer;
-import net.coderbot.iris.rendertarget.NoiseTexture;
+import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.SingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -79,7 +79,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final CompositeRenderer compositeRenderer;
 	private final SingleColorTexture normals;
 	private final SingleColorTexture specular;
-	private final NoiseTexture noise;
+	private final NativeImageBackedNoiseTexture noise;
 
 	private final int waterId;
 	private final float sunPathRotation;
@@ -127,7 +127,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		specular = new SingleColorTexture(0, 0, 0, 0);
 
 		final int noiseTextureResolution = programs.getPackDirectives().getNoiseTextureResolution();
-		noise = new NoiseTexture(noiseTextureResolution, noiseTextureResolution);
+		noise = new NativeImageBackedNoiseTexture(noiseTextureResolution);
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
@@ -370,7 +370,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
 			// a given program and bind the required textures instead.
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
-			GlStateManager.bindTexture(noise.getTextureId());
+			GlStateManager.bindTexture(noise.getGlId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE2);
 			GlStateManager.bindTexture(normals.getTextureId());
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE3);
@@ -452,7 +452,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// Destroy the static samplers (specular, normals, and noise)
 		specular.destroy();
 		normals.destroy();
-		noise.destroy();
+		noise.close();
 	}
 
 	private static void destroyPasses(Pass... passes) {
