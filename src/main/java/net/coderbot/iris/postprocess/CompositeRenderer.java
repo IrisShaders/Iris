@@ -20,6 +20,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
+import net.minecraft.client.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
@@ -35,11 +36,11 @@ public class CompositeRenderer {
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
 	private final ShadowRenderer shadowMapRenderer;
-	private final NativeImageBackedNoiseTexture noiseTexture;
+	private final AbstractTexture noiseTexture;
 
 	final CenterDepthSampler centerDepthSampler;
 
-	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, ShadowRenderer shadowMapRenderer) {
+	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, ShadowRenderer shadowMapRenderer, AbstractTexture noiseTexture) {
 		centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
@@ -123,9 +124,7 @@ public class CompositeRenderer {
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 
 		this.shadowMapRenderer = shadowMapRenderer;
-
-		final int noiseTextureResolution = pack.getPackDirectives().getNoiseTextureResolution();
-		this.noiseTexture = new NativeImageBackedNoiseTexture(noiseTextureResolution);
+		this.noiseTexture = noiseTexture;
 	}
 
 	private static final class Pass {
@@ -268,7 +267,5 @@ public class CompositeRenderer {
 		for (Pass renderPass : passes) {
 			renderPass.destroy();
 		}
-
-		noiseTexture.close();
 	}
 }
