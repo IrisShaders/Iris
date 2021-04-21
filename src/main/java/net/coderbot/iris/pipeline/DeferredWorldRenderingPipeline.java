@@ -20,6 +20,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
+import net.minecraft.client.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
@@ -79,7 +80,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final CompositeRenderer compositeRenderer;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
-	private final NativeImageBackedNoiseTexture noise;
+	private final AbstractTexture noise;
 
 	private final int waterId;
 	private final float sunPathRotation;
@@ -132,7 +133,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
 		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer);
+		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer, noise);
 	}
 
 	private void checkWorld() {
