@@ -20,6 +20,7 @@
     "renderlayer.MixinRenderLayer",
     "renderlayer.RenderLayerAccessor",
     "renderlayer.RenderPhaseAccessor",
+    "shadows.MixinWorldRenderer",
     "texunits.MixinBufferVertexConsumer",
     "texunits.MixinGlStateManager",
     "texunits.MixinLightmapTextureManager",

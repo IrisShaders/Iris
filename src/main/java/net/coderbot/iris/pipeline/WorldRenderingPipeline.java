@@ -2,10 +2,12 @@ package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.minecraft.client.render.Camera;
 
 public interface WorldRenderingPipeline {
 	void beginWorldRendering();
-	void renderShadows(WorldRendererAccessor worldRenderer);
+	default void renderShadows(WorldRendererAccessor worldRenderer, Camera camera) {
+	}
 	void beginShadowRender();
 	void endShadowRender();
 	void beginTranslucents();

@@ -13,9 +13,12 @@ import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
+import net.coderbot.iris.shadows.CullingDataCache;
+import net.coderbot.iris.shadows.NonCullingFrustum;
 import net.coderbot.iris.uniforms.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgramManager;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
@@ -39,6 +42,8 @@ public class ShadowRenderer {
 	private final GlFramebuffer shadowFb;
 	private final Program shadowProgram;
 	private final float sunPathRotation;
+
+	public static boolean ACTIVE = false;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives) {
 		this.pipeline = pipeline;
@@ -106,12 +111,32 @@ public class ShadowRenderer {
 		return modelView;
 	}
 
-	public void renderShadows(WorldRendererAccessor worldRenderer) {
+	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
+		MinecraftClient client = MinecraftClient.getInstance();
+
+		worldRenderer.getWorld().getProfiler().swap("shadows");
+		ACTIVE = true;
+
+		worldRenderer.getWorld().getProfiler().push("terrain_setup");
+
+		if (worldRenderer instanceof CullingDataCache) {
+			((CullingDataCache) worldRenderer).saveState();
+		}
+
+		boolean wasChunkCullingEnabled = client.chunkCullingEnabled;
+		client.chunkCullingEnabled = false;
+
+		worldRenderer.invokeSetupTerrain(playerCamera, new NonCullingFrustum(), false, worldRenderer.getFrame(), false);
+		worldRenderer.setFrame(worldRenderer.getFrame() + 1);
+
+		client.chunkCullingEnabled = wasChunkCullingEnabled;
+
+		worldRenderer.getWorld().getProfiler().swap("terrain");
+
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
 
 		// Determine the camera position
-		MinecraftClient client = MinecraftClient.getInstance();
 		Vec3d cameraPos = CameraUniforms.getCameraPosition();
 
 		double cameraX = cameraPos.getX();
@@ -147,6 +172,8 @@ public class ShadowRenderer {
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutout(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutoutMipped(), modelView, cameraX, cameraY, cameraZ);
 
+		worldRenderer.getWorld().getProfiler().pop();
+
 		// Make sure to unload the projection matrix
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.popMatrix();
@@ -158,6 +185,13 @@ public class ShadowRenderer {
 
 		// Restore the old viewport
 		RenderSystem.viewport(0, 0, client.getWindow().getFramebufferWidth(), client.getWindow().getFramebufferHeight());
+
+		if (worldRenderer instanceof CullingDataCache) {
+			((CullingDataCache) worldRenderer).restoreState();
+		}
+
+		ACTIVE = false;
+		worldRenderer.getWorld().getProfiler().swap("updatechunks");
 	}
 
 	private static ClientWorld getWorld() {

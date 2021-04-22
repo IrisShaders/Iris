@@ -14,11 +14,6 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void renderShadows(WorldRendererAccessor worldRenderer) {
-		// stub: nothing to do here
-	}
-
-	@Override
 	public void beginShadowRender() {
 		// stub: nothing to do here
 	}

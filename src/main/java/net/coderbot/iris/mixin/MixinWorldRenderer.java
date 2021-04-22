@@ -62,7 +62,7 @@ public class MixinWorldRenderer {
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V"))
 	private void iris$renderTerrainShadows(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		pipeline.renderShadows((WorldRendererAccessor) this);
+		pipeline.renderShadows((WorldRendererAccessor) this, camera);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR))
