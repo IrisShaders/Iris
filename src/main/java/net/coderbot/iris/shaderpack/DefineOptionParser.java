@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.coderbot.iris.Iris;
 import org.apache.commons.lang3.StringUtils;
 
 import net.minecraft.util.Util;
