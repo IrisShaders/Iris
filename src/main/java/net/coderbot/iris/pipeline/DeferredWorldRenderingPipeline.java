@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline;
 
+import java.io.IOException;
 import java.util.*;
 
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -12,6 +13,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.postprocess.CompositeRenderer;
+import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
@@ -129,8 +131,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
 		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
 
-		final int noiseTextureResolution = programs.getPackDirectives().getNoiseTextureResolution();
-		noise = new NativeImageBackedNoiseTexture(noiseTextureResolution);
+		noise = programs.getPack().getCustomNoiseTexture().flatMap(texture -> {
+			try {
+				AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture(texture);
+
+				return Optional.of(customNoiseTexture);
+			} catch (IOException e) {
+				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
+				return Optional.empty();
+			}
+		}).orElseGet(() -> {
+			final int noiseTextureResolution = programs.getPackDirectives().getNoiseTextureResolution();
+
+			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
+		});
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
