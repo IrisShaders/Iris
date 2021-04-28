@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import net.coderbot.iris.Iris;
 import net.fabricmc.loader.api.FabricLoader;
 
 /**
@@ -64,6 +65,25 @@ public class IrisConfig {
 		}
 
 		return shaderPackName;
+	}
+
+	/**
+	 * Sets the name of the current shaderpack
+	 */
+	public void setShaderPackName(String name) {
+		if (name.equals("(internal)")) {
+			this.shaderPackName = null;
+		}
+		else {
+			this.shaderPackName = name;
+		}
+		try {
+			save();
+		}
+		catch (IOException e) {
+			Iris.logger.error("Error saving configuration file, unable to set shader pack name");
+			e.printStackTrace();
+		}
 	}
 
 	/**
