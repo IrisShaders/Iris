@@ -31,6 +31,7 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -86,11 +87,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
 
+	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
+
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives());
-		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
+		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
@@ -253,13 +256,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		} else if (program == GbufferProgram.CLEAR) {
 			// Ensure that Minecraft's main framebuffer is cleared, or else very odd issues will happen with shaders
 			// that have composites that don't write to all pixels.
+			//
+			// NB: colortex0 should not be cleared to the fog color! This causes a lot of issues on shaderpacks like
+			// Sildur's Vibrant Shaders. Instead, it should be cleared to solid black like the other buffers. The
+			// horizon rendered by HorizonRenderer ensures that shaderpacks that don't override the sky rendering don't
+			// have issues, and this also gives shaderpacks more control over sky rendering in general.
 			MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
-			RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT | GL20C.GL_DEPTH_BUFFER_BIT, false);
-
-			// We only want the vanilla clear color to be applied to colortex0.
-			baseline.bind();
-
-			// No geometry should actually be rendered in the CLEAR step, but disable programs to be sure.
 			GlProgramManager.useProgram(0);
 
 			return;

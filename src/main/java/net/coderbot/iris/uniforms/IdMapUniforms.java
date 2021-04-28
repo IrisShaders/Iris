@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -24,7 +25,7 @@ public final class IdMapUniforms {
 	}
 
 	public static void addIdMapUniforms(UniformHolder uniforms, IdMap idMap) {
-		Map<Identifier, Integer> blockIdMap = idMap.getBlockProperties();
+		Map<BlockState, Integer> blockIdMap = idMap.getBlockProperties();
 		Map<Identifier, Integer> entityIdMap = idMap.getEntityIdMap();
 
 		uniforms
@@ -70,7 +71,7 @@ public final class IdMapUniforms {
 	 *
 	 * @return the blockentity id
 	 */
-	private static int getBlockEntityId(Map<Identifier, Integer> blockIdMap) {
+	private static int getBlockEntityId(Map<BlockState, Integer> blockIdMap) {
 		BlockEntity entity = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
 
 		if (entity == null || !entity.hasWorld()) {
@@ -79,15 +80,15 @@ public final class IdMapUniforms {
 
 		ClientWorld world = Objects.requireNonNull(MinecraftClient.getInstance().world);
 
-		Block blockAt = world.getBlockState(entity.getPos()).getBlock();
+		BlockState blockAt = world.getBlockState(entity.getPos());
 
-		if (!entity.getType().supports(blockAt)) {
+		if (!entity.getType().supports(blockAt.getBlock())) {
 			// Somehow the block here isn't compatible with the block entity at this location.
 			// I'm not sure how this could ever reasonably happen.
 			return -1;
 		}
 
-		return blockIdMap.getOrDefault(Registry.BLOCK.getId(blockAt), -1);
+		return blockIdMap.getOrDefault(blockAt, -1);
 	}
 
 	/**

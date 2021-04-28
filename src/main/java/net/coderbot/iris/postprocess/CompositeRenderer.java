@@ -148,6 +148,9 @@ public class CompositeRenderer {
 	public void renderAll() {
 		centerDepthSampler.endWorldRendering();
 
+		RenderSystem.disableBlend();
+		RenderSystem.disableAlphaTest();
+
 		final Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		final int baseWidth = main.textureWidth;
 		final int baseHeight = main.textureHeight;

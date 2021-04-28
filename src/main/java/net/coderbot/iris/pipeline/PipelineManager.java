@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.DimensionId;
+import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.opengl.GL20C;
 
@@ -33,6 +34,10 @@ public class PipelineManager {
 		}
 
 		if (pipeline == null) {
+			// Ensure that the timers are reset
+			SystemTimeUniforms.COUNTER.reset();
+			SystemTimeUniforms.TIMER.reset();
+
 			pipeline = pipelineFactory.apply(lastDimension);
 
 			// TODO: Do not always reload on shaderpack changes, and only reload if the block ID mapping changes
