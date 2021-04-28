@@ -45,6 +45,12 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		GlShader geometry;
 		GlShader fragment;
 
+		if (computeSource != null) {
+			compute = buildShader(ShaderType.COMPUTE, name + ".csh", computeSource);
+		} else {
+			compute = null;
+		}
+
 		vertex = buildShader(ShaderType.VERTEX, name + ".vsh", vertexSource);
 
 		if (geometrySource != null) {
