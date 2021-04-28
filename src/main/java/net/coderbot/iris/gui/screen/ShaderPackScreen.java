@@ -72,7 +72,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}));
 		this.addButton(new ButtonWidget(bottomCenter, this.height - 27, 100, 20, new TranslatableText("options.iris.apply"), button -> this.applyChanges()));
 		this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20, ScreenTexts.CANCEL, button -> this.onClose()));
-		this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20, new TranslatableText("options.iris.openShaderPackFolder"), button -> Util.getOperatingSystem().open(Iris.shaderpacksDirectory.toFile())));
+		this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20, new TranslatableText("options.iris.openShaderPackFolder"), button -> Util.getOperatingSystem().open(Iris.SHADERPACKS_DIRECTORY.toFile())));
 		this.addButton(new ButtonWidget(topCenter + 78, this.height - 51, 152, 20, new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPacks.refresh()));
 	}
 
@@ -88,20 +88,18 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	public void filesDragged(List<Path> paths) {
 		List<Path> packs = paths.stream().filter(Iris::isValidShaderpack).collect(Collectors.toList());
 		for (Path pack : packs) {
-			if (Iris.isValidShaderpack(pack)) {
-				String fileName = pack.getFileName().toString();
-				try {
-					Files.copy(pack, Iris.shaderpacksDirectory.resolve(fileName));
-				} catch (IOException e) {
-					e.printStackTrace();
-					this.addedPackDialog = new TranslatableText(
-							"options.iris.shaderPackSelection.copyError",
-							fileName
-					).formatted(Formatting.ITALIC, Formatting.RED);
-					this.addedPackDialogTimer = 100;
-					this.shaderPacks.refresh();
-					return;
-				}
+			String fileName = pack.getFileName().toString();
+			try {
+				Files.copy(pack, Iris.SHADERPACKS_DIRECTORY.resolve(fileName));
+			} catch (IOException e) {
+				e.printStackTrace();
+				this.addedPackDialog = new TranslatableText(
+						"options.iris.shaderPackSelection.copyError",
+						fileName
+				).formatted(Formatting.ITALIC, Formatting.RED);
+				this.addedPackDialogTimer = 100;
+				this.shaderPacks.refresh();
+				return;
 			}
 		}
 		if (packs.size() > 0) {
@@ -141,6 +139,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		try {
 			Iris.reload();
 		} catch (IOException e) {
+			Iris.logger.error("Error reloading shader pack while applying changes!");
 			e.printStackTrace();
 		}
 	}
