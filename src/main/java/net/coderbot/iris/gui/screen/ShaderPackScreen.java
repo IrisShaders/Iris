@@ -12,11 +12,20 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class ShaderPackScreen extends Screen {
+public class ShaderPackScreen extends Screen implements HudHideable {
+	private static final Text SELECT_TITLE = new TranslatableText("pack.iris.select.title").formatted(Formatting.GRAY, Formatting.ITALIC);
+
 	private final Screen parent;
 
 	private ShaderPackListWidget shaderPacks;
+
+	private Text addedPackDialog = null;
+	private int addedPackDialogTimer = 0;
 
 	public ShaderPackScreen(Screen parent) {
 		super(new TranslatableText("options.iris.shaderPackSelection.title"));
@@ -33,8 +42,14 @@ public class ShaderPackScreen extends Screen {
 
 		this.shaderPacks.render(matrices, mouseX, mouseY, delta);
 
-		drawCenteredText(matrices, this.textRenderer, this.title, (int)(this.width * 0.5), 8, 16777215);
-		drawCenteredText(matrices, this.textRenderer, new TranslatableText("pack.iris.select.title").formatted(Formatting.GRAY, Formatting.ITALIC), (int)(this.width * 0.5), 21, 16777215);
+		drawCenteredText(matrices, this.textRenderer, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
+
+		if (addedPackDialog != null && addedPackDialogTimer > 0) {
+			drawCenteredText(matrices, this.textRenderer, addedPackDialog, (int)(this.width * 0.5), 21, 0xFFFFFF);
+		} else {
+			drawCenteredText(matrices, this.textRenderer, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
+		}
+
 		super.render(matrices, mouseX, mouseY, delta);
 	}
 
@@ -62,16 +77,66 @@ public class ShaderPackScreen extends Screen {
 	}
 
 	@Override
+	public void tick() {
+		super.tick();
+		if (this.addedPackDialogTimer > 0) {
+			this.addedPackDialogTimer--;
+		}
+	}
+
+	@Override
+	public void filesDragged(List<Path> paths) {
+		List<Path> packs = paths.stream().filter(Iris::isValidShaderpack).collect(Collectors.toList());
+		for (Path pack : packs) {
+			if (Iris.isValidShaderpack(pack)) {
+				String fileName = pack.getFileName().toString();
+				try {
+					Files.copy(pack, Iris.shaderpacksDirectory.resolve(fileName));
+				} catch (IOException e) {
+					e.printStackTrace();
+					this.addedPackDialog = new TranslatableText(
+							"options.iris.shaderPackSelection.copyError",
+							fileName
+					).formatted(Formatting.ITALIC, Formatting.RED);
+					this.addedPackDialogTimer = 100;
+					this.shaderPacks.refresh();
+					return;
+				}
+			}
+		}
+		if (packs.size() > 0) {
+			if (packs.size() == 1) {
+				this.addedPackDialog = new TranslatableText(
+						"options.iris.shaderPackSelection.addedPack",
+						packs.get(0).getFileName().toString()
+				).formatted(Formatting.ITALIC, Formatting.YELLOW);
+			} else {
+				this.addedPackDialog = new TranslatableText(
+						"options.iris.shaderPackSelection.addedPacks",
+						packs.size()
+				).formatted(Formatting.ITALIC, Formatting.YELLOW);
+			}
+		} else {
+			this.addedPackDialog = new TranslatableText(
+					"options.iris.shaderPackSelection.failedAdd"
+			).formatted(Formatting.ITALIC, Formatting.RED);
+		}
+		this.addedPackDialogTimer = 100;
+		this.shaderPacks.refresh();
+	}
+
+	@Override
 	public void onClose() {
 		this.client.openScreen(parent);
 	}
 
 	private void applyChanges() {
-		ShaderPackListWidget.ShaderPackEntry entry = this.shaderPacks.getSelected();
-		String name = "(internal)";
-		if (entry != null) {
-			name = entry.getPackName();
+		ShaderPackListWidget.BaseEntry base = this.shaderPacks.getSelected();
+		if (!(base instanceof ShaderPackListWidget.ShaderPackEntry)) {
+			return;
 		}
+		ShaderPackListWidget.ShaderPackEntry entry = (ShaderPackListWidget.ShaderPackEntry)base;
+		String name = entry.getPackName();
 		Iris.getIrisConfig().setShaderPackName(name);
 		try {
 			Iris.reload();

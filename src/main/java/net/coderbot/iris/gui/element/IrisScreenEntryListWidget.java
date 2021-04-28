@@ -1,9 +1,7 @@
 package net.coderbot.iris.gui.element;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.TickableElement;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class IrisScreenEntryListWidget<E extends AlwaysSelectedEntryListWidget.Entry<E>> extends AlwaysSelectedEntryListWidget<E> {
 	public IrisScreenEntryListWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {

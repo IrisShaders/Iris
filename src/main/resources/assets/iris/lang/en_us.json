@@ -10,6 +10,11 @@
   "options.iris.refreshShaderPacks": "Refresh Shader Packs",
   "options.iris.shaderPackSelection": "Shader Packs...",
   "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Added Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Added %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Files were not valid Shader Packs",
+  "options.iris.shaderPackSelection.copyError": "Could not add Shader Pack \"%s\"",
 
-  "pack.iris.select.title": "Select"
+  "pack.iris.select.title": "Select",
+  "pack.iris.list.label": "+ Drag and Drop Shader Packs to add"
 }

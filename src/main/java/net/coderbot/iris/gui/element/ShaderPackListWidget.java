@@ -8,20 +8,19 @@ import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 
-import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackListWidget.ShaderPackEntry> {
+public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackListWidget.BaseEntry> {
 	public static final List<String> BUILTIN_PACKS = ImmutableList.of("(internal)");
+	private static final Text PACK_LIST_LABEL = new TranslatableText("pack.iris.list.label").formatted(Formatting.ITALIC, Formatting.GRAY);
 
 	public ShaderPackListWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
@@ -49,19 +48,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 				addEntry(index, pack);
 			}
 
-			Collection<Path> folders = Files.walk(path, 1).filter(p -> {
-				if (Files.isDirectory(p)) {
-					return Files.exists(p.resolve("shaders"));
-				}
-				if (p.toString().endsWith(".zip")) {
-					try {
-						FileSystem zipSystem = FileSystems.newFileSystem(p, Iris.class.getClassLoader());
-						return Files.exists(zipSystem.getPath("shaders"));
-					} catch (IOException ignored) {
-					}
-				}
-				return false;
-			}).collect(Collectors.toList());
+			Collection<Path> folders = Files.walk(path, 1).filter(Iris::isValidShaderpack).collect(Collectors.toList());
 
 			for (Path folder : folders) {
 				String name = folder.getFileName().toString();
@@ -70,6 +57,8 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 					addEntry(index, name);
 				}
 			}
+
+			this.addEntry(new LabelEntry(PACK_LIST_LABEL));
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
@@ -83,7 +72,11 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 		this.addEntry(entry);
 	}
 
-	public static class ShaderPackEntry extends AlwaysSelectedEntryListWidget.Entry<ShaderPackEntry> {
+	public static abstract class BaseEntry extends AlwaysSelectedEntryListWidget.Entry<BaseEntry> {
+		protected BaseEntry() {}
+	}
+
+	public static class ShaderPackEntry extends BaseEntry {
 		private final String packName;
 		private final ShaderPackListWidget list;
 		private final int index;
@@ -127,6 +120,19 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 				return true;
 			}
 			return false;
+		}
+	}
+
+	public static class LabelEntry extends BaseEntry {
+		private final Text label;
+
+		public LabelEntry(Text label) {
+			this.label = label;
+		}
+
+		@Override
+		public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xC2C2C2);
 		}
 	}
 }

@@ -10,6 +10,7 @@
     "MixinGameRenderer",
     "MixinGlStateManager",
     "MixinImmediateVertexConsumerProvider",
+    "MixinInGameHud",
     "MixinModelViewBobbing",
     "MixinParticleManager",
     "MixinTranslationStorage",

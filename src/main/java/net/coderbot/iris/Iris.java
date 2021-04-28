@@ -229,6 +229,20 @@ public class Iris implements ClientModInitializer {
 		internal = true;
 	}
 
+	public static boolean isValidShaderpack(Path pack) {
+		if (Files.isDirectory(pack)) {
+			return Files.exists(pack.resolve("shaders"));
+		}
+		if (pack.toString().endsWith(".zip")) {
+			try {
+				FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader());
+				return Files.exists(zipSystem.getPath("shaders"));
+			} catch (IOException ignored) {
+			}
+		}
+		return false;
+	}
+
 	public static void reload() throws IOException {
 		// allows shaderpacks to be changed at runtime
 		irisConfig.initialize();
