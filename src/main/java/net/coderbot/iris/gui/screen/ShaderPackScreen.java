@@ -13,7 +13,7 @@ import net.minecraft.util.Util;
 
 import java.io.IOException;
 
-public class ShaderPackScreen extends Screen implements HudHideable {
+public class ShaderPackScreen extends Screen {
 	private final Screen parent;
 
 	private ShaderPackListWidget shaderPacks;
@@ -27,13 +27,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		if (this.client.world == null) {
 			this.renderBackground(matrices);
-		}
-		else {
+		} else {
 			this.fillGradient(matrices, 0, 0, width, height, 0x4F232323, 0x4F232323);
 		}
 
 		this.shaderPacks.render(matrices, mouseX, mouseY, delta);
-		
+
 		drawCenteredText(matrices, this.textRenderer, this.title, (int)(this.width * 0.5), 8, 16777215);
 		drawCenteredText(matrices, this.textRenderer, new TranslatableText("pack.iris.select.title").formatted(Formatting.GRAY, Formatting.ITALIC), (int)(this.width * 0.5), 21, 16777215);
 		super.render(matrices, mouseX, mouseY, delta);
@@ -76,8 +75,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		Iris.getIrisConfig().setShaderPackName(name);
 		try {
 			Iris.reload();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

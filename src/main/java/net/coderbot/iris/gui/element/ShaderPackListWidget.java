@@ -57,8 +57,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 					try {
 						FileSystem zipSystem = FileSystems.newFileSystem(p, Iris.class.getClassLoader());
 						return Files.exists(zipSystem.getPath("shaders"));
-					}
-					catch (IOException ignored) {
+					} catch (IOException ignored) {
 					}
 				}
 				return false;
