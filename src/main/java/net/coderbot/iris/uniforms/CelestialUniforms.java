@@ -32,7 +32,7 @@ public final class CelestialUniforms {
 			.uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
 	}
 
-	private static float getSunAngle() {
+	public static float getSunAngle() {
 		float skyAngle = getSkyAngle();
 
 		if (skyAngle < 0.75F) {

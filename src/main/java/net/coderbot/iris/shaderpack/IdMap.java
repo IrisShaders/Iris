@@ -18,6 +18,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.minecraft.block.Blocks;
 import net.minecraft.state.StateManager;
+import net.minecraft.tag.BlockTags;
 import org.apache.logging.log4j.Level;
 
 import net.minecraft.block.Block;
@@ -68,7 +69,26 @@ public class IdMap {
 		// TODO: Properly override block render layers
 
 		if (blockPropertiesMap == null) {
-			blockPropertiesMap = Object2IntMaps.emptyMap();
+			// Fill in with default values...
+
+			blockPropertiesMap = new Object2IntOpenHashMap<>();
+
+			// Anvil ID #8 = water
+			Blocks.WATER.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 8));
+
+			// Anvil ID #10 = lava
+			Blocks.LAVA.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 10));
+
+			// Anvil ID #18 = leaves
+			/*BlockTags.LEAVES.values().forEach(block -> {
+				block.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
+			});*/
+
+			// Anvil ID #31 = grass
+			Blocks.GRASS.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 31));
+
+			// Anvil ID #175 = double plant
+			Blocks.TALL_GRASS.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 175));
 		}
 
 		if (blockRenderLayerMap == null) {
