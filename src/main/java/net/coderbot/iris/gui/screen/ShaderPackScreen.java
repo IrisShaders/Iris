@@ -102,12 +102,15 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				return;
 			}
 		}
+		this.shaderPacks.refresh();
 		if (packs.size() > 0) {
 			if (packs.size() == 1) {
+				String packName = packs.get(0).getFileName().toString();
 				this.addedPackDialog = new TranslatableText(
 						"options.iris.shaderPackSelection.addedPack",
-						packs.get(0).getFileName().toString()
+						packName
 				).formatted(Formatting.ITALIC, Formatting.YELLOW);
+				this.shaderPacks.select(packName);
 			} else {
 				this.addedPackDialog = new TranslatableText(
 						"options.iris.shaderPackSelection.addedPacks",
@@ -120,7 +123,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			).formatted(Formatting.ITALIC, Formatting.RED);
 		}
 		this.addedPackDialogTimer = 100;
-		this.shaderPacks.refresh();
 	}
 
 	@Override
