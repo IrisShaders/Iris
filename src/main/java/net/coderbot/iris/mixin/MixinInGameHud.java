@@ -19,7 +19,7 @@ public class MixinInGameHud {
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
 	public void iris$handleHudHidingScreens(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
 		Screen screen = this.client.currentScreen;
-		if(screen instanceof HudHideable) {
+		if (screen instanceof HudHideable) {
 			ci.cancel();
 		}
 	}

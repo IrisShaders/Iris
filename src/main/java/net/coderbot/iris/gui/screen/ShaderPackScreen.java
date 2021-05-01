@@ -92,7 +92,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			try {
 				Files.copy(pack, Iris.SHADERPACKS_DIRECTORY.resolve(fileName));
 			} catch (IOException e) {
-				e.printStackTrace();
+				Iris.logger.warn("Error copying dragged shader pack", e);
 				this.addedPackDialog = new TranslatableText(
 						"options.iris.shaderPackSelection.copyError",
 						fileName
@@ -142,7 +142,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			Iris.reload();
 		} catch (IOException e) {
 			Iris.logger.error("Error reloading shader pack while applying changes!");
-			e.printStackTrace();
+			Iris.logger.catching(e);
 		}
 	}
 }

@@ -80,7 +80,7 @@ public class IrisConfig {
 			save();
 		} catch (IOException e) {
 			Iris.logger.error("Error saving configuration file, unable to set shader pack name");
-			e.printStackTrace();
+			Iris.logger.catching(e);
 		}
 	}
 
