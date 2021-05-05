@@ -1,9 +1,20 @@
 package kroppeb.stareval.parser;
 
-import kroppeb.stareval.token.*;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import kroppeb.stareval.token.ArgsToken;
+import kroppeb.stareval.token.BinaryExpressionToken;
+import kroppeb.stareval.token.BinaryOperatorToken;
+import kroppeb.stareval.token.CallToken;
+import kroppeb.stareval.token.ExpressionToken;
+import kroppeb.stareval.token.IdToken;
+import kroppeb.stareval.token.PartialBinaryExpressionToken;
+import kroppeb.stareval.token.PriorityOperatorToken;
+import kroppeb.stareval.token.Token;
+import kroppeb.stareval.token.UnaryExpressionToken;
+import kroppeb.stareval.token.UnaryOperatorToken;
+import kroppeb.stareval.token.UnfinishedArgsToken;
 
 class TokenStack {
 	final List<Token> stack = new ArrayList<>();
@@ -95,10 +106,10 @@ class TokenStack {
 	private ExpressionToken expressionReducePop(int priority) throws Exception {
 		ExpressionToken token = (ExpressionToken) this.pop();
 		while (this.stack.size() >= 1) {
-			Token x = this.peek(0);
+			Token x = this.peek();
 
 			if (x instanceof PriorityOperatorToken && ((PriorityOperatorToken) x).getPriority() <= priority) {
-				this.pop(1);
+				this.pop();
 				token = ((PriorityOperatorToken) x).resolveWith(token);
 			} else {
 				break;
