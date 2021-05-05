@@ -9,30 +9,30 @@ class TokenStack {
 	final List<Token> stack = new ArrayList<>();
 
 	Token peek() {
-		if (stack.size() > 0) {
-			return stack.get(stack.size() - 1);
+		if (!this.stack.isEmpty()) {
+			return this.stack.get(this.stack.size() - 1);
 		}
 		return null;
 	}
 
 	private Token peek(int offset) {
-		if (stack.size() > offset) {
-			return stack.get(stack.size() - 1 - offset);
+		if (this.stack.size() > offset) {
+			return this.stack.get(this.stack.size() - 1 - offset);
 		}
 		return null;
 	}
 
 	private void pop(int count) throws Exception {
 		for (int i = 0; i < count; i++) {
-			pop();
+			this.pop();
 		}
 	}
 
 	private Token pop() throws Exception {
-		if (stack.isEmpty()) {
+		if (this.stack.isEmpty()) {
 			throw new Exception();
 		}
-		return stack.remove(stack.size() - 1);
+		return this.stack.remove(this.stack.size() - 1);
 	}
 
 	/**
@@ -51,15 +51,15 @@ class TokenStack {
 	 */
 	void push(Token token) throws Exception {
 		// in Kotlin I'd mark this tailrecursive.
-		Token top = this.peek();
+		final Token top = this.peek();
 		if (token instanceof ArgsToken && top instanceof IdToken) {
 			this.pop();
-			push(new CallToken(((IdToken) top).id, ((ArgsToken) token).tokens));
+			this.push(new CallToken(((IdToken) top).id, ((ArgsToken) token).tokens));
 		} else if (token instanceof BinaryOperatorToken) {
 			BinaryOperatorToken binOpToken = (BinaryOperatorToken) token;
 
 			// reduce the expressions to the needed priority level
-			ExpressionToken left = this.expressionReducePop(binOpToken.op.priority);
+			ExpressionToken left = this.expressionReducePop(binOpToken.op.getPriority());
 			// stack[ {'a', '*'}, 'b'], token = '+' -> stack[], left = {'a', '*', 'b'}
 			//                                      -> stack[{{'a', '*', 'b'}, '+'}]
 			// stack[ {'a', '+'}, 'b'], token = '+' -> stack[], left = {'a', '+', 'b'}
@@ -81,7 +81,7 @@ class TokenStack {
 	 * @see #expressionReducePop(int)
 	 */
 	ExpressionToken expressionReducePop() throws Exception {
-		return expressionReducePop(Integer.MAX_VALUE);
+		return this.expressionReducePop(Integer.MAX_VALUE);
 	}
 
 	/**
@@ -92,13 +92,13 @@ class TokenStack {
 	 *     as long as the {@code priority} of the {@link PriorityOperatorToken} is stricter than the given priority</li>
 	 * </ul>
 	 */
-	ExpressionToken expressionReducePop(int priority) throws Exception {
-		ExpressionToken token = (ExpressionToken) pop();
-		while (stack.size() >= 1) {
-			Token x = peek(0);
+	private ExpressionToken expressionReducePop(int priority) throws Exception {
+		ExpressionToken token = (ExpressionToken) this.pop();
+		while (this.stack.size() >= 1) {
+			Token x = this.peek(0);
 
 			if (x instanceof PriorityOperatorToken && ((PriorityOperatorToken) x).getPriority() <= priority) {
-				pop(1);
+				this.pop(1);
 				token = ((PriorityOperatorToken) x).resolveWith(token);
 			} else {
 				break;
@@ -118,7 +118,7 @@ class TokenStack {
 		// UnfinishedArgs Expression (commaReduce)
 		// => UnfinishedArgs
 
-		ExpressionToken expr = expressionReducePop();
+		ExpressionToken expr = this.expressionReducePop();
 		UnfinishedArgsToken args = (UnfinishedArgsToken) this.peek();
 		if (args == null) {
 			throw new Exception();

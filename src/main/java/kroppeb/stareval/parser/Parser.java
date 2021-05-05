@@ -1,47 +1,38 @@
 package kroppeb.stareval.parser;
 
 
-import kroppeb.stareval.token.AccessToken;
-import kroppeb.stareval.token.AccessableToken;
-import kroppeb.stareval.token.BinaryOperatorToken;
-import kroppeb.stareval.token.ExpressionToken;
-import kroppeb.stareval.token.IdToken;
-import kroppeb.stareval.token.NumberToken;
-import kroppeb.stareval.token.Token;
-import kroppeb.stareval.token.UnaryOperatorToken;
-import kroppeb.stareval.token.UnfinishedArgsToken;
-import org.jetbrains.annotations.NotNull;
-
+import kroppeb.stareval.token.*;
 import net.minecraft.client.util.CharPredicate;
+import org.jetbrains.annotations.NotNull;
 
 
 public class Parser {
-	final ParserOptions options;
-	final ParserOptions.ParserParts parserParts;
-	
+	private final ParserOptions options;
+	private final ParserOptions.ParserParts parserParts;
+
 	public Parser(ParserOptions options) {
 		this.options = options;
-		this.parserParts = options.parserParts;
+		this.parserParts = options.getParserParts();
 	}
-	
-	public ExpressionToken parse(final String input) throws Exception {
-		return parseInternal(new StringReader(input));
+
+	public ExpressionToken parse(String input) throws Exception {
+		return this.parseInternal(new StringReader(input));
 	}
-	
-	ExpressionToken parseInternal(final StringReader input) throws Exception {
+
+	private ExpressionToken parseInternal(StringReader input) throws Exception {
 		// parser stack
 		final TokenStack stack = new TokenStack();
-		
-		
+
+
 		while (input.canRead()) {
 			char c = input.read();
-			
-			if (parserParts.isIdStart(c)) {
-				Token token = parseIdGroup(input);
+
+			if (this.parserParts.isIdStart(c)) {
+				Token token = this.parseIdGroup(input);
 				stack.push(token);
-			} else if (parserParts.isNumberStart(c)) {
+			} else if (this.parserParts.isNumberStart(c)) {
 				// start parsing a number
-				final String numberString = readWhile(input, parserParts::isNumberPart);
+				final String numberString = readWhile(input, this.parserParts::isNumberPart);
 				stack.push(new NumberToken(numberString));
 			} else if (c == '(') {
 				stack.push(new UnfinishedArgsToken());
@@ -52,37 +43,38 @@ public class Parser {
 			} else {
 				if (stack.peek() instanceof ExpressionToken) {
 					// maybe binary operator
-					OpResolver<BinaryOp> resolver = options.binaryOpResolvers.get(c);
+					OpResolver<BinaryOp> resolver = this.options.getBinaryOpResolver(c);
 					if (resolver != null) {
 						stack.push(new BinaryOperatorToken(resolver.check(input)));
 						continue;
 					}
 				} else {
 					// maybe unary operator
-					OpResolver<UnaryOp> resolver = options.unaryOpResolvers.get(c);
+					OpResolver<UnaryOp> resolver = this.options.getUnaryOpResolver(c);
 					if (resolver != null) {
 						stack.push(new UnaryOperatorToken(resolver.check(input)));
 						continue;
 					}
 				}
-				
+
 				throw new Exception("unknown char: '" + c + "'");
 			}
 		}
+
 		ExpressionToken result = stack.expressionReducePop();
 		if (!stack.stack.isEmpty()) {
 			throw new Exception("stack isn't empty: " + stack.stack + " top: " + result);
 		}
-		
+
 		return result;
 	}
-	
+
 	@NotNull
 	private Token parseIdGroup(StringReader input) throws Exception {
 		final String id = readWhile(input, this.parserParts::isIdPart);
 		AccessableToken token = new IdToken(id);
 
-		if(!input.canRead()) {
+		if (!input.canRead()) {
 			return token;
 		}
 
@@ -95,7 +87,7 @@ public class Parser {
 					if (!this.parserParts.isAccessStart(input.read())) {
 						throw new Exception("expected a valid access");
 					}
-					
+
 					token = new AccessToken(token, readWhile(input, this.parserParts::isAccessPart));
 				} else {
 					throw new Error("can't end with '.'");
@@ -104,7 +96,7 @@ public class Parser {
 		}
 		return token;
 	}
-	
+
 	/**
 	 * The returned value add the last value btw;
 	 */
@@ -116,7 +108,7 @@ public class Parser {
 			}
 			input.skip();
 		}
-		
+
 		return input.substring();
 	}
 }

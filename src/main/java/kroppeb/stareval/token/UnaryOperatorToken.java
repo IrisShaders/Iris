@@ -3,19 +3,19 @@ package kroppeb.stareval.token;
 import kroppeb.stareval.parser.UnaryOp;
 
 public class UnaryOperatorToken extends PriorityOperatorToken {
-	public final UnaryOp op;
-	
+	private final UnaryOp op;
+
 	public UnaryOperatorToken(UnaryOp op) {
 		this.op = op;
 	}
-	
+
 	@Override
 	public String toString() {
-		return "UnaryOp{" + op + "}";
+		return "UnaryOp{" + this.op + "}";
 	}
 
 	@Override
-	public int getPriority(){
+	public int getPriority() {
 		return -1;
 	}
 

@@ -1,16 +1,20 @@
 package kroppeb.stareval.parser;
 
 public class BinaryOp extends Op {
-	public final String name;
-	public final int priority;
-	
+	private final String name;
+	private final int priority;
+
 	public BinaryOp(String name, int priority) {
 		this.name = name;
 		this.priority = priority;
 	}
-	
+
 	@Override
 	public String toString() {
-		return name + "{" + priority + "}" ;
+		return this.name + "{" + this.priority + "}";
+	}
+
+	public int getPriority() {
+		return this.priority;
 	}
 }

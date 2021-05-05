@@ -27,7 +27,7 @@ public class StringReader {
 		this.move();
 
 		// Initializing these variables to the actual start of the string.
-		this.lastIndex = nextIndex;
+		this.lastIndex = this.nextIndex;
 		this.mark();
 	}
 
@@ -36,11 +36,11 @@ public class StringReader {
 	 */
 	private void move() {
 		this.lastIndex = this.nextIndex;
-		if (nextIndex >= this.string.length())
+		if (this.nextIndex >= this.string.length())
 			return;
 		this.nextIndex++;
 		while (this.nextIndex < this.string.length() && this.string.charAt(this.nextIndex) == ' ') {
-			nextIndex++;
+			this.nextIndex++;
 		}
 	}
 
@@ -48,7 +48,7 @@ public class StringReader {
 	 * @return The character that would be returned by the next call to {@link #read}
 	 */
 	public char peek() {
-		return string.charAt(this.nextIndex);
+		return this.string.charAt(this.nextIndex);
 	}
 
 	/**
@@ -62,8 +62,8 @@ public class StringReader {
 	 * Read a character
 	 */
 	public char read() {
-		char current = peek();
-		skip();
+		char current = this.peek();
+		this.skip();
 		return current;
 	}
 
@@ -71,7 +71,7 @@ public class StringReader {
 	 * Read a character and verify it's the expected character.
 	 */
 	public void read(char c) throws Exception {
-		char read = read();
+		char read = this.read();
 		if (read != c)
 			throw new Exception("unexpected character: '" + read + "' expected '" + c + "'");
 	}
@@ -83,10 +83,10 @@ public class StringReader {
 	 * @return whether it could read the character.
 	 */
 	public boolean tryRead(char c) {
-		char read = peek();
+		char read = this.peek();
 		if (read != c)
 			return false;
-		skip();
+		this.skip();
 		return true;
 	}
 
