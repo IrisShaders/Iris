@@ -74,8 +74,9 @@ public final class ParserOptions {
 							} else {
 								for (Map.Entry<String, T> subEntry : map.entrySet()) {
 									if (!"".equals(subEntry.getKey())) {
-										if (subEntry.getKey().length() != 1)
+										if (subEntry.getKey().length() != 1) {
 											throw new RuntimeException("Not supported atm");
+										}
 										result.put(entry.getCharKey(), new SingleDualCharOpResolver<>(
 												map.get(""),
 												subEntry.getValue(),
@@ -86,8 +87,9 @@ public final class ParserOptions {
 							}
 						} else {
 							for (Map.Entry<String, T> subEntry : map.entrySet()) {
-								if (subEntry.getKey().length() != 1)
+								if (subEntry.getKey().length() != 1) {
 									throw new RuntimeException("Not supported atm");
+								}
 								result.put(entry.getCharKey(), new SingleDualCharOpResolver<>(
 										map.get(""),
 										subEntry.getValue(),
