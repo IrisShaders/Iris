@@ -128,7 +128,7 @@ public class Option<T> {
 	 * @return if the option's value is the default.
 	 */
 	public boolean isDefaultValue() {
-		return this.value == this.defaultValue;
+		return this.value.equals(this.defaultValue);
 	}
 
 	/**
