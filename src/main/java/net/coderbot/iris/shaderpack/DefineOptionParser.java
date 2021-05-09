@@ -176,7 +176,7 @@ public class DefineOptionParser {
 
 	private static String applyBooleanOption(Option<Boolean> option, String line, String startingComment) {
 		if (option.getValue() && startingComment != null) {
-			return line.replace(startingComment, "");
+			return line.substring(startingComment.length());
 
 			//if the option is false but there is no comment at the beginning
 			//this indicates that the option in the config is false, but the line is true
