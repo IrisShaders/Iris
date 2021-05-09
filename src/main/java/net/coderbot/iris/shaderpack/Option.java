@@ -43,6 +43,10 @@ public class Option<T> {
 	 * @param properties the properties to append to
 	 */
 	public void save(Properties properties) {
+		// If the option is on it's default value, then do not save it.
+		if (isDefaultValue()) {
+			return;
+		}
 		properties.put(this.name, this.value.toString());
 	}
 
@@ -116,6 +120,15 @@ public class Option<T> {
 	 */
 	public Function<String, T> getDeserializer() {
 		return deserializer;
+	}
+
+	/**
+	 * Checks if the Option is set to it's default setting
+	 *
+	 * @return if the option's value is the default.
+	 */
+	public boolean isDefaultValue() {
+		return this.value == this.defaultValue;
 	}
 
 	/**
