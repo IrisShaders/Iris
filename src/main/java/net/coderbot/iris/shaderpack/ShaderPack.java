@@ -21,11 +21,12 @@ public class ShaderPack {
 
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
+	private final CustomTexture customNoiseTexture;
 	private final ShaderPackConfig config;
 	private final ShaderProperties shaderProperties;
 
 	public ShaderPack(Path root) throws IOException {
-		this.shaderProperties = loadProperties(root, "shaders.properties")
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
 		this.config = new ShaderPackConfig(Iris.getIrisConfig().getShaderPackName());
@@ -38,6 +39,20 @@ public class ShaderPack {
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
+
+		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
+			try {
+				// TODO: Make sure the resulting path is within the shaderpack?
+				byte[] content = Files.readAllBytes(root.resolve(path));
+
+				// TODO: Read the blur / clamp data from the shaderpack...
+				return new CustomTexture(content, true, false);
+			} catch (IOException e) {
+				Iris.logger.error("Unable to read the custom noise texture at " + path);
+
+				return null;
+			}
+		}).orElse(null);
 		this.config.save();
 	}
 
@@ -89,6 +104,10 @@ public class ShaderPack {
 
 	public IdMap getIdMap() {
 		return idMap;
+	}
+
+	public Optional<CustomTexture> getCustomNoiseTexture() {
+		return Optional.ofNullable(customNoiseTexture);
 	}
 
 	public Map<String, Map<String, String>> getLangMap() {
