@@ -26,7 +26,7 @@ public class ShaderPack {
 	private final ShaderProperties shaderProperties;
 
 	public ShaderPack(Path root) throws IOException {
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
 		this.config = new ShaderPackConfig(Iris.getIrisConfig().getShaderPackName());
