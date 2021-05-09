@@ -20,6 +20,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
+import net.minecraft.client.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
 
 import net.minecraft.client.MinecraftClient;
@@ -35,11 +36,11 @@ public class CompositeRenderer {
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
 	private final EmptyShadowMapRenderer shadowMapRenderer;
-	private final NoiseTexture noiseTexture;
+	private final AbstractTexture noiseTexture;
 
 	final CenterDepthSampler centerDepthSampler;
 
-	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, EmptyShadowMapRenderer shadowMapRenderer) {
+	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, EmptyShadowMapRenderer shadowMapRenderer, AbstractTexture noiseTexture) {
 		centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
@@ -123,9 +124,7 @@ public class CompositeRenderer {
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 
 		this.shadowMapRenderer = shadowMapRenderer;
-
-		final int noiseTextureResolution = pack.getPackDirectives().getNoiseTextureResolution();
-		this.noiseTexture = new NoiseTexture(noiseTextureResolution, noiseTextureResolution);
+		this.noiseTexture = noiseTexture;
 	}
 
 	private static final class Pass {
@@ -167,7 +166,7 @@ public class CompositeRenderer {
 
 		bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
 		bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
-		bindTexture(SamplerUniforms.NOISE_TEX, noiseTexture.getTextureId());
+		bindTexture(SamplerUniforms.NOISE_TEX, noiseTexture.getGlId());
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 
@@ -268,7 +267,5 @@ public class CompositeRenderer {
 		for (Pass renderPass : passes) {
 			renderPass.destroy();
 		}
-
-		noiseTexture.destroy();
 	}
 }
