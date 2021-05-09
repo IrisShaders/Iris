@@ -1,4 +1,4 @@
-package net.coderbot.iris.mixin;
+package net.coderbot.iris.mixin.gui;
 
 import net.coderbot.iris.gui.screen.HudHideable;
 import net.minecraft.client.MinecraftClient;
@@ -19,6 +19,7 @@ public class MixinInGameHud {
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
 	public void iris$handleHudHidingScreens(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
 		Screen screen = this.client.currentScreen;
+
 		if (screen instanceof HudHideable) {
 			ci.cancel();
 		}

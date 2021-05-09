@@ -24,11 +24,15 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 	public ShaderPackListWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
+
 		refresh();
 	}
 
 	@Override
 	public int getRowWidth() {
+		// Allow the list widget to expand to take up most of the width of the screen, or shrink as needed.
+		// This is important both because shader pack names can be quite long, and it also helps if this list widget
+		// is side-by-side with another widget, such as a config GUI.
 		return width - 50;
 	}
 
@@ -39,6 +43,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 	public void refresh() {
 		this.clearEntries();
+
 		try {
 			Path path = Iris.SHADERPACKS_DIRECTORY;
 			int index = -1;
@@ -52,6 +57,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 			for (Path folder : folders) {
 				String name = folder.getFileName().toString();
+
 				if (!BUILTIN_PACKS.contains(name)) {
 					index++;
 					addEntry(index, name);
@@ -67,17 +73,21 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 	public void addEntry(int index, String name) {
 		ShaderPackEntry entry = new ShaderPackEntry(index, this, name);
+
 		if (Iris.getIrisConfig().getShaderPackName().equals(name)) {
 			this.setSelected(entry);
 		}
+
 		this.addEntry(entry);
 	}
 
 	public void select(String name) {
 		for (int i = 0; i < getEntryCount(); i++) {
 			BaseEntry entry = getEntry(i);
+
 			if (entry instanceof ShaderPackEntry && ((ShaderPackEntry)entry).packName.equals(name)) {
 				setSelected(entry);
+
 				return;
 			}
 		}
@@ -111,16 +121,21 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 			TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 			int color = 0xFFFFFF;
 			String name = packName;
+
 			if (textRenderer.getWidth(new LiteralText(name).formatted(Formatting.BOLD)) > this.list.getRowWidth() - 3) {
 				name = textRenderer.trimToWidth(name, this.list.getRowWidth() - 8) + "...";
 			}
+
 			MutableText text = new LiteralText(name);
+
 			if (this.isMouseOver(mouseX, mouseY)) {
 				text = text.formatted(Formatting.BOLD);
 			}
+
 			if (this.isSelected()) {
 				color = 0xFFF263;
 			}
+
 			drawCenteredText(matrices, textRenderer, text, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, color);
 		}
 
@@ -130,6 +145,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 				this.list.select(this.index);
 				return true;
 			}
+
 			return false;
 		}
 	}

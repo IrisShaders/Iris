@@ -76,6 +76,7 @@ public class IrisConfig {
 		} else {
 			this.shaderPackName = name;
 		}
+
 		try {
 			save();
 		} catch (IOException e) {
