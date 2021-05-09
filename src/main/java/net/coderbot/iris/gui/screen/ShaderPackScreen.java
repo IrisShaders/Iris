@@ -12,6 +12,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -26,6 +27,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	private Text addedPackDialog = null;
 	private int addedPackDialogTimer = 0;
+
+	private boolean dropChanges = false;
 
 	public ShaderPackScreen(Screen parent) {
 		super(new TranslatableText("options.iris.shaderPackSelection.title"));
@@ -69,16 +72,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		this.children.add(shaderPackList);
 
-		this.addButton(new ButtonWidget(bottomCenter + 104, this.height - 27, 100, 20, ScreenTexts.DONE, button -> {
-			applyChanges();
-			onClose();
-		}));
+		this.addButton(new ButtonWidget(bottomCenter + 104, this.height - 27, 100, 20,
+			ScreenTexts.DONE, button -> onClose()));
 
 		this.addButton(new ButtonWidget(bottomCenter, this.height - 27, 100, 20,
 			new TranslatableText("options.iris.apply"), button -> this.applyChanges()));
 
 		this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20,
-			ScreenTexts.CANCEL, button -> this.onClose()));
+			ScreenTexts.CANCEL, button -> this.dropChangesAndClose()));
 
 		this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20,
 			new TranslatableText("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
@@ -105,6 +106,16 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 			try {
 				Files.copy(pack, Iris.SHADERPACKS_DIRECTORY.resolve(fileName));
+			} catch (FileAlreadyExistsException e) {
+				this.addedPackDialog = new TranslatableText(
+						"options.iris.shaderPackSelection.copyErrorAlreadyExists",
+						fileName
+				).formatted(Formatting.ITALIC, Formatting.RED);
+
+				this.addedPackDialogTimer = 100;
+				this.shaderPackList.refresh();
+
+				return;
 			} catch (IOException e) {
 				Iris.logger.warn("Error copying dragged shader pack", e);
 
@@ -126,9 +137,22 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		if (packs.size() == 0) {
 			// If zero packs were added, then notify the user that the files that they added weren't actually shader
 			// packs.
-			this.addedPackDialog = new TranslatableText(
+
+			if (paths.size() == 1) {
+				// If a single pack could not be added, provide a message with that pack in the file name
+				String fileName = paths.get(0).getFileName().toString();
+
+				this.addedPackDialog = new TranslatableText(
+					"options.iris.shaderPackSelection.failedAddSingle",
+					fileName
+				).formatted(Formatting.ITALIC, Formatting.RED);
+			} else {
+				// Otherwise, show a generic message.
+
+				this.addedPackDialog = new TranslatableText(
 					"options.iris.shaderPackSelection.failedAdd"
-			).formatted(Formatting.ITALIC, Formatting.RED);
+				).formatted(Formatting.ITALIC, Formatting.RED);
+			}
 
 		} else if (packs.size() == 1) {
 			// In most cases, users will drag a single pack into the selection menu. So, let's special case it.
@@ -151,20 +175,23 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			).formatted(Formatting.ITALIC, Formatting.YELLOW);
 		}
 
-
+		// Show the relevant message for 5 seconds (100 ticks)
 		this.addedPackDialogTimer = 100;
 	}
 
 	@Override
 	public void onClose() {
+		if (!dropChanges) {
+			// TODO: Don't apply changes unnecessarily
+			applyChanges();
+		}
+
 		this.client.openScreen(parent);
 	}
 
-	private void setAddedPackDialog(TranslatableText text) {
-		this.addedPackDialog = text;
-
-		// Show the relevant message for 5 seconds (100 ticks)
-		this.addedPackDialogTimer = 100;
+	private void dropChangesAndClose() {
+		dropChanges = true;
+		onClose();
 	}
 
 	private void applyChanges() {
