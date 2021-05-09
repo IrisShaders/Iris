@@ -27,8 +27,9 @@ public class Option<T> {
 		this.allowedValues = allowedValues;
 		this.name = name;
 		this.value = defaultValue;
-		//only add to the list if it is already not empty.
-		//If it is empty, then we know that it can be set to any value
+
+		// Only add the default value to the list of allowed values if the list is already not empty.
+		// If the list is empty, then we know that this option can be set to any value.
 		if (!allowedValues.contains(defaultValue) && !allowedValues.isEmpty()) {
 			allowedValues.add(defaultValue);
 		}
