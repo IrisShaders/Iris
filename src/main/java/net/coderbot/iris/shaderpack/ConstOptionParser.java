@@ -85,7 +85,7 @@ public class ConstOptionParser {
 
 				Option<Boolean> booleanOption = createConstBooleanOption(name, value, comment, config);
 
-				lines.set(i, trimmedLine.replace(value, booleanOption.getValue().toString()));
+				lines.set(i, trimmedLine.replaceFirst(value, booleanOption.getValue().toString()));
 			} else if (floatMatcher.matches()) {
 				String name = group(floatMatcher, "name");
 				String value = group(floatMatcher, "value");
@@ -101,7 +101,7 @@ public class ConstOptionParser {
 				Option<Float> floatOption = createFloatOption(name, comment, value, config);
 
 				if (floatOption != null) {
-					lines.set(i, trimmedLine.replace(value, floatOption.getValue().toString()));
+					lines.set(i, trimmedLine.replaceFirst(value, floatOption.getValue().toString()));
 				}
 
 			} else if (intMatcher.matches()) {
@@ -119,7 +119,7 @@ public class ConstOptionParser {
 				Option<Integer> integerOption = createIntegerOption(name, comment, value, config);
 
 				if (integerOption != null) {
-					lines.set(i, trimmedLine.replace(value, integerOption.getValue().toString()));
+					lines.set(i, trimmedLine.replaceFirst(value, integerOption.getValue().toString()));
 				}
 			}
 		}

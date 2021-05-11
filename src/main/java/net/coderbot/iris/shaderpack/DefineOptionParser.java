@@ -103,7 +103,7 @@ public class DefineOptionParser {
 					Option<Float> floatOption = createFloatOption(name, comment, value, config);
 
 					if (floatOption != null) {
-						String line = trimmedLine.replace(value, floatOption.getValue().toString());
+						String line = trimmedLine.replaceFirst(value, floatOption.getValue().toString());
 						lines.set(i, line);
 					}
 
@@ -119,7 +119,7 @@ public class DefineOptionParser {
 					Option<Integer> integerOption = createIntegerOption(name, comment, value, config);
 
 					if (integerOption != null) {
-						String line = trimmedLine.replace(value, integerOption.getValue().toString());
+						String line = trimmedLine.replaceFirst(value, integerOption.getValue().toString());
 						lines.set(i, line);
 					}
 				}
