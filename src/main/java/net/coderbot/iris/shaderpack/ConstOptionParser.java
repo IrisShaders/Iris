@@ -131,9 +131,8 @@ public class ConstOptionParser {
 		Option<Boolean> booleanOption = new Option<>(comment, Arrays.asList(true, false), name, defaultValue, Boolean::parseBoolean);
 
 		booleanOption = config.processOption(booleanOption);
-		config.addBooleanOption(booleanOption);
 
-		return booleanOption;
+		return config.addBooleanOption(booleanOption);
 	}
 
 

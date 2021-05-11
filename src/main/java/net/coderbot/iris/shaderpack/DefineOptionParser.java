@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -177,9 +178,7 @@ public class DefineOptionParser {
 		Option<Boolean> booleanOption = new Option<>(comment, Arrays.asList(true, false), name, defaultValue, Boolean::parseBoolean);
 
 		booleanOption = config.processOption(booleanOption);
-		config.addBooleanOption(booleanOption);
-
-		return booleanOption;
+		return config.addBooleanOption(booleanOption);
 	}
 
 	/**
@@ -216,9 +215,9 @@ public class DefineOptionParser {
 		Option<Float> floatOption = new Option<>(comment, floats, name, floatValue, Float::parseFloat);
 
 		floatOption = config.processOption(floatOption);
-		config.addFloatOption(floatOption);
 
-		return floatOption;
+
+		return config.addFloatOption(floatOption);
 	}
 
 	/**
@@ -257,8 +256,8 @@ public class DefineOptionParser {
 		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, (string) -> (int) Float.parseFloat(string));//parse as float and cast to string to be flexible
 
 		integerOption = config.processOption(integerOption);
-		config.addIntegerOption(integerOption);
-		return integerOption;
+
+		return config.addIntegerOption(integerOption);
 	}
 
 	/**
