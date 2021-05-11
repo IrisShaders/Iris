@@ -113,7 +113,7 @@ public class ShaderPackConfig {
 		}
 
 		floatOptions.put(option.getName(), option);
-		return floatOption;
+		return option;
 	}
 
 	/**
