@@ -1,6 +1,8 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -21,9 +23,11 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class NewShaderTests {
-	public static Shader create(String name, ProgramSource source, float alpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException{
+	public static Shader create(String name, ProgramSource source, RenderTargets renderTargets, GlFramebuffer baseline, float alpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException{
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, hasColorAttrib);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, hasColorAttrib);
+
+		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
 		// TODO: Assert that the unpatched programs do not contain any "#moj_import" statements
 
@@ -60,7 +64,7 @@ public class NewShaderTests {
 
 		ResourceFactory shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
 
-		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, uniforms -> {
+		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, framebuffer, baseline, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());
 			SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			SamplerUniforms.addDepthSamplerUniforms(uniforms);

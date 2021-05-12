@@ -18,6 +18,10 @@ public class ProgramCreator {
 		GL20C.glBindAttribLocation(program, 11, "mc_midTexCoord");
 		GL20C.glBindAttribLocation(program, 12, "at_tangent");
 
+		// TODO(21w10a): more hardcoding!!!!
+		GL20C.glBindAttribLocation(program, 0, "Position");
+		GL20C.glBindAttribLocation(program, 1, "UV0");
+
 		for (GlShader shader : shaders) {
 			GL20C.glAttachShader(program, shader.getHandle());
 		}

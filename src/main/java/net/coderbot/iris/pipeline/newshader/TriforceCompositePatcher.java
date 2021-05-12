@@ -5,38 +5,22 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
-public class TriforcePatcher {
-	public static String patch(String source, ShaderType type, float alpha, boolean hasChunkOffset, boolean hasColorAttrib) {
+public class TriforceCompositePatcher {
+	public static String patch(String source, ShaderType type) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		fixVersion(transformations);
 
-		if (type == ShaderType.FRAGMENT && alpha > 0.0) {
-			if (transformations.contains("irisMain")) {
-				throw new IllegalStateException("Shader already contains \"irisMain\"???");
-			}
-
-			// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
-			// end.
-			transformations.replaceExact("main", "irisMain");
-			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
-					"    irisMain();\n" +
-					"\n" +
-					"    if (gl_FragData[0].a < " + alpha + ") {\n" +
-					"        discard;\n" +
-					"    }\n" +
-					"}");
-		}
-
 		// TODO: More solid way to handle texture matrices
-		transformations.replaceExact("gl_TextureMatrix[0]", "TextureMat");
-		transformations.replaceExact("gl_TextureMatrix[1]", "iris_LightmapTextureMatrix");
+		// TODO: Provide these values with uniforms
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_LightmapTextureMatrix;");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 TextureMat;");
+		for (int i = 0; i < 8; i++) {
+			transformations.replaceExact("gl_TextureMatrix[" + i + "]", "mat4(1.0)");
+		}
 
 		// TODO: Other fog things
 		// TODO: fogDensity isn't actually implemented!
+		// TODO: Does this exist in composite shaders???
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform float fogDensity;\n" +
 				"uniform float FogStart;\n" +
 				"uniform float FogEnd;\n" +
@@ -63,55 +47,26 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in float iris_FogFragCoord;");
 		}
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ProjectionMatrix ProjMat");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ProjMat;");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ProjectionMatrix mat4(1.0)");
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV0;");
 
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in ivec2 UV2;");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(0.0, 0.0, 0.0, 1.0)");
 		}
 
-		// TODO: Patching should take in mind cases where there are not color or normal vertex attributes
-
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec4 ColorModulator;");
-
-		if (hasColorAttrib) {
-			// TODO: Handle the fragment shader here
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color (Color * ColorModulator)");
-
-			if (type == ShaderType.VERTEX) {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec4 Color;");
-			}
-		} else {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color ColorModulator");
-		}
+		// No color attributes, the color is always solid white.
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color vec4(1.0, 1.0, 1.0, 1.0)");
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal Normal");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Normal;");
+			// https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glNormal.xml
+			// The initial value of the current normal is the unit vector, (0, 0, 1).
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal vec3(0.0, 0.0, 1.0)");
 		}
 
-		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_NormalMatrix mat3(transpose(inverse(gl_ModelViewMatrix)))");
-
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ModelViewMat;");
-
-		if (hasChunkOffset) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec3 ChunkOffset;");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "mat4 _iris_internal_translate(vec3 offset) {\n" +
-					"    // NB: Column-major order\n" +
-					"    return mat4(1.0, 0.0, 0.0, 0.0,\n" +
-					"                0.0, 1.0, 0.0, 0.0,\n" +
-					"                0.0, 0.0, 1.0, 0.0,\n" +
-					"                offset.x, offset.y, offset.z, 1.0);\n" +
-					"}");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix (ModelViewMat * _iris_internal_translate(ChunkOffset))");
-		} else {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix ModelViewMat");
-		}
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_NormalMatrix mat3(1.0)");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix mat4(1.0)");
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
@@ -128,8 +83,6 @@ public class TriforcePatcher {
 		} else if (type == ShaderType.FRAGMENT) {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define varying in");
 		}
-
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define lightmap Sampler2");
 
 		if (type == ShaderType.FRAGMENT) {
 			if (transformations.contains("gl_FragColor")) {

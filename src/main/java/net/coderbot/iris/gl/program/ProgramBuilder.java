@@ -13,17 +13,23 @@ import org.lwjgl.opengl.GL21C;
 public class ProgramBuilder extends ProgramUniforms.Builder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
-	private static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
-		.define(StandardMacros.getOsString())
-		.define("MC_VERSION", StandardMacros.getMcVersion())
-		.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
-		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
-		.define(StandardMacros.getRenderer())
-		.define(StandardMacros.getVendor())
-		.defineAll(StandardMacros.getGlExtensions())
-		.build();
+	private static final ShaderConstants MACRO_CONSTANTS;
 
-
+	static {
+		try {
+			MACRO_CONSTANTS = ShaderConstants.builder()
+					.define(StandardMacros.getOsString())
+					.define("MC_VERSION", StandardMacros.getMcVersion())
+					.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
+					.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+					.define(StandardMacros.getRenderer())
+					.define(StandardMacros.getVendor())
+					.defineAll(StandardMacros.getGlExtensions())
+					.build();
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to initialize StandardMacros!", e);
+		}
+	}
 
 	private final int program;
 
@@ -45,14 +51,14 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		GlShader fragment;
 
 		try {
-			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, MACRO_CONSTANTS);
+			vertex = new GlShader(ShaderType.VERTEX, name + ".vsh", vertexSource, EMPTY_CONSTANTS);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile vertex shader for program " + name, e);
 		}
 
 		if (geometrySource != null) {
 			try {
-				geometry = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource, MACRO_CONSTANTS);
+				geometry = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource, EMPTY_CONSTANTS);
 			} catch (RuntimeException e) {
 				throw new RuntimeException("Failed to compile geometry shader for program " + name, e);
 			}
@@ -61,7 +67,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		}
 
 		try {
-			fragment = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource, MACRO_CONSTANTS);
+			fragment = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource, EMPTY_CONSTANTS);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile fragment shader for program " + name, e);
 		}

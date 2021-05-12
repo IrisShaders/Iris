@@ -12,7 +12,10 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.pipeline.newshader.TriforceCompositePatcher;
+import net.coderbot.iris.pipeline.newshader.TriforcePatcher;
 import net.coderbot.iris.rendertarget.*;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -239,14 +242,19 @@ public class CompositeRenderer {
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source) {
-		// TODO: Properly handle empty shaders
-		Objects.requireNonNull(source.getVertexSource());
-		Objects.requireNonNull(source.getFragmentSource());
+		String vertex = TriforceCompositePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
+
+		if (source.getGeometrySource().isPresent()) {
+			// TODO(21w10a): support geometry shaders
+			throw new RuntimeException("Geometry shaders are not supported yet.");
+		}
+
+		String fragment = TriforceCompositePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
+
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null));
+			builder = ProgramBuilder.begin(source.getName(), vertex, null, fragment);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
