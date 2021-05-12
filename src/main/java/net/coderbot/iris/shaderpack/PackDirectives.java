@@ -7,12 +7,14 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.rendertarget.RenderTargets;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 public class PackDirectives {
-	private InternalTextureFormat[] requestedTextureFormats;
-	private boolean[] clearBuffers;
+	private final InternalTextureFormat[] requestedTextureFormats;
+	private final boolean[] clearBuffers;
 	private int noiseTextureResolution;
+	private float sunPathRotation;
 
 	PackDirectives() {
 		requestedTextureFormats = new InternalTextureFormat[RenderTargets.MAX_RENDER_TARGETS];
@@ -22,6 +24,7 @@ public class PackDirectives {
 		Arrays.fill(clearBuffers, true);
 
 		noiseTextureResolution = 256;
+		sunPathRotation = 0.0F;
 	}
 
 	public IntList getBuffersToBeCleared() {
@@ -46,6 +49,10 @@ public class PackDirectives {
 		return noiseTextureResolution;
 	}
 
+	public float getSunPathRotation() {
+		return sunPathRotation;
+	}
+
 	void accept(ConstDirectiveParser.ConstDirective directive) {
 		final ConstDirectiveParser.Type type = directive.getType();
 		final String key = directive.getKey();
@@ -57,7 +64,13 @@ public class PackDirectives {
 			String bufferName = key.substring(0, key.length() - "Format".length());
 
 			bufferNameToIndex(bufferName).ifPresent(index -> {
-				requestedTextureFormats[index] = InternalTextureFormat.valueOf(value);
+				Optional<InternalTextureFormat> internalFormat = InternalTextureFormat.fromString(value);
+
+				if (internalFormat.isPresent()) {
+					requestedTextureFormats[index] = internalFormat.get();
+				} else {
+					Iris.logger.warn("Unrecognized internal texture format " + value + " specified for " + key + ", ignoring.");
+				}
 			});
 		} else if (type == ConstDirectiveParser.Type.BOOL && key.endsWith("Clear") && value.equals("false")) {
 			String bufferName = key.substring(0, key.length() - "Clear".length());
@@ -67,6 +80,8 @@ public class PackDirectives {
 			});
 		} else if (type == ConstDirectiveParser.Type.INT && key.equals("noiseTextureResolution")) {
 			noiseTextureResolution = Integer.parseInt(value);
+		} else if (type == ConstDirectiveParser.Type.FLOAT && key.equals("sunPathRotation")) {
+			sunPathRotation = Float.parseFloat(value);
 		}
 	}
 

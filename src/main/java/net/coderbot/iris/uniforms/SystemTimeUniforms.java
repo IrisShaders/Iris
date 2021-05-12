@@ -13,6 +13,7 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
  */
 public final class SystemTimeUniforms {
 	public static final Timer TIMER = new Timer();
+	public static final FrameCounter COUNTER = new FrameCounter();
 
 	private SystemTimeUniforms() {
 	}
@@ -24,7 +25,9 @@ public final class SystemTimeUniforms {
 	 */
 	public static void addSystemTimeUniforms(UniformHolder uniforms) {
 		uniforms
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "frameCounter", new FrameCounter())
+			.uniform1i(UniformUpdateFrequency.PER_FRAME, "frameCounter", COUNTER)
+			// TODO: Don't hardcode framemod8 here for Sildur's Vibrant Shaders
+			.uniform1i(UniformUpdateFrequency.PER_FRAME, "framemod8", () -> COUNTER.getAsInt() % 8)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTime", TIMER::getLastFrameTime)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeCounter", TIMER::getFrameTimeCounter);
 	}
@@ -33,7 +36,7 @@ public final class SystemTimeUniforms {
 	 * A simple frame counter. On each frame, it is incremented by 1, and it wraps around every 720720 frames. It starts
 	 * at zero and goes from there.
 	 */
-	private static class FrameCounter implements IntSupplier {
+	public static class FrameCounter implements IntSupplier {
 		private int count;
 
 		private FrameCounter() {
@@ -42,11 +45,15 @@ public final class SystemTimeUniforms {
 
 		@Override
 		public int getAsInt() {
-			int currentFrame = count;
+			return count;
+		}
 
+		public void beginFrame() {
 			count = (count + 1) % 720720;
+		}
 
-			return currentFrame;
+		public void reset() {
+			count = 0;
 		}
 	}
 
@@ -63,9 +70,7 @@ public final class SystemTimeUniforms {
 		private OptionalLong lastStartTime;
 
 		public Timer() {
-			frameTimeCounter = 0.0F;
-			lastFrameTime = 0.0F;
-			lastStartTime = OptionalLong.empty();
+			reset();
 		}
 
 		public void beginFrame(long frameStartTime) {
@@ -81,6 +86,12 @@ public final class SystemTimeUniforms {
 			// Advance the current frameTimeCounter by the amount of time the last frame took.
 			frameTimeCounter += lastFrameTime;
 
+			// Prevent the frameTimeCounter from getting too large, since that causes issues with some shaderpacks
+			// This means that it should reset every hour.
+			if (frameTimeCounter >= 3600.0F) {
+				frameTimeCounter = 0.0F;
+			}
+
 			// Finally, update the "last start time" value.
 			lastStartTime = OptionalLong.of(frameStartTime);
 		}
@@ -91,6 +102,12 @@ public final class SystemTimeUniforms {
 
 		public float getLastFrameTime() {
 			return lastFrameTime;
+		}
+
+		public void reset() {
+			frameTimeCounter = 0.0F;
+			lastFrameTime = 0.0F;
+			lastStartTime = OptionalLong.empty();
 		}
 	}
 }

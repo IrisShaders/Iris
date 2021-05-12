@@ -3,8 +3,12 @@ package net.coderbot.iris.shaderpack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class ConstDirectiveParser {
+	private static Pattern FLOAT_PATTERN = Pattern.compile("[+-]?([0-9]*[.])?[0-9]+");
+	private static Pattern INT_PATTERN = Pattern.compile("[+-]?[0-9]+");
+
 	public static List<ConstDirective> findDirectives(String source) {
 		List<ConstDirective> directives = new ArrayList<>();
 
@@ -111,11 +115,13 @@ public class ConstDirectiveParser {
 		String value = remaining.substring(0, semicolonIndex).trim();
 
 		// The value must be a "word" (alphanumeric & underscore characters)
-		if (!isWord(value)) {
-			return Optional.empty();
+		// Alternatively, it must be a valid numeric value.
+		if ((type == Type.FLOAT && FLOAT_PATTERN.matcher(value).matches()) ||
+				(type == Type.INT && INT_PATTERN.matcher(value).matches()) || isWord(value)) {
+			return Optional.of(new ConstDirective(type, key, value));
 		}
 
-		return Optional.of(new ConstDirective(type, key, value));
+		return Optional.empty();
 	}
 
 	private static boolean startsWithWhitespace(String text) {
