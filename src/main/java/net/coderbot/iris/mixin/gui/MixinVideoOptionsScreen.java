@@ -2,8 +2,8 @@ package net.coderbot.iris.mixin.gui;
 
 import net.coderbot.iris.gui.option.ShaderPackSelectionButtonOption;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.VideoOptionsScreen;
-import net.minecraft.client.options.Option;
+import net.minecraft.client.gui.screen.option.VideoOptionsScreen;
+import net.minecraft.client.option.Option;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,7 +19,7 @@ public abstract class MixinVideoOptionsScreen extends Screen {
 			method = "init",
 			at = @At(
 					value = "INVOKE",
-					target = "Lnet/minecraft/client/gui/widget/ButtonListWidget;addAll([Lnet/minecraft/client/options/Option;)V"
+					target = "Lnet/minecraft/client/gui/widget/ButtonListWidget;addAll([Lnet/minecraft/client/option/Option;)V"
 			),
 			index = 0
 	)

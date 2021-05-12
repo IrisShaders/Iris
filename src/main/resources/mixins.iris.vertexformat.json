@@ -8,7 +8,6 @@
     "MixinVertexFormatElement",
     "MixinGlStateManager",
     "MixinChunkRebuildTask",
-    "MixinVertexBuffer",
     "MixinVertexFormat"
   ],
   "injectors": {
