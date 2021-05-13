@@ -10,11 +10,13 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -105,7 +107,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			String fileName = pack.getFileName().toString();
 
 			try {
-				Files.copy(pack, Iris.SHADERPACKS_DIRECTORY.resolve(fileName));
+				copyShaderPack(pack, fileName);
 			} catch (FileAlreadyExistsException e) {
 				this.addedPackDialog = new TranslatableText(
 						"options.iris.shaderPackSelection.copyErrorAlreadyExists",
@@ -179,6 +181,20 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.addedPackDialogTimer = 100;
 	}
 
+	private static void copyShaderPack(Path pack, String name) throws IOException {
+		Path target = Iris.SHADERPACKS_DIRECTORY.resolve(name);
+
+		// Make use of FileUtils to copy a directory with ease.
+		// Needs to convert the NIO Path to an IO File in order to work.
+		if (Files.isDirectory(pack)) {
+			FileUtils.copyDirectory(pack.toFile(), target.toFile());
+
+			return;
+		}
+
+		Files.copy(pack, target);
+	}
+
 	@Override
 	public void onClose() {
 		if (!dropChanges) {
@@ -204,6 +220,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		ShaderPackListWidget.ShaderPackEntry entry = (ShaderPackListWidget.ShaderPackEntry)base;
 		String name = entry.getPackName();
 		Iris.getIrisConfig().setShaderPackName(name);
+		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().enabled);
+
+		try {
+			Iris.getIrisConfig().save();
+		} catch (IOException e) {
+			Iris.logger.error("Error saving configuration file!");
+			Iris.logger.catching(e);
+		}
 
 		try {
 			Iris.reload();
