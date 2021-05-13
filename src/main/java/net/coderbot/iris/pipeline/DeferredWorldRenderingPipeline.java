@@ -394,7 +394,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			GlStateManager.bindTexture(specular.getGlId());
 
 			bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
-			bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
+			bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureNoTranslucentsId());
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4));
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5));
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6));

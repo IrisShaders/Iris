@@ -8,6 +8,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
@@ -41,6 +42,8 @@ public class ShadowRenderer {
 
 	private final WorldRenderingPipeline pipeline;
 	private final RenderTargets targets;
+	private final DepthTexture noTranslucents;
+
 	private final GlFramebuffer shadowFb;
 	private final Program shadowProgram;
 	private final float sunPathRotation;
@@ -54,6 +57,8 @@ public class ShadowRenderer {
 			InternalTextureFormat.RGBA
 		});
 
+		this.noTranslucents = new DepthTexture(RESOLUTION, RESOLUTION);
+
 		this.shadowFb = targets.createBaselineFramebuffer();
 
 		if (shadow != null) {
@@ -66,6 +71,16 @@ public class ShadowRenderer {
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE4);
 		GlStateManager.bindTexture(getDepthTextureId());
+
+		// TODO: Don't duplicate / hardcode these things, this should be controlled by shadowHardwareFiltering
+
+		// We have to do this or else shadow hardware filtering breaks entirely!
+		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
+		// Make sure that things are smoothed
+		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+
+		GlStateManager.bindTexture(getDepthTextureNoTranslucentsId());
 
 		// We have to do this or else shadow hardware filtering breaks entirely!
 		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
@@ -210,6 +225,18 @@ public class ShadowRenderer {
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutout(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutoutMipped(), modelView, cameraX, cameraY, cameraZ);
 
+		// Copy the content of the depth texture before rendering translucent content.
+		// This is needed for the shadowtex0 / shadowtex1 split.
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+		RenderSystem.bindTexture(noTranslucents.getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, RESOLUTION, RESOLUTION, 0);
+
+		// TODO: Prevent these calls from scheduling translucent sorting...
+		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
+		// Just something to watch out for, however...
+		worldRenderer.invokeRenderLayer(RenderLayer.getTranslucent(), modelView, cameraX, cameraY, cameraZ);
+		worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ);
+
 		worldRenderer.getWorld().getProfiler().pop();
 
 		// Restore backface culling
@@ -265,6 +292,10 @@ public class ShadowRenderer {
 
 	public int getDepthTextureId() {
 		return targets.getDepthTexture().getTextureId();
+	}
+
+	public int getDepthTextureNoTranslucentsId() {
+		return noTranslucents.getTextureId();
 	}
 
 	public void destroy() {

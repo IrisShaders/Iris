@@ -165,7 +165,7 @@ public class CompositeRenderer {
 		bindTexture(SamplerUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
 		bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
-		bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
+		bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureNoTranslucentsId());
 		bindTexture(SamplerUniforms.NOISE_TEX, noiseTexture.getGlId());
 
 		FullScreenQuadRenderer.INSTANCE.begin();
