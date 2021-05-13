@@ -43,18 +43,11 @@ public class Option<T> {
 	 * @param properties the properties to append to
 	 */
 	public void save(Properties properties) {
-		// If the option is on it's default value, then do not save it
-		// However, if the option is already in the properties and the user say switches back to default
-		// then the option stays in the properties list
-		if (isDefaultValue() && !properties.containsKey(this.name)) {
+		// If the option is on it's default value, then do not save it/remove the option from the properties
+		if (isDefaultValue()) {
+			properties.remove(this.name);
 			return;
 		}
-
-		if (properties.contains(this.name)) {
-			properties.replace(this.name, this.value);
-			return;
-		}
-
 		properties.put(this.name, this.value.toString());
 	}
 
