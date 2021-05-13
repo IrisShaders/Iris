@@ -177,8 +177,8 @@ public class DefineOptionParser {
 
 		Option<Boolean> booleanOption = new Option<>(comment, Arrays.asList(true, false), name, defaultValue, Boolean::parseBoolean);
 
-		booleanOption = config.processOption(booleanOption);
-		return config.addBooleanOption(booleanOption);
+		booleanOption = config.addBooleanOption(booleanOption);
+		return config.processOption(booleanOption);
 	}
 
 	/**
@@ -214,10 +214,10 @@ public class DefineOptionParser {
 
 		Option<Float> floatOption = new Option<>(comment, floats, name, floatValue, Float::parseFloat);
 
-		floatOption = config.processOption(floatOption);
+		floatOption = config.addFloatOption(floatOption);
 
 
-		return config.addFloatOption(floatOption);
+		return config.processOption(floatOption);
 	}
 
 	/**
@@ -255,9 +255,9 @@ public class DefineOptionParser {
 
 		Option<Integer> integerOption = new Option<>(comment, integers, name, intValue, (string) -> (int) Float.parseFloat(string));//parse as float and cast to string to be flexible
 
-		integerOption = config.processOption(integerOption);
+		integerOption = config.addIntegerOption(integerOption);
 
-		return config.addIntegerOption(integerOption);
+		return config.processOption(integerOption);
 	}
 
 	/**
