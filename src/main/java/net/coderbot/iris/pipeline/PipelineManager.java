@@ -52,6 +52,15 @@ public class PipelineManager {
 			//
 			// If the block ID mapping changes and the world render is not reloaded, then things won't work correctly.
 			MinecraftClient.getInstance().worldRenderer.reload();
+
+			// If Sodium is loaded, we need to reload the world renderer to properly recreate the ChunkRenderBackend
+			// Otherwise, the terrain shaders won't be changed properly.
+			// We also need to re-render all of the chunks if there is a change in the directional shading setting
+			//
+			// TODO: Don't trigger a reload if this is the first time the world is being rendered
+			/*if (FabricLoader.getInstance().isModLoaded("sodium")) {
+				MinecraftClient.getInstance().worldRenderer.reload();
+			}*/
 		}
 
 		return pipeline;
