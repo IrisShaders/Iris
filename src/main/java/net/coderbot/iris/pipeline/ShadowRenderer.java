@@ -13,12 +13,14 @@ import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
+import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
 import net.coderbot.iris.shadows.CullingDataCache;
-import net.coderbot.iris.shadows.NonCullingFrustum;
+import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.uniforms.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
@@ -33,7 +35,7 @@ import org.lwjgl.opengl.GL30C;
 import java.util.Objects;
 
 public class ShadowRenderer {
-	public static final float HALF_PLANE_LENGTH = 110F;
+	public static final float HALF_PLANE_LENGTH = 80F;
 	private static final int RESOLUTION = 3072;
 	public static Matrix4f MODELVIEW;
 
@@ -111,11 +113,24 @@ public class ShadowRenderer {
 		return modelView;
 	}
 
+	private static Frustum createShadowFrustum(MatrixStack modelview, float[] ortho) {
+		Matrix4f orthoMatrix = new Matrix4f();
+
+		((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
+
+		return new Frustum(modelview.peek().getModel(), orthoMatrix);
+	}
+
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
 		MinecraftClient client = MinecraftClient.getInstance();
 
 		worldRenderer.getWorld().getProfiler().swap("shadows");
 		ACTIVE = true;
+
+		// Create our camera
+		MatrixStack modelView = creatShadowModelView(this.sunPathRotation);
+		MODELVIEW = modelView.peek().getModel().copy();
+		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(HALF_PLANE_LENGTH);
 
 		worldRenderer.getWorld().getProfiler().push("terrain_setup");
 
@@ -123,10 +138,35 @@ public class ShadowRenderer {
 			((CullingDataCache) worldRenderer).saveState();
 		}
 
+		Frustum frustum;
+
+		// NB: This frustum assumes that the shader pack uses standard shadow mapping techniques
+		// TODO: If a shader pack tries to use voxelization, we must use a different culling method!
+		frustum = createShadowFrustum(modelView, orthoMatrix);
+
+		// Determine the player camera position
+		Vec3d cameraPos = CameraUniforms.getCameraPosition();
+
+		double cameraX = cameraPos.getX();
+		double cameraY = cameraPos.getY();
+		double cameraZ = cameraPos.getZ();
+
+		// Center the frustum on the player camera position
+		frustum.setPosition(cameraX, cameraY, cameraZ);
+
+		// Disable chunk occlusion culling - it's a bit complex to get this properly working with shadow rendering
+		// as-is, however in the future it will be good to work on restoring it for a nice performance boost.
+		//
+		// TODO: Get chunk occlusion working with shadows
 		boolean wasChunkCullingEnabled = client.chunkCullingEnabled;
 		client.chunkCullingEnabled = false;
 
-		worldRenderer.invokeSetupTerrain(playerCamera, new NonCullingFrustum(), false, worldRenderer.getFrame(), false);
+		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
+		worldRenderer.invokeSetupTerrain(playerCamera, frustum, false, worldRenderer.getFrame(), false);
+
+		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
+		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
+		// chunks during traversal, and break rendering in concerning ways.
 		worldRenderer.setFrame(worldRenderer.getFrame() + 1);
 
 		client.chunkCullingEnabled = wasChunkCullingEnabled;
@@ -135,17 +175,6 @@ public class ShadowRenderer {
 
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
-
-		// Determine the camera position
-		Vec3d cameraPos = CameraUniforms.getCameraPosition();
-
-		double cameraX = cameraPos.getX();
-		double cameraY = cameraPos.getY();
-		double cameraZ = cameraPos.getZ();
-
-		// Create our camera
-		MatrixStack modelView = creatShadowModelView(this.sunPathRotation);
-		MODELVIEW = modelView.peek().getModel().copy();
 
 		// Set up the shadow program
 		if (shadowProgram != null) {
@@ -164,8 +193,17 @@ public class ShadowRenderer {
 		// Set up our orthographic projection matrix and load it into the legacy matrix stack
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.pushMatrix();
-		GL11.glLoadMatrixf(ShadowMatrices.createOrthoMatrix(HALF_PLANE_LENGTH));
+		GL11.glLoadMatrixf(orthoMatrix);
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+
+		// Disable backface culling
+		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
+		// shadow.
+		//
+		// However, it only partially resolves issues of light leaking into caves.
+		//
+		// TODO: Better way of preventing light from leaking into places where it shouldn't
+		RenderSystem.disableCull();
 
 		// Render all opaque terrain
 		worldRenderer.invokeRenderLayer(RenderLayer.getSolid(), modelView, cameraX, cameraY, cameraZ);
@@ -173,6 +211,9 @@ public class ShadowRenderer {
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutoutMipped(), modelView, cameraX, cameraY, cameraZ);
 
 		worldRenderer.getWorld().getProfiler().pop();
+
+		// Restore backface culling
+		RenderSystem.enableCull();
 
 		// Make sure to unload the projection matrix
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);

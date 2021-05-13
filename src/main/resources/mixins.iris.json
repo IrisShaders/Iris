@@ -20,6 +20,7 @@
     "fabulous.MixinOption",
     "gui.MixinInGameHud",
     "gui.MixinVideoOptionsScreen",
+    "math.MixinMatrix4f",
     "renderlayer.MixinFixEyesTranslucency",
     "renderlayer.MixinRenderLayer",
     "renderlayer.RenderLayerAccessor",
