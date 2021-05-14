@@ -16,6 +16,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
+import net.coderbot.iris.shadows.frustum.ShadowFrustum;
 import net.coderbot.iris.uniforms.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgramManager;
@@ -140,16 +141,13 @@ public class ShadowRenderer {
 
 		((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
 
-		return new Frustum(modelview.peek().getModel(), orthoMatrix);
+		// TODO: Don't use the box culling thing if the render distance is less than the shadow distance, saves a few operations
+		return new ShadowFrustum(modelview.peek().getModel(), orthoMatrix, HALF_PLANE_LENGTH);
+		// return new Frustum(modelview.peek().getModel(), orthoMatrix);
 	}
 
 	private static Frustum createEntityShadowFrustum(MatrixStack modelview) {
-		float[] ortho = ShadowMatrices.createOrthoMatrix(16.0f);
-		Matrix4f orthoMatrix = new Matrix4f();
-
-		((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
-
-		return new Frustum(modelview.peek().getModel(), orthoMatrix);
+		return createShadowFrustum(modelview, ShadowMatrices.createOrthoMatrix(16.0f));
 	}
 
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
