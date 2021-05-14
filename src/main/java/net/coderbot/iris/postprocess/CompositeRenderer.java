@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -21,6 +22,7 @@ import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.minecraft.client.texture.AbstractTexture;
+import org.apache.logging.log4j.Level;
 import org.lwjgl.opengl.GL15C;
 
 import net.minecraft.client.MinecraftClient;
@@ -251,7 +253,10 @@ public class CompositeRenderer {
 				source.getFragmentSource().orElse(null));
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
-			throw new RuntimeException("Shader compilation failed!", e);
+			Iris.logger.error("Shader compilation failed!");
+			Iris.logger.catching(Level.ERROR, e);
+			builder = new ProgramBuilder("error", 0);
+			ProgramBuilder.catchPrograms();
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());

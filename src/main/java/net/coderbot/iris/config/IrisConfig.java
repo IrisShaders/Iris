@@ -18,14 +18,14 @@ public class IrisConfig {
 	/**
 	 * The path to the current shaderpack. Null if the internal shaderpack is being used.
 	 */
-	private String shaderPackName;
+	private static String shaderPackName;
 
 	/**
 	 * Whether or not shaders are used for rendering. False to disable all shader-based rendering, true to enable it.
 	 */
-	private boolean enableShaders;
+	private static boolean enableShaders;
 
-	private Path propertiesPath;
+	private static Path propertiesPath;
 
 	public IrisConfig() {
 		shaderPackName = null;
@@ -59,7 +59,7 @@ public class IrisConfig {
 	 *
 	 * @return shaderpack name. If internal it returns "(internal)"
 	 */
-	public String getShaderPackName() {
+	public static String getShaderPackName() {
 		if (shaderPackName == null) {
 			return "(internal)";
 		}
@@ -97,8 +97,8 @@ public class IrisConfig {
 	/**
 	 * Sets enableShaders false for when compile error happen could be used for other things tho.
 	 */
-	public void setShadersEnabled(boolean enableDisable) {
-		this.enableShaders = enableDisable;
+	public static void setShadersEnabled(boolean enableDisable) {
+		enableShaders = enableDisable;
 	}
 
 	/**
@@ -127,7 +127,7 @@ public class IrisConfig {
 	 *
 	 * @throws IOException file exceptions
 	 */
-	public void save() throws IOException {
+	public static void save() throws IOException {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName());
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");

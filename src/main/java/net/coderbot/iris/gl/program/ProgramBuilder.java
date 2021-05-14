@@ -2,6 +2,7 @@ package net.coderbot.iris.gl.program;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderConstants;
@@ -11,6 +12,8 @@ import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
+
+import java.io.IOException;
 
 public class ProgramBuilder extends ProgramUniforms.Builder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
@@ -29,7 +32,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 
 	private final int program;
 
-	private ProgramBuilder(String name, int program) {
+	public ProgramBuilder(String name, int program) {
 		super(name, program);
 
 		this.program = program;
@@ -83,11 +86,25 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		try {
 			return new GlShader(shaderType, name, source, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
+			ProgramBuilder.catchPrograms();
 			Iris.logger.error("Failed to compile " + shaderType + " shader for program " + name);
-			Iris.irisConfig.setShadersEnabled(false);
-			Iris.loadShaderpack();
 			Iris.logger.catching(Level.ERROR, e);
 		}
 		return new GlShader(ShaderType.ERROR, "error", "", EMPTY_CONSTANTS);
 	}
+
+	public static void catchPrograms() {
+		IrisConfig.setShadersEnabled(false);
+		try {
+			IrisConfig.save();
+		} catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
+		try {
+			Iris.reload();
+		} catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
+	}
 }
+

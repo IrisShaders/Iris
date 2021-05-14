@@ -39,12 +39,12 @@ public class Iris implements ClientModInitializer {
 
 	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
-	public static ShaderPack currentPack;
-	public static String currentPackName;
-	public static boolean internal;
+	private static ShaderPack currentPack;
+	private static String currentPackName;
+	private static boolean internal;
 
 	private static PipelineManager pipelineManager;
-	public static IrisConfig irisConfig;
+	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
 	private static KeyBinding reloadKeybind;
 
