@@ -95,6 +95,13 @@ public class IrisConfig {
 	}
 
 	/**
+	 * Sets enableShaders false for when compile error happen could be used for other things tho.
+	 */
+	public void setShadersEnabled(boolean enableDisable) {
+		this.enableShaders = enableDisable;
+	}
+
+	/**
 	 * loads the config file and then populates the string, int, and boolean entries with the parsed entries
 	 *
 	 * @throws IOException if the file cannot be loaded

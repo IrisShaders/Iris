@@ -84,6 +84,8 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 			return new GlShader(shaderType, name, source, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
 			Iris.logger.error("Failed to compile " + shaderType + " shader for program " + name);
+			Iris.irisConfig.setShadersEnabled(false);
+			Iris.loadShaderpack();
 			Iris.logger.catching(Level.ERROR, e);
 		}
 		return new GlShader(ShaderType.ERROR, "error", "", EMPTY_CONSTANTS);
