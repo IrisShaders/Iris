@@ -14,12 +14,9 @@ public final class Program extends GlResource {
 	}
 
 	public void use() {
-		//TODO: is this check needed anymore?
-		if (getGlId() != -1) {
 			GL20C.glUseProgram(getGlId());
 
 			uniforms.update();
-		}
 	}
 
 	public void destroyInternal() {
