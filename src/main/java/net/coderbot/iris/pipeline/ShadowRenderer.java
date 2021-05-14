@@ -19,9 +19,7 @@ import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.uniforms.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.Pair;
@@ -47,6 +45,8 @@ public class ShadowRenderer {
 	private final Program shadowProgram;
 	private final float sunPathRotation;
 
+	private final BufferBuilderStorage buffers;
+
 	public static boolean ACTIVE = false;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives) {
@@ -68,6 +68,8 @@ public class ShadowRenderer {
 		}
 
 		this.sunPathRotation = directives.getSunPathRotation();
+
+		this.buffers = new BufferBuilderStorage();
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE4);
 		GlStateManager.bindTexture(getDepthTextureId());
@@ -228,6 +230,24 @@ public class ShadowRenderer {
 		worldRenderer.invokeRenderLayer(RenderLayer.getSolid(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutout(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutoutMipped(), modelView, cameraX, cameraY, cameraZ);
+
+		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
+		// it is set to a fixed value.
+		final float tickDelta = CapturedRenderingState.INSTANCE.getTickDelta();
+
+		// Render the player entity
+		//
+		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
+		// rendering.
+		//
+		// TODO: Render other entities / block entities in the shadow pass
+		VertexConsumerProvider.Immediate provider = buffers.getEntityVertexConsumers();
+
+		if (client.player != null) {
+			worldRenderer.invokeRenderEntity(client.player, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
+		}
+
+		provider.draw();
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
