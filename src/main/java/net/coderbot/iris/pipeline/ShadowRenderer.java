@@ -48,6 +48,7 @@ public class ShadowRenderer {
 	private final BufferBuilderStorage buffers;
 
 	public static boolean ACTIVE = false;
+	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives) {
 		this.pipeline = pipeline;
@@ -260,6 +261,8 @@ public class ShadowRenderer {
 		// Just something to watch out for, however...
 		worldRenderer.invokeRenderLayer(RenderLayer.getTranslucent(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ);
+
+		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
 
 		worldRenderer.getWorld().getProfiler().pop();
 
