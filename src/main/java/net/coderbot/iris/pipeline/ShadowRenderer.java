@@ -14,7 +14,6 @@ import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
-import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.uniforms.*;
@@ -114,7 +113,7 @@ public class ShadowRenderer {
 		return new Pair<>(builder.build(), source.getDirectives());
 	}
 
-	public static MatrixStack creatShadowModelView(float sunPathRotation) {
+	public static MatrixStack createShadowModelView(float sunPathRotation) {
 		// Determine the camera position
 		Vec3d cameraPos = CameraUniforms.getCameraPosition();
 
@@ -144,7 +143,7 @@ public class ShadowRenderer {
 		ACTIVE = true;
 
 		// Create our camera
-		MatrixStack modelView = creatShadowModelView(this.sunPathRotation);
+		MatrixStack modelView = createShadowModelView(this.sunPathRotation);
 		MODELVIEW = modelView.peek().getModel().copy();
 		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(HALF_PLANE_LENGTH);
 
