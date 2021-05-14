@@ -230,9 +230,19 @@ public class Iris implements ClientModInitializer {
 
 	public static boolean isValidShaderpack(Path pack) {
 		if (Files.isDirectory(pack)) {
+			// Sometimes the shaderpack directory itself can be
+			// identified as a shader pack due to it containing
+			// folders which contain "shaders" folders, this is
+			// necessary to check against that
+			if (pack.equals(SHADERPACKS_DIRECTORY)) {
+				return false;
+			}
 			try {
-				return Files.list(pack)
+				return Files.walk(pack)
 						.filter(Files::isDirectory)
+						// Prevent a pack simply named "shaders" from being
+						// identified as a valid pack
+						.filter(path -> !path.equals(pack))
 						.anyMatch(path -> path.endsWith("shaders"));
 			} catch (IOException ignored) {
 				// ignored, not a valid shader pack.
