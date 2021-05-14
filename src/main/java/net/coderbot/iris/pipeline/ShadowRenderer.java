@@ -54,12 +54,13 @@ public class ShadowRenderer {
 		this.pipeline = pipeline;
 
 		this.targets = new RenderTargets(RESOLUTION, RESOLUTION, new InternalTextureFormat[]{
+			InternalTextureFormat.RGBA,
 			InternalTextureFormat.RGBA
 		});
 
 		this.noTranslucents = new DepthTexture(RESOLUTION, RESOLUTION);
 
-		this.shadowFb = targets.createBaselineFramebuffer();
+		this.shadowFb = targets.createBaselineShadowFramebuffer();
 
 		if (shadow != null) {
 			this.shadowProgram = createProgram(shadow, directives).getLeft();
@@ -296,6 +297,14 @@ public class ShadowRenderer {
 
 	public int getDepthTextureNoTranslucentsId() {
 		return noTranslucents.getTextureId();
+	}
+
+	public int getColorTexture0Id() {
+		return targets.get(0).getMainTexture();
+	}
+
+	public int getColorTexture1Id() {
+		return targets.get(1).getMainTexture();
 	}
 
 	public void destroy() {

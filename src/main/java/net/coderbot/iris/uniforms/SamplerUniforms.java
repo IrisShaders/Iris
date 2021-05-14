@@ -24,6 +24,9 @@ public class SamplerUniforms {
 	public static final int DEPTH_TEX_1 = 11;
 	public static final int DEPTH_TEX_2 = 12;
 
+	public static final int SHADOW_COLOR_0 = 13;
+	public static final int SHADOW_COLOR_1 = 14;
+
 	public static final int NOISE_TEX = 15;
 
 	public static final int DEFAULT_COLOR = COLOR_TEX_0;
@@ -51,8 +54,8 @@ public class SamplerUniforms {
 		addSampler(uniforms, waterShadowEnabled ? SHADOW_TEX_1 : SHADOW_TEX_0, "shadow");
 
 		addSampler(uniforms, SHADOW_TEX_1, "shadowtex1");
-		addSampler(uniforms, 13, "shadowcolor", "shadowcolor0");
-		addSampler(uniforms, 14, "shadowcolor1");
+		addSampler(uniforms, SHADOW_COLOR_0, "shadowcolor", "shadowcolor0");
+		addSampler(uniforms, SHADOW_COLOR_1, "shadowcolor1");
 
 		// Noise
 		addSampler(uniforms, NOISE_TEX, "noisetex");
