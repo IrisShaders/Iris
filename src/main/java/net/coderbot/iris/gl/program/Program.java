@@ -14,9 +14,9 @@ public final class Program extends GlResource {
 	}
 
 	public void use() {
-			GL20C.glUseProgram(getGlId());
+		GL20C.glUseProgram(getGlId());
 
-			uniforms.update();
+		uniforms.update();
 	}
 
 	public void destroyInternal() {
