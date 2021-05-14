@@ -231,7 +231,7 @@ public class Iris implements ClientModInitializer {
 	public static boolean isValidShaderpack(Path pack) {
 		if (Files.isDirectory(pack)) {
 			try {
-				return Files.walk(pack)
+				return Files.list(pack)
 						.filter(Files::isDirectory)
 						.anyMatch(path -> path.endsWith("shaders"));
 			} catch (IOException ignored) {

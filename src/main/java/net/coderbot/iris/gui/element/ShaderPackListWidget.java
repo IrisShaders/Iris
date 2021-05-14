@@ -48,10 +48,6 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 		return super.getRowTop(index) + 2;
 	}
 
-	private static boolean isValidPackPath(Path path) {
-		return !path.equals(Iris.SHADERPACKS_DIRECTORY) && Iris.isValidShaderpack(path);
-	}
-
 	public void refresh() {
 		this.clearEntries();
 
@@ -66,7 +62,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 				addEntry(index, pack);
 			}
 
-			Collection<Path> folders = Files.walk(path, 1).filter(ShaderPackListWidget::isValidPackPath).collect(Collectors.toList());
+			Collection<Path> folders = Files.walk(path, 1).filter(Iris::isValidShaderpack).collect(Collectors.toList());
 
 			for (Path folder : folders) {
 				String name = folder.getFileName().toString();
@@ -196,10 +192,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 		@Override
 		public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-			GuiUtil.bindTexture(GuiUtil.IRIS_WIDGETS_TEX);
-			RenderSystem.color4f(1.0f, 1.0f, 1.0f, 1.0f);
-			RenderSystem.enableBlend();
-			RenderSystem.enableTexture();
+			GuiUtil.bindIrisWidgetsTexture();
 
 			GuiUtil.drawButton(matrices, x - 2, y - 3, entryWidth, 18, hovered, false);
 

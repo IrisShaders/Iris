@@ -1,5 +1,6 @@
 package net.coderbot.iris.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.sound.PositionedSoundInstance;
@@ -17,11 +18,7 @@ import net.minecraft.util.Identifier;
  * some code that will be changed.
  */
 public final class GuiUtil {
-	/**
-	 * Resource ID for the texture used for
-	 * Iris's GUI widgets.
-	 */
-	public static final Identifier IRIS_WIDGETS_TEX = new Identifier("iris", "textures/gui/widgets.png");
+	private static final Identifier IRIS_WIDGETS_TEX = new Identifier("iris", "textures/gui/widgets.png");
 
 	private GuiUtil() {}
 
@@ -30,13 +27,11 @@ public final class GuiUtil {
 	}
 
 	/**
-	 * Binds the texture to be used for
-	 * succeeding draw calls.
-	 *
-	 * @param texture The resource ID of the texture to be bound.
+	 * Binds Iris's widgets texture to be
+	 * used for succeeding draw calls.
 	 */
-	public static void bindTexture(Identifier texture) {
-		client().getTextureManager().bindTexture(texture);
+	public static void bindIrisWidgetsTexture() {
+		client().getTextureManager().bindTexture(IRIS_WIDGETS_TEX);
 	}
 
 	/**
@@ -59,6 +54,13 @@ public final class GuiUtil {
 
 		// V offset for which button texture to use
 		int vOffset = disabled ? 46 : hovered ? 86 : 66;
+
+		// Sets RenderSystem to use solid white as the tint color for blend mode, and enables blend mode
+		RenderSystem.blendColor(1.0f, 1.0f, 1.0f, 1.0f);
+		RenderSystem.enableBlend();
+
+		// Sets RenderSystem to be able to use textures when drawing
+		RenderSystem.enableTexture();
 
 		// Top left section
 		DrawableHelper.drawTexture(matrices, x, y, 0, vOffset, halfWidth, halfHeight, 256, 256);

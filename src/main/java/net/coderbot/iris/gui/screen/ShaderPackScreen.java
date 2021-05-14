@@ -184,15 +184,34 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private static void copyShaderPack(Path pack, String name) throws IOException {
 		Path target = Iris.SHADERPACKS_DIRECTORY.resolve(name);
 
-		// Make use of FileUtils to copy a directory with ease.
-		// Needs to convert the NIO Path to an IO File in order to work.
-		if (Files.isDirectory(pack)) {
-			FileUtils.copyDirectory(pack.toFile(), target.toFile());
+		// Copy the pack file into the shaderpacks folder.
+		Files.copy(pack, target);
+		// Zip or other archive files will be copied without issue,
+		// however normal folders will require additional handling below.
 
-			return;
+		// Manually copy the contents of the pack if it is a folder
+		if (Files.isDirectory(pack)) {
+			// Use for loops instead of forEach due to createDirectory throwing an IOException
+			// which requires additional handling when used in a lambda
+
+			// Copy all sub folders, collected as a list in order to prevent issues with non-ordered sets
+			for (Path p : Files.walk(pack).filter(Files::isDirectory).collect(Collectors.toList())) {
+				Path folder = pack.relativize(p);
+
+				if (Files.exists(folder)) {
+					continue;
+				}
+
+				Files.createDirectory(target.resolve(folder));
+			}
+			// Copy all non-folder files
+			for (Path p : Files.walk(pack).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
+				Path file = pack.relativize(p);
+
+				Files.copy(p, target.resolve(file));
+			}
 		}
 
-		Files.copy(pack, target);
 	}
 
 	@Override
