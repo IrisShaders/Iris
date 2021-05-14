@@ -20,9 +20,12 @@ import net.coderbot.iris.uniforms.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
@@ -49,6 +52,7 @@ public class ShadowRenderer {
 
 	public static boolean ACTIVE = false;
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
+	private static int renderedShadowEntities = 0;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives) {
 		this.pipeline = pipeline;
@@ -132,6 +136,15 @@ public class ShadowRenderer {
 	}
 
 	private static Frustum createShadowFrustum(MatrixStack modelview, float[] ortho) {
+		Matrix4f orthoMatrix = new Matrix4f();
+
+		((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
+
+		return new Frustum(modelview.peek().getModel(), orthoMatrix);
+	}
+
+	private static Frustum createEntityShadowFrustum(MatrixStack modelview) {
+		float[] ortho = ShadowMatrices.createOrthoMatrix(16.0f);
 		Matrix4f orthoMatrix = new Matrix4f();
 
 		((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
@@ -232,23 +245,43 @@ public class ShadowRenderer {
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutout(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutoutMipped(), modelView, cameraX, cameraY, cameraZ);
 
+		worldRenderer.getWorld().getProfiler().swap("entities");
+
 		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
 		// it is set to a fixed value.
 		final float tickDelta = CapturedRenderingState.INSTANCE.getTickDelta();
 
-		// Render the player entity
+		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
+		// TODO: Make this configurable and disable-able
+		final Frustum entityShadowFrustum = createEntityShadowFrustum(modelView);
+		entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
+
+		// Render nearby entities
 		//
 		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
 		// rendering.
 		//
-		// TODO: Render other entities / block entities in the shadow pass
+		// TODO: Render other block entities in the shadow pass
 		VertexConsumerProvider.Immediate provider = buffers.getEntityVertexConsumers();
+		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
 
-		if (client.player != null) {
-			worldRenderer.invokeRenderEntity(client.player, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
+		int shadowEntities = 0;
+
+		// TODO: I'm sure that this can be improved / optimized.
+		for (Entity entity : getWorld().getEntities()) {
+			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ)) {
+				continue;
+			}
+
+			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
+			shadowEntities++;
 		}
 
+		renderedShadowEntities = shadowEntities;
+
 		provider.draw();
+
+		worldRenderer.getWorld().getProfiler().swap("translucent terrain");
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
@@ -287,6 +320,10 @@ public class ShadowRenderer {
 
 		ACTIVE = false;
 		worldRenderer.getWorld().getProfiler().swap("updatechunks");
+	}
+
+	public static String getEntitiesDebugString() {
+		return renderedShadowEntities + "/" + MinecraftClient.getInstance().world.getRegularEntityCount();
 	}
 
 	private static ClientWorld getWorld() {

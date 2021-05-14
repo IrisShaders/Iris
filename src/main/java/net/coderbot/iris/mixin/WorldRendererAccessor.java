@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -10,6 +11,9 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(WorldRenderer.class)
 public interface WorldRendererAccessor {
+	@Accessor("entityRenderDispatcher")
+	EntityRenderDispatcher getEntityRenderDispatcher();
+
 	@Invoker("renderLayer")
 	void invokeRenderLayer(RenderLayer terrainLayer, MatrixStack modelView, double cameraX, double cameraY, double cameraZ);
 
