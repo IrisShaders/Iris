@@ -4,30 +4,19 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s",
 
-  "option.iris.back": "Back",
-  "option.iris.profile": "Profile",
-
   "options.iris.apply": "Apply",
   "options.iris.refresh": "Refresh",
   "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
   "options.iris.refreshShaderPacks": "Refresh Shader Packs",
   "options.iris.shaderPackSelection": "Shader Packs...",
   "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Added Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Added %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Files were not valid Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" is not a valid Shader Pack",
+  "options.iris.shaderPackSelection.copyError": "Could not add Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" is already in your Shader Packs folder!",
 
   "pack.iris.select.title": "Select",
-  "pack.iris.configure.title": "Configure",
-  "pack.iris.internal": "Internal Shaders",
-
-  "page.iris.notFound": "Page Not Found",
-  "page.iris.invalid": "Invalid Page: \"%s\"",
-  "page.iris.noConfig": "No shader options.",
-  "page.iris.noShaders": "No shader pack loaded.",
-
-  "property.iris.boolean.true": "True",
-  "property.iris.boolean.false": "False",
-  "property.iris.title.configScreen": "Configure Iris",
-  "property.iris.uiTheme": "UI Theme",
-  "property.iris.condenseShaderConfig": "Compact Shader Pack Config",
-
-  "tooltip.iris.config": "Configure Iris"
+  "pack.iris.list.label": "+ Drag and Drop Shader Packs to add"
 }

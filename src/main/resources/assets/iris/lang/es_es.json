@@ -3,30 +3,17 @@
   "iris.keybind.reload": "Recargar Shaders",
   "iris.shaders.reloaded.failure": "¡Falló en la recarga de los Shaders! Razón: %s",
 
-  "option.iris.back": "Volver",
-  "option.iris.profile": "Perfil",
-
-  "options.iris.apply": "Aplique",
+  "options.iris.apply": "Aplíquese",
   "options.iris.refresh": "Refrescar",
-  "options.iris.openShaderPackFolder": "Abrir la carpeta de paquetes de Shaders...",
-  "options.iris.refreshShaderPacks": "Refrescar los paquetes de Shaders",
-  "options.iris.shaderPackSelection": "Paquetes de Shader...",
-  "options.iris.shaderPackSelection.title": "Paquetes de Shader",
+  "options.iris.openShaderPackFolder": "Abrir la carpeta Shader Pack...",
+  "options.iris.refreshShaderPacks": "Actualizar Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Añadidos Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Añadidos %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Los archivos no eran Shader Packs válidos",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" no es un Shader Pack válido",
+  "options.iris.shaderPackSelection.copyError": "No se ha podido añadir el Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "¡\"%s\" ya está en tu carpeta de Shader Packs!",
 
   "pack.iris.select.title": "Seleccione",
-  "pack.iris.configure.title": "Configurar",
-  "pack.iris.internal": "Shaders internos",
-
-  "page.iris.notFound": "¡Página no encontrada!",
-  "page.iris.invalid": "Página inválida: \"%s\"",
-  "page.iris.noConfig": "No hay opciones de Shaders.",
-  "page.iris.noShaders": "No hay ningún paquete de Shaders cargado.",
-
-  "property.iris.boolean.true": "Verdadero",
-  "property.iris.boolean.false": "Falso",
-  "property.iris.title.configScreen": "Configurar Iris",
-  "property.iris.uiTheme": "Tema UI",
-  "property.iris.condenseShaderConfig": "Configuración del paquete de sombreado compacto",
-  
-  "property.iris.config": "Configurar Iris"
+  "pack.iris.list.label": "+ Arrastrar y soltar Shader Packs para añadir"
 }

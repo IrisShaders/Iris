@@ -3,30 +3,17 @@
   "iris.keybind.reload": "Шейдеры перезарядки",
   "iris.shaders.reloaded.failure": "Ошибка при Перезагрузке шейдеров! Причина: %s",
 
-  "option.iris.back": "Назад",
-  "option.iris.profile": "Профиль",
-
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
-  "options.iris.openShaderPackFolder": "Открытая папка шейдерного пакета...",
-  "options.iris.refreshShaderPacks": "Обновить шейдерные пакеты",
-  "options.iris.shaderPackSelection": "шейдерные пакеты...",
-  "options.iris.shaderPackSelection.title": "шейдерные пакеты",
+  "options.iris.openShaderPackFolder": "Откройте папку Shader Pack...",
+  "options.iris.refreshShaderPacks": "Обновление Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Добавлен Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Добавлен %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Файлы не являются действительными Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является действительным Shader Pack",
+  "options.iris.shaderPackSelection.copyError": "Не удалось добавить Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке Shader Packs!",
 
   "pack.iris.select.title": "Выберите",
-  "pack.iris.configure.title": "Настроить",
-  "pack.iris.internal": "Внутренние шейдеры",
-
-  "page.iris.notFound": "не найденная страница!",
-  "page.iris.invalid": "Недействительная страница: \"%s\"",
-  "page.iris.noConfig": "Нет вариантов шейдеров.",
-  "page.iris.noShaders": "Никаких шейдеров не заряжено.",
-
-  "property.iris.boolean.true": "Правда",
-  "property.iris.boolean.false": "Ложный",
-  "property.iris.title.configScreen": "Настроить ирис",
-  "property.iris.uiTheme": "Tема",
-  "property.iris.condenseShaderConfig": "Компактная конфигурация шейдерного пакета",
-  
-  "property.iris.config": "Настроить ирис"
+  "pack.iris.list.label": "+ Перетаскивание Shader Pack для добавления"
 }

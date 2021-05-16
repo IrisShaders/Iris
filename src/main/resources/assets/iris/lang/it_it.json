@@ -3,30 +3,17 @@
   "iris.keybind.reload": "Aggiornare gli Shader",
   "iris.shaders.reloaded.failure": "Non è riuscito a ricaricare gli Shader! Ragione: %s",
 
-  "option.iris.back": "Indietro",
-  "option.iris.profile": "Profilo",
-
-  "options.iris.apply": "Richiedi",
-  "options.iris.refresh": "Rinfresca",
-  "options.iris.openShaderPackFolder": "Aprire la cartella confezioni di Shader...",
-  "options.iris.refreshShaderPacks": "Rinfresca le confezioni di Shader",
-  "options.iris.shaderPackSelection": "Confezioni di Shader...",
-  "options.iris.shaderPackSelection.title": "Confezioni di Shader",
+  "options.iris.apply": "Applica",
+  "options.iris.refresh": "Aggiorna",
+  "options.iris.openShaderPackFolder": "Aprire la cartella Shader Pack...",
+  "options.iris.refreshShaderPacks": "Aggiorna i Shader Pack",
+  "options.iris.shaderPackSelection.addedPack": "Aggiunto Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Aggiunto %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "I file non sono validi Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" non è uno Shader Pack valido",
+  "options.iris.shaderPackSelection.copyError": "Impossibile aggiungere lo Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" è già nella tua cartella Shader Packs!",
 
   "pack.iris.select.title": "Selezionare",
-  "pack.iris.configure.title": "Configurare",
-  "pack.iris.internal": "Shaders interni",
-
-  "page.iris.notFound": "Pagina non trovata!",
-  "page.iris.invalid": "Pagina non valida: \"%s\"",
-  "page.iris.noConfig": "Nessuna opzione Shader.",
-  "page.iris.noShaders": "Nessuna confezioni di Shader caricato.",
-
-  "property.iris.boolean.true": "Vero",
-  "property.iris.boolean.false": "Falso",
-  "property.iris.title.configScreen": "Configurare Iris",
-  "property.iris.uiTheme": "Tema UI",
-  "property.iris.condenseShaderConfig": "Configurazione del confezioni di shader compatto",
-  
-  "property.iris.config": "Configurare Iris"
+  "pack.iris.list.label": "+ Trascinare e rilasciare i Shader Packs per aggiungere"
 }

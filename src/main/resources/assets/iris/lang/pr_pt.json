@@ -3,30 +3,17 @@
   "iris.keybind.reload": "Recarregar Shaders",
   "iris.shaders.reloaded.failure": "Falha no Reload Shaders! Motivo: %s",
 
-  "option.iris.back": "Voltar",
-  "option.iris.profile": "Perfil",
-
   "options.iris.apply": "Aplicar",
   "options.iris.refresh": "Actualizar",
-  "options.iris.openShaderPackFolder": "Pasta de Pacote de Shader Aberto...",
-  "options.iris.refreshShaderPacks": "Actualizar pacotes de Shader",
-  "options.iris.shaderPackSelection": "Pacotes de Shader...",
-  "options.iris.shaderPackSelection.title": "Pacotes de Shader",
+  "options.iris.openShaderPackFolder": "Pasta de Shader Pack Aberto......",
+  "options.iris.refreshShaderPacks": "Actualizar Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Adicionado Pacote de Shader \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Adicionadas %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Os ficheiros não eram válidos Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" não é um Pacote Shader válido",
+  "options.iris.shaderPackSelection.copyError": "Não foi possível acrescentar Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" já está na sua pasta Shader Packs!",
 
-  "pack.iris.select.title": "Seleccione",
-  "pack.iris.configure.title": "Configurar", 
-  "pack.iris.internal": "Shaders internos",
-
-  "page.iris.notFound": "Página não encontrada!",
-  "page.iris.invalid": "Página inválida: \"%s\"",
-  "page.iris.noConfig": "Sem Opções de Shader.",
-  "page.iris.noShaders": "Nenhum pacote de Shader carregado.",
-
-  "property.iris.boolean.true": "Verdadeiro",
-  "property.iris.boolean.false": "Falso",
-  "property.iris.title.configScreen": "Configurar Iris",
-  "property.iris.uiTheme": "Tema UI",
-  "property.iris.condenseShaderConfig": "Pacote de Shader Compacto Config",
-  
-  "property.iris.config": "Configurar Iris"
+  "pack.iris.select.title": "Seleccionar",
+  "pack.iris.list.label": "+ Trascina e rilascia Shader Pack da aggiungere"
 }

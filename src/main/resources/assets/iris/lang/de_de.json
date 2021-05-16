@@ -3,30 +3,17 @@
   "iris.keybind.reload": "Shader neu laden",
   "iris.shaders.reloaded.failure": "Shader neu laden fehlgeschlagen! Grund: %s",
 
-  "option.iris.back": "Zurück",
-  "option.iris.profile": "Profil",
-
   "options.iris.apply": "Anwenden",
   "options.iris.refresh": "Aktualisieren",
-  "options.iris.openShaderPackFolder": "Shader-Pack-Ordner öffnen...",
-  "options.iris.refreshShaderPacks": "Shader-Packs aktualisieren",
-  "options.iris.shaderPackSelection": "Shader-Packs...",
-  "options.iris.shaderPackSelection.title": "Shader-Packs",
+  "options.iris.openShaderPackFolder": "Öffnen Sie den Ordner Shader Pack...",
+  "options.iris.refreshShaderPacks": "Shader Packs aktualisieren.",
+  "options.iris.shaderPackSelection.addedPack": "Shader Pack hinzugefügt \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "%s Shader Packs hinzugefügt",
+  "options.iris.shaderPackSelection.failedAdd": "Die Dateien waren keine gültigen Shader Packs.",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" ist kein gültiges Shader Pack",
+  "options.iris.shaderPackSelection.copyError": "Konnte Shader Pack nicht hinzufügen \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" befindet sich bereits in Ihrem Shader Packs-Ordner!",
 
-  "pack.iris.select.title": "Wählen",
-  "pack.iris.configure.title": "Konfigurieren",
-  "pack.iris.internal": "Interne Shader",
-
-  "page.iris.notFound": "Seite nicht gefunden!",
-  "page.iris.invalid": "Ungültige Seite: \"%s\"",
-  "page.iris.noConfig": "Keine Shader-Optionen.",
-  "page.iris.noShaders": "Kein Shader-Pack geladen.",
-
-  "property.iris.boolean.true": "Wahr",
-  "property.iris.boolean.false": "Falsche",
-  "property.iris.title.configScreen": "Iris konfigurieren",
-  "property.iris.uiTheme": "UI-Thema",
-  "property.iris.condenseShaderConfig": "Kompaktes Shader-Pack Konfig",
-  
-  "property.iris.config": "Iris konfigurieren"
+  "pack.iris.select.title": "Wählen Sie",
+  "pack.iris.list.label": "+ Hinzufügen von Shader-Packs per Drag and Drop."
 }

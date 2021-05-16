@@ -3,30 +3,17 @@
   "iris.keybind.reload": "Herladen Shaders",
   "iris.shaders.reloaded.failure": "Mislukt om Shaders te herladen! Reden: %s",
 
-  "option.iris.back": "Terug",
-  "option.iris.profile": "Profiel",
-
   "options.iris.apply": "Solliciteer",
   "options.iris.refresh": "Vernieuwen",
-  "options.iris.openShaderPackFolder": "Open Shader-pakketten Map...",
-  "options.iris.refreshShaderPacks": "Verfrissende Shader-pakketten",
-  "options.iris.shaderPackSelection": "Shader-pakketten...",
-  "options.iris.shaderPackSelection.title": "Shader-pakketten",
+  "options.iris.openShaderPackFolder": "Open de map Shader Pack...",
+  "options.iris.refreshShaderPacks": "Vernieuw Shader Pack",
+  "options.iris.shaderPackSelection.addedPack": "Shader Pack toegevoegd \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Toegevoegd %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Bestanden waren niet geldig Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" is geen geldig Shader Pack",
+  "options.iris.shaderPackSelection.copyError": "Kon geen Shader Pack toevoegen \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" staat al in uw Shader Packs map!",
 
-  "pack.iris.select.title": "selecteer",
-  "pack.iris.configure.title": "Configureer",
-  "pack.iris.internal": "Interne Shaders",
-
-  "page.iris.notFound": "Pagina niet gevonden!",
-  "page.iris.invalid": "Ongeldige pagina: \"%s\"",
-  "page.iris.noConfig": "Geen Shader-opties.",
-  "page.iris.noShaders": "Geen Shader-pakketten geladen.",
-
-  "property.iris.boolean.true": "Waar",
-  "property.iris.boolean.false": "Vals",
-  "property.iris.title.configScreen": "Iris configureren",
-  "property.iris.uiTheme": "UI Thema",
-  "property.iris.condenseShaderConfig": "Compacte shaderconfiguratie",
-  
-  "property.iris.config": "Iris configureren"
+  "pack.iris.select.title": "Selecteer",
+  "pack.iris.list.label": "+ Shader Packs slepen en neerzetten om toe te voegen"
 }

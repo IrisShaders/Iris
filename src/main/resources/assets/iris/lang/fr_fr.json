@@ -3,30 +3,17 @@
   "iris.keybind.reload": "Recharger Les Shaders",
   "iris.shaders.reloaded.failure": "Échec lors du rechargement des Shaders! Raison: %s",
 
-  "option.iris.back": "Retour",
-  "option.iris.profile": "Profil",
-
   "options.iris.apply": "Appliquer",
-  "options.iris.refresh": "Actualiser",
-  "options.iris.openShaderPackFolder": "Ouvrir le dossier des packs de Shaders...",
-  "options.iris.refreshShaderPacks": "Actualiser la liste des packs de Shaders",
-  "options.iris.shaderPackSelection": "Packs de Shaders...",
-  "options.iris.shaderPackSelection.title": "Packs de Shaders",
+  "options.iris.refresh": "Rafraichir",
+  "options.iris.openShaderPackFolder": "Ouvrir le dossier des Shader Packs...",
+  "options.iris.refreshShaderPacks": "Refresh Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Shader Pack ajouté : \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Ajouté %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Les fichiers ne sont pas des Shader Packs valides",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" n'est pas un Shader Pack valide",
+  "options.iris.shaderPackSelection.copyError": "Erreur lors que de l'ajout de Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" est déja dans votre dossier de Shader Packs !",
 
-  "pack.iris.select.title": "Selectionner",
-  "pack.iris.configure.title": "Configurer",
-  "pack.iris.internal": "Shaders internes",
-
-  "page.iris.notFound": "Page non trouvée!",
-  "page.iris.invalid": "Page invalide: \"%s\"",
-  "page.iris.noConfig": "Pas d'options de Shaders.",
-  "page.iris.noShaders": "Aucun pack de Shaders chargé.",
-
-  "property.iris.boolean.true": "Vrai",
-  "property.iris.boolean.false": "Faux",
-  "property.iris.title.configScreen": "Configurer Iris",
-  "property.iris.uiTheme": "Thème UI",
-  "property.iris.condenseShaderConfig": "Configuration des packs de Shaders compacte",
-  
-  "property.iris.config": "Configurer Iris"
+  "pack.iris.select.title": "Sélectionner",
+  "pack.iris.list.label": "+ Faites glisser vos Shader Packs pour les ajouter"
 }
