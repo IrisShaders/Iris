@@ -2,7 +2,16 @@
 
 *A new shaders mod for Minecraft intended to be compatible with existing ShadersMod/Optifine shaders*
 
-## What is Iris?
+## How can I use this?
+
+Iris is alpha quality software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment.
+
+That being said... **If you want to test out compiled alpha builds of the mod, please consider becoming a [Patron](https://www.patreon.com/coderbot), which will give you access to compiled downloads**. Alternatively, developers who know what they are doing can compile the mod themselves.
+
+**No support will be provided for users who cannot figure out how to properly compile the mod themselves.**
+
+
+## What is Iris, anyways?
 
 Iris is an experiment in loading shaderpacks on Fabric. After making minimal progress trying to hack karyonix's ShadersMod codebase on to newer versions, I finally asked: *How hard is it to load a basic shaderpack on Fabric from scratch?* As it turns out, nowhere near as hard as I expected! Thus, Iris was born.
 
@@ -13,8 +22,8 @@ For the most part, I am creating Iris in order to have fun and get more experien
 
 ## Current State
 
-* Iris is able to load basic shaderpacks. It cannot currently load shaderpacks distributed as zip files, so you need to extract them first - this will be fixed. Furthermore, many shaderpacks (such as Sildur's) have significant rendering issues currently. As I implement more of the OptiFine shader interface, these issues will go away and Iris will be able to load existing shaderpacks without causing significant rendering issues.
-* Iris does not work properly with Sodium. Sodium also renders the terrain using its own shaders, so for Iris and Sodium to work together I will need to just implement some glue code between Sodium and Iris in order to make Sodium render terrain with the shaders that Iris loads. Since Sodium and Iris are both licensed under the LGPLv3 license, and because I am on good terms with JellySquid, compatibility between Sodium and Iris is entirely possible. It's just not the highest priority at the moment, because I would like to focus on getting basic shaders working properly first.
+* Sildur's Vibrant Shaders and XorDev's shaderpacks work for the most part under Iris, and have been the focus of my development. However, most other shaderpacks either have severe rendering issues, or do not work at all. My current focus is to get Sildur's Vibrant Shaders and XorDev's shaderpacks to the point where they are 100% working before shifting focus to other shaderpacks. As I fix issues in these shaderpacks, other shaderpacks will very likely begin to work properly as well.
+* I am working with JellySquid to make Sodium and Iris compatible. There is a proof-of-concept for Iris/Sodium compatibility available on a [custom fork of Sodium](https://github.com/IrisShaders/sodium-fabric). While this proof of concept is being used as a reference for compatibility work, it will likely be replaced with more solid and stable code in the future.
 
 
 ## Goals
@@ -28,8 +37,7 @@ Iris also intends to have full feature parity with OptiFine shaderpacks. You sho
 
 At the moment, I have no intention of adding additional features to OptiFine shaderpacks. My primary goal is to reach feature parity with OptiFine, so that, at least in the area of shaders, the transition from OptiFine to Iris is seamless.
 
-I also don't currently plan to port to Forge at the moment, because for one, OptiFine already works just fine with Forge. JellySquid has written up an [excellent document](https://gist.github.com/jellysquid3/629eb84a74ab326046faf971150dc6c3) on why she does not support Forge, and I agree for the most part as well. At the end of the day, this is a hobby project for fun, and supporting modern Forge just isn't fun for me. Hopefully you can understand.
-
+Iris will never support Forge. I only have a limited amount of time to dedicate towards Iris, and supporting Forge would take time away from other things that are more important and fun. Between the fact that the lead developers of Forge are not pleasant people to work with and the fact that Forge was just never intended to support the kinds of things that Iris does, maintaining a Forge port just does not make sense.
 
 ## How can I help?
 
@@ -38,13 +46,15 @@ At the moment, the options for contributing are somewhat limited, and I don't ha
 
 ## Rationale
 
-### Why not Canvas?
+### What about Canvas?
 
 [Canvas](https://github.com/grondag/canvas) is an advanced shader-based renderer for Minecraft also running on Fabric, by Grondag. This raises a common question: why not contribute to Canvas instead? I have already investigated this possibility, however the goals of Canvas and Iris are in fact quite different.
 
 Canvas has the goal of creating a new shader pipeline focused on empowering mod authors with advanced graphics features, and is very promising. But this new shader pipeline is intentionally designed to not work with existing shaderpacks. Canvas wants to shed all of the backwards compatibility issues of loading existing shaderpacks, in order to achieve better performance and enable additional features for modders. For more information, see the "Why" section of the [Canvas README](https://github.com/grondag/canvas/blob/one/README.md#Why).
 
 However, Iris has a notably different goal: loading existing shader packs out of the box. While it's theoretically possible to get this working on Canvas, I personally prefer to start off making a standalone shaders mod instead of spending time trying to understand another complex rendering system in addition to Minecraft and ShadersMod/OptiFine.
+
+Canvas is progressing very rapidly, and has experimental support for things like sky shadows. [Lumi Lights](https://spiralhalo.github.io/) is a shaderpack for Canvas that offers features like bloom, godrays, reflective water, and more, and it's worth a shot if you're interested in a more stable experience than what Iris can currently offer.
 
 I think that Canvas is a great project, and some day it could very well be the dominant shader mod for Fabric. Iris is made for those who still want to play with existing OptiFine shaderpacks, because there will always be legacy shaderpack content available, even when Canvas shaderpacks become more common.
 
@@ -59,7 +69,11 @@ The fundamental flaw with OptiFabric is that it is a massive *hack*. I call it a
 
 OptiFine is created as a "jar mod." Remember deleting META-INF about a decade ago (Wow, I feel old now) and copying the files from that one new mod directly into your `minecraft.jar`? Effectively, that's what Optifine now does every time you start the game. That means that it directly patches a decompiled version of Minecraft, then at runtime it overwrites the vanilla classes (units of code) with its own modified versions. This is about as invasive and incompatible as it sounds. Perhaps unsurprisingly, Optifine is *notorious* for having [many](https://github.com/TerraformersMC/Terrestria/issues/178), [many](https://github.com/jellysquid3/lithium-fabric/issues/73), [*many*](https://www.reddit.com/r/feedthebeast/comments/6ueyla/112_optifine_incompatible_with_some_mods/) incompatibilities with other mods.
 
-On the other hand, Iris is a native Fabric mod that uses carefully crafted and precise code injections driven by the [Mixin](https://github.com/SpongePowered/Mixin) bytecode patching system. Mixin is the bases of the entire Fabric modding community, and is a much more compatible way of patching the game. This alone should help alleviate many of the compatibility issue that have plagued OptiFine.
+On the other hand, Iris is a native Fabric mod that uses carefully crafted and precise code injections driven by the [Mixin](https://github.com/SpongePowered/Mixin) bytecode patching system. Mixin is the basis of the entire Fabric modding community, and is a much more compatible way of patching the game. This alone should help alleviate many of the compatibility issues that have plagued OptiFine.
+
+## Discord
+
+Join the [Iris Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and follow development!
 
 
 ## Credits

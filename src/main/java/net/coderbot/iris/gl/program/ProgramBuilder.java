@@ -1,101 +1,87 @@
 package net.coderbot.iris.gl.program;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.OptionalInt;
-
-import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.uniform.Uniform;
-import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.gl.shader.GlShader;
+import net.coderbot.iris.gl.shader.ProgramCreator;
+import net.coderbot.iris.gl.shader.ShaderConstants;
+import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.gl.shader.StandardMacros;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL21;
-
-import net.minecraft.client.gl.GlProgram;
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.gl.GlShader;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL21C;
 
 public class ProgramBuilder extends ProgramUniforms.Builder {
-	private final GlProgram program;
+	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
-	private ProgramBuilder(String name, GlProgram program) {
-		super(name, program.getProgramRef());
+	private static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
+		.define(StandardMacros.getOsString())
+		.define("MC_VERSION", StandardMacros.getMcVersion())
+		.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
+		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+		.define(StandardMacros.getRenderer())
+		.define(StandardMacros.getVendor())
+		.defineAll(StandardMacros.getGlExtensions())
+		.build();
+
+
+
+	private final int program;
+
+	private ProgramBuilder(String name, int program) {
+		super(name, program);
 
 		this.program = program;
 	}
 
-	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String fragmentSource) throws IOException {
+	public void bindAttributeLocation(int index, String name) {
+		GL21C.glBindAttribLocation(program, index, name);
+	}
+
+	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String geometrySource, @Nullable String fragmentSource) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 
 		GlShader vertex;
+		GlShader geometry;
 		GlShader fragment;
 
-		try {
-			InputStream vertexSourceStream = new ByteArrayInputStream(vertexSource.getBytes(StandardCharsets.UTF_8));
-			vertex = GlShader.createFromResource(GlShader.Type.VERTEX, name + ".vsh", vertexSourceStream, "iris");
-		} catch (IOException e) {
-			throw new IOException("Failed to compile vertex shader for program " + name, e);
+		vertex = buildShader(ShaderType.VERTEX, name + ".vsh", vertexSource);
+
+		if (geometrySource != null) {
+			geometry = buildShader(ShaderType.GEOMETRY, name + ".gsh", geometrySource);
+		} else {
+			geometry = null;
 		}
 
-		try {
-			InputStream fragmentSourceStream = new ByteArrayInputStream(fragmentSource.getBytes(StandardCharsets.UTF_8));
-			fragment = GlShader.createFromResource(GlShader.Type.FRAGMENT, name + ".fsh", fragmentSourceStream, "iris");
-		} catch (IOException e) {
-			throw new IOException("Failed to compile fragment shader for program " + name, e);
-		}
+		fragment = buildShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource);
 
 		int programId;
-
-		try {
-			programId = GlProgramManager.createProgram();
-		} catch (IOException e) {
-			e.printStackTrace();
-			programId = 0;
+		
+		if (geometry != null) {
+			programId = ProgramCreator.create(name, vertex, geometry, fragment);
+		} else {
+			programId = ProgramCreator.create(name, vertex, fragment);
 		}
 
-		final int finalProgramId = programId;
+		vertex.destroy();
 
-		GlProgram program = new GlProgram() {
-			@Override
-			public int getProgramRef() {
-				return finalProgramId;
-			}
-
-			@Override
-			public void markUniformsDirty() {
-				// nah
-			}
-
-			@Override
-			public GlShader getVertexShader() {
-				return vertex;
-			}
-
-			@Override
-			public GlShader getFragmentShader() {
-				return fragment;
-			}
-		};
-
-		try {
-			GlProgramManager.linkProgram(program);
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (geometry != null) {
+			geometry.destroy();
 		}
 
-		vertex.release();
-		fragment.release();
+		fragment.destroy();
 
-		return new ProgramBuilder(name, program);
+		return new ProgramBuilder(name, programId);
 	}
 
 	public Program build() {
 		return new Program(program, super.buildUniforms());
+	}
+
+	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {
+		try {
+			return new GlShader(shaderType, name, source, MACRO_CONSTANTS);
+		} catch (RuntimeException e) {
+			throw new RuntimeException("Failed to compile " + shaderType + " shader for program " + name, e);
+		}
 	}
 }

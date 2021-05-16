@@ -1,12 +1,8 @@
 package net.coderbot.iris.shaderpack;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,165 +10,104 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.registry.BuiltinRegistries;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.World;
+
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 public class ShaderPack {
-	private final PackDirectives packDirectives;
-	private final ProgramSource gbuffersBasic;
-	private final ProgramSource gbuffersTextured;
-	private final ProgramSource gbuffersTexturedLit;
-	private final ProgramSource gbuffersTerrain;
-	private final ProgramSource gbuffersWater;
-	private final ProgramSource gbuffersSkyBasic;
-	private final ProgramSource gbuffersSkyTextured;
-	private final ProgramSource gbuffersClouds;
-	private final ProgramSource gbuffersEntities;
-	private final ProgramSource gbuffersBlock;
-	private final ProgramSource[] composite;
-	private final ProgramSource compositeFinal;
+	private final ProgramSet base;
+	@Nullable
+	private final ProgramSet overworld;
+	private final ProgramSet nether;
+	private final ProgramSet end;
+
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
-	private final Properties shaderProperties = new Properties();
-
+	private final CustomTexture customNoiseTexture;
 	public ShaderPack(Path root) throws IOException {
-		this.packDirectives = new PackDirectives();
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+			.map(ShaderProperties::new)
+			.orElseGet(ShaderProperties::empty);
 
-		this.gbuffersBasic = readProgramSource(root, "gbuffers_basic", this);
-		this.gbuffersTextured = readProgramSource(root, "gbuffers_textured", this);
-		this.gbuffersTexturedLit = readProgramSource(root, "gbuffers_textured_lit", this);
-		this.gbuffersTerrain = readProgramSource(root, "gbuffers_terrain", this);
-		this.gbuffersWater = readProgramSource(root, "gbuffers_water", this);
-		this.gbuffersSkyBasic = readProgramSource(root, "gbuffers_skybasic", this);
-		this.gbuffersSkyTextured = readProgramSource(root, "gbuffers_skytextured", this);
-		this.gbuffersClouds = readProgramSource(root, "gbuffers_clouds", this);
-		this.gbuffersEntities = readProgramSource(root, "gbuffers_entities", this);
-		this.gbuffersBlock = readProgramSource(root, "gbuffers_block", this);
-
-		this.composite = new ProgramSource[16];
-
-		for (int i = 0; i < this.composite.length; i++) {
-			String suffix = i == 0 ? "" : Integer.toString(i);
-
-			this.composite[i] = readProgramSource(root, "composite" + suffix, this);
-		}
-
-		this.compositeFinal = readProgramSource(root, "final", this);
+		this.base = new ProgramSet(root, root, shaderProperties, this);
+		this.overworld = loadOverrides(root, "world0", shaderProperties, this);
+		this.nether = loadOverrides(root, "world-1", shaderProperties, this);
+		this.end = loadOverrides(root, "world1", shaderProperties, this);
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
+		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
+			try {
+				// TODO: Make sure the resulting path is within the shaderpack?
+				byte[] content = Files.readAllBytes(root.resolve(path));
+
+				// TODO: Read the blur / clamp data from the shaderpack...
+				return new CustomTexture(content, true, false);
+			} catch (IOException e) {
+				Iris.logger.error("Unable to read the custom noise texture at " + path);
+
+				return null;
+			}
+		}).orElse(null);
+	}
+
+	@Nullable
+	private static ProgramSet loadOverrides(Path root, String subfolder, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
+		Path sub = root.resolve(subfolder);
+
+		if (Files.exists(sub)) {
+			return new ProgramSet(sub, root, shaderProperties, pack);
+		}
+
+		return null;
+	}
+
+	// TODO: Copy-paste from IdMap, find a way to deduplicate this
+	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
+		Properties properties = new Properties();
 
 		try {
-			shaderProperties.load(Files.newInputStream(root.resolve("shaders.properties")));
-		} catch (Exception ignored) {}
+			properties.load(Files.newInputStream(shaderPath.resolve(name)));
+		} catch (IOException e) {
+			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+
+			return Optional.empty();
+		}
+
+		return Optional.of(properties);
+	}
+
+	public ProgramSet getProgramSet(DimensionId dimension) {
+		ProgramSet overrides;
+
+		switch (dimension) {
+			case OVERWORLD:
+				overrides = overworld;
+				break;
+			case NETHER:
+				overrides = nether;
+				break;
+			case END:
+				overrides = end;
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown dimension " + dimension);
+		}
+
+		return ProgramSet.merged(base, overrides);
 	}
 
 	public IdMap getIdMap() {
 		return idMap;
 	}
 
-	public Optional<ProgramSource> getGbuffersBasic() {
-		return gbuffersBasic.requireValid();
+	public Optional<CustomTexture> getCustomNoiseTexture() {
+		return Optional.ofNullable(customNoiseTexture);
 	}
 
-	public Optional<ProgramSource> getGbuffersTextured() {
-		return gbuffersTextured.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersTexturedLit() {
-		return gbuffersTexturedLit.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersTerrain() {
-		return gbuffersTerrain.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersWater() {
-		return gbuffersWater.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersSkyBasic() {
-		return gbuffersSkyBasic.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersSkyTextured() {
-		return gbuffersSkyTextured.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersClouds() {
-		return gbuffersClouds.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersEntities() {
-		return gbuffersEntities.requireValid();
-	}
-
-	public Optional<ProgramSource> getGbuffersBlock() {
-		return gbuffersBlock.requireValid();
-	}
-
-	public ProgramSource[] getComposite() {
-		return composite;
-	}
-
-	public Optional<ProgramSource> getCompositeFinal() {
-		return compositeFinal.requireValid();
-	}
 
 	public Map<String, Map<String, String>> getLangMap() {
 		return langMap;
-	}
-
-	public PackDirectives getPackDirectives() {
-		return packDirectives;
-	}
-
-	public Properties getShaderProperties() {
-		return this.shaderProperties;
-	}
-
-	private static ProgramSource readProgramSource(Path root, String program, ShaderPack pack) throws IOException {
-		String vertexSource = null;
-		String fragmentSource = null;
-
-		try {
-			Path vertexPath = root.resolve(program + ".vsh");
-			vertexSource = readFile(vertexPath);
-
-			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(root, vertexPath, vertexSource);
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		try {
-			Path fragmentPath = root.resolve(program + ".fsh");
-			fragmentSource = readFile(fragmentPath);
-
-			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(root, fragmentPath, fragmentSource);
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		return new ProgramSource(program, vertexSource, fragmentSource, pack);
-	}
-
-	private static String readFile(Path path) throws IOException {
-		try {
-			return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-		} catch (FileNotFoundException | NoSuchFileException e) {
-			return null;
-		}
 	}
 
 	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {
@@ -208,53 +143,5 @@ public class ShaderPack {
 		});
 
 		return allLanguagesMap;
-	}
-
-	public static class ProgramSource {
-		private final String name;
-		private final String vertexSource;
-		private final String fragmentSource;
-		private final ProgramDirectives directives;
-		private final ShaderPack parent;
-
-		public ProgramSource(String name, String vertexSource, String fragmentSource, ShaderPack parent) {
-			this.name = name;
-			this.vertexSource = vertexSource;
-			this.fragmentSource = fragmentSource;
-			this.parent = parent;
-			this.directives = new ProgramDirectives(this);
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public Optional<String> getVertexSource() {
-			return Optional.ofNullable(vertexSource);
-		}
-
-		public Optional<String> getFragmentSource() {
-			return Optional.ofNullable(fragmentSource);
-		}
-
-		public ProgramDirectives getDirectives() {
-			return this.directives;
-		}
-
-		public ShaderPack getParent() {
-			return parent;
-		}
-
-		public boolean isValid() {
-			return vertexSource != null && fragmentSource != null;
-		}
-
-		public Optional<ProgramSource> requireValid() {
-			if (this.isValid()) {
-				return Optional.of(this);
-			} else {
-				return Optional.empty();
-			}
-		}
 	}
 }

@@ -19,10 +19,17 @@ public class IrisConfig {
 	 * The path to the current shaderpack. Null if the internal shaderpack is being used.
 	 */
 	private String shaderPackName;
+
+	/**
+	 * Whether or not shaders are used for rendering. False to disable all shader-based rendering, true to enable it.
+	 */
+	private boolean enableShaders;
+
 	private Path propertiesPath;
 
 	public IrisConfig() {
 		shaderPackName = null;
+		enableShaders = true;
 		propertiesPath = FabricLoader.getInstance().getConfigDir().resolve("iris.properties");
 	}
 
@@ -61,19 +68,21 @@ public class IrisConfig {
 	}
 
 	/**
-	 * Sets the shader pack name, and tries to save the config file.
-	 * Will print an error if unable to save.
-	 *
-	 * @param name The name of the shader pack
+
+	 * Sets the name of the current shaderpack
 	 */
 	public void setShaderPackName(String name) {
-		if(name == null) return;
-		shaderPackName = name;
+		if (name.equals("(internal)")) {
+			this.shaderPackName = null;
+		} else {
+			this.shaderPackName = name;
+		}
+
 		try {
 			save();
 		} catch (IOException e) {
-			Iris.logger.error("Error setting shader pack!");
-			e.printStackTrace();
+			Iris.logger.error("Error saving configuration file, unable to set shader pack name");
+			Iris.logger.catching(e);
 		}
 	}
 
@@ -91,6 +100,7 @@ public class IrisConfig {
 		Properties properties = new Properties();
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
+		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
 
 		if (shaderPackName != null && shaderPackName.equals("(internal)")) {
 			shaderPackName = null;
@@ -105,6 +115,7 @@ public class IrisConfig {
 	public void save() throws IOException {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName());
+		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
 	}
 }

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "plugin": "net.coderbot.iris.compat.physicsmod.mixin.YeetPhysicsMod",
+  "package": "net.coderbot.iris.compat.physicsmod.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinWorldRenderer"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -16,20 +16,23 @@ import net.minecraft.util.math.Matrix4f;
  * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#celestial-bodies">Uniforms: Celestial bodies</a>
  */
 public final class CelestialUniforms {
-	private CelestialUniforms() {
+	private final float sunPathRotation;
+
+	public CelestialUniforms(float sunPathRotation) {
+		this.sunPathRotation = sunPathRotation;
 	}
 
-	public static void addCelestialUniforms(UniformHolder uniforms) {
+	public void addCelestialUniforms(UniformHolder uniforms) {
 		uniforms
 			.uniform1f(PER_FRAME, "sunAngle", CelestialUniforms::getSunAngle)
-			.uniformTruncated3f(PER_FRAME, "sunPosition", CelestialUniforms::getSunPosition)
-			.uniformTruncated3f(PER_FRAME, "moonPosition", CelestialUniforms::getMoonPosition)
+			.uniformTruncated3f(PER_FRAME, "sunPosition", this::getSunPosition)
+			.uniformTruncated3f(PER_FRAME, "moonPosition", this::getMoonPosition)
 			.uniform1f(PER_FRAME, "shadowAngle", CelestialUniforms::getShadowAngle)
-			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", CelestialUniforms::getShadowLightPosition)
+			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", this::getShadowLightPosition)
 			.uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
 	}
 
-	private static float getSunAngle() {
+	public static float getSunAngle() {
 		float skyAngle = getSkyAngle();
 
 		if (skyAngle < 0.75F) {
@@ -49,19 +52,19 @@ public final class CelestialUniforms {
 		return shadowAngle;
 	}
 
-	private static Vector4f getSunPosition() {
+	private Vector4f getSunPosition() {
 		return getCelestialPosition(100.0F);
 	}
 
-	private static Vector4f getMoonPosition() {
+	private Vector4f getMoonPosition() {
 		return getCelestialPosition(-100.0F);
 	}
 
-	private static Vector4f getShadowLightPosition() {
+	private Vector4f getShadowLightPosition() {
 		return isDay() ? getSunPosition() : getMoonPosition();
 	}
 
-	private static Vector4f getCelestialPosition(float y) {
+	private Vector4f getCelestialPosition(float y) {
 		Vector4f position = new Vector4f(0.0F, y, 0.0F, 0.0F);
 
 		Matrix4f celestial = CapturedRenderingState.INSTANCE.getGbufferModelView().copy();
@@ -69,6 +72,7 @@ public final class CelestialUniforms {
 		// This is the same transformation applied by renderSky, however, it's been moved to here.
 		// This is because we need the result of it before it's actually performed in vanilla.
 		celestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
+		celestial.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(sunPathRotation));
 		celestial.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
 
 		position.transform(celestial);
@@ -93,7 +97,10 @@ public final class CelestialUniforms {
 	}
 
 	private static boolean isDay() {
-		return getWorld().isDay();
+		// Determine whether it is day or night based on the sky angle.
+		//
+		// World#isDay appears to do some nontrivial calculations that appear to not entirely work for us here.
+		return getSunAngle() <= 0.5;
 	}
 
 	private static ClientWorld getWorld() {

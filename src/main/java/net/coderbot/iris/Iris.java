@@ -1,20 +1,19 @@
 package net.coderbot.iris;
 
 import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Objects;
+import java.nio.file.*;
 import java.util.Optional;
+import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
-import net.coderbot.iris.pipeline.ShaderPipeline;
-import net.coderbot.iris.postprocess.CompositeRenderer;
-import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.pipeline.*;
+import net.coderbot.iris.shaderpack.DimensionId;
+import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
-import net.minecraft.util.Tickable;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.World;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,21 +37,33 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 
-	private static final Path shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
-	private static ShaderPipeline pipeline;
-	private static RenderTargets renderTargets;
-	private static CompositeRenderer compositeRenderer;
+	private static String currentPackName;
+	private static boolean internal;
+
+	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
-
-	public static KeyBinding reloadKeybind;
+	private static KeyBinding reloadKeybind;
 
 	@Override
 	public void onInitializeClient() {
+		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
+			modContainer -> {
+				String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
+
+				// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
+				// the right fork of Sodium, it will just crash.
+				if (!versionString.startsWith("IRIS-SNAPSHOT")) {
+					throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but IRIS-SNAPSHOT is expected");
+				}
+			}
+		);
+
 		try {
-			Files.createDirectories(shaderpacksDirectory);
+			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
 			Iris.logger.warn("Failed to create shaderpacks directory!");
 			Iris.logger.catching(Level.WARN, e);
@@ -76,8 +87,6 @@ public class Iris implements ClientModInitializer {
 
 				try {
 					reload();
-					// TODO: Is this needed?
-					// minecraftClient.worldRenderer.reload();
 
 					if (minecraftClient.player != null){
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
@@ -92,6 +101,8 @@ public class Iris implements ClientModInitializer {
 				}
 			}
 		});
+
+		pipelineManager = new PipelineManager(Iris::createPipeline);
 	}
 
 	public static Path getShaderPackDir() {
@@ -99,10 +110,22 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static void loadShaderpack() {
+		if (!irisConfig.areShadersEnabled()) {
+			logger.info("Shaders are disabled because enableShaders is set to false in iris.properties");
+
+			currentPack = null;
+			currentPackName = "(off)";
+			internal = false;
+
+			return;
+		}
+
 		// Attempt to load an external shaderpack if it is available
 		if (!irisConfig.isInternal()) {
 			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
+				logger.warn("Falling back to internal shaders because the external shaderpack could not be loaded");
 				loadInternalShaderpack();
+				currentPackName = "(internal) [fallback, check your logs for errors]";
 			}
 		} else {
 			loadInternalShaderpack();
@@ -110,59 +133,86 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static boolean loadExternalShaderpack(String name) {
-		Path shaderPackRoot = shaderpacksDirectory.resolve(name);
-		Path shaderPackPath = shaderPackRoot.resolve("shaders");
+		Path shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
+		Path shaderPackPath;
 
 		if (shaderPackRoot.toString().endsWith(".zip")) {
-			Optional<Path> optionalPath = loadExternalZipShaderpack(shaderPackRoot);
+			Optional<Path> optionalPath;
+
+			try {
+				optionalPath = loadExternalZipShaderpack(shaderPackRoot);
+			} catch (FileSystemNotFoundException e) {
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+
+				return false;
+			} catch (ZipException e) {
+				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", irisConfig.getShaderPackName());
+
+				return false;
+			} catch (IOException e) {
+				logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
+				logger.catching(Level.ERROR, e);
+
+				return false;
+			}
+
 			if (optionalPath.isPresent()) {
 				shaderPackPath = optionalPath.get();
+			} else {
+				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+				return false;
 			}
+		} else {
+			if (!Files.exists(shaderPackRoot)) {
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+				return false;
+			}
+
+			// If it's a folder-based shaderpack, just use the shaders subdirectory
+			shaderPackPath = shaderPackRoot.resolve("shaders");
 		}
+
 		if (!Files.exists(shaderPackPath)) {
-			logger.warn("The shaderpack " + name + " does not have a shaders directory, falling back to internal shaders");
+			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
 			return false;
 		}
 
 		try {
 			currentPack = new ShaderPack(shaderPackPath);
 		} catch (IOException e) {
-			logger.error(String.format("Failed to load shaderpack \"%s\"! Falling back to internal shaders", irisConfig.getShaderPackName()));
-			logger.catching(Level.ERROR, e);
+			logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
+			logger.error(e);
 
 			return false;
 		}
 
 		logger.info("Using shaderpack: " + name);
+		currentPackName = name;
+		internal = false;
+
 		return true;
 	}
 
-	private static Optional<Path> loadExternalZipShaderpack(Path shaderpackPath) {
-		try {
-			FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
-			zipFileSystem = zipSystem;
-			Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
+	private static Optional<Path> loadExternalZipShaderpack(Path shaderpackPath) throws IOException {
+		FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
+		zipFileSystem = zipSystem;
+		Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
 
-			Path potentialShaderDir = zipSystem.getPath("shaders");
-			//if the shaders dir was immediatly found return it
-			//otherwise, manually search through each directory path until it ends with "shaders"
-			if (Files.exists(potentialShaderDir)) {
-				return Optional.of(potentialShaderDir);
-			}
+		Path potentialShaderDir = zipSystem.getPath("shaders");
+		//if the shaders dir was immediately found return it
+		//otherwise, manually search through each directory path until it ends with "shaders"
+		if (Files.exists(potentialShaderDir)) {
+			return Optional.of(potentialShaderDir);
+		}
 
-			//sometimes shaderpacks have their shaders directory within another folder in the shaderpack
-			//for example Sildurs-Vibrant-Shaders.zip/shaders
-			//while other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
-			//this makes it hard to determine what is the actual shaders dir
-			return Files.walk(root)
+		//sometimes shaderpacks have their shaders directory within another folder in the shaderpack
+		//for example Sildurs-Vibrant-Shaders.zip/shaders
+		//while other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
+		//this makes it hard to determine what is the actual shaders dir
+		return Files.walk(root)
 				.filter(Files::isDirectory)
 				.filter(path -> path.endsWith("shaders"))
 				.findFirst();
-		} catch (IOException e) {
-			logger.error("Error while finding shaderpack for zip directory {}", shaderpackPath);
-			logger.catching(Level.ERROR, e);
-		}
-		return Optional.empty();
 	}
 
 	private static void loadInternalShaderpack() {
@@ -179,6 +229,34 @@ public class Iris implements ClientModInitializer {
 		getIrisConfig().setShaderPackName("(internal)");
 
 		logger.info("Using internal shaders");
+		currentPackName = "(internal)";
+		internal = true;
+	}
+
+	public static boolean isValidShaderpack(Path pack) {
+		if (Files.isDirectory(pack)) {
+			try {
+				return Files.walk(pack)
+						.filter(Files::isDirectory)
+						.anyMatch(path -> path.endsWith("shaders"));
+			} catch (IOException ignored) {
+				// ignored, not a valid shader pack.
+			}
+		}
+
+		if (pack.toString().endsWith(".zip")) {
+			try {
+				FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader());
+				Path root = zipSystem.getRootDirectories().iterator().next();
+				return Files.walk(root)
+						.filter(Files::isDirectory)
+						.anyMatch(path -> path.endsWith("shaders"));
+			} catch (IOException ignored) {
+				// ignored, not a valid shader pack.
+			}
+		}
+
+		return false;
 	}
 
 	public static void reload() throws IOException {
@@ -198,56 +276,70 @@ public class Iris implements ClientModInitializer {
 	private static void destroyEverything() {
 		currentPack = null;
 
-		if (pipeline != null) {
-			pipeline.destroy();
-			pipeline = null;
-		}
+		pipelineManager.destroyPipeline();
 
-		if (compositeRenderer != null) {
-			compositeRenderer.destroy();
-			compositeRenderer = null;
-		}
-
-		if (renderTargets != null) {
-			renderTargets.destroy();
-			renderTargets = null;
-		}
-
+		// Close the zip filesystem that the shaderpack was loaded from
+		//
+		// This prevents a FileSystemAlreadyExistsException when reloading shaderpacks.
 		if (zipFileSystem != null) {
 			try {
 				zipFileSystem.close();
+			} catch (NoSuchFileException e) {
+				Iris.logger.warn("Failed to close the shaderpack zip when reloading because it was deleted, proceeding anyways.");
 			} catch (IOException e) {
 				Iris.logger.error("Failed to close zip file system?", e);
 			}
 		}
 	}
 
-	public static RenderTargets getRenderTargets() {
-		if (renderTargets == null) {
-			renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), Objects.requireNonNull(currentPack));
-		}
+	public static DimensionId lastDimension = DimensionId.OVERWORLD;
 
-		return renderTargets;
+	public static DimensionId getCurrentDimension() {
+		ClientWorld world = MinecraftClient.getInstance().world;
+
+		if (world != null) {
+			RegistryKey<World> worldRegistryKey = world.getRegistryKey();
+
+			if (worldRegistryKey.equals(World.END)) {
+				return DimensionId.END;
+			} else if (worldRegistryKey.equals(World.NETHER)) {
+				return DimensionId.NETHER;
+			} else {
+				return DimensionId.OVERWORLD;
+			}
+		} else {
+			// This prevents us from reloading the shaderpack unless we need to. Otherwise, if the player is in the
+			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the world
+			// because the code thinks that the dimension changed.
+			return lastDimension;
+		}
 	}
 
-	public static ShaderPipeline getPipeline() {
-		if (pipeline == null) {
-			pipeline = new ShaderPipeline(Objects.requireNonNull(currentPack), getRenderTargets());
+	private static WorldRenderingPipeline createPipeline(DimensionId dimensionId) {
+		if (currentPack == null) {
+			// completely disable shader-based rendering
+			return new FixedFunctionWorldRenderingPipeline();
 		}
 
-		return pipeline;
-	}
+		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
-	public static ShaderPack getCurrentPack() {
-		return currentPack;
-	}
-
-	public static CompositeRenderer getCompositeRenderer() {
-		if (compositeRenderer == null) {
-			compositeRenderer = new CompositeRenderer(Objects.requireNonNull(currentPack), getRenderTargets());
+		if (internal) {
+			return new InternalWorldRenderingPipeline(programs);
+		} else {
+			return new DeferredWorldRenderingPipeline(programs);
 		}
+	}
 
-		return compositeRenderer;
+	public static PipelineManager getPipelineManager() {
+		return pipelineManager;
+	}
+
+	public static Optional<ShaderPack> getCurrentPack() {
+		return Optional.ofNullable(currentPack);
+	}
+
+	public static String getCurrentPackName() {
+		return currentPackName;
 	}
 
 	public static IrisConfig getIrisConfig() {

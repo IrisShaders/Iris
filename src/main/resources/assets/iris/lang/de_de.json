@@ -16,4 +16,6 @@
 
   "pack.iris.select.title": "Wählen Sie",
   "pack.iris.list.label": "+ Hinzufügen von Shader-Packs per Drag and Drop."
+=======
+  "iris.shaders.reloaded.failure": "Shader neu laden fehlgeschlagen! Grund: %s"
 }
