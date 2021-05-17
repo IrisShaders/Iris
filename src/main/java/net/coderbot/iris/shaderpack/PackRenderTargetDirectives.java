@@ -1,17 +1,19 @@
 package net.coderbot.iris.shaderpack;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.ints.*;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.vendored.joml.Vector4f;
 
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class PackRenderTargetDirectives {
-	private static final int MAX_RENDER_TARGETS = RenderTargets.MAX_RENDER_TARGETS;
-	private static final String[] LEGACY_RENDER_TARGETS = new String[] {
+	public static final ImmutableList<String> LEGACY_RENDER_TARGETS = ImmutableList.of(
 		"gcolor",
 		"gdepth",
 		"gnormal",
@@ -20,75 +22,81 @@ public class PackRenderTargetDirectives {
 		"gaux2",
 		"gaux3",
 		"gaux4"
-	};
+	);
 
-	private final InternalTextureFormat[] requestedTextureFormats;
-	private final boolean[] clearBuffers;
-	private final boolean[] mipmapBuffers;
+	// TODO: Support 16 render targets instead of just 8
+	public static final Set<Integer> BASELINE_SUPPORTED_RENDER_TARGETS = ImmutableSet.of(0, 1, 2, 3, 4, 5, 6, 7);
 
-	PackRenderTargetDirectives() {
-		requestedTextureFormats = new InternalTextureFormat[MAX_RENDER_TARGETS];
-		Arrays.fill(requestedTextureFormats, InternalTextureFormat.RGBA);
+	private final Int2ObjectMap<RenderTargetSettings> renderTargetSettings;
 
-		clearBuffers = new boolean[RenderTargets.MAX_RENDER_TARGETS];
-		Arrays.fill(clearBuffers, true);
+	PackRenderTargetDirectives(Set<Integer> supportedRenderTargets) {
+		this.renderTargetSettings = new Int2ObjectOpenHashMap<>();
 
-		mipmapBuffers = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+		supportedRenderTargets.forEach(
+				(index) -> renderTargetSettings.put(index.intValue(), new RenderTargetSettings()));
 	}
 
 	public IntList getBuffersToBeCleared() {
 		IntList buffersToBeCleared = new IntArrayList();
 
-		for (int i = 0; i < clearBuffers.length; i++) {
-			if (clearBuffers[i]) {
-				buffersToBeCleared.add(i);
+		renderTargetSettings.forEach((index, settings) -> {
+			if (settings.shouldClear()) {
+				buffersToBeCleared.add(index.intValue());
 			}
-		}
+		});
 
 		return buffersToBeCleared;
 	}
 
-	public InternalTextureFormat[] getRequestedBufferFormats() {
-		// TODO: If gdepth is directly referenced and no format override is provided, use RGBA32F
-
-		return requestedTextureFormats;
+	public Map<Integer, RenderTargetSettings> getRenderTargetSettings() {
+		return Collections.unmodifiableMap(renderTargetSettings);
 	}
 
-	// TODO: getter for mipmap directives, and actually handle them!
+	// TODO: handle mipmap directives!
 
 	public void acceptDirectives(DirectiveHolder directives) {
-		if (MAX_RENDER_TARGETS > 7) {
+		Optional.ofNullable(renderTargetSettings.get(7)).ifPresent(colortex7 -> {
 			// Handle legacy GAUX4FORMAT directives
 
 			directives.acceptCommentStringDirective("GAUX4FORMAT", format -> {
 				if ("RGBA32F".equals(format)) {
-					requestedTextureFormats[7] = InternalTextureFormat.RGBA32F;
+					colortex7.requestedFormat = InternalTextureFormat.RGBA32F;
 				} else if ("RGB32F".equals(format)) {
-					requestedTextureFormats[7] = InternalTextureFormat.RGB32F;
+					colortex7.requestedFormat = InternalTextureFormat.RGB32F;
 				} else if ("RGB16".equals(format)) {
-					requestedTextureFormats[7] = InternalTextureFormat.RGB16;
+					colortex7.requestedFormat = InternalTextureFormat.RGB16;
 				} else {
 					Iris.logger.warn("Ignoring GAUX4FORMAT directive /* GAUX4FORMAT:" + format + "*/ because " + format
-							+ " must be RGBA32F, RGB32F, or RGB16. Use `const int colortex7Format = " + format + ";` + instead.");
+						+ " must be RGBA32F, RGB32F, or RGB16. Use `const int colortex7Format = " + format + ";` + instead.");
 				}
 			});
-		}
+		});
 
-		for (int i = 0; i < MAX_RENDER_TARGETS; i++) {
-			acceptBufferDirectives(directives, i, "colortex" + i);
+		// If a shaderpack declares a gdepth uniform (even if it is not actually sampled or even of the correct type),
+		// we upgrade the format of gdepth / colortex1 to RGBA32F if it is currently RGBA.
+		Optional.ofNullable(renderTargetSettings.get(1)).ifPresent(gdepth -> {
+			directives.acceptUniformDirective("gdepth", () -> {
+				if (gdepth.requestedFormat == InternalTextureFormat.RGBA) {
+					gdepth.requestedFormat = InternalTextureFormat.RGBA32F;
+				}
+			});
+		});
 
-			if (i < LEGACY_RENDER_TARGETS.length) {
-				acceptBufferDirectives(directives, i, LEGACY_RENDER_TARGETS[i]);
+		renderTargetSettings.forEach((index, settings) -> {
+			acceptBufferDirectives(directives, settings, "colortex" + index);
+
+			if (index < LEGACY_RENDER_TARGETS.size()) {
+				acceptBufferDirectives(directives, settings, LEGACY_RENDER_TARGETS.get(index));
 			}
-		}
+		});
 	}
 
-	private void acceptBufferDirectives(DirectiveHolder directives, int bufferIndex, String bufferName) {
+	private void acceptBufferDirectives(DirectiveHolder directives, RenderTargetSettings settings, String bufferName) {
 		directives.acceptConstStringDirective(bufferName + "Format", format -> {
 			Optional<InternalTextureFormat> internalFormat = InternalTextureFormat.fromString(format);
 
 			if (internalFormat.isPresent()) {
-				requestedTextureFormats[bufferIndex] = internalFormat.get();
+				settings.requestedFormat = internalFormat.get();
 			} else {
 				Iris.logger.warn("Unrecognized internal texture format " + format + " specified for " + bufferName + "Format, ignoring.");
 			}
@@ -96,13 +104,45 @@ public class PackRenderTargetDirectives {
 
 		// TODO: Only for composite and deferred
 		directives.acceptConstBooleanDirective(bufferName + "Clear",
-				shouldClear -> clearBuffers[bufferIndex] = shouldClear);
+				shouldClear -> settings.clear = shouldClear);
 
 		// TODO: Only for composite, deferred, and final
-		// TODO: vec4 *ClearColor
+		directives.acceptConstVec4Directive(bufferName + "ClearColor",
+				clearColor -> settings.clearColor = clearColor);
 
 		// TODO: Only for composite, deferred, and final
+		// TODO: These directives should be per program and not global!
 		directives.acceptConstBooleanDirective(bufferName + "MipmapEnabled",
-				shouldMipmap -> mipmapBuffers[bufferIndex] = shouldMipmap);
+				shouldMipmap -> settings.mipmap = shouldMipmap);
+	}
+
+	public static final class RenderTargetSettings {
+		private InternalTextureFormat requestedFormat;
+		private boolean clear;
+		private Vector4f clearColor;
+		private boolean mipmap;
+
+		public RenderTargetSettings() {
+			this.requestedFormat = InternalTextureFormat.RGBA;
+			this.clear = true;
+			this.clearColor = new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+			this.mipmap = false;
+		}
+
+		public InternalTextureFormat getRequestedFormat() {
+			return requestedFormat;
+		}
+
+		public boolean shouldClear() {
+			return clear;
+		}
+
+		public Vector4f getClearColor() {
+			return clearColor;
+		}
+
+		public boolean shouldGenerateMipmap() {
+			return mipmap;
+		}
 	}
 }

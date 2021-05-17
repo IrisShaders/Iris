@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.vendored.joml.Vector4f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -107,21 +108,27 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	}
 
 	@Override
+	public void acceptUniformDirective(String name, Runnable onDetected) {
+		// TODO
+		Iris.logger.warn("Not looking for a uniform directive with the name " + name + " since this type of directive is not currently supported.");
+	}
+
+	@Override
 	public void acceptCommentStringDirective(String name, Consumer<String> consumer) {
 		// TODO
-		Iris.logger.warn("Not looking for a comment string directive with the name " + name + " since it's not currently supported.");
+		Iris.logger.warn("Not looking for a comment string directive with the name " + name + " since this type of directive is not currently supported.");
 	}
 
 	@Override
 	public void acceptCommentIntDirective(String name, IntConsumer consumer) {
 		// TODO
-		Iris.logger.warn("Not looking for a comment int directive with the name " + name + " since it's not currently supported.");
+		Iris.logger.warn("Not looking for a comment int directive with the name " + name + " since this type of directive is not currently supported.");
 	}
 
 	@Override
 	public void acceptCommentFloatDirective(String name, FloatConsumer consumer) {
 		// TODO
-		Iris.logger.warn("Not looking for a comment float directive with the name " + name + " since it's not currently supported.");
+		Iris.logger.warn("Not looking for a comment float directive with the name " + name + " since this type of directive is not currently supported.");
 	}
 
 	@Override
@@ -142,5 +149,11 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	@Override
 	public void acceptConstFloatDirective(String name, FloatConsumer consumer) {
 		floatConstVariables.put(name, consumer);
+	}
+
+	@Override
+	public void acceptConstVec4Directive(String name, Consumer<Vector4f> consumer) {
+		// TODO
+		Iris.logger.warn("Not looking for a const vec4 directive with the name " + name + " since this type of directive is not currently supported.");
 	}
 }

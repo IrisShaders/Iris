@@ -1,5 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
+import java.util.Set;
+
 public class PackDirectives {
 	private int noiseTextureResolution;
 	private float sunPathRotation;
@@ -7,11 +9,11 @@ public class PackDirectives {
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
 
-	PackDirectives() {
+	PackDirectives(Set<Integer> supportedRenderTargets) {
 		noiseTextureResolution = 256;
 		sunPathRotation = 0.0F;
 
-		renderTargetDirectives = new PackRenderTargetDirectives();
+		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = new PackShadowDirectives();
 	}
 
