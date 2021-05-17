@@ -1,8 +1,13 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.Arrays;
+import com.google.common.collect.ImmutableList;
 
 public class PackShadowDirectives {
+	// Bump this up if you want more shadow color buffers!
+	// This is currently set at 2 for ShadersMod / OptiFine parity but can theoretically be bumped up to 8.
+	// TODO: Make this configurable?
+	public static final int MAX_SHADOW_COLOR_BUFFERS = 2;
+
 	private int resolution;
 	// Use a boxed form so we can use null to indicate that there is not an FOV specified.
 	private Float fov;
@@ -10,8 +15,8 @@ public class PackShadowDirectives {
 	private float distanceRenderMul;
 	private float intervalSize;
 
-	private final DepthSamplingSettings[] depthSamplingSettings;
-	private final SamplingSettings[] colorSamplingSettings;
+	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
+	private final ImmutableList<SamplingSettings> colorSamplingSettings;
 
 	public PackShadowDirectives() {
 		// By default, the shadow map has a resolution of 1024x1024. It's recommended to increase this for better
@@ -51,15 +56,43 @@ public class PackShadowDirectives {
 		// moon move, or when the player camera moves into a different grid cell.
 		this.intervalSize = 2.0f;
 
-		this.depthSamplingSettings = new DepthSamplingSettings[] {
-			new DepthSamplingSettings(),
-			new DepthSamplingSettings()
-		};
+		this.depthSamplingSettings = ImmutableList.of(new DepthSamplingSettings(), new DepthSamplingSettings());
 
-		this.colorSamplingSettings = new SamplingSettings[] {
-			new SamplingSettings(),
-			new SamplingSettings()
-		};
+		ImmutableList.Builder<SamplingSettings> colorSamplingSettings = ImmutableList.builder();
+
+		for (int i = 0; i < MAX_SHADOW_COLOR_BUFFERS; i++) {
+			colorSamplingSettings.add(new SamplingSettings());
+		}
+
+		this.colorSamplingSettings = colorSamplingSettings.build();
+	}
+
+	public int getResolution() {
+		return resolution;
+	}
+
+	public Float getFov() {
+		return fov;
+	}
+
+	public float getDistance() {
+		return distance;
+	}
+
+	public float getDistanceRenderMul() {
+		return distanceRenderMul;
+	}
+
+	public float getIntervalSize() {
+		return intervalSize;
+	}
+
+	public ImmutableList<DepthSamplingSettings> getDepthSamplingSettings() {
+		return depthSamplingSettings;
+	}
+
+	public ImmutableList<SamplingSettings> getColorSamplingSettings() {
+		return colorSamplingSettings;
 	}
 
 	public void acceptDirectives(DirectiveHolder directives) {
@@ -88,7 +121,7 @@ public class PackShadowDirectives {
 	/**
 	 * Handles shadowHardwareFiltering* directives
 	 */
-	private static void acceptHardwareFilteringSettings(DirectiveHolder directives, DepthSamplingSettings[] samplers) {
+	private static void acceptHardwareFilteringSettings(DirectiveHolder directives, ImmutableList<DepthSamplingSettings> samplers) {
 		// Get the default base value for the hardware filtering setting
 		directives.acceptConstBooleanDirective("shadowHardwareFiltering", hardwareFiltering -> {
 			for (DepthSamplingSettings samplerSettings : samplers) {
@@ -97,14 +130,14 @@ public class PackShadowDirectives {
 		});
 
 		// Find any per-sampler overrides for the hardware filtering setting
-		for (int i = 0; i < samplers.length; i++) {
+		for (int i = 0; i < samplers.size(); i++) {
 			String name = "shadowHardwareFiltering" + i;
 
-			directives.acceptConstBooleanDirective(name, samplers[i]::setHardwareFiltering);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setHardwareFiltering);
 		}
 	}
 
-	private static void acceptDepthMipmapSettings(DirectiveHolder directives, SamplingSettings[] samplers) {
+	private static void acceptDepthMipmapSettings(DirectiveHolder directives, ImmutableList<DepthSamplingSettings> samplers) {
 		// Get the default base value for the shadow depth mipmap setting
 		directives.acceptConstBooleanDirective("generateShadowMipmap", mipmap -> {
 			for (SamplingSettings samplerSettings : samplers) {
@@ -115,19 +148,19 @@ public class PackShadowDirectives {
 		// Find any per-sampler overrides for the shadow depth mipmap setting
 
 		// Legacy override option: shadowtexMipmap, an alias for shadowtex0Mipmap
-		if (samplers.length >= 1) {
-			directives.acceptConstBooleanDirective("shadowtexMipmap", samplers[0]::setMipmap);
+		if (samplers.size() >= 1) {
+			directives.acceptConstBooleanDirective("shadowtexMipmap", samplers.get(0)::setMipmap);
 		}
 
 		// Standard override option: shadowtex0Mipmap and shadowtex1Mipmap
-		for (int i = 0; i < samplers.length; i++) {
+		for (int i = 0; i < samplers.size(); i++) {
 			String name = "shadowtex" + i + "Mipmap";
 
-			directives.acceptConstBooleanDirective(name, samplers[i]::setMipmap);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setMipmap);
 		}
 	}
 
-	private static void acceptColorMipmapSettings(DirectiveHolder directives, SamplingSettings[] samplers) {
+	private static void acceptColorMipmapSettings(DirectiveHolder directives, ImmutableList<SamplingSettings> samplers) {
 		// Get the default base value for the shadow depth mipmap setting
 		directives.acceptConstBooleanDirective("generateShadowColorMipmap", mipmap -> {
 			for (SamplingSettings samplerSettings : samplers) {
@@ -136,44 +169,44 @@ public class PackShadowDirectives {
 		});
 
 		// Find any per-sampler overrides for the shadow depth mipmap setting
-		for (int i = 0; i < samplers.length; i++) {
+		for (int i = 0; i < samplers.size(); i++) {
 			String name = "shadowcolor" + i + "Mipmap";
-			directives.acceptConstBooleanDirective(name, samplers[i]::setMipmap);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setMipmap);
 
 			name = "shadowColor" + i + "Mipmap";
-			directives.acceptConstBooleanDirective(name, samplers[i]::setMipmap);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setMipmap);
 		}
 	}
 
-	private static void acceptDepthFilteringSettings(DirectiveHolder directives, SamplingSettings[] samplers) {
-		if (samplers.length >= 1) {
-			directives.acceptConstBooleanDirective("shadowtexNearest", samplers[0]::setNearest);
+	private static void acceptDepthFilteringSettings(DirectiveHolder directives, ImmutableList<DepthSamplingSettings> samplers) {
+		if (samplers.size() >= 1) {
+			directives.acceptConstBooleanDirective("shadowtexNearest", samplers.get(0)::setNearest);
 		}
 
-		for (int i = 0; i < samplers.length; i++) {
+		for (int i = 0; i < samplers.size(); i++) {
 			String name = "shadowtex" + i + "Nearest";
 
-			directives.acceptConstBooleanDirective(name, samplers[i]::setNearest);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setNearest);
 
 			name = "shadow" + i + "MinMagNearest";
 
-			directives.acceptConstBooleanDirective(name, samplers[i]::setNearest);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setNearest);
 		}
 	}
 
-	private static void acceptColorFilteringSettings(DirectiveHolder directives, SamplingSettings[] samplers) {
-		for (int i = 0; i < samplers.length; i++) {
+	private static void acceptColorFilteringSettings(DirectiveHolder directives, ImmutableList<SamplingSettings> samplers) {
+		for (int i = 0; i < samplers.size(); i++) {
 			String name = "shadowcolor" + i + "Nearest";
 
-			directives.acceptConstBooleanDirective(name, samplers[i]::setNearest);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setNearest);
 
 			name = "shadowColor" + i + "Nearest";
 
-			directives.acceptConstBooleanDirective(name, samplers[i]::setNearest);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setNearest);
 
 			name = "shadowColor" + i + "MinMagNearest";
 
-			directives.acceptConstBooleanDirective(name, samplers[i]::setNearest);
+			directives.acceptConstBooleanDirective(name, samplers.get(i)::setNearest);
 		}
 	}
 
@@ -185,8 +218,8 @@ public class PackShadowDirectives {
 				", distance=" + distance +
 				", distanceRenderMul=" + distanceRenderMul +
 				", intervalSize=" + intervalSize +
-				", depthSamplingSettings=" + Arrays.toString(depthSamplingSettings) +
-				", colorSamplingSettings=" + Arrays.toString(colorSamplingSettings) +
+				", depthSamplingSettings=" + depthSamplingSettings +
+				", colorSamplingSettings=" + colorSamplingSettings +
 				'}';
 	}
 
@@ -207,11 +240,11 @@ public class PackShadowDirectives {
 			nearest = false;
 		}
 
-		private void setMipmap(boolean mipmap) {
+		protected void setMipmap(boolean mipmap) {
 			this.mipmap = mipmap;
 		}
 
-		private void setNearest(boolean nearest) {
+		protected void setNearest(boolean nearest) {
 			this.nearest = nearest;
 		}
 
