@@ -164,6 +164,10 @@ public class ConstDirectiveParser {
 		public String getValue() {
 			return value;
 		}
+
+		public String toString() {
+			return "ConstDirective { " + type + " " + key + " = " + value + "; }";
+		}
 	}
 
 	public enum Type {
