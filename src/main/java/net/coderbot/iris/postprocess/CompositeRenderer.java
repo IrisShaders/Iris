@@ -91,7 +91,7 @@ public class CompositeRenderer {
 			}
 		}
 
-		IntList buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared();
+		IntList buffersToBeCleared = pack.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared();
 		boolean[] willBeCleared = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
 		buffersToBeCleared.forEach((int buffer) -> {

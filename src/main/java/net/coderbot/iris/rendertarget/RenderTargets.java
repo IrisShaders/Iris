@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.shaderpack.PackDirectives;
 
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.minecraft.client.gl.Framebuffer;
 
 public class RenderTargets {
@@ -26,7 +27,7 @@ public class RenderTargets {
 	private int cachedWidth;
 	private int cachedHeight;
 
-	public RenderTargets(Framebuffer reference, PackDirectives directives) {
+	public RenderTargets(Framebuffer reference, PackRenderTargetDirectives directives) {
 		this(reference.textureWidth, reference.textureHeight, directives.getRequestedBufferFormats());
 	}
 

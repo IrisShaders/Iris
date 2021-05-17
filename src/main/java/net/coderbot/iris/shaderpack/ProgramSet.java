@@ -199,14 +199,7 @@ public class ProgramSet {
 			}
 
 			source.getFragmentSource().ifPresent(directiveHolder::processSource);
-
-			// TODO: Move buffer format & clear directive handling to the new system
-			source.getFragmentSource().ifPresent(fragment -> {
-				ConstDirectiveParser.findDirectives(fragment).forEach(packDirectives::accept);
-			});
 		}
-
-		Iris.logger.info("Shadow directives: " + packDirectives.getShadowDirectives());
 	}
 
 	public Optional<ProgramSource> getShadow() {
