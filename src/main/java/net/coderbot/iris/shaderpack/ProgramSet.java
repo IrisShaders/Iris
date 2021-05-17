@@ -1,5 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
+import net.coderbot.iris.Iris;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -187,16 +189,24 @@ public class ProgramSet {
 		programs.addAll(Arrays.asList(composite));
 		programs.add(compositeFinal);
 
+		DispatchingDirectiveHolder directiveHolder = new DispatchingDirectiveHolder();
+
+		packDirectives.acceptDirectivesFrom(directiveHolder);
+
 		for (ProgramSource source : programs) {
 			if (source == null) {
 				continue;
 			}
 
-			source
-				.getFragmentSource()
-				.map(ConstDirectiveParser::findDirectives)
-				.ifPresent(lines -> lines.forEach(packDirectives::accept));
+			source.getFragmentSource().ifPresent(directiveHolder::processSource);
+
+			// TODO: Move buffer format & clear directive handling to the new system
+			source.getFragmentSource().ifPresent(fragment -> {
+				ConstDirectiveParser.findDirectives(fragment).forEach(packDirectives::accept);
+			});
 		}
+
+		Iris.logger.info("Shadow directives: " + packDirectives.getShadowDirectives());
 	}
 
 	public Optional<ProgramSource> getShadow() {

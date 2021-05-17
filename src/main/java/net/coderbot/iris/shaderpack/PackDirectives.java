@@ -15,6 +15,7 @@ public class PackDirectives {
 	private final boolean[] clearBuffers;
 	private int noiseTextureResolution;
 	private float sunPathRotation;
+	private final PackShadowDirectives shadowDirectives;
 
 	PackDirectives() {
 		requestedTextureFormats = new InternalTextureFormat[RenderTargets.MAX_RENDER_TARGETS];
@@ -25,6 +26,8 @@ public class PackDirectives {
 
 		noiseTextureResolution = 256;
 		sunPathRotation = 0.0F;
+
+		shadowDirectives = new PackShadowDirectives();
 	}
 
 	public IntList getBuffersToBeCleared() {
@@ -53,12 +56,24 @@ public class PackDirectives {
 		return sunPathRotation;
 	}
 
+	public PackShadowDirectives getShadowDirectives() {
+		return shadowDirectives;
+	}
+
+	public void acceptDirectivesFrom(DirectiveHolder directives) {
+		shadowDirectives.acceptDirectives(directives);
+
+		directives.acceptConstIntDirective("noiseTextureResolution",
+				noiseTextureResolution -> this.noiseTextureResolution = noiseTextureResolution);
+
+		directives.acceptConstFloatDirective("sunPathRotation",
+				sunPathRotation -> this.sunPathRotation = sunPathRotation);
+	}
+
 	void accept(ConstDirectiveParser.ConstDirective directive) {
 		final ConstDirectiveParser.Type type = directive.getType();
 		final String key = directive.getKey();
 		final String value = directive.getValue();
-
-		Iris.logger.info("Found potential directive: " + type + " " + key + " = " + value);
 
 		if (type == ConstDirectiveParser.Type.INT && key.endsWith("Format")) {
 			String bufferName = key.substring(0, key.length() - "Format".length());
@@ -78,10 +93,6 @@ public class PackDirectives {
 			bufferNameToIndex(bufferName).ifPresent(index -> {
 				clearBuffers[index] = false;
 			});
-		} else if (type == ConstDirectiveParser.Type.INT && key.equals("noiseTextureResolution")) {
-			noiseTextureResolution = Integer.parseInt(value);
-		} else if (type == ConstDirectiveParser.Type.FLOAT && key.equals("sunPathRotation")) {
-			sunPathRotation = Float.parseFloat(value);
 		}
 	}
 
