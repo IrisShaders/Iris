@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.vendored.joml.Vector4f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,12 +15,14 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	private final Map<String, Consumer<String>> stringConstVariables;
 	private final Map<String, IntConsumer> intConstVariables;
 	private final Map<String, FloatConsumer> floatConstVariables;
+	private final Map<String, Consumer<Vector4f>> vec4ConstVariables;
 
 	public DispatchingDirectiveHolder() {
 		booleanConstVariables = new HashMap<>();
 		stringConstVariables = new HashMap<>();
 		intConstVariables = new HashMap<>();
 		floatConstVariables = new HashMap<>();
+		vec4ConstVariables = new HashMap<>();
 	}
 
 	public void processSource(String source) {
@@ -51,6 +54,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 			typeCheckHelper("int", intConstVariables, directive);
 			typeCheckHelper("int", stringConstVariables, directive);
 			typeCheckHelper("float", floatConstVariables, directive);
+			typeCheckHelper("vec4", vec4ConstVariables, directive);
 		} else if (type == ConstDirectiveParser.Type.INT) {
 			// GLSL does not actually have a string type, so string constant directives use "const int" instead.
 			Consumer<String> stringConsumer = stringConstVariables.get(key);
@@ -77,6 +81,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 
 			typeCheckHelper("bool", booleanConstVariables, directive);
 			typeCheckHelper("float", floatConstVariables, directive);
+			typeCheckHelper("vec4", vec4ConstVariables, directive);
 		} else if (type == ConstDirectiveParser.Type.FLOAT) {
 			FloatConsumer consumer = floatConstVariables.get(key);
 
@@ -95,8 +100,52 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 			typeCheckHelper("bool", booleanConstVariables, directive);
 			typeCheckHelper("int", intConstVariables, directive);
 			typeCheckHelper("int", stringConstVariables, directive);
+			typeCheckHelper("vec4", vec4ConstVariables, directive);
 		} else if (type == ConstDirectiveParser.Type.VEC4) {
-			Iris.logger.warn("Ignoring " + directive + " because vec4 directives are currently unsupported.");
+			Consumer<Vector4f> consumer = vec4ConstVariables.get(key);
+
+			if (consumer != null) {
+				if (!value.startsWith("vec4")) {
+					Iris.logger.error("Failed to process " + directive + ": value was not a valid vec4 constructor");
+				}
+
+				String vec4Args = value.substring("vec4".length()).trim();
+
+				if (!vec4Args.startsWith("(") || !vec4Args.endsWith(")")) {
+					Iris.logger.error("Failed to process " + directive + ": value was not a valid vec4 constructor");
+				}
+
+				vec4Args = vec4Args.substring(1, vec4Args.length() - 1);
+
+				String[] parts = vec4Args.split(",");
+
+				for (int i = 0; i < parts.length; i++) {
+					parts[i] = parts[i].trim();
+				}
+
+				if (parts.length != 4) {
+					Iris.logger.error("Failed to process " + directive +
+						": expected 4 arguments to a vec4 constructor, got " + parts.length);
+				}
+
+				try {
+					consumer.accept(new Vector4f(
+						Float.parseFloat(parts[0]),
+						Float.parseFloat(parts[1]),
+						Float.parseFloat(parts[2]),
+						Float.parseFloat(parts[3])
+					));
+				} catch (NumberFormatException e) {
+					Iris.logger.error("Failed to process " + directive, e);
+				}
+
+				return;
+			}
+
+			typeCheckHelper("bool", booleanConstVariables, directive);
+			typeCheckHelper("int", intConstVariables, directive);
+			typeCheckHelper("int", stringConstVariables, directive);
+			typeCheckHelper("float", floatConstVariables, directive);
 		}
 	}
 
@@ -107,21 +156,27 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	}
 
 	@Override
+	public void acceptUniformDirective(String name, Runnable onDetected) {
+		// TODO
+		Iris.logger.warn("Not looking for a uniform directive with the name " + name + " since this type of directive is not currently supported.");
+	}
+
+	@Override
 	public void acceptCommentStringDirective(String name, Consumer<String> consumer) {
 		// TODO
-		Iris.logger.warn("Not looking for a comment string directive with the name " + name + " since it's not currently supported.");
+		Iris.logger.warn("Not looking for a comment string directive with the name " + name + " since this type of directive is not currently supported.");
 	}
 
 	@Override
 	public void acceptCommentIntDirective(String name, IntConsumer consumer) {
 		// TODO
-		Iris.logger.warn("Not looking for a comment int directive with the name " + name + " since it's not currently supported.");
+		Iris.logger.warn("Not looking for a comment int directive with the name " + name + " since this type of directive is not currently supported.");
 	}
 
 	@Override
 	public void acceptCommentFloatDirective(String name, FloatConsumer consumer) {
 		// TODO
-		Iris.logger.warn("Not looking for a comment float directive with the name " + name + " since it's not currently supported.");
+		Iris.logger.warn("Not looking for a comment float directive with the name " + name + " since this type of directive is not currently supported.");
 	}
 
 	@Override
@@ -142,5 +197,10 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	@Override
 	public void acceptConstFloatDirective(String name, FloatConsumer consumer) {
 		floatConstVariables.put(name, consumer);
+	}
+
+	@Override
+	public void acceptConstVec4Directive(String name, Consumer<Vector4f> consumer) {
+		vec4ConstVariables.put(name, consumer);
 	}
 }

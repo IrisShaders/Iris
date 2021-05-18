@@ -3,12 +3,14 @@ package net.coderbot.iris.rendertarget;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.shaderpack.PackDirectives;
 
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.minecraft.client.gl.Framebuffer;
 
 public class RenderTargets {
@@ -26,21 +28,18 @@ public class RenderTargets {
 	private int cachedWidth;
 	private int cachedHeight;
 
-	public RenderTargets(Framebuffer reference, PackDirectives directives) {
-		this(reference.textureWidth, reference.textureHeight, directives.getRequestedBufferFormats());
+	public RenderTargets(Framebuffer reference, PackRenderTargetDirectives directives) {
+		this(reference.textureWidth, reference.textureHeight, directives.getRenderTargetSettings());
 	}
 
-	public RenderTargets(int width, int height, InternalTextureFormat[] formats) {
-		if (formats.length > MAX_RENDER_TARGETS) {
-			throw new IllegalArgumentException("Too many render targets: " + formats.length + " targets requested, but the maximum number of render targets is " + MAX_RENDER_TARGETS);
-		}
+	public RenderTargets(int width, int height, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
+		targets = new RenderTarget[MAX_RENDER_TARGETS];
 
-		targets = new RenderTarget[formats.length];
-		int targetIndex = 0;
-
-		for (InternalTextureFormat format : formats) {
-			targets[targetIndex++] = RenderTarget.builder().setDimensions(width, height).setInternalFormat(format).build();
-		}
+		renderTargets.forEach((index, settings) -> {
+			// TODO: Handle render targets above 8
+			// TODO: Handle mipmapping?
+			targets[index] = RenderTarget.builder().setDimensions(width, height).setInternalFormat(settings.getRequestedFormat()).build();
+		});
 
 		this.depthTexture = new DepthTexture(width, height);
 		this.noTranslucents = new DepthTexture(width, height);

@@ -1,7 +1,5 @@
 package net.coderbot.iris.shaderpack;
 
-import net.coderbot.iris.Iris;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +47,8 @@ public class ProgramSet {
 	private final ShaderPack pack;
 
 	public ProgramSet(Path root, Path inclusionRoot, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
-		this.packDirectives = new PackDirectives();
+		// TODO: Support additional render targets beyond 8
+		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS);
 		this.pack = pack;
 
 		this.shadow = readProgramSource(root, inclusionRoot, "shadow", this, shaderProperties);
@@ -104,7 +103,8 @@ public class ProgramSet {
 			throw new IllegalStateException();
 		}
 
-		this.packDirectives = new PackDirectives();
+		// TODO: Support additional render targets beyond 8
+		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS);
 
 		this.shadow = merge(base.shadow, overrides.shadow);
 
@@ -199,14 +199,7 @@ public class ProgramSet {
 			}
 
 			source.getFragmentSource().ifPresent(directiveHolder::processSource);
-
-			// TODO: Move buffer format & clear directive handling to the new system
-			source.getFragmentSource().ifPresent(fragment -> {
-				ConstDirectiveParser.findDirectives(fragment).forEach(packDirectives::accept);
-			});
 		}
-
-		Iris.logger.info("Shadow directives: " + packDirectives.getShadowDirectives());
 	}
 
 	public Optional<ProgramSource> getShadow() {

@@ -223,7 +223,7 @@ public class PackShadowDirectives {
 				'}';
 	}
 
-	private static class SamplingSettings {
+	public static class SamplingSettings {
 		/**
 		 * Whether mipmaps should be generated before sampling. Disabled by default.
 		 */
@@ -265,7 +265,7 @@ public class PackShadowDirectives {
 		}
 	}
 
-	private static class DepthSamplingSettings extends SamplingSettings {
+	public static class DepthSamplingSettings extends SamplingSettings {
 		private boolean hardwareFiltering;
 
 		public DepthSamplingSettings() {
@@ -274,6 +274,10 @@ public class PackShadowDirectives {
 
 		private void setHardwareFiltering(boolean hardwareFiltering) {
 			this.hardwareFiltering = hardwareFiltering;
+		}
+
+		public boolean getHardwareFiltering() {
+			return hardwareFiltering;
 		}
 
 		@Override
