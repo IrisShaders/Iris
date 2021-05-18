@@ -107,6 +107,7 @@ public class PackRenderTargetDirectives {
 				shouldClear -> settings.clear = shouldClear);
 
 		// TODO: Only for composite, deferred, and final
+		// TODO: what happens if clear = false but clearColor is specified?
 		directives.acceptConstVec4Directive(bufferName + "ClearColor",
 				clearColor -> settings.clearColor = clearColor);
 
