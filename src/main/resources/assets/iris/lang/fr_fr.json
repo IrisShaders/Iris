@@ -7,7 +7,7 @@
   "options.iris.refresh": "Rafraichir",
   "options.iris.openShaderPackFolder": "Ouvrir le dossier des Shader Packs...",
   "options.iris.refreshShaderPacks": "Refresh Shader Packs",
-  "options.iris.shaderPackSelection.addedPack": "Shader Pack ajouté : \"%s\"",
+  "options.iris.shaderPackSelection.addedPack": "Shader pack ajouté : \"%s\"",
   "options.iris.shaderPackSelection.addedPacks": "Ajouté %s Shader Packs",
   "options.iris.shaderPackSelection.failedAdd": "Les fichiers ne sont pas des Shader Packs valides",
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" n'est pas un Shader Pack valide",
