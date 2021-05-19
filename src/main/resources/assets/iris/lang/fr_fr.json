@@ -1,7 +1,7 @@
 {
   "iris.shaders.reloaded": "Shaders rechargés !",
   "iris.keybind.reload": "Recharger les shaders",
-  "iris.shaders.reloaded.failure": "Échec lors du rechargement des Shaders! Raison: %s",
+  "iris.shaders.reloaded.failure": "Échec lors du rechargement des shaders ! Raison : %s",
 
   "options.iris.apply": "Appliquer",
   "options.iris.refresh": "Rafraichir",
