@@ -10,7 +10,7 @@
   "options.iris.shaderPackSelection.addedPack": "Shader pack ajouté : \"%s\"",
   "options.iris.shaderPackSelection.addedPacks": "Ajouté %s Shader Packs",
   "options.iris.shaderPackSelection.failedAdd": "Les fichiers ne sont pas des shader packs valides",
-  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" n'est pas un Shader Pack valide",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" n'est pas un shader pack valide",
   "options.iris.shaderPackSelection.copyError": "Erreur lors que de l'ajout de Shader Pack \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" est déja dans votre dossier de Shader Packs !",
 
