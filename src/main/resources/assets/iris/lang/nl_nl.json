@@ -15,5 +15,5 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" staat al in uw Shader Packs map!",
 
   "pack.iris.select.title": "Selecteren",
-  "pack.iris.list.label": "+ Shader Packs slepen en neerzetten om toe te voegen"
+  "pack.iris.list.label": "+ Voeg Shader Packs toe door te slepen en neer te zetten"
 }
