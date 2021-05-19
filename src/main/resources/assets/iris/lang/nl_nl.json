@@ -8,7 +8,7 @@
   "options.iris.openShaderPackFolder": "Open de Shader Pack map...",
   "options.iris.refreshShaderPacks": "Ververs Shader Pack",
   "options.iris.shaderPackSelection.addedPack": "Shader Pack \"%s\" toegevoegd",
-  "options.iris.shaderPackSelection.addedPacks": "\"%s\" Shader Packs toegevoegd",
+  "options.iris.shaderPackSelection.addedPacks": "%s Shader Packs toegevoegd",
   "options.iris.shaderPackSelection.failedAdd": "Bestanden zijn geen geldige Shader Packs",
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" is geen geldige Shader Pack",
   "options.iris.shaderPackSelection.copyError": "Kon Shader Pack \"%s\" niet toevoegen",
