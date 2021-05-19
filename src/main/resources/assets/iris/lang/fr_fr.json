@@ -15,5 +15,5 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" est déjà dans votre dossier de shader packs !",
 
   "pack.iris.select.title": "Sélectionner",
-  "pack.iris.list.label": "+ Faites glisser vos Shader Packs pour les ajouter"
+  "pack.iris.list.label": "+ Faites glisser vos shader packs pour les ajouter"
 }
