@@ -97,10 +97,6 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		IrisConfig.setShadersEnabled(false);
 		try {
 			IrisConfig.save();
-		} catch (IOException ioException) {
-			ioException.printStackTrace();
-		}
-		try {
 			Iris.reload();
 		} catch (IOException ioException) {
 			ioException.printStackTrace();
