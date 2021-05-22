@@ -25,6 +25,7 @@ public abstract class MixinDebugHud {
 		List<String> messages = cir.getReturnValue();
 
 		messages.add("");
+		messages.add("[Iris] Shadows: " + ShadowRenderer.OVERALL_DEBUG_STRING);
 		messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
 		messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
 	}

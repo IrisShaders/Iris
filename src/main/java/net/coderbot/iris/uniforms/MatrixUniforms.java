@@ -21,8 +21,9 @@ public final class MatrixUniforms {
 		// TODO: In some cases, gbufferProjectionInverse takes on a value much different than OptiFine...
 		// We need to audit Mojang's linear algebra.
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
-		addShadowMatrix(uniforms, "ModelView", () -> ShadowRenderer.createShadowModelView(directives.getSunPathRotation()).peek().getModel().copy());
-		addShadowArrayMatrix(uniforms, "Projection", MatrixUniforms::getShadowProjection);
+		addShadowMatrix(uniforms, "ModelView", () ->
+				ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).peek().getModel().copy());
+		addShadowArrayMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance()));
 	}
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
@@ -42,10 +43,6 @@ public final class MatrixUniforms {
 		uniforms
 				.uniformMatrixFromArray(PER_FRAME, "shadow" + name, supplier)
 				.uniformJomlMatrix(PER_FRAME, "shadow" + name + "Inverse", new InvertedArrayMatrix(supplier));
-	}
-
-	private static float[] getShadowProjection() {
-		return ShadowMatrices.createOrthoMatrix(ShadowRenderer.HALF_PLANE_LENGTH);
 	}
 
 	private static class Inverted implements Supplier<net.coderbot.iris.vendored.joml.Matrix4f> {

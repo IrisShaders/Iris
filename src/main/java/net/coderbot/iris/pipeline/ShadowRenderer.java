@@ -1,7 +1,9 @@
 package net.coderbot.iris.pipeline;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -11,11 +13,13 @@ import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
+import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.ShadowFrustum;
 import net.coderbot.iris.uniforms.*;
 import net.minecraft.client.MinecraftClient;
@@ -26,7 +30,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
@@ -37,35 +40,46 @@ import org.lwjgl.opengl.GL30C;
 import java.util.Objects;
 
 public class ShadowRenderer {
-	public static final float HALF_PLANE_LENGTH = 80F;
-	private static final int RESOLUTION = 3072;
+	private final float halfPlaneLength;
+	private final float renderDistanceMultiplier;
+	private final int resolution;
+	private final float intervalSize;
 	public static Matrix4f MODELVIEW;
 
 	private final WorldRenderingPipeline pipeline;
-	private final RenderTargets targets;
-	private final DepthTexture noTranslucents;
+	private final ShadowRenderTargets targets;
 
-	private final GlFramebuffer shadowFb;
 	private final Program shadowProgram;
 	private final float sunPathRotation;
 
 	private final BufferBuilderStorage buffers;
 
 	public static boolean ACTIVE = false;
+	public static String OVERALL_DEBUG_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives) {
 		this.pipeline = pipeline;
 
-		this.targets = new RenderTargets(RESOLUTION, RESOLUTION, new InternalTextureFormat[]{
+		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
+
+		this.halfPlaneLength = shadowDirectives.getDistance();
+		this.renderDistanceMultiplier = shadowDirectives.getDistanceRenderMul();
+		this.resolution = shadowDirectives.getResolution();
+		this.intervalSize = shadowDirectives.getIntervalSize();
+
+		OVERALL_DEBUG_STRING = "render distance = " + (renderDistanceMultiplier > 0 ? (halfPlaneLength * renderDistanceMultiplier) + " blocks" : "unlimited") + " @ " + resolution + "x" + resolution;
+
+		if (shadowDirectives.getFov() != null) {
+			// TODO: Support FOV in the shadow map for legacy shaders
+			Iris.logger.warn("The shaderpack specifies a shadow FOV of " + shadowDirectives.getFov() + ", but Iris does not currently support perspective projections in the shadow pass.");
+		}
+
+		this.targets = new ShadowRenderTargets(resolution, new InternalTextureFormat[]{
 			InternalTextureFormat.RGBA,
 			InternalTextureFormat.RGBA
 		});
-
-		this.noTranslucents = new DepthTexture(RESOLUTION, RESOLUTION);
-
-		this.shadowFb = targets.createBaselineShadowFramebuffer();
 
 		if (shadow != null) {
 			this.shadowProgram = createProgram(shadow, directives).getLeft();
@@ -77,27 +91,43 @@ public class ShadowRenderer {
 
 		this.buffers = new BufferBuilderStorage();
 
+		configureSamplingSettings(shadowDirectives);
+	}
+
+	private void configureSamplingSettings(PackShadowDirectives shadowDirectives) {
+		final ImmutableList<PackShadowDirectives.DepthSamplingSettings> depthSamplingSettings =
+				shadowDirectives.getDepthSamplingSettings();
+
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE4);
+
 		GlStateManager.bindTexture(getDepthTextureId());
-
-		// TODO: Don't duplicate / hardcode these things, this should be controlled by shadowHardwareFiltering
-
-		// We have to do this or else shadow hardware filtering breaks entirely!
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
-		// Make sure that things are smoothed
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+		configureDepthSampler(depthSamplingSettings.get(0));
 
 		GlStateManager.bindTexture(getDepthTextureNoTranslucentsId());
+		configureDepthSampler(depthSamplingSettings.get(1));
 
-		// We have to do this or else shadow hardware filtering breaks entirely!
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
-		// Make sure that things are smoothed
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+		// TODO: Configure color samplers
 
 		GlStateManager.bindTexture(0);
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
+	}
+
+	private void configureDepthSampler(PackShadowDirectives.DepthSamplingSettings settings) {
+		// TODO: Mipmap support.
+
+		if (settings.getHardwareFiltering()) {
+			// We have to do this or else shadow hardware filtering breaks entirely!
+			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
+		}
+
+		if (!settings.getNearest()) {
+			// Make sure that things are smoothed
+			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+		} else {
+			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_NEAREST);
+			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_NEAREST);
+		}
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
@@ -121,7 +151,7 @@ public class ShadowRenderer {
 		return new Pair<>(builder.build(), source.getDirectives());
 	}
 
-	public static MatrixStack createShadowModelView(float sunPathRotation) {
+	public static MatrixStack createShadowModelView(float sunPathRotation, float intervalSize) {
 		// Determine the camera position
 		Vec3d cameraPos = CameraUniforms.getCameraPosition();
 
@@ -131,22 +161,25 @@ public class ShadowRenderer {
 
 		// Set up our modelview matrix stack
 		MatrixStack modelView = new MatrixStack();
-		ShadowMatrices.createModelViewMatrix(modelView.peek().getModel(), getShadowAngle(), 2.0f, sunPathRotation, cameraX, cameraY, cameraZ);
+		ShadowMatrices.createModelViewMatrix(modelView.peek().getModel(), getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
 
 		return modelView;
 	}
 
-	private static Frustum createShadowFrustum(MatrixStack modelview, float[] ortho) {
+	private Frustum createShadowFrustum(MatrixStack modelview, float[] ortho) {
 		Matrix4f orthoMatrix = new Matrix4f();
 
 		((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
 
 		// TODO: Don't use the box culling thing if the render distance is less than the shadow distance, saves a few operations
-		return new ShadowFrustum(modelview.peek().getModel(), orthoMatrix, HALF_PLANE_LENGTH);
-		// return new Frustum(modelview.peek().getModel(), orthoMatrix);
+		if (renderDistanceMultiplier <= 0) {
+			return new Frustum(modelview.peek().getModel(), orthoMatrix);
+		}
+
+		return new ShadowFrustum(modelview.peek().getModel(), orthoMatrix, halfPlaneLength * renderDistanceMultiplier);
 	}
 
-	private static Frustum createEntityShadowFrustum(MatrixStack modelview) {
+	private Frustum createEntityShadowFrustum(MatrixStack modelview) {
 		return createShadowFrustum(modelview, ShadowMatrices.createOrthoMatrix(16.0f));
 	}
 
@@ -157,9 +190,9 @@ public class ShadowRenderer {
 		ACTIVE = true;
 
 		// Create our camera
-		MatrixStack modelView = createShadowModelView(this.sunPathRotation);
+		MatrixStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
 		MODELVIEW = modelView.peek().getModel().copy();
-		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(HALF_PLANE_LENGTH);
+		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
 
 		worldRenderer.getWorld().getProfiler().push("terrain_setup");
 
@@ -213,15 +246,16 @@ public class ShadowRenderer {
 		}
 
 		// Set up and clear our framebuffer
-		shadowFb.bind();
+		targets.getFramebuffer().bind();
 
+		// TODO: Support shadow clear color directives & disable buffer clearing
 		// Ensure that the color and depth values are cleared appropriately
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		RenderSystem.clearDepth(1.0f);
 		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
 
 		// Set up the viewport
-		RenderSystem.viewport(0, 0, RESOLUTION, RESOLUTION);
+		RenderSystem.viewport(0, 0, resolution, resolution);
 
 		// Set up our orthographic projection matrix and load it into the legacy matrix stack
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
@@ -284,8 +318,8 @@ public class ShadowRenderer {
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
-		RenderSystem.bindTexture(noTranslucents.getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, RESOLUTION, RESOLUTION, 0);
+		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
@@ -357,15 +391,16 @@ public class ShadowRenderer {
 	}
 
 	public int getDepthTextureNoTranslucentsId() {
-		return noTranslucents.getTextureId();
+		return targets.getDepthTextureNoTranslucents().getTextureId();
 	}
 
+	// TODO: Support more shadow color textures as well as support there being no shadow color textures.
 	public int getColorTexture0Id() {
-		return targets.get(0).getMainTexture();
+		return targets.getColorTextureId(0);
 	}
 
 	public int getColorTexture1Id() {
-		return targets.get(1).getMainTexture();
+		return targets.getColorTextureId(1);
 	}
 
 	public void destroy() {
