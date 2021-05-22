@@ -39,6 +39,9 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Unique
 	private short currentBlock;
 
+	@Unique
+	private short currentRenderType;
+
 	@Shadow
 	private boolean field_21594;
 
@@ -98,7 +101,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		}
 
 		this.putFloat(0, currentBlock);
-		this.putFloat(4, (short) -1);
+		this.putFloat(4, currentRenderType);
 		this.putFloat(8, (short) -1);
 		this.putFloat(12, (short) -1);
 		this.nextElement();
@@ -154,13 +157,15 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	}
 
 	@Override
-	public void beginBlock(short block) {
+	public void beginBlock(short block, short renderType) {
 		this.currentBlock = block;
+		this.currentRenderType = renderType;
 	}
 
 	@Override
 	public void endBlock() {
 		this.currentBlock = -1;
+		this.currentRenderType = -1;
 	}
 
 	private void computeTangents() {
