@@ -149,7 +149,7 @@ public class ShadowRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives);
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, FrameUpdateNotifier.INSTANCE);
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 
 		return new Pair<>(builder.build(), source.getDirectives());
