@@ -15,95 +15,96 @@ import net.minecraft.util.math.Vec3d;
 public interface LocationalUniformHolder extends UniformHolder {
 	LocationalUniformHolder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform);
 
-	OptionalInt location(String name);
+	OptionalInt location(String name, UniformType type);
 
 	@Override
 	default LocationalUniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, value)));
+		location(name, UniformType.FLOAT).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, value)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, () -> (float) value.getAsInt())));
+		location(name, UniformType.FLOAT).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, () -> (float) value.getAsInt())));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, DoubleSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, () -> (float) value.getAsDouble())));
+		location(name, UniformType.FLOAT).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, () -> (float) value.getAsDouble())));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform1i(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new IntUniform(id, value)));
+		location(name, UniformType.INT).ifPresent(id -> addUniform(updateFrequency, new IntUniform(id, value)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new BooleanUniform(id, value)));
+		location(name, UniformType.INT).ifPresent(id -> addUniform(updateFrequency, new BooleanUniform(id, value)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, true)));
+		location(name, UniformType.VEC2).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, true)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, false)));
+		// TODO: Use VEC2I
+		location(name, UniformType.VEC2).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value, false)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector3Uniform(id, value)));
+		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, new Vector3Uniform(id, value)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.truncated(id, value)));
+		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.truncated(id, value)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3d> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.converted(id, value)));
+		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.converted(id, value)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new Vector4Uniform(id, value)));
+		location(name, UniformType.VEC4).ifPresent(id -> addUniform(updateFrequency, new Vector4Uniform(id, value)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new MatrixUniform(id, value)));
+		location(name, UniformType.MAT4).ifPresent(id -> addUniform(updateFrequency, new MatrixUniform(id, value)));
 
 		return this;
 	}
 
 	@Override
 	default LocationalUniformHolder uniformJomlMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<net.coderbot.iris.vendored.joml.Matrix4f> value) {
-		location(name).ifPresent(id -> addUniform(updateFrequency, new JomlMatrixUniform(id, value)));
+		location(name, UniformType.MAT4).ifPresent(id -> addUniform(updateFrequency, new JomlMatrixUniform(id, value)));
 
 		return this;
 	}
