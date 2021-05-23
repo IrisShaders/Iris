@@ -21,6 +21,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.minecraft.client.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
@@ -43,7 +44,7 @@ public class CompositeRenderer {
 	final CenterDepthSampler centerDepthSampler;
 
 	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, EmptyShadowMapRenderer shadowMapRenderer, AbstractTexture noiseTexture) {
-		centerDepthSampler = new CenterDepthSampler(renderTargets);
+		centerDepthSampler = new CenterDepthSampler(renderTargets, FrameUpdateNotifier.INSTANCE);
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -303,7 +304,7 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
 		SamplerUniforms.addCompositeSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
 
