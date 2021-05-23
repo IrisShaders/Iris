@@ -8,11 +8,11 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.Uniform;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20C;
 
 import net.minecraft.client.MinecraftClient;
-
 
 public class ProgramUniforms {
 	private final ImmutableList<Uniform> perTick;
@@ -20,6 +20,7 @@ public class ProgramUniforms {
 
 	private ImmutableList<Uniform> once;
 	long lastTick = -1;
+	int lastFrame = -1;
 
 	public ProgramUniforms(ImmutableList<Uniform> once, ImmutableList<Uniform> perTick, ImmutableList<Uniform> perFrame) {
 		this.once = once;
@@ -56,7 +57,14 @@ public class ProgramUniforms {
 			updateStage(perTick);
 		}
 
-		updateStage(perFrame);
+		// TODO: Move the frame counter to a different place?
+		int currentFrame = SystemTimeUniforms.COUNTER.getAsInt();
+
+		if (lastFrame != currentFrame) {
+			lastFrame = currentFrame;
+
+			updateStage(perFrame);
+		}
 	}
 
 	public static Builder builder(String name, int program) {

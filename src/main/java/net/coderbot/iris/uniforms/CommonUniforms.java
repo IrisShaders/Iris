@@ -38,8 +38,8 @@ public final class CommonUniforms {
 	}
 
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
-	public static void addCommonUniforms(LocationalUniformHolder uniforms, IdMap idMap, PackDirectives directives) {
-		CameraUniforms.addCameraUniforms(uniforms);
+	public static void addCommonUniforms(LocationalUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
+		CameraUniforms.addCameraUniforms(uniforms, updateNotifier);
 		ViewportUniforms.addViewportUniforms(uniforms);
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
@@ -49,10 +49,10 @@ public final class CommonUniforms {
 		SamplerUniforms.addCommonSamplerUniforms(uniforms);
 		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms);
 
-		CommonUniforms.generalCommonUniforms(uniforms);
+		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
 
-	public static void generalCommonUniforms(UniformHolder uniforms){
+	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier){
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
@@ -64,9 +64,9 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
-			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness))
+			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier))
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength))
+			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
 	}
 
