@@ -22,14 +22,17 @@ import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.ShadowFrustum;
 import net.coderbot.iris.uniforms.*;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
@@ -58,6 +61,7 @@ public class ShadowRenderer {
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
+	private static int renderedShadowBlockEntities = 0;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives) {
 		this.pipeline = pipeline;
@@ -309,7 +313,23 @@ public class ShadowRenderer {
 			shadowEntities++;
 		}
 
+		worldRenderer.getWorld().getProfiler().swap("blockentities");
+
+		int shadowBlockEntities = 0;
+
+		// TODO: Use visibleChunks to cull block entities
+		for (BlockEntity entity : getWorld().blockEntities) {
+			modelView.push();
+			BlockPos pos = entity.getPos();
+			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+			BlockEntityRenderDispatcher.INSTANCE.render(entity, tickDelta, modelView, provider);
+			modelView.pop();
+
+			shadowBlockEntities++;
+		}
+
 		renderedShadowEntities = shadowEntities;
+		renderedShadowBlockEntities = shadowBlockEntities;
 
 		provider.draw();
 
@@ -356,6 +376,10 @@ public class ShadowRenderer {
 
 	public static String getEntitiesDebugString() {
 		return renderedShadowEntities + "/" + MinecraftClient.getInstance().world.getRegularEntityCount();
+	}
+
+	public static String getBlockEntitiesDebugString() {
+		return renderedShadowBlockEntities + "/" + MinecraftClient.getInstance().world.blockEntities.size();
 	}
 
 	private static ClientWorld getWorld() {

@@ -28,5 +28,6 @@ public abstract class MixinDebugHud {
 		messages.add("[Iris] Shadows: " + ShadowRenderer.OVERALL_DEBUG_STRING);
 		messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
 		messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
+		messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
 	}
 }
