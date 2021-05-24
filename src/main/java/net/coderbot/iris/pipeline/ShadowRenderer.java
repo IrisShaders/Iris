@@ -37,6 +37,7 @@ import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -155,6 +156,26 @@ public class ShadowRenderer {
 		return new Pair<>(builder.build(), source.getDirectives());
 	}
 
+	private static void setupAttributes(Program program) {
+		// Add default attribute values to avoid undefined behavior on content rendered without an extended vertex format
+		// TODO: Avoid duplication with DeferredWorldRenderingPipeline
+		setupAttribute(program, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
+		setupAttribute(program, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(program, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
+	}
+
+	private static void setupAttribute(Program program, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
+		int location = GL20.glGetAttribLocation(program.getProgramId(), name);
+
+		if (location != -1) {
+			if (location != expectedLocation) {
+				throw new IllegalStateException();
+			}
+
+			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
+		}
+	}
+
 	public static MatrixStack createShadowModelView(float sunPathRotation, float intervalSize) {
 		// Determine the camera position
 		Vec3d cameraPos = CameraUniforms.getCameraPosition();
@@ -245,6 +266,7 @@ public class ShadowRenderer {
 		// Set up the shadow program
 		if (shadowProgram != null) {
 			shadowProgram.use();
+			setupAttributes(shadowProgram);
 		} else {
 			GlProgramManager.useProgram(0);
 		}
