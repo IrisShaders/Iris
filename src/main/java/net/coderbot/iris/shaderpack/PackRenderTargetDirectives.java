@@ -17,7 +17,7 @@ public class PackRenderTargetDirectives {
 		"gcolor",
 		"gdepth",
 		"gnormal",
-		"gcomposite",
+		"composite",
 		"gaux1",
 		"gaux2",
 		"gaux3",
@@ -131,6 +131,15 @@ public class PackRenderTargetDirectives {
 
 		public Vector4f getClearColor() {
 			return clearColor;
+		}
+
+		@Override
+		public String toString() {
+			return "RenderTargetSettings{" +
+					"requestedFormat=" + requestedFormat +
+					", clear=" + clear +
+					", clearColor=" + clearColor +
+					'}';
 		}
 	}
 }
