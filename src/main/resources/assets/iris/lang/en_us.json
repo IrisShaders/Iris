@@ -2,5 +2,21 @@
   "iris.shaders.reloaded": "Shaders Reloaded!",
   "iris.keybind.reload": "Reload Shaders",
   "iris.keybinds": "Iris",
-  "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s"
+  "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s",
+
+  "options.iris.apply": "Apply",
+  "options.iris.refresh": "Refresh",
+  "options.iris.openShaderPackFolder": "Open Shader Pack Folder...",
+  "options.iris.refreshShaderPacks": "Refresh Shader Packs",
+  "options.iris.shaderPackSelection": "Shader Packs...",
+  "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Added Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Added %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Files were not valid Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" is not a valid Shader Pack",
+  "options.iris.shaderPackSelection.copyError": "Could not add Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" is already in your Shader Packs folder!",
+
+  "pack.iris.select.title": "Select",
+  "pack.iris.list.label": "+ Drag and Drop Shader Packs to add"
 }
