@@ -3,6 +3,7 @@ package net.coderbot.iris.postprocess;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.google.common.collect.ImmutableList;
@@ -15,11 +16,13 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.rendertarget.*;
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.minecraft.client.texture.AbstractTexture;
 import org.apache.logging.log4j.Level;
@@ -43,8 +46,11 @@ public class CompositeRenderer {
 	final CenterDepthSampler centerDepthSampler;
 
 	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, EmptyShadowMapRenderer shadowMapRenderer, AbstractTexture noiseTexture) {
-		centerDepthSampler = new CenterDepthSampler(renderTargets);
+		centerDepthSampler = new CenterDepthSampler(renderTargets, FrameUpdateNotifier.INSTANCE);
 
+		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
+		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
+				renderTargetDirectives.getRenderTargetSettings();
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
 
 		for (ProgramSource source : pack.getComposite()) {
@@ -80,6 +86,11 @@ public class CompositeRenderer {
 			pass.stageReadsFromAlt = Arrays.copyOf(stageReadsFromAlt, stageReadsFromAlt.length);
 			pass.framebuffer = framebuffer;
 			pass.viewportScale = directives.getViewportScale();
+			pass.generateMipmap = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+
+			for (int i = 0; i < pass.generateMipmap.length; i++) {
+				pass.generateMipmap[i] = directives.getMipmappedBuffers().contains(i);
+			}
 
 			if (programEntry == programs.get(programs.size() - 1)) {
 				pass.isLastPass = true;
@@ -93,7 +104,7 @@ public class CompositeRenderer {
 			}
 		}
 
-		IntList buffersToBeCleared = pack.getPackDirectives().getBuffersToBeCleared();
+		IntList buffersToBeCleared = pack.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared();
 		boolean[] willBeCleared = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
 		buffersToBeCleared.forEach((int buffer) -> {
@@ -133,6 +144,7 @@ public class CompositeRenderer {
 		Program program;
 		GlFramebuffer framebuffer;
 		boolean[] stageReadsFromAlt;
+		boolean[] generateMipmap;
 		boolean isLastPass;
 		float viewportScale;
 
@@ -179,14 +191,14 @@ public class CompositeRenderer {
 				main.beginWrite(false);
 			}
 
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt[2]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt[3]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt[4]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt[5]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0], renderPass.generateMipmap[0]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1], renderPass.generateMipmap[1]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt[2], renderPass.generateMipmap[2]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt[3], renderPass.generateMipmap[3]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt[4], renderPass.generateMipmap[4]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt[5], renderPass.generateMipmap[5]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6], renderPass.generateMipmap[6]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7], renderPass.generateMipmap[7]);
 
 			float scaledWidth = baseWidth * renderPass.viewportScale;
 			float scaledHeight = baseHeight * renderPass.viewportScale;
@@ -225,6 +237,15 @@ public class CompositeRenderer {
 		main.beginWrite(true);
 		GlStateManager.useProgram(0);
 
+		resetRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0));
+		resetRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1));
+		resetRenderTarget(SamplerUniforms.COLOR_TEX_2, renderTargets.get(2));
+		resetRenderTarget(SamplerUniforms.COLOR_TEX_3, renderTargets.get(3));
+		resetRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4));
+		resetRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5));
+		resetRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6));
+		resetRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7));
+
 		// TODO: We unbind these textures but it would probably make sense to unbind the other ones too.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEFAULT_DEPTH);
 		RenderSystem.bindTexture(0);
@@ -232,8 +253,36 @@ public class CompositeRenderer {
 		RenderSystem.bindTexture(0);
 	}
 
-	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean readFromAlt) {
+	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean readFromAlt, boolean generateMipmap) {
 		bindTexture(textureUnit, readFromAlt ? target.getAltTexture() : target.getMainTexture());
+
+		if (generateMipmap) {
+			// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
+			// (since the last mipmap was generated)
+			//
+			// NB: We leave mipmapping enabled even if the buffer is written to again, this appears to match the
+			// behavior of ShadersMod/OptiFine, however I'm not sure if it's desired behavior. It's possible that a
+			// program could use mipmapped sampling with a stale mipmap, which probably isn't great. However, the
+			// sampling mode is always reset between frames, so this only persists after the first program to use
+			// mipmapping on this buffer.
+			//
+			// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
+			// unlikely that this issue occurs in practice with most shader packs.
+			GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
+			GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
+		}
+	}
+
+	private static void resetRenderTarget(int textureUnit, RenderTarget target) {
+		// Resets the sampling mode of the given render target and then unbinds it to prevent accidental sampling of it
+		// elsewhere.
+		bindTexture(textureUnit, target.getMainTexture());
+		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+
+		bindTexture(textureUnit, target.getAltTexture());
+		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+
+		RenderSystem.bindTexture(0);
 	}
 
 	private static void bindTexture(int textureUnit, int texture) {
@@ -259,7 +308,7 @@ public class CompositeRenderer {
 			ProgramBuilder.catchPrograms();
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
 		SamplerUniforms.addCompositeSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
 

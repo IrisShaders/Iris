@@ -2,6 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.texunits.TextureUnit;
 
@@ -46,7 +47,7 @@ public class SamplerUniforms {
 
 		// Note: This will make it so that "watershadow" is printed twice to the log, oh well
 		// Check if the "watershadow" uniform is active. If so, the "shadow" texture will have a separate texture unit
-		boolean waterShadowEnabled = uniforms.location("watershadow").isPresent();
+		boolean waterShadowEnabled = uniforms.location("watershadow", UniformType.INT).isPresent();
 
 		addSampler(uniforms, waterShadowEnabled ? SHADOW_TEX_1 : SHADOW_TEX_0, "shadow");
 
