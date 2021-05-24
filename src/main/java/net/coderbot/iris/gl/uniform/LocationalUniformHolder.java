@@ -61,8 +61,7 @@ public interface LocationalUniformHolder extends UniformHolder {
 
 	@Override
 	default LocationalUniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
-		// TODO: Use VEC2I
-		location(name, UniformType.VEC2).ifPresent(id -> addUniform(updateFrequency, new Vector2IntegerUniform(id, value)));
+		location(name, UniformType.VEC2I).ifPresent(id -> addUniform(updateFrequency, new Vector2IntegerUniform(id, value)));
 
 		return this;
 	}
