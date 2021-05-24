@@ -7,7 +7,6 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Failed to reload shaders! Reason: %s",
   "iris.shaders.toggled.failure": "Failed to toggle shaders! Reason: %s",
-  "iris.shaders.toggled.failure.noShaders": "There are no shaders to toggle to!",
 
   "options.iris.apply": "Apply",
   "options.iris.refresh": "Refresh",

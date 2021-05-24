@@ -106,43 +106,26 @@ public class Iris implements ClientModInitializer {
 				}
 			} else if (toggleShadersKeybind.wasPressed()) {
 				IrisConfig config = getIrisConfig();
-				if (config.areShadersEnabled()) {
-					try {
-						config.setShadersEnabled(false);
+				try {
+					config.setShadersEnabled(!config.areShadersEnabled());
+					config.save();
 
-						reload();
-						if (minecraftClient.player != null) {
-							minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", "off"), false);
-						}
-					} catch (Exception e) {
-						Iris.logger.error("Error while toggling shaders!", e);
-
-						if (minecraftClient.player != null) {
-							minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
-						}
-					}
-				} else if (!config.getShaderPackName().equals("")) {
-					try {
-						config.setShadersEnabled(true);
-
-						reload();
-						if (minecraftClient.player != null) {
-							minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", currentPackName), false);
-						}
-					} catch (Exception e) {
-						Iris.logger.error("Error while toggling shaders!", e);
-
-						if (minecraftClient.player != null) {
-							minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
-						}
-					}
-				} else {
+					reload();
 					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure.noShaders"), false);
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
 					}
+				} catch (Exception e) {
+					Iris.logger.error("Error while toggling shaders!", e);
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
+					}
+
+					setShadersDisabled();
+					currentPackName = "(off) [fallback, check your logs for errors]";
 				}
 			} else if (shaderpackScreenKeybind.wasPressed()) {
-				minecraftClient.openScreen(new ShaderPackScreen(minecraftClient.currentScreen));
+				minecraftClient.openScreen(new ShaderPackScreen(null));
 			}
 		});
 
@@ -163,12 +146,21 @@ public class Iris implements ClientModInitializer {
 		// Attempt to load an external shaderpack if it is available
 		if (!irisConfig.isInternal()) {
 			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
-				logger.warn("Falling back to internal shaders because the external shaderpack could not be loaded");
-				loadInternalShaderpack();
-				currentPackName = "(internal) [fallback, check your logs for errors]";
+				logger.warn("Falling back to normal rendering without shaders because the external shaderpack could not be loaded");
+				setShadersDisabled();
+				currentPackName = "(off) [fallback, check your logs for errors]";
 			}
 		} else {
-			loadInternalShaderpack();
+			try {
+				loadInternalShaderpack();
+			} catch (Exception e) {
+				logger.error("Something went terribly wrong, Iris was unable to load the internal shaderpack!");
+				logger.catching(Level.ERROR, e);
+
+				logger.warn("Falling back to normal rendering without shaders because the internal shaderpack could not be loaded");
+				setShadersDisabled();
+				currentPackName = "(off) [fallback, check your logs for errors]";
+			}
 		}
 	}
 
@@ -237,7 +229,6 @@ public class Iris implements ClientModInitializer {
 
 		currentPackName = name;
 		internal = false;
-		getIrisConfig().setShadersEnabled(true);
 
 		logger.info("Using shaderpack: " + name);
 
@@ -280,6 +271,14 @@ public class Iris implements ClientModInitializer {
 		logger.info("Using internal shaders");
 		currentPackName = "(internal)";
 		internal = true;
+	}
+
+	private static void setShadersDisabled() {
+		currentPack = null;
+		currentPackName = "(off)";
+		internal = false;
+
+		logger.info("Shaders are disabled");
 	}
 
 	public static boolean isValidShaderpack(Path pack) {
