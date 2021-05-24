@@ -1,5 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
+import net.coderbot.iris.Iris;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -204,6 +206,10 @@ public class ProgramSet {
 				}
 			});
 		}
+
+		packDirectives.getRenderTargetDirectives().getRenderTargetSettings().forEach((index, settings) -> {
+			Iris.logger.debug("Render target settings for colortex" + index + ": " + settings);
+		});
 	}
 
 	public Optional<ProgramSource> getShadow() {
