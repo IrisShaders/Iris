@@ -87,8 +87,7 @@ public class CompositeRenderer {
 			pass.generateMipmap = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
 			for (int i = 0; i < pass.generateMipmap.length; i++) {
-				// TODO: This should be per-pass, currently buffer mipmap directives are handled globally...
-				pass.generateMipmap[i] = renderTargetSettings.get(i).shouldGenerateMipmap();
+				pass.generateMipmap[i] = directives.getMipmappedBuffers().contains(i);
 			}
 
 			if (programEntry == programs.get(programs.size() - 1)) {

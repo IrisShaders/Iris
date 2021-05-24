@@ -189,16 +189,20 @@ public class ProgramSet {
 		programs.addAll(Arrays.asList(composite));
 		programs.add(compositeFinal);
 
-		DispatchingDirectiveHolder directiveHolder = new DispatchingDirectiveHolder();
+		DispatchingDirectiveHolder packDirectiveHolder = new DispatchingDirectiveHolder();
 
-		packDirectives.acceptDirectivesFrom(directiveHolder);
+		packDirectives.acceptDirectivesFrom(packDirectiveHolder);
 
 		for (ProgramSource source : programs) {
 			if (source == null) {
 				continue;
 			}
 
-			source.getFragmentSource().ifPresent(directiveHolder::processSource);
+			source.getFragmentSource().map(ConstDirectiveParser::findDirectives).ifPresent(directives -> {
+				for (ConstDirectiveParser.ConstDirective directive : directives) {
+					packDirectiveHolder.processDirective(directive);
+				}
+			});
 		}
 	}
 

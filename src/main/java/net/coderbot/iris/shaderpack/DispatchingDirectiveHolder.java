@@ -25,11 +25,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 		vec4ConstVariables = new HashMap<>();
 	}
 
-	public void processSource(String source) {
-		ConstDirectiveParser.findDirectives(source).forEach(this::processDirective);
-	}
-
-	private void processDirective(ConstDirectiveParser.ConstDirective directive) {
+	public void processDirective(ConstDirectiveParser.ConstDirective directive) {
 		final ConstDirectiveParser.Type type = directive.getType();
 		final String key = directive.getKey();
 		final String value = directive.getValue();
