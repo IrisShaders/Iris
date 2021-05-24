@@ -62,7 +62,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 				addEntry(index, pack);
 			}
 
-			Collection<Path> folders = Files.walk(path, 1).filter(Iris::isValidShaderpack).collect(Collectors.toList());
+			Collection<Path> folders = Files.list(path).filter(Iris::isValidShaderpack).collect(Collectors.toList());
 
 			for (Path folder : folders) {
 				String name = folder.getFileName().toString();
