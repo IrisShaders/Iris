@@ -24,7 +24,7 @@ public class PackRenderTargetDirectives {
 		"gaux4"
 	);
 
-	// TODO: Support 16 render targets instead of just 8
+	// TODO: Support 16 render targets instead of just 8, we need other changes elsewhere first.
 	public static final Set<Integer> BASELINE_SUPPORTED_RENDER_TARGETS = ImmutableSet.of(0, 1, 2, 3, 4, 5, 6, 7);
 
 	private final Int2ObjectMap<RenderTargetSettings> renderTargetSettings;
@@ -51,8 +51,6 @@ public class PackRenderTargetDirectives {
 	public Map<Integer, RenderTargetSettings> getRenderTargetSettings() {
 		return Collections.unmodifiableMap(renderTargetSettings);
 	}
-
-	// TODO: handle mipmap directives!
 
 	public void acceptDirectives(DirectiveHolder directives) {
 		Optional.ofNullable(renderTargetSettings.get(7)).ifPresent(colortex7 -> {
@@ -110,24 +108,17 @@ public class PackRenderTargetDirectives {
 		// TODO: what happens if clear = false but clearColor is specified?
 		directives.acceptConstVec4Directive(bufferName + "ClearColor",
 				clearColor -> settings.clearColor = clearColor);
-
-		// TODO: Only for composite, deferred, and final
-		// TODO: These directives should be per program and not global!
-		directives.acceptConstBooleanDirective(bufferName + "MipmapEnabled",
-				shouldMipmap -> settings.mipmap = shouldMipmap);
 	}
 
 	public static final class RenderTargetSettings {
 		private InternalTextureFormat requestedFormat;
 		private boolean clear;
 		private Vector4f clearColor;
-		private boolean mipmap;
 
 		public RenderTargetSettings() {
 			this.requestedFormat = InternalTextureFormat.RGBA;
 			this.clear = true;
 			this.clearColor = new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-			this.mipmap = false;
 		}
 
 		public InternalTextureFormat getRequestedFormat() {
@@ -140,10 +131,6 @@ public class PackRenderTargetDirectives {
 
 		public Vector4f getClearColor() {
 			return clearColor;
-		}
-
-		public boolean shouldGenerateMipmap() {
-			return mipmap;
 		}
 	}
 }
