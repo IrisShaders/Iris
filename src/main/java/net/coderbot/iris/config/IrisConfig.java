@@ -76,13 +76,6 @@ public class IrisConfig {
 		} else {
 			this.shaderPackName = name;
 		}
-
-		try {
-			save();
-		} catch (IOException e) {
-			Iris.logger.error("Error saving configuration file, unable to set shader pack name");
-			Iris.logger.catching(e);
-		}
 	}
 
 	/**
@@ -92,6 +85,13 @@ public class IrisConfig {
 	 */
 	public boolean areShadersEnabled() {
 		return enableShaders;
+	}
+
+	/**
+	 * Sets whether shaders should be used for rendering.
+	 */
+	public void setShadersEnabled(boolean enabled) {
+		this.enableShaders = enabled;
 	}
 
 	/**
