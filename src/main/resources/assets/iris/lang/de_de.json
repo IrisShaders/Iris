@@ -15,5 +15,5 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" befindet sich bereits in Ihrem Shader Packs-Ordner!",
 
   "pack.iris.select.title": "Wählen Sie",
-  "pack.iris.list.label": "+ Hinzufügen von Shader-Packs per Drag and Drop."
+  "pack.iris.list.label": "+ Um Shader Packs hinzuzufügen, ziehe sie in dieses Fenster hinein"
 }
