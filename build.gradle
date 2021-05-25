@@ -11,10 +11,15 @@ archivesBaseName = project.archives_base_name
 version = "${project.mod_version}+${getVersionMetadata()}"
 group = project.maven_group
 
+repositories {
+	maven { url = "https://maven.terraformersmc.com/" }
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
 	// Critical, needed for loading our custom language files
 	includeFabricApiModule "fabric-resource-loader-v0"

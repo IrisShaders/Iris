@@ -21,6 +21,9 @@
   "entrypoints": {
     "client": [
       "net.coderbot.iris.Iris"
+    ],
+    "modmenu": [
+      "net.coderbot.iris.config.ModMenuIntegration"
     ]
   },
 
