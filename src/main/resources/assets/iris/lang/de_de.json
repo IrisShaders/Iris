@@ -5,7 +5,7 @@
 
   "options.iris.apply": "Anwenden",
   "options.iris.refresh": "Aktualisieren",
-  "options.iris.openShaderPackFolder": "Öffnen Sie den Ordner Shader Pack...",
+  "options.iris.openShaderPackFolder": "Shader Packs-Ordner öffnen...",
   "options.iris.refreshShaderPacks": "Shader Packs aktualisieren.",
   "options.iris.shaderPackSelection.addedPack": "Shader Pack hinzugefügt \"%s\"",
   "options.iris.shaderPackSelection.addedPacks": "%s Shader Packs hinzugefügt",
