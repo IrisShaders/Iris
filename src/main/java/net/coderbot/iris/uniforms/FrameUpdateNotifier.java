@@ -7,9 +7,13 @@ public class FrameUpdateNotifier {
 	// TODO: Make this specific to the current Pipeline object.
 	public static final FrameUpdateNotifier INSTANCE = new FrameUpdateNotifier();
 
-	private final List<Runnable> listeners;
+	private List<Runnable> listeners;
 
 	private FrameUpdateNotifier() {
+		listeners = new ArrayList<>();
+	}
+
+	public void reset() {
 		listeners = new ArrayList<>();
 	}
 
