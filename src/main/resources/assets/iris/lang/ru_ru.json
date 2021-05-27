@@ -1,6 +1,6 @@
 {
   "iris.shaders.reloaded": "Шейдеры перезагружены!",
-  "iris.keybind.reload": "Шейдеры перезарядки",
+  "iris.keybind.reload": "Перезагрузить шейдеры",
   "iris.shaders.reloaded.failure": "Ошибка при перезагрузке шейдеров! Причина: %s",
 
   "options.iris.apply": "Применить",
