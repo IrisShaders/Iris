@@ -16,7 +16,7 @@ public class ProgramSource {
 		this.geometrySource = geometrySource;
 		this.fragmentSource = fragmentSource;
 		this.parent = parent;
-		this.directives = new ProgramDirectives(this, properties);
+		this.directives = new ProgramDirectives(this, properties, PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS);
 	}
 
 	public String getName() {

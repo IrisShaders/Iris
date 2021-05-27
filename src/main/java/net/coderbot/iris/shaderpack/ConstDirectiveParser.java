@@ -6,9 +6,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class ConstDirectiveParser {
-	private static Pattern FLOAT_PATTERN = Pattern.compile("[+-]?([0-9]*[.])?[0-9]+");
-	private static Pattern INT_PATTERN = Pattern.compile("[+-]?[0-9]+");
-
 	public static List<ConstDirective> findDirectives(String source) {
 		List<ConstDirective> directives = new ArrayList();
 
@@ -114,14 +111,9 @@ public class ConstDirectiveParser {
 
 		String value = remaining.substring(0, semicolonIndex).trim();
 
-		// The value must be a "word" (alphanumeric & underscore characters)
-		// Alternatively, it must be a valid numeric value.
-		if ((type == Type.FLOAT && FLOAT_PATTERN.matcher(value).matches()) ||
-				(type == Type.INT && INT_PATTERN.matcher(value).matches()) || isWord(value)) {
-			return Optional.of(new ConstDirective(type, key, value));
-		}
-
-		return Optional.empty();
+		// We make no attempt to properly parse / verify the value here, that responsibility lies with whatever code
+		// is working with the directives.
+		return Optional.of(new ConstDirective(type, key, value));
 	}
 
 	private static boolean startsWithWhitespace(String text) {
@@ -163,6 +155,10 @@ public class ConstDirectiveParser {
 
 		public String getValue() {
 			return value;
+		}
+
+		public String toString() {
+			return "ConstDirective { " + type + " " + key + " = " + value + "; }";
 		}
 	}
 

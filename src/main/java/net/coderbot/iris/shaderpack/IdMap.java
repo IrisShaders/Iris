@@ -89,6 +89,13 @@ public class IdMap {
 
 			// Anvil ID #175 = double plant
 			Blocks.TALL_GRASS.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 175));
+
+			Blocks.OAK_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
+			Blocks.BIRCH_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
+			Blocks.JUNGLE_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
+			Blocks.SPRUCE_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
+			Blocks.ACACIA_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
+			Blocks.DARK_OAK_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
 		}
 
 		if (blockRenderLayerMap == null) {

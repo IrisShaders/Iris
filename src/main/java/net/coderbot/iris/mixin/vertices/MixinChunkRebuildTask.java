@@ -4,6 +4,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.render.BufferBuilder;
@@ -69,7 +70,8 @@ public class MixinChunkRebuildTask {
 	private void iris$onRenderFluid(float cameraX, float cameraY, float cameraZ, ChunkBuilder.ChunkData data, BlockBufferBuilderStorage buffers, CallbackInfoReturnable<Set> cir, int i, BlockPos blockPos, BlockPos blockPos2, ChunkOcclusionDataBuilder chunkOcclusionDataBuilder, Set set, ChunkRendererRegion chunkRendererRegion, MatrixStack matrixStack, Random random, BlockRenderManager blockRenderManager, Iterator var15, BlockPos blockPos3, BlockState blockState, FluidState fluidState, RenderLayer renderLayer, BufferBuilder bufferBuilder) {
 		if (bufferBuilder instanceof BlockSensitiveBufferBuilder) {
 			lastBufferBuilder = ((BlockSensitiveBufferBuilder) bufferBuilder);
-			lastBufferBuilder.beginBlock(resolveBlockId(fluidState.getBlockState()));
+			// All fluids have a ShadersMod render type of 1, to match behavior of Minecraft 1.7 and earlier.
+			lastBufferBuilder.beginBlock(resolveBlockId(fluidState.getBlockState()), (short) 1);
 		}
 	}
 
@@ -85,7 +87,8 @@ public class MixinChunkRebuildTask {
 	private void iris$onRenderBlock(float cameraX, float cameraY, float cameraZ, ChunkBuilder.ChunkData data, BlockBufferBuilderStorage buffers, CallbackInfoReturnable<Set> cir, int i, BlockPos blockPos, BlockPos blockPos2, ChunkOcclusionDataBuilder chunkOcclusionDataBuilder, Set set, ChunkRendererRegion chunkRendererRegion, MatrixStack matrixStack, Random random, BlockRenderManager blockRenderManager, Iterator var15, BlockPos blockPos3, BlockState blockState, RenderLayer renderLayer2, BufferBuilder bufferBuilder) {
 		if (bufferBuilder instanceof BlockSensitiveBufferBuilder) {
 			lastBufferBuilder = ((BlockSensitiveBufferBuilder) bufferBuilder);
-			lastBufferBuilder.beginBlock(resolveBlockId(blockState));
+			// TODO: Resolve render types for normal blocks?
+			lastBufferBuilder.beginBlock(resolveBlockId(blockState), (short) -1);
 		}
 	}
 
