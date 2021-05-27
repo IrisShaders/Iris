@@ -10,7 +10,7 @@
   "options.iris.shaderPackSelection.addedPack": "Добавлен шейдер \"%s\"",,
   "options.iris.shaderPackSelection.addedPacks": "Добавлено %s шейдеров",
   "options.iris.shaderPackSelection.failedAdd": "Файлы не являются шейдерами",
-  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является действительным Shader Pack",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является шейдером",
   "options.iris.shaderPackSelection.copyError": "Не удалось добавить шейдер \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
 
