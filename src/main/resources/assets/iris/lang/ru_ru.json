@@ -5,7 +5,7 @@
 
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
-  "options.iris.openShaderPackFolder": "Откройте папку Shader Pack...",
+  "options.iris.openShaderPackFolder": "Откройте папку c шейдером...",
   "options.iris.refreshShaderPacks": "Обновление Shader Packs",
   "options.iris.shaderPackSelection.addedPack": "Добавлен Shader Pack \"%s\"",
   "options.iris.shaderPackSelection.addedPacks": "Добавлен %s Shader Packs",
