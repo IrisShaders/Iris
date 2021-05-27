@@ -15,5 +15,5 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
 
   "pack.iris.select.title": "Выберите",
-  "pack.iris.list.label": ""+ Перетащите шейдер для добавления""
+  "pack.iris.list.label": "+ Перетащите шейдер для добавления"
 }
