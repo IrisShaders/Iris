@@ -1,6 +1,6 @@
 package net.coderbot.iris.mixin;
 
-import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.world.ClientWorld;
@@ -15,6 +15,6 @@ public class MixinBackgroundRenderer {
 	@Shadow private static float red, green, blue;
 	@Inject(method = "render", at = @At("TAIL"))
 	private static void render(Camera camera, float tickDelta, ClientWorld world, int i, float f, CallbackInfo ci) {
-		CommonUniforms.setFogColor(red, green, blue);
+		CapturedRenderingState.INSTANCE.setFogColor(red, green, blue);
 	}
 }

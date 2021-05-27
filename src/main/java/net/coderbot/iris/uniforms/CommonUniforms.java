@@ -21,10 +21,8 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.util.CubicSampler;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.LightType;
@@ -34,7 +32,6 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
-	private static Vec3d fogColor;
 
 	private CommonUniforms() {
 		// no construction allowed
@@ -71,7 +68,7 @@ public final class CommonUniforms {
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
-			.uniform3d(PER_FRAME, "fogColor", CommonUniforms::getFogColor);
+			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor);
 	}
 
 	private static Vec3d getSkyColor() {
@@ -80,14 +77,6 @@ public final class CommonUniforms {
 		}
 
 		return client.world.method_23777(client.cameraEntity.getBlockPos(), CapturedRenderingState.INSTANCE.getTickDelta());
-	}
-
-	private static Vec3d getFogColor() {
-		return fogColor;
-	}
-
-	public static void setFogColor(float red, float green, float blue) {
-		fogColor = new Vec3d(red, green, blue);
 	}
 
 	private static float getBlindness() {
