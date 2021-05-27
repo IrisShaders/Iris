@@ -12,7 +12,7 @@
   "options.iris.shaderPackSelection.failedAdd": "Файлы не являются действительными Shader Packs",
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является действительным Shader Pack",
   "options.iris.shaderPackSelection.copyError": "Не удалось добавить Shader Pack \"%s\"",
-  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке Shader Packs!",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
 
   "pack.iris.select.title": "Выберите",
   "pack.iris.list.label": "+ Перетаскивание Shader Pack для добавления"
