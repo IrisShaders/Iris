@@ -20,12 +20,15 @@ public class SodiumTerrainPipeline {
 	String terrainFragment;
 	String translucentVertex;
 	String translucentFragment;
+	String shadowVertex;
+	String shadowFragment;
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
 
 	public SodiumTerrainPipeline(ProgramSet programSet) {
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
+		Optional<ProgramSource> shadowSource = programSet.getShadow();
 
 		this.programSet = programSet;
 
@@ -43,12 +46,21 @@ public class SodiumTerrainPipeline {
 			//framebuffer = renderTargets.createFramebufferWritingToMain(sources.getDirectives().getDrawBuffers());
 		});
 
+		shadowSource.ifPresent(sources -> {
+			shadowVertex = sources.getVertexSource().orElse(null);
+			shadowFragment = sources.getFragmentSource().orElse(null);
+		});
+
 		if (terrainVertex != null) {
 			terrainVertex = transformVertexShader(terrainVertex);
 		}
 
 		if (translucentVertex != null) {
 			translucentVertex = transformVertexShader(translucentVertex);
+		}
+
+		if (shadowVertex != null) {
+			shadowVertex = transformVertexShader(shadowVertex);
 		}
 
 		/*if (framebuffer == null) {
@@ -124,6 +136,14 @@ public class SodiumTerrainPipeline {
 
 	public Optional<String> getTranslucentFragmentShaderSource() {
 		return Optional.ofNullable(translucentFragment);
+	}
+
+	public Optional<String> getShadowVertexShaderSource() {
+		return Optional.ofNullable(shadowVertex);
+	}
+
+	public Optional<String> getShadowFragmentShaderSource() {
+		return Optional.ofNullable(shadowFragment);
 	}
 
 	public ProgramUniforms initUniforms(int programId) {
