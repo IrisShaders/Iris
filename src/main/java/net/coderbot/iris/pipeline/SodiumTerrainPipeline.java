@@ -75,7 +75,9 @@ public class SodiumTerrainPipeline {
 			"attribute vec4 d_ModelOffset;\n" +
 			"#else\n" +
 			"uniform vec4 d_ModelOffset;\n" +
-			"#endif\n";
+			"#endif\n" +
+			"\n" +
+			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
 
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, injections);
 
@@ -89,6 +91,8 @@ public class SodiumTerrainPipeline {
 		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
 		transformations.replaceExact("gl_NormalMatrix", "mat3(u_NormalMatrix)");
 		transformations.replaceExact("gl_Normal", "a_Normal");
+		// Just being careful
+		transformations.replaceExact("ftransform", "iris_ftransform");
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
