@@ -328,10 +328,18 @@ public class Iris implements ClientModInitializer {
 
 		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
-		if (internal) {
-			return new InternalWorldRenderingPipeline(programs);
-		} else {
-			return new DeferredWorldRenderingPipeline(programs);
+		try {
+			if (internal) {
+				return new InternalWorldRenderingPipeline(programs);
+			} else {
+				return new DeferredWorldRenderingPipeline(programs);
+			}
+		} catch (Exception e) {
+			Iris.logger.error("Failed to create shader rendering pipeline, falling back to internal shaders!", e);
+			// TODO: This should be reverted if a dimension change causes shaders to compile again
+			currentPackName = "(off) [fallback, check your logs for details]";
+
+			return new FixedFunctionWorldRenderingPipeline();
 		}
 	}
 
