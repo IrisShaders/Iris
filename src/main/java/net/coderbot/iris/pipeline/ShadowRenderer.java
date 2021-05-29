@@ -264,12 +264,7 @@ public class ShadowRenderer {
 		pipeline.beginShadowRender();
 
 		// Set up the shadow program
-		if (shadowProgram != null) {
-			shadowProgram.use();
-			setupAttributes(shadowProgram);
-		} else {
-			GlProgramManager.useProgram(0);
-		}
+		setupShadowProgram();
 
 		// Set up and clear our framebuffer
 		targets.getFramebuffer().bind();
@@ -302,6 +297,12 @@ public class ShadowRenderer {
 		worldRenderer.invokeRenderLayer(RenderLayer.getSolid(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutout(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getCutoutMipped(), modelView, cameraX, cameraY, cameraZ);
+
+		// Reset our shader program in case Sodium overrode it.
+		//
+		// If we forget to do this entities will be very small on most shaderpacks since they're being rendered
+		// without shaders, which doesn't integrate with their shadow distortion code.
+		setupShadowProgram();
 
 		worldRenderer.getWorld().getProfiler().swap("entities");
 
@@ -369,6 +370,9 @@ public class ShadowRenderer {
 		worldRenderer.invokeRenderLayer(RenderLayer.getTranslucent(), modelView, cameraX, cameraY, cameraZ);
 		worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ);
 
+		// TODO: If we want to render anything after translucent terrain, we need to uncomment this line!
+		// setupShadowProgram();
+
 		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
 
 		worldRenderer.getWorld().getProfiler().pop();
@@ -394,6 +398,15 @@ public class ShadowRenderer {
 
 		ACTIVE = false;
 		worldRenderer.getWorld().getProfiler().swap("updatechunks");
+	}
+
+	private void setupShadowProgram() {
+		if (shadowProgram != null) {
+			shadowProgram.use();
+			setupAttributes(shadowProgram);
+		} else {
+			GlProgramManager.useProgram(0);
+		}
 	}
 
 	public static String getEntitiesDebugString() {
