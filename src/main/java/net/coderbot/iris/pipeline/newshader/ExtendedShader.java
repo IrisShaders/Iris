@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
@@ -15,7 +16,7 @@ public class ExtendedShader extends Shader {
 	GlFramebuffer writingTo;
 	GlFramebuffer baseline;
 
-	public ExtendedShader(ResourceFactory resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingTo, GlFramebuffer baseline, Consumer<UniformHolder> uniformCreator) throws IOException {
+	public ExtendedShader(ResourceFactory resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingTo, GlFramebuffer baseline, Consumer<LocationalUniformHolder> uniformCreator) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getProgramRef();

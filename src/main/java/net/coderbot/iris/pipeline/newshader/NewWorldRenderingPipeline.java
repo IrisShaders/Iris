@@ -2,12 +2,15 @@ package net.coderbot.iris.pipeline.newshader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.postprocess.CompositeRenderer;
+import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
+import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NoiseTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.rendertarget.SingleColorTexture;
@@ -20,6 +23,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
@@ -51,7 +55,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CompositeRenderer compositeRenderer;
 	private final SingleColorTexture normals;
 	private final SingleColorTexture specular;
-	private final NoiseTexture noise;
+	private final AbstractTexture noise;
 
 	private final int waterId;
 	private final float sunPathRotation;
@@ -112,13 +116,25 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		normals = new SingleColorTexture(127, 127, 255, 255);
 		specular = new SingleColorTexture(0, 0, 0, 0);
 
-		final int noiseTextureResolution = programSet.getPackDirectives().getNoiseTextureResolution();
-		noise = new NoiseTexture(noiseTextureResolution, noiseTextureResolution);
+		noise = programSet.getPack().getCustomNoiseTexture().flatMap(texture -> {
+			try {
+				AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture(texture);
+
+				return Optional.of(customNoiseTexture);
+			} catch (IOException e) {
+				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
+				return Optional.empty();
+			}
+		}).orElseGet(() -> {
+			final int noiseTextureResolution = programSet.getPackDirectives().getNoiseTextureResolution();
+
+			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
+		});
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
 		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
-		this.compositeRenderer = new CompositeRenderer(programSet, renderTargets, shadowMapRenderer);
+		this.compositeRenderer = new CompositeRenderer(programSet, renderTargets, shadowMapRenderer, noise);
 	}
 
 	@SafeVarargs
