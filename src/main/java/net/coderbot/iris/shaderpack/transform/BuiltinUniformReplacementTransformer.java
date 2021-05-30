@@ -6,10 +6,12 @@ public class BuiltinUniformReplacementTransformer {
 	private static final String NORMALIZED_PLACEHOLDER = "iris_NormalizedLightmapCoords";
 
 	public BuiltinUniformReplacementTransformer() {
+		// TODO: I don't think that this is the same as vanilla!
 		this.normalizedLightmapCoords = "(gl_MultiTexCoord1.xy)";
 	}
 
 	public BuiltinUniformReplacementTransformer(float lightmapScale) {
+		// TODO: I don't think that this is the same as vanilla!
 		this.normalizedLightmapCoords = "(gl_MultiTexCoord1.xy * " + lightmapScale + ")";
 	}
 
@@ -65,6 +67,11 @@ public class BuiltinUniformReplacementTransformer {
 			"vec4(" + NORMALIZED_PLACEHOLDER + ", 0.0, 1.0)"
 		);
 
+		// NB: Technically this isn't a correct transformation (it changes the values slightly), however the shader code
+		// being replaced isn't correct to begin with since it doesn't properly apply the centering / scaling
+		// transformation like gl_TextureMatrix[1] would. Therefore, I think this is acceptable.
+		//
+		// This code shows up in Sildur's shaderpacks.
 		transformations.replaceExact(
 			"gl_MultiTexCoord1.xy/255.0",
 			NORMALIZED_PLACEHOLDER

@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin;
 
+import net.coderbot.iris.Iris;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.GameRenderer;
@@ -45,7 +46,12 @@ public class MixinTweakFarPlane {
 
 	@Redirect(method = "getBasicProjectionMatrix(D)Lnet/minecraft/util/math/Matrix4f;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;method_32796()F"))
 	private float iris$tweakViewDistanceToMatchOptiFine(GameRenderer renderer) {
-		float tweakedViewDistance = method_32796();
+		if (!Iris.getCurrentPack().isPresent()) {
+			// Don't mess with the far plane if no shaderpack is loaded
+			return this.viewDistance;
+		}
+
+		float tweakedViewDistance = this.method_32796();
 
 		// Halve the distance of the far plane in the projection matrix from vanilla. Normally, the far plane is 4 times
 		// the view distance, but this makes it so that it is only two times the view distance.
@@ -63,6 +69,11 @@ public class MixinTweakFarPlane {
 
 	@Inject(method = "renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;viewDistance:F", shift = At.Shift.AFTER))
 	private void iris$tweakViewDistanceBasedOnFog(float tickDelta, long limitTime, MatrixStack matrix, CallbackInfo ci) {
+		if (!Iris.getCurrentPack().isPresent()) {
+			// Don't mess with the far plane if no shaderpack is loaded
+			return;
+		}
+
 		// Tweak the view distance based on the fog setting
 		//
 		// Coefficient values: 0.83 for fast fog, 0.95 for fancy fog, 1.0 for no fog

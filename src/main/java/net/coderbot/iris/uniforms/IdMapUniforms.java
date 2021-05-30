@@ -25,7 +25,7 @@ public final class IdMapUniforms {
 	}
 
 	public static void addIdMapUniforms(UniformHolder uniforms, IdMap idMap) {
-		Map<Identifier, Integer> blockIdMap = idMap.getBlockProperties();
+		Map<BlockState, Integer> blockIdMap = idMap.getBlockProperties();
 		Map<Identifier, Integer> entityIdMap = idMap.getEntityIdMap();
 
 		uniforms
@@ -71,7 +71,7 @@ public final class IdMapUniforms {
 	 *
 	 * @return the blockentity id
 	 */
-	private static int getBlockEntityId(Map<Identifier, Integer> blockIdMap) {
+	private static int getBlockEntityId(Map<BlockState, Integer> blockIdMap) {
 		BlockEntity entity = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
 
 		if (entity == null || !entity.hasWorld()) {
@@ -88,7 +88,7 @@ public final class IdMapUniforms {
 			return -1;
 		}
 
-		return blockIdMap.getOrDefault(Registry.BLOCK.getId(blockAt.getBlock()), -1);
+		return blockIdMap.getOrDefault(blockAt, -1);
 	}
 
 	/**
