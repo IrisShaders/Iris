@@ -12,11 +12,11 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
-import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.AlphaTest;
 
 public class ShaderProperties {
 	Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
-	Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
+	Object2ObjectMap<String, AlphaTest> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
 
 	private ShaderProperties() {
@@ -43,7 +43,7 @@ public class ShaderProperties {
 
 			handlePassDirective("alphaTest.", key, value, pass -> {
 				if ("off".equals(value)) {
-					alphaTestOverrides.put(pass, new AlphaTestOverride.Off());
+					alphaTestOverrides.put(pass, new AlphaTest.Off());
 					return;
 				}
 
@@ -72,7 +72,7 @@ public class ShaderProperties {
 					return;
 				}
 
-				alphaTestOverrides.put(pass, new AlphaTestOverride(function.get(), reference));
+				alphaTestOverrides.put(pass, new AlphaTest(function.get(), reference));
 			});
 
 			handlePassDirective("blend.", key, value, pass -> {

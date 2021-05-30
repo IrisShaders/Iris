@@ -1,5 +1,9 @@
 package net.coderbot.iris.postprocess;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,6 +13,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -23,6 +28,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 import org.lwjgl.opengl.GL15C;
 
 import net.minecraft.client.MinecraftClient;
@@ -193,6 +199,8 @@ public class CompositeRenderer {
 
 			renderPass.program.use();
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
+
+			RenderSystem.viewport(0, 0, baseWidth, baseHeight);
 		}
 
 		FullScreenQuadRenderer.end();
@@ -265,6 +273,15 @@ public class CompositeRenderer {
 		SamplerUniforms.addDepthSamplerUniforms(builder);
 
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
+
+		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+
+		try {
+			Files.write(debugOutDir.resolve(source.getName() + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
+			Files.write(debugOutDir.resolve(source.getName() + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+		} catch (IOException e) {
+			Iris.logger.warn("Failed to write debug patched shader source", e);
+		}
 
 		return new Pair<>(builder.build(), source.getDirectives());
 	}

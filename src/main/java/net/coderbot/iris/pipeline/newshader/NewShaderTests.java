@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -9,6 +10,7 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.resource.Resource;
@@ -21,9 +23,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class NewShaderTests {
-	public static Shader create(String name, ProgramSource source, RenderTargets renderTargets, GlFramebuffer baseline, float alpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException{
+	public static Shader create(String name, ProgramSource source, RenderTargets renderTargets, GlFramebuffer baseline, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException{
+		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
+
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, hasColorAttrib);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, hasColorAttrib);
 
@@ -63,6 +69,12 @@ public class NewShaderTests {
 				"}";
 
 		ResourceFactory shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
+
+		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+
+		Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
+		Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+		Files.write(debugOutDir.resolve(name + ".json"), shaderJson.getBytes(StandardCharsets.UTF_8));
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, framebuffer, baseline, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());

@@ -1,17 +1,18 @@
 package net.coderbot.iris.pipeline.newshader;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforcePatcher {
-	public static String patch(String source, ShaderType type, float alpha, boolean hasChunkOffset, boolean hasColorAttrib) {
+	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, boolean hasColorAttrib) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		fixVersion(transformations);
 
-		if (type == ShaderType.FRAGMENT && alpha > 0.0) {
+		if (type == ShaderType.FRAGMENT) {
 			if (transformations.contains("irisMain")) {
 				throw new IllegalStateException("Shader already contains \"irisMain\"???");
 			}
@@ -22,9 +23,7 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
 					"    irisMain();\n" +
 					"\n" +
-					"    if (gl_FragData[0].a < " + alpha + ") {\n" +
-					"        discard;\n" +
-					"    }\n" +
+					alpha.toExpression("    ") +
 					"}");
 		}
 
@@ -149,7 +148,7 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
 
-		System.out.println(transformations.toString());
+		//System.out.println(transformations.toString());
 
 		return transformations.toString();
 	}

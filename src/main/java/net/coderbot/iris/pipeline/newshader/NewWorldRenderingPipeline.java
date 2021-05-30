@@ -2,6 +2,8 @@ package net.coderbot.iris.pipeline.newshader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -13,6 +15,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.Shader;
@@ -23,6 +26,9 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
@@ -51,6 +57,20 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final float sunPathRotation;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
+		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+
+		if (Files.exists(debugOutDir)) {
+			Files.list(debugOutDir).forEach(path -> {
+				try {
+					Files.delete(path);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			});
+		}
+
+		Files.createDirectories(debugOutDir);
+
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programSet.getPackDirectives());
 		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
@@ -63,16 +83,19 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
+		// Matches OptiFine's default for CUTOUT and CUTOUT_MIPPED.
+		AlphaTest terrainCutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
+
 		// TODO: Resolve hasColorAttrib based on the vertex format
-		this.skyBasic = NewShaderTests.create("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), renderTargets, baseline, 0.0F, VertexFormats.POSITION, false);
-		this.skyBasicColor = NewShaderTests.create("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), renderTargets, baseline, 0.0F, VertexFormats.POSITION_COLOR, true);
-		this.skyTextured = NewShaderTests.create("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), renderTargets, baseline, 0.0F, VertexFormats.POSITION_TEXTURE, false);
-		this.terrainSolid = NewShaderTests.create("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, 0.0F, IrisVertexFormats.TERRAIN, true);
-		this.terrainCutout = NewShaderTests.create("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, 0.1F, IrisVertexFormats.TERRAIN, true);
-		this.terrainCutoutMipped = NewShaderTests.create("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, 0.5F, IrisVertexFormats.TERRAIN, true);
+		this.skyBasic = NewShaderTests.create("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, VertexFormats.POSITION, false);
+		this.skyBasicColor = NewShaderTests.create("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
+		this.skyTextured = NewShaderTests.create("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false);
+		this.terrainSolid = NewShaderTests.create("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
+		this.terrainCutout = NewShaderTests.create("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+		this.terrainCutoutMipped = NewShaderTests.create("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
 
 		if (translucentSource != terrainSource) {
-			this.terrainTranslucent = NewShaderTests.create("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), renderTargets, baseline, 0.0F, IrisVertexFormats.TERRAIN, true);
+			this.terrainTranslucent = NewShaderTests.create("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
 		} else {
 			this.terrainTranslucent = this.terrainSolid;
 		}
@@ -135,6 +158,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// Not clearing the depth buffer since there's only one of those and it was already cleared
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+
+		// Make sure to switch back to the main framebuffer. If we forget to do this then our alt buffers might be
+		// cleared to the fog color, which absolutely is not what we want!
+		//
+		// If we forget to do this, then weird lines appear at the top of the screen and the right of the screen
+		// on Sildur's Vibrant Shaders.
+		main.beginWrite(true);
 	}
 
 	@Override

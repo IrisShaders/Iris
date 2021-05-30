@@ -2,14 +2,14 @@ package net.coderbot.iris.shaderpack;
 
 import java.util.Optional;
 
-import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import org.jetbrains.annotations.Nullable;
 
 public class ProgramDirectives {
 	private int[] drawBuffers;
 	private float viewportScale;
 	@Nullable
-	private AlphaTestOverride alphaTestOverride;
+	private AlphaTest alphaTestOverride;
 	private boolean disableBlend;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties) {
@@ -53,7 +53,7 @@ public class ProgramDirectives {
 		return viewportScale;
 	}
 
-	public Optional<AlphaTestOverride> getAlphaTestOverride() {
+	public Optional<AlphaTest> getAlphaTestOverride() {
 		return Optional.ofNullable(alphaTestOverride);
 	}
 

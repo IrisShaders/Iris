@@ -1,14 +1,28 @@
 package net.coderbot.iris.gl.blending;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+public class AlphaTest {
+	public static final AlphaTest ALWAYS = new AlphaTest(AlphaTestFunction.ALWAYS, 0.0f);
 
-public class AlphaTestOverride {
 	private final AlphaTestFunction function;
 	private final float reference;
 
-	public AlphaTestOverride(AlphaTestFunction function, float reference) {
+	public AlphaTest(AlphaTestFunction function, float reference) {
 		this.function = function;
 		this.reference = reference;
+	}
+
+	public String toExpression(String indentation) {
+		if (function == AlphaTestFunction.ALWAYS) {
+			return "// alpha test disabled\n";
+		} else if (function == AlphaTestFunction.NEVER) {
+			return "discard;\n";
+		}
+
+		String expr = function.getExpression();
+
+		return indentation + "if (!(gl_FragData[0].a " + expr + " " + reference + ")) {\n" +
+				indentation + "    discard;\n" +
+				indentation + "}\n";
 	}
 
 	public void setup() {
@@ -28,7 +42,7 @@ public class AlphaTestOverride {
 		return "AlphaTestOverride { " + function + " " + reference + " }";
 	}
 
-	public static class Off extends AlphaTestOverride {
+	public static class Off extends AlphaTest {
 		public Off() {
 			super(null, 0.0f);
 		}

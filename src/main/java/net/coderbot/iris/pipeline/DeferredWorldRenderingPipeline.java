@@ -5,7 +5,7 @@ import java.util.*;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -342,7 +342,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		builder.bindAttributeLocation(11, "mc_midTexCoord");
 		builder.bindAttributeLocation(12, "at_tangent");
 
-		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
+		AlphaTest alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
 
 		if (alphaTestOverride != null) {
 			Iris.logger.info("Configured alpha test override for " + source.getName() + ": " + alphaTestOverride);
@@ -354,10 +354,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final class Pass {
 		private final Program program;
 		private final GlFramebuffer framebuffer;
-		private final AlphaTestOverride alphaTestOverride;
+		private final AlphaTest alphaTestOverride;
 		private final boolean disableBlend;
 
-		private Pass(Program program, GlFramebuffer framebuffer, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
+		private Pass(Program program, GlFramebuffer framebuffer, AlphaTest alphaTestOverride, boolean disableBlend) {
 			this.program = program;
 			this.framebuffer = framebuffer;
 			this.alphaTestOverride = alphaTestOverride;
@@ -408,7 +408,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		public void stopUsing() {
 			if (alphaTestOverride != null) {
-				AlphaTestOverride.teardown();
+				AlphaTest.teardown();
 			}
 		}
 
