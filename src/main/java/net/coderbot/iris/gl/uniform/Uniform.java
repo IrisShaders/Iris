@@ -8,4 +8,8 @@ public abstract class Uniform {
 	}
 
 	public abstract void update();
+
+	public int getLocation() {
+		return location;
+	}
 }

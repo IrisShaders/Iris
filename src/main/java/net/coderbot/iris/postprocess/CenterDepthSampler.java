@@ -2,6 +2,7 @@ package net.coderbot.iris.postprocess;
 
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import org.lwjgl.opengl.GL11C;
 
@@ -13,8 +14,8 @@ public class CenterDepthSampler {
 	private boolean hasFirstSample;
 	private boolean everRetrieved;
 
-	public CenterDepthSampler(RenderTargets renderTargets) {
-		centerDepthSmooth = new SmoothedFloat(1.0f, this::sampleCenterDepth);
+	public CenterDepthSampler(RenderTargets renderTargets, FrameUpdateNotifier updateNotifier) {
+		centerDepthSmooth = new SmoothedFloat(1.0f, this::sampleCenterDepth, updateNotifier);
 
 		// Prior to OpenGL 4.1, all framebuffers must have at least 1 color target.
 		depthBufferHolder = renderTargets.createFramebufferWritingToMain(new int[] {0});

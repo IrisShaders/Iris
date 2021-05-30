@@ -15,12 +15,44 @@ That being said... **If you want to test out compiled alpha builds of the mod, p
 
 Iris is an experiment in loading shaderpacks on Fabric. After making minimal progress trying to hack karyonix's ShadersMod codebase on to newer versions, I finally asked: *How hard is it to load a basic shaderpack on Fabric from scratch?* As it turns out, nowhere near as hard as I expected! Thus, Iris was born.
 
-Iris is completely free and open source, and you are free to read, distribute, and modify the code as long as you abide by the (fairly reasonable) terms of the [GNU LGPLv3 license](https://github.com/IrisShaders/Iris/blob/master/LICENSE). This should be a quite nice change of pace from the closed-source nature of OptiFine.
+Iris is completely free and open source, and you are free to read, distribute, and modify the code as long as you abide by the (fairly reasonable) terms of the [GNU LGPLv3 license](https://github.com/IrisShaders/Iris/blob/master/LICENSE). This should be a quite nice change of pace from the closed-source nature of OptiFine. That being said, I will ask that you talk to me before publicly posting compiled builds of the mod currently. This is out of necessity - Iris just is not yet complete enough to become widely used right now, and I don't have a support team capable of handling all potential user support requests.
 
 For the most part, I am creating Iris in order to have fun and get more experience in rendering. However, I am also frustrated by the constant incompatibilities and issues that players have reported when using OptiFine, and I also know that I am far from the only person with this experience. By developing a compatible and open source shaders mod, I hope to work towards a community where players and developers no longer have to worry about OptiFine incompatibilities.
 
 
 ## Current State
+
+Iris has been progressing quite rapidly recently. The following shaderpacks mostly work, though with a few bugs of course:
+
+* [XorDev's shaderpacks](https://github.com/XorDev/Minecraft-Shaderpacks), aside from Ominous
+* [Sildur's Vibrant Shaders](https://sildurs-shaders.github.io/)
+* [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
+    * Enchantment glints are broken
+    * Fog is broken
+* [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
+    * Reflections are all black, weather doesn't look quite right.
+    * Underwater and nether fog is broken
+* [BSL Shaders](https://www.bitslablab.com/bslshaders/)
+    * Reflections currently do not work at all, and rain doesn't show up.
+* [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
+    * Water looks weird in general, though reflections do work. Weather doesn't work, rain does not show up and the sky does not darken.
+* [SEUS v11](https://sonicether.com/shaders/download/v11-0/) from 2016
+    * General issues with weather
+    * You need to disable clouds manually
+    * Note that SEUS v11 does not work on some platforms and might fail to compile.
+* [Skylec Shader](https://www.curseforge.com/minecraft/customization/skylec-shader) - a very lightweight shaderpack that pulls off some neat effects
+    * Underwater is broken
+    * Weather is broken
+
+Other shaderpacks aren't supported.
+
+A major feature missing from the public source code is shadow mapping. Many packs rely on shadow mapping quite heavily, and its absence causes a variety of issues:
+
+* Nothing casts a shadow (obviously)
+* You might see the sun glowing through solid blocks and similar issues on shader packs making use of volumetric lighting (like BSL & Sildurs Vibrant Shaders Extreme-VL)
+* The sides of blocks facing the sun will be very bright while the sides facing away will be very dark, creating a weird effect.
+
+---
 
 * Sildur's Vibrant Shaders and XorDev's shaderpacks work for the most part under Iris, and have been the focus of my development. However, most other shaderpacks either have severe rendering issues, or do not work at all. My current focus is to get Sildur's Vibrant Shaders and XorDev's shaderpacks to the point where they are 100% working before shifting focus to other shaderpacks. As I fix issues in these shaderpacks, other shaderpacks will very likely begin to work properly as well.
 * I am working with JellySquid to make Sodium and Iris compatible. There is a proof-of-concept for Iris/Sodium compatibility available on a [custom fork of Sodium](https://github.com/IrisShaders/sodium-fabric). While this proof of concept is being used as a reference for compatibility work, it will likely be replaced with more solid and stable code in the future.

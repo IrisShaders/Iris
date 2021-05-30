@@ -231,9 +231,19 @@ public class Iris implements ClientModInitializer {
 
 	public static boolean isValidShaderpack(Path pack) {
 		if (Files.isDirectory(pack)) {
+			// Sometimes the shaderpack directory itself can be
+			// identified as a shader pack due to it containing
+			// folders which contain "shaders" folders, this is
+			// necessary to check against that
+			if (pack.equals(SHADERPACKS_DIRECTORY)) {
+				return false;
+			}
 			try {
 				return Files.walk(pack)
 						.filter(Files::isDirectory)
+						// Prevent a pack simply named "shaders" from being
+						// identified as a valid pack
+						.filter(path -> !path.equals(pack))
 						.anyMatch(path -> path.endsWith("shaders"));
 			} catch (IOException ignored) {
 				// ignored, not a valid shader pack.
@@ -320,10 +330,18 @@ public class Iris implements ClientModInitializer {
 		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
 		// TODO(21w10a): Bring back the old world rendering pipelines
-		/*if (internal) {
-			return new InternalWorldRenderingPipeline(programs);
-		} else {
-			return new DeferredWorldRenderingPipeline(programs);
+		/*try {
+			if (internal) {
+				return new InternalWorldRenderingPipeline(programs);
+			} else {
+				return new DeferredWorldRenderingPipeline(programs);
+			}
+		} catch (Exception e) {
+			Iris.logger.error("Failed to create shader rendering pipeline, falling back to internal shaders!", e);
+			// TODO: This should be reverted if a dimension change causes shaders to compile again
+			currentPackName = "(off) [fallback, check your logs for details]";
+
+			return new FixedFunctionWorldRenderingPipeline();
 		}*/
 
 		try {

@@ -19,12 +19,12 @@ public class CameraUniforms {
 	private CameraUniforms() {
 	}
 
-	public static void addCameraUniforms(UniformHolder uniforms) {
+	public static void addCameraUniforms(UniformHolder uniforms, FrameUpdateNotifier notifier) {
 		uniforms
 			.uniform1f(ONCE, "near", () -> 0.05)
 			.uniform1f(PER_FRAME, "far", CameraUniforms::getRenderDistanceInBlocks)
 			.uniform3d(PER_FRAME, "cameraPosition", CameraUniforms::getCameraPosition)
-			.uniform3d(PER_FRAME, "previousCameraPosition", new PreviousCameraPosition());
+			.uniform3d(PER_FRAME, "previousCameraPosition", new PreviousCameraPosition(notifier));
 	}
 
 	private static int getRenderDistanceInBlocks() {
@@ -37,14 +37,20 @@ public class CameraUniforms {
 
 	private static class PreviousCameraPosition implements Supplier<Vec3d> {
 		private Vec3d previousCameraPosition = new Vec3d(0.0, 0.0, 0.0);
+		private Vec3d currentCameraPosition = new Vec3d(0.0, 0.0, 0.0);
+
+		private PreviousCameraPosition(FrameUpdateNotifier notifier) {
+			notifier.addListener(this::update);
+		}
+
+		private void update() {
+			previousCameraPosition = currentCameraPosition;
+			currentCameraPosition = getCameraPosition();
+		}
 
 		@Override
 		public Vec3d get() {
-			Vec3d previous = previousCameraPosition;
-
-			previousCameraPosition = getCameraPosition();
-
-			return previous;
+			return previousCameraPosition;
 		}
 	}
 }

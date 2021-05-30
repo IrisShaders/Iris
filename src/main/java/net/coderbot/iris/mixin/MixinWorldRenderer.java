@@ -8,6 +8,7 @@ import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.*;
 import net.minecraft.util.math.Vec3d;
@@ -51,7 +52,8 @@ public class MixinWorldRenderer {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
-		
+		FrameUpdateNotifier.INSTANCE.onNewFrame();
+
 		pipeline.beginWorldRendering();
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}

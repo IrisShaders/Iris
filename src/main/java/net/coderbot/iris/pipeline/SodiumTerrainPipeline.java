@@ -11,6 +11,7 @@ import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransform
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 
@@ -19,12 +20,15 @@ public class SodiumTerrainPipeline {
 	String terrainFragment;
 	String translucentVertex;
 	String translucentFragment;
+	String shadowVertex;
+	String shadowFragment;
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
 
 	public SodiumTerrainPipeline(ProgramSet programSet) {
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
+		Optional<ProgramSource> shadowSource = programSet.getShadow();
 
 		this.programSet = programSet;
 
@@ -42,12 +46,21 @@ public class SodiumTerrainPipeline {
 			//framebuffer = renderTargets.createFramebufferWritingToMain(sources.getDirectives().getDrawBuffers());
 		});
 
+		shadowSource.ifPresent(sources -> {
+			shadowVertex = sources.getVertexSource().orElse(null);
+			shadowFragment = sources.getFragmentSource().orElse(null);
+		});
+
 		if (terrainVertex != null) {
 			terrainVertex = transformVertexShader(terrainVertex);
 		}
 
 		if (translucentVertex != null) {
 			translucentVertex = transformVertexShader(translucentVertex);
+		}
+
+		if (shadowVertex != null) {
+			shadowVertex = transformVertexShader(shadowVertex);
 		}
 
 		/*if (framebuffer == null) {
@@ -64,6 +77,7 @@ public class SodiumTerrainPipeline {
 			"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
 			"attribute vec3 a_Normal; // The vertex normal\n" +
 			"uniform mat4 u_ModelViewMatrix;\n" +
+			"uniform mat4 u_ModelViewProjectionMatrix;\n" +
 			"uniform mat4 u_NormalMatrix;\n" +
 			"uniform vec3 u_ModelScale;\n" +
 			"uniform vec2 u_TextureScale;\n" +
@@ -74,7 +88,9 @@ public class SodiumTerrainPipeline {
 			"attribute vec4 d_ModelOffset;\n" +
 			"#else\n" +
 			"uniform vec4 d_ModelOffset;\n" +
-			"#endif\n";
+			"#endif\n" +
+			"\n" +
+			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
 
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, injections);
 
@@ -84,10 +100,13 @@ public class SodiumTerrainPipeline {
 		//transformations.replaceExact("gl_MultiTexCoord1", "vec4(a_LightCoord * 255.0, 0.0, 1.0)");
 		transformations.replaceExact("gl_Color", "a_Color");
 		transformations.replaceExact("gl_ModelViewMatrix", "u_ModelViewMatrix");
+		transformations.replaceExact("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
 		transformations.replaceExact("gl_NormalMatrix", "mat3(u_NormalMatrix)");
 		transformations.replaceExact("gl_Normal", "a_Normal");
+		// Just being careful
+		transformations.replaceExact("ftransform", "iris_ftransform");
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
@@ -119,10 +138,18 @@ public class SodiumTerrainPipeline {
 		return Optional.ofNullable(translucentFragment);
 	}
 
+	public Optional<String> getShadowVertexShaderSource() {
+		return Optional.ofNullable(shadowVertex);
+	}
+
+	public Optional<String> getShadowFragmentShaderSource() {
+		return Optional.ofNullable(shadowFragment);
+	}
+
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives());
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), FrameUpdateNotifier.INSTANCE);
 		SamplerUniforms.addWorldSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
