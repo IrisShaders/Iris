@@ -1,5 +1,19 @@
 {
   "iris.shaders.reloaded": "Shaders opgeladen!",
   "iris.keybind.reload": "Herladen Shaders",
-  "iris.shaders.reloaded.failure": "Mislukt om Shaders te herladen! Reden: %s"
+  "iris.shaders.reloaded.failure": "Mislukt om Shaders te herladen! Reden: %s",
+
+  "options.iris.apply": "Solliciteer",
+  "options.iris.refresh": "Vernieuwen",
+  "options.iris.openShaderPackFolder": "Open de map Shader Pack...",
+  "options.iris.refreshShaderPacks": "Vernieuw Shader Pack",
+  "options.iris.shaderPackSelection.addedPack": "Shader Pack toegevoegd \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Toegevoegd %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Bestanden waren niet geldig Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" is geen geldig Shader Pack",
+  "options.iris.shaderPackSelection.copyError": "Kon geen Shader Pack toevoegen \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" staat al in uw Shader Packs map!",
+
+  "pack.iris.select.title": "Selecteer",
+  "pack.iris.list.label": "+ Shader Packs slepen en neerzetten om toe te voegen"
 }

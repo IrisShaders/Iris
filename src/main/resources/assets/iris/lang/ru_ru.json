@@ -1,5 +1,19 @@
 {
   "iris.shaders.reloaded": "Шейдеры перезаряжены!",
   "iris.keybind.reload": "Шейдеры перезарядки",
-  "iris.shaders.reloaded.failure": "Ошибка при Перезагрузке шейдеров! Причина: %s"
+  "iris.shaders.reloaded.failure": "Ошибка при Перезагрузке шейдеров! Причина: %s",
+
+  "options.iris.apply": "Применить",
+  "options.iris.refresh": "Обновить",
+  "options.iris.openShaderPackFolder": "Откройте папку Shader Pack...",
+  "options.iris.refreshShaderPacks": "Обновление Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Добавлен Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Добавлен %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Файлы не являются действительными Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является действительным Shader Pack",
+  "options.iris.shaderPackSelection.copyError": "Не удалось добавить Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке Shader Packs!",
+
+  "pack.iris.select.title": "Выберите",
+  "pack.iris.list.label": "+ Перетаскивание Shader Pack для добавления"
 }
