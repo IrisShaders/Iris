@@ -7,6 +7,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.vertices.IrisVertexFormats;
@@ -77,7 +78,7 @@ public class NewShaderTests {
 		Files.write(debugOutDir.resolve(name + ".json"), shaderJson.getBytes(StandardCharsets.UTF_8));
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, framebuffer, baseline, uniforms -> {
-			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives());
+			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
 			SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
