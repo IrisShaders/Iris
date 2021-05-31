@@ -11,6 +11,10 @@ public class TriforceCompositePatcher {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
 
+		if (source.contains("iris_")) {
+			throw new IllegalStateException("Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported.");
+		}
+
 		StringTransformations transformations = new StringTransformations(source);
 
 		fixVersion(transformations);
@@ -25,11 +29,15 @@ public class TriforceCompositePatcher {
 
 		// TODO: Other fog things
 		// TODO: fogDensity isn't actually implemented!
-		// TODO: Does this exist in composite shaders???
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform float fogDensity;\n" +
-				"uniform float FogStart;\n" +
-				"uniform float FogEnd;\n" +
-				"uniform vec4 FogColor;\n" +
+
+		// This must be defined and valid in all shader passes, including composite passes.
+		//
+		// A shader that relies on this behavior is SEUS v11 - it reads gl_Fog.color and breaks if it is not properly
+		// defined.
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform float iris_FogDensity;\n" +
+				"uniform float iris_FogStart;\n" +
+				"uniform float iris_FogEnd;\n" +
+				"uniform vec4 iris_FogColor;\n" +
 				"\n" +
 				"struct iris_FogParameters {\n" +
 				"    vec4 color;\n" +
@@ -39,7 +47,7 @@ public class TriforceCompositePatcher {
 				"    float scale;\n" +
 				"};\n" +
 				"\n" +
-				"iris_FogParameters iris_Fog = iris_FogParameters(FogColor, fogDensity, FogStart, FogEnd, 1.0 / (FogEnd - FogStart));\n" +
+				"iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));\n" +
 				"\n" +
 				"#define gl_Fog iris_Fog");
 

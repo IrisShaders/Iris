@@ -5,9 +5,11 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.resource.ResourceFactory;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -73,5 +75,12 @@ public class ExtendedShader extends Shader {
 		// TODO: Expose Sampler1 (the mob overlay flash)
 
 		super.addSampler(name, sampler);
+	}
+
+	@Nullable
+	@Override
+	public GlUniform getUniform(String name) {
+		// Prefix all uniforms with Iris to help avoid conflicts with existing names within the shader.
+		return super.getUniform("iris_" + name);
 	}
 }

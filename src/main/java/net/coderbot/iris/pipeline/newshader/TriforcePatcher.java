@@ -12,6 +12,10 @@ public class TriforcePatcher {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
 
+		if (source.contains("iris_")) {
+			throw new IllegalStateException("Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported.");
+		}
+
 		StringTransformations transformations = new StringTransformations(source);
 
 		fixVersion(transformations);
@@ -32,18 +36,18 @@ public class TriforcePatcher {
 		}
 
 		// TODO: More solid way to handle texture matrices
-		transformations.replaceExact("gl_TextureMatrix[0]", "TextureMat");
+		transformations.replaceExact("gl_TextureMatrix[0]", "iris_TextureMat");
 		transformations.replaceExact("gl_TextureMatrix[1]", "iris_LightmapTextureMatrix");
 
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_LightmapTextureMatrix;");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 TextureMat;");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_TextureMat;");
 
 		// TODO: Other fog things
 		// TODO: fogDensity isn't actually implemented!
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform float fogDensity;\n" +
-				"uniform float FogStart;\n" +
-				"uniform float FogEnd;\n" +
-				"uniform vec4 FogColor;\n" +
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform float iris_FogDensity;\n" +
+				"uniform float iris_FogStart;\n" +
+				"uniform float iris_FogEnd;\n" +
+				"uniform vec4 iris_FogColor;\n" +
 				"\n" +
 				"struct iris_FogParameters {\n" +
 				"    vec4 color;\n" +
@@ -53,7 +57,7 @@ public class TriforcePatcher {
 				"    float scale;\n" +
 				"};\n" +
 				"\n" +
-				"iris_FogParameters iris_Fog = iris_FogParameters(FogColor, fogDensity, FogStart, FogEnd, 1.0 / (FogEnd - FogStart));\n" +
+				"iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));\n" +
 				"\n" +
 				"#define gl_Fog iris_Fog");
 
@@ -66,8 +70,8 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in float iris_FogFragCoord;");
 		}
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ProjectionMatrix ProjMat");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ProjMat;");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ProjectionMatrix iris_ProjMat");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_ProjMat;");
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
@@ -75,21 +79,26 @@ public class TriforcePatcher {
 
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in ivec2 UV2;");
+
+			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other texture coordinates are not valid inputs.
+			for (int i = 2; i < 8; i++) {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord" + i + " vec4(0.0, 0.0, 0.0, 1.0)");
+			}
 		}
 
 		// TODO: Patching should take in mind cases where there are not color or normal vertex attributes
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec4 ColorModulator;");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec4 iris_ColorModulator;");
 
 		if (hasColorAttrib) {
 			// TODO: Handle the fragment shader here
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color (Color * ColorModulator)");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color (Color * iris_ColorModulator)");
 
 			if (type == ShaderType.VERTEX) {
 				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec4 Color;");
 			}
 		} else {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color ColorModulator");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color iris_ColorModulator");
 		}
 
 		if (type == ShaderType.VERTEX) {
@@ -100,10 +109,10 @@ public class TriforcePatcher {
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_NormalMatrix mat3(transpose(inverse(gl_ModelViewMatrix)))");
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 ModelViewMat;");
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_ModelViewMat;");
 
 		if (hasChunkOffset) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec3 ChunkOffset;");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec3 iris_ChunkOffset;");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "mat4 _iris_internal_translate(vec3 offset) {\n" +
 					"    // NB: Column-major order\n" +
 					"    return mat4(1.0, 0.0, 0.0, 0.0,\n" +
@@ -111,9 +120,9 @@ public class TriforcePatcher {
 					"                0.0, 0.0, 1.0, 0.0,\n" +
 					"                offset.x, offset.y, offset.z, 1.0);\n" +
 					"}");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix (ModelViewMat * _iris_internal_translate(ChunkOffset))");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix (iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))");
 		} else {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix ModelViewMat");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix iris_ModelViewMat");
 		}
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
