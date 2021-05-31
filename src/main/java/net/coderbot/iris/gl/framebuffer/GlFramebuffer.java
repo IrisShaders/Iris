@@ -10,7 +10,7 @@ public class GlFramebuffer extends GlResource {
 	private Int2IntMap attachments;
 
 	public GlFramebuffer() {
-		super(GlStateManager.genFramebuffer());
+		super(GlStateManager.glGenFramebuffers());
 
 		this.attachments = new Int2IntArrayMap();
 
@@ -52,24 +52,24 @@ public class GlFramebuffer extends GlResource {
 	}
 
 	public void bind() {
-		GlStateManager.bindFramebuffer(GL30C.GL_FRAMEBUFFER, getGlId());
+		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, getGlId());
 	}
 
 	public void bindAsReadBuffer() {
-		GlStateManager.bindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, getGlId());
+		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, getGlId());
 	}
 
 	public void bindAsDrawBuffer() {
-		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, getGlId());
+		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, getGlId());
 	}
 
 	protected void destroyInternal() {
-		GlStateManager.deleteFramebuffer(getGlId());
+		GlStateManager._glDeleteFramebuffers(getGlId());
 	}
 
 	public boolean isComplete() {
 		bind();
-		int status = GlStateManager.checkFramebufferStatus(GL30C.GL_FRAMEBUFFER);
+		int status = GlStateManager.glCheckFramebufferStatus(GL30C.GL_FRAMEBUFFER);
 
 		return status == GL30C.GL_FRAMEBUFFER_COMPLETE;
 	}

@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin.fantastic;
 
 import net.coderbot.iris.fantastic.IrisParticleTextureSheets;
-import net.minecraft.client.particle.BarrierParticle;
+import net.minecraft.client.particle.ItemBillboardParticle;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderLayers;
@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(BarrierParticle.class)
-public class MixinBarrierParticle {
+@Mixin(ItemBillboardParticle.class)
+public class MixinItemBillboardParticle {
 	@Unique
 	private boolean isOpaque;
 
@@ -36,7 +36,7 @@ public class MixinBarrierParticle {
 	@Inject(method = "getType()Lnet/minecraft/client/particle/ParticleTextureSheet;", at = @At("HEAD"), cancellable = true)
 	private void iris$overrideParticleSheet(CallbackInfoReturnable<ParticleTextureSheet> cir) {
 		if (isOpaque) {
-			// TODO(21w10a): cir.setReturnValue(IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET);
+			cir.setReturnValue(IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET);
 		}
 	}
 }

@@ -29,14 +29,18 @@ public class ExtendedShader extends Shader {
 		this.baseline = baseline;
 	}
 
+	// TODO: Yarn WTF: That's the unbind method, not the bind method!
 	@Override
-	public void method_34585() {
+	public void bind() {
+		super.bind();
+
 		baseline.bind();
 	}
 
+	// TODO: Yarn WTF: That's the bind method...
 	@Override
-	public void method_34586() {
-		super.method_34586();
+	public void upload() {
+		super.upload();
 
 		uniforms.update();
 		writingTo.bind();

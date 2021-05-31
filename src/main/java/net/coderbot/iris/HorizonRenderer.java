@@ -122,6 +122,7 @@ public class HorizonRenderer {
 	}
 
 	public void renderHorizon(Matrix4f modelView, Matrix4f projection, Shader shader) {
-		buffer.method_34427(modelView, projection, shader);
+		// Despite the name, this actually dispatches the draw call using the specified shader.
+		buffer.setShader(modelView, projection, shader);
 	}
 }

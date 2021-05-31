@@ -43,10 +43,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private short currentRenderType;
 
 	@Shadow
-	private boolean field_21594;
+	private boolean textured;
 
 	@Shadow
-	private boolean field_21595;
+	private boolean hasOverlay;
 
 	@Shadow
 	private ByteBuffer buffer;
@@ -90,8 +90,8 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			return;
 		}
 
-		field_21594 = false;
-		field_21595 = false;
+		textured = false;
+		hasOverlay = false;
 	}
 
 	@Inject(method = "next()V", at = @At("HEAD"))

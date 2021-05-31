@@ -10,7 +10,7 @@ import net.minecraft.client.gl.Framebuffer;
 public class FramebufferBlitter {
 	public static void copyFramebufferContent(GlFramebuffer from, Framebuffer to) {
 		from.bindAsReadBuffer();
-		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, to.fbo);
+		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, to.fbo);
 
 		int width = to.textureWidth;
 		int height = to.textureHeight;
@@ -22,7 +22,7 @@ public class FramebufferBlitter {
 
 	public static void copyDepthBufferContent(GlFramebuffer from, Framebuffer to) {
 		from.bindAsReadBuffer();
-		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, to.fbo);
+		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, to.fbo);
 
 		int width = to.textureWidth;
 		int height = to.textureHeight;

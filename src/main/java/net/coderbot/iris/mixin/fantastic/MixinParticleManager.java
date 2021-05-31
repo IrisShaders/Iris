@@ -54,7 +54,7 @@ public class MixinParticleManager implements PhasedParticleManager {
 
 	static {
 		OPAQUE_PARTICLE_TEXTURE_SHEETS = ImmutableList.of(
-			// TODO(21w10a): IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET,
+			IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET,
 			ParticleTextureSheet.PARTICLE_SHEET_OPAQUE,
 			ParticleTextureSheet.PARTICLE_SHEET_LIT,
 			ParticleTextureSheet.CUSTOM,

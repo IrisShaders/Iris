@@ -9,7 +9,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	public void beginWorldRendering() {
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
 		MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
-		GlStateManager.useProgram(0);
+		GlStateManager._glUseProgram(0);
 	}
 
 	@Override

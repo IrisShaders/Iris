@@ -45,7 +45,7 @@ public class FullScreenQuadRenderer {
 	}
 
 	public void renderQuad() {
-		quad.method_34432();
+		quad.drawVertices();
 	}
 
 	public static void end() {

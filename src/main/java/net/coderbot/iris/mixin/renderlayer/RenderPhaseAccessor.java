@@ -14,8 +14,9 @@ public interface RenderPhaseAccessor {
 	@Accessor("name")
 	String getName();
 
-	@Accessor("TRANSLUCENT_TRANSPARENCY")
+	// TODO(1.17): translucent transparency accessor
+	/*@Accessor("TRANSLUCENT_TRANSPARENCY")
 	static RenderPhase.Transparency getTranslucentTransparency() {
 		return null;
-	}
+	}*/
 }

@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin;
 
-import net.minecraft.class_5913;
-import net.minecraft.client.gl.GlShader;
+import net.minecraft.client.gl.GLImportProcessor;
+import net.minecraft.client.gl.Program;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -9,10 +9,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import java.util.Collections;
 import java.util.List;
 
-@Mixin(GlShader.class)
+@Mixin(Program.class)
 public class MixinGlShader {
-	@Redirect(method = "method_34416", at = @At(value = "INVOKE", target = "net/minecraft/class_5913.method_34229 (Ljava/lang/String;)Ljava/util/List;"))
-	private static List<String> iris$allowSkippingMojImportDirectives(class_5913 includeHandler, String shaderSource) {
+	@Redirect(method = "loadProgram", at = @At(value = "INVOKE", target = "net/minecraft/client/gl/GLImportProcessor.readSource (Ljava/lang/String;)Ljava/util/List;"))
+	private static List<String> iris$allowSkippingMojImportDirectives(GLImportProcessor includeHandler, String shaderSource) {
 		// Mojang's code for handling #moj_import directives uses regexes that can cause StackOverflowErrors.
 		//
 		// Rather than fix the crash, we just don't try to process directives if they don't exist, which is fine
@@ -21,6 +21,6 @@ public class MixinGlShader {
 			return Collections.singletonList(shaderSource);
 		}
 
-		return includeHandler.method_34229(shaderSource);
+		return includeHandler.readSource(shaderSource);
 	}
 }

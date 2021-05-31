@@ -12,7 +12,7 @@ public class BuiltinNoiseTexture {
 		MinecraftClient.getInstance().getTextureManager().bindTexture(NOISE);
 		int id = MinecraftClient.getInstance().getTextureManager().getTexture(NOISE).getGlId();
 
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE15);
-		GlStateManager.bindTexture(id);
+		GlStateManager._activeTexture(GL20C.GL_TEXTURE15);
+		GlStateManager._bindTexture(id);
 	}
 }

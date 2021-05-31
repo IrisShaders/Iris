@@ -124,7 +124,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE2);
+		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE2);
 
 		// Create some placeholder PBR textures for now
 		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
@@ -145,7 +145,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
 		});
 
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0);
 
 		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
 		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer, noise);
@@ -385,12 +385,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		public void use() {
 			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
 			// a given program and bind the required textures instead.
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
-			GlStateManager.bindTexture(noise.getGlId());
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE2);
-			GlStateManager.bindTexture(normals.getGlId());
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE3);
-			GlStateManager.bindTexture(specular.getGlId());
+			GlStateManager.glActiveTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
+			GlStateManager._bindTexture(noise.getGlId());
+			GlStateManager.glActiveTexture(GL15C.GL_TEXTURE2);
+			GlStateManager._bindTexture(normals.getGlId());
+			GlStateManager.glActiveTexture(GL15C.GL_TEXTURE3);
+			GlStateManager._bindTexture(specular.getGlId());
 
 			bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
 			bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
@@ -408,7 +408,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// Once we start rendering the hand before composite content, this will need to be addressed.
 			bindTexture(SamplerUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
+			GlStateManager.glActiveTexture(GL15C.GL_TEXTURE0);
 
 			framebuffer.bind();
 			program.use();
@@ -420,7 +420,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			}
 
 			if (disableBlend) {
-				GlStateManager.disableBlend();
+				GlStateManager._disableBlend();
 			}
 		}
 
@@ -532,7 +532,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bind();
-		GlStateManager.bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
+		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 	}
 

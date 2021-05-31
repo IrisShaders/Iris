@@ -132,6 +132,11 @@ public class NewShaderTests {
 		}
 
 		@Override
+		public boolean hasMetadata() {
+			return false;
+		}
+
+		@Override
 		public <T> @Nullable T getMetadata(ResourceMetadataReader<T> metaReader) {
 			return null;
 		}

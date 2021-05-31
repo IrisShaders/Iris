@@ -96,14 +96,14 @@ public class PipelineManager {
 		//
 		// Without this code, there will be weird issues when reloading certain shaderpacks.
 		for (int i = 0; i < 16; i++) {
-			GlStateManager.activeTexture(GL20C.GL_TEXTURE0 + i);
-			GlStateManager.bindTexture(0);
+			GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0 + i);
+			GlStateManager._bindTexture(0);
 		}
 
 		// Set the active texture unit to unit 0
 		//
 		// This seems to be what most code expects. It's a sane default in any case.
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0);
 
 		// Destroy the old world rendering pipeline
 		//

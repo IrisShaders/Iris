@@ -38,7 +38,8 @@ public final class MatrixUniforms {
 			Matrix4f copy = parent.get().copy();
 
 			FloatBuffer buffer = FloatBuffer.allocate(16);
-			copy.writeToBuffer(buffer);
+			// TODO: This is column-major, the yarn name is misleading!!!
+			copy.writeRowFirst(buffer);
 			buffer.rewind();
 
 			net.coderbot.iris.vendored.joml.Matrix4f matrix4f = new net.coderbot.iris.vendored.joml.Matrix4f(buffer);

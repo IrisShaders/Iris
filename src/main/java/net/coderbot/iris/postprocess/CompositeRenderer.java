@@ -243,7 +243,7 @@ public class CompositeRenderer {
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
 		main.beginWrite(true);
-		GlStateManager.useProgram(0);
+		GlStateManager._glUseProgram(0);
 
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0));
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1));

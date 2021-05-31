@@ -110,7 +110,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE2);
+		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);
 
 		// Create some placeholder PBR textures for now
 		normals = new SingleColorTexture(127, 127, 255, 255);
@@ -131,7 +131,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
 		});
 
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
 		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
 		this.compositeRenderer = new CompositeRenderer(programSet, renderTargets, shadowMapRenderer, noise);
@@ -188,7 +188,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bind();
-		GlStateManager.bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
+		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 	}
 

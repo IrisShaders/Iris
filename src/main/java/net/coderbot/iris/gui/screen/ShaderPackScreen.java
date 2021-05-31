@@ -69,24 +69,24 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.shaderPackList = new ShaderPackListWidget(this.client, this.width, this.height, 32, this.height - 58, 0, this.width);
 
 		if (inWorld) {
-			this.shaderPackList.method_31322(false);
+			this.shaderPackList.setRenderBackground(false);
 		}
 
-		this.children.add(shaderPackList);
+		this.addDrawableChild(shaderPackList);
 
-		this.addButton(new ButtonWidget(bottomCenter + 104, this.height - 27, 100, 20,
+		this.addDrawableChild(new ButtonWidget(bottomCenter + 104, this.height - 27, 100, 20,
 			ScreenTexts.DONE, button -> onClose()));
 
-		this.addButton(new ButtonWidget(bottomCenter, this.height - 27, 100, 20,
+		this.addDrawableChild(new ButtonWidget(bottomCenter, this.height - 27, 100, 20,
 			new TranslatableText("options.iris.apply"), button -> this.applyChanges()));
 
-		this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20,
+		this.addDrawableChild(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20,
 			ScreenTexts.CANCEL, button -> this.dropChangesAndClose()));
 
-		this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20,
+		this.addDrawableChild(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20,
 			new TranslatableText("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
 
-		this.addButton(new ButtonWidget(topCenter + 78, this.height - 51, 152, 20,
+		this.addDrawableChild(new ButtonWidget(topCenter + 78, this.height - 51, 152, 20,
 			new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPackList.refresh()));
 	}
 

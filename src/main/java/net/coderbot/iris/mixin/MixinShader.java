@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(Shader.class)
 public class MixinShader {
-	@Redirect(method = {"method_34586()V", "method_34588()V"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/GlUniform;getUniformLocation(ILjava/lang/CharSequence;)I"))
+	@Redirect(method = {"upload()V", "loadReferences()V"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/GlUniform;getUniformLocation(ILjava/lang/CharSequence;)I"))
 	private int iris$redirectGetUniformLocation(int programId, CharSequence name) {
 		int location = GlUniform.getUniformLocation(programId, name);
 

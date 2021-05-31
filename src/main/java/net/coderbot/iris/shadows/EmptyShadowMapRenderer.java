@@ -12,7 +12,7 @@ public class EmptyShadowMapRenderer {
 	public EmptyShadowMapRenderer(int size) {
 		this.depthTexture = new DepthTexture(size, size);
 
-		GlStateManager.bindTexture(depthTexture.getTextureId());
+		GlStateManager._bindTexture(depthTexture.getTextureId());
 
 		// We have to do this or else sampling a sampler2DShadow produces "undefined" results.
 		//
@@ -26,7 +26,7 @@ public class EmptyShadowMapRenderer {
 		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
 		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
 
-		GlStateManager.bindTexture(0);
+		GlStateManager._bindTexture(0);
 
 		GlFramebuffer framebuffer = new GlFramebuffer();
 		framebuffer.addDepthAttachment(depthTexture.getTextureId());

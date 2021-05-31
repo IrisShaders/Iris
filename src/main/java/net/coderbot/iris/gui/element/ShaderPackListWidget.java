@@ -129,6 +129,12 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 			return packName;
 		}
 
+		// Appears to be some accessibility thing
+		@Override
+		public Text method_37006() {
+			return new TranslatableText("narrator.select", packName);
+		}
+
 		@Override
 		public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
@@ -177,6 +183,12 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 			this.label = label;
 		}
 
+		// Appears to be some accessibility thing
+		@Override
+		public Text method_37006() {
+			return label;
+		}
+
 		@Override
 		public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xC2C2C2);
@@ -199,6 +211,12 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 			Text label = this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
 
 			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
+		}
+
+		// Appears to be some accessibility thing
+		@Override
+		public Text method_37006() {
+			return new TranslatableText("narration.button", this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
 		}
 
 		@Override
