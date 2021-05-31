@@ -44,6 +44,7 @@ public class Parser {
 				if (stack.peek() instanceof ExpressionToken) {
 					// maybe binary operator
 					OpResolver<BinaryOp> resolver = this.options.getBinaryOpResolver(c);
+
 					if (resolver != null) {
 						stack.push(new BinaryOperatorToken(resolver.check(input)));
 						continue;
@@ -51,6 +52,7 @@ public class Parser {
 				} else {
 					// maybe unary operator
 					OpResolver<UnaryOp> resolver = this.options.getUnaryOpResolver(c);
+
 					if (resolver != null) {
 						stack.push(new UnaryOperatorToken(resolver.check(input)));
 						continue;
@@ -62,6 +64,7 @@ public class Parser {
 		}
 
 		ExpressionToken result = stack.expressionReducePop();
+
 		if (!stack.stack.isEmpty()) {
 			throw new Exception("stack isn't empty: " + stack.stack + " top: " + result);
 		}
@@ -83,6 +86,7 @@ public class Parser {
 		if (c == '.') {
 			do {
 				input.skip();
+
 				if (input.canRead()) {
 					if (!this.parserParts.isAccessStart(input.read())) {
 						throw new Exception("expected a valid access");
@@ -94,18 +98,21 @@ public class Parser {
 				}
 			} while (input.canRead() && input.peek() == '.');
 		}
+
 		return token;
 	}
 
 	/**
-	 * The returned value add the last value btw;
+	 * The returned value includes the last value btw;
 	 */
 	private static String readWhile(StringReader input, CharPredicate predicate) {
 		input.mark();
+
 		while (input.canRead()) {
 			if (!predicate.test(input.peek())) {
 				break;
 			}
+
 			input.skip();
 		}
 

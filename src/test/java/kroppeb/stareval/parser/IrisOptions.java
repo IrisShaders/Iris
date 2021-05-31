@@ -1,9 +1,5 @@
 package kroppeb.stareval.parser;
 
-import kroppeb.stareval.parser.BinaryOp;
-import kroppeb.stareval.parser.ParserOptions;
-import kroppeb.stareval.parser.UnaryOp;
-
 public class IrisOptions {
 	static final BinaryOp Multiply = new BinaryOp("multiply", 0);
 	static final BinaryOp Divide = new BinaryOp("divide", 0);
@@ -18,38 +14,38 @@ public class IrisOptions {
 	static final BinaryOp MoreThanOrEquals = new BinaryOp("moreThanOrEquals", 2);
 	static final BinaryOp And = new BinaryOp("or", 3);
 	static final BinaryOp Or = new BinaryOp("and", 3);
-	
+
 	static final UnaryOp Not = new UnaryOp("not");
 	static final UnaryOp Negate = new UnaryOp("negate");
-	
+
 	public static final ParserOptions options;
-	
+
 	static {
 		final ParserOptions.Builder builder = new ParserOptions.Builder();
-		builder.addBinaryOp("*",Multiply);
-		builder.addBinaryOp("/",Divide);
-		builder.addBinaryOp("%",Remainder);
-		
-		builder.addBinaryOp("+",Add);
-		builder.addBinaryOp("-",Subtract);
-		
-		builder.addBinaryOp("==",Equals);
-		builder.addBinaryOp("!=",NotEquals);
-		builder.addBinaryOp("<",LessThan);
-		builder.addBinaryOp(">",MoreThan);
-		builder.addBinaryOp("<=",LessThanOrEquals);
-		builder.addBinaryOp(">=",MoreThanOrEquals);
-		
-		builder.addBinaryOp("≠",NotEquals);
-		builder.addBinaryOp("≤",LessThanOrEquals);
-		builder.addBinaryOp("≥",MoreThanOrEquals);
-		
-		builder.addBinaryOp("&&",And);
-		builder.addBinaryOp("||",Or);
-		
+		builder.addBinaryOp("*", Multiply);
+		builder.addBinaryOp("/", Divide);
+		builder.addBinaryOp("%", Remainder);
+
+		builder.addBinaryOp("+", Add);
+		builder.addBinaryOp("-", Subtract);
+
+		builder.addBinaryOp("==", Equals);
+		builder.addBinaryOp("!=", NotEquals);
+		builder.addBinaryOp("<", LessThan);
+		builder.addBinaryOp(">", MoreThan);
+		builder.addBinaryOp("<=", LessThanOrEquals);
+		builder.addBinaryOp(">=", MoreThanOrEquals);
+
+		builder.addBinaryOp("≠", NotEquals);
+		builder.addBinaryOp("≤", LessThanOrEquals);
+		builder.addBinaryOp("≥", MoreThanOrEquals);
+
+		builder.addBinaryOp("&&", And);
+		builder.addBinaryOp("||", Or);
+
 		builder.addUnaryOp("!", Not);
 		builder.addUnaryOp("-", Negate);
-		
+
 		options = builder.build();
 	}
 }

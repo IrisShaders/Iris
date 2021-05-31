@@ -4,7 +4,3 @@ public abstract class Token {
 	@Override
 	public abstract String toString();
 }
-
-
-
-

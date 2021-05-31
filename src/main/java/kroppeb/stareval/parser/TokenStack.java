@@ -1,20 +1,9 @@
 package kroppeb.stareval.parser;
 
+import kroppeb.stareval.token.*;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import kroppeb.stareval.token.ArgsToken;
-import kroppeb.stareval.token.BinaryExpressionToken;
-import kroppeb.stareval.token.BinaryOperatorToken;
-import kroppeb.stareval.token.CallToken;
-import kroppeb.stareval.token.ExpressionToken;
-import kroppeb.stareval.token.IdToken;
-import kroppeb.stareval.token.PartialBinaryExpressionToken;
-import kroppeb.stareval.token.PriorityOperatorToken;
-import kroppeb.stareval.token.Token;
-import kroppeb.stareval.token.UnaryExpressionToken;
-import kroppeb.stareval.token.UnaryOperatorToken;
-import kroppeb.stareval.token.UnfinishedArgsToken;
 
 class TokenStack {
 	final List<Token> stack = new ArrayList<>();
@@ -23,6 +12,7 @@ class TokenStack {
 		if (!this.stack.isEmpty()) {
 			return this.stack.get(this.stack.size() - 1);
 		}
+
 		return null;
 	}
 
@@ -30,6 +20,7 @@ class TokenStack {
 		if (this.stack.size() > offset) {
 			return this.stack.get(this.stack.size() - 1 - offset);
 		}
+
 		return null;
 	}
 
@@ -43,6 +34,7 @@ class TokenStack {
 		if (this.stack.isEmpty()) {
 			throw new Exception();
 		}
+
 		return this.stack.remove(this.stack.size() - 1);
 	}
 
@@ -61,10 +53,11 @@ class TokenStack {
 	 * </ul>
 	 */
 	void push(Token token) throws Exception {
-		// in Kotlin I'd mark this tailrecursive.
 		final Token top = this.peek();
+
 		if (token instanceof ArgsToken && top instanceof IdToken) {
 			this.pop();
+			// TODO: can't this be `this.stack.add`?
 			this.push(new CallToken(((IdToken) top).id, ((ArgsToken) token).tokens));
 		} else if (token instanceof BinaryOperatorToken) {
 			BinaryOperatorToken binOpToken = (BinaryOperatorToken) token;
@@ -105,6 +98,7 @@ class TokenStack {
 	 */
 	private ExpressionToken expressionReducePop(int priority) throws Exception {
 		ExpressionToken token = (ExpressionToken) this.pop();
+
 		while (this.stack.size() >= 1) {
 			Token x = this.peek();
 
@@ -115,6 +109,7 @@ class TokenStack {
 				break;
 			}
 		}
+
 		return token;
 	}
 
@@ -131,9 +126,11 @@ class TokenStack {
 
 		ExpressionToken expr = this.expressionReducePop();
 		UnfinishedArgsToken args = (UnfinishedArgsToken) this.peek();
+
 		if (args == null) {
 			throw new Exception();
 		}
+
 		args.tokens.add(expr);
 	}
 

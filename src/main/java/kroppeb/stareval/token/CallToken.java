@@ -21,6 +21,7 @@ public class CallToken extends ExpressionToken {
 		for (int i = 0; i < this.args.size(); i++) {
 			this.args.set(i, this.args.get(i).simplify());
 		}
+
 		return this;
 	}
 }

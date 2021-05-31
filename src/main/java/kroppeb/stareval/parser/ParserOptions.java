@@ -6,9 +6,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.util.Map;
 
-/**
- * --
- */
 public final class ParserOptions {
 	private final Char2ObjectMap<? extends OpResolver<UnaryOp>> unaryOpResolvers;
 	private final Char2ObjectMap<? extends OpResolver<BinaryOp>> binaryOpResolvers;
@@ -60,14 +57,16 @@ public final class ParserOptions {
 		}
 
 		private static <T extends Op> Char2ObjectMap<OpResolver<T>> convertOp(
-				 Char2ObjectMap<? extends Map<String, T>> ops) {
+				Char2ObjectMap<? extends Map<String, T>> ops) {
 			Char2ObjectMap<OpResolver<T>> result = new Char2ObjectOpenHashMap<>();
 
 			ops.char2ObjectEntrySet().forEach(entry -> {
 						Map<String, T> map = entry.getValue();
+
 						if (map.size() > 2) {
 							throw new RuntimeException("Not supported atm");
 						}
+
 						if (map.containsKey("")) {
 							if (map.size() == 1) {
 								result.put(entry.getCharKey(), new SingleCharOpResolver<>(map.get("")));
@@ -77,6 +76,7 @@ public final class ParserOptions {
 										if (subEntry.getKey().length() != 1) {
 											throw new RuntimeException("Not supported atm");
 										}
+
 										result.put(entry.getCharKey(), new SingleDualCharOpResolver<>(
 												map.get(""),
 												subEntry.getValue(),
@@ -90,6 +90,7 @@ public final class ParserOptions {
 								if (subEntry.getKey().length() != 1) {
 									throw new RuntimeException("Not supported atm");
 								}
+
 								result.put(entry.getCharKey(), new SingleDualCharOpResolver<>(
 										map.get(""),
 										subEntry.getValue(),
@@ -153,4 +154,3 @@ public final class ParserOptions {
 		}
 	}
 }
-

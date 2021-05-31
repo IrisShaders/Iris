@@ -14,12 +14,12 @@ class ParserTest {
 	void checkIfValidExpressionsParse(String input) throws Exception {
 		parser.parse(input);
 	}
-	
+
 	@ParameterizedTest
 	@CsvFileSource(resources = "/fullyEquivalent.csv", delimiter = ';')
 	void checkOrderOfOperationsParse(String input1, String input2) throws Exception {
 		ExpressionToken exp1 = parser.parse(input1);
 		ExpressionToken exp2 = parser.parse(input2);
-		assertEquals(exp1.simplify() .toString(), exp2.simplify().toString());
+		assertEquals(exp1.simplify().toString(), exp2.simplify().toString());
 	}
 }

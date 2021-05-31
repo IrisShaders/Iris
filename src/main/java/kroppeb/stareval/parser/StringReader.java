@@ -36,10 +36,13 @@ public class StringReader {
 	 */
 	private void move() {
 		this.lastIndex = this.nextIndex;
+
 		if (this.nextIndex >= this.string.length()) {
 			return;
 		}
+
 		this.nextIndex++;
+
 		while (this.nextIndex < this.string.length() && this.string.charAt(this.nextIndex) == ' ') {
 			this.nextIndex++;
 		}
@@ -73,6 +76,7 @@ public class StringReader {
 	 */
 	public void read(char c) throws Exception {
 		char read = this.read();
+
 		if (read != c) {
 			throw new Exception("unexpected character: '" + read + "' expected '" + c + "'");
 		}
@@ -86,9 +90,11 @@ public class StringReader {
 	 */
 	public boolean tryRead(char c) {
 		char read = this.peek();
+
 		if (read != c) {
 			return false;
 		}
+
 		this.skip();
 		return true;
 	}
