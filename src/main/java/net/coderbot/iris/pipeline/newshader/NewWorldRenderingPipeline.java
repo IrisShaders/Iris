@@ -75,7 +75,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		Files.createDirectories(debugOutDir);
 
-		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programSet.getPackDirectives());
+		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programSet.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
@@ -104,7 +104,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.terrainTranslucent = this.terrainSolid;
 		}
 
-		int[] buffersToBeCleared = programSet.getPackDirectives().getBuffersToBeCleared().toIntArray();
+		int[] buffersToBeCleared = programSet.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
 
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
