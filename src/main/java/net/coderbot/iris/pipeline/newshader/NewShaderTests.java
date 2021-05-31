@@ -28,15 +28,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class NewShaderTests {
-	public static Shader create(String name, ProgramSource source, RenderTargets renderTargets, GlFramebuffer baseline, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException{
+	public static ExtendedShader create(String name, ProgramSource source, RenderTargets renderTargets, GlFramebuffer baseline, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, hasColorAttrib);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, hasColorAttrib);
 
 		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
-
-		// TODO: Assert that the unpatched programs do not contain any "#moj_import" statements
 
 		String shaderJson = "{\n" +
 				"    \"blend\": {\n" +
@@ -54,8 +52,31 @@ public class NewShaderTests {
 				"        \"Normal\"\n" +
 				"    ],\n" +
 				"    \"samplers\": [\n" +
-				"        { \"name\": \"Sampler0\" },\n" +
-				"        { \"name\": \"Sampler2\" }\n" +
+				// TODO: Don't duplicate these definitions!
+				"        { \"name\": \"texture\" },\n" +
+				"        { \"name\": \"tex\" },\n" +
+				"        { \"name\": \"lightmap\" },\n" +
+				"        { \"name\": \"normals\" },\n" +
+				"        { \"name\": \"specular\" },\n" +
+				"        { \"name\": \"shadow\" },\n" +
+				"        { \"name\": \"watershadow\" },\n" +
+				"        { \"name\": \"shadowtex0\" },\n" +
+				"        { \"name\": \"shadowtex1\" },\n" +
+				"        { \"name\": \"depthtex0\" },\n" +
+				"        { \"name\": \"depthtex1\" },\n" +
+				"        { \"name\": \"noisetex\" },\n" +
+				"        { \"name\": \"colortex0\" },\n" +
+				"        { \"name\": \"colortex1\" },\n" +
+				"        { \"name\": \"colortex2\" },\n" +
+				"        { \"name\": \"colortex3\" },\n" +
+				"        { \"name\": \"colortex4\" },\n" +
+				"        { \"name\": \"colortex5\" },\n" +
+				"        { \"name\": \"colortex6\" },\n" +
+				"        { \"name\": \"colortex7\" },\n" +
+				"        { \"name\": \"gaux1\" },\n" +
+				"        { \"name\": \"gaux2\" },\n" +
+				"        { \"name\": \"gaux3\" },\n" +
+				"        { \"name\": \"gaux4\" }\n" +
 				"    ],\n" +
 				"    \"uniforms\": [\n" +
 				"        { \"name\": \"TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
@@ -79,8 +100,8 @@ public class NewShaderTests {
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, framebuffer, baseline, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
-			SamplerUniforms.addWorldSamplerUniforms(uniforms);
-			SamplerUniforms.addDepthSamplerUniforms(uniforms);
+			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
+			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 		});
 	}

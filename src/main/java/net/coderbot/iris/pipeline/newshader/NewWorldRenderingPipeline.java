@@ -22,6 +22,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.Shader;
+import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.util.Identifier;
@@ -79,36 +80,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
-		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
-
-		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
-
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
-
-		// Matches OptiFine's default for CUTOUT and CUTOUT_MIPPED.
-		AlphaTest terrainCutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
-
-		// TODO: Resolve hasColorAttrib based on the vertex format
-		this.skyBasic = NewShaderTests.create("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, VertexFormats.POSITION, false);
-		this.skyBasicColor = NewShaderTests.create("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
-		this.skyTextured = NewShaderTests.create("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false);
-		this.terrainSolid = NewShaderTests.create("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
-		this.terrainCutout = NewShaderTests.create("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
-		this.terrainCutoutMipped = NewShaderTests.create("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), renderTargets, baseline, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
-
-		if (translucentSource != terrainSource) {
-			this.terrainTranslucent = NewShaderTests.create("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), renderTargets, baseline, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
-		} else {
-			this.terrainTranslucent = this.terrainSolid;
-		}
-
-		int[] buffersToBeCleared = programSet.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
-
-		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
-		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
-
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);
 
@@ -134,7 +105,71 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
 		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
+
+		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
+
+		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
+
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+
+		// Matches OptiFine's default for CUTOUT and CUTOUT_MIPPED.
+		AlphaTest terrainCutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
+
+		// TODO: Resolve hasColorAttrib based on the vertex format
+		this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION, false);
+		this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
+		this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false);
+		this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
+		this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+		this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+
+		if (translucentSource != terrainSource) {
+			this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
+		} else {
+			this.terrainTranslucent = this.terrainSolid;
+		}
+
+		int[] buffersToBeCleared = programSet.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
+
+		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
+		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
+
 		this.compositeRenderer = new CompositeRenderer(programSet, renderTargets, shadowMapRenderer, noise);
+	}
+
+	private Shader createShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, renderTargets, baseline, fallbackAlpha, vertexFormat, hasColorAttrib);
+
+		// TODO: waterShadowEnabled?
+
+		extendedShader.addIrisSampler("normals", this.normals.getTextureId());
+		extendedShader.addIrisSampler("specular", this.specular.getTextureId());
+		extendedShader.addIrisSampler("shadow", this.shadowMapRenderer.getDepthTextureId());
+		extendedShader.addIrisSampler("watershadow", this.shadowMapRenderer.getDepthTextureId());
+		extendedShader.addIrisSampler("shadowtex0", this.shadowMapRenderer.getDepthTextureId());
+		extendedShader.addIrisSampler("shadowtex1", this.shadowMapRenderer.getDepthTextureId());
+		extendedShader.addIrisSampler("depthtex0", this.renderTargets.getDepthTexture().getTextureId());
+		extendedShader.addIrisSampler("depthtex1", this.renderTargets.getDepthTextureNoTranslucents().getTextureId());
+		extendedShader.addIrisSampler("noisetex", this.noise.getGlId());
+
+		// TODO: Shadowcolor
+
+		// TODO: colortex8 to 15
+		for (int i = 0; i < 8; i++) {
+			// TODO: This should be "alt" for programs executing after deferred.
+			extendedShader.addIrisSampler("colortex" + i, this.renderTargets.get(i).getMainTexture());
+		}
+
+		for (int i = 1; i <= 4; i++) {
+			// TODO: This should be "alt" for programs executing after deferred.
+
+			// gaux1 -> colortex4, gaux2 -> colortex5, gaux3 -> colortex6, gaux4 -> colortex7
+			extendedShader.addIrisSampler("gaux" + i, this.renderTargets.get(i + 3).getMainTexture());
+		}
+
+		return extendedShader;
 	}
 
 	@SafeVarargs

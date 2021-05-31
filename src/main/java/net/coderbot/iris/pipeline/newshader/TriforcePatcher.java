@@ -8,6 +8,10 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforcePatcher {
 	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, boolean hasColorAttrib) {
+		if (source.contains("moj_import")) {
+			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
+		}
+
 		StringTransformations transformations = new StringTransformations(source);
 
 		fixVersion(transformations);
@@ -127,8 +131,6 @@ public class TriforcePatcher {
 		} else if (type == ShaderType.FRAGMENT) {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define varying in");
 		}
-
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define lightmap Sampler2");
 
 		if (type == ShaderType.FRAGMENT) {
 			if (transformations.contains("gl_FragColor")) {

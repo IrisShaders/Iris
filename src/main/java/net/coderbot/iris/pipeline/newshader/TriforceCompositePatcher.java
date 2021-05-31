@@ -7,6 +7,10 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforceCompositePatcher {
 	public static String patch(String source, ShaderType type) {
+		if (source.contains("moj_import")) {
+			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
+		}
+
 		StringTransformations transformations = new StringTransformations(source);
 
 		fixVersion(transformations);
@@ -16,6 +20,7 @@ public class TriforceCompositePatcher {
 
 		for (int i = 0; i < 8; i++) {
 			transformations.replaceExact("gl_TextureMatrix[" + i + "]", "mat4(1.0)");
+			transformations.replaceExact("gl_TextureMatrix [" + i + "]", "mat4(1.0)");
 		}
 
 		// TODO: Other fog things
@@ -53,7 +58,10 @@ public class TriforceCompositePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV0;");
 
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(0.0, 0.0, 0.0, 1.0)");
+			// gl_MultiTexCoord0 is the only valid input, all other inputs
+			for (int i = 1; i < 8; i++) {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord" + i + " vec4(0.0, 0.0, 0.0, 1.0)");
+			}
 		}
 
 		// No color attributes, the color is always solid white.
