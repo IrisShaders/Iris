@@ -346,7 +346,7 @@ public class Iris implements ClientModInitializer {
 
 		try {
 			return new NewWorldRenderingPipeline(programs);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			Iris.logger.error("Couldn't load NewWorldRenderingPipeline, falling back to vanilla shaders.", e);
 			return new FixedFunctionWorldRenderingPipeline();
 		}

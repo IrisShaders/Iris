@@ -9,6 +9,7 @@
     "MixinDebugHud",
     "MixinEntityRenderDispatcher",
     "MixinGameRenderer",
+    "MixinGlShader",
     "MixinGlStateManager",
     "MixinImmediateVertexConsumerProvider",
     "MixinModelViewBobbing",
