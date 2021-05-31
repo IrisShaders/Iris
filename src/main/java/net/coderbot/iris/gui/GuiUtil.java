@@ -31,7 +31,7 @@ public final class GuiUtil {
 	 * used for succeeding draw calls.
 	 */
 	public static void bindIrisWidgetsTexture() {
-		client().getTextureManager().bindTexture(IRIS_WIDGETS_TEX);
+		RenderSystem.setShaderTexture(0, IRIS_WIDGETS_TEX);
 	}
 
 	/**
@@ -56,10 +56,10 @@ public final class GuiUtil {
 		int vOffset = disabled ? 46 : hovered ? 86 : 66;
 
 		// Sets RenderSystem to use solid white as the tint color for blend mode, and enables blend mode
-		RenderSystem.blendColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.enableBlend();
 
 		// Sets RenderSystem to be able to use textures when drawing
+		// This doesn't do anything on 1.17
 		RenderSystem.enableTexture();
 
 		// Top left section
