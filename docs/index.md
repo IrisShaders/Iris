@@ -1,8 +1,10 @@
 ---
 layout: default
 ---
+# About Iris
 
-# What is Iris?
+
+## What is Iris?
 
 Iris is a Minecraft mod built using the modern and elegant [Fabric Modloader](http://fabricmc.net) that aims to bring full support for [OptiFine](https://optifine.net) shaderpacks to Fabric. It will be compatible with [CaffeineMC](https://github.com/CaffeineMC) optimization mods such as Sodium in the near future, which will allow Iris to render breathtaking graphics while maintaining a low performance overhead.
 
