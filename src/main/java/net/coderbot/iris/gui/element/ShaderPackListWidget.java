@@ -1,7 +1,6 @@
 package net.coderbot.iris.gui.element;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.minecraft.client.MinecraftClient;

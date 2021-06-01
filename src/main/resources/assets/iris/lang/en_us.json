@@ -16,6 +16,7 @@
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" is not a valid Shader Pack",
   "options.iris.shaderPackSelection.copyError": "Could not add Shader Pack \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" is already in your Shader Packs folder!",
+  "options.iris.shaderPackSelection.unimplemented": "The current Shader Pack uses some features not yet implemented in Iris.",
   "options.iris.shaders.disabled": "Shaders: Disabled",
   "options.iris.shaders.enabled": "Shaders: Enabled",
 

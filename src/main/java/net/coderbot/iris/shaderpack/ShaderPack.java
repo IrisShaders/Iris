@@ -22,6 +22,7 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 	private final CustomTexture customNoiseTexture;
+	private boolean usingUnimplementedFeatures = false;
 
 	public ShaderPack(Path root) throws IOException {
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
@@ -49,6 +50,17 @@ public class ShaderPack {
 				return null;
 			}
 		}).orElse(null);
+
+		// TODO: remove and actually detect for unimplemented features
+		markUsingUnimplementedFeatures();
+	}
+
+	private void markUsingUnimplementedFeatures() {
+		this.usingUnimplementedFeatures = true;
+	}
+
+	public boolean isUsingUnimplementedFeatures() {
+		return usingUnimplementedFeatures;
 	}
 
 	@Nullable

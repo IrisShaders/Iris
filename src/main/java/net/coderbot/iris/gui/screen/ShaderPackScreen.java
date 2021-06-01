@@ -2,6 +2,7 @@ package net.coderbot.iris.gui.screen;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.element.ShaderPackListWidget;
+import net.coderbot.iris.gui.element.UnimplementedWarningWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -10,22 +11,22 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
-import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ShaderPackScreen extends Screen implements HudHideable {
 	private static final Text SELECT_TITLE = new TranslatableText("pack.iris.select.title").formatted(Formatting.GRAY, Formatting.ITALIC);
+	private static final Text UNIMPLEMENTED_WARNING = new TranslatableText("options.iris.shaderPackSelection.unimplemented").formatted(Formatting.GOLD);
 
 	private final Screen parent;
 
 	private ShaderPackListWidget shaderPackList;
+	private UnimplementedWarningWidget warning;
 
 	private Text addedPackDialog = null;
 	private int addedPackDialogTimer = 0;
@@ -47,6 +48,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}
 
 		this.shaderPackList.render(matrices, mouseX, mouseY, delta);
+		Iris.getCurrentPack().ifPresent(pack -> {
+			if (pack.isUsingUnimplementedFeatures()) {
+				this.warning.render(matrices, mouseX, mouseY, delta);
+				if (this.warning.isHovered(mouseX, mouseY)) {
+					renderTooltip(matrices, UNIMPLEMENTED_WARNING, mouseX, mouseY);
+				}
+			}
+		});
 
 		drawCenteredText(matrices, this.textRenderer, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
 
@@ -55,6 +64,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		} else {
 			drawCenteredText(matrices, this.textRenderer, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
 		}
+
+
 
 		super.render(matrices, mouseX, mouseY, delta);
 	}
@@ -67,6 +78,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		boolean inWorld = this.client.world != null;
 
 		this.shaderPackList = new ShaderPackListWidget(this.client, this.width, this.height, 32, this.height - 58, 0, this.width);
+		this.warning = new UnimplementedWarningWidget(this.width - 23, 38);
 
 		if (inWorld) {
 			this.shaderPackList.method_31322(false);
