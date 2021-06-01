@@ -66,6 +66,11 @@ public class MixinWorldRenderer {
 		pipeline = null;
 	}
 
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V"))
+	private void iris$renderTerrainShadows(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		pipeline.renderShadows((WorldRendererAccessor) this, camera);
+	}
+
 	// TODO(21w10a): Deal with render hooks
 	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR))
 	private void iris$beforeClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {

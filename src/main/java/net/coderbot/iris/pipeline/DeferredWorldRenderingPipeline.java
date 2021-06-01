@@ -11,6 +11,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
@@ -23,6 +24,7 @@ import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
@@ -79,7 +81,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
-	private final EmptyShadowMapRenderer shadowMapRenderer;
+	private final ShadowRenderer shadowMapRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
@@ -147,7 +149,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0);
 
-		this.shadowMapRenderer = new EmptyShadowMapRenderer(2048);
+		this.shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null), programs.getPackDirectives());
 		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer, noise);
 	}
 
@@ -164,7 +166,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void pushProgram(GbufferProgram program) {
 		checkWorld();
 
-		if (!isRenderingWorld) {
+		if (!isRenderingWorld || isRenderingShadow) {
 			// don't mess with non-world rendering
 			return;
 		}
@@ -178,7 +180,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void popProgram(GbufferProgram expected) {
 		checkWorld();
 
-		if (!isRenderingWorld) {
+		if (!isRenderingWorld || isRenderingShadow) {
 			// don't mess with non-world rendering
 			return;
 		}
@@ -393,7 +395,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			GlStateManager._bindTexture(specular.getGlId());
 
 			bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
-			bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
+			bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureNoTranslucentsId());
+			bindTexture(SamplerUniforms.SHADOW_COLOR_0, shadowMapRenderer.getColorTexture0Id());
+			bindTexture(SamplerUniforms.SHADOW_COLOR_1, shadowMapRenderer.getColorTexture1Id());
+
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4));
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5));
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6));
@@ -551,6 +556,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 	}
 
+	@Override
+	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
+		this.shadowMapRenderer.renderShadows(worldRenderer, playerCamera);
+	}
+
 	// TODO: better way to avoid this global state?
 	private boolean isRenderingWorld = false;
 
@@ -599,5 +609,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		programStackLog.clear();
 
 		compositeRenderer.renderAll();
+	}
+
+	private boolean isRenderingShadow = false;
+
+	public void beginShadowRender() {
+		isRenderingShadow = true;
+	}
+
+	public void endShadowRender() {
+		isRenderingShadow = false;
 	}
 }
