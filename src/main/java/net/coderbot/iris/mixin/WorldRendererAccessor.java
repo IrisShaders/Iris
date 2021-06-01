@@ -5,6 +5,7 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -15,7 +16,7 @@ public interface WorldRendererAccessor {
 	EntityRenderDispatcher getEntityRenderDispatcher();
 
 	@Invoker("renderLayer")
-	void invokeRenderLayer(RenderLayer terrainLayer, MatrixStack modelView, double cameraX, double cameraY, double cameraZ);
+	void invokeRenderLayer(RenderLayer terrainLayer, MatrixStack modelView, double cameraX, double cameraY, double cameraZ, Matrix4f projection);
 
 	@Invoker("setupTerrain")
 	void invokeSetupTerrain(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator);

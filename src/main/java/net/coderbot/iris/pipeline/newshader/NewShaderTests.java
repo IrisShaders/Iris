@@ -29,12 +29,16 @@ import java.nio.file.Path;
 
 public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, RenderTargets renderTargets, GlFramebuffer baseline, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
+		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
+
+		return create(name, source, framebuffer, baseline, fallbackAlpha, vertexFormat, hasColorAttrib);
+	}
+
+	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer framebuffer, GlFramebuffer baseline, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, hasColorAttrib);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, hasColorAttrib);
-
-		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
 
 		String shaderJson = "{\n" +
 				"    \"blend\": {\n" +
@@ -76,7 +80,10 @@ public class NewShaderTests {
 				"        { \"name\": \"gaux1\" },\n" +
 				"        { \"name\": \"gaux2\" },\n" +
 				"        { \"name\": \"gaux3\" },\n" +
-				"        { \"name\": \"gaux4\" }\n" +
+				"        { \"name\": \"gaux4\" },\n" +
+				"        { \"name\": \"shadowcolor\" },\n" +
+				"        { \"name\": \"shadowcolor0\" },\n" +
+				"        { \"name\": \"shadowcolor1\" }\n" +
 				"    ],\n" +
 				"    \"uniforms\": [\n" +
 				"        { \"name\": \"iris_TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +

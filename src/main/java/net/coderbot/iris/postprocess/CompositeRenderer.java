@@ -259,10 +259,27 @@ public class CompositeRenderer {
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7));
 
 		// TODO: We unbind these textures but it would probably make sense to unbind the other ones too.
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEFAULT_DEPTH);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_0);
 		RenderSystem.bindTexture(0);
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEFAULT_COLOR);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_1);
 		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_2);
+		RenderSystem.bindTexture(0);
+
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_TEX_0);
+		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_TEX_1);
+		RenderSystem.bindTexture(0);
+
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_COLOR_0);
+		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_COLOR_1);
+		RenderSystem.bindTexture(0);
+
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
+		RenderSystem.bindTexture(0);
+
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
 	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean readFromAlt, boolean generateMipmap) {

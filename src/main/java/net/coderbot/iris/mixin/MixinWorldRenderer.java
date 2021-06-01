@@ -5,10 +5,12 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.*;
 import net.minecraft.util.math.Vec3d;
@@ -66,7 +68,7 @@ public class MixinWorldRenderer {
 		pipeline = null;
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V"))
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V", shift = At.Shift.AFTER))
 	private void iris$renderTerrainShadows(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.renderShadows((WorldRendererAccessor) this, camera);
 	}
@@ -85,6 +87,16 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=sky"))
 	private void iris$beginSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.SKY);
+	}
+
+	@Inject(method = "setupTerrain", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=rebuildNear"), cancellable = true)
+	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo callback) {
+		if (ShadowRenderer.ACTIVE) {
+			// Prevent nearby chunks from being rebuilt on the main thread in the shadow pass. Aside from causing
+			// FPS to tank, this also causes weird chunk corruption! It's critical to make sure that it's disabled as a
+			// result.
+			callback.cancel();
+		}
 	}
 
 	@Redirect(method = RENDER, at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;viewDistance:I"),

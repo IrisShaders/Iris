@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlDebugInfo;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
@@ -75,27 +76,51 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getRenderTypeSolidShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideSolidShader(CallbackInfoReturnable<Shader> cir) {
-		override(CoreWorldRenderingPipeline::getTerrain, cir);
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else {
+			override(CoreWorldRenderingPipeline::getTerrain, cir);
+		}
 	}
 
 	@Inject(method = "getRenderTypeCutoutShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideCutoutShader(CallbackInfoReturnable<Shader> cir) {
-		override(CoreWorldRenderingPipeline::getTerrainCutout, cir);
+		if (ShadowRenderer.ACTIVE) {
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else {
+			override(CoreWorldRenderingPipeline::getTerrainCutout, cir);
+		}
 	}
 
 	@Inject(method = "getRenderTypeCutoutMippedShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideCutoutMippedShader(CallbackInfoReturnable<Shader> cir) {
-		override(CoreWorldRenderingPipeline::getTerrainCutoutMipped, cir);
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else {
+			override(CoreWorldRenderingPipeline::getTerrainCutoutMipped, cir);
+		}
 	}
 
 	@Inject(method = "getRenderTypeTranslucentShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTranslucentShader(CallbackInfoReturnable<Shader> cir) {
-		override(CoreWorldRenderingPipeline::getTranslucent, cir);
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else {
+			override(CoreWorldRenderingPipeline::getTranslucent, cir);
+		}
 	}
 
 	@Inject(method = "getRenderTypeTripwireShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTripwireShader(CallbackInfoReturnable<Shader> cir) {
-		override(CoreWorldRenderingPipeline::getTranslucent, cir);
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else {
+			override(CoreWorldRenderingPipeline::getTranslucent, cir);
+		}
 	}
 
 	private static boolean isPhase(WorldRenderingPhase phase) {

@@ -1,7 +1,7 @@
 package net.coderbot.iris.shadow;
 
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3f;
 
 import java.nio.FloatBuffer;
 
@@ -35,9 +35,9 @@ public class ShadowMatrices {
 
 		target.loadIdentity();
 		target.multiply(Matrix4f.translate(0.0f, 0.0f, -100.0f));
-		target.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(90.0F));
-		target.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(skyAngle * -360.0f));
-		target.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(sunPathRotation));
+		target.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(90.0F));
+		target.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(skyAngle * -360.0f));
+		target.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(sunPathRotation));
 	}
 
 	public static void snapModelViewToGrid(Matrix4f target, float shadowIntervalSize, double cameraX, double cameraY, double cameraZ) {
@@ -131,7 +131,8 @@ public class ShadowMatrices {
 
 		private static float[] toFloatArray(Matrix4f matrix4f) {
 			FloatBuffer buffer = FloatBuffer.allocate(16);
-			matrix4f.writeToBuffer(buffer);
+			// TODO: YARN WTF
+			matrix4f.writeRowFirst(buffer);
 
 			return buffer.array();
 		}

@@ -15,10 +15,10 @@ public class MixinWorldRenderer implements CullingDataCache {
 	@Shadow
 	@Final
 	@Mutable
-	private ObjectList visibleChunks;
+	private ObjectArrayList visibleChunks;
 
 	@Unique
-	private ObjectList savedVisibleChunks = new ObjectArrayList(69696);
+	private ObjectArrayList savedVisibleChunks = new ObjectArrayList(69696);
 
 	@Shadow
 	private boolean needsTerrainUpdate;
@@ -68,7 +68,7 @@ public class MixinWorldRenderer implements CullingDataCache {
 
 	@Unique
 	private void swap() {
-		ObjectList tmpList = visibleChunks;
+		ObjectArrayList tmpList = visibleChunks;
 		visibleChunks = savedVisibleChunks;
 		savedVisibleChunks = tmpList;
 

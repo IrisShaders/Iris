@@ -10,6 +10,7 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getTerrain();
 	Shader getTerrainCutout();
 	Shader getTerrainCutoutMipped();
+	Shader getShadowTerrainCutout();
 	Shader getTranslucent();
 	WorldRenderingPhase getPhase();
 	void destroy();
