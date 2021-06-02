@@ -27,7 +27,6 @@ class Parser {
 		return this.stack.remove(this.stack.size() - 1);
 	}
 
-
 	private void push(Token token) {
 		this.stack.add(token);
 	}
@@ -100,6 +99,40 @@ class Parser {
 		}
 	}
 
+	// visitor methods
+
+	void visitId(String id) {
+		this.push(new IdToken(id));
+	}
+
+	boolean canReadAccess() {
+		return this.peek() instanceof AccessableToken;
+	}
+
+	/**
+	 * Assumes `canReadAccess` has returned true
+	 */
+	void visitAccess(String access) {
+		AccessableToken pop = (AccessableToken) this.pop();
+		this.push(new AccessToken(pop, access));
+	}
+
+	void visitNumber(String numberString) {
+		this.push(new NumberToken(numberString));
+	}
+
+	void visitOpeningParenthesis() {
+		this.push(new UnfinishedArgsToken());
+	}
+
+	void visitComma(int index) throws ParseException {
+		if (this.peek() instanceof ExpressionToken) {
+			this.commaReduce(index);
+		} else {
+			throw new UnexpectedTokenException("Expected an expression before a comma ','", index);
+		}
+	}
+
 	/**
 	 * Allows for trailing comma.
 	 * Executes following reduce steps:
@@ -152,22 +185,6 @@ class Parser {
 			} else {
 				this.push(args.tokens.get(0));
 			}
-		}
-	}
-
-	void visitNumber(String numberString) {
-		this.push(new NumberToken(numberString));
-	}
-
-	void visitOpeningParenthesis() {
-		this.push(new UnfinishedArgsToken());
-	}
-
-	void visitComma(int index) throws ParseException {
-		if (this.peek() instanceof ExpressionToken) {
-			this.commaReduce(index);
-		} else {
-			throw new UnexpectedTokenException("Expected an expression before a comma ','", index);
 		}
 	}
 
@@ -241,21 +258,5 @@ class Parser {
 		} else {
 			throw new MissingTokenException("The input seems to be empty", endIndex);
 		}
-	}
-
-	void visitId(String id) {
-		this.push(new IdToken(id));
-	}
-
-	boolean canReadAccess() {
-		return this.peek() instanceof AccessableToken;
-	}
-
-	/**
-	 * Assumes `canReadAccess` has returned true
-	 */
-	void visitAccess(String access) {
-		AccessableToken pop = (AccessableToken) this.pop();
-		this.push(new AccessToken(pop, access));
 	}
 }
