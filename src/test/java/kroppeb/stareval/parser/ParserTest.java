@@ -9,19 +9,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class ParserTest {
-	private static final Parser parser = new Parser(IrisOptions.options);
+	private static final Tokenizer TOKENIZER = new Tokenizer(IrisOptions.options);
 
 	@ParameterizedTest
 	@CsvFileSource(resources = "/shouldBeAbleToBeParsed.csv", delimiter = ';')
 	void checkIfValidExpressionsParse(String input) throws ParseException {
-		parser.parse(input);
+		TOKENIZER.parse(input);
 	}
 
 	@ParameterizedTest
 	@CsvFileSource(resources = "/shouldNotBeAbleToBeParsed.csv", delimiter = ';')
 	void checkIfInvalidExpressionsDontParse(String input) {
 		try{
-			parser.parse(input);
+			TOKENIZER.parse(input);
 		} catch (ParseException parseException){
 			parseException.printStackTrace();
 			return;
@@ -35,8 +35,8 @@ class ParserTest {
 	@ParameterizedTest
 	@CsvFileSource(resources = "/fullyEquivalent.csv", delimiter = ';')
 	void checkOrderOfOperationsParse(String input1, String input2) throws ParseException {
-		ExpressionToken exp1 = parser.parse(input1);
-		ExpressionToken exp2 = parser.parse(input2);
+		ExpressionToken exp1 = TOKENIZER.parse(input1);
+		ExpressionToken exp2 = TOKENIZER.parse(input2);
 		assertEquals(exp1.simplify().toString(), exp2.simplify().toString());
 	}
 }
