@@ -1,10 +1,12 @@
 package kroppeb.stareval.parser;
 
 
-import kroppeb.stareval.exception.*;
-import kroppeb.stareval.token.*;
+import kroppeb.stareval.exception.ParseException;
+import kroppeb.stareval.exception.UnexpectedCharacterException;
+import kroppeb.stareval.exception.UnexpectedEndingException;
+import kroppeb.stareval.token.AccessToken;
+import kroppeb.stareval.token.ExpressionToken;
 import net.minecraft.client.util.CharPredicate;
-import org.jetbrains.annotations.NotNull;
 
 
 public class Tokenizer {
@@ -29,29 +31,37 @@ public class Tokenizer {
 			char c = input.read();
 
 			if (this.parserParts.isIdStart(c)) {
-				Token token = this.parseIdGroup(input);
-				stack.push(token);
+				final String id = readWhile(input, this.parserParts::isIdPart);
+				stack.visitId(id);
+			} else if(c == '.' && stack.canReadAccess()){
+				if (input.canRead()) {
+					char start = input.read();
+					if (!this.parserParts.isAccessStart(start)) {
+						throw new UnexpectedCharacterException("a valid accessor", start, input.getCurrentIndex());
+					}
+
+					final String access = readWhile(input, this.parserParts::isAccessPart);
+					stack.visitAccess(access);
+				} else {
+					throw new UnexpectedEndingException("An expression can't end with '.'");
+				}
 			} else if (this.parserParts.isNumberStart(c)) {
 				// start parsing a number
 				final String numberString = readWhile(input, this.parserParts::isNumberPart);
-				stack.push(new NumberToken(numberString));
+				stack.visitNumber(numberString);
 			} else if (c == '(') {
-				stack.push(new UnfinishedArgsToken());
+				stack.visitOpeningParenthesis();
 			} else if (c == ',') {
-				if (stack.peek() instanceof ExpressionToken) {
-					stack.commaReduce(input.getCurrentIndex());
-				} else {
-					throw new UnexpectedTokenException("Expected an expression before a comma ','", input.getCurrentIndex());
-				}
+				stack.visitComma(input.getCurrentIndex());
 			} else if (c == ')') {
-				stack.bracketReduce(input.getCurrentIndex());
+				stack.visitClosingParenthesis(input.getCurrentIndex());
 			} else {
-				if (stack.peek() instanceof ExpressionToken) {
+				if (stack.canReadBinaryOp()) {
 					// maybe binary operator
 					OpResolver<? extends BinaryOp> resolver = this.options.getBinaryOpResolver(c);
 
 					if (resolver != null) {
-						stack.push(new BinaryOperatorToken(resolver.resolve(input)));
+						stack.visitBinaryOperator(resolver.resolve(input));
 						continue;
 					}
 				} else {
@@ -59,7 +69,7 @@ public class Tokenizer {
 					OpResolver<? extends UnaryOp> resolver = this.options.getUnaryOpResolver(c);
 
 					if (resolver != null) {
-						stack.push(new UnaryOperatorToken(resolver.resolve(input)));
+						stack.visitUnaryOperator(resolver.resolve(input));
 						continue;
 					}
 				}
@@ -68,64 +78,7 @@ public class Tokenizer {
 			}
 		}
 
-		if (!stack.stack.isEmpty()) {
-			if (stack.peek() instanceof ExpressionToken) {
-				ExpressionToken result = stack.expressionReducePop();
-
-				if (stack.stack.isEmpty()) {
-					return result;
-				}
-
-				if (stack.peek() instanceof UnfinishedArgsToken) {
-					throw new MissingTokenException("Expected a closing bracket", input.getCurrentIndex());
-				} else {
-					throw new UnexpectedTokenException(
-							"The stack of tokens isn't empty at the end of the expression: " + stack.stack +
-									" top: " + result, input.getCurrentIndex());
-				}
-			} else {
-				Token top = stack.peek();
-				if (top instanceof UnfinishedArgsToken) {
-					throw new MissingTokenException("Expected a closing bracket", input.getCurrentIndex());
-				} else if (top instanceof PriorityOperatorToken) {
-					throw new MissingTokenException(
-							"Expected a identifier, constant or subexpression on the right side of the operator",
-							input.getCurrentIndex());
-				} else {
-					throw new UnexpectedTokenException(
-							"The stack of tokens contains an unexpected token at the top: " + stack.stack,
-							input.getCurrentIndex());
-				}
-			}
-		} else {
-			throw new MissingTokenException("The input seems to be empty", input.getCurrentIndex());
-		}
-	}
-
-	@NotNull
-	private Token parseIdGroup(StringReader input) throws ParseException {
-		final String id = readWhile(input, this.parserParts::isIdPart);
-		AccessableToken token = new IdToken(id);
-
-		if (!input.canRead()) {
-			return token;
-		}
-
-
-		while (input.tryRead('.')) {
-			if (input.canRead()) {
-				char start = input.read();
-				if (!this.parserParts.isAccessStart(start)) {
-					throw new UnexpectedCharacterException("a valid accessor", start, input.getCurrentIndex());
-				}
-
-				token = new AccessToken(token, readWhile(input, this.parserParts::isAccessPart));
-			} else {
-				throw new UnexpectedEndingException("An expression can't end with '.'");
-			}
-		}
-
-		return token;
+		return stack.getFinal(input.getCurrentIndex());
 	}
 
 	/**

@@ -11,7 +11,7 @@ import java.util.List;
 class Parser {
 	final List<Token> stack = new ArrayList<>();
 
-	Token peek() {
+	private Token peek() {
 		if (!this.stack.isEmpty()) {
 			return this.stack.get(this.stack.size() - 1);
 		}
@@ -27,49 +27,16 @@ class Parser {
 		return this.stack.remove(this.stack.size() - 1);
 	}
 
-	/**
-	 * Executes following reduce steps:
-	 * <ul>
-	 *     <li>{@link ExpressionToken} | {@link BinaryOperatorToken} => {@link PartialBinaryExpressionToken}</li>
-	 *     <li>{@link UnaryOperatorToken}, {@link ExpressionToken} | {@link BinaryOperatorToken} => {@link UnaryExpressionToken} | {@link BinaryOperatorToken}</li>
-	 *     <li>
-	 *         {@link PartialBinaryExpressionToken}, {@link ExpressionToken} | {@link BinaryOperatorToken} <br/>
-	 *         where the operator on the stack has a higher or equal priority to the one being added, the 3 items on the
-	 *         stack get popped, merged to a {@link BinaryExpressionToken} and placed on the stack.
-	 *         The new token is then pushed again.
-	 *     </li>
-	 * </ul>
-	 */
-	void push(Token token) {
-		final Token top = this.peek();
 
-		if (token instanceof BinaryOperatorToken) {
-			BinaryOperatorToken binOpToken = (BinaryOperatorToken) token;
-
-			// reduce the expressions to the needed priority level
-			ExpressionToken left = this.expressionReducePop(binOpToken.op.getPriority());
-			// stack[ {'a', '*'}, 'b'], token = '+' -> stack[], left = {'a', '*', 'b'}
-			//                                      -> stack[{{'a', '*', 'b'}, '+'}]
-			// stack[ {'a', '+'}, 'b'], token = '+' -> stack[], left = {'a', '+', 'b'}
-			//                                      -> stack[{{'a', '+', 'b'}, '+'}]
-			// stack[ {     '-'}, 'b'], token = '+' -> stack[], left = {'-', 'b'}
-			//                                      -> stack[{{     '-', 'b'}, '+'}]
-
-			// stack[ {'a', '+'}, 'b'], token = '*' -> stack[{'a', '+'}], left = {'b'}
-			//                                      -> stack[{'a', '+'}, {'b', '*'}]
-
-			this.stack.add(new PartialBinaryExpressionToken(left, binOpToken.op));
-
-		} else {
-			this.stack.add(token);
-		}
+	private void push(Token token) {
+		this.stack.add(token);
 	}
 
 	/**
 	 * @throws ClassCastException if the top is not an expression
 	 * @see #expressionReducePop(int)
 	 */
-	ExpressionToken expressionReducePop() {
+	private ExpressionToken expressionReducePop() {
 		return this.expressionReducePop(Integer.MAX_VALUE);
 	}
 
@@ -107,10 +74,9 @@ class Parser {
 	 * </ul>
 	 *
 	 * @param index the current reader index, for exception throwing.
-	 *
 	 * @throws ClassCastException if the top is not an expression
 	 */
-	void commaReduce(int index) throws ParseException {
+	private void commaReduce(int index) throws ParseException {
 		// ( expr,
 		// UnfinishedArgs Expression (commaReduce)
 		// => UnfinishedArgs
@@ -145,7 +111,7 @@ class Parser {
 	 *
 	 * @param index the current reader index, for exception throwing.
 	 */
-	void bracketReduce(int index) throws ParseException {
+	void visitClosingParenthesis(int index) throws ParseException {
 		//
 		// ( ... )
 		// UnfinishedArgsToken Expression? (callReduce)
@@ -157,7 +123,7 @@ class Parser {
 
 		UnfinishedArgsToken args;
 		{
-			if(this.stack.isEmpty()){
+			if (this.stack.isEmpty()) {
 				throw new MissingTokenException("A closing bracket ')' can't be the first character of an expression", index);
 			}
 
@@ -177,15 +143,119 @@ class Parser {
 			this.pop();
 			this.push(new CallToken(((IdToken) top).id, args.tokens));
 		} else {
-			if(args.tokens.isEmpty()){
+			if (args.tokens.isEmpty()) {
 				throw new MissingTokenException("Encountered empty brackets that aren't a call", index);
-			} else if(args.tokens.size() > 1){
+			} else if (args.tokens.size() > 1) {
 				throw new UnexpectedTokenException("Encountered too many expressions in brackets that aren't a call", index);
-			} else if(!expressionOnTop){
+			} else if (!expressionOnTop) {
 				throw new UnexpectedTokenException("Encountered a trailing comma in brackets that aren't a call", index);
 			} else {
 				this.push(args.tokens.get(0));
 			}
 		}
+	}
+
+	void visitNumber(String numberString) {
+		this.push(new NumberToken(numberString));
+	}
+
+	void visitOpeningParenthesis() {
+		this.push(new UnfinishedArgsToken());
+	}
+
+	void visitComma(int index) throws ParseException {
+		if (this.peek() instanceof ExpressionToken) {
+			this.commaReduce(index);
+		} else {
+			throw new UnexpectedTokenException("Expected an expression before a comma ','", index);
+		}
+	}
+
+	boolean canReadBinaryOp() {
+		return this.peek() instanceof ExpressionToken;
+	}
+
+	/**
+	 * Executes following reduce steps:
+	 * <ul>
+	 *     <li>{@link ExpressionToken} | {@link BinaryOperatorToken} => {@link PartialBinaryExpressionToken}</li>
+	 *     <li>{@link UnaryOperatorToken}, {@link ExpressionToken} | {@link BinaryOperatorToken} => {@link UnaryExpressionToken} | {@link BinaryOperatorToken}</li>
+	 *     <li>
+	 *         {@link PartialBinaryExpressionToken}, {@link ExpressionToken} | {@link BinaryOperatorToken} <br/>
+	 *         where the operator on the stack has a higher or equal priority to the one being added, the 3 items on the
+	 *         stack get popped, merged to a {@link BinaryExpressionToken} and placed on the stack.
+	 *         The new token is then pushed again.
+	 *     </li>
+	 * </ul>
+	 */
+	void visitBinaryOperator(BinaryOp binaryOp) {
+		// reduce the expressions to the needed priority level
+		ExpressionToken left = this.expressionReducePop(binaryOp.getPriority());
+		// stack[ {'a', '*'}, 'b'], token = '+' -> stack[], left = {'a', '*', 'b'}
+		//                                      -> stack[{{'a', '*', 'b'}, '+'}]
+		// stack[ {'a', '+'}, 'b'], token = '+' -> stack[], left = {'a', '+', 'b'}
+		//                                      -> stack[{{'a', '+', 'b'}, '+'}]
+		// stack[ {     '-'}, 'b'], token = '+' -> stack[], left = {'-', 'b'}
+		//                                      -> stack[{{     '-', 'b'}, '+'}]
+
+		// stack[ {'a', '+'}, 'b'], token = '*' -> stack[{'a', '+'}], left = {'b'}
+		//                                      -> stack[{'a', '+'}, {'b', '*'}]
+
+		this.stack.add(new PartialBinaryExpressionToken(left, binaryOp));
+	}
+
+	void visitUnaryOperator(UnaryOp unaryOp) {
+		this.push(new UnaryOperatorToken(unaryOp));
+	}
+
+	ExpressionToken getFinal(int endIndex) throws ParseException {
+		if (!this.stack.isEmpty()) {
+			if (this.peek() instanceof ExpressionToken) {
+				ExpressionToken result = this.expressionReducePop();
+
+				if (this.stack.isEmpty()) {
+					return result;
+				}
+
+				if (this.peek() instanceof UnfinishedArgsToken) {
+					throw new MissingTokenException("Expected a closing bracket", endIndex);
+				} else {
+					throw new UnexpectedTokenException(
+							"The stack of tokens isn't empty at the end of the expression: " + this.stack +
+									" top: " + result, endIndex);
+				}
+			} else {
+				Token top = this.peek();
+				if (top instanceof UnfinishedArgsToken) {
+					throw new MissingTokenException("Expected a closing bracket", endIndex);
+				} else if (top instanceof PriorityOperatorToken) {
+					throw new MissingTokenException(
+							"Expected a identifier, constant or subexpression on the right side of the operator",
+							endIndex);
+				} else {
+					throw new UnexpectedTokenException(
+							"The stack of tokens contains an unexpected token at the top: " + this.stack,
+							endIndex);
+				}
+			}
+		} else {
+			throw new MissingTokenException("The input seems to be empty", endIndex);
+		}
+	}
+
+	void visitId(String id) {
+		this.push(new IdToken(id));
+	}
+
+	boolean canReadAccess() {
+		return this.peek() instanceof AccessableToken;
+	}
+
+	/**
+	 * Assumes `canReadAccess` has returned true
+	 */
+	void visitAccess(String access) {
+		AccessableToken pop = (AccessableToken) this.pop();
+		this.push(new AccessToken(pop, access));
 	}
 }
