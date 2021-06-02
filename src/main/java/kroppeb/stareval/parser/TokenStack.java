@@ -30,7 +30,6 @@ class TokenStack {
 	/**
 	 * Executes following reduce steps:
 	 * <ul>
-	 *     <li>{@link IdToken} | {@link ArgsToken} => {@link CallToken}</li>
 	 *     <li>{@link ExpressionToken} | {@link BinaryOperatorToken} => {@link PartialBinaryExpressionToken}</li>
 	 *     <li>{@link UnaryOperatorToken}, {@link ExpressionToken} | {@link BinaryOperatorToken} => {@link UnaryExpressionToken} | {@link BinaryOperatorToken}</li>
 	 *     <li>
@@ -139,8 +138,9 @@ class TokenStack {
 	 * Allows for trailing comma.
 	 * Executes following reduce steps:
 	 * <ul>
-	 *     <li>{@link UnfinishedArgsToken}, {@link #expressionReducePop} => {@link ArgsToken}</li>
-	 *     <li>{@link UnfinishedArgsToken} => {@link ArgsToken}</li>
+	 *     <li>{@link IdToken} {@link UnfinishedArgsToken}, {@link #expressionReducePop} => {@link CallToken}</li>
+	 *     <li>{@link IdToken} {@link UnfinishedArgsToken} => {@link CallToken}</li>
+	 *     <li>{@link UnfinishedArgsToken}, {@link #expressionReducePop} => {@link ExpressionToken}</li>
 	 * </ul>
 	 *
 	 * @param index the current reader index, for exception throwing.
