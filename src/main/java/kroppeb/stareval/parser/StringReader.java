@@ -1,5 +1,7 @@
 package kroppeb.stareval.parser;
 
+import kroppeb.stareval.exception.UnexpectedCharacterException;
+
 /**
  * A class to facilitate the reading of strings, will completely ignore all spaces.
  */
@@ -74,11 +76,11 @@ public class StringReader {
 	/**
 	 * Read a character and verify it's the expected character.
 	 */
-	public void read(char c) throws Exception {
+	public void read(char c) throws UnexpectedCharacterException {
 		char read = this.read();
 
 		if (read != c) {
-			throw new Exception("unexpected character: '" + read + "' expected '" + c + "'");
+			throw new UnexpectedCharacterException(c, read, this.getCurrentIndex());
 		}
 	}
 
@@ -89,6 +91,10 @@ public class StringReader {
 	 * @return whether it could read the character.
 	 */
 	public boolean tryRead(char c) {
+		if (!this.canRead()) {
+			return false;
+		}
+
 		char read = this.peek();
 
 		if (read != c) {
@@ -118,5 +124,9 @@ public class StringReader {
 	 */
 	public boolean canRead() {
 		return this.nextIndex < this.string.length();
+	}
+
+	public int getCurrentIndex() {
+		return this.lastIndex;
 	}
 }

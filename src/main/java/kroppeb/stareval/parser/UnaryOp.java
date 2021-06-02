@@ -1,6 +1,6 @@
 package kroppeb.stareval.parser;
 
-public class UnaryOp extends Op {
+public class UnaryOp {
 	private final String name;
 
 	public UnaryOp(String name) {

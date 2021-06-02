@@ -1,5 +1,8 @@
 package kroppeb.stareval.parser;
 
+import kroppeb.stareval.exception.MissingTokenException;
+import kroppeb.stareval.exception.ParseException;
+import kroppeb.stareval.exception.UnexpectedTokenException;
 import kroppeb.stareval.token.*;
 
 import java.util.ArrayList;
@@ -16,23 +19,9 @@ class TokenStack {
 		return null;
 	}
 
-	private Token peek(int offset) {
-		if (this.stack.size() > offset) {
-			return this.stack.get(this.stack.size() - 1 - offset);
-		}
-
-		return null;
-	}
-
-	private void pop(int count) throws Exception {
-		for (int i = 0; i < count; i++) {
-			this.pop();
-		}
-	}
-
-	private Token pop() throws Exception {
+	private Token pop() {
 		if (this.stack.isEmpty()) {
-			throw new Exception();
+			throw new IllegalStateException("Internal token stack is empty");
 		}
 
 		return this.stack.remove(this.stack.size() - 1);
@@ -52,14 +41,10 @@ class TokenStack {
 	 *     </li>
 	 * </ul>
 	 */
-	void push(Token token) throws Exception {
+	void push(Token token) {
 		final Token top = this.peek();
 
-		if (token instanceof ArgsToken && top instanceof IdToken) {
-			this.pop();
-			// TODO: can't this be `this.stack.add`?
-			this.push(new CallToken(((IdToken) top).id, ((ArgsToken) token).tokens));
-		} else if (token instanceof BinaryOperatorToken) {
+		if (token instanceof BinaryOperatorToken) {
 			BinaryOperatorToken binOpToken = (BinaryOperatorToken) token;
 
 			// reduce the expressions to the needed priority level
@@ -82,9 +67,10 @@ class TokenStack {
 	}
 
 	/**
+	 * @throws ClassCastException if the top is not an expression
 	 * @see #expressionReducePop(int)
 	 */
-	ExpressionToken expressionReducePop() throws Exception {
+	ExpressionToken expressionReducePop() {
 		return this.expressionReducePop(Integer.MAX_VALUE);
 	}
 
@@ -95,11 +81,13 @@ class TokenStack {
 	 *     <li>{@link PriorityOperatorToken}, {@link ExpressionToken} => {@link ExpressionToken}
 	 *     as long as the {@code priority} of the {@link PriorityOperatorToken} is stricter than the given priority</li>
 	 * </ul>
+	 *
+	 * @throws ClassCastException if the top is not an expression
 	 */
-	private ExpressionToken expressionReducePop(int priority) throws Exception {
+	private ExpressionToken expressionReducePop(int priority) {
 		ExpressionToken token = (ExpressionToken) this.pop();
 
-		while (this.stack.size() >= 1) {
+		while (!this.stack.isEmpty()) {
 			Token x = this.peek();
 
 			if (x instanceof PriorityOperatorToken && ((PriorityOperatorToken) x).getPriority() <= priority) {
@@ -118,20 +106,33 @@ class TokenStack {
 	 * <ul>
 	 *     <li>{@link UnfinishedArgsToken}, {@link #expressionReducePop} => {@link UnfinishedArgsToken}</li>
 	 * </ul>
+	 *
+	 * @param index the current reader index, for exception throwing.
+	 *
+	 * @throws ClassCastException if the top is not an expression
 	 */
-	void commaReduce() throws Exception {
+	void commaReduce(int index) throws ParseException {
 		// ( expr,
 		// UnfinishedArgs Expression (commaReduce)
 		// => UnfinishedArgs
 
 		ExpressionToken expr = this.expressionReducePop();
-		UnfinishedArgsToken args = (UnfinishedArgsToken) this.peek();
+		Token args = this.peek();
 
 		if (args == null) {
-			throw new Exception();
+			throw new MissingTokenException(
+					"Expected an opening bracket '(' before seeing a comma ',' or closing bracket ')'",
+					index
+			);
 		}
 
-		args.tokens.add(expr);
+		if (args instanceof UnfinishedArgsToken) {
+			((UnfinishedArgsToken) args).tokens.add(expr);
+		} else {
+			throw new UnexpectedTokenException(
+					"Expected to see an opening bracket '(' or a comma ',' right before an expression followed by a " +
+							"closing bracket ')' or a comma ','", index);
+		}
 	}
 
 	/**
@@ -141,18 +142,50 @@ class TokenStack {
 	 *     <li>{@link UnfinishedArgsToken}, {@link #expressionReducePop} => {@link ArgsToken}</li>
 	 *     <li>{@link UnfinishedArgsToken} => {@link ArgsToken}</li>
 	 * </ul>
+	 *
+	 * @param index the current reader index, for exception throwing.
 	 */
-	void bracketReduce() throws Exception {
+	void bracketReduce(int index) throws ParseException {
 		//
 		// ( ... )
 		// UnfinishedArgsToken Expression? (callReduce)
 
-		if (this.peek() instanceof ExpressionToken) {
-			this.commaReduce();
+		boolean expressionOnTop = this.peek() instanceof ExpressionToken;
+		if (expressionOnTop) {
+			this.commaReduce(index);
 		}
 
-		UnfinishedArgsToken args = (UnfinishedArgsToken) this.pop();
+		UnfinishedArgsToken args;
+		{
+			if(this.stack.isEmpty()){
+				throw new MissingTokenException("A closing bracket ')' can't be the first character of an expression", index);
+			}
 
-		this.push(new ArgsToken(args.tokens));
+			Token pop = this.pop();
+
+			if (!(pop instanceof UnfinishedArgsToken)) {
+				throw new UnexpectedTokenException(
+						"Expected to see an opening bracket '(' or a comma ',' right before an expression followed by a " +
+								"closing bracket ')' or a comma ','", index);
+			}
+			args = (UnfinishedArgsToken) pop;
+		}
+
+		Token top = this.peek();
+
+		if (top instanceof IdToken) {
+			this.pop();
+			this.push(new CallToken(((IdToken) top).id, args.tokens));
+		} else {
+			if(args.tokens.isEmpty()){
+				throw new MissingTokenException("Encountered empty brackets that aren't a call", index);
+			} else if(args.tokens.size() > 1){
+				throw new UnexpectedTokenException("Encountered too many expressions in brackets that aren't a call", index);
+			} else if(!expressionOnTop){
+				throw new UnexpectedTokenException("Encountered a trailing comma in brackets that aren't a call", index);
+			} else {
+				this.push(args.tokens.get(0));
+			}
+		}
 	}
 }

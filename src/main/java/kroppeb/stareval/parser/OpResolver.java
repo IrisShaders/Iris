@@ -1,56 +1,58 @@
 package kroppeb.stareval.parser;
 
 
-abstract class OpResolver<T extends Op> {
-	abstract T check(StringReader input) throws Exception;
+import kroppeb.stareval.exception.ParseException;
+
+abstract class OpResolver<T> {
+	abstract T resolve(StringReader input) throws ParseException;
 }
 
-class SingleCharOpResolver<T extends Op> extends OpResolver<T> {
-	private final T t;
+class SingleCharOpResolver<T> extends OpResolver<T> {
+	private final T op;
 
-	SingleCharOpResolver(T t) {
-		this.t = t;
+	SingleCharOpResolver(T op) {
+		this.op = op;
 	}
 
 	@Override
-	T check(StringReader input) {
-		return this.t;
+	T resolve(StringReader input) {
+		return this.op;
 	}
 }
 
-class DualCharOpResolver<T extends Op> extends OpResolver<T> {
-	private final T t;
-	private final char c;
+class DualCharOpResolver<T> extends OpResolver<T> {
+	private final T op;
+	private final char secondChar;
 
-	DualCharOpResolver(T t, char c) {
-		this.t = t;
-		this.c = c;
+	DualCharOpResolver(T op, char secondChar) {
+		this.op = op;
+		this.secondChar = secondChar;
 	}
 
 	@Override
-	T check(StringReader input) throws Exception {
-		input.read(this.c);
-		return this.t;
+	T resolve(StringReader input) throws ParseException {
+		input.read(this.secondChar);
+		return this.op;
 	}
 }
 
-class SingleDualCharOpResolver<T extends Op> extends OpResolver<T> {
-	private final T tSingle;
-	private final T tDouble;
-	private final char c;
+class SingleDualCharOpResolver<T> extends OpResolver<T> {
+	private final T singleCharOperator;
+	private final T doubleCharOperator;
+	private final char secondChar;
 
-	SingleDualCharOpResolver(T tSingle, T tDouble, char c) {
-		this.tSingle = tSingle;
-		this.tDouble = tDouble;
-		this.c = c;
+	SingleDualCharOpResolver(T singleCharOperator, T doubleCharOperator, char secondChar) {
+		this.singleCharOperator = singleCharOperator;
+		this.doubleCharOperator = doubleCharOperator;
+		this.secondChar = secondChar;
 	}
 
 	@Override
-	T check(StringReader input) {
-		if (input.tryRead(this.c)) {
-			return this.tDouble;
+	T resolve(StringReader input) {
+		if (input.tryRead(this.secondChar)) {
+			return this.doubleCharOperator;
 		} else {
-			return this.tSingle;
+			return this.singleCharOperator;
 		}
 	}
 }

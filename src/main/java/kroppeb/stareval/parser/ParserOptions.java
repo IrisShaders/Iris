@@ -7,14 +7,14 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.Map;
 
 public final class ParserOptions {
-	private final Char2ObjectMap<? extends OpResolver<UnaryOp>> unaryOpResolvers;
-	private final Char2ObjectMap<? extends OpResolver<BinaryOp>> binaryOpResolvers;
+	private final Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers;
+	private final Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers;
 	private final ParserParts parserParts;
 
 
 	private ParserOptions(
-			Char2ObjectMap<? extends OpResolver<UnaryOp>> unaryOpResolvers,
-			Char2ObjectMap<? extends OpResolver<BinaryOp>> binaryOpResolvers,
+			Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers,
+			Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers,
 			ParserParts parserParts) {
 		this.unaryOpResolvers = unaryOpResolvers;
 		this.binaryOpResolvers = binaryOpResolvers;
@@ -25,11 +25,11 @@ public final class ParserOptions {
 		return this.parserParts;
 	}
 
-	OpResolver<UnaryOp> getUnaryOpResolver(char c) {
+	OpResolver<? extends UnaryOp> getUnaryOpResolver(char c) {
 		return this.unaryOpResolvers.get(c);
 	}
 
-	OpResolver<BinaryOp> getBinaryOpResolver(char c) {
+	OpResolver<? extends BinaryOp> getBinaryOpResolver(char c) {
 		return this.binaryOpResolvers.get(c);
 	}
 
@@ -56,7 +56,7 @@ public final class ParserOptions {
 			this.parserParts = parserParts;
 		}
 
-		private static <T extends Op> Char2ObjectMap<OpResolver<T>> convertOp(
+		private static <T> Char2ObjectMap<? extends OpResolver<? extends T>> convertOp(
 				Char2ObjectMap<? extends Map<String, T>> ops) {
 			Char2ObjectMap<OpResolver<T>> result = new Char2ObjectOpenHashMap<>();
 

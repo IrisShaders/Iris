@@ -1,6 +1,6 @@
 package kroppeb.stareval.parser;
 
-public class BinaryOp extends Op {
+public class BinaryOp {
 	private final String name;
 	private final int priority;
 
