@@ -4,50 +4,45 @@ package kroppeb.stareval.parser;
 import kroppeb.stareval.exception.ParseException;
 import kroppeb.stareval.exception.UnexpectedCharacterException;
 import kroppeb.stareval.exception.UnexpectedEndingException;
-import kroppeb.stareval.token.AccessToken;
 import kroppeb.stareval.token.ExpressionToken;
 import net.minecraft.client.util.CharPredicate;
 
 
-public class Tokenizer {
-	private final ParserOptions options;
-	private final ParserOptions.ParserParts parserParts;
-
-	public Tokenizer(ParserOptions options) {
-		this.options = options;
-		this.parserParts = options.getParserParts();
+class Tokenizer {
+	private Tokenizer() {
 	}
 
-	public ExpressionToken parse(String input) throws ParseException {
-		return this.parseInternal(new StringReader(input));
+	static ExpressionToken parse(String input, ParserOptions options) throws ParseException {
+		return parseInternal(new StringReader(input), options);
 	}
 
-	private ExpressionToken parseInternal(StringReader input) throws ParseException {
+	static ExpressionToken parseInternal(StringReader input, ParserOptions options) throws ParseException {
 		// parser stack
 		final Parser stack = new Parser();
-
+		ParserOptions.ParserParts parserParts = options.getParserParts();
 
 		while (input.canRead()) {
 			char c = input.read();
 
-			if (this.parserParts.isIdStart(c)) {
-				final String id = readWhile(input, this.parserParts::isIdPart);
+			if (parserParts.isIdStart(c)) {
+				final String id = readWhile(input, parserParts::isIdPart);
 				stack.visitId(id);
-			} else if(c == '.' && stack.canReadAccess()){
+			} else if (c == '.' && stack.canReadAccess()) {
 				if (input.canRead()) {
 					char start = input.read();
-					if (!this.parserParts.isAccessStart(start)) {
+
+					if (!parserParts.isAccessStart(start)) {
 						throw new UnexpectedCharacterException("a valid accessor", start, input.getCurrentIndex());
 					}
 
-					final String access = readWhile(input, this.parserParts::isAccessPart);
+					final String access = readWhile(input, parserParts::isAccessPart);
 					stack.visitAccess(access);
 				} else {
 					throw new UnexpectedEndingException("An expression can't end with '.'");
 				}
-			} else if (this.parserParts.isNumberStart(c)) {
+			} else if (parserParts.isNumberStart(c)) {
 				// start parsing a number
-				final String numberString = readWhile(input, this.parserParts::isNumberPart);
+				final String numberString = readWhile(input, parserParts::isNumberPart);
 				stack.visitNumber(numberString);
 			} else if (c == '(') {
 				stack.visitOpeningParenthesis();
@@ -58,7 +53,7 @@ public class Tokenizer {
 			} else {
 				if (stack.canReadBinaryOp()) {
 					// maybe binary operator
-					OpResolver<? extends BinaryOp> resolver = this.options.getBinaryOpResolver(c);
+					OpResolver<? extends BinaryOp> resolver = options.getBinaryOpResolver(c);
 
 					if (resolver != null) {
 						stack.visitBinaryOperator(resolver.resolve(input));
@@ -66,7 +61,7 @@ public class Tokenizer {
 					}
 				} else {
 					// maybe unary operator
-					OpResolver<? extends UnaryOp> resolver = this.options.getUnaryOpResolver(c);
+					OpResolver<? extends UnaryOp> resolver = options.getUnaryOpResolver(c);
 
 					if (resolver != null) {
 						stack.visitUnaryOperator(resolver.resolve(input));

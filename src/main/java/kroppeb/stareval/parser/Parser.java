@@ -8,8 +8,11 @@ import kroppeb.stareval.token.*;
 import java.util.ArrayList;
 import java.util.List;
 
-class Parser {
-	final List<Token> stack = new ArrayList<>();
+public class Parser {
+	private final List<Token> stack = new ArrayList<>();
+
+	Parser() {
+	}
 
 	private Token peek() {
 		if (!this.stack.isEmpty()) {
@@ -258,5 +261,9 @@ class Parser {
 		} else {
 			throw new MissingTokenException("The input seems to be empty", endIndex);
 		}
+	}
+
+	public static ExpressionToken parse(String input, ParserOptions options) throws ParseException {
+		return Tokenizer.parse(input, options);
 	}
 }

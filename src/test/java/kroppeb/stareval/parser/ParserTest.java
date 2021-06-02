@@ -9,23 +9,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class ParserTest {
-	private static final Tokenizer TOKENIZER = new Tokenizer(IrisOptions.options);
+	private static ExpressionToken parse(String string) throws ParseException {
+		return Parser.parse(string, IrisOptions.options);
+	}
 
 	@ParameterizedTest
 	@CsvFileSource(resources = "/shouldBeAbleToBeParsed.csv", delimiter = ';')
 	void checkIfValidExpressionsParse(String input) throws ParseException {
-		TOKENIZER.parse(input);
+		parse(input);
 	}
 
 	@ParameterizedTest
 	@CsvFileSource(resources = "/shouldNotBeAbleToBeParsed.csv", delimiter = ';')
 	void checkIfInvalidExpressionsDontParse(String input) {
-		try{
-			TOKENIZER.parse(input);
-		} catch (ParseException parseException){
+		try {
+			parse(input);
+		} catch (ParseException parseException) {
 			parseException.printStackTrace();
 			return;
-		} catch (RuntimeException runtimeException){
+		} catch (RuntimeException runtimeException) {
 			fail("Unexpected exception has been thrown", runtimeException);
 			return;
 		}
@@ -35,8 +37,8 @@ class ParserTest {
 	@ParameterizedTest
 	@CsvFileSource(resources = "/fullyEquivalent.csv", delimiter = ';')
 	void checkOrderOfOperationsParse(String input1, String input2) throws ParseException {
-		ExpressionToken exp1 = TOKENIZER.parse(input1);
-		ExpressionToken exp2 = TOKENIZER.parse(input2);
+		ExpressionToken exp1 = parse(input1);
+		ExpressionToken exp2 = parse(input2);
 		assertEquals(exp1.simplify().toString(), exp2.simplify().toString());
 	}
 }
