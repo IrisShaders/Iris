@@ -1,7 +1,9 @@
 package net.coderbot.iris.gui.element;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gui.GuiUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
@@ -20,7 +22,12 @@ import java.util.stream.Collectors;
 
 public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackListWidget.BaseEntry> {
 	public static final List<String> BUILTIN_PACKS = ImmutableList.of("(internal)");
+
 	private static final Text PACK_LIST_LABEL = new TranslatableText("pack.iris.list.label").formatted(Formatting.ITALIC, Formatting.GRAY);
+	private static final Text SHADERS_DISABLED_LABEL = new TranslatableText("options.iris.shaders.disabled");
+	private static final Text SHADERS_ENABLED_LABEL = new TranslatableText("options.iris.shaders.enabled");
+
+	private final EnableShadersButtonEntry enableShadersButton = new EnableShadersButtonEntry(Iris.getIrisConfig().areShadersEnabled());
 
 	public ShaderPackListWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
@@ -30,10 +37,10 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 	@Override
 	public int getRowWidth() {
-		// Allow the list widget to expand to take up most of the width of the screen, or shrink as needed.
-		// This is important both because shader pack names can be quite long, and it also helps if this list widget
-		// is side-by-side with another widget, such as a config GUI.
-		return width - 50;
+		// Temporarily set to only reach a width of up to 312 in order to fit in with
+		// the width of the array of buttons at the bottom of the GUI. May be changed
+		// in the future if this widget is made to occupy half the screen.
+		return Math.min(308, width - 50);
 	}
 
 	@Override
@@ -45,15 +52,17 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 		this.clearEntries();
 
 		try {
+			this.addEntry(enableShadersButton);
+
 			Path path = Iris.SHADERPACKS_DIRECTORY;
-			int index = -1;
+			int index = 0;
 
 			for (String pack : BUILTIN_PACKS) {
 				index++;
 				addEntry(index, pack);
 			}
 
-			Collection<Path> folders = Files.walk(path, 1).filter(Iris::isValidShaderpack).collect(Collectors.toList());
+			Collection<Path> folders = Files.list(path).filter(Iris::isValidShaderpack).collect(Collectors.toList());
 
 			for (Path folder : folders) {
 				String name = folder.getFileName().toString();
@@ -93,6 +102,10 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 		}
 	}
 
+	public EnableShadersButtonEntry getEnableShadersButton() {
+		return enableShadersButton;
+	}
+
 	public static abstract class BaseEntry extends AlwaysSelectedEntryListWidget.Entry<BaseEntry> {
 		protected BaseEntry() {}
 	}
@@ -122,13 +135,15 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 			int color = 0xFFFFFF;
 			String name = packName;
 
+			boolean shadersEnabled = list.getEnableShadersButton().enabled;
+
 			if (textRenderer.getWidth(new LiteralText(name).formatted(Formatting.BOLD)) > this.list.getRowWidth() - 3) {
 				name = textRenderer.trimToWidth(name, this.list.getRowWidth() - 8) + "...";
 			}
 
 			MutableText text = new LiteralText(name);
 
-			if (this.isMouseOver(mouseX, mouseY)) {
+			if (shadersEnabled && this.isMouseOver(mouseX, mouseY)) {
 				text = text.formatted(Formatting.BOLD);
 			}
 
@@ -136,13 +151,18 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 				color = 0xFFF263;
 			}
 
+			if (!shadersEnabled) {
+				color = 0xA2A2A2;
+			}
+
 			drawCenteredText(matrices, textRenderer, text, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, color);
 		}
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (!this.isSelected() && button == 0) {
+			if (list.getEnableShadersButton().enabled && !this.isSelected() && button == 0) {
 				this.list.select(this.index);
+
 				return true;
 			}
 
@@ -160,6 +180,37 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 		@Override
 		public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xC2C2C2);
+		}
+	}
+
+	public static class EnableShadersButtonEntry extends BaseEntry {
+		public boolean enabled;
+
+		public EnableShadersButtonEntry(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		@Override
+		public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			GuiUtil.bindIrisWidgetsTexture();
+
+			GuiUtil.drawButton(matrices, x - 2, y - 3, entryWidth, 18, hovered, false);
+
+			Text label = this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
+
+			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
+		}
+
+		@Override
+		public boolean mouseClicked(double mouseX, double mouseY, int button) {
+			if (button == 0) {
+				this.enabled = !this.enabled;
+				GuiUtil.playButtonClickSound();
+
+				return true;
+			}
+
+			return super.mouseClicked(mouseX, mouseY, button);
 		}
 	}
 }
