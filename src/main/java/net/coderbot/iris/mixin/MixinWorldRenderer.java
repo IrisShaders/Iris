@@ -77,6 +77,7 @@ public class MixinWorldRenderer {
 			// Prevent nearby chunks from being rebuilt on the main thread in the shadow pass. Aside from causing
 			// FPS to tank, this also causes weird chunk corruption! It's critical to make sure that it's disabled as a
 			// result.
+			MinecraftClient.getInstance().getProfiler().pop();
 			callback.cancel();
 		}
 	}
