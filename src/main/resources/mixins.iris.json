@@ -26,6 +26,7 @@
     "renderlayer.MixinRenderLayer",
     "renderlayer.RenderLayerAccessor",
     "renderlayer.RenderPhaseAccessor",
+    "shadows.MixinBeaconBlockEntityRenderer",
     "shadows.MixinWorldRenderer",
     "texunits.MixinBufferVertexConsumer",
     "texunits.MixinGlStateManager",
