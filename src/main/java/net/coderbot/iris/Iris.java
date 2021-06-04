@@ -130,7 +130,16 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static boolean loadExternalShaderpack(String name) {
-		Path shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
+		Path shaderPackRoot;
+
+		try {
+			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
+		} catch (InvalidPathException e) {
+			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", irisConfig.getShaderPackName());
+
+			return false;
+		}
+
 		Path shaderPackPath;
 
 		if (shaderPackRoot.toString().endsWith(".zip")) {
