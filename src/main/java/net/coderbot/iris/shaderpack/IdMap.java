@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
+import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -70,32 +71,8 @@ public class IdMap {
 
 		if (blockPropertiesMap == null) {
 			// Fill in with default values...
-
 			blockPropertiesMap = new Object2IntOpenHashMap<>();
-
-			// Anvil ID #8 = water
-			Blocks.WATER.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 8));
-
-			// Anvil ID #10 = lava
-			Blocks.LAVA.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 10));
-
-			// Anvil ID #18 = leaves
-			/*BlockTags.LEAVES.values().forEach(block -> {
-				block.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
-			});*/
-
-			// Anvil ID #31 = grass
-			Blocks.GRASS.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 31));
-
-			// Anvil ID #175 = double plant
-			Blocks.TALL_GRASS.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 175));
-
-			Blocks.OAK_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
-			Blocks.BIRCH_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
-			Blocks.JUNGLE_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
-			Blocks.SPRUCE_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
-			Blocks.ACACIA_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
-			Blocks.DARK_OAK_LEAVES.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
+			LegacyIdMap.addLegacyValues(blockPropertiesMap);
 		}
 
 		if (blockRenderLayerMap == null) {

@@ -13,25 +13,27 @@ import org.jetbrains.annotations.Nullable;
 public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;
 
-	private int[] drawBuffers;
-	private float viewportScale;
+	private final int[] drawBuffers;
+	private final float viewportScale;
 	@Nullable
-	private AlphaTestOverride alphaTestOverride;
-	private boolean disableBlend;
-	private ImmutableSet<Integer> mipmappedBuffers;
+	private final AlphaTestOverride alphaTestOverride;
+	private final boolean disableBlend;
+	private final ImmutableSet<Integer> mipmappedBuffers;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
-		// First try to find it in the fragment source, then in the vertex source.
-		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
-		// TODO: ShadersMod appears to default to all buffers? Investigate this more closely.
-		drawBuffers = findDrawbuffersDirective(source.getFragmentSource())
-			.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[]{0}));
-		viewportScale = 1.0f;
+		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
+		// If there's no explicit declaration, then by default /* DRAWBUFFERS:01234567 */ is inferred.
+		// This behavior is needed for SEUS v08 and SEUS v10 to work, otherwise they will break badly.
+		drawBuffers = findDrawbuffersDirective(source.getFragmentSource()).orElse(new int[] { 0, 1, 2, 3, 4, 5, 6, 7 });
 
 		if (properties != null) {
-			viewportScale = properties.viewportScaleOverrides.getOrDefault(source.getName(), 1.0f);
-			alphaTestOverride = properties.alphaTestOverrides.get(source.getName());
-			disableBlend = properties.blendDisabled.contains(source.getName());
+			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
+			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
+			disableBlend = properties.getBlendDisabled().contains(source.getName());
+		} else {
+			viewportScale = 1.0f;
+			alphaTestOverride = null;
+			disableBlend = false;
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();

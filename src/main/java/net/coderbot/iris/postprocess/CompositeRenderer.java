@@ -51,6 +51,8 @@ public class CompositeRenderer {
 				renderTargetDirectives.getRenderTargetSettings();
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
 
+		// TODO: The final pass should be separate from composite passes.
+
 		for (ProgramSource source : pack.getComposite()) {
 			if (source == null || !source.isValid()) {
 				continue;
@@ -97,8 +99,11 @@ public class CompositeRenderer {
 			passes.add(pass);
 
 			// Flip the buffers that this shader wrote to
-			for (int buffer : drawBuffers) {
-				stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
+			// The final pass does not write to our render targets, so it doesn't flip buffers.
+			if (!pass.isLastPass) {
+				for (int buffer : drawBuffers) {
+					stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
+				}
 			}
 		}
 
