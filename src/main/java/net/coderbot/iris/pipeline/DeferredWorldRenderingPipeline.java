@@ -36,6 +36,7 @@ import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import org.lwjgl.opengl.GL30C;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -456,6 +457,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// This destroys all of the loaded composite programs as well.
 		compositeRenderer.destroy();
 
+		// Make sure that any custom framebuffers are not bound before destroying render targets
+		GlStateManager.bindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
+		GlStateManager.bindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
+
+		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+
 		// Destroy our render targets
 		//
 		// While it's possible to just clear them instead and reuse them, we'd need to investigate whether or not this
@@ -531,9 +539,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginTranslucents() {
 		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
 		// all non-translucent content, as required.
-		baseline.bind();
+		baseline.bindAsReadBuffer();
 		GlStateManager.bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		GlStateManager.bindTexture(0);
 	}
 
 	public static GbufferProgram getProgramForSheet(ParticleTextureSheet sheet) {
