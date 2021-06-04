@@ -173,6 +173,13 @@ public class MixinWorldRenderer {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
+	@Inject(method = "renderWeather", at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.defaultAlphaFunc ()V", shift = At.Shift.AFTER))
+	private void iris$applyWeatherOverrides(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo ci) {
+		// TODO: This is a temporary workaround for https://github.com/IrisShaders/Iris/issues/219
+		pipeline.pushProgram(GbufferProgram.WEATHER);
+		pipeline.popProgram(GbufferProgram.WEATHER);
+	}
+
 	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
 	/*@Inject(method = "renderEntity", at = @At("HEAD"))
 	private void iris$beginEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
