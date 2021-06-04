@@ -81,10 +81,10 @@ public class ShadowRenderTargets {
 	}
 
 	public void destroy() {
+		framebuffer.destroy();
+
 		GL20C.glDeleteTextures(targets);
 		depthTexture.destroy();
 		noTranslucents.destroy();
-
-		framebuffer.destroy();
 	}
 }
