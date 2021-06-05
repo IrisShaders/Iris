@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.fantastic.ExtendedBufferStorage;
+import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -41,6 +43,8 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class ShadowRenderer {
@@ -57,6 +61,7 @@ public class ShadowRenderer {
 	private final float sunPathRotation;
 
 	private final BufferBuilderStorage buffers;
+	private final ExtendedBufferStorage extendedBufferStorage;
 
 	public static boolean ACTIVE = false;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
@@ -95,6 +100,12 @@ public class ShadowRenderer {
 		this.sunPathRotation = directives.getSunPathRotation();
 
 		this.buffers = new BufferBuilderStorage();
+
+		if (this.buffers instanceof ExtendedBufferStorage) {
+			this.extendedBufferStorage = (ExtendedBufferStorage) buffers;
+		} else {
+			this.extendedBufferStorage = null;
+		}
 
 		configureSamplingSettings(shadowDirectives);
 	}
@@ -312,19 +323,25 @@ public class ShadowRenderer {
 
 		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
 		// TODO: Make this configurable and disable-able
-		final Frustum entityShadowFrustum = createEntityShadowFrustum(modelView);
-		entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
+		final Frustum entityShadowFrustum = frustum; // createEntityShadowFrustum(modelView);
+		// entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
 
 		// Render nearby entities
 		//
 		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
 		// rendering.
-		//
-		// TODO: Render other block entities in the shadow pass
+		if (extendedBufferStorage != null) {
+			extendedBufferStorage.beginWorldRendering();
+		}
+
 		VertexConsumerProvider.Immediate provider = buffers.getEntityVertexConsumers();
 		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
 
 		int shadowEntities = 0;
+
+		worldRenderer.getWorld().getProfiler().push("cull");
+
+		List<Entity> renderedEntities = new ArrayList<>(32);
 
 		// TODO: I'm sure that this can be improved / optimized.
 		for (Entity entity : getWorld().getEntities()) {
@@ -332,11 +349,19 @@ public class ShadowRenderer {
 				continue;
 			}
 
+			renderedEntities.add(entity);
+		}
+
+		worldRenderer.getWorld().getProfiler().swap("build geometry");
+
+		for (Entity entity : renderedEntities) {
 			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
 			shadowEntities++;
 		}
 
-		worldRenderer.getWorld().getProfiler().swap("blockentities");
+		worldRenderer.getWorld().getProfiler().pop();
+
+		worldRenderer.getWorld().getProfiler().swap("build blockentities");
 
 		int shadowBlockEntities = 0;
 
@@ -354,9 +379,14 @@ public class ShadowRenderer {
 		renderedShadowEntities = shadowEntities;
 		renderedShadowBlockEntities = shadowBlockEntities;
 
+		worldRenderer.getWorld().getProfiler().swap("draw entities");
+
+		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
+		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
+		// shadow...
 		provider.draw();
 
-		worldRenderer.getWorld().getProfiler().swap("translucent terrain");
+		worldRenderer.getWorld().getProfiler().swap("translucent depth copy");
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
@@ -364,14 +394,21 @@ public class ShadowRenderer {
 		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 
+		worldRenderer.getWorld().getProfiler().swap("translucent terrain");
+
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
 		worldRenderer.invokeRenderLayer(RenderLayer.getTranslucent(), modelView, cameraX, cameraY, cameraZ);
-		worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ);
+		// Note: Apparently tripwire isn't rendered in the shadow pass.
+		// worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ);
 
-		// TODO: If we want to render anything after translucent terrain, we need to uncomment this line!
+		// NB: If we want to render anything after translucent terrain, we need to uncomment this line!
 		// setupShadowProgram();
+
+		if (extendedBufferStorage != null) {
+			extendedBufferStorage.endWorldRendering();
+		}
 
 		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
 
