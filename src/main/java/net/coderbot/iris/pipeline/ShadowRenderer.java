@@ -261,6 +261,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		boolean wasChunkCullingEnabled = client.chunkCullingEnabled;
 		client.chunkCullingEnabled = false;
 
+		// Always schedule a terrain update
+		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
+		((WorldRenderer) worldRenderer).scheduleTerrainUpdate();
+
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
 		worldRenderer.invokeSetupTerrain(playerCamera, frustum, false, worldRenderer.getFrame(), false);
 
