@@ -19,18 +19,18 @@ import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
+import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.minecraft.client.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.util.Pair;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
 
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
@@ -38,18 +38,20 @@ public class CompositeRenderer {
 	private final ImmutableList<Pass> passes;
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
-	private final EmptyShadowMapRenderer shadowMapRenderer;
 	private final AbstractTexture noiseTexture;
 
 	final CenterDepthSampler centerDepthSampler;
+	private boolean usesShadows = false;
 
-	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, EmptyShadowMapRenderer shadowMapRenderer, AbstractTexture noiseTexture) {
+	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, AbstractTexture noiseTexture) {
 		centerDepthSampler = new CenterDepthSampler(renderTargets, FrameUpdateNotifier.INSTANCE);
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
 				renderTargetDirectives.getRenderTargetSettings();
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
+
+		// TODO: The final pass should be separate from composite passes.
 
 		for (ProgramSource source : pack.getComposite()) {
 			if (source == null || !source.isValid()) {
@@ -97,8 +99,11 @@ public class CompositeRenderer {
 			passes.add(pass);
 
 			// Flip the buffers that this shader wrote to
-			for (int buffer : drawBuffers) {
-				stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
+			// The final pass does not write to our render targets, so it doesn't flip buffers.
+			if (!pass.isLastPass) {
+				for (int buffer : drawBuffers) {
+					stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
+				}
 			}
 		}
 
@@ -134,7 +139,6 @@ public class CompositeRenderer {
 
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 
-		this.shadowMapRenderer = shadowMapRenderer;
 		this.noiseTexture = noiseTexture;
 	}
 
@@ -156,7 +160,7 @@ public class CompositeRenderer {
 		int targetTexture;
 	}
 
-	public void renderAll() {
+	public void renderAll(ShadowMapRenderer shadowMapRenderer) {
 		centerDepthSampler.endWorldRendering();
 
 		RenderSystem.disableBlend();
@@ -177,7 +181,10 @@ public class CompositeRenderer {
 		bindTexture(SamplerUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
 
 		bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
-		bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureId());
+		bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureNoTranslucentsId());
+		bindTexture(SamplerUniforms.SHADOW_COLOR_0, shadowMapRenderer.getColorTexture0Id());
+		bindTexture(SamplerUniforms.SHADOW_COLOR_1, shadowMapRenderer.getColorTexture1Id());
+
 		bindTexture(SamplerUniforms.NOISE_TEX, noiseTexture.getGlId());
 
 		FullScreenQuadRenderer.INSTANCE.begin();
@@ -235,6 +242,7 @@ public class CompositeRenderer {
 		main.beginWrite(true);
 		GlStateManager.useProgram(0);
 
+		// NB: Unbinding all of these textures is necessary for proper shaderpack reloading.
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0));
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1));
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_2, renderTargets.get(2));
@@ -244,11 +252,27 @@ public class CompositeRenderer {
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6));
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7));
 
-		// TODO: We unbind these textures but it would probably make sense to unbind the other ones too.
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEFAULT_DEPTH);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_0);
 		RenderSystem.bindTexture(0);
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEFAULT_COLOR);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_1);
 		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_2);
+		RenderSystem.bindTexture(0);
+
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_TEX_0);
+		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_TEX_1);
+		RenderSystem.bindTexture(0);
+
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_COLOR_0);
+		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_COLOR_1);
+		RenderSystem.bindTexture(0);
+
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
+		RenderSystem.bindTexture(0);
+
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
 	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean readFromAlt, boolean generateMipmap) {
@@ -304,6 +328,10 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
+		if (SamplerUniforms.hasShadowSamplers(builder)) {
+			usesShadows = true;
+		}
+
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
 		SamplerUniforms.addCompositeSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
@@ -317,5 +345,9 @@ public class CompositeRenderer {
 		for (Pass renderPass : passes) {
 			renderPass.destroy();
 		}
+	}
+
+	public boolean usesShadows() {
+		return usesShadows;
 	}
 }

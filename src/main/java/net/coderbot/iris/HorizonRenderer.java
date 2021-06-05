@@ -92,22 +92,34 @@ public class HorizonRenderer {
 		buildOctagonalPrism(consumer, radius * COS_22_5, radius * SIN_22_5);
 	}
 
-	private void buildBottomPlane(VertexConsumer consumer, float radius) {
-		consumer.vertex(radius, BOTTOM, -radius);
-		consumer.next();
-		consumer.vertex(-radius, BOTTOM, -radius);
-		consumer.next();
-		consumer.vertex(-radius, BOTTOM, radius);
-		consumer.next();
-		consumer.vertex(radius, BOTTOM, radius);
-		consumer.next();
+	private void buildBottomPlane(VertexConsumer consumer, int radius) {
+		for(int x = -radius; x <= radius; x += 64) {
+			for(int z = -radius; z <= radius; z += 64) {
+				consumer.vertex(x + 64, BOTTOM, z);
+				consumer.next();
+				consumer.vertex(x, BOTTOM, z);
+				consumer.next();
+				consumer.vertex(x, BOTTOM, z + 64);
+				consumer.next();
+				consumer.vertex(x + 64, BOTTOM, z + 64);
+				consumer.next();
+			}
+		}
 	}
 
 	private void buildHorizon(VertexConsumer consumer) {
-		float radius = getRenderDistanceInBlocks();
+		int radius = getRenderDistanceInBlocks();
+
+		if (radius > 256) {
+			// Prevent the prism from getting too large, this causes issues on some shader packs that modify the vanilla
+			// sky if we don't do this.
+			radius = 256;
+		}
 
 		buildRegularOctagonalPrism(consumer, radius);
-		buildBottomPlane(consumer, radius);
+
+		// Always make the bottom plane have a radius of 384, to match the top plane.
+		buildBottomPlane(consumer, 384);
 	}
 
 	private int getRenderDistanceInBlocks() {

@@ -4,10 +4,10 @@ import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.GameOptions;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.Vector3f;
@@ -58,8 +58,14 @@ public class MixinWorldRenderer {
 	// Inject a bit early so that we can end our rendering in time.
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;method_23792()V"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		MinecraftClient.getInstance().getProfiler().swap("iris_final");
 		pipeline.finalizeWorldRendering();
 		pipeline = null;
+	}
+
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V", shift = At.Shift.AFTER))
+	private void iris$renderTerrainShadows(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		pipeline.renderShadows((WorldRendererAccessor) this, camera);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR))
@@ -171,6 +177,13 @@ public class MixinWorldRenderer {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
+	@Inject(method = "renderWeather", at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.defaultAlphaFunc ()V", shift = At.Shift.AFTER))
+	private void iris$applyWeatherOverrides(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo ci) {
+		// TODO: This is a temporary workaround for https://github.com/IrisShaders/Iris/issues/219
+		pipeline.pushProgram(GbufferProgram.WEATHER);
+		pipeline.popProgram(GbufferProgram.WEATHER);
+	}
+
 	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
 	/*@Inject(method = "renderEntity", at = @At("HEAD"))
 	private void iris$beginEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
@@ -189,10 +202,13 @@ public class MixinWorldRenderer {
 										CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
 										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
 										VertexConsumerProvider.Immediate immediate) {
+		profiler.swap("iris_opaque_entity_draws");
+
 		if (immediate instanceof FlushableVertexConsumerProvider) {
 			((FlushableVertexConsumerProvider) immediate).flushNonTranslucentContent();
 		}
 
+		profiler.swap("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
 }
