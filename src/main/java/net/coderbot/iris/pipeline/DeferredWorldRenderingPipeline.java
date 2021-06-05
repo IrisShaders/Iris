@@ -21,6 +21,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
+import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
@@ -82,7 +83,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
-	private final ShadowRenderer shadowMapRenderer;
+	private final ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
@@ -95,6 +96,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private static final List<String> programStackLog = new ArrayList<>();
 
 	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
+
+	private boolean usesShadows = false;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -150,8 +153,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
-		this.shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null), programs.getPackDirectives());
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer, noise);
+		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, noise);
+
+		this.usesShadows |= compositeRenderer.usesShadows();
+
+		if (usesShadows) {
+			this.shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null), programs.getPackDirectives());
+		} else {
+			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
+		}
 	}
 
 	private void checkWorld() {
@@ -352,6 +362,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
+		}
+
+		if (SamplerUniforms.hasShadowSamplers(builder)) {
+			usesShadows = true;
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
@@ -570,6 +584,22 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.shadowMapRenderer.renderShadows(worldRenderer, playerCamera);
 	}
 
+	@Override
+	public void addDebugText(List<String> messages) {
+		if (shadowMapRenderer instanceof ShadowRenderer) {
+			messages.add("");
+			messages.add("[Iris] Shadow Maps: " + ShadowRenderer.OVERALL_DEBUG_STRING);
+			messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
+			messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
+			messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
+		} else if (shadowMapRenderer instanceof EmptyShadowMapRenderer) {
+			messages.add("");
+			messages.add("[Iris] Shadow Maps: not used by shader pack");
+		} else {
+			throw new IllegalStateException("Unknown shadow map renderer type!");
+		}
+	}
+
 	// TODO: better way to avoid this global state?
 	private boolean isRenderingWorld = false;
 
@@ -617,7 +647,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		isRenderingWorld = false;
 		programStackLog.clear();
 
-		compositeRenderer.renderAll();
+		compositeRenderer.renderAll(shadowMapRenderer);
 	}
 
 	private boolean isRenderingShadow = false;

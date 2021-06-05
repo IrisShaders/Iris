@@ -31,10 +31,6 @@ public abstract class MixinDebugHud {
 			messages.add(2, Formatting.YELLOW + "[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
 		}
 
-		messages.add("");
-		messages.add("[Iris] Shadows: " + ShadowRenderer.OVERALL_DEBUG_STRING);
-		messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
-		messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
-		messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
+		Iris.getPipelineManager().getPipeline().addDebugText(messages);
 	}
 }

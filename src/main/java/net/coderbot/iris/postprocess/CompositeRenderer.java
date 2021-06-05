@@ -14,12 +14,12 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.rendertarget.*;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
@@ -38,12 +38,12 @@ public class CompositeRenderer {
 	private final ImmutableList<Pass> passes;
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
-	private final ShadowRenderer shadowMapRenderer;
 	private final AbstractTexture noiseTexture;
 
 	final CenterDepthSampler centerDepthSampler;
+	private boolean usesShadows = false;
 
-	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, ShadowRenderer shadowMapRenderer, AbstractTexture noiseTexture) {
+	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, AbstractTexture noiseTexture) {
 		centerDepthSampler = new CenterDepthSampler(renderTargets, FrameUpdateNotifier.INSTANCE);
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
@@ -139,7 +139,6 @@ public class CompositeRenderer {
 
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 
-		this.shadowMapRenderer = shadowMapRenderer;
 		this.noiseTexture = noiseTexture;
 	}
 
@@ -161,7 +160,7 @@ public class CompositeRenderer {
 		int targetTexture;
 	}
 
-	public void renderAll() {
+	public void renderAll(ShadowMapRenderer shadowMapRenderer) {
 		centerDepthSampler.endWorldRendering();
 
 		RenderSystem.disableBlend();
@@ -328,6 +327,10 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
+		if (SamplerUniforms.hasShadowSamplers(builder)) {
+			usesShadows = true;
+		}
+
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
 		SamplerUniforms.addCompositeSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
@@ -341,5 +344,9 @@ public class CompositeRenderer {
 		for (Pass renderPass : passes) {
 			renderPass.destroy();
 		}
+	}
+
+	public boolean usesShadows() {
+		return usesShadows;
 	}
 }

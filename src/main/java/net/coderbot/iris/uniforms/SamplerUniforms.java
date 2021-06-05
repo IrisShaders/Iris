@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformType;
@@ -60,6 +61,20 @@ public class SamplerUniforms {
 
 		// Noise
 		addSampler(uniforms, NOISE_TEX, "noisetex");
+	}
+
+	public static boolean hasShadowSamplers(LocationalUniformHolder uniformHolder) {
+		// TODO: Keep this up to date with the actual definitions.
+		ImmutableList<String> shadowSamplers = ImmutableList.of("shadowtex0", "shadowtex1", "shadow", "watershadow",
+				"shadowcolor", "shadowcolor0", "shadowcolor1");
+
+		for (String samplerName : shadowSamplers) {
+			if(uniformHolder.location(samplerName, UniformType.INT).isPresent()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static void addWorldSamplerUniforms(UniformHolder uniforms) {

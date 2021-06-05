@@ -21,6 +21,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
+import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.ShadowFrustum;
 import net.coderbot.iris.uniforms.*;
@@ -47,7 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ShadowRenderer {
+public class ShadowRenderer implements ShadowMapRenderer {
 	private final float halfPlaneLength;
 	private final float renderDistanceMultiplier;
 	private final int resolution;
@@ -219,6 +220,7 @@ public class ShadowRenderer {
 		return createShadowFrustum(modelview, ShadowMatrices.createOrthoMatrix(16.0f));
 	}
 
+	@Override
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
 		MinecraftClient client = MinecraftClient.getInstance();
 
@@ -482,23 +484,28 @@ public class ShadowRenderer {
 		return shadowAngle;
 	}
 
+	@Override
 	public int getDepthTextureId() {
 		return targets.getDepthTexture().getTextureId();
 	}
 
+	@Override
 	public int getDepthTextureNoTranslucentsId() {
 		return targets.getDepthTextureNoTranslucents().getTextureId();
 	}
 
 	// TODO: Support more shadow color textures as well as support there being no shadow color textures.
+	@Override
 	public int getColorTexture0Id() {
 		return targets.getColorTextureId(0);
 	}
 
+	@Override
 	public int getColorTexture1Id() {
 		return targets.getColorTextureId(1);
 	}
 
+	@Override
 	public void destroy() {
 		this.targets.destroy();
 
