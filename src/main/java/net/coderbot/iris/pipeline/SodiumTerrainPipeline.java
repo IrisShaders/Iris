@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
@@ -93,6 +94,9 @@ public class SodiumTerrainPipeline {
 			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
 
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, injections);
+
+		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, defineString + "\n"));
 
 		transformations.replaceExact("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
 		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
