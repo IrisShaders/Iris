@@ -1,4 +1,4 @@
-![logo](docs/iris-logo-transparent.png)
+![logo](docs/banner.png)
 
 # Iris
 
