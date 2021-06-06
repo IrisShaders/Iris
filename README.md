@@ -48,12 +48,6 @@ Iris has been progressing quite rapidly recently. The following shaderpacks most
 
 Other shaderpacks aren't supported.
 
-A major feature missing from the public source code is shadow mapping. Many packs rely on shadow mapping quite heavily, and its absence causes a variety of issues:
-
-* Nothing casts a shadow (obviously)
-* You might see the sun glowing through solid blocks and similar issues on shader packs making use of volumetric lighting (like BSL & Sildurs Vibrant Shaders Extreme-VL)
-* The sides of blocks facing the sun will be very bright while the sides facing away will be very dark, creating a weird effect.
-
 ---
 
 * Sildur's Vibrant Shaders and XorDev's shaderpacks work for the most part under Iris, and have been the focus of my development. However, most other shaderpacks either have severe rendering issues, or do not work at all. My current focus is to get Sildur's Vibrant Shaders and XorDev's shaderpacks to the point where they are 100% working before shifting focus to other shaderpacks. As I fix issues in these shaderpacks, other shaderpacks will very likely begin to work properly as well.
