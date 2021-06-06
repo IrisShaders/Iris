@@ -88,6 +88,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
 	private final AbstractTexture noise;
+	private final FrameUpdateNotifier updateNotifier;
 
 	private final int waterId;
 	private final float sunPathRotation;
@@ -101,6 +102,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
+
+		this.updateNotifier = new FrameUpdateNotifier();
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
@@ -153,7 +156,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, noise);
+		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, noise, updateNotifier);
 
 		this.usesShadows |= compositeRenderer.usesShadows();
 
@@ -368,7 +371,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			usesShadows = true;
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
 		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
@@ -658,5 +661,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	public void endShadowRender() {
 		isRenderingShadow = false;
+	}
+
+	public FrameUpdateNotifier getUpdateNotifier() {
+		return updateNotifier;
 	}
 }
