@@ -54,6 +54,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final int resolution;
 	private final float intervalSize;
 	public static Matrix4f MODELVIEW;
+	public static Matrix4f ORTHO;
 
 	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
@@ -232,6 +233,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		MODELVIEW = modelView.peek().getModel().copy();
 		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
 
+		ORTHO = new Matrix4f();
+		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
+
 		worldRenderer.getWorld().getProfiler().push("terrain_setup");
 
 		if (worldRenderer instanceof CullingDataCache) {
@@ -351,7 +355,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// TODO: I'm sure that this can be improved / optimized.
 		for (Entity entity : getWorld().getEntities()) {
-			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ)) {
+			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ) || entity.isSpectator()) {
 				continue;
 			}
 
