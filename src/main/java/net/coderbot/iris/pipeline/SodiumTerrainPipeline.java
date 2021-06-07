@@ -133,7 +133,7 @@ public class SodiumTerrainPipeline {
 	}
 
 	public static Optional<SodiumTerrainPipeline> create() {
-		Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
+		Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension(), false);
 
 		return Iris.getCurrentPack().map(
 			pack -> new SodiumTerrainPipeline(Objects.requireNonNull(pack.getProgramSet(Iris.getCurrentDimension())))
