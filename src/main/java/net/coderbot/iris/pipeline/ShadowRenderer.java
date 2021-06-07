@@ -285,8 +285,7 @@ public class ShadowRenderer {
 		projMatBuf.flip();
 
 		Matrix4f projectionMatrix = new Matrix4f();
-		// TODO: Yarn WTF
-		projectionMatrix.readRowFirst(projMatBuf);
+		projectionMatrix.readColumnMajor(projMatBuf);
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no

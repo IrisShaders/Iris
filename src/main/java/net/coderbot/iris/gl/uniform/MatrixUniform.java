@@ -27,8 +27,7 @@ public class MatrixUniform extends Uniform {
 		if (!newValue.equals(cachedValue)) {
 			cachedValue = newValue.copy();
 
-			// TODO: This looks like an incorrect yarn name, since the method actually writes in column-major order.
-			cachedValue.writeRowFirst(buffer);
+			cachedValue.writeColumnMajor(buffer);
 			buffer.rewind();
 
 			GL21.glUniformMatrix4fv(location, false, buffer);

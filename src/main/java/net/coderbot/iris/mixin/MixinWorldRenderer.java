@@ -37,7 +37,7 @@ public class MixinWorldRenderer {
 	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V";
 	private static final String RENDER = "render(Lnet/minecraft/client/util/math/MatrixStack;FJZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lnet/minecraft/client/render/LightmapTextureManager;Lnet/minecraft/util/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
-	private static final String RENDER_SKY = "Lnet/minecraft/client/render/WorldRenderer;renderSky(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/math/Matrix4f;F)V";
+	private static final String RENDER_SKY = "Lnet/minecraft/client/render/WorldRenderer;renderSky(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/math/Matrix4f;FLjava/lang/Runnable;)V";
 	private static final String RENDER_LAYER = "renderLayer(Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/util/math/MatrixStack;DDD)V";
 	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/render/WorldRenderer;renderClouds(Lnet/minecraft/client/util/math/MatrixStack;FDDD)V";
 	private static final String RENDER_WEATHER = "Lnet/minecraft/client/render/WorldRenderer;renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V";
@@ -118,13 +118,13 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER_SKY,
 		at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.getShader()Lnet/minecraft/client/render/Shader;", shift = At.Shift.AFTER),
 		slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
-	private void iris$renderSky$drawHorizon(MatrixStack matrices, Matrix4f projectionMatrix, float f, CallbackInfo callback) {
+	private void iris$renderSky$drawHorizon(MatrixStack matrices, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
 		new HorizonRenderer().renderHorizon(matrices.peek().getModel().copy(), projectionMatrix.copy(), GameRenderer.getPositionShader());
 	}
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getSkyAngle(F)F"),
 			slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/util/math/Vec3f;POSITIVE_Y:Lnet/minecraft/util/math/Vec3f;")))
-	private void iris$renderSky$tiltSun(MatrixStack matrices, Matrix4f projectionMatrix, float f, CallbackInfo callback) {
+	private void iris$renderSky$tiltSun(MatrixStack matrices, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
 		matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(pipeline.getSunPathRotation()));
 	}
 

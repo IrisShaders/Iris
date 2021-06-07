@@ -131,8 +131,8 @@ public class ShadowMatrices {
 
 		private static float[] toFloatArray(Matrix4f matrix4f) {
 			FloatBuffer buffer = FloatBuffer.allocate(16);
-			// TODO: YARN WTF
-			matrix4f.writeRowFirst(buffer);
+
+			matrix4f.writeColumnMajor(buffer);
 
 			return buffer.array();
 		}
