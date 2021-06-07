@@ -2,17 +2,24 @@ package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.rendertarget.DepthTexture;
+import net.minecraft.client.render.Camera;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
-public class EmptyShadowMapRenderer {
-	private final DepthTexture depthTexture;
+public class EmptyShadowMapRenderer implements ShadowMapRenderer {
+	private final ShadowRenderTargets targets;
 
 	public EmptyShadowMapRenderer(int size) {
-		this.depthTexture = new DepthTexture(size, size);
+		this.targets = new ShadowRenderTargets(size, new InternalTextureFormat[]{
+				InternalTextureFormat.RGBA,
+				InternalTextureFormat.RGBA
+		});
 
-		GlStateManager._bindTexture(depthTexture.getTextureId());
+		// NB: We don't use getDepthTextureNoTranslucents
+		GlStateManager._bindTexture(targets.getDepthTexture().getTextureId());
 
 		// We have to do this or else sampling a sampler2DShadow produces "undefined" results.
 		//
@@ -28,25 +35,41 @@ public class EmptyShadowMapRenderer {
 
 		GlStateManager._bindTexture(0);
 
-		GlFramebuffer framebuffer = new GlFramebuffer();
-		framebuffer.addDepthAttachment(depthTexture.getTextureId());
-
-		framebuffer.bind();
+		targets.getFramebuffer().bind();
 
 		// Hopefully I'm not clobbering any other OpenGL state here...
 		GL20C.glClearDepth(1.0);
-		GL20C.glClear(GL20C.GL_DEPTH_BUFFER_BIT);
+		GL20C.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		GL20C.glClear(GL20C.GL_DEPTH_BUFFER_BIT | GL20C.GL_COLOR_BUFFER_BIT);
 
 		GL30C.glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
+	}
 
-		framebuffer.destroy();
+	@Override
+	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
+		// No-op
 	}
 
 	public int getDepthTextureId() {
-		return depthTexture.getTextureId();
+		return targets.getDepthTexture().getTextureId();
+	}
+
+	@Override
+	public int getDepthTextureNoTranslucentsId() {
+		return targets.getDepthTexture().getTextureId();
+	}
+
+	@Override
+	public int getColorTexture0Id() {
+		return targets.getColorTextureId(0);
+	}
+
+	@Override
+	public int getColorTexture1Id() {
+		return targets.getColorTextureId(1);
 	}
 
 	public void destroy() {
-		this.depthTexture.destroy();
+		this.targets.destroy();
 	}
 }

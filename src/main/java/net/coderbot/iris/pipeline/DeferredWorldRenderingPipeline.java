@@ -21,6 +21,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
+import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
@@ -38,6 +39,7 @@ import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import org.lwjgl.opengl.GL30C;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -81,7 +83,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
-	private final ShadowRenderer shadowMapRenderer;
+	private final ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
@@ -94,6 +96,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private static final List<String> programStackLog = new ArrayList<>();
 
 	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
+
+	private boolean usesShadows = false;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -149,8 +153,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0);
 
-		this.shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null), programs.getPackDirectives());
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, shadowMapRenderer, noise);
+		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, noise);
+
+		this.usesShadows |= compositeRenderer.usesShadows();
+
+		if (usesShadows) {
+			this.shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null), programs.getPackDirectives());
+		} else {
+			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
+		}
 	}
 
 	private void checkWorld() {
@@ -353,6 +364,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
+		if (SamplerUniforms.hasShadowSamplers(builder)) {
+			usesShadows = true;
+		}
+
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), FrameUpdateNotifier.INSTANCE);
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
@@ -461,6 +476,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// This destroys all of the loaded composite programs as well.
 		compositeRenderer.destroy();
 
+		// Make sure that any custom framebuffers are not bound before destroying render targets
+		GlStateManager.bindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
+		GlStateManager.bindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
+
+		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+
 		// Destroy our render targets
 		//
 		// While it's possible to just clear them instead and reuse them, we'd need to investigate whether or not this
@@ -536,9 +558,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginTranslucents() {
 		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
 		// all non-translucent content, as required.
-		baseline.bind();
+		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		GlStateManager._bindTexture(0);
 	}
 
 	public static GbufferProgram getProgramForSheet(ParticleTextureSheet sheet) {
@@ -559,6 +582,22 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
 		this.shadowMapRenderer.renderShadows(worldRenderer, playerCamera);
+	}
+
+	@Override
+	public void addDebugText(List<String> messages) {
+		if (shadowMapRenderer instanceof ShadowRenderer) {
+			messages.add("");
+			messages.add("[Iris] Shadow Maps: " + ShadowRenderer.OVERALL_DEBUG_STRING);
+			messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
+			messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
+			messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
+		} else if (shadowMapRenderer instanceof EmptyShadowMapRenderer) {
+			messages.add("");
+			messages.add("[Iris] Shadow Maps: not used by shader pack");
+		} else {
+			throw new IllegalStateException("Unknown shadow map renderer type!");
+		}
 	}
 
 	// TODO: better way to avoid this global state?
@@ -608,7 +647,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		isRenderingWorld = false;
 		programStackLog.clear();
 
-		compositeRenderer.renderAll();
+		compositeRenderer.renderAll(shadowMapRenderer);
 	}
 
 	private boolean isRenderingShadow = false;

@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.fantastic.ExtendedBufferStorage;
+import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -19,6 +21,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
+import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.ShadowFrustum;
 import net.coderbot.iris.uniforms.*;
@@ -41,15 +44,18 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.nio.FloatBuffer;
 import java.util.Objects;
 
-public class ShadowRenderer {
+public class ShadowRenderer implements ShadowMapRenderer {
 	private final float halfPlaneLength;
 	private final float renderDistanceMultiplier;
 	private final int resolution;
 	private final float intervalSize;
 	public static Matrix4f MODELVIEW;
+	public static Matrix4f ORTHO;
 
 	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
@@ -58,6 +64,7 @@ public class ShadowRenderer {
 	private final float sunPathRotation;
 
 	private final BufferBuilderStorage buffers;
+	private final ExtendedBufferStorage extendedBufferStorage;
 
 	public static boolean ACTIVE = false;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
@@ -96,6 +103,12 @@ public class ShadowRenderer {
 		this.sunPathRotation = directives.getSunPathRotation();
 
 		this.buffers = new BufferBuilderStorage();
+
+		if (this.buffers instanceof ExtendedBufferStorage) {
+			this.extendedBufferStorage = (ExtendedBufferStorage) buffers;
+		} else {
+			this.extendedBufferStorage = null;
+		}
 
 		configureSamplingSettings(shadowDirectives);
 	}
@@ -209,6 +222,7 @@ public class ShadowRenderer {
 		return createShadowFrustum(modelview, ShadowMatrices.createOrthoMatrix(16.0f));
 	}
 
+	@Override
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
 		MinecraftClient client = MinecraftClient.getInstance();
 
@@ -219,6 +233,9 @@ public class ShadowRenderer {
 		MatrixStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
 		MODELVIEW = modelView.peek().getModel().copy();
 		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+
+		ORTHO = new Matrix4f();
+		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
 
 		worldRenderer.getWorld().getProfiler().push("terrain_setup");
 
@@ -248,6 +265,10 @@ public class ShadowRenderer {
 		// TODO: Get chunk occlusion working with shadows
 		boolean wasChunkCullingEnabled = client.chunkCullingEnabled;
 		client.chunkCullingEnabled = false;
+
+		// Always schedule a terrain update
+		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
+		((WorldRenderer) worldRenderer).scheduleTerrainUpdate();
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
 		worldRenderer.invokeSetupTerrain(playerCamera, frustum, false, worldRenderer.getFrame(), false);
@@ -317,31 +338,45 @@ public class ShadowRenderer {
 
 		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
 		// TODO: Make this configurable and disable-able
-		final Frustum entityShadowFrustum = createEntityShadowFrustum(modelView);
-		entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
+		final Frustum entityShadowFrustum = frustum; // createEntityShadowFrustum(modelView);
+		// entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
 
 		// Render nearby entities
 		//
 		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
 		// rendering.
-		//
-		// TODO: Render other block entities in the shadow pass
+		if (extendedBufferStorage != null) {
+			extendedBufferStorage.beginWorldRendering();
+		}
+
 		VertexConsumerProvider.Immediate provider = buffers.getEntityVertexConsumers();
 		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
 
 		int shadowEntities = 0;
 
+		worldRenderer.getWorld().getProfiler().push("cull");
+
+		List<Entity> renderedEntities = new ArrayList<>(32);
+
 		// TODO: I'm sure that this can be improved / optimized.
 		for (Entity entity : getWorld().getEntities()) {
-			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ)) {
+			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ) || entity.isSpectator()) {
 				continue;
 			}
 
+			renderedEntities.add(entity);
+		}
+
+		worldRenderer.getWorld().getProfiler().swap("build geometry");
+
+		for (Entity entity : renderedEntities) {
 			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
 			shadowEntities++;
 		}
 
-		worldRenderer.getWorld().getProfiler().swap("blockentities");
+		worldRenderer.getWorld().getProfiler().pop();
+
+		worldRenderer.getWorld().getProfiler().swap("build blockentities");
 
 		int shadowBlockEntities = 0;
 
@@ -359,9 +394,14 @@ public class ShadowRenderer {
 		renderedShadowEntities = shadowEntities;
 		renderedShadowBlockEntities = shadowBlockEntities;
 
+		worldRenderer.getWorld().getProfiler().swap("draw entities");
+
+		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
+		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
+		// shadow...
 		provider.draw();*/
 
-		worldRenderer.getWorld().getProfiler().swap("translucent terrain");
+		worldRenderer.getWorld().getProfiler().swap("translucent depth copy");
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
@@ -370,14 +410,21 @@ public class ShadowRenderer {
 		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 
+		worldRenderer.getWorld().getProfiler().swap("translucent terrain");
+
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
 		worldRenderer.invokeRenderLayer(RenderLayer.getTranslucent(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
-		worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
+		// Note: Apparently tripwire isn't rendered in the shadow pass.
+		// worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
 
-		// TODO: If we want to render anything after translucent terrain, we need to uncomment this line!
+		// NB: If we want to render anything after translucent terrain, we need to uncomment this line!
 		// setupShadowProgram();
+
+		if (extendedBufferStorage != null) {
+			extendedBufferStorage.endWorldRendering();
+		}
 
 		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
 
@@ -448,23 +495,28 @@ public class ShadowRenderer {
 		return shadowAngle;
 	}
 
+	@Override
 	public int getDepthTextureId() {
 		return targets.getDepthTexture().getTextureId();
 	}
 
+	@Override
 	public int getDepthTextureNoTranslucentsId() {
 		return targets.getDepthTextureNoTranslucents().getTextureId();
 	}
 
 	// TODO: Support more shadow color textures as well as support there being no shadow color textures.
+	@Override
 	public int getColorTexture0Id() {
 		return targets.getColorTextureId(0);
 	}
 
+	@Override
 	public int getColorTexture1Id() {
 		return targets.getColorTextureId(1);
 	}
 
+	@Override
 	public void destroy() {
 		this.targets.destroy();
 

@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL21C;
 public class ProgramBuilder extends ProgramUniforms.Builder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
-	private static final ShaderConstants MACRO_CONSTANTS;
+	public static final ShaderConstants MACRO_CONSTANTS;
 
 	static {
 		try {

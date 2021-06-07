@@ -1,5 +1,23 @@
 {
   "iris.shaders.reloaded": "Shaders Ricaricato!",
-  "iris.keybind.reload": "Aggiornare gli shader",
-  "iris.shaders.reloaded.failure": "Non è riuscito a ricaricare gli shader! Ragione: %s"
+  "iris.keybind.reload": "Aggiornare gli Shader",
+  "iris.shaders.reloaded.failure": "Non è riuscito a ricaricare gli Shader! Ragione: %s",
+
+  "options.iris.apply": "Applica",
+  "options.iris.refresh": "Aggiorna",
+  "options.iris.openShaderPackFolder": "Aprire la cartella Shader Pack...",
+  "options.iris.refreshShaderPacks": "Aggiorna i Shader Pack",
+  "options.iris.shaderPackSelection": "Shader Packs...",
+  "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Aggiunto Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Aggiunto %s Shader Packs",
+  "options.iris.shaderPackSelection.failedAdd": "I file non sono validi Shader Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" non è uno Shader Pack valido",
+  "options.iris.shaderPackSelection.copyError": "Impossibile aggiungere lo Shader Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" è già nella tua cartella Shader Packs!",
+  "options.iris.shaders.disabled": "Shaders: Disabilitatos",
+  "options.iris.shaders.enabled": "Shaders: Abilitatos",
+
+  "pack.iris.select.title": "Selezionare",
+  "pack.iris.list.label": "+ Trascinare e rilasciare i Shader Packs per aggiungere"
 }

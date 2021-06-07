@@ -1,5 +1,6 @@
 package net.coderbot.iris.layer;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import net.coderbot.iris.mixin.renderlayer.RenderLayerAccessor;
@@ -33,6 +34,10 @@ public class IrisRenderLayerWrapper extends RenderLayer {
 		super.endDrawing();
 	}
 
+	public RenderLayer unwrap() {
+		return this.wrapped;
+	}
+
 	@Override
 	public Optional<RenderLayer> getAffectedOutline() {
 		return this.wrapped.getAffectedOutline();
@@ -45,7 +50,17 @@ public class IrisRenderLayerWrapper extends RenderLayer {
 
 	@Override
 	public boolean equals(@Nullable Object object) {
-		return this == object;
+		if (object == null) {
+			return false;
+		}
+
+		if (object.getClass() != this.getClass()) {
+			return false;
+		}
+
+		IrisRenderLayerWrapper other = (IrisRenderLayerWrapper) object;
+
+		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.useProgram, other.useProgram);
 	}
 
 	@Override

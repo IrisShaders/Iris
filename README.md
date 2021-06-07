@@ -1,3 +1,5 @@
+![logo](docs/iris-logo-transparent.png)
+
 # Iris
 
 *A new shaders mod for Minecraft intended to be compatible with existing ShadersMod/Optifine shaders*
@@ -110,7 +112,7 @@ Join the [Iris Discord server](https://discord.gg/jQJnav2jPu) to chat about the 
 
 ## Credits
 
-* **Vaerian**, for creating the excellent logo
+* **TheOnlyThing and Vaerian**, for creating the excellent logo
 * **daxnitro, karyonix, and sp614x**, for creating and maintaining the current shaders mods
 * **Mumfrey**, for creating the finest bytecode patching system that I've ever had the pleasure of working with
 * **The Fabric community**, for providing both support and great tooling

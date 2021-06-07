@@ -63,6 +63,7 @@ public class MixinWorldRenderer {
 	// Inject a bit early so that we can end our rendering in time.
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;method_23792()V"))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		MinecraftClient.getInstance().getProfiler().swap("iris_final");
 		pipeline.finalizeWorldRendering();
 		pipeline.setPhase(WorldRenderingPhase.NOT_RENDERING_WORLD);
 		pipeline = null;
@@ -87,16 +88,6 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=sky"))
 	private void iris$beginSky(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.SKY);
-	}
-
-	@Inject(method = "setupTerrain", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=rebuildNear"), cancellable = true)
-	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo callback) {
-		if (ShadowRenderer.ACTIVE) {
-			// Prevent nearby chunks from being rebuilt on the main thread in the shadow pass. Aside from causing
-			// FPS to tank, this also causes weird chunk corruption! It's critical to make sure that it's disabled as a
-			// result.
-			callback.cancel();
-		}
 	}
 
 	@Redirect(method = RENDER, at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;viewDistance:I"),
@@ -198,6 +189,13 @@ public class MixinWorldRenderer {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}*/
 
+	@Inject(method = "renderWeather", at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.defaultAlphaFunc ()V", shift = At.Shift.AFTER))
+	private void iris$applyWeatherOverrides(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo ci) {
+		// TODO: This is a temporary workaround for https://github.com/IrisShaders/Iris/issues/219
+		pipeline.pushProgram(GbufferProgram.WEATHER);
+		pipeline.popProgram(GbufferProgram.WEATHER);
+	}
+
 	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
 	/*@Inject(method = "renderEntity", at = @At("HEAD"))
 	private void iris$beginEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
@@ -216,10 +214,13 @@ public class MixinWorldRenderer {
 										CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
 										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
 										VertexConsumerProvider.Immediate immediate) {
+		profiler.swap("iris_opaque_entity_draws");
+
 		if (immediate instanceof FlushableVertexConsumerProvider) {
 			((FlushableVertexConsumerProvider) immediate).flushNonTranslucentContent();
 		}
 
+		profiler.swap("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
 }

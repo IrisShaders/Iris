@@ -2,7 +2,9 @@ package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.hud.DebugHud;
+import net.minecraft.util.Formatting;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,10 +26,11 @@ public abstract class MixinDebugHud {
 	private void appendShadowDebugText(CallbackInfoReturnable<List<String>> cir) {
 		List<String> messages = cir.getReturnValue();
 
-		messages.add("");
-		messages.add("[Iris] Shadows: " + ShadowRenderer.OVERALL_DEBUG_STRING);
-		messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
-		messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
-		messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
+		if (!FabricLoader.getInstance().isModLoaded("sodium") && Iris.getCurrentPack().isPresent()) {
+			messages.add(1, Formatting.YELLOW + "[Iris] Sodium isn't installed; you will have poor performance.");
+			messages.add(2, Formatting.YELLOW + "[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
+		}
+
+		Iris.getPipelineManager().getPipeline().addDebugText(messages);
 	}
 }

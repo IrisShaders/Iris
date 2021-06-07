@@ -5,9 +5,13 @@ import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.minecraft.client.render.Camera;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 
+import java.util.List;
+
 public interface WorldRenderingPipeline {
 	void beginWorldRendering();
 	default void renderShadows(WorldRendererAccessor worldRenderer, Camera camera) {
+	}
+	default void addDebugText(List<String> messages) {
 	}
 	void beginShadowRender();
 	void endShadowRender();

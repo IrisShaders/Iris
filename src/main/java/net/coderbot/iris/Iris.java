@@ -57,8 +57,8 @@ public class Iris implements ClientModInitializer {
 
 				// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
 				// the right fork of Sodium, it will just crash.
-				if (!versionString.startsWith("IRIS-SNAPSHOT")) {
-					throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but IRIS-SNAPSHOT is expected");
+				if (!versionString.startsWith("0.2.0_IRIS-SNAPSHOT")) {
+					throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but 0.2.0_IRIS-SNAPSHOT is expected");
 				}
 			}
 		);
@@ -131,7 +131,16 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static boolean loadExternalShaderpack(String name) {
-		Path shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
+		Path shaderPackRoot;
+
+		try {
+			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
+		} catch (InvalidPathException e) {
+			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", irisConfig.getShaderPackName());
+
+			return false;
+		}
+
 		Path shaderPackPath;
 
 		if (shaderPackRoot.toString().endsWith(".zip")) {

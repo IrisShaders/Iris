@@ -1,5 +1,23 @@
 {
-  "iris.shaders.reloaded": "Шейдеры перезаряжены!",
-  "iris.keybind.reload": "Шейдеры перезарядки",
-  "iris.shaders.reloaded.failure": "Ошибка при Перезагрузке шейдеров! Причина: %s"
+  "iris.shaders.reloaded": "Шейдеры перезагружены!",
+  "iris.keybind.reload": "Перезагрузить шейдеры",
+  "iris.shaders.reloaded.failure": "Ошибка при перезагрузке шейдеров! Причина: %s",
+  
+  "options.iris.apply": "Применить",
+  "options.iris.refresh": "Обновить",
+  "options.iris.openShaderPackFolder": "Откройте папку c шейдером...",
+  "options.iris.refreshShaderPacks": "Обновить список шейдеров",
+  "options.iris.shaderPackSelection": "Шейдеры...",
+  "options.iris.shaderPackSelection.title": "Шейдеры",
+  "options.iris.shaderPackSelection.addedPack": "Добавлен шейдер \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Добавлено %s шейдеров",
+  "options.iris.shaderPackSelection.failedAdd": "Файлы не являются шейдерами",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является шейдером",
+  "options.iris.shaderPackSelection.copyError": "Не удалось добавить шейдер \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
+  "options.iris.shaders.disabled": "Шейдеры: Выключены",
+  "options.iris.shaders.enabled": "Шейдеры: Включены",
+  
+  "pack.iris.select.title": "Выберите",
+  "pack.iris.list.label": "+ Перетащите шейдер для добавления"
 }

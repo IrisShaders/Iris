@@ -31,6 +31,24 @@ public class ShadowFrustum extends Frustum {
 		this.maxAllowedZ = cameraZ + maxDistance;
 	}
 
+	// for Sodium
+	// TODO: Better way to do this... Maybe we shouldn't be using a frustum for the box culling in the first place!
+	public boolean preAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		if (maxX < this.minAllowedX || minX > this.maxAllowedX) {
+			return false;
+		}
+
+		if (maxY < this.minAllowedY || minY > this.maxAllowedY) {
+			return false;
+		}
+
+		if (maxZ < this.minAllowedZ || minZ > this.maxAllowedZ) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public boolean isVisible(Box box) {
 		if (box.maxX < this.minAllowedX || box.minX > this.maxAllowedX) {
 			return false;
