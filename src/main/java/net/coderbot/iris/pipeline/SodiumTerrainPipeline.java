@@ -36,15 +36,11 @@ public class SodiumTerrainPipeline {
 		terrainSource.ifPresent(sources -> {
 			terrainVertex = sources.getVertexSource().orElse(null);
 			terrainFragment = sources.getFragmentSource().orElse(null);
-
-			//framebuffer = renderTargets.createFramebufferWritingToMain(sources.getDirectives().getDrawBuffers());
 		});
 
 		translucentSource.ifPresent(sources -> {
 			translucentVertex = sources.getVertexSource().orElse(null);
 			translucentFragment = sources.getFragmentSource().orElse(null);
-
-			//framebuffer = renderTargets.createFramebufferWritingToMain(sources.getDirectives().getDrawBuffers());
 		});
 
 		shadowSource.ifPresent(sources -> {
@@ -64,9 +60,17 @@ public class SodiumTerrainPipeline {
 			shadowVertex = transformVertexShader(shadowVertex);
 		}
 
-		/*if (framebuffer == null) {
-			framebuffer = renderTargets.createFramebufferWritingToMain(new int[] {0});
-		}*/
+		if (terrainFragment != null) {
+			terrainFragment = transformFragmentShader(terrainFragment);
+		}
+
+		if (translucentFragment != null) {
+			translucentFragment = transformFragmentShader(translucentFragment);
+		}
+
+		if (shadowFragment != null) {
+			shadowFragment = transformFragmentShader(shadowFragment);
+		}
 	}
 
 	private static String transformVertexShader(String base) {
@@ -90,6 +94,8 @@ public class SodiumTerrainPipeline {
 
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, injections);
 
+		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
+		// constants.
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, defineString + "\n"));
 
@@ -111,6 +117,17 @@ public class SodiumTerrainPipeline {
 
 		System.out.println("Final patched source:");
 		System.out.println(transformations);
+
+		return transformations.toString();
+	}
+
+	private static String transformFragmentShader(String base) {
+		StringTransformations transformations = new StringTransformations(base);
+
+		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
+		// constants.
+		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, defineString + "\n"));
 
 		return transformations.toString();
 	}
