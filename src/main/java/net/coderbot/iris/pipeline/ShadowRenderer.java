@@ -351,7 +351,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// TODO: I'm sure that this can be improved / optimized.
 		for (Entity entity : getWorld().getEntities()) {
-			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ)) {
+			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ) || entity.isSpectator()) {
 				continue;
 			}
 
