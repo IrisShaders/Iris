@@ -84,12 +84,7 @@ public class SodiumTerrainPipeline {
 			"uniform vec2 u_TextureScale;\n" +
 			"\n" +
 			"// The model translation for this draw call.\n" +
-			"// If multi-draw is enabled, then the model offset will come from an attribute buffer.\n" +
-			"#ifdef USE_MULTIDRAW\n" +
 			"attribute vec4 d_ModelOffset;\n" +
-			"#else\n" +
-			"uniform vec4 d_ModelOffset;\n" +
-			"#endif\n" +
 			"\n" +
 			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
 

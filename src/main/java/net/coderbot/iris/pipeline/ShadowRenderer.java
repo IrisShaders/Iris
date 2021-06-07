@@ -54,6 +54,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final int resolution;
 	private final float intervalSize;
 	public static Matrix4f MODELVIEW;
+	public static Matrix4f ORTHO;
 
 	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
@@ -231,6 +232,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		MatrixStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
 		MODELVIEW = modelView.peek().getModel().copy();
 		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+
+		ORTHO = new Matrix4f();
+		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
 
 		worldRenderer.getWorld().getProfiler().push("terrain_setup");
 
