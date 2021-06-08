@@ -106,7 +106,7 @@ public class ProgramSet {
 		}
 
 		// TODO: Support additional render targets beyond 8
-		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, getPackDirectives());
+		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, base.getPackDirectives());
 
 		this.shadow = merge(base.shadow, overrides.shadow);
 
