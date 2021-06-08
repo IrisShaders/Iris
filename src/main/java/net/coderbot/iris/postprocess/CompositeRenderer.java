@@ -68,8 +68,7 @@ public class CompositeRenderer {
 			ProgramDirectives directives = programEntry.getRight();
 
 			pass.program = programEntry.getLeft();
-			// TODO: Don't truncate draw buffers...
-			int[] drawBuffers = truncateDrawBuffers(directives.getDrawBuffers());
+			int[] drawBuffers = directives.getDrawBuffers();
 
 			boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
@@ -92,6 +91,12 @@ public class CompositeRenderer {
 
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
+				if (buffer >= 8) {
+					// Don't flip extended buffers
+					// TODO: Support extended buffers
+					continue;
+				}
+
 				bufferFlipper.flip(buffer);
 			}
 		}
@@ -102,27 +107,6 @@ public class CompositeRenderer {
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 
 		this.noiseTexture = noiseTexture;
-	}
-
-	private int[] truncateDrawBuffers(int[] buffers) {
-		int size = 0;
-
-		for (int buffer : buffers) {
-			if (buffer < 8) {
-				size += 1;
-			}
-		}
-
-		int[] newBuffers = new int[size];
-		int index = 0;
-
-		for (int buffer : buffers) {
-			if (buffer < 8) {
-				newBuffers[index++] = buffer;
-			}
-		}
-
-		return newBuffers;
 	}
 
 	private static final class Pass {
