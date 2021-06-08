@@ -51,13 +51,13 @@ public class IrisConfig {
 	 * @return if the shaderpack is internal
 	 */
 	public boolean isInternal() {
-		return shaderPackName == null;
+		return areShadersEnabled() && shaderPackName == null;
 	}
 
 	/**
 	 * Returns the name of the current shaderpack
 	 *
-	 * @return shaderpack name. If internal it returns "(internal)"
+	 * @return Returns the current shaderpack name - if internal shaders are being used it returns "(internal)"
 	 */
 	public String getShaderPackName() {
 		if (shaderPackName == null) {
