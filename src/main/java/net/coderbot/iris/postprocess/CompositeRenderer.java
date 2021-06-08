@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -56,6 +57,14 @@ public class CompositeRenderer {
 
 		// TODO: The final pass should be separate from composite passes.
 
+		for (ProgramSource source : pack.getDeferred()) {
+			if (source == null || !source.isValid()) {
+				continue;
+			}
+
+			programs.add(createProgram(source));
+		}
+
 		for (ProgramSource source : pack.getComposite()) {
 			if (source == null || !source.isValid()) {
 				continue;
@@ -68,25 +77,25 @@ public class CompositeRenderer {
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
-		// Initially filled with false values
-		boolean[] stageReadsFromAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+		BufferFlipper flipper = new BufferFlipper();
 
 		for (Pair<Program, ProgramDirectives> programEntry : programs) {
 			Pass pass = new Pass();
 			ProgramDirectives directives = programEntry.getRight();
 
 			pass.program = programEntry.getLeft();
-			int[] drawBuffers = directives.getDrawBuffers();
+			// TODO: Don't truncate draw buffers...
+			int[] drawBuffers = truncateDrawBuffers(directives.getDrawBuffers());
 
-			boolean[] stageWritesToAlt = Arrays.copyOf(stageReadsFromAlt, RenderTargets.MAX_RENDER_TARGETS);
+			boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
 			for (int i = 0; i < stageWritesToAlt.length; i++) {
-				stageWritesToAlt[i] = !stageWritesToAlt[i];
+				stageWritesToAlt[i] = !flipper.isFlipped(i);
 			}
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(stageWritesToAlt, drawBuffers);
 
-			pass.stageReadsFromAlt = Arrays.copyOf(stageReadsFromAlt, stageReadsFromAlt.length);
+			pass.stageReadsFromAlt = flipper.snapshot();
 			pass.framebuffer = framebuffer;
 			pass.viewportScale = directives.getViewportScale();
 			pass.generateMipmap = new boolean[RenderTargets.MAX_RENDER_TARGETS];
@@ -105,17 +114,12 @@ public class CompositeRenderer {
 			// The final pass does not write to our render targets, so it doesn't flip buffers.
 			if (!pass.isLastPass) {
 				for (int buffer : drawBuffers) {
-					stageReadsFromAlt[buffer] = !stageReadsFromAlt[buffer];
+					flipper.flip(buffer);
 				}
 			}
 		}
 
 		IntList buffersToBeCleared = pack.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared();
-		boolean[] willBeCleared = new boolean[RenderTargets.MAX_RENDER_TARGETS];
-
-		buffersToBeCleared.forEach((int buffer) -> {
-			willBeCleared[buffer] = true;
-		});
 
 		this.passes = passes.build();
 		this.renderTargets = renderTargets;
@@ -127,16 +131,18 @@ public class CompositeRenderer {
 		// framebuffers for every other frame, but that would be a lot more complex...
 		ImmutableList.Builder<SwapPass> swapPasses = ImmutableList.builder();
 
-		for (int i = 0; i < stageReadsFromAlt.length; i++) {
-			if (stageReadsFromAlt[i] && !willBeCleared[i]) {
-				SwapPass swap = new SwapPass();
-				swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {i});
-				swap.from.readBuffer(i);
-				swap.targetTexture = renderTargets.get(i).getMainTexture();
-
-				swapPasses.add(swap);
+		flipper.getFlippedBuffers().forEachRemaining((int target) -> {
+			if (buffersToBeCleared.contains(target)) {
+				return;
 			}
-		}
+
+			SwapPass swap = new SwapPass();
+			swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {target});
+			swap.from.readBuffer(target);
+			swap.targetTexture = renderTargets.get(target).getMainTexture();
+
+			swapPasses.add(swap);
+		});
 
 		this.swapPasses = swapPasses.build();
 
@@ -145,10 +151,31 @@ public class CompositeRenderer {
 		this.noiseTexture = noiseTexture;
 	}
 
+	private int[] truncateDrawBuffers(int[] buffers) {
+		int size = 0;
+
+		for (int buffer : buffers) {
+			if (buffer < 8) {
+				size += 1;
+			}
+		}
+
+		int[] newBuffers = new int[size];
+		int index = 0;
+
+		for (int buffer : buffers) {
+			if (buffer < 8) {
+				newBuffers[index++] = buffer;
+			}
+		}
+
+		return newBuffers;
+	}
+
 	private static final class Pass {
 		Program program;
 		GlFramebuffer framebuffer;
-		boolean[] stageReadsFromAlt;
+		ImmutableSet<Integer> stageReadsFromAlt;
 		boolean[] generateMipmap;
 		boolean isLastPass;
 		float viewportScale;
@@ -199,14 +226,14 @@ public class CompositeRenderer {
 				main.beginWrite(false);
 			}
 
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt[0], renderPass.generateMipmap[0]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt[1], renderPass.generateMipmap[1]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt[2], renderPass.generateMipmap[2]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt[3], renderPass.generateMipmap[3]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt[4], renderPass.generateMipmap[4]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt[5], renderPass.generateMipmap[5]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt[6], renderPass.generateMipmap[6]);
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt[7], renderPass.generateMipmap[7]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0), renderPass.stageReadsFromAlt.contains(0), renderPass.generateMipmap[0]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1), renderPass.stageReadsFromAlt.contains(1), renderPass.generateMipmap[1]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_2, renderTargets.get(2), renderPass.stageReadsFromAlt.contains(2), renderPass.generateMipmap[2]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_3, renderTargets.get(3), renderPass.stageReadsFromAlt.contains(3), renderPass.generateMipmap[3]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4), renderPass.stageReadsFromAlt.contains(4), renderPass.generateMipmap[4]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5), renderPass.stageReadsFromAlt.contains(5), renderPass.generateMipmap[5]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6), renderPass.stageReadsFromAlt.contains(6), renderPass.generateMipmap[6]);
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7), renderPass.stageReadsFromAlt.contains(7), renderPass.generateMipmap[7]);
 
 			float scaledWidth = baseWidth * renderPass.viewportScale;
 			float scaledHeight = baseHeight * renderPass.viewportScale;
@@ -255,25 +282,17 @@ public class CompositeRenderer {
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6));
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7));
 
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_0);
-		RenderSystem.bindTexture(0);
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_1);
-		RenderSystem.bindTexture(0);
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.DEPTH_TEX_2);
-		RenderSystem.bindTexture(0);
+		unbindTexture(SamplerUniforms.DEPTH_TEX_0);
+		unbindTexture(SamplerUniforms.DEPTH_TEX_1);
+		unbindTexture(SamplerUniforms.DEPTH_TEX_2);
 
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_TEX_0);
-		RenderSystem.bindTexture(0);
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_TEX_1);
-		RenderSystem.bindTexture(0);
+		unbindTexture(SamplerUniforms.SHADOW_TEX_0);
+		unbindTexture(SamplerUniforms.SHADOW_TEX_1);
 
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_COLOR_0);
-		RenderSystem.bindTexture(0);
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.SHADOW_COLOR_1);
-		RenderSystem.bindTexture(0);
+		unbindTexture(SamplerUniforms.SHADOW_COLOR_0);
+		unbindTexture(SamplerUniforms.SHADOW_COLOR_1);
 
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
-		RenderSystem.bindTexture(0);
+		unbindTexture(SamplerUniforms.NOISE_TEX);
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
@@ -313,6 +332,11 @@ public class CompositeRenderer {
 	private static void bindTexture(int textureUnit, int texture) {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + textureUnit);
 		RenderSystem.bindTexture(texture);
+	}
+
+	private static void unbindTexture(int textureUnit) {
+		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + textureUnit);
+		RenderSystem.bindTexture(0);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
