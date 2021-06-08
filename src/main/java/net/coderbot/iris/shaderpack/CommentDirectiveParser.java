@@ -67,10 +67,29 @@ public class CommentDirectiveParser {
 		// observation, it seems like the first DRAWBUFFERS directive is generally the "default" directive.
 		//
 		// This is important because if we add a draw buffer that isn't written to, undefined behavior happens!
-		int indexOfPrefix = haystack.indexOf(prefix);
+		int indexOfPrefix;
+
+		if (haystack.contains("https://bitslablab.com") || haystack.contains("By LexBoosT")) {
+			if (haystack.contains("REFLECTION_PREVIOUS") && haystack.contains("/*DRAWBUFFERS:05*/")) {
+				return Optional.of("05");
+			}
+
+			indexOfPrefix = haystack.indexOf(prefix);
+		} else {
+			indexOfPrefix = haystack.lastIndexOf(prefix);
+		}
 
 		if (indexOfPrefix == -1) {
 			return Optional.empty();
+		}
+
+		// TODO: But in this case, the second DRAWBUFFERS directive is the default one!!!
+		// TODO: Actually process #ifdef and #ifndef before processing comment directives!!!!
+		// This hack is needed to get BSL reflections to work for now until we do that.
+		if (haystack.contains("REFLECTION_PREVIOUS")
+				&& (haystack.contains("https://bitslablab.com") || haystack.contains("By LexBoosT"))
+				&& haystack.contains("/*DRAWBUFFERS:05*/")) {
+			return Optional.of("05");
 		}
 
 		String before = haystack.substring(0, indexOfPrefix).trim();
