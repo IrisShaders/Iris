@@ -15,6 +15,7 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -115,8 +116,10 @@ public class SodiumTerrainPipeline {
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
-		System.out.println("Final patched source:");
-		System.out.println(transformations);
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			System.out.println("Final patched source:");
+			System.out.println(transformations);
+		}
 
 		return transformations.toString();
 	}
