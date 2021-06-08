@@ -14,6 +14,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.rendertarget.*;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -41,28 +42,18 @@ public class CompositeRenderer {
 
 	private boolean usesShadows = false;
 
-	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, AbstractTexture noiseTexture,
-							 FrameUpdateNotifier updateNotifier, CenterDepthSampler centerDepthSampler,
-							 BufferFlipper bufferFlipper) {
+	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, RenderTargets renderTargets,
+							 AbstractTexture noiseTexture, FrameUpdateNotifier updateNotifier,
+							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper) {
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 
-		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
+		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
 				renderTargetDirectives.getRenderTargetSettings();
 		final List<Pair<Program, ProgramDirectives>> programs = new ArrayList<>();
 
-		// TODO: The final pass should be separate from composite passes.
-
-		for (ProgramSource source : pack.getDeferred()) {
-			if (source == null || !source.isValid()) {
-				continue;
-			}
-
-			programs.add(createProgram(source));
-		}
-
-		for (ProgramSource source : pack.getComposite()) {
+		for (ProgramSource source : sources) {
 			if (source == null || !source.isValid()) {
 				continue;
 			}

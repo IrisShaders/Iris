@@ -87,6 +87,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer baseline;
 
 	private final ShadowMapRenderer shadowMapRenderer;
+	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final FinalPassRenderer finalPassRenderer;
 	private final NativeImageBackedSingleColorTexture normals;
@@ -140,8 +141,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);;
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, noise, updateNotifier, centerDepthSampler, flipper);
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
+		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
+				noise, updateNotifier, centerDepthSampler, flipper);
+		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
+				noise, updateNotifier, centerDepthSampler, flipper);
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(), centerDepthSampler);
 
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
@@ -659,6 +663,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		isRenderingWorld = false;
 		programStackLog.clear();
 
+		deferredRenderer.renderAll(shadowMapRenderer);
 		compositeRenderer.renderAll(shadowMapRenderer);
 		finalPassRenderer.renderFinalPass(shadowMapRenderer);
 	}
