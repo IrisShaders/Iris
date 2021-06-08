@@ -6,18 +6,17 @@
 
 ## How can I use this?
 
-Iris is alpha quality software and is highly incomplete. If you are not a developer or familiar with compiling and running Minecraft mods from source, OptiFine is likely the better choice in the immediate moment.
+**You can download Iris from [GitHub Releases](https://github.com/IrisShaders/Iris/releases), [Modrinth](https://modrinth.com/mod/iris) or [Curseforge]().**
 
-That being said... **If you want to test out compiled alpha builds of the mod, please consider becoming a [Patron](https://www.patreon.com/coderbot), which will give you access to compiled downloads**. Alternatively, developers who know what they are doing can compile the mod themselves.
+If you want to test out compiled alpha builds of the mod, please consider becoming a [Patron](https://www.patreon.com/coderbot), which will give you access to compiled downloads. Alternatively, developers who know what they are doing can compile the mod themselves.
 
-**No support will be provided for users who cannot figure out how to properly compile the mod themselves.**
-
+You can also join the [Iris Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and follow development!
 
 ## What is Iris, anyways?
 
 Iris is an experiment in loading shaderpacks on Fabric. After making minimal progress trying to hack karyonix's ShadersMod codebase on to newer versions, I finally asked: *How hard is it to load a basic shaderpack on Fabric from scratch?* As it turns out, nowhere near as hard as I expected! Thus, Iris was born.
 
-Iris is completely free and open source, and you are free to read, distribute, and modify the code as long as you abide by the (fairly reasonable) terms of the [GNU LGPLv3 license](https://github.com/IrisShaders/Iris/blob/master/LICENSE). This should be a quite nice change of pace from the closed-source nature of OptiFine. That being said, I will ask that you talk to me before publicly posting compiled builds of the mod currently. This is out of necessity - Iris just is not yet complete enough to become widely used right now, and I don't have a support team capable of handling all potential user support requests.
+Iris is completely free and open source, and you are free to read, distribute, and modify the code as long as you abide by the (fairly reasonable) terms of the [GNU LGPLv3 license](https://github.com/IrisShaders/Iris/blob/master/LICENSE). This should be a quite nice change of pace from the closed-source nature of OptiFine.
 
 For the most part, I am creating Iris in order to have fun and get more experience in rendering. However, I am also frustrated by the constant incompatibilities and issues that players have reported when using OptiFine, and I also know that I am far from the only person with this experience. By developing a compatible and open source shaders mod, I hope to work towards a community where players and developers no longer have to worry about OptiFine incompatibilities.
 
@@ -47,16 +46,9 @@ Iris has been progressing quite rapidly recently. The following shaderpacks most
     * Weather is broken
 
 Other shaderpacks aren't supported.
-
-A major feature missing from the public source code is shadow mapping. Many packs rely on shadow mapping quite heavily, and its absence causes a variety of issues:
-
-* Nothing casts a shadow (obviously)
-* You might see the sun glowing through solid blocks and similar issues on shader packs making use of volumetric lighting (like BSL & Sildurs Vibrant Shaders Extreme-VL)
-* The sides of blocks facing the sun will be very bright while the sides facing away will be very dark, creating a weird effect.
-
+ 
 ---
-
-* Sildur's Vibrant Shaders and XorDev's shaderpacks work for the most part under Iris, and have been the focus of my development. However, most other shaderpacks either have severe rendering issues, or do not work at all. My current focus is to get Sildur's Vibrant Shaders and XorDev's shaderpacks to the point where they are 100% working before shifting focus to other shaderpacks. As I fix issues in these shaderpacks, other shaderpacks will very likely begin to work properly as well.
+ 
 * I am working with JellySquid to make Sodium and Iris compatible. There is a proof-of-concept for Iris/Sodium compatibility available on a [custom fork of Sodium](https://github.com/IrisShaders/sodium-fabric). While this proof of concept is being used as a reference for compatibility work, it will likely be replaced with more solid and stable code in the future.
 
 
@@ -104,10 +96,6 @@ The fundamental flaw with OptiFabric is that it is a massive *hack*. I call it a
 OptiFine is created as a "jar mod." Remember deleting META-INF about a decade ago (Wow, I feel old now) and copying the files from that one new mod directly into your `minecraft.jar`? Effectively, that's what Optifine now does every time you start the game. That means that it directly patches a decompiled version of Minecraft, then at runtime it overwrites the vanilla classes (units of code) with its own modified versions. This is about as invasive and incompatible as it sounds. Perhaps unsurprisingly, Optifine is *notorious* for having [many](https://github.com/TerraformersMC/Terrestria/issues/178), [many](https://github.com/jellysquid3/lithium-fabric/issues/73), [*many*](https://www.reddit.com/r/feedthebeast/comments/6ueyla/112_optifine_incompatible_with_some_mods/) incompatibilities with other mods.
 
 On the other hand, Iris is a native Fabric mod that uses carefully crafted and precise code injections driven by the [Mixin](https://github.com/SpongePowered/Mixin) bytecode patching system. Mixin is the basis of the entire Fabric modding community, and is a much more compatible way of patching the game. This alone should help alleviate many of the compatibility issues that have plagued OptiFine.
-
-## Discord
-
-Join the [Iris Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and follow development!
 
 
 ## Credits
