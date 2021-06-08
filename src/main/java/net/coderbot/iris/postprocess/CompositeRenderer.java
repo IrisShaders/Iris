@@ -138,6 +138,7 @@ public class CompositeRenderer {
 	}
 
 	public void renderAll(ShadowMapRenderer shadowMapRenderer) {
+		// TODO: Is this valid in the deferred pass?
 		centerDepthSampler.endWorldRendering();
 
 		RenderSystem.disableBlend();
