@@ -4,6 +4,9 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.Camera;
+
+import java.util.List;
 
 public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
@@ -11,6 +14,16 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
 		MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
 		GlStateManager._glUseProgram(0);
+	}
+
+	@Override
+	public void renderShadows(WorldRendererAccessor worldRenderer, Camera camera) {
+		// stub: nothing to do here
+	}
+
+	@Override
+	public void addDebugText(List<String> messages) {
+		// stub: nothing to do here
 	}
 
 	@Override
@@ -51,5 +64,17 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	@Override
 	public boolean shouldDisableDirectionalShading() {
 		return false;
+	}
+
+	@Override
+	public boolean shouldRenderClouds() {
+		// Keep clouds enabled
+		return true;
+	}
+
+	@Override
+	public float getSunPathRotation() {
+		// No sun tilt
+		return 0;
 	}
 }

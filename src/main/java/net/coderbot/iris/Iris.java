@@ -7,6 +7,7 @@ import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
@@ -48,6 +49,8 @@ public class Iris implements ClientModInitializer {
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
 	private static KeyBinding reloadKeybind;
+	private static KeyBinding toggleShadersKeybind;
+	private static KeyBinding shaderpackScreenKeybind;
 
 	@Override
 	public void onInitializeClient() {
@@ -57,7 +60,7 @@ public class Iris implements ClientModInitializer {
 
 				// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
 				// the right fork of Sodium, it will just crash.
-				if (!versionString.startsWith("0.2.0_IRIS-SNAPSHOT")) {
+				if (!versionString.startsWith("0.2.0+IRIS")) {
 					throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but 0.2.0_IRIS-SNAPSHOT is expected");
 				}
 			}
@@ -83,14 +86,15 @@ public class Iris implements ClientModInitializer {
 		loadShaderpack();
 
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
+		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.toggleShaders", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
+		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.shaderPackSelection", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			if (reloadKeybind.wasPressed()){
-
+			if (reloadKeybind.wasPressed()) {
 				try {
 					reload();
 
-					if (minecraftClient.player != null){
+					if (minecraftClient.player != null) {
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
 					}
 
@@ -101,6 +105,28 @@ public class Iris implements ClientModInitializer {
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
 					}
 				}
+			} else if (toggleShadersKeybind.wasPressed()) {
+				IrisConfig config = getIrisConfig();
+				try {
+					config.setShadersEnabled(!config.areShadersEnabled());
+					config.save();
+
+					reload();
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
+					}
+				} catch (Exception e) {
+					Iris.logger.error("Error while toggling shaders!", e);
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
+					}
+
+					setShadersDisabled();
+					currentPackName = "(off) [fallback, check your logs for errors]";
+				}
+			} else if (shaderpackScreenKeybind.wasPressed()) {
+				minecraftClient.openScreen(new ShaderPackScreen(null));
 			}
 		});
 
@@ -121,12 +147,21 @@ public class Iris implements ClientModInitializer {
 		// Attempt to load an external shaderpack if it is available
 		if (!irisConfig.isInternal()) {
 			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
-				logger.warn("Falling back to internal shaders because the external shaderpack could not be loaded");
-				loadInternalShaderpack();
-				currentPackName = "(internal) [fallback, check your logs for errors]";
+				logger.warn("Falling back to normal rendering without shaders because the external shaderpack could not be loaded");
+				setShadersDisabled();
+				currentPackName = "(off) [fallback, check your logs for errors]";
 			}
 		} else {
-			loadInternalShaderpack();
+			try {
+				loadInternalShaderpack();
+			} catch (Exception e) {
+				logger.error("Something went terribly wrong, Iris was unable to load the internal shaderpack!");
+				logger.catching(Level.ERROR, e);
+
+				logger.warn("Falling back to normal rendering without shaders because the internal shaderpack could not be loaded");
+				setShadersDisabled();
+				currentPackName = "(off) [fallback, check your logs for errors]";
+			}
 		}
 	}
 
@@ -193,9 +228,10 @@ public class Iris implements ClientModInitializer {
 			return false;
 		}
 
-		logger.info("Using shaderpack: " + name);
 		currentPackName = name;
 		internal = false;
+
+		logger.info("Using shaderpack: " + name);
 
 		return true;
 	}
@@ -236,6 +272,14 @@ public class Iris implements ClientModInitializer {
 		logger.info("Using internal shaders");
 		currentPackName = "(internal)";
 		internal = true;
+	}
+
+	private static void setShadersDisabled() {
+		currentPack = null;
+		currentPackName = "(off)";
+		internal = false;
+
+		logger.info("Shaders are disabled");
 	}
 
 	public static boolean isValidShaderpack(Path pack) {

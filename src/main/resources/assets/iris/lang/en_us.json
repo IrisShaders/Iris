@@ -1,8 +1,12 @@
 {
   "iris.shaders.reloaded": "Shaders Reloaded!",
+  "iris.shaders.toggled": "Toggled shaders to %s!",
   "iris.keybind.reload": "Reload Shaders",
+  "iris.keybind.shaderPackSelection": "Shaderpack Selection Screen",
+  "iris.keybind.toggleShaders": "Toggle Shaders",
   "iris.keybinds": "Iris",
-  "iris.shaders.reloaded.failure": "Failed to Reload Shaders! Reason: %s",
+  "iris.shaders.reloaded.failure": "Failed to reload shaders! Reason: %s",
+  "iris.shaders.toggled.failure": "Failed to toggle shaders! Reason: %s",
 
   "options.iris.apply": "Apply",
   "options.iris.refresh": "Refresh",

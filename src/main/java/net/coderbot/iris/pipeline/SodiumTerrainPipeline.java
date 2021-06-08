@@ -15,6 +15,7 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -115,8 +116,10 @@ public class SodiumTerrainPipeline {
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
-		System.out.println("Final patched source:");
-		System.out.println(transformations);
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			System.out.println("Final patched source:");
+			System.out.println(transformations);
+		}
 
 		return transformations.toString();
 	}
@@ -133,6 +136,8 @@ public class SodiumTerrainPipeline {
 	}
 
 	public static Optional<SodiumTerrainPipeline> create() {
+		Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension(), false);
+
 		return Iris.getCurrentPack().map(
 			pack -> new SodiumTerrainPipeline(Objects.requireNonNull(pack.getProgramSet(Iris.getCurrentDimension())))
 		);
@@ -165,7 +170,8 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), FrameUpdateNotifier.INSTANCE);
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
 		SamplerUniforms.addWorldSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);

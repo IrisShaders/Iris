@@ -6,7 +6,9 @@ import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -45,7 +47,7 @@ public class MixinWorldRenderer {
 
 	@Unique
 	private boolean skyTextureEnabled;
-	
+
 	@Unique
 	private WorldRenderingPipeline pipeline;
 
@@ -53,8 +55,15 @@ public class MixinWorldRenderer {
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
-		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
-		FrameUpdateNotifier.INSTANCE.onNewFrame();
+		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension(), true);
+
+		if (pipeline instanceof DeferredWorldRenderingPipeline) {
+			((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier().onNewFrame();
+		}
+
+		if (pipeline instanceof CoreWorldRenderingPipeline) {
+			((CoreWorldRenderingPipeline) pipeline).getUpdateNotifier().onNewFrame();
+		}
 
 		pipeline.beginWorldRendering();
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
@@ -137,6 +146,13 @@ public class MixinWorldRenderer {
 	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS))
 	private void iris$beginClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.CLOUDS);
+	}
+
+	@Inject(method = "renderClouds", at = @At("HEAD"), cancellable = true)
+	private void iris$maybeRemoveClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
+		if (!pipeline.shouldRenderClouds()) {
+			ci.cancel();
+		}
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))

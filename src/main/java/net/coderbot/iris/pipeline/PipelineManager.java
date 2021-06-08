@@ -26,7 +26,7 @@ public class PipelineManager {
 		this.wasDisablingDirectionalShading = DirectionalShadingHelper.shouldDisableDirectionalShading;
 	}
 
-	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
+	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension, boolean reloadRenderer) {
 		if (currentDimension != lastDimension) {
 			Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
 
@@ -52,7 +52,9 @@ public class PipelineManager {
 			// TODO: Do not always reload on shaderpack changes, and only reload if the block ID mapping changes
 			//
 			// If the block ID mapping changes and the world render is not reloaded, then things won't work correctly.
-			MinecraftClient.getInstance().worldRenderer.reload();
+			if (reloadRenderer) {
+				MinecraftClient.getInstance().worldRenderer.reload();
+			}
 
 			// If Sodium is loaded, we need to reload the world renderer to properly recreate the ChunkRenderBackend
 			// Otherwise, the terrain shaders won't be changed properly.
