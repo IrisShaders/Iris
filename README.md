@@ -1,4 +1,4 @@
-![logo](docs/iris-logo-transparent.png)
+![logo](docs/banner.png)
 
 # Iris
 
@@ -46,7 +46,8 @@ Iris has been progressing quite rapidly recently. The following shaderpacks most
     * Weather is broken
 
 Other shaderpacks aren't supported.
- 
+
+
 ---
  
 * I am working with JellySquid to make Sodium and Iris compatible. There is a proof-of-concept for Iris/Sodium compatibility available on a [custom fork of Sodium](https://github.com/IrisShaders/sodium-fabric). While this proof of concept is being used as a reference for compatibility work, it will likely be replaced with more solid and stable code in the future.

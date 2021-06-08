@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline;
 import java.io.IOException;
 import java.util.*;
 
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
@@ -12,7 +13,10 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.coderbot.iris.postprocess.BufferFlipper;
+import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
+import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
@@ -84,11 +88,19 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer baseline;
 
 	private final ShadowMapRenderer shadowMapRenderer;
+	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
+	private final FinalPassRenderer finalPassRenderer;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
 	private final AbstractTexture noise;
 	private final FrameUpdateNotifier updateNotifier;
+	private final CenterDepthSampler centerDepthSampler;
+
+	private final ImmutableSet<Integer> flippedBeforeTranslucent;
+	private final ImmutableSet<Integer> flippedAfterTranslucent;
+
+	private boolean isBeforeTranslucent;
 
 	private final int waterId;
 	private final float sunPathRotation;
@@ -108,29 +120,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
-
-		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
-		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
-		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
-		this.skyBasic = programs.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
-		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
-		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
-		this.terrain = programs.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
-		this.translucent = programs.getGbuffersWater().map(this::createPass).orElse(terrain);
-		this.damagedBlock = programs.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
-		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
-		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
-		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
-		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
-		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
-		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
-		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
-
-		int[] buffersToBeCleared = programs.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
-
-		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
-		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE2);
@@ -156,7 +145,43 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, noise, updateNotifier);
+		BufferFlipper flipper = new BufferFlipper();
+
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
+
+		flippedBeforeTranslucent = flipper.snapshot();
+
+		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
+				noise, updateNotifier, centerDepthSampler, flipper);
+
+		flippedAfterTranslucent = flipper.snapshot();
+
+		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
+				noise, updateNotifier, centerDepthSampler, flipper);
+		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(), centerDepthSampler);
+
+		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
+		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
+		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
+		this.skyBasic = programs.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
+		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
+		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
+		this.terrain = programs.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
+		this.translucent = programs.getGbuffersWater().map(this::createPass).orElse(terrain);
+		this.damagedBlock = programs.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
+		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
+		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
+		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
+		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
+		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
+		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
+		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
+
+		int[] buffersToBeCleared = programs.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
+
+		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
+		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		this.usesShadows |= compositeRenderer.usesShadows();
 
@@ -374,7 +399,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
-		GlFramebuffer framebuffer = renderTargets.createFramebufferWritingToMain(source.getDirectives().getDrawBuffers());
+		GlFramebuffer framebufferBeforeTranslucents =
+				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
+		GlFramebuffer framebufferAfterTranslucents =
+				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
 		builder.bindAttributeLocation(10, "mc_Entity");
 		builder.bindAttributeLocation(11, "mc_midTexCoord");
@@ -386,18 +414,21 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			Iris.logger.info("Configured alpha test override for " + source.getName() + ": " + alphaTestOverride);
 		}
 
-		return new Pass(builder.build(), framebuffer, alphaTestOverride, source.getDirectives().shouldDisableBlend());
+		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
+				source.getDirectives().shouldDisableBlend());
 	}
 
 	private final class Pass {
 		private final Program program;
-		private final GlFramebuffer framebuffer;
+		private final GlFramebuffer framebufferBeforeTranslucents;
+		private final GlFramebuffer framebufferAfterTranslucents;
 		private final AlphaTestOverride alphaTestOverride;
 		private final boolean disableBlend;
 
-		private Pass(Program program, GlFramebuffer framebuffer, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
+		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
 			this.program = program;
-			this.framebuffer = framebuffer;
+			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
+			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
 			this.alphaTestOverride = alphaTestOverride;
 			this.disableBlend = disableBlend;
 		}
@@ -417,10 +448,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			bindTexture(SamplerUniforms.SHADOW_COLOR_0, shadowMapRenderer.getColorTexture0Id());
 			bindTexture(SamplerUniforms.SHADOW_COLOR_1, shadowMapRenderer.getColorTexture1Id());
 
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4));
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5));
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6));
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7));
+			ImmutableSet<Integer> flipped = isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
+
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4), flipped.contains(4));
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5), flipped.contains(5));
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6), flipped.contains(6));
+			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7), flipped.contains(7));
 
 			int depthAttachment = renderTargets.getDepthTexture().getTextureId();
 			int depthAttachmentNoTranslucents = renderTargets.getDepthTextureNoTranslucents().getTextureId();
@@ -433,7 +466,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 
-			framebuffer.bind();
+			if (isBeforeTranslucent) {
+				framebufferBeforeTranslucents.bind();
+			} else {
+				framebufferAfterTranslucents.bind();
+			}
+
 			program.use();
 
 			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
@@ -462,8 +500,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 	}
 
-	private static void bindRenderTarget(int textureUnit, RenderTarget target) {
-		bindTexture(textureUnit, target.getMainTexture());
+	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean flipped) {
+		bindTexture(textureUnit, flipped ? target.getAltTexture() : target.getMainTexture());
 	}
 
 	private static void bindTexture(int textureUnit, int texture) {
@@ -559,12 +597,31 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	@Override
 	public void beginTranslucents() {
+		isBeforeTranslucent = false;
+
 		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager.bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager.bindTexture(0);
+
+		deferredRenderer.renderAll(shadowMapRenderer);
+
+		RenderSystem.enableBlend();
+		RenderSystem.enableAlphaTest();
+
+		MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().enable();
+		MinecraftClient.getInstance().gameRenderer.getOverlayTexture().setupOverlayColor();
+
+		if (!programStack.isEmpty()) {
+			GbufferProgram toUse = programStack.get(programStack.size() - 1);
+
+			useProgram(toUse);
+		} else {
+			useProgram(GbufferProgram.NONE);
+			baseline.bind();
+		}
 	}
 
 	public static GbufferProgram getProgramForSheet(ParticleTextureSheet sheet) {
@@ -609,6 +666,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public void beginWorldRendering() {
 		isRenderingWorld = true;
+		isBeforeTranslucent = true;
 
 		checkWorld();
 
@@ -651,6 +709,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		programStackLog.clear();
 
 		compositeRenderer.renderAll(shadowMapRenderer);
+		finalPassRenderer.renderFinalPass(shadowMapRenderer);
 	}
 
 	private boolean isRenderingShadow = false;

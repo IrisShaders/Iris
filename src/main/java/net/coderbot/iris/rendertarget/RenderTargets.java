@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -99,6 +100,18 @@ public class RenderTargets {
 
 	public GlFramebuffer createFramebufferWritingToAlt(int[] drawBuffers) {
 		return createFullFramebuffer(true, drawBuffers);
+	}
+
+	public GlFramebuffer createGbufferFramebuffer(ImmutableSet<Integer> flipped, int[] drawBuffers) {
+		boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+
+		flipped.forEach(index -> stageWritesToAlt[index] = true);
+
+		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToAlt, drawBuffers);
+
+		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
+
+		return framebuffer;
 	}
 
 	private GlFramebuffer createFullFramebuffer(boolean clearsAlt, int[] drawBuffers) {
