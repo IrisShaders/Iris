@@ -37,15 +37,15 @@ public class CompositeRenderer {
 	private final ImmutableList<Pass> passes;
 	private final AbstractTexture noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
-	private final FinalPassRenderer finalPassRenderer;
+	private final CenterDepthSampler centerDepthSampler;
 
-	final CenterDepthSampler centerDepthSampler;
 	private boolean usesShadows = false;
 
-	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, AbstractTexture noiseTexture, FrameUpdateNotifier updateNotifier) {
+	public CompositeRenderer(ProgramSet pack, RenderTargets renderTargets, AbstractTexture noiseTexture,
+							 FrameUpdateNotifier updateNotifier, CenterDepthSampler centerDepthSampler,
+							 BufferFlipper bufferFlipper) {
 		this.updateNotifier = updateNotifier;
-
-		centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
+		this.centerDepthSampler = centerDepthSampler;
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -72,8 +72,6 @@ public class CompositeRenderer {
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 
-		BufferFlipper flipper = new BufferFlipper();
-
 		for (Pair<Program, ProgramDirectives> programEntry : programs) {
 			Pass pass = new Pass();
 			ProgramDirectives directives = programEntry.getRight();
@@ -85,12 +83,12 @@ public class CompositeRenderer {
 			boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
 			for (int i = 0; i < stageWritesToAlt.length; i++) {
-				stageWritesToAlt[i] = !flipper.isFlipped(i);
+				stageWritesToAlt[i] = !bufferFlipper.isFlipped(i);
 			}
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(stageWritesToAlt, drawBuffers);
 
-			pass.stageReadsFromAlt = flipper.snapshot();
+			pass.stageReadsFromAlt = bufferFlipper.snapshot();
 			pass.framebuffer = framebuffer;
 			pass.viewportScale = directives.getViewportScale();
 			pass.generateMipmap = new boolean[RenderTargets.MAX_RENDER_TARGETS];
@@ -103,7 +101,7 @@ public class CompositeRenderer {
 
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
-				flipper.flip(buffer);
+				bufferFlipper.flip(buffer);
 			}
 		}
 
@@ -113,9 +111,6 @@ public class CompositeRenderer {
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 
 		this.noiseTexture = noiseTexture;
-
-		finalPassRenderer = new FinalPassRenderer(pack, renderTargets, noiseTexture, updateNotifier,
-				flipper.snapshot(), centerDepthSampler);
 	}
 
 	private int[] truncateDrawBuffers(int[] buffers) {
@@ -230,8 +225,6 @@ public class CompositeRenderer {
 		unbindTexture(SamplerUniforms.NOISE_TEX);
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
-
-		this.finalPassRenderer.renderFinalPass(shadowMapRenderer);
 	}
 
 	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean readFromAlt, boolean generateMipmap) {

@@ -12,7 +12,10 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.coderbot.iris.postprocess.BufferFlipper;
+import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
+import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
@@ -85,10 +88,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private final ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer compositeRenderer;
+	private final FinalPassRenderer finalPassRenderer;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
 	private final AbstractTexture noise;
 	private final FrameUpdateNotifier updateNotifier;
+	private final CenterDepthSampler centerDepthSampler;
 
 	private final int waterId;
 	private final float sunPathRotation;
@@ -108,29 +113,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
-
-		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
-		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
-		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
-		this.skyBasic = programs.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
-		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
-		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
-		this.terrain = programs.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
-		this.translucent = programs.getGbuffersWater().map(this::createPass).orElse(terrain);
-		this.damagedBlock = programs.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
-		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
-		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
-		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
-		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
-		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
-		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
-		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
-
-		int[] buffersToBeCleared = programs.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
-
-		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
-		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE2);
@@ -156,7 +138,34 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
-		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, noise, updateNotifier);
+		BufferFlipper flipper = new BufferFlipper();
+
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);;
+		this.compositeRenderer = new CompositeRenderer(programs, renderTargets, noise, updateNotifier, centerDepthSampler, flipper);
+		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(), centerDepthSampler);
+
+		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
+		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
+		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
+		this.skyBasic = programs.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
+		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
+		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
+		this.terrain = programs.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
+		this.translucent = programs.getGbuffersWater().map(this::createPass).orElse(terrain);
+		this.damagedBlock = programs.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
+		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
+		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
+		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
+		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
+		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
+		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
+		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
+
+		int[] buffersToBeCleared = programs.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
+
+		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
+		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		this.usesShadows |= compositeRenderer.usesShadows();
 
@@ -651,6 +660,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		programStackLog.clear();
 
 		compositeRenderer.renderAll(shadowMapRenderer);
+		finalPassRenderer.renderFinalPass(shadowMapRenderer);
 	}
 
 	private boolean isRenderingShadow = false;
