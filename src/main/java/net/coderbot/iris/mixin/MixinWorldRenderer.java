@@ -133,6 +133,13 @@ public class MixinWorldRenderer {
 		pipeline.pushProgram(GbufferProgram.CLOUDS);
 	}
 
+	@Inject(method = "renderClouds", at = @At("HEAD"), cancellable = true)
+	private void iris$maybeRemoveClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
+		if (!pipeline.shouldRenderClouds()) {
+			ci.cancel();
+		}
+	}
+
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))
 	private void iris$endClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.CLOUDS);

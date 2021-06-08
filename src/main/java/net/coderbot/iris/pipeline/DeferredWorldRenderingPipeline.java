@@ -104,6 +104,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private final int waterId;
 	private final float sunPathRotation;
+	private final boolean shouldRenderClouds;
 
 	private static final List<GbufferProgram> programStack = new ArrayList<>();
 	private static final List<String> programStackLog = new ArrayList<>();
@@ -115,6 +116,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
+		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
 		this.updateNotifier = new FrameUpdateNotifier();
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives().getRenderTargetDirectives());
@@ -362,6 +364,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public boolean shouldDisableDirectionalShading() {
 		return true;
+	}
+
+	@Override
+	public boolean shouldRenderClouds() {
+		return shouldRenderClouds;
 	}
 
 	@Override

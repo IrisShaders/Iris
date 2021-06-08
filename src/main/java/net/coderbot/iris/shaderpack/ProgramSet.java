@@ -50,7 +50,7 @@ public class ProgramSet {
 
 	public ProgramSet(Path root, Path inclusionRoot, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
 		// TODO: Support additional render targets beyond 8
-		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS);
+		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, shaderProperties);
 		this.pack = pack;
 
 		this.shadow = readProgramSource(root, inclusionRoot, "shadow", this, shaderProperties);
@@ -106,7 +106,7 @@ public class ProgramSet {
 		}
 
 		// TODO: Support additional render targets beyond 8
-		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS);
+		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, getPackDirectives());
 
 		this.shadow = merge(base.shadow, overrides.shadow);
 

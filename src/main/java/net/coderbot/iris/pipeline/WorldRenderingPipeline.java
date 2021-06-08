@@ -8,10 +8,8 @@ import java.util.List;
 
 public interface WorldRenderingPipeline {
 	void beginWorldRendering();
-	default void renderShadows(WorldRendererAccessor worldRenderer, Camera camera) {
-	}
-	default void addDebugText(List<String> messages) {
-	}
+	void renderShadows(WorldRendererAccessor worldRenderer, Camera camera);
+	void addDebugText(List<String> messages);
 	void beginShadowRender();
 	void endShadowRender();
 	void beginTranslucents();
@@ -21,8 +19,7 @@ public interface WorldRenderingPipeline {
 
 	boolean shouldDisableVanillaEntityShadows();
 	boolean shouldDisableDirectionalShading();
+	boolean shouldRenderClouds();
 
-	default float getSunPathRotation() {
-		return 0.0F;
-	}
+	float getSunPathRotation();
 }
