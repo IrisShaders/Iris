@@ -31,10 +31,9 @@ Iris has been progressing quite rapidly recently. The following shaderpacks most
     * Enchantment glints are broken
     * Fog is broken
 * [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
-    * Reflections are all black, weather doesn't look quite right.
-    * Underwater and nether fog is broken
+    * Weather doesn't look quite right.
 * [BSL Shaders](https://www.bitslablab.com/bslshaders/)
-    * Reflections currently do not work at all, and rain doesn't show up.
+    * Rain doesn't show up.
 * [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
     * Water looks weird in general, though reflections do work. Weather doesn't work, rain does not show up and the sky does not darken.
 * [SEUS v11](https://sonicether.com/shaders/download/v11-0/) from 2016
