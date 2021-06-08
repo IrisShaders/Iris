@@ -1,4 +1,4 @@
-![logo](docs/iris-logo-transparent.png)
+![logo](docs/banner.png)
 
 # Iris
 
@@ -47,12 +47,6 @@ Iris has been progressing quite rapidly recently. The following shaderpacks most
     * Weather is broken
 
 Other shaderpacks aren't supported.
-
-A major feature missing from the public source code is shadow mapping. Many packs rely on shadow mapping quite heavily, and its absence causes a variety of issues:
-
-* Nothing casts a shadow (obviously)
-* You might see the sun glowing through solid blocks and similar issues on shader packs making use of volumetric lighting (like BSL & Sildurs Vibrant Shaders Extreme-VL)
-* The sides of blocks facing the sun will be very bright while the sides facing away will be very dark, creating a weird effect.
 
 ---
 
