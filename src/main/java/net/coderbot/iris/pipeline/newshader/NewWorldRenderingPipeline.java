@@ -37,7 +37,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
 	private boolean destroyed = false;
@@ -54,6 +56,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader terrainCutoutMipped;
 	private final Shader terrainTranslucent;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
+
+	private final Set<Shader> loadedShaders;
 
 	private final GlFramebuffer clearAltBuffers;
 	private final GlFramebuffer clearMainBuffers;
@@ -118,6 +122,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
 
+		// TODO: Use EmptyShadowMapRenderer when shadows aren't needed.
 		this.shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null), programSet.getPackDirectives());
 
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
@@ -125,21 +130,29 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// Matches OptiFine's default for CUTOUT and CUTOUT_MIPPED.
 		AlphaTest terrainCutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
 
+		this.loadedShaders = new HashSet<>();
+
 		// TODO: Resolve hasColorAttrib based on the vertex format
-		this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION, false);
-		this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
-		this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false);
-		this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
-		this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
-		this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+		try {
+			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION, false);
+			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
+			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false);
+			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
+			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
 
-		// TODO: Shadow programs should have access to different samplers.
-		this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+			// TODO: Shadow programs should have access to different samplers.
+			this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
 
-		if (translucentSource != terrainSource) {
-			this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
-		} else {
-			this.terrainTranslucent = this.terrainSolid;
+			if (translucentSource != terrainSource) {
+				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
+			} else {
+				this.terrainTranslucent = this.terrainSolid;
+			}
+		} catch (RuntimeException e) {
+			destroyShaders();
+
+			throw e;
 		}
 
 		int[] buffersToBeCleared = programSet.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
@@ -147,11 +160,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 
-		this.compositeRenderer = new CompositeRenderer(programSet, renderTargets, shadowMapRenderer, noise);
+		this.compositeRenderer = new CompositeRenderer(programSet, renderTargets, noise);
 	}
 
 	private Shader createShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, renderTargets, baseline, fallbackAlpha, vertexFormat, hasColorAttrib);
+
+		loadedShaders.add(extendedShader);
 
 		// TODO: waterShadowEnabled?
 
@@ -190,6 +205,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer framebuffer = this.shadowMapRenderer.getFramebuffer();
 
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, baseline, fallbackAlpha, vertexFormat, hasColorAttrib);
+
+		loadedShaders.add(extendedShader);
 
 		// TODO: waterShadowEnabled?
 		// TODO: Audit these render targets...
@@ -310,7 +327,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void finalizeWorldRendering() {
-		compositeRenderer.renderAll();
+		compositeRenderer.renderAll(shadowMapRenderer);
 	}
 
 	@Override
@@ -363,24 +380,20 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return terrainTranslucent;
 	}
 
+	private void destroyShaders() {
+		// NB: If you forget this, shader reloads won't work!
+		loadedShaders.forEach(shader -> {
+			// TODO: Yarn WTF: This is the unbind method, not the bind method...
+			shader.bind();
+			shader.close();
+		});
+	}
+
 	@Override
 	public void destroy() {
 		destroyed = true;
 
-		// NB: If you forget this, shader reloads won't work!
-		skyBasic.close();
-		skyBasicColor.close();
-		skyTextured.close();
-
-		shadowTerrainCutout.close();
-
-		terrainSolid.close();
-		terrainCutout.close();
-		terrainCutoutMipped.close();
-
-		if (terrainTranslucent != terrainSolid) {
-			terrainTranslucent.close();
-		}
+		destroyShaders();
 
 		// Unbind all textures
 		//

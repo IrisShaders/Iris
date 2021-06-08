@@ -1,0 +1,3 @@
+accessWidener	v1	named
+accessible  class   net/minecraft/client/render/RenderPhase$Transparency
+accessible  class   net/minecraft/client/render/RenderLayer$MultiPhaseParameters

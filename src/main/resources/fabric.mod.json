@@ -32,6 +32,8 @@
     "mixins.iris.bettermipmaps.json"
   ],
 
+  "accessWidener" : "iris.accesswidener",
+
   "depends": {
     "fabricloader": ">=0.11.3",
     "minecraft": ["1.17", "1.17-rc.2"],

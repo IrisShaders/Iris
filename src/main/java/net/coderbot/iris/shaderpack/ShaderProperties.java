@@ -260,7 +260,7 @@ public class ShaderProperties {
 		return frustumCulling;
 	}
 
-	public Object2ObjectMap<String, AlphaTestOverride> getAlphaTestOverrides() {
+	public Object2ObjectMap<String, AlphaTest> getAlphaTestOverrides() {
 		return alphaTestOverrides;
 	}
 

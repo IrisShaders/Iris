@@ -477,9 +477,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		compositeRenderer.destroy();
 
 		// Make sure that any custom framebuffers are not bound before destroying render targets
-		GlStateManager.bindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
-		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
-		GlStateManager.bindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
 
 		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
 

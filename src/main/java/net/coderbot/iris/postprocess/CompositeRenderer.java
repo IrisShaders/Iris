@@ -246,6 +246,8 @@ public class CompositeRenderer {
 				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 				RenderSystem.bindTexture(swapPass.targetTexture);
 				GL20C.glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
+				RenderSystem.bindTexture(0);
+				GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 			}
 		}
 
