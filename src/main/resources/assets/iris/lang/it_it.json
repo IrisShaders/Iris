@@ -15,8 +15,8 @@
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" non è uno Shader Pack valido",
   "options.iris.shaderPackSelection.copyError": "Impossibile aggiungere lo Shader Pack \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" è già nella tua cartella Shader Packs!",
-  "options.iris.shaders.disabled": "Shaders: Disabilitatos",
-  "options.iris.shaders.enabled": "Shaders: Abilitatos",
+  "options.iris.shaders.disabled": "Shaders: Disabilitati",
+  "options.iris.shaders.enabled": "Shaders: Abilitati",
 
   "pack.iris.select.title": "Selezionare",
   "pack.iris.list.label": "+ Trascinare e rilasciare i Shader Packs per aggiungere"
