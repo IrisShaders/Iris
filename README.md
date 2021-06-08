@@ -6,7 +6,7 @@
 
 ## How can I use this?
 
-**You can download Iris from [GitHub Releases](https://github.com/IrisShaders/Iris/releases), [Modrinth](https://modrinth.com/mod/iris) or [Curseforge](https://www.curseforge.com/minecraft/mc-mods/irisshaders).**
+**You can download Iris from [GitHub Releases](https://github.com/IrisShaders/Iris/releases), [Modrinth](https://modrinth.com/mod/iris), or [CurseForge](https://www.curseforge.com/minecraft/mc-mods/irisshaders).**
 
 If you want to test out compiled alpha builds of the mod, please consider becoming a [Patron](https://www.patreon.com/coderbot), which will give you access to compiled downloads. Alternatively, developers who know what they are doing can compile the mod themselves.
 
