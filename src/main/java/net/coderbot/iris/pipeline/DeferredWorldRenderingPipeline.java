@@ -97,6 +97,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 
+	private final ImmutableSet<Integer> flippedBeforeTranslucent;
+	private final ImmutableSet<Integer> flippedAfterTranslucent;
+
+	private boolean isBeforeTranslucent;
+
 	private final int waterId;
 	private final float sunPathRotation;
 
@@ -143,10 +148,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		BufferFlipper flipper = new BufferFlipper();
 
 		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
+
+		flippedBeforeTranslucent = flipper.snapshot();
+
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper);
 
-		ImmutableSet<Integer> afterDeferred = flipper.snapshot();
+		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper);
@@ -159,7 +167,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
 		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
 		this.terrain = programs.getGbuffersTerrain().map(this::createPass).orElse(texturedLit);
-		this.translucent = programs.getGbuffersWater().map(source -> createPass(afterDeferred, source)).orElse(terrain);
+		this.translucent = programs.getGbuffersWater().map(this::createPass).orElse(terrain);
 		this.damagedBlock = programs.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
 		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
@@ -371,10 +379,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	private Pass createPass(ProgramSource source) {
-		return createPass(ImmutableSet.of(), source);
-	}
-
-	private Pass createPass(ImmutableSet<Integer> flipped, ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -395,7 +399,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		SamplerUniforms.addWorldSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
-		GlFramebuffer framebuffer = renderTargets.createGbufferFramebuffer(flipped, source.getDirectives().getDrawBuffers());
+		GlFramebuffer framebufferBeforeTranslucents =
+				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
+		GlFramebuffer framebufferAfterTranslucents =
+				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
 		builder.bindAttributeLocation(10, "mc_Entity");
 		builder.bindAttributeLocation(11, "mc_midTexCoord");
@@ -407,22 +414,23 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			Iris.logger.info("Configured alpha test override for " + source.getName() + ": " + alphaTestOverride);
 		}
 
-		return new Pass(builder.build(), framebuffer, alphaTestOverride, source.getDirectives().shouldDisableBlend(), flipped);
+		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
+				source.getDirectives().shouldDisableBlend());
 	}
 
 	private final class Pass {
 		private final Program program;
-		private final GlFramebuffer framebuffer;
+		private final GlFramebuffer framebufferBeforeTranslucents;
+		private final GlFramebuffer framebufferAfterTranslucents;
 		private final AlphaTestOverride alphaTestOverride;
 		private final boolean disableBlend;
-		private final ImmutableSet<Integer> flipped;
 
-		private Pass(Program program, GlFramebuffer framebuffer, AlphaTestOverride alphaTestOverride, boolean disableBlend, ImmutableSet<Integer> flipped) {
+		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
 			this.program = program;
-			this.framebuffer = framebuffer;
+			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
+			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
 			this.alphaTestOverride = alphaTestOverride;
 			this.disableBlend = disableBlend;
-			this.flipped = flipped;
 		}
 
 		public void use() {
@@ -440,6 +448,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			bindTexture(SamplerUniforms.SHADOW_COLOR_0, shadowMapRenderer.getColorTexture0Id());
 			bindTexture(SamplerUniforms.SHADOW_COLOR_1, shadowMapRenderer.getColorTexture1Id());
 
+			ImmutableSet<Integer> flipped = isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
+
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4), flipped.contains(4));
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5), flipped.contains(5));
 			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6), flipped.contains(6));
@@ -456,7 +466,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
 
-			framebuffer.bind();
+			if (isBeforeTranslucent) {
+				framebufferBeforeTranslucents.bind();
+			} else {
+				framebufferAfterTranslucents.bind();
+			}
+
 			program.use();
 
 			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
@@ -582,6 +597,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	@Override
 	public void beginTranslucents() {
+		isBeforeTranslucent = false;
+
 		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
@@ -649,6 +666,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public void beginWorldRendering() {
 		isRenderingWorld = true;
+		isBeforeTranslucent = true;
 
 		checkWorld();
 
