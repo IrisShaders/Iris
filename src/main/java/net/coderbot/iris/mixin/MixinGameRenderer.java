@@ -202,6 +202,27 @@ public class MixinGameRenderer {
 		}
 	}
 
+	@Inject(method = {
+			"getRenderTypeCrumblingShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideCrumblingShader(CallbackInfoReturnable<Shader> cir) {
+		if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getCrumbling, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRenderTypeTextShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeTextIntensityShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeTextSeeThroughShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeTextIntensitySeeThroughShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideTextShader(CallbackInfoReturnable<Shader> cir) {
+		if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getText, cir);
+		}
+	}
+
 	private static boolean isPhase(WorldRenderingPhase phase) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 

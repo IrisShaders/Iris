@@ -69,6 +69,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader lightning;
 	private final Shader leash;
 	private final Shader particles;
+	private final Shader crumbling;
+	private final Shader text;
 
 	private final Shader terrainTranslucent;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
@@ -172,6 +174,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Optional<ProgramSource> entitiesSource = first(programSet.getGbuffersEntities(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> entityEyesSource = first(programSet.getGbuffersEntityEyes(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 
+		Optional<ProgramSource> damagedBlockSource = first(programSet.getGbuffersDamagedBlock(), terrainSource);
+
 		// TODO: Use EmptyShadowMapRenderer when shadows aren't needed.
 		this.shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null), programSet.getPackDirectives());
 
@@ -197,6 +201,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
 			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_LIGHT, true);
 			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, true);
+			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, true);
+			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT, true);
 
 			// TODO: Shadow programs should have access to different samplers.
 			this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
@@ -517,6 +523,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public Shader getParticles() {
 		return particles;
+	}
+
+	@Override
+	public Shader getCrumbling() {
+		return crumbling;
+	}
+
+	@Override
+	public Shader getText() {
+		return text;
 	}
 
 	@Override
