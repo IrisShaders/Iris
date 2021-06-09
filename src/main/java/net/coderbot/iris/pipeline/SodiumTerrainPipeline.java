@@ -6,6 +6,7 @@ import java.util.Optional;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
@@ -170,8 +171,23 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
+		FrameUpdateNotifier updateNotifier;
+
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+
+		if (pipeline instanceof DeferredWorldRenderingPipeline) {
+			updateNotifier = ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier();
+		} else if (pipeline instanceof CoreWorldRenderingPipeline) {
+			updateNotifier = ((CoreWorldRenderingPipeline) pipeline).getUpdateNotifier();
+		} else if (pipeline instanceof FixedFunctionWorldRenderingPipeline) {
+			// TODO: This isn't what we should do.
+			updateNotifier = new FrameUpdateNotifier();
+		} else {
+			// TODO: Proper interface
+			throw new IllegalStateException("Unsupported pipeline: " + pipeline);
+		}
+
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier);
 		SamplerUniforms.addWorldSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
