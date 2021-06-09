@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline.newshader;
 
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.render.Shader;
 
 public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
@@ -13,5 +14,6 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getShadowTerrainCutout();
 	Shader getTranslucent();
 	WorldRenderingPhase getPhase();
+	FrameUpdateNotifier getUpdateNotifier();
 	void destroy();
 }

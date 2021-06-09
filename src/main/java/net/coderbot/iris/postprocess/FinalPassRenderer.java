@@ -5,10 +5,13 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.pipeline.newshader.TriforceCompositePatcher;
 import net.coderbot.iris.rendertarget.FramebufferBlitter;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -18,8 +21,10 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.FogUniforms117;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.texture.AbstractTexture;
@@ -29,6 +34,10 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 
@@ -125,7 +134,6 @@ public class FinalPassRenderer {
 
 	public void renderFinalPass(ShadowMapRenderer shadowMapRenderer) {
 		RenderSystem.disableBlend();
-		RenderSystem.disableAlphaTest();
 
 		final Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		final int baseWidth = main.textureWidth;
@@ -166,7 +174,7 @@ public class FinalPassRenderer {
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 		}
 
-		FullScreenQuadRenderer.end();
+		FullScreenQuadRenderer.INSTANCE.end();
 
 		if (finalPass == null) {
 			// If there are no passes, we somehow need to transfer the content of the Iris render targets into the main
@@ -190,12 +198,14 @@ public class FinalPassRenderer {
 			RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 			RenderSystem.bindTexture(swapPass.targetTexture);
 			GL20C.glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
+			RenderSystem.bindTexture(0);
+			GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
 		main.beginWrite(true);
-		GlStateManager.useProgram(0);
+		GlStateManager._glUseProgram(0);
 
 		// NB: Unbinding all of these textures is necessary for proper shaderpack reloading.
 		resetRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0));
@@ -266,14 +276,19 @@ public class FinalPassRenderer {
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source) {
-		// TODO: Properly handle empty shaders
-		Objects.requireNonNull(source.getVertexSource());
-		Objects.requireNonNull(source.getFragmentSource());
+		String vertex = TriforceCompositePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
+
+		if (source.getGeometrySource().isPresent()) {
+			// TODO(21w10a): support geometry shaders
+			throw new RuntimeException("Geometry shaders are not supported yet.");
+		}
+
+		String fragment = TriforceCompositePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
+
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null));
+			builder = ProgramBuilder.begin(source.getName(), vertex, null, fragment);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -286,8 +301,18 @@ public class FinalPassRenderer {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		SamplerUniforms.addCompositeSamplerUniforms(builder);
 		SamplerUniforms.addDepthSamplerUniforms(builder);
+		FogUniforms117.addFogUniforms(builder);
 
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
+
+		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+
+		try {
+			Files.write(debugOutDir.resolve(source.getName() + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
+			Files.write(debugOutDir.resolve(source.getName() + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+		} catch (IOException e) {
+			Iris.logger.warn("Failed to write debug patched shader source", e);
+		}
 
 		return new Pair<>(builder.build(), source.getDirectives());
 	}

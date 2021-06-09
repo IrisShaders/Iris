@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
@@ -10,18 +11,25 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.postprocess.BufferFlipper;
+import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
+import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
+import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
@@ -31,13 +39,12 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.system.CallbackI;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -64,13 +71,23 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final GlFramebuffer baseline;
 
 	private final ShadowRenderer shadowMapRenderer;
+	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
+	private final FinalPassRenderer finalPassRenderer;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
 	private final AbstractTexture noise;
+	private final FrameUpdateNotifier updateNotifier;
+	private final CenterDepthSampler centerDepthSampler;
+
+	private final ImmutableSet<Integer> flippedBeforeTranslucent;
+	private final ImmutableSet<Integer> flippedAfterTranslucent;
+
+	boolean isBeforeTranslucent;
 
 	private final int waterId;
 	private final float sunPathRotation;
+	private final boolean shouldRenderClouds;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
@@ -86,6 +103,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		Files.createDirectories(debugOutDir);
+
+		this.shouldRenderClouds = programSet.getPackDirectives().areCloudsEnabled();
+		this.updateNotifier = new FrameUpdateNotifier();
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programSet.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
@@ -114,6 +134,21 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		});
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
+
+		BufferFlipper flipper = new BufferFlipper();
+
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
+
+		flippedBeforeTranslucent = flipper.snapshot();
+
+		this.deferredRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getDeferred(), renderTargets,
+				noise, updateNotifier, centerDepthSampler, flipper);
+
+		flippedAfterTranslucent = flipper.snapshot();
+
+		this.compositeRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getComposite(), renderTargets,
+				noise, updateNotifier, centerDepthSampler, flipper);
+		this.finalPassRenderer = new FinalPassRenderer(programSet, renderTargets, noise, updateNotifier, flipper.snapshot(), centerDepthSampler);
 
 		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
@@ -159,12 +194,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
-
-		this.compositeRenderer = new CompositeRenderer(programSet, renderTargets, noise);
 	}
 
 	private Shader createShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, renderTargets, baseline, fallbackAlpha, vertexFormat, hasColorAttrib);
+		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
+		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
+
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent, baseline, fallbackAlpha, vertexFormat, hasColorAttrib, updateNotifier, this);
 
 		loadedShaders.add(extendedShader);
 
@@ -186,16 +222,26 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// TODO: Shadowcolor
 
 		// TODO: colortex8 to 15
+		// TODO: We shouldn't be making these available but whatever
 		for (int i = 0; i < 8; i++) {
-			// TODO: This should be "alt" for programs executing after deferred.
-			extendedShader.addIrisSampler("colortex" + i, this.renderTargets.get(i).getMainTexture());
+			final int finalI = i;
+
+			extendedShader.addIrisSampler("colortex" + i, () -> {
+				boolean flipped = (isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent).contains(finalI);
+
+				return flipped ? this.renderTargets.get(finalI).getAltTexture() : this.renderTargets.get(finalI).getMainTexture();
+			});
 		}
 
 		for (int i = 1; i <= 4; i++) {
-			// TODO: This should be "alt" for programs executing after deferred.
+			final int finalI = i + 3;
 
 			// gaux1 -> colortex4, gaux2 -> colortex5, gaux3 -> colortex6, gaux4 -> colortex7
-			extendedShader.addIrisSampler("gaux" + i, this.renderTargets.get(i + 3).getMainTexture());
+			extendedShader.addIrisSampler("gaux" + i, () -> {
+				boolean flipped = (isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent).contains(finalI);
+
+				return flipped ? this.renderTargets.get(finalI).getAltTexture() : this.renderTargets.get(finalI).getMainTexture();
+			});
 		}
 
 		return extendedShader;
@@ -204,7 +250,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private Shader createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
 		GlFramebuffer framebuffer = this.shadowMapRenderer.getFramebuffer();
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, baseline, fallbackAlpha, vertexFormat, hasColorAttrib);
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline, fallbackAlpha, vertexFormat, hasColorAttrib, updateNotifier, this);
 
 		loadedShaders.add(extendedShader);
 
@@ -284,11 +330,31 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// If we forget to do this, then weird lines appear at the top of the screen and the right of the screen
 		// on Sildur's Vibrant Shaders.
 		main.beginWrite(true);
+
+		isBeforeTranslucent = true;
 	}
 
 	@Override
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
 		this.shadowMapRenderer.renderShadows(worldRenderer, playerCamera);
+	}
+
+	@Override
+	public void addDebugText(List<String> messages) {
+		ShadowMapRenderer shadowMapRenderer = this.shadowMapRenderer;
+
+		if (shadowMapRenderer instanceof ShadowRenderer) {
+			messages.add("");
+			messages.add("[Iris] Shadow Maps: " + ShadowRenderer.OVERALL_DEBUG_STRING);
+			messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
+			messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
+			messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
+		} else if (shadowMapRenderer instanceof EmptyShadowMapRenderer) {
+			messages.add("");
+			messages.add("[Iris] Shadow Maps: not used by shader pack");
+		} else {
+			throw new IllegalStateException("Unknown shadow map renderer type!");
+		}
 	}
 
 	@Override
@@ -307,12 +373,24 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			throw new IllegalStateException("Tried to use a destroyed world rendering pipeline");
 		}
 
+		isBeforeTranslucent = false;
+
 		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
+
+		deferredRenderer.renderAll(shadowMapRenderer);
+
+		RenderSystem.enableBlend();
+
+		MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().enable();
+		MinecraftClient.getInstance().gameRenderer.getOverlayTexture().setupOverlayColor();
+
+		// Reset shader or whatever...
+		RenderSystem.setShader(GameRenderer::getPositionShader);
 	}
 
 	@Override
@@ -328,11 +406,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void finalizeWorldRendering() {
 		compositeRenderer.renderAll(shadowMapRenderer);
+		finalPassRenderer.renderFinalPass(shadowMapRenderer);
 	}
 
 	@Override
 	public boolean shouldDisableVanillaEntityShadows() {
 		return true;
+	}
+
+	@Override
+	public boolean shouldRenderClouds() {
+		return shouldRenderClouds;
 	}
 
 	@Override
@@ -435,5 +519,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
+	}
+
+	@Override
+	public FrameUpdateNotifier getUpdateNotifier() {
+		return updateNotifier;
 	}
 }

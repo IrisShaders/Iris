@@ -184,7 +184,7 @@ public class CompositeRenderer {
 			RenderSystem.viewport(0, 0, baseWidth, baseHeight);
 		}
 
-		FullScreenQuadRenderer.end();
+		FullScreenQuadRenderer.INSTANCE.end();
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.

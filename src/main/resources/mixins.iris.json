@@ -18,6 +18,7 @@
     "MixinTranslationStorage",
     "MixinTweakFarPlane",
     "MixinWorldRenderer",
+    "MixinVertexBuffer",
     "WorldRendererAccessor",
     "fabulous.MixinDisableFabulousGraphics",
     "fabulous.MixinOption",

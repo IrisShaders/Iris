@@ -1,6 +1,7 @@
 package net.coderbot.iris.postprocess;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.fantastic.VertexBufferHelper;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.*;
 import org.lwjgl.opengl.GL11;
@@ -41,16 +42,20 @@ public class FullScreenQuadRenderer {
 	}
 
 	public void begin() {
+		((VertexBufferHelper) quad).saveBinding();
 		RenderSystem.disableDepthTest();
-		quad.bind();
+		BufferRenderer.unbindAll();
 	}
 
 	public void renderQuad() {
 		quad.drawVertices();
 	}
 
-	public static void end() {
+	public void end() {
 		RenderSystem.enableDepthTest();
+		quad.getElementFormat().endDrawing();
 		VertexBuffer.unbind();
+		VertexBuffer.unbindVertexArray();
+		((VertexBufferHelper) quad).restoreBinding();
 	}
 }
