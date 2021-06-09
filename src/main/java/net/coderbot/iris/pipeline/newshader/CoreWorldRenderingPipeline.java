@@ -11,6 +11,12 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getTerrain();
 	Shader getTerrainCutout();
 	Shader getTerrainCutoutMipped();
+	Shader getEntitiesSolid();
+	Shader getEntitiesCutout();
+	Shader getEntitiesEyes();
+	Shader getLeash();
+	Shader getLightning();
+	Shader getParticles();
 	Shader getShadowTerrainCutout();
 	Shader getTranslucent();
 	WorldRenderingPhase getPhase();

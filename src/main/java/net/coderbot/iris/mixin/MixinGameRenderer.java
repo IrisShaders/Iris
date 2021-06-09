@@ -123,11 +123,100 @@ public class MixinGameRenderer {
 		}
 	}
 
+	@Inject(method = {
+			"getRenderTypeEntityCutoutShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeEntityCutoutNoNullShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeEntityCutoutNoNullZOffsetShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeEntitySmoothCutoutShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeEntityTranslucentShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeEntityTranslucentCullShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeItemEntityTranslucentCullShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeArmorCutoutNoCullShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<Shader> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getEntitiesCutout, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRenderTypeEntitySolidShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeWaterMaskShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeEntityNoOutlineShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeEntityShadowShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntitySolidShader(CallbackInfoReturnable<Shader> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getEntitiesSolid, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRenderTypeEyesShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityEyesShader(CallbackInfoReturnable<Shader> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getEntitiesEyes, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRenderTypeLeashShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideLeashShader(CallbackInfoReturnable<Shader> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getLeash, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRenderTypeLightningShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideLightningShader(CallbackInfoReturnable<Shader> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+		} else if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getLightning, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getParticleShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideParticleShader(CallbackInfoReturnable<Shader> cir) {
+		if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getParticles, cir);
+		}
+	}
+
 	private static boolean isPhase(WorldRenderingPhase phase) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			return ((CoreWorldRenderingPipeline) pipeline).getPhase() == phase;
+		} else {
+			return false;
+		}
+	}
+
+	private static boolean isRenderingWorld() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+
+		if (pipeline instanceof CoreWorldRenderingPipeline) {
+			return ((CoreWorldRenderingPipeline) pipeline).getPhase() != WorldRenderingPhase.NOT_RENDERING_WORLD;
 		} else {
 			return false;
 		}

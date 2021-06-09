@@ -61,6 +61,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader terrainSolid;
 	private final Shader terrainCutout;
 	private final Shader terrainCutoutMipped;
+
+	private final Shader entitiesSolid;
+	private final Shader entitiesCutout;
+	private final Shader entitiesEyes;
+	private final Shader lightning;
+	private final Shader leash;
+	private final Shader particles;
+
 	private final Shader terrainTranslucent;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 
@@ -150,12 +158,18 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				noise, updateNotifier, centerDepthSampler, flipper);
 		this.finalPassRenderer = new FinalPassRenderer(programSet, renderTargets, noise, updateNotifier, flipper.snapshot(), centerDepthSampler);
 
+		Optional<ProgramSource> basicSource = programSet.getGbuffersBasic();
+
 		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
 
+		Optional<ProgramSource> particleSource = first(programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
+
+		Optional<ProgramSource> entitiesSource = first(programSet.getGbuffersEntities(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> entityEyesSource = first(programSet.getGbuffersEntityEyes(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 
 		// TODO: Use EmptyShadowMapRenderer when shadows aren't needed.
 		this.shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null), programSet.getPackDirectives());
@@ -164,6 +178,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// Matches OptiFine's default for CUTOUT and CUTOUT_MIPPED.
 		AlphaTest terrainCutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
+		AlphaTest nonZeroAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.0001F);
 
 		this.loadedShaders = new HashSet<>();
 
@@ -175,6 +190,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
 			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
 			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
+			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
+			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource.orElseThrow(RuntimeException::new), nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
+			this.lightning = createShader("gbuffers_lightning", entitiesSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
+			this.leash = createShader("gbuffers_leash", basicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_LIGHT, true);
+			this.particles = createShader("gbuffers_particles", particleSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, true);
 
 			// TODO: Shadow programs should have access to different samplers.
 			this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
@@ -407,6 +428,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public void finalizeWorldRendering() {
 		compositeRenderer.renderAll(shadowMapRenderer);
 		finalPassRenderer.renderFinalPass(shadowMapRenderer);
+		phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 	}
 
 	@Override
@@ -452,6 +474,36 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public Shader getTerrainCutoutMipped() {
 		return terrainCutoutMipped;
+	}
+
+	@Override
+	public Shader getEntitiesCutout() {
+		return entitiesCutout;
+	}
+
+	@Override
+	public Shader getEntitiesEyes() {
+		return entitiesEyes;
+	}
+
+	@Override
+	public Shader getLeash() {
+		return leash;
+	}
+
+	@Override
+	public Shader getLightning() {
+		return lightning;
+	}
+
+	@Override
+	public Shader getParticles() {
+		return particles;
+	}
+
+	@Override
+	public Shader getEntitiesSolid() {
+		return entitiesSolid;
 	}
 
 	@Override

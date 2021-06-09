@@ -5,6 +5,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
@@ -45,7 +46,7 @@ public class ExtendedShader extends Shader {
 	public void bind() {
 		super.bind();
 
-		baseline.bind();
+		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
 	}
 
 	// TODO: Yarn WTF: That's the bind method...
