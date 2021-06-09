@@ -30,12 +30,13 @@ import java.nio.file.Path;
 public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
-										VertexFormat vertexFormat, boolean hasColorAttrib, FrameUpdateNotifier updateNotifier,
+										VertexFormat vertexFormat, FrameUpdateNotifier updateNotifier,
 										NewWorldRenderingPipeline parent) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 
-		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, hasColorAttrib);
-		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, hasColorAttrib);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat);
+		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs);
+		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs);
 
 		String shaderJson = "{\n" +
 				"    \"blend\": {\n" +

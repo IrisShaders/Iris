@@ -7,7 +7,7 @@ import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforcePatcher {
-	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, boolean hasColorAttrib) {
+	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
 		if (source.contains("moj_import")) {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
@@ -79,11 +79,19 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_ProjMat;");
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV0;");
+			if (inputs.hasTex()) {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV0;");
+			} else {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(0.0, 0.0, 0.0, 1.0)");
+			}
 
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in ivec2 UV2;");
+			if (inputs.hasLight()) {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in ivec2 UV2;");
+			} else {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(0.0, 0.0, 0.0, 1.0)");
+			}
 
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other texture coordinates are not valid inputs.
 			for (int i = 2; i < 8; i++) {
@@ -95,7 +103,7 @@ public class TriforcePatcher {
 
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec4 iris_ColorModulator;");
 
-		if (hasColorAttrib) {
+		if (inputs.hasColor()) {
 			// TODO: Handle the fragment shader here
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color (Color * iris_ColorModulator)");
 
@@ -107,8 +115,12 @@ public class TriforcePatcher {
 		}
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal Normal");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Normal;");
+			if (inputs.hasNormal()) {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal Normal");
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Normal;");
+			} else {
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal vec3(0.0, 0.0, 1.0)");
+			}
 		}
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
