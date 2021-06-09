@@ -199,7 +199,9 @@ public class MixinGameRenderer {
 			"getParticleShader()Lnet/minecraft/client/render/Shader;"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideParticleShader(CallbackInfoReturnable<Shader> cir) {
-		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
+		if(isPhase(WorldRenderingPhase.WEATHER)) {
+			override(CoreWorldRenderingPipeline::getWeather, cir);
+		} else if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getParticles, cir);
 		}
 	}

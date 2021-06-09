@@ -17,6 +17,7 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getLeash();
 	Shader getLightning();
 	Shader getParticles();
+	Shader getWeather();
 	Shader getCrumbling();
 	Shader getText();
 	Shader getShadowTerrainCutout();
