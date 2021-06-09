@@ -29,6 +29,7 @@
     "renderlayer.MixinRenderLayer",
     "renderlayer.RenderLayerAccessor",
     "renderlayer.RenderPhaseAccessor",
+    "shadows.ChunkInfoAccessor",
     "shadows.MixinBeaconBlockEntityRenderer",
     "shadows.MixinPreventRebuildNearInShadowPass",
     "shadows.MixinWorldRenderer",

@@ -12,6 +12,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.coderbot.iris.mixin.shadows.ChunkInfoAccessor;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackDirectives;
@@ -383,17 +384,17 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		int shadowBlockEntities = 0;
 
-		// TODO: Use visibleChunks to cull block entities
-		// TODO: Render block entities!!!
-		/*for (BlockEntity entity : getWorld().blockEntities) {
-			modelView.push();
-			BlockPos pos = entity.getPos();
-			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			MinecraftClient.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, provider);
-			modelView.pop();
+		for (WorldRenderer.ChunkInfo chunk : worldRenderer.getVisibleChunks()) {
+			for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getData().getBlockEntities()) {
+				modelView.push();
+				BlockPos pos = entity.getPos();
+				modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+				MinecraftClient.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, provider);
+				modelView.pop();
 
-			shadowBlockEntities++;
-		}*/
+				shadowBlockEntities++;
+			}
+		}
 
 		renderedShadowEntities = shadowEntities;
 		renderedShadowBlockEntities = shadowBlockEntities;
@@ -468,8 +469,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	public static String getBlockEntitiesDebugString() {
-		// TODO: return renderedShadowBlockEntities + "/" + MinecraftClient.getInstance().world.blockEntities.size();
-		return "(not supported)";
+		return renderedShadowBlockEntities + ""; // TODO: + "/" + MinecraftClient.getInstance().world.blockEntities.size();
 	}
 
 	private static ClientWorld getWorld() {

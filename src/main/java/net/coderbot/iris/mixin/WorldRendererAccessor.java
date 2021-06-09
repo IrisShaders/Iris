@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
@@ -17,6 +18,9 @@ public interface WorldRendererAccessor {
 
 	@Invoker("renderLayer")
 	void invokeRenderLayer(RenderLayer terrainLayer, MatrixStack modelView, double cameraX, double cameraY, double cameraZ, Matrix4f projection);
+
+	@Accessor("visibleChunks")
+	ObjectArrayList<WorldRenderer.ChunkInfo> getVisibleChunks();
 
 	@Invoker("setupTerrain")
 	void invokeSetupTerrain(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator);
