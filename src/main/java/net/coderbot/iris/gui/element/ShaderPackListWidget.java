@@ -27,6 +27,8 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 	private static final Text SHADERS_DISABLED_LABEL = new TranslatableText("options.iris.shaders.disabled");
 	private static final Text SHADERS_ENABLED_LABEL = new TranslatableText("options.iris.shaders.enabled");
 
+	private int packCount = 0;
+
 	private final EnableShadersButtonEntry enableShadersButton = new EnableShadersButtonEntry(Iris.getIrisConfig().areShadersEnabled());
 
 	public ShaderPackListWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right) {
@@ -78,6 +80,8 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 			Iris.logger.error("Error reading files while constructing selection UI");
 			Iris.logger.catching(e);
 		}
+
+		enableShadersButton.refresh(this);
 	}
 
 	public void addEntry(int index, String name) {
@@ -86,6 +90,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 		if (Iris.getIrisConfig().getShaderPackName().equals(name)) {
 			this.setSelected(entry);
 		}
+		packCount++;
 
 		this.addEntry(entry);
 	}
@@ -185,25 +190,30 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 	public static class EnableShadersButtonEntry extends BaseEntry {
 		public boolean enabled;
+		private boolean canChange;
 
 		public EnableShadersButtonEntry(boolean enabled) {
 			this.enabled = enabled;
+		}
+
+		public void refresh(ShaderPackListWidget packs) {
+			this.canChange = packs.packCount > 0;
 		}
 
 		@Override
 		public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			GuiUtil.bindIrisWidgetsTexture();
 
-			GuiUtil.drawButton(matrices, x - 2, y - 3, entryWidth, 18, hovered, false);
+			GuiUtil.drawButton(matrices, x - 2, y - 3, entryWidth, 18, hovered, canChange);
 
 			Text label = this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
 
-			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
+			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, canChange ? 0xFFFFFF : 0xAEAEAE);
 		}
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (button == 0) {
+			if (canChange && button == 0) {
 				this.enabled = !this.enabled;
 				GuiUtil.playButtonClickSound();
 
