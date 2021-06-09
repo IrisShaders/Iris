@@ -35,6 +35,7 @@ import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -184,24 +185,24 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// TODO: Resolve hasColorAttrib based on the vertex format
 		try {
-			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION, false);
-			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
-			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false);
-			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
-			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
-			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
-			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
-			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
-			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource.orElseThrow(RuntimeException::new), nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
-			this.lightning = createShader("gbuffers_lightning", entitiesSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
-			this.leash = createShader("gbuffers_leash", basicSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_LIGHT, true);
-			this.particles = createShader("gbuffers_particles", particleSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, true);
+			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, VertexFormats.POSITION, false);
+			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
+			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false);
+			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
+			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
+			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
+			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
+			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
+			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_LIGHT, true);
+			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, true);
 
 			// TODO: Shadow programs should have access to different samplers.
-			this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource.orElseThrow(RuntimeException::new), terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+			this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
 
 			if (translucentSource != terrainSource) {
-				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource.orElseThrow(RuntimeException::new), AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
+				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
 			} else {
 				this.terrainTranslucent = this.terrainSolid;
 			}
@@ -215,6 +216,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
+	}
+
+	@Nullable
+	private Shader createShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
+		if (!source.isPresent()) {
+			return null;
+		}
+
+		return createShader(name, source.get(), fallbackAlpha, vertexFormat, hasColorAttrib);
 	}
 
 	private Shader createShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
@@ -266,6 +276,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return extendedShader;
+	}
+
+	private Shader createShadowShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
+		if (!source.isPresent()) {
+			return null;
+		}
+
+		return createShadowShader(name, source.get(), fallbackAlpha, vertexFormat, hasColorAttrib);
 	}
 
 	private Shader createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean hasColorAttrib) throws IOException {
