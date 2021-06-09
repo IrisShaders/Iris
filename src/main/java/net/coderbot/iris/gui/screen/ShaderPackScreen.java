@@ -230,7 +230,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void applyChanges() {
-		ShaderPackListWidget.BaseEntry base = this.shaderPackList.getSelected();
+		ShaderPackListWidget.BaseEntry base = this.shaderPackList.getSelectedOrNull();
 
 		if (!(base instanceof ShaderPackListWidget.ShaderPackEntry)) {
 			return;

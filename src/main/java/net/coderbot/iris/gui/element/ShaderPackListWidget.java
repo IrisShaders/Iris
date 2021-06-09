@@ -122,7 +122,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 		}
 
 		public boolean isSelected() {
-			return list.getSelected() == this;
+			return list.getSelectedOrNull() == this;
 		}
 
 		public String getPackName() {
