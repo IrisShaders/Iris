@@ -20,6 +20,7 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getCrumbling();
 	Shader getText();
 	Shader getShadowTerrainCutout();
+	Shader getShadowEntitiesCutout();
 	Shader getTranslucent();
 	WorldRenderingPhase getPhase();
 	FrameUpdateNotifier getUpdateNotifier();

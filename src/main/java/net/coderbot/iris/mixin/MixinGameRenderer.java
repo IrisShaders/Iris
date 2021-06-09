@@ -136,7 +136,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<Shader> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
-			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getEntitiesCutout, cir);
 		}
@@ -151,7 +151,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideEntitySolidShader(CallbackInfoReturnable<Shader> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
-			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getEntitiesSolid, cir);
 		}
@@ -163,7 +163,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideEntityEyesShader(CallbackInfoReturnable<Shader> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
-			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getEntitiesEyes, cir);
 		}
@@ -175,7 +175,8 @@ public class MixinGameRenderer {
 	private static void iris$overrideLeashShader(CallbackInfoReturnable<Shader> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
-			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+			// override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+			return;
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getLeash, cir);
 		}
@@ -187,7 +188,8 @@ public class MixinGameRenderer {
 	private static void iris$overrideLightningShader(CallbackInfoReturnable<Shader> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
-			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+			// override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
+			return;
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getLightning, cir);
 		}
@@ -197,7 +199,7 @@ public class MixinGameRenderer {
 			"getParticleShader()Lnet/minecraft/client/render/Shader;"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideParticleShader(CallbackInfoReturnable<Shader> cir) {
-		if (isRenderingWorld()) {
+		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getParticles, cir);
 		}
 	}
@@ -206,7 +208,7 @@ public class MixinGameRenderer {
 			"getRenderTypeCrumblingShader()Lnet/minecraft/client/render/Shader;"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideCrumblingShader(CallbackInfoReturnable<Shader> cir) {
-		if (isRenderingWorld()) {
+		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getCrumbling, cir);
 		}
 	}
@@ -218,7 +220,7 @@ public class MixinGameRenderer {
 			"getRenderTypeTextIntensitySeeThroughShader()Lnet/minecraft/client/render/Shader;"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTextShader(CallbackInfoReturnable<Shader> cir) {
-		if (isRenderingWorld()) {
+		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getText, cir);
 		}
 	}

@@ -66,6 +66,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader entitiesSolid;
 	private final Shader entitiesCutout;
 	private final Shader entitiesEyes;
+	private final Shader shadowEntitiesCutout;
 	private final Shader lightning;
 	private final Shader leash;
 	private final Shader particles;
@@ -206,6 +207,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			// TODO: Shadow programs should have access to different samplers.
 			this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
+			this.shadowEntitiesCutout = createShadowShader("shadow_entities_cutout", shadowSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true);
 
 			if (translucentSource != terrainSource) {
 				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
@@ -543,6 +545,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public Shader getShadowTerrainCutout() {
 		return shadowTerrainCutout;
+	}
+
+	@Override
+	public Shader getShadowEntitiesCutout() {
+		return shadowEntitiesCutout;
 	}
 
 	@Override

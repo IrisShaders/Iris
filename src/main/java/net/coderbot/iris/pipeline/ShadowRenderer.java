@@ -308,6 +308,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		Matrix4f projectionMatrix = new Matrix4f();
 		projectionMatrix.readColumnMajor(projMatBuf);
 
+		Matrix4f previousProjectionMatrix = RenderSystem.getProjectionMatrix();
+		RenderSystem.setProjectionMatrix(projectionMatrix);
+
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
 		// shadow.
@@ -324,7 +327,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// TODO: Restore entity & block entity rendering
 
-		/*// Reset our shader program in case Sodium overrode it.
+		// Reset our shader program in case Sodium overrode it.
 		//
 		// If we forget to do this entities will be very small on most shaderpacks since they're being rendered
 		// without shaders, which doesn't integrate with their shadow distortion code.
@@ -381,15 +384,16 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		int shadowBlockEntities = 0;
 
 		// TODO: Use visibleChunks to cull block entities
-		for (BlockEntity entity : getWorld().blockEntities) {
+		// TODO: Render block entities!!!
+		/*for (BlockEntity entity : getWorld().blockEntities) {
 			modelView.push();
 			BlockPos pos = entity.getPos();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			BlockEntityRenderDispatcher.INSTANCE.render(entity, tickDelta, modelView, provider);
+			MinecraftClient.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, provider);
 			modelView.pop();
 
 			shadowBlockEntities++;
-		}
+		}*/
 
 		renderedShadowEntities = shadowEntities;
 		renderedShadowBlockEntities = shadowBlockEntities;
@@ -399,7 +403,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
 		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
 		// shadow...
-		provider.draw();*/
+		provider.draw();
 
 		worldRenderer.getWorld().getProfiler().swap("translucent depth copy");
 
@@ -425,6 +429,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		if (extendedBufferStorage != null) {
 			extendedBufferStorage.endWorldRendering();
 		}
+
+		RenderSystem.setProjectionMatrix(previousProjectionMatrix);
 
 		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
 
@@ -458,8 +464,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	public static String getEntitiesDebugString() {
-		// TODO: return renderedShadowEntities + "/" + MinecraftClient.getInstance().world.getRegularEntityCount();
-		return "(not supported)";
+		return renderedShadowEntities + "/" + MinecraftClient.getInstance().world.getRegularEntityCount();
 	}
 
 	public static String getBlockEntitiesDebugString() {
