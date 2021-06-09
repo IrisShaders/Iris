@@ -36,6 +36,7 @@ Iris has been progressing quite rapidly recently. The following shaderpacks most
     * Underwater and nether fog is broken
 * [BSL Shaders](https://www.bitslablab.com/bslshaders/)
     * Reflections currently do not work at all, and rain doesn't show up.
+    * Water waving animation doesn't work at all at 30 million blocks out.
 * [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
     * Water looks weird in general, though reflections do work. Weather doesn't work, rain does not show up and the sky does not darken.
 * [SEUS v11](https://sonicether.com/shaders/download/v11-0/) from 2016
