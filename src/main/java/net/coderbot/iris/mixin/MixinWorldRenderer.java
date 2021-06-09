@@ -116,7 +116,7 @@ public class MixinWorldRenderer {
 	}*/
 
 	@Inject(method = RENDER_SKY,
-		at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.getShader()Lnet/minecraft/client/render/Shader;", shift = At.Shift.AFTER),
+		at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.getShader()Lnet/minecraft/client/render/Shader;", shift = At.Shift.AFTER, remap = false),
 		slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
 	private void iris$renderSky$drawHorizon(MatrixStack matrices, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
 		new HorizonRenderer().renderHorizon(matrices.peek().getModel().copy(), projectionMatrix.copy(), GameRenderer.getPositionShader());

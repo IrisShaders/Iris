@@ -21,7 +21,7 @@ public abstract class MixinMultiPhaseRenderLayer extends RenderLayer implements 
 		super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
 	}
 
-	@Inject(method = "<init>", at = @At("RETURN"))
+	@Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/render/VertexFormat;Lnet/minecraft/client/render/VertexFormat$DrawMode;IZZLnet/minecraft/client/render/RenderLayer$MultiPhaseParameters;)V", at = @At("RETURN"))
 	private void iris$onMultiPhaseInit(String name, VertexFormat vertexFormat, VertexFormat.DrawMode drawMode,
 									   int expectedBufferSize, boolean hasCrumbling, boolean translucent,
 									   RenderLayer.MultiPhaseParameters phases, CallbackInfo ci) {
