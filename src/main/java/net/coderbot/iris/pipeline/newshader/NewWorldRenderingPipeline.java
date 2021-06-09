@@ -205,7 +205,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_LIGHT, true);
 			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, true);
 			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, true);
-			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, true);
+			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, true);
 			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT, true);
 
 			// TODO: Shadow programs should have access to different samplers.
