@@ -86,7 +86,7 @@ Canvas is progressing very rapidly, and has experimental support for things like
 
 I think that Canvas is a great project, and some day it could very well be the dominant shader mod for Fabric. Iris is made for those who still want to play with existing OptiFine shaderpacks, because there will always be legacy shaderpack content available, even when Canvas shaderpacks become more common.
 
-In the long run, I think that it's better for everyone if we end up with Iris and Canvas competing rather than OptiFine and Canvas competing, because at the very least, there's opportunities for cooperation and collaboration between Iris and Canvas that just don't exist with OptiFine. It's also likely that Iris can implement a subset of Grondag's [FREX](https://github.com/grondag/frex) API, which could definitely result in FREX being more widely used.
+In the long run, I think that it's better for everyone if we end up with Iris and Canvas competing rather than OptiFine and Canvas competing, because at the very least, there are opportunities for cooperation and collaboration between Iris and Canvas that just don't exist with OptiFine. It's also likely that Iris can implement a subset of Grondag's [FREX](https://github.com/grondag/frex) API, which could definitely result in FREX being more widely used.
 
 
 ### Why not OptiFabric / Optifine?
