@@ -146,7 +146,19 @@ public class Iris implements ClientModInitializer {
 
 		// Attempt to load an external shaderpack if it is available
 		if (!irisConfig.isInternal()) {
-			if (!loadExternalShaderpack(irisConfig.getShaderPackName())) {
+			Optional<String> externalName = irisConfig.getShaderPackName();
+
+			if (!externalName.isPresent()) {
+				logger.info("Shaders are disabled because no valid shaderpack is selected");
+
+				currentPack = null;
+				currentPackName = "(off)";
+				internal = false;
+
+				return;
+			}
+
+			if (!loadExternalShaderpack(externalName.get())) {
 				logger.warn("Falling back to normal rendering without shaders because the external shaderpack could not be loaded");
 				setShadersDisabled();
 				currentPackName = "(off) [fallback, check your logs for errors]";
