@@ -35,7 +35,8 @@ public class MixinInGameHud {
 	// TODO: Move this to a more appropriate mixin
 	@Inject(method = "render", at = @At("RETURN"))
 	public void iris$displayBigSodiumWarning(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-		if (FabricLoader.getInstance().isModLoaded("sodium")
+		// TODO: No sodium on 1.17
+		/*if (FabricLoader.getInstance().isModLoaded("sodium")
 				|| MinecraftClient.getInstance().options.debugEnabled
 				|| !Iris.getCurrentPack().isPresent()) {
 			return;
@@ -56,6 +57,6 @@ public class MixinInGameHud {
 
 			DrawableHelper.fill(matrices, 1, y - 1, 2 + lineWidth + 1, y + lineHeight - 1, 0x9050504E);
 			textRenderer.draw(matrices, string, 2.0F, y, 0xFFFF55);
-		}
+		}*/
 	}
 }

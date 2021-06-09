@@ -26,10 +26,11 @@ public abstract class MixinDebugHud {
 	private void appendShadowDebugText(CallbackInfoReturnable<List<String>> cir) {
 		List<String> messages = cir.getReturnValue();
 
-		if (!FabricLoader.getInstance().isModLoaded("sodium") && Iris.getCurrentPack().isPresent()) {
+		// TODO: No sodium on 1.17
+		/*if (!FabricLoader.getInstance().isModLoaded("sodium") && Iris.getCurrentPack().isPresent()) {
 			messages.add(1, Formatting.YELLOW + "[Iris] Sodium isn't installed; you will have poor performance.");
 			messages.add(2, Formatting.YELLOW + "[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
-		}
+		}*/
 
 		Iris.getPipelineManager().getPipeline().addDebugText(messages);
 	}
