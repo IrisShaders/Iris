@@ -70,6 +70,11 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in float iris_FogFragCoord;");
 		}
 
+		if (type == ShaderType.VERTEX) {
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 iris_FrontColor;");
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FrontColor iris_FrontColor");
+		}
+
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ProjectionMatrix iris_ProjMat");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_ProjMat;");
 
