@@ -10,13 +10,11 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
-import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -239,7 +237,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		ShaderPackListWidget.ShaderPackEntry entry = (ShaderPackListWidget.ShaderPackEntry)base;
 		String name = entry.getPackName();
 		Iris.getIrisConfig().setShaderPackName(name);
-		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().enabled);
+		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().shadersEnabled);
 
 		try {
 			Iris.getIrisConfig().save();

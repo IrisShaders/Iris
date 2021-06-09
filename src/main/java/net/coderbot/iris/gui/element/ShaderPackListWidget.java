@@ -1,7 +1,6 @@
 package net.coderbot.iris.gui.element;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.minecraft.client.MinecraftClient;
@@ -140,7 +139,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 			int color = 0xFFFFFF;
 			String name = packName;
 
-			boolean shadersEnabled = list.getEnableShadersButton().enabled;
+			boolean shadersEnabled = list.getEnableShadersButton().shadersEnabled;
 
 			if (textRenderer.getWidth(new LiteralText(name).formatted(Formatting.BOLD)) > this.list.getRowWidth() - 3) {
 				name = textRenderer.trimToWidth(name, this.list.getRowWidth() - 8) + "...";
@@ -165,7 +164,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (list.getEnableShadersButton().enabled && !this.isSelected() && button == 0) {
+			if (list.getEnableShadersButton().shadersEnabled && !this.isSelected() && button == 0) {
 				this.list.select(this.index);
 
 				return true;
@@ -189,32 +188,35 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 	}
 
 	public static class EnableShadersButtonEntry extends BaseEntry {
-		public boolean enabled;
-		private boolean canChange;
+		public boolean shadersEnabled;
+		private boolean buttonEnabled;
 
-		public EnableShadersButtonEntry(boolean enabled) {
-			this.enabled = enabled;
+		public EnableShadersButtonEntry(boolean shadersEnabled) {
+			this.shadersEnabled = shadersEnabled;
 		}
 
-		public void refresh(ShaderPackListWidget packs) {
-			this.canChange = packs.packCount > 0;
+		private void refresh(ShaderPackListWidget packs) {
+			this.buttonEnabled = packs.packCount > 0;
+			if (!buttonEnabled) {
+				shadersEnabled = false;
+			}
 		}
 
 		@Override
 		public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			GuiUtil.bindIrisWidgetsTexture();
 
-			GuiUtil.drawButton(matrices, x - 2, y - 3, entryWidth, 18, hovered, canChange);
+			GuiUtil.drawButton(matrices, x - 2, y - 3, entryWidth, 18, buttonEnabled && hovered, buttonEnabled);
 
-			Text label = this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
+			Text label = this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
 
-			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, canChange ? 0xFFFFFF : 0xAEAEAE);
+			drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, buttonEnabled ? 0xFFFFFF : 0xAEAEAE);
 		}
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (canChange && button == 0) {
-				this.enabled = !this.enabled;
+			if (buttonEnabled && button == 0) {
+				this.shadersEnabled = !this.shadersEnabled;
 				GuiUtil.playButtonClickSound();
 
 				return true;
