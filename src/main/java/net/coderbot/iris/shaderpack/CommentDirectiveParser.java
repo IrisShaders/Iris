@@ -69,11 +69,7 @@ public class CommentDirectiveParser {
 		// This is important because if we add a draw buffer that isn't written to, undefined behavior happens!
 		int indexOfPrefix;
 
-		if (haystack.contains("https://bitslablab.com") || haystack.contains("By LexBoosT")) {
-			if (haystack.contains("REFLECTION_PREVIOUS") && haystack.contains("/*DRAWBUFFERS:05*/")) {
-				return Optional.of("05");
-			}
-
+		if ((haystack.contains("https://bitslablab.com") || haystack.contains("By LexBoosT")) && needle.equals("DRAWBUFFERS")) {
 			indexOfPrefix = haystack.indexOf(prefix);
 		} else {
 			indexOfPrefix = haystack.lastIndexOf(prefix);
@@ -88,8 +84,14 @@ public class CommentDirectiveParser {
 		// This hack is needed to get BSL reflections to work for now until we do that.
 		if (haystack.contains("REFLECTION_PREVIOUS")
 				&& (haystack.contains("https://bitslablab.com") || haystack.contains("By LexBoosT"))
-				&& haystack.contains("/*DRAWBUFFERS:05*/")) {
+				&& haystack.contains("/*DRAWBUFFERS:05*/") && needle.equals("DRAWBUFFERS")) {
 			return Optional.of("05");
+		}
+
+		// TODO: This is a similar hack but just for complementary.
+		if (haystack.contains("COLORED_LIGHT") && haystack.contains("Complementary Shaders by EminGT")
+				&& haystack.contains("/* DRAWBUFFERS:03618 */") && needle.equals("DRAWBUFFERS")) {
+			return Optional.of("0361");
 		}
 
 		String before = haystack.substring(0, indexOfPrefix).trim();
