@@ -5,16 +5,26 @@ import java.util.Set;
 public class PackDirectives {
 	private int noiseTextureResolution;
 	private float sunPathRotation;
+	private boolean areCloudsEnabled;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
 
-	PackDirectives(Set<Integer> supportedRenderTargets) {
+	private PackDirectives(Set<Integer> supportedRenderTargets) {
 		noiseTextureResolution = 256;
 		sunPathRotation = 0.0F;
-
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = new PackShadowDirectives();
+	}
+
+	PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
+		this(supportedRenderTargets);
+		areCloudsEnabled = properties.areCloudsEnabled();
+	}
+
+	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
+		this(supportedRenderTargets);
+		areCloudsEnabled = directives.areCloudsEnabled();
 	}
 
 	public int getNoiseTextureResolution() {
@@ -23,6 +33,10 @@ public class PackDirectives {
 
 	public float getSunPathRotation() {
 		return sunPathRotation;
+	}
+
+	public boolean areCloudsEnabled() {
+		return areCloudsEnabled;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {

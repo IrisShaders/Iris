@@ -45,9 +45,9 @@ public final class CommonUniforms {
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
 		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
 		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
-		MatrixUniforms.addMatrixUniforms(uniforms);
+		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		SamplerUniforms.addCommonSamplerUniforms(uniforms);
-		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms);
+		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
@@ -79,7 +79,7 @@ public final class CommonUniforms {
 		return client.world.method_23777(client.cameraEntity.getBlockPos(), CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
-	private static float getBlindness() {
+	static float getBlindness() {
 		Entity cameraEntity = client.getCameraEntity();
 
 		if (cameraEntity instanceof LivingEntity) {
@@ -103,7 +103,7 @@ public final class CommonUniforms {
 		return ((ClientPlayerEntity)client.cameraEntity).getMoodPercentage();
 	}
 
-	private static float getRainStrength() {
+	static float getRainStrength() {
 		if (client.world == null) {
 			return 0f;
 		}

@@ -1,3 +1,5 @@
+![logo](docs/banner.png)
+
 # Iris
 
 *A new shaders mod for Minecraft intended to be compatible with existing ShadersMod/Optifine shaders*
@@ -45,12 +47,6 @@ Iris has been progressing quite rapidly recently. The following shaderpacks most
     * Weather is broken
 
 Other shaderpacks aren't supported.
-
-A major feature missing from the public source code is shadow mapping. Many packs rely on shadow mapping quite heavily, and its absence causes a variety of issues:
-
-* Nothing casts a shadow (obviously)
-* You might see the sun glowing through solid blocks and similar issues on shader packs making use of volumetric lighting (like BSL & Sildurs Vibrant Shaders Extreme-VL)
-* The sides of blocks facing the sun will be very bright while the sides facing away will be very dark, creating a weird effect.
 
 ---
 
@@ -110,7 +106,7 @@ Join the [Iris Discord server](https://discord.gg/jQJnav2jPu) to chat about the 
 
 ## Credits
 
-* **Vaerian**, for creating the excellent logo
+* **TheOnlyThing and Vaerian**, for creating the excellent logo
 * **daxnitro, karyonix, and sp614x**, for creating and maintaining the current shaders mods
 * **Mumfrey**, for creating the finest bytecode patching system that I've ever had the pleasure of working with
 * **The Fabric community**, for providing both support and great tooling

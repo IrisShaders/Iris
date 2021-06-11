@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -101,6 +102,18 @@ public class RenderTargets {
 		return createFullFramebuffer(true, drawBuffers);
 	}
 
+	public GlFramebuffer createGbufferFramebuffer(ImmutableSet<Integer> flipped, int[] drawBuffers) {
+		boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
+
+		flipped.forEach(index -> stageWritesToAlt[index] = true);
+
+		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToAlt, drawBuffers);
+
+		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
+
+		return framebuffer;
+	}
+
 	private GlFramebuffer createFullFramebuffer(boolean clearsAlt, int[] drawBuffers) {
 		boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
 
@@ -113,11 +126,23 @@ public class RenderTargets {
 		return framebuffer;
 	}
 
+	public GlFramebuffer createBaselineShadowFramebuffer() {
+		boolean[] stageWritesToAlt = new boolean[2];
+
+		Arrays.fill(stageWritesToAlt, false);
+
+		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToAlt, new int[] {0, 1});
+
+		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
+
+		return framebuffer;
+	}
+
 	public GlFramebuffer createColorFramebuffer(boolean[] stageWritesToAlt, int[] drawBuffers) {
 		GlFramebuffer framebuffer = new GlFramebuffer();
 		ownedFramebuffers.add(framebuffer);
 
-		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
+		for (int i = 0; i < stageWritesToAlt.length; i++) {
 			RenderTarget target = this.get(i);
 
 			int textureId = stageWritesToAlt[i] ? target.getAltTexture() : target.getMainTexture();

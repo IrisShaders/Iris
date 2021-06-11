@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformType;
@@ -24,6 +25,9 @@ public class SamplerUniforms {
 	public static final int DEPTH_TEX_0 = 6;
 	public static final int DEPTH_TEX_1 = 11;
 	public static final int DEPTH_TEX_2 = 12;
+
+	public static final int SHADOW_COLOR_0 = 13;
+	public static final int SHADOW_COLOR_1 = 14;
 
 	public static final int NOISE_TEX = 15;
 
@@ -52,11 +56,25 @@ public class SamplerUniforms {
 		addSampler(uniforms, waterShadowEnabled ? SHADOW_TEX_1 : SHADOW_TEX_0, "shadow");
 
 		addSampler(uniforms, SHADOW_TEX_1, "shadowtex1");
-		addSampler(uniforms, 13, "shadowcolor", "shadowcolor0");
-		addSampler(uniforms, 14, "shadowcolor1");
+		addSampler(uniforms, SHADOW_COLOR_0, "shadowcolor", "shadowcolor0");
+		addSampler(uniforms, SHADOW_COLOR_1, "shadowcolor1");
 
 		// Noise
 		addSampler(uniforms, NOISE_TEX, "noisetex");
+	}
+
+	public static boolean hasShadowSamplers(LocationalUniformHolder uniformHolder) {
+		// TODO: Keep this up to date with the actual definitions.
+		ImmutableList<String> shadowSamplers = ImmutableList.of("shadowtex0", "shadowtex1", "shadow", "watershadow",
+				"shadowcolor", "shadowcolor0", "shadowcolor1");
+
+		for (String samplerName : shadowSamplers) {
+			if(uniformHolder.location(samplerName, UniformType.INT).isPresent()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static void addWorldSamplerUniforms(UniformHolder uniforms) {

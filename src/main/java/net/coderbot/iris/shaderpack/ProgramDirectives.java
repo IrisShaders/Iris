@@ -13,25 +13,31 @@ import org.jetbrains.annotations.Nullable;
 public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;
 
-	private int[] drawBuffers;
-	private float viewportScale;
+	private final int[] drawBuffers;
+	private final float viewportScale;
 	@Nullable
-	private AlphaTestOverride alphaTestOverride;
-	private boolean disableBlend;
-	private ImmutableSet<Integer> mipmappedBuffers;
+	private final AlphaTestOverride alphaTestOverride;
+	private final boolean disableBlend;
+	private final ImmutableSet<Integer> mipmappedBuffers;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
-		// First try to find it in the fragment source, then in the vertex source.
+		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
-		// TODO: ShadersMod appears to default to all buffers? Investigate this more closely.
-		drawBuffers = findDrawbuffersDirective(source.getFragmentSource())
-			.orElseGet(() -> findDrawbuffersDirective(source.getVertexSource()).orElse(new int[]{0}));
-		viewportScale = 1.0f;
+		// For SEUS v08 and SEUS v10 to work, this will need to be set to 01234567. However, doing this causes
+		// TAA to break on Sildur's Vibrant Shaders, since gbuffers_skybasic lacks a DRAWBUFFERS directive, causing
+		// undefined data to be written to colortex7.
+		//
+		// TODO: Figure out how to infer the DRAWBUFFERS directive when it is missing.
+		drawBuffers = findDrawbuffersDirective(source.getFragmentSource()).orElse(new int[] { 0 });
 
 		if (properties != null) {
-			viewportScale = properties.viewportScaleOverrides.getOrDefault(source.getName(), 1.0f);
-			alphaTestOverride = properties.alphaTestOverrides.get(source.getName());
-			disableBlend = properties.blendDisabled.contains(source.getName());
+			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
+			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
+			disableBlend = properties.getBlendDisabled().contains(source.getName());
+		} else {
+			viewportScale = 1.0f;
+			alphaTestOverride = null;
+			disableBlend = false;
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();

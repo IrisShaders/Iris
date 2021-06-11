@@ -150,6 +150,12 @@ public class ProgramUniforms {
 					}
 				}
 
+				// TODO: This is an absolutely horrific hack, but is needed until custom uniforms work.
+				if ("framemod8".equals(name) && expected == UniformType.FLOAT && provided == UniformType.INT) {
+					SystemTimeUniforms.addFloatFrameMod8Uniform(this);
+					provided = UniformType.FLOAT;
+				}
+
 				if (provided != null && provided != expected) {
 					String expectedName;
 

@@ -3,6 +3,7 @@ package net.coderbot.iris.config;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
@@ -51,27 +52,23 @@ public class IrisConfig {
 	 * @return if the shaderpack is internal
 	 */
 	public boolean isInternal() {
-		return shaderPackName == null;
+		return false;
 	}
 
 	/**
 	 * Returns the name of the current shaderpack
 	 *
-	 * @return shaderpack name. If internal it returns "(internal)"
+	 * @return Returns the current shaderpack name - if internal shaders are being used it returns "(internal)"
 	 */
-	public String getShaderPackName() {
-		if (shaderPackName == null) {
-			return "(internal)";
-		}
-
-		return shaderPackName;
+	public Optional<String> getShaderPackName() {
+		return Optional.ofNullable(shaderPackName);
 	}
 
 	/**
 	 * Sets the name of the current shaderpack
 	 */
 	public void setShaderPackName(String name) {
-		if (name.equals("(internal)")) {
+		if (name == null || name.equals("(internal)") || name.isEmpty()) {
 			this.shaderPackName = null;
 		} else {
 			this.shaderPackName = name;
@@ -110,8 +107,10 @@ public class IrisConfig {
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
 
-		if (shaderPackName != null && shaderPackName.equals("(internal)")) {
-			shaderPackName = null;
+		if (shaderPackName != null) {
+			if (shaderPackName.equals("(internal)") || shaderPackName.isEmpty()) {
+				shaderPackName = null;
+			}
 		}
 	}
 
@@ -122,7 +121,7 @@ public class IrisConfig {
 	 */
 	public void save() throws IOException {
 		Properties properties = new Properties();
-		properties.setProperty("shaderPack", getShaderPackName());
+		properties.setProperty("shaderPack", getShaderPackName().orElse(""));
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
 	}
