@@ -38,11 +38,11 @@ everything above this dashed line (including the line itself.)
 > Example:
 > 1. Place a Redstone Lamp in front of a Redstone Repeater
 > 2. Use a Lever to activate the Redstone Repeater
-> 3. Nothing happens
+> 3. Game Crashes
 
 ### Crash Report File Or Latest Log
 
-> Upload your crash report file as an attachment to this issue (drag-and-drop) or to a service such as GitHub
+> Upload your crash report file or Latest.log as an attachment to this issue (drag-and-drop) or to a service such as GitHub
 > Gist (paste a link) and replace this section. This information is critical in resolving your issue!
 >
 > Tip: Messages like "Exit code 0" from your launcher are not what you're looking for. If your launcher does not
