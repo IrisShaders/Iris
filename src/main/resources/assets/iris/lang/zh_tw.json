@@ -2,7 +2,7 @@
   "iris.shaders.reloaded": "已重新載入光影！",
   "iris.shaders.toggled": "使用光影：%s！",
   "iris.keybind.reload": "重新載入光影",
-  "iris.keybind.shaderPackSelection": "選擇光影包畫面",
+  "iris.keybind.shaderPackSelection": "光影包選擇畫面",
   "iris.keybind.toggleShaders": "光影開關",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "無法重新載入光影！原因：%s",
