@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin.fabulous;
 
+import net.coderbot.iris.Iris;
 import net.minecraft.client.resource.VideoWarningManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +15,6 @@ public class MixinOption {
 	@Redirect(method = "method_32563", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resource/VideoWarningManager;hasCancelledAfterWarning()Z"))
 	private static boolean iris$onAttemptedToSelectFabulousGraphics(VideoWarningManager manager) {
 		// Returning true here will cause Minecraft to cycle between Fancy and Fast, disabling Fabulous graphics
-		return true;
+		return Iris.getIrisConfig().areShadersEnabled();
 	}
 }

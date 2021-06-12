@@ -1,7 +1,6 @@
 package net.coderbot.iris.gui.element;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.minecraft.client.MinecraftClient;
@@ -67,10 +66,12 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 			for (Path folder : folders) {
 				String name = folder.getFileName().toString();
 
-				if (!BUILTIN_PACKS.contains(name)) {
-					index++;
-					addEntry(index, name);
+				if (BUILTIN_PACKS.contains(name)) {
+					continue;
 				}
+
+				index++;
+				addEntry(index, name);
 			}
 
 			this.addEntry(new LabelEntry(PACK_LIST_LABEL));
@@ -83,9 +84,11 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 	public void addEntry(int index, String name) {
 		ShaderPackEntry entry = new ShaderPackEntry(index, this, name);
 
-		if (Iris.getIrisConfig().getShaderPackName().equals(name)) {
-			this.setSelected(entry);
-		}
+		Iris.getIrisConfig().getShaderPackName().ifPresent(currentPackName -> {
+			if (name.equals(currentPackName)) {
+				setSelected(entry);
+			}
+		});
 
 		this.addEntry(entry);
 	}
