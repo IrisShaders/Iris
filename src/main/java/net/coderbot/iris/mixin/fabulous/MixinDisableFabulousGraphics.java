@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin.fabulous;
 
+import net.coderbot.iris.Iris;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,7 +21,7 @@ public class MixinDisableFabulousGraphics {
 	private void iris$disableFabulousGraphics(CallbackInfo ci) {
 		GameOptions options = MinecraftClient.getInstance().options;
 
-		if (options.graphicsMode == GraphicsMode.FABULOUS) {
+		if (options.graphicsMode == GraphicsMode.FABULOUS && Iris.getIrisConfig().areShadersEnabled()) {
 			options.graphicsMode = GraphicsMode.FANCY;
 		}
 	}
