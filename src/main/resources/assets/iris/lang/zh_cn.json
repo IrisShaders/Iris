@@ -1,8 +1,12 @@
 {
   "iris.shaders.reloaded": "已重新加载光影！",
+  "iris.shaders.toggled": "光影已切换到 %s！",
   "iris.keybind.reload": "重新加载光影",
+  "iris.keybind.shaderPackSelection": "光影包选择界面",
+  "iris.keybind.toggleShaders": "开关光影",
   "iris.keybinds": "Iris",
-  "iris.shaders.reloaded.failure": "重新加载光影失败！原因： %s",
+  "iris.shaders.reloaded.failure": "重新加载光影失败！原因：%s",
+  "iris.shaders.toggled.failure": "切换光影失败！原因：%s",
 
   "options.iris.apply": "应用",
   "options.iris.refresh": "刷新",
