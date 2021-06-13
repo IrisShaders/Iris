@@ -113,7 +113,14 @@ public class TriforceCompositePatcher {
 
 		// TODO: Add similar functions for all legacy texture sampling functions
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }");
+
+		if (type == ShaderType.FRAGMENT) {
+			// GLSL 1.50 Specification, Section 8.7:
+			//    In all functions below, the bias parameter is optional for fragment shaders.
+			//    The bias parameter is not accepted in a vertex or geometry shader.
+			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }");
+		}
+
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }");
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
