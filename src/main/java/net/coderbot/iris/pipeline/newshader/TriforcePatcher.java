@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -184,6 +185,11 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
 
 		//System.out.println(transformations.toString());
+
+		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
+		// constants.
+		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
+				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, defineString + "\n"));
 
 		return transformations.toString();
 	}
