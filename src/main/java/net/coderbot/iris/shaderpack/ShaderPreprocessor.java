@@ -40,12 +40,6 @@ public class ShaderPreprocessor {
 			}
 
 			lines.add(line);
-
-			if (line.startsWith("#version")) {
-				// That was the first line. Add our preprocessor lines
-				lines.add("#define MC_RENDER_QUALITY 1.0");
-				lines.add("#define MC_SHADOW_QUALITY 1.0");
-			}
 		}
 
 		return lines;
