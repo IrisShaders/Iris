@@ -93,26 +93,26 @@ public class SodiumTerrainPipeline {
 			"\n" +
 			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, injections);
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
 
 		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
 		// constants.
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, defineString + "\n"));
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
-		transformations.replaceExact("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
+		transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
 		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
-		transformations.replaceExact("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
+		transformations.define("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
 		//transformations.replaceExact("gl_MultiTexCoord1", "vec4(a_LightCoord * 255.0, 0.0, 1.0)");
-		transformations.replaceExact("gl_Color", "a_Color");
-		transformations.replaceExact("gl_ModelViewMatrix", "u_ModelViewMatrix");
-		transformations.replaceExact("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
+		transformations.define("gl_Color", "a_Color");
+		transformations.define("gl_ModelViewMatrix", "u_ModelViewMatrix");
+		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
-		transformations.replaceExact("gl_NormalMatrix", "mat3(u_NormalMatrix)");
-		transformations.replaceExact("gl_Normal", "a_Normal");
+		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
+		transformations.define("gl_Normal", "a_Normal");
 		// Just being careful
-		transformations.replaceExact("ftransform", "iris_ftransform");
+		transformations.define("ftransform", "iris_ftransform");
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
@@ -128,21 +128,21 @@ public class SodiumTerrainPipeline {
 		StringTransformations transformations = new StringTransformations(base);
 
 		String injections =
-				"#define gl_ModelViewMatrix u_ModelViewMatrix\n" +
-				"#define gl_ModelViewProjectionMatrix u_ModelViewProjectionMatrix\n" +
-				"#define gl_NormalMatrix mat3(u_NormalMatrix)\n" +
 				"uniform mat4 u_ModelViewMatrix;\n" +
 				"uniform mat4 u_ModelViewProjectionMatrix;\n" +
 				"uniform mat4 u_NormalMatrix;\n";
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, injections);
+		transformations.define("gl_ModelViewMatrix", "u_ModelViewMatrix");
+		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
+		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
+		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
+
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
 
 		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
 		// constants.
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, defineString + "\n"));
-
-		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			System.out.println("Final patched fragment source:");
