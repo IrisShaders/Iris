@@ -2,6 +2,7 @@ package net.coderbot.iris.shaderpack.transform;
 
 public class StringTransformations implements Transformations {
 	private String prefix;
+	private String extensions;
 	private StringBuilder injections;
 	private String body;
 	private StringBuilder suffix;
@@ -19,9 +20,39 @@ public class StringTransformations implements Transformations {
 		int splitPoint = base.indexOf("\n") + 1;
 
 		this.prefix = prefix + base.substring(0, splitPoint);
+		this.extensions = "";
 		this.injections = new StringBuilder();
 		this.body = base.substring(splitPoint);
 		this.suffix = new StringBuilder("\n");
+
+		if (!body.contains("#extension")) {
+			// Don't try to hoist #extension lines if there are none.
+			return;
+		}
+
+		StringBuilder extensions = new StringBuilder();
+		StringBuilder body = new StringBuilder();
+
+		boolean inBody = false;
+
+		for (String line : this.body.split("\\R")) {
+			String trimmedLine = line.trim();
+
+			if (!trimmedLine.isEmpty() && !trimmedLine.startsWith("#extension")) {
+				inBody = true;
+			}
+
+			if (inBody) {
+				body.append(line);
+				body.append('\n');
+			} else {
+				extensions.append(line);
+				extensions.append('\n');
+			}
+		}
+
+		this.extensions = extensions.toString();
+		this.body = body.toString();
 	}
 
 	@Override
@@ -61,6 +92,7 @@ public class StringTransformations implements Transformations {
 		}
 
 		prefix = prefix.replace(from, to);
+		extensions = extensions.replace(from, to);
 		injections = new StringBuilder(injections.toString().replace(from, to));
 		body = body.replace(from, to);
 		suffix = new StringBuilder(suffix.toString().replace(from, to));
@@ -68,6 +100,6 @@ public class StringTransformations implements Transformations {
 
 	@Override
 	public String toString() {
-		return prefix + injections + body + suffix;
+		return prefix + extensions + injections + body + suffix;
 	}
 }
