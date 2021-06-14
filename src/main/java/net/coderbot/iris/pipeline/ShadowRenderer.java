@@ -292,7 +292,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// TODO: Support shadow clear color directives & disable buffer clearing
 		// Ensure that the color and depth values are cleared appropriately
-		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		RenderSystem.clearColor(255, 255, 255, 1);
 		RenderSystem.clearDepth(1.0f);
 		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
 
