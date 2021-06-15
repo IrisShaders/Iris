@@ -68,8 +68,10 @@ Iris has been progressing quite rapidly recently. The following shader packs mos
     * Underwater is broken
     * Weather is broken
 
-Other shaderpacks aren't officially supported currently.
+For Linux users running AMD GPUs, some shader packs can be fixed by launching the game with
+`allow_glsl_extension_directive_midshader=true` and/or `force_glsl_extensions_warn=true`.
 
+Other shaderpacks aren't officially supported currently.
 
 ## How can I help?
 
