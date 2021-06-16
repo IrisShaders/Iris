@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.minecraft.client.MinecraftClient;
@@ -9,6 +10,11 @@ import net.minecraft.client.render.Camera;
 import java.util.List;
 
 public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
+	public FixedFunctionWorldRenderingPipeline() {
+		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
+		BlockRenderingSettings.INSTANCE.setUseSeparateAo(false);
+	}
+
 	@Override
 	public void beginWorldRendering() {
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
