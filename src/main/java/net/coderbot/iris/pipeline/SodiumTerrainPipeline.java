@@ -135,14 +135,6 @@ public class SodiumTerrainPipeline {
 		return transformations.toString();
 	}
 
-	public static Optional<SodiumTerrainPipeline> create() {
-		Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension(), false);
-
-		return Iris.getCurrentPack().map(
-			pack -> new SodiumTerrainPipeline(Objects.requireNonNull(pack.getProgramSet(Iris.getCurrentDimension())))
-		);
-	}
-
 	public Optional<String> getTerrainVertexShaderSource() {
 		return Optional.ofNullable(terrainVertex);
 	}

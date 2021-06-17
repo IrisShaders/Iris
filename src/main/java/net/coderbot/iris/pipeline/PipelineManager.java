@@ -15,13 +15,14 @@ public class PipelineManager {
 	private static PipelineManager instance;
 	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
 	private WorldRenderingPipeline pipeline;
+	private boolean sodiumShaderReloadNeeded;
 	private DimensionId lastDimension;
 
 	public PipelineManager(Function<DimensionId, WorldRenderingPipeline> pipelineFactory) {
 		this.pipelineFactory = pipelineFactory;
 	}
 
-	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension, boolean allowReloadRenderer) {
+	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
 		if (currentDimension != lastDimension) {
 			Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
 
@@ -35,6 +36,7 @@ public class PipelineManager {
 			SystemTimeUniforms.TIMER.reset();
 
 			pipeline = pipelineFactory.apply(lastDimension);
+			sodiumShaderReloadNeeded = true;
 
 			// If Sodium is loaded, we need to reload the world renderer to properly recreate the ChunkRenderBackend
 			// Otherwise, the terrain shaders won't be changed properly.
@@ -42,8 +44,7 @@ public class PipelineManager {
 			// ID mapping, or separateAo setting.
 			//
 			// TODO: Don't trigger a reload if this is the first time the world is being rendered
-			if (allowReloadRenderer && (FabricLoader.getInstance().isModLoaded("sodium") ||
-					BlockRenderingSettings.INSTANCE.isReloadRequired())) {
+			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
 				MinecraftClient.getInstance().worldRenderer.reload();
 				BlockRenderingSettings.INSTANCE.clearReloadRequired();
 			}
@@ -54,6 +55,14 @@ public class PipelineManager {
 
 	public WorldRenderingPipeline getPipeline() {
 		return pipeline;
+	}
+
+	public boolean isSodiumShaderReloadNeeded() {
+		return sodiumShaderReloadNeeded;
+	}
+
+	public void clearSodiumShaderReloadNeeded() {
+		sodiumShaderReloadNeeded = false;
 	}
 
 	public void setAsInstance() {
@@ -93,9 +102,8 @@ public class PipelineManager {
 		// Destroy the old world rendering pipeline
 		//
 		// This destroys all loaded shader programs and all of the render targets.
-		if (pipeline instanceof DeferredWorldRenderingPipeline) {
-			// TODO: Don't cast this to DeferredWorldRenderingPipeline?
-			((DeferredWorldRenderingPipeline) pipeline).destroy();
+		if (pipeline != null) {
+			pipeline.destroy();
 		}
 
 		pipeline = null;

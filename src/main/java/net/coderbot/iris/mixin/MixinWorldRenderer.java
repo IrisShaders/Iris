@@ -50,10 +50,7 @@ public class MixinWorldRenderer {
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
-		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension(), true);
-		if (pipeline instanceof DeferredWorldRenderingPipeline) {
-			((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier().onNewFrame();
-		}
+		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 
 		pipeline.beginWorldRendering();
 	}

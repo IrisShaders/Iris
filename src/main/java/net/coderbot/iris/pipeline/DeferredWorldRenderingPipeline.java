@@ -101,6 +101,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
+	private final SodiumTerrainPipeline sodiumTerrainPipeline;
+
 	private boolean isBeforeTranslucent;
 
 	private final int waterId;
@@ -197,6 +199,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		} else {
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
+
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs);
 	}
 
 	private void checkWorld() {
@@ -691,6 +695,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new IllegalStateException("Program stack before the start of rendering, something has gone very wrong!");
 		}
 
+		updateNotifier.onNewFrame();
+
 		// Get ready for world rendering
 		prepareRenderTargets();
 
@@ -722,6 +728,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		compositeRenderer.renderAll(shadowMapRenderer);
 		finalPassRenderer.renderFinalPass(shadowMapRenderer);
+	}
+
+	@Override
+	public SodiumTerrainPipeline getSodiumTerrainPipeline() {
+		return sodiumTerrainPipeline;
 	}
 
 	private boolean isRenderingShadow = false;

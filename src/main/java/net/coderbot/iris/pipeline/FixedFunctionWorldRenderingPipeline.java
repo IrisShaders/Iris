@@ -63,6 +63,17 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public void destroy() {
+		// stub: nothing to do here
+	}
+
+	@Override
+	public SodiumTerrainPipeline getSodiumTerrainPipeline() {
+		// no shaders to override
+		return null;
+	}
+
+	@Override
 	public boolean shouldDisableVanillaEntityShadows() {
 		return false;
 	}

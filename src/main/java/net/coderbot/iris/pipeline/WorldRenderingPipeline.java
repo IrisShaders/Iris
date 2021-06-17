@@ -16,6 +16,9 @@ public interface WorldRenderingPipeline {
 	void pushProgram(GbufferProgram program);
 	void popProgram(GbufferProgram program);
 	void finalizeWorldRendering();
+	void destroy();
+
+	SodiumTerrainPipeline getSodiumTerrainPipeline();
 
 	boolean shouldDisableVanillaEntityShadows();
 	boolean shouldDisableDirectionalShading();
