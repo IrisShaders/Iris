@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
@@ -100,6 +101,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
+	private final SodiumTerrainPipeline sodiumTerrainPipeline;
+
 	private boolean isBeforeTranslucent;
 
 	private final int waterId;
@@ -122,6 +125,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
+
+		BlockRenderingSettings.INSTANCE.setIdMap(programs.getPack().getIdMap());
+		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
+		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programs.getPackDirectives().shouldUseSeparateAo());
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE2);
@@ -192,6 +199,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		} else {
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
+
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs);
 	}
 
 	private void checkWorld() {
@@ -685,6 +694,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new IllegalStateException("Program stack before the start of rendering, something has gone very wrong!");
 		}
 
+		updateNotifier.onNewFrame();
+
 		// Get ready for world rendering
 		prepareRenderTargets();
 
@@ -716,6 +727,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		compositeRenderer.renderAll(shadowMapRenderer);
 		finalPassRenderer.renderFinalPass(shadowMapRenderer);
+	}
+
+	@Override
+	public SodiumTerrainPipeline getSodiumTerrainPipeline() {
+		return sodiumTerrainPipeline;
 	}
 
 	private boolean isRenderingShadow = false;

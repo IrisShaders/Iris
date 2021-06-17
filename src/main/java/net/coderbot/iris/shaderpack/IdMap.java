@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -395,5 +396,28 @@ public class IdMap {
 
 	public Map<Identifier, Integer> getEntityIdMap() {
 		return entityIdMap;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		IdMap idMap = (IdMap) o;
+
+		return Objects.equals(itemIdMap, idMap.itemIdMap)
+				&& Objects.equals(entityIdMap, idMap.entityIdMap)
+				&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
+				&& Objects.equals(blockRenderLayerMap, idMap.blockRenderLayerMap);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderLayerMap);
 	}
 }

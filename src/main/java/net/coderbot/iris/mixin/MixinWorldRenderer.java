@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
@@ -11,7 +12,6 @@ import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
-import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.*;
@@ -55,15 +55,7 @@ public class MixinWorldRenderer {
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
-		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension(), true);
-
-		if (pipeline instanceof DeferredWorldRenderingPipeline) {
-			((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier().onNewFrame();
-		}
-
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			((CoreWorldRenderingPipeline) pipeline).getUpdateNotifier().onNewFrame();
-		}
+		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 
 		pipeline.beginWorldRendering();
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
@@ -116,10 +108,17 @@ public class MixinWorldRenderer {
 	}*/
 
 	@Inject(method = RENDER_SKY,
-		at = @At(value = "INVOKE", target = "net/minecraft/client/gl/VertexBuffer.setShader (Lnet/minecraft/util/math/Matrix4f;Lnet/minecraft/util/math/Matrix4f;Lnet/minecraft/client/render/Shader;)V", shift = At.Shift.AFTER),
-		slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
+			at = @At(value = "INVOKE", target = "net/minecraft/client/gl/VertexBuffer.setShader (Lnet/minecraft/util/math/Matrix4f;Lnet/minecraft/util/math/Matrix4f;Lnet/minecraft/client/render/Shader;)V", shift = At.Shift.AFTER),
+			slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
 	private void iris$renderSky$drawHorizon(MatrixStack matrices, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
+		RenderSystem.depthMask(false);
+
+		Vec3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
+		RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z, 1.0F);
+
 		new HorizonRenderer().renderHorizon(matrices.peek().getModel().copy(), projectionMatrix.copy(), GameRenderer.getPositionShader());
+
+		RenderSystem.depthMask(true);
 	}
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getSkyAngle(F)F"),

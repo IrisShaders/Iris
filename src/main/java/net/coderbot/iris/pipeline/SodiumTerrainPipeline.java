@@ -118,7 +118,7 @@ public class SodiumTerrainPipeline {
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			System.out.println("Final patched source:");
+			System.out.println("Final patched vertex source:");
 			System.out.println(transformations);
 		}
 
@@ -128,20 +128,29 @@ public class SodiumTerrainPipeline {
 	private static String transformFragmentShader(String base) {
 		StringTransformations transformations = new StringTransformations(base);
 
+		String injections =
+				"#define gl_ModelViewMatrix u_ModelViewMatrix\n" +
+				"#define gl_ModelViewProjectionMatrix u_ModelViewProjectionMatrix\n" +
+				"#define gl_NormalMatrix mat3(u_NormalMatrix)\n" +
+				"uniform mat4 u_ModelViewMatrix;\n" +
+				"uniform mat4 u_ModelViewProjectionMatrix;\n" +
+				"uniform mat4 u_NormalMatrix;\n";
+
+		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, injections);
+
 		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
 		// constants.
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
 				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, defineString + "\n"));
 
+		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
+
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			System.out.println("Final patched fragment source:");
+			System.out.println(transformations);
+		}
+
 		return transformations.toString();
-	}
-
-	public static Optional<SodiumTerrainPipeline> create() {
-		Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension(), false);
-
-		return Iris.getCurrentPack().map(
-			pack -> new SodiumTerrainPipeline(Objects.requireNonNull(pack.getProgramSet(Iris.getCurrentDimension())))
-		);
 	}
 
 	public Optional<String> getTerrainVertexShaderSource() {

@@ -6,8 +6,10 @@
   "client": [
     "MixinBufferBuilder",
     "MixinVertexFormatElement",
-    "MixinChunkRebuildTask",
-    "MixinVertexFormat"
+    "MixinVertexFormat",
+    "block_rendering.MixinBakedQuad",
+    "block_rendering.MixinBufferBuilder_SeparateAo",
+    "block_rendering.MixinChunkRebuildTask"
   ],
   "injectors": {
     "defaultRequire": 1

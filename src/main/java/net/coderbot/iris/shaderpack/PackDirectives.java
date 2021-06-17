@@ -6,6 +6,7 @@ public class PackDirectives {
 	private int noiseTextureResolution;
 	private float sunPathRotation;
 	private boolean areCloudsEnabled;
+	private boolean separateAo;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
@@ -20,11 +21,13 @@ public class PackDirectives {
 	PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
 		this(supportedRenderTargets);
 		areCloudsEnabled = properties.areCloudsEnabled();
+		separateAo = properties.getSeparateAo().orElse(false);
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
 		this(supportedRenderTargets);
 		areCloudsEnabled = directives.areCloudsEnabled();
+		separateAo = directives.separateAo;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -37,6 +40,10 @@ public class PackDirectives {
 
 	public boolean areCloudsEnabled() {
 		return areCloudsEnabled;
+	}
+
+	public boolean shouldUseSeparateAo() {
+		return separateAo;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {

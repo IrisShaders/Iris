@@ -17,6 +17,9 @@ public interface WorldRenderingPipeline {
 	void pushProgram(GbufferProgram program);
 	void popProgram(GbufferProgram program);
 	void finalizeWorldRendering();
+	void destroy();
+
+	SodiumTerrainPipeline getSodiumTerrainPipeline();
 
 	default void setPhase(WorldRenderingPhase phase) {
 		// no-op
