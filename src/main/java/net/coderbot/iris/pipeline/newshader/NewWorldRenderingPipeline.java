@@ -4,12 +4,14 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
@@ -92,6 +94,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final AbstractTexture noise;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
+
+	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
@@ -222,6 +226,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			throw e;
 		}
+
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programSet);
+
+		BlockRenderingSettings.INSTANCE.setIdMap(programSet.getPack().getIdMap());
+		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
+		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programSet.getPackDirectives().shouldUseSeparateAo());
 
 		int[] buffersToBeCleared = programSet.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
 
@@ -382,6 +392,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		main.beginWrite(true);
 
 		isBeforeTranslucent = true;
+
+		updateNotifier.onNewFrame();
 	}
 
 	@Override
@@ -615,6 +627,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		shadowMapRenderer.destroy();
 		renderTargets.destroy();
+	}
+
+	@Override
+	public SodiumTerrainPipeline getSodiumTerrainPipeline() {
+		return sodiumTerrainPipeline;
 	}
 
 	@Override

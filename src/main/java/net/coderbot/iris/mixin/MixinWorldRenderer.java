@@ -108,9 +108,8 @@ public class MixinWorldRenderer {
 	}*/
 
 	@Inject(method = RENDER_SKY,
-			at = @At(value = "INVOKE", target = "net/minecraft/client/gl/VertexBuffer.setShader (Lnet/minecraft/util/math/Matrix4f;Lnet/minecraft/util/math/Matrix4f;Lnet/minecraft/client/render/Shader;)V", shift = At.Shift.AFTER),
-			slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
-	private void iris$renderSky$drawHorizon(MatrixStack matrices, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
+			at = @At(value = "INVOKE", target = "net/minecraft/client/render/BackgroundRenderer.setFogBlack()V"))
+		private void iris$renderSky$drawHorizon(MatrixStack matrices, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
 		RenderSystem.depthMask(false);
 
 		Vec3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
