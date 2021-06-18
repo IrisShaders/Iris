@@ -234,22 +234,12 @@ public class MixinWorldRenderer {
 	}
 
 	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=blockentities"))
-	private void iris$startBlockEntities(MatrixStack matrices, float tickDelta, long limitTime,
-										 boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-										 LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
-										 CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
-										 Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
-										 VertexConsumerProvider.Immediate immediate) {
+	private void iris$startBlockEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.BLOCK_ENTITIES);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=destroyProgress"))
-	private void iris$endBlockEntities(MatrixStack matrices, float tickDelta, long limitTime,
-									   boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-									   LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
-									   CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
-									   Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
-									   VertexConsumerProvider.Immediate immediate) {
+	private void iris$endBlockEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}
 }
