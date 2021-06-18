@@ -233,8 +233,8 @@ public class MixinWorldRenderer {
 		pipeline.beginTranslucents();
 	}
 
-	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=blockentities"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$StartBlockEntities(MatrixStack matrices, float tickDelta, long limitTime,
+	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=blockentities"))
+	private void iris$startBlockEntities(MatrixStack matrices, float tickDelta, long limitTime,
 										 boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 										 LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
 										 CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
@@ -243,8 +243,8 @@ public class MixinWorldRenderer {
 		pipeline.setPhase(WorldRenderingPhase.BLOCK_ENTITIES);
 	}
 
-	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=destroyProgress"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$EndBlockEntities(MatrixStack matrices, float tickDelta, long limitTime,
+	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=destroyProgress"))
+	private void iris$endBlockEntities(MatrixStack matrices, float tickDelta, long limitTime,
 									   boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 									   LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
 									   CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
