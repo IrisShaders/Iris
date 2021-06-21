@@ -230,4 +230,14 @@ public class MixinWorldRenderer {
 		profiler.swap("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
+
+	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=blockentities"))
+	private void iris$startBlockEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
+		pipeline.setPhase(WorldRenderingPhase.BLOCK_ENTITIES);
+	}
+
+	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=destroyProgress"))
+	private void iris$endBlockEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
+		pipeline.setPhase(WorldRenderingPhase.OTHER);
+	}
 }

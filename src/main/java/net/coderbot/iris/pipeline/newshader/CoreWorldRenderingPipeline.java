@@ -8,6 +8,7 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getSkyBasic();
 	Shader getSkyBasicColor();
 	Shader getSkyTextured();
+	Shader getSkyTexturedColor();
 	Shader getTerrain();
 	Shader getTerrainCutout();
 	Shader getTerrainCutoutMipped();
@@ -20,6 +21,7 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getWeather();
 	Shader getCrumbling();
 	Shader getText();
+	Shader getBlock();
 	Shader getShadowTerrainCutout();
 	Shader getShadowEntitiesCutout();
 	Shader getTranslucent();
