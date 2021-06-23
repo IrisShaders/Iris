@@ -7,7 +7,7 @@ class Tests {
 		test("basic injection", "#version\n//Injected\n//After", () -> {
 			StringTransformations transformations = new StringTransformations("#version\n//After");
 
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "//Injected");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "//Injected");
 
 			return transformations.toString();
 		});
@@ -15,7 +15,7 @@ class Tests {
 		test("inject with content before #version", "// Example prefix\n\n#version\n//Injected\n//After", () -> {
 			StringTransformations transformations = new StringTransformations("// Example prefix\n\n#version\n//After");
 
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "//Injected");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "//Injected");
 
 			return transformations.toString();
 		});
@@ -23,7 +23,7 @@ class Tests {
 		test("multiple injections", "// Example prefix\n\n#version\n//Injected\n//After", () -> {
 			StringTransformations transformations = new StringTransformations("// Example prefix\n\n#version\n//After");
 
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "//Injected");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "//Injected");
 
 			return transformations.toString();
 		});
