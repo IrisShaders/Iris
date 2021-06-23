@@ -40,12 +40,12 @@ public class TriforcePatcher {
 		transformations.replaceExact("gl_TextureMatrix[0]", "iris_TextureMat");
 		transformations.replaceExact("gl_TextureMatrix[1]", "iris_LightmapTextureMatrix");
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_LightmapTextureMatrix;");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_TextureMat;");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_LightmapTextureMatrix;");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_TextureMat;");
 
 		// TODO: Other fog things
 		// TODO: fogDensity isn't actually implemented!
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform float iris_FogDensity;\n" +
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_FogDensity;\n" +
 				"uniform float iris_FogStart;\n" +
 				"uniform float iris_FogEnd;\n" +
 				"uniform vec4 iris_FogColor;\n" +
@@ -63,133 +63,135 @@ public class TriforcePatcher {
 				"#define gl_Fog iris_Fog");
 
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FogFragCoord iris_FogFragCoord");
+		transformations.define("gl_FogFragCoord", "iris_FogFragCoord");
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "out float iris_FogFragCoord;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out float iris_FogFragCoord;");
 		} else if (type == ShaderType.FRAGMENT) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in float iris_FogFragCoord;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in float iris_FogFragCoord;");
 		}
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 iris_FrontColor;");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FrontColor iris_FrontColor");
+			// TODO: This is incorrect and is just the bare minimum needed for SEUS v11 & Renewed to compile
+			// It works because they don't actually use gl_FrontColor even though they write to it.
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 iris_FrontColor;");
+			transformations.define("gl_FrontColor", "iris_FrontColor");
 		}
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ProjectionMatrix iris_ProjMat");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_ProjMat;");
+		transformations.define("gl_ProjectionMatrix", "iris_ProjMat");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_ProjMat;");
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasTex()) {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec2 UV0;");
+				transformations.define("gl_MultiTexCoord0", "vec4(UV0, 0.0, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 UV0;");
 			} else {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord0 vec4(0.0, 0.0, 0.0, 1.0)");
+				transformations.define("gl_MultiTexCoord0", "vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 
 			if (inputs.hasLight()) {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(UV2, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in ivec2 UV2;");
+				transformations.define("gl_MultiTexCoord1", "vec4(UV2, 0.0, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 UV2;");
 			} else {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord1 vec4(0.0, 0.0, 0.0, 1.0)");
+				transformations.define("gl_MultiTexCoord1", "vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other texture coordinates are not valid inputs.
 			for (int i = 2; i < 8; i++) {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_MultiTexCoord" + i + " vec4(0.0, 0.0, 0.0, 1.0)");
+				transformations.define("gl_MultiTexCoord" + i, " vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 		}
 
 		// TODO: Patching should take in mind cases where there are not color or normal vertex attributes
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec4 iris_ColorModulator;");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec4 iris_ColorModulator;");
 
 		if (inputs.hasColor()) {
 			// TODO: Handle the fragment shader here
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color (Color * iris_ColorModulator)");
+			transformations.define("gl_Color", "(Color * iris_ColorModulator)");
 
 			if (type == ShaderType.VERTEX) {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec4 Color;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 Color;");
 			}
 		} else {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Color iris_ColorModulator");
+			transformations.define("gl_Color", "iris_ColorModulator");
 		}
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasNormal()) {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal Normal");
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Normal;");
+				transformations.define("gl_Normal", "Normal");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Normal;");
 			} else {
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Normal vec3(0.0, 0.0, 1.0)");
+				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
 		}
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_NormalMatrix mat3(transpose(inverse(gl_ModelViewMatrix)))");
+		transformations.define("gl_NormalMatrix", "mat3(transpose(inverse(gl_ModelViewMatrix)))");
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform mat4 iris_ModelViewMat;");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_ModelViewMat;");
 
 		if (hasChunkOffset) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "uniform vec3 iris_ChunkOffset;");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "mat4 _iris_internal_translate(vec3 offset) {\n" +
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 iris_ChunkOffset;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4 _iris_internal_translate(vec3 offset) {\n" +
 					"    // NB: Column-major order\n" +
 					"    return mat4(1.0, 0.0, 0.0, 0.0,\n" +
 					"                0.0, 1.0, 0.0, 0.0,\n" +
 					"                0.0, 0.0, 1.0, 0.0,\n" +
 					"                offset.x, offset.y, offset.z, 1.0);\n" +
 					"}");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix (iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix (iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))");
 		} else {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewMatrix iris_ModelViewMat");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix iris_ModelViewMat");
 		}
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_Vertex vec4(Position, 1.0)");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "in vec3 Position;");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(Position, 1.0)");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Position;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define attribute in");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define varying out");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define attribute in");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define varying out");
 		} else if (type == ShaderType.FRAGMENT) {
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define varying in");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define varying in");
 		}
 
 		if (type == ShaderType.FRAGMENT) {
 			if (transformations.contains("gl_FragColor")) {
 				// TODO: Find a way to properly support gl_FragColor
 				Iris.logger.warn("[Triforce Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FragColor iris_FragData[0]");
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_FragColor iris_FragData[0]");
 			}
 
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "#define gl_FragData iris_FragData");
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "out vec4 iris_FragData[8];");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_FragData iris_FragData");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 iris_FragData[8];");
 		}
 
 		// TODO: Add similar functions for all legacy texture sampling functions
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }");
 
 		if (type == ShaderType.FRAGMENT) {
 			// GLSL 1.50 Specification, Section 8.7:
 			//    In all functions below, the bias parameter is optional for fragment shaders.
 			//    The bias parameter is not accepted in a vertex or geometry shader.
-			transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }");
 		}
 
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }");
-		transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
 
 		//System.out.println(transformations.toString());
 
 		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
 		// constants.
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.AFTER_VERSION, defineString + "\n"));
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
 		return transformations.toString();
 	}
