@@ -144,4 +144,15 @@ public class ParsedString {
 
 		return takeCharacters(position);
 	}
+
+	@Nullable
+	public String takeWordOrNumber() {
+		String number = takeNumber();
+
+		if (number == null) {
+			return takeWord();
+		}
+
+		return number;
+	}
 }

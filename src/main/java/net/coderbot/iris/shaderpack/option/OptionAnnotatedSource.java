@@ -2,6 +2,7 @@ package net.coderbot.iris.shaderpack.option;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.shaderpack.parsing.ParsedString;
 
 import java.util.regex.Matcher;
@@ -63,10 +64,48 @@ public final class OptionAnnotatedSource {
 	 */
 	private final ImmutableMap<String, Integer> booleanDefineReferences;
 
+	private static final ImmutableSet<String> VALID_CONST_OPTION_NAMES = ImmutableSet.of(
+		"shadowMapResolution",
+		"shadowDistance",
+		"shadowDistanceRenderMul",
+		"shadowIntervalSize",
+		"generateShadowMipmap",
+		"generateShadowColorMipmap",
+		"shadowHardwareFiltering",
+		"shadowHardwareFiltering0",
+		"shadowHardwareFiltering1",
+		"shadowtex0Mipmap",
+		"shadowtexMipmap",
+		"shadowtex1Mipmap",
+		"shadowcolor0Mipmap",
+		"shadowColor0Mipmap",
+		"shadowcolor1Mipmap",
+		"shadowColor1Mipmap",
+		"shadowtex0Nearest",
+		"shadowtexNearest",
+		"shadow0MinMagNearest",
+		"shadowtex1Nearest",
+		"shadow1MinMagNearest",
+		"shadowcolor0Nearest",
+		"shadowColor0Nearest",
+		"shadowColor0MinMagNearest",
+		"shadowcolor1Nearest",
+		"shadowColor1Nearest",
+		"shadowColor1MinMagNearest",
+		"wetnessHalflife",
+		"drynessHalflife",
+		"eyeBrightnessHalflife",
+		"centerDepthHalflife",
+		"sunPathRotation",
+		"ambientOcclusionLevel",
+		"superSamplingLevel",
+		"noiseTextureResolution"
+	);
+
 	/**
 	 * Parses the lines of a shader source file in order to locate valid options from it.
 	 */
-	public OptionAnnotatedSource(ImmutableList<String> lines) {
+	public OptionAnnotatedSource(final ImmutableList<String> lines) {
 		this.lines = lines;
 
 		AnnotationsBuilder builder = new AnnotationsBuilder();
@@ -103,12 +142,7 @@ public final class OptionAnnotatedSource {
 			// contain references.
 			parseIfdef(builder, index, line);
 		} else if (line.takeLiteral("const")) {
-			if (!line.takeSomeWhitespace()) {
-				return;
-			}
-
-			// TODO: Parse const option
-			builder.diagnostics.put(index, "Const options aren't currently supported.");
+			parseConst(builder, index, line);
 		} else if (line.currentlyContains("#define")) {
 			parseDefineOption(builder, index, line);
 		}
@@ -128,6 +162,108 @@ public final class OptionAnnotatedSource {
 		}
 
 		builder.booleanDefineReferences.put(name, index);
+	}
+
+	private static void parseConst(AnnotationsBuilder builder, int index, ParsedString line) {
+		// const is already taken.
+
+		if (!line.takeSomeWhitespace()) {
+			builder.diagnostics.put(index, "Expected whitespace after const and before type declaration");
+			return;
+		}
+
+		boolean isString;
+
+		if (line.takeLiteral("int") || line.takeLiteral("float")) {
+			isString = true;
+		} else if (line.takeLiteral("bool")) {
+			isString = false;
+		} else {
+			builder.diagnostics.put(index, "Unexpected type declaration after const. " +
+					"Expected int, float, or bool. " +
+					"Vector const declarations cannot be configured using shader options.");
+			return;
+		}
+
+		if (!line.takeSomeWhitespace()) {
+			builder.diagnostics.put(index, "Expected whitespace after type declaration.");
+			return;
+		}
+
+		String name = line.takeWord();
+
+		if (name == null) {
+			builder.diagnostics.put(index, "Expected name of option after type declaration, " +
+					"but an unexpected character was detected first.");
+			return;
+		}
+
+		line.takeSomeWhitespace();
+
+		if (!line.takeLiteral("=")) {
+			builder.diagnostics.put(index, "Unexpected characters before equals sign in const declaration.");
+			return;
+		}
+
+		line.takeSomeWhitespace();
+
+		String value = line.takeWordOrNumber();
+
+		if (value == null) {
+			builder.diagnostics.put(index, "Unexpected non-whitespace characters after equals sign");
+			return;
+		}
+
+		line.takeSomeWhitespace();
+
+		if (!line.takeLiteral(";")) {
+			builder.diagnostics.put(index, "Value between the equals sign and the semicolon wasn't parsed as a valid word or number.");
+			return;
+		}
+
+		line.takeSomeWhitespace();
+
+		String comment;
+
+		if (line.takeComments()) {
+			comment = line.takeRest().trim();
+		} else if (!line.isEnd()) {
+			builder.diagnostics.put(index, "Unexpected non-whitespace characters outside of comment after semicolon");
+			return;
+		} else {
+			comment = null;
+		}
+
+		if (!isString) {
+			boolean booleanValue;
+
+			if ("true".equals(value)) {
+				booleanValue = true;
+			} else if ("false".equals(value)) {
+				booleanValue = false;
+			} else {
+				builder.diagnostics.put(index, "Expected true or false as the value of a boolean const option, but got "
+						+ value + ".");
+				return;
+			}
+
+			if (!VALID_CONST_OPTION_NAMES.contains(name)) {
+				builder.diagnostics.put(index, "This was a valid const boolean option declaration, but " + name +
+						" was not recognized as being a name of one of the configurable const options.");
+				return;
+			}
+
+			builder.booleanOptions.put(index, new BooleanOption(OptionType.CONST, name, comment, booleanValue));
+			return;
+		}
+
+		if (!VALID_CONST_OPTION_NAMES.contains(name)) {
+			builder.diagnostics.put(index, "This was a valid const option declaration, but " + name +
+					" was not recognized as being a name of one of the configurable const options.");
+			return;
+		}
+
+		builder.stringOptions.put(index, StringOption.create(OptionType.CONST, name, comment, value));
 	}
 
 	private static void parseDefineOption(AnnotationsBuilder builder, int index, ParsedString line) {
@@ -190,11 +326,7 @@ public final class OptionAnnotatedSource {
 			return;
 		}
 
-		String value = line.takeNumber();
-
-		if (value == null) {
-			value = line.takeWord();
-		}
+		String value = line.takeWordOrNumber();
 
 		if (value == null) {
 			builder.diagnostics.put(index, "Ignoring this #define directive because it doesn't appear to be a boolean #define, " +
