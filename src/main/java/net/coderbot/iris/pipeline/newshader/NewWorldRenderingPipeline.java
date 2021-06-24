@@ -658,4 +658,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public FrameUpdateNotifier getUpdateNotifier() {
 		return updateNotifier;
 	}
+
+	public GlFramebuffer getBaselineFramebuffer() {
+		return baseline;
+	}
 }
