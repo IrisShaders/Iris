@@ -28,7 +28,7 @@ public class PipelineManager {
 
 	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
 		WorldRenderingPipeline currentPipeline = pipelinesPerWorld.computeIfAbsent(currentDimension, pipelineFactory);
-		
+
 		if (!isInitialized) {
 			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
 				MinecraftClient.getInstance().worldRenderer.reload();
@@ -36,9 +36,9 @@ public class PipelineManager {
 			}
 			isInitialized = true;
 		}
-		
+
 		pipeline = currentPipeline;
-		
+
 		return currentPipeline;
 	}
 
@@ -75,12 +75,12 @@ public class PipelineManager {
 			resetTextureState();
 			renderingPipeline.destroy();
 		}
-		
+
 		pipelinesPerWorld.clear();
 		pipeline = null;
 		isInitialized = false;
 	}
-	
+
 	private void resetTextureState() {
 		// Unbind all textures
 		//
@@ -93,7 +93,7 @@ public class PipelineManager {
 			GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0 + i);
 			GlStateManager._bindTexture(0);
 		}
-		
+
 		// Set the active texture unit to unit 0
 		//
 		// This seems to be what most code expects. It's a sane default in any case.
