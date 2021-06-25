@@ -83,7 +83,7 @@ public class BuiltinUniformReplacementTransformer {
 		// If there are references to the fallback lightmap texture matrix, then make it available to the shader program.
 		if (transformations.contains("iris_LightmapTextureMatrix")) {
 			transformations.injectLine(
-				Transformations.InjectionPoint.AFTER_VERSION,
+				Transformations.InjectionPoint.BEFORE_CODE,
 				"uniform mat4 iris_LightmapTextureMatrix;"
 			);
 		}

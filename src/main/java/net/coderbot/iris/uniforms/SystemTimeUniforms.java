@@ -3,6 +3,7 @@ package net.coderbot.iris.uniforms;
 import java.util.OptionalLong;
 import java.util.function.IntSupplier;
 
+import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 
@@ -30,6 +31,10 @@ public final class SystemTimeUniforms {
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "framemod8", () -> COUNTER.getAsInt() % 8)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTime", TIMER::getLastFrameTime)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeCounter", TIMER::getFrameTimeCounter);
+	}
+
+	public static void addFloatFrameMod8Uniform(UniformHolder uniforms) {
+		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "framemod8", () -> COUNTER.getAsInt() % 8);
 	}
 
 	/**

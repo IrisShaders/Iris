@@ -1,5 +1,23 @@
 {
-  "iris.shaders.reloaded": "シェーダー・リローデッド",
-  "iris.keybind.reload": "リロードシェーダー",
-  "iris.shaders.reloaded.failure": "シェーダーのリロードに失敗しました！理由： %s"
+  "iris.shaders.reloaded": "Shader・リローデッド",
+  "iris.keybind.reload": "リロードShader",
+  "iris.shaders.reloaded.failure": "Shaderのリロードに失敗しました！理由： %s",
+
+  "options.iris.apply": "応募",
+  "options.iris.refresh": "リフレッシュ",
+  "options.iris.openShaderPackFolder": "Shader Packsフォルダを開く...",
+  "options.iris.refreshShaderPacks": "Shader Packの更新",
+  "options.iris.shaderPackSelection": "Shader Packs...",
+  "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Shader Pack \"％s\" を追加しました",
+  "options.iris.shaderPackSelection.addedPacks": "Shader Pack \"％s\" の追加",
+  "options.iris.shaderPackSelection.failedAdd": "ファイルが有効でない Shader Pack",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"％s\" は有効なShader Packではありません。",
+  "options.iris.shaderPackSelection.copyError": " Shader Pack\"％s\"を追加できませんでした",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"％s\"はすでにShaderPacksフォルダーにあります。",
+  "options.iris.shaders.disabled": "シェーダーです。無効",
+  "options.iris.shaders.enabled": "シェーダーです。有効",
+
+  "pack.iris.select.title": "セレクト",
+  "pack.iris.list.label": "+ Shaderパックをドラッグ＆ドロップで追加"
 }

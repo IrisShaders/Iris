@@ -9,9 +9,11 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
+import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -70,25 +72,8 @@ public class IdMap {
 
 		if (blockPropertiesMap == null) {
 			// Fill in with default values...
-
 			blockPropertiesMap = new Object2IntOpenHashMap<>();
-
-			// Anvil ID #8 = water
-			Blocks.WATER.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 8));
-
-			// Anvil ID #10 = lava
-			Blocks.LAVA.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 10));
-
-			// Anvil ID #18 = leaves
-			/*BlockTags.LEAVES.values().forEach(block -> {
-				block.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 18));
-			});*/
-
-			// Anvil ID #31 = grass
-			Blocks.GRASS.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 31));
-
-			// Anvil ID #175 = double plant
-			Blocks.TALL_GRASS.getStateManager().getStates().forEach(state -> blockPropertiesMap.put(state, 175));
+			LegacyIdMap.addLegacyValues(blockPropertiesMap);
 		}
 
 		if (blockRenderLayerMap == null) {
@@ -411,5 +396,28 @@ public class IdMap {
 
 	public Map<Identifier, Integer> getEntityIdMap() {
 		return entityIdMap;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		IdMap idMap = (IdMap) o;
+
+		return Objects.equals(itemIdMap, idMap.itemIdMap)
+				&& Objects.equals(entityIdMap, idMap.entityIdMap)
+				&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
+				&& Objects.equals(blockRenderLayerMap, idMap.blockRenderLayerMap);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderLayerMap);
 	}
 }

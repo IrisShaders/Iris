@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -139,7 +140,7 @@ public class ShaderPack {
 			//some shaderpacks use optifines file name coding which is different than minecraft's.
 			//An example of this is using "en_US.lang" compared to "en_us.json"
 			//also note that optifine uses a property scheme for loading language entries to keep parity with other optifine features
-			String currentFileName = path.getFileName().toString().toLowerCase();
+			String currentFileName = path.getFileName().toString().toLowerCase(Locale.ROOT);
 			String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
 			Properties properties = new Properties();
 

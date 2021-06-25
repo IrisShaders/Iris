@@ -1,6 +1,7 @@
 package net.coderbot.iris.uniforms.transforms;
 
 import net.coderbot.iris.gl.uniform.FloatSupplier;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 
 /**
@@ -45,7 +46,7 @@ public class SmoothedFloat implements FloatSupplier {
 	 * @param unsmoothed the input sequence of unsmoothed values to be smoothed. {@code unsmoothed.getAsFloat()} will be
 	 *                   called exactly once for every time {@code smoothed.getAsFloat()} is called.
 	 */
-	public SmoothedFloat(float halfLife, FloatSupplier unsmoothed) {
+	public SmoothedFloat(float halfLife, FloatSupplier unsmoothed, FrameUpdateNotifier updateNotifier) {
 		// Half life is measured in units of 10ths of a second, or 2 ticks
 		// For example, a half life of value of 2.0 is 4 ticks or 0.2 seconds
 		halfLife *= 0.1f;
@@ -58,15 +59,14 @@ public class SmoothedFloat implements FloatSupplier {
 		this.decayConstant = (float) (1.0f / timeConstant);
 
 		this.unsmoothed = unsmoothed;
+
+		updateNotifier.addListener(this::update);
 	}
 
 	/**
-	 * Takes one value from the unsmoothed value sequence, and smooths it
-	 *
-	 * @return a single smoothed value
+	 * Takes one value from the unsmoothed value sequence, and smooths it into our accumulator
 	 */
-	@Override
-	public float getAsFloat() {
+	private void update() {
 		if (!hasInitialValue) {
 			// There is no smoothing on the first value.
 			// This is not an optimal approach to choosing the initial value:
@@ -76,7 +76,7 @@ public class SmoothedFloat implements FloatSupplier {
 			accumulator = unsmoothed.getAsFloat();
 			hasInitialValue = true;
 
-			return accumulator;
+			return;
 		}
 
 		// Implements the basic variant of exponential smoothing
@@ -94,6 +94,16 @@ public class SmoothedFloat implements FloatSupplier {
 
 		// sₜ = αxₜ + (1 - α)sₜ₋₁
 		accumulator = lerp(accumulator, newValue, smoothingFactor);
+	}
+
+	/**
+	 * @return the current smoothed value
+	 */
+	@Override
+	public float getAsFloat() {
+		if (!hasInitialValue) {
+			return unsmoothed.getAsFloat();
+		}
 
 		return accumulator;
 	}
