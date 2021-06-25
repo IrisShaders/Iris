@@ -48,9 +48,9 @@ public class ProgramSet {
 
 	private final ShaderPack pack;
 
-	public ProgramSet(Path root, Path inclusionRoot, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
+	public ProgramSet(Path root, Path inclusionRoot, ShaderPack pack) throws IOException {
 		// TODO: Support additional render targets beyond 8
-		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, shaderProperties);
+		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, pack.getShaderProperties());
 		this.pack = pack;
 
 		this.shadow = readProgramSource(root, inclusionRoot, "shadow", this, pack);

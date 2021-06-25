@@ -23,15 +23,20 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 	private final CustomTexture customNoiseTexture;
-	private final ShaderPackConfig config;
+	private ShaderPackConfig config;
 	private final ShaderProperties shaderProperties;
 
 	public ShaderPack(Path root) throws IOException {
 		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
-		this.config = new ShaderPackConfig(Iris.getIrisConfig().getShaderPackName());
-		this.config.load();
+
+		Optional<String> packName = Iris.getIrisConfig().getShaderPackName();
+
+		if (packName.isPresent()) {
+			this.config = new ShaderPackConfig(packName.get());
+			this.config.load();
+		}
 
 		this.base = new ProgramSet(root, root, this);
 		this.overworld = loadOverrides(root, "world0", this);
@@ -54,7 +59,10 @@ public class ShaderPack {
 				return null;
 			}
 		}).orElse(null);
-		this.config.save();
+
+		if (this.config != null) {
+			this.config.save();
+		}
 	}
 
 	@Nullable
