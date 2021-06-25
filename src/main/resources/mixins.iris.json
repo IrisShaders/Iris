@@ -12,6 +12,7 @@
     "MixinGlShader",
     "MixinGlStateManager",
     "MixinImmediateVertexConsumerProvider",
+    "MixinMinecraftClient",
     "MixinModelViewBobbing",
     "MixinShader",
     "MixinTranslationStorage",
