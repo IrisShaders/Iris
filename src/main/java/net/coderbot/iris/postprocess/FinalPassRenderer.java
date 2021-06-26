@@ -185,6 +185,11 @@ public class FinalPassRenderer {
 			FramebufferBlitter.copyDepthBufferContent(this.baseline, main);
 		}
 
+		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
+			// Reset mipmapping states at the end of the frame.
+			resetRenderTarget(0, renderTargets.get(i));
+		}
+
 		for (SwapPass swapPass : swapPasses) {
 			swapPass.from.bindAsReadBuffer();
 
@@ -198,27 +203,11 @@ public class FinalPassRenderer {
 		main.beginWrite(true);
 		GlStateManager.useProgram(0);
 
-		// NB: Unbinding all of these textures is necessary for proper shaderpack reloading.
-		resetRenderTarget(SamplerUniforms.COLOR_TEX_0, renderTargets.get(0));
-		resetRenderTarget(SamplerUniforms.COLOR_TEX_1, renderTargets.get(1));
-		resetRenderTarget(SamplerUniforms.COLOR_TEX_2, renderTargets.get(2));
-		resetRenderTarget(SamplerUniforms.COLOR_TEX_3, renderTargets.get(3));
-		resetRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4));
-		resetRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5));
-		resetRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6));
-		resetRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7));
-
-		unbindTexture(SamplerUniforms.DEPTH_TEX_0);
-		unbindTexture(SamplerUniforms.DEPTH_TEX_1);
-		unbindTexture(SamplerUniforms.DEPTH_TEX_2);
-
-		unbindTexture(SamplerUniforms.SHADOW_TEX_0);
-		unbindTexture(SamplerUniforms.SHADOW_TEX_1);
-
-		unbindTexture(SamplerUniforms.SHADOW_COLOR_0);
-		unbindTexture(SamplerUniforms.SHADOW_COLOR_1);
-
-		unbindTexture(SamplerUniforms.NOISE_TEX);
+		for (int i = 0; i < 16; i++) {
+			// Unbind all textures that we may have used.
+			// NB: This is necessary for shader pack reloading to work propely
+			unbindTexture(i);
+		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
