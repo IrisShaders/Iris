@@ -110,7 +110,7 @@ public class ProgramSamplers {
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override
-		public boolean addDynamicSampler(IntSupplier sampler, String... names) {
+		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
 			boolean used = false;
 
 			for (String name : names) {
@@ -139,7 +139,7 @@ public class ProgramSamplers {
 				return false;
 			}
 
-			samplers.add(new SamplerBinding(nextUnit, sampler));
+			samplers.add(new SamplerBinding(nextUnit, sampler, postBind));
 
 			remainingUnits -= 1;
 			nextUnit += 1;
