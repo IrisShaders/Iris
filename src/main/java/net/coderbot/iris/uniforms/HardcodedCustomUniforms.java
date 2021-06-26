@@ -32,7 +32,7 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getTimeBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * (-2.0)),0.0);
+		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * 2.0),0.0);
 	}
 
 	private static float getMoonBrightness() {
