@@ -21,23 +21,22 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getTimeAngle() {
-		float sunAngle = CelestialUniforms.getSunAngle();
-		float tAmin = frac(sunAngle - 0.033333333f);
-		float tAlin = tAmin < 0.433333333f ? (tAmin * 1.15384615385f) : (tAmin * 0.882352941176f + 0.117647058824f);
-		float hA = tAlin > 0.5f ? 1.0f : 0.0f;
-		float tAfrc = frac(tAlin * 2.0f);
-		float tAfrs = tAfrc*tAfrc*(3.0f-2.0f*tAfrc);
-		float tAmix = hA < 0.5f ? 0.3f : -0.1f;
+		return getWorldDayTime() / 24000F;
+	}
 
-		return (tAfrc * (1.0f-tAmix) + tAfrs * tAmix + hA) * 0.5f;
+	private static int getWorldDayTime() {
+		long timeOfDay = MinecraftClient.getInstance().world.getTimeOfDay();
+		long dayTime = timeOfDay % 24000L;
+
+		return (int) dayTime;
 	}
 
 	private static float getTimeBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * 2.0),0.0);
+		return (float) Math.max(Math.sin(getTimeAngle() * 6.28318530718),0.0);
 	}
 
 	private static float getMoonBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * (-2.0)),0.0);
+		return (float) Math.max(Math.sin(getTimeAngle() * (-6.28318530718)),0.0);
 	}
 
 	private static float getShadowFade() {
