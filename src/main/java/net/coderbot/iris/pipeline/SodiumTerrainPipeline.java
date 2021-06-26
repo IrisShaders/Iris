@@ -181,6 +181,7 @@ public class SodiumTerrainPipeline {
 
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		SamplerUniforms.addCommonSamplerUniforms(uniforms);
 		SamplerUniforms.addWorldSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);

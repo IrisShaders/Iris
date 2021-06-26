@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -23,13 +24,13 @@ import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
@@ -88,7 +89,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
 
-	private final ShadowMapRenderer shadowMapRenderer;
+	private Runnable createShadowMapRenderer;
+	private ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final FinalPassRenderer finalPassRenderer;
@@ -154,6 +156,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
+		createShadowMapRenderer = () -> {
+			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null), programs.getPackDirectives());
+			createShadowMapRenderer = () -> {};
+		};
+
 		BufferFlipper flipper = new BufferFlipper();
 
 		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
@@ -195,8 +202,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.usesShadows |= compositeRenderer.usesShadows();
 
 		if (usesShadows) {
-			this.shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null), programs.getPackDirectives());
-		} else {
+			createShadowMapRenderer.run();
+		}
+
+		if (shadowMapRenderer == null) {
+			// Fallback just in case.
+			// TODO: Can we remove this?
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
 
@@ -402,19 +413,27 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null));
+				source.getFragmentSource().orElse(null), IrisSamplers.RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		if (SamplerUniforms.hasShadowSamplers(builder)) {
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+
+		Supplier<ImmutableSet<Integer>> flipped =
+				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
+
+		IrisSamplers.addWorldSamplers(builder, renderTargets, normals, specular);
+		IrisSamplers.addNoiseSampler(builder, noise);
+		IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
+
+		if (IrisSamplers.hasShadowSamplers(builder)) {
 			usesShadows = true;
+			createShadowMapRenderer.run();
+			IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
-		SamplerUniforms.addWorldSamplerUniforms(builder);
-		SamplerUniforms.addDepthSamplerUniforms(builder);
 		GlFramebuffer framebufferBeforeTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
 		GlFramebuffer framebufferAfterTranslucents =
@@ -450,38 +469,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		public void use() {
-			// TODO: Binding the texture here is ugly and hacky. It would be better to have a utility function to set up
-			// a given program and bind the required textures instead.
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE0 + SamplerUniforms.NOISE_TEX);
-			GlStateManager.bindTexture(noise.getGlId());
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE2);
-			GlStateManager.bindTexture(normals.getGlId());
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE3);
-			GlStateManager.bindTexture(specular.getGlId());
-
-			bindTexture(SamplerUniforms.SHADOW_TEX_0, shadowMapRenderer.getDepthTextureId());
-			bindTexture(SamplerUniforms.SHADOW_TEX_1, shadowMapRenderer.getDepthTextureNoTranslucentsId());
-			bindTexture(SamplerUniforms.SHADOW_COLOR_0, shadowMapRenderer.getColorTexture0Id());
-			bindTexture(SamplerUniforms.SHADOW_COLOR_1, shadowMapRenderer.getColorTexture1Id());
-
-			ImmutableSet<Integer> flipped = isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
-
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_4, renderTargets.get(4), flipped.contains(4));
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_5, renderTargets.get(5), flipped.contains(5));
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_6, renderTargets.get(6), flipped.contains(6));
-			bindRenderTarget(SamplerUniforms.COLOR_TEX_7, renderTargets.get(7), flipped.contains(7));
-
-			int depthAttachment = renderTargets.getDepthTexture().getTextureId();
-			int depthAttachmentNoTranslucents = renderTargets.getDepthTextureNoTranslucents().getTextureId();
-
-			bindTexture(SamplerUniforms.DEPTH_TEX_0, depthAttachment);
-			bindTexture(SamplerUniforms.DEPTH_TEX_1, depthAttachmentNoTranslucents);
-			// Note: Since we haven't rendered the hand yet, this won't contain any handheld items.
-			// Once we start rendering the hand before composite content, this will need to be addressed.
-			bindTexture(SamplerUniforms.DEPTH_TEX_2, depthAttachmentNoTranslucents);
-
-			GlStateManager.activeTexture(GL15C.GL_TEXTURE0);
-
 			if (isBeforeTranslucent) {
 				framebufferBeforeTranslucents.bind();
 			} else {
@@ -514,15 +501,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		public void destroy() {
 			this.program.destroy();
 		}
-	}
-
-	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean flipped) {
-		bindTexture(textureUnit, flipped ? target.getAltTexture() : target.getMainTexture());
-	}
-
-	private static void bindTexture(int textureUnit, int texture) {
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + textureUnit);
-		RenderSystem.bindTexture(texture);
 	}
 
 	public void destroy() {
