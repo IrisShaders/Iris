@@ -1,12 +1,11 @@
 package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.ExtendedBufferStorage;
-import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -15,9 +14,9 @@ import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.mixin.shadows.ChunkInfoAccessor;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
-import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
@@ -32,10 +31,10 @@ import net.minecraft.client.gl.GlProgramManager;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
@@ -49,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.nio.FloatBuffer;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class ShadowRenderer implements ShadowMapRenderer {
 	private final float halfPlaneLength;
@@ -67,13 +67,20 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final BufferBuilderStorage buffers;
 	private final ExtendedBufferStorage extendedBufferStorage;
 
+	private final RenderTargets gbufferRenderTargets;
+	private final AbstractTexture normals;
+	private final AbstractTexture specular;
+	private final AbstractTexture noise;
+
 	public static boolean ACTIVE = false;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
 	private static int renderedShadowBlockEntities = 0;
 
-	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives) {
+	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
+						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
+						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -95,8 +102,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			InternalTextureFormat.RGBA
 		});
 
+		this.gbufferRenderTargets = gbufferRenderTargets;
+		this.normals = normals;
+		this.specular = specular;
+		this.noise = noise;
+
 		/*if (shadow != null) {
-			this.shadowProgram = createProgram(shadow, directives).getLeft();
+			this.shadowProgram = createProgram(shadow, directives, flipped);
 		} else {
 			this.shadowProgram = null;
 		}*/
@@ -151,7 +163,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private Pair<Program, ProgramDirectives> createProgram(ProgramSource source, PackDirectives directives) {
+	private Program createProgram(ProgramSource source, PackDirectives directives,
+								  Supplier<ImmutableSet<Integer>> flipped) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -159,16 +172,19 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-					source.getFragmentSource().orElse(null));
+					source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
-		SamplerUniforms.addWorldSamplerUniforms(builder);
+		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
+		IrisSamplers.addWorldSamplers(builder, normals, specular);
+		IrisSamplers.addNoiseSampler(builder, noise);
+		IrisSamplers.addShadowSamplers(builder, this);
 
-		return new Pair<>(builder.build(), source.getDirectives());
+		return builder.build();
 	}
 
 	private static void setupAttributes(Program program) {
@@ -414,6 +430,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
+		RenderSystem.bindTexture(0);
 
 		worldRenderer.getWorld().getProfiler().swap("translucent terrain");
 

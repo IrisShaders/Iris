@@ -6,17 +6,20 @@ import org.lwjgl.opengl.GL20C;
 
 public final class Program extends GlResource {
 	private final ProgramUniforms uniforms;
+	private final ProgramSamplers samplers;
 
-	Program(int program, ProgramUniforms uniforms) {
+	Program(int program, ProgramUniforms uniforms, ProgramSamplers samplers) {
 		super(program);
 
 		this.uniforms = uniforms;
+		this.samplers = samplers;
 	}
 
 	public void use() {
 		GL20C.glUseProgram(getGlId());
 
 		uniforms.update();
+		samplers.update();
 	}
 
 	public void destroyInternal() {

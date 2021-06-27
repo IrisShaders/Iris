@@ -1,10 +1,11 @@
 package net.coderbot.iris.pipeline;
 
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.IntFunction;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -13,7 +14,6 @@ import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransform
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.fabricmc.loader.api.FabricLoader;
@@ -28,7 +28,11 @@ public class SodiumTerrainPipeline {
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
 
-	public SodiumTerrainPipeline(ProgramSet programSet) {
+	private final IntFunction<ProgramSamplers> createTerrainSamplers;
+	private final IntFunction<ProgramSamplers> createShadowSamplers;
+
+	public SodiumTerrainPipeline(ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
+								 IntFunction<ProgramSamplers> createShadowSamplers) {
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
@@ -73,6 +77,9 @@ public class SodiumTerrainPipeline {
 		if (shadowFragment != null) {
 			shadowFragment = transformFragmentShader(shadowFragment);
 		}
+
+		this.createTerrainSamplers = createTerrainSamplers;
+		this.createShadowSamplers = createShadowSamplers;
 	}
 
 	private static String transformVertexShader(String base) {
@@ -196,12 +203,21 @@ public class SodiumTerrainPipeline {
 			throw new IllegalStateException("Unsupported pipeline: " + pipeline);
 		}
 
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier);
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		SamplerUniforms.addCommonSamplerUniforms(uniforms);
 		SamplerUniforms.addWorldSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();
+	}
+
+	public ProgramSamplers initTerrainSamplers(int programId) {
+		return createTerrainSamplers.apply(programId);
+	}
+
+	public ProgramSamplers initShadowSamplers(int programId) {
+		return createShadowSamplers.apply(programId);
 	}
 
 	/*public void bindFramebuffer() {
