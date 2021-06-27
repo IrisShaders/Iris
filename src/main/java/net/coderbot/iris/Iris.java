@@ -433,7 +433,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static String getVersion() {
-		if (IRIS_VERSION == null) {
+		if (IRIS_VERSION == null || IRIS_VERSION.contains("${version}")) {
 			return "Version info unknown!";
 		}
 
