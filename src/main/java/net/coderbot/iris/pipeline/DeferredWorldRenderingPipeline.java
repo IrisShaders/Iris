@@ -51,6 +51,9 @@ import org.lwjgl.opengl.GL30C;
  */
 public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final RenderTargets renderTargets;
+
+	private final List<Pass> allPasses;
+
 	@Nullable
 	private final Pass basic;
 	@Nullable
@@ -121,6 +124,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
 		this.updateNotifier = new FrameUpdateNotifier();
+
+		this.allPasses = new ArrayList<>();
 
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
@@ -430,8 +435,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			Iris.logger.info("Configured alpha test override for " + source.getName() + ": " + alphaTestOverride);
 		}
 
-		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
+		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
 				source.getDirectives().shouldDisableBlend());
+
+		allPasses.add(pass);
+
+		return pass;
 	}
 
 	private final class Pass {
@@ -526,12 +535,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	public void destroy() {
-		destroyPasses(basic, textured, texturedLit, skyBasic, skyTextured, clouds, terrain, translucent, weather);
+		destroyPasses(allPasses);
 
 		// Destroy the composite rendering pipeline
 		//
 		// This destroys all of the loaded composite programs as well.
 		compositeRenderer.destroy();
+		deferredRenderer.destroy();
+		finalPassRenderer.destroy();
 
 		// Make sure that any custom framebuffers are not bound before destroying render targets
 		GlStateManager.bindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
@@ -555,7 +566,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		noise.close();
 	}
 
-	private static void destroyPasses(Pass... passes) {
+	private static void destroyPasses(List<Pass> passes) {
 		Set<Pass> destroyed = new HashSet<>();
 
 		for (Pass pass : passes) {
