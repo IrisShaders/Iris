@@ -77,11 +77,7 @@ public class CompositeRenderer {
 			pass.stageReadsFromAlt = flipped;
 			pass.framebuffer = framebuffer;
 			pass.viewportScale = directives.getViewportScale();
-			pass.generateMipmap = new boolean[RenderTargets.MAX_RENDER_TARGETS];
-
-			for (int i = 0; i < pass.generateMipmap.length; i++) {
-				pass.generateMipmap[i] = directives.getMipmappedBuffers().contains(i);
-			}
+			pass.mipmappedBuffers = directives.getMipmappedBuffers();
 
 			passes.add(pass);
 
@@ -106,7 +102,7 @@ public class CompositeRenderer {
 		Program program;
 		GlFramebuffer framebuffer;
 		ImmutableSet<Integer> stageReadsFromAlt;
-		boolean[] generateMipmap;
+		ImmutableSet<Integer> mipmappedBuffers;
 		float viewportScale;
 
 		private void destroy() {
@@ -128,21 +124,19 @@ public class CompositeRenderer {
 		FullScreenQuadRenderer.INSTANCE.begin();
 
 		for (Pass renderPass : passes) {
-			renderPass.framebuffer.bind();
+			if (!renderPass.mipmappedBuffers.isEmpty()) {
+				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
-			bindRenderTarget(0, renderTargets.get(0), renderPass.stageReadsFromAlt.contains(0), renderPass.generateMipmap[0]);
-			bindRenderTarget(0, renderTargets.get(1), renderPass.stageReadsFromAlt.contains(1), renderPass.generateMipmap[1]);
-			bindRenderTarget(0, renderTargets.get(2), renderPass.stageReadsFromAlt.contains(2), renderPass.generateMipmap[2]);
-			bindRenderTarget(0, renderTargets.get(3), renderPass.stageReadsFromAlt.contains(3), renderPass.generateMipmap[3]);
-			bindRenderTarget(0, renderTargets.get(4), renderPass.stageReadsFromAlt.contains(4), renderPass.generateMipmap[4]);
-			bindRenderTarget(0, renderTargets.get(5), renderPass.stageReadsFromAlt.contains(5), renderPass.generateMipmap[5]);
-			bindRenderTarget(0, renderTargets.get(6), renderPass.stageReadsFromAlt.contains(6), renderPass.generateMipmap[6]);
-			bindRenderTarget(0, renderTargets.get(7), renderPass.stageReadsFromAlt.contains(7), renderPass.generateMipmap[7]);
+				for (int index : renderPass.mipmappedBuffers) {
+					setupMipmapping(renderTargets.get(index), renderPass.stageReadsFromAlt.contains(index));
+				}
+			}
 
 			float scaledWidth = baseWidth * renderPass.viewportScale;
 			float scaledHeight = baseHeight * renderPass.viewportScale;
 			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
 
+			renderPass.framebuffer.bind();
 			renderPass.program.use();
 
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
@@ -159,40 +153,29 @@ public class CompositeRenderer {
 		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {
 			// Unbind all textures that we may have used.
 			// NB: This is necessary for shader pack reloading to work propely
-			unbindTexture(i);
+			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + i);
+			RenderSystem.bindTexture(0);
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
-	private static void bindRenderTarget(int textureUnit, RenderTarget target, boolean readFromAlt, boolean generateMipmap) {
-		bindTexture(textureUnit, readFromAlt ? target.getAltTexture() : target.getMainTexture());
+	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
+		RenderSystem.bindTexture(readFromAlt ? target.getAltTexture() : target.getMainTexture());
 
-		if (generateMipmap) {
-			// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
-			// (since the last mipmap was generated)
-			//
-			// NB: We leave mipmapping enabled even if the buffer is written to again, this appears to match the
-			// behavior of ShadersMod/OptiFine, however I'm not sure if it's desired behavior. It's possible that a
-			// program could use mipmapped sampling with a stale mipmap, which probably isn't great. However, the
-			// sampling mode is always reset between frames, so this only persists after the first program to use
-			// mipmapping on this buffer.
-			//
-			// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
-			// unlikely that this issue occurs in practice with most shader packs.
-			GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
-			GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
-		}
-	}
-
-	private static void bindTexture(int textureUnit, int texture) {
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + textureUnit);
-		RenderSystem.bindTexture(texture);
-	}
-
-	private static void unbindTexture(int textureUnit) {
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + textureUnit);
-		RenderSystem.bindTexture(0);
+		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
+		// (since the last mipmap was generated)
+		//
+		// NB: We leave mipmapping enabled even if the buffer is written to again, this appears to match the
+		// behavior of ShadersMod/OptiFine, however I'm not sure if it's desired behavior. It's possible that a
+		// program could use mipmapped sampling with a stale mipmap, which probably isn't great. However, the
+		// sampling mode is always reset between frames, so this only persists after the first program to use
+		// mipmapping on this buffer.
+		//
+		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
+		// unlikely that this issue occurs in practice with most shader packs.
+		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
+		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
