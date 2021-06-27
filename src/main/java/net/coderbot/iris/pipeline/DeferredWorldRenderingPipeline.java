@@ -410,7 +410,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.RESERVED_TEXTURE_UNITS);
+				source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -421,9 +421,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
+		IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
 		IrisSamplers.addWorldSamplers(builder, renderTargets, normals, specular);
 		IrisSamplers.addNoiseSampler(builder, noise);
-		IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
 
 		if (IrisSamplers.hasShadowSamplers(builder)) {
 			createShadowMapRenderer.run();

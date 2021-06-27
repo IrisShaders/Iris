@@ -77,8 +77,6 @@ public class ProgramSamplers {
 			//		", next texture unit is " + nextUnit + ", there are " + remainingUnits + " units remaining.");
 		}
 
-		// TODO: "default" sampler behavior
-
 		@Override
 		public void addExternalSampler(int textureUnit, String... names) {
 			if (!reservedTextureUnits.contains(textureUnit)) {
@@ -105,14 +103,26 @@ public class ProgramSamplers {
 			return GL20C.glGetUniformLocation(program, name) != -1;
 		}
 
+		@Override
+		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+			if (nextUnit != 0) {
+				// TODO: Relax this restriction!
+				throw new IllegalStateException("Texture unit 0 is already used.");
+			}
+
+			return addDynamicSampler(sampler, postBind, true, names);
+		}
+
 		/**
 		 * Adds a sampler
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override
 		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-			boolean used = false;
+			return addDynamicSampler(sampler, postBind, false, names);
+		}
 
+		private boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, boolean used, String... names) {
 			for (String name : names) {
 				int location = GL20C.glGetUniformLocation(program, name);
 

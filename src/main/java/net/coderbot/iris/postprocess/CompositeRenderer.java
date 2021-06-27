@@ -130,6 +130,7 @@ public class CompositeRenderer {
 		for (Pass renderPass : passes) {
 			renderPass.framebuffer.bind();
 
+			bindRenderTarget(0, renderTargets.get(0), renderPass.stageReadsFromAlt.contains(0), renderPass.generateMipmap[0]);
 			bindRenderTarget(0, renderTargets.get(1), renderPass.stageReadsFromAlt.contains(1), renderPass.generateMipmap[1]);
 			bindRenderTarget(0, renderTargets.get(2), renderPass.stageReadsFromAlt.contains(2), renderPass.generateMipmap[2]);
 			bindRenderTarget(0, renderTargets.get(3), renderPass.stageReadsFromAlt.contains(3), renderPass.generateMipmap[3]);
@@ -143,9 +144,6 @@ public class CompositeRenderer {
 			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
 
 			renderPass.program.use();
-
-			// TODO: Better default handling.
-			bindRenderTarget(0, renderTargets.get(0), renderPass.stageReadsFromAlt.contains(0), renderPass.generateMipmap[0]);
 
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 		}
@@ -208,16 +206,16 @@ public class CompositeRenderer {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.RESERVED_TEXTURE_UNITS);
+				source.getFragmentSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
 		IrisSamplers.addNoiseSampler(builder, noiseTexture);
 		IrisSamplers.addCompositeSamplers(builder, renderTargets);
-		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
 
 		if (IrisSamplers.hasShadowSamplers(builder)) {
 			IrisSamplers.addShadowSamplers(builder, shadowMapRendererSupplier.get());

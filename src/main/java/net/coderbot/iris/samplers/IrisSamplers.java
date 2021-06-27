@@ -14,8 +14,15 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class IrisSamplers {
-	public static final ImmutableSet<Integer> RESERVED_TEXTURE_UNITS = ImmutableSet.of(
+	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
 		TextureUnit.TERRAIN.getSamplerId(),
+		TextureUnit.LIGHTMAP.getSamplerId(),
+		TextureUnit.OVERLAY.getSamplerId()
+	);
+
+	// TODO: In composite programs, there shouldn't be any reserved textures.
+	// We need a way to restore these texture bindings.
+	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
 		TextureUnit.LIGHTMAP.getSamplerId(),
 		TextureUnit.OVERLAY.getSamplerId()
 	);
@@ -48,7 +55,13 @@ public class IrisSamplers {
 
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
-				samplers.addDynamicSampler(sampler, name, legacyName);
+
+				// colortex0 is the default sampler in fullscreen passes
+				if (i == 0 && isFullscreenPass) {
+					samplers.addDefaultSampler(sampler, name, legacyName);
+				} else {
+					samplers.addDynamicSampler(sampler, name, legacyName);
+				}
 			} else {
 				samplers.addDynamicSampler(sampler, name);
 			}
