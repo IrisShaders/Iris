@@ -116,8 +116,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
 
-	private boolean usesShadows = false;
-
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
@@ -167,13 +165,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		flippedBeforeTranslucent = flipper.snapshot();
 
+		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
+			createShadowMapRenderer.run();
+			return shadowMapRenderer;
+		};
+
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
-				noise, updateNotifier, centerDepthSampler, flipper);
+				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
-				noise, updateNotifier, centerDepthSampler, flipper);
+				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(), centerDepthSampler);
 
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
@@ -198,12 +201,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
-
-		this.usesShadows |= compositeRenderer.usesShadows();
-
-		if (usesShadows) {
-			createShadowMapRenderer.run();
-		}
 
 		if (shadowMapRenderer == null) {
 			// Fallback just in case.
@@ -429,7 +426,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
 
 		if (IrisSamplers.hasShadowSamplers(builder)) {
-			usesShadows = true;
 			createShadowMapRenderer.run();
 			IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
 		}
@@ -600,7 +596,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager.bindTexture(0);
 
-		deferredRenderer.renderAll(shadowMapRenderer);
+		deferredRenderer.renderAll();
 
 		RenderSystem.enableBlend();
 		RenderSystem.enableAlphaTest();
@@ -704,7 +700,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		isRenderingWorld = false;
 		programStackLog.clear();
 
-		compositeRenderer.renderAll(shadowMapRenderer);
+		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass(shadowMapRenderer);
 	}
 
