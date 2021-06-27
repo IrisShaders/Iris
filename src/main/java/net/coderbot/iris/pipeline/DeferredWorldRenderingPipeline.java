@@ -177,7 +177,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
-		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(), centerDepthSampler);
+		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(),
+				centerDepthSampler, shadowMapRendererSupplier);
 
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
@@ -701,7 +702,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		programStackLog.clear();
 
 		compositeRenderer.renderAll();
-		finalPassRenderer.renderFinalPass(shadowMapRenderer);
+		finalPassRenderer.renderFinalPass();
 	}
 
 	@Override
