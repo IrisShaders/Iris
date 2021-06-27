@@ -1,0 +1,83 @@
+name: Bug Report
+description: Create a report to help us improve
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        
+        Before continuing to make the issue, please make sure there are no similar issues on [the issue tracker](https://github.com/IrisShaders/Iris/issues). If there are, consider contributing your information in there instead!
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: 'Also tell us, what did you expect to happen? Please provide some reproduction steps: What did you do to trigger the bug?'
+      placeholder: Tell us what you see!
+      value: "A bug happened!"
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: You can add images by clicking on the button in the bar that will appear once you click this textbox.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+
+  - type: input
+    id: version
+    attributes:
+      label: Iris and Minecraft Version
+      description: What version of Iris are you running? Include the Minecraft version too. Every part is important! If you do not know what version you are using, look at the file name in your "mods" folder.
+      placeholder: ex. iris-mc1.16.5-1.0.0.jar for Minecraft 1.16.5
+    validations:
+      required: true
+  - type: dropdown
+    id: sodium
+    attributes:
+      label: Are you running Sodium along with Iris?
+      description: This is the case if you kept the default Sodium & Iris when running the installer or if you downloaded the release from Curseforge or Modrinth
+      options:
+        - 'Yes'
+        - 'No'
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What is your Operating System?
+      placeholder: ex. Windows 10
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: What is your GPU?
+      description: Please write the vendor and model of your GPU
+      placeholder: ex. Nvidia GeForce RTX 2070
+    validations:
+      required: true
+  - type: input
+    id: java
+    attributes:
+      label: Java Version
+      description: What Java version are you running? If you haven't touched the one in the launcher, it's Java 8 for 1.16.5 and Java 16 for 1.17
+      placeholder: ex. Java 11
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
+    validations:
+      required: false
