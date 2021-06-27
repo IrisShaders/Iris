@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
@@ -13,6 +14,7 @@ import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.postprocess.BufferFlipper;
@@ -159,10 +161,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
+		// TODO: Change this once earlier passes are implemented.
+		ImmutableSet<Integer> flippedBeforeTerrain = ImmutableSet.of();
+
 		createShadowMapRenderer = () -> {
-			// TODO: The flipped set will need to be changeable if we implement the "prepare" passes.
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
-					programs.getPackDirectives(), () -> ImmutableSet.of(), renderTargets, normals, specular, noise);
+					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise);
 			createShadowMapRenderer = () -> {};
 		};
 
@@ -186,6 +190,41 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowMapRendererSupplier);
+
+		Supplier<ImmutableSet<Integer>> flipped =
+				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
+
+		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
+			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+
+			IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
+			IrisSamplers.addWorldSamplers(builder, normals, specular);
+			IrisSamplers.addWorldDepthSamplers(builder, renderTargets);
+			IrisSamplers.addNoiseSampler(builder, noise);
+
+			if (IrisSamplers.hasShadowSamplers(builder)) {
+				createShadowMapRenderer.run();
+				IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
+		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
+			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+
+			IrisSamplers.addRenderTargetSamplers(builder, () -> flippedBeforeTerrain, renderTargets, false);
+			IrisSamplers.addWorldSamplers(builder, normals, specular);
+			IrisSamplers.addNoiseSampler(builder, noise);
+
+			// Only initialize these samplers if the shadow map renderer exists.
+			// Otherwise, this program shouldn't be used at all?
+			if (IrisSamplers.hasShadowSamplers(builder) && shadowMapRenderer != null) {
+				IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
 
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
@@ -216,7 +255,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
 
-		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs);
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs, createTerrainSamplers, createShadowTerrainSamplers);
 	}
 
 	private void checkWorld() {
