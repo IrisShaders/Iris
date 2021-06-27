@@ -155,7 +155,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
 
 		createShadowMapRenderer = () -> {
-			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null), programs.getPackDirectives());
+			// TODO: The flipped set will need to be changeable if we implement the "prepare" passes.
+			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
+					programs.getPackDirectives(), () -> ImmutableSet.of(), renderTargets, normals, specular, noise);
 			createShadowMapRenderer = () -> {};
 		};
 
@@ -423,7 +425,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
-		IrisSamplers.addWorldSamplers(builder, renderTargets, normals, specular);
+		IrisSamplers.addWorldSamplers(builder, normals, specular);
+		IrisSamplers.addWorldDepthSamplers(builder, renderTargets);
 		IrisSamplers.addNoiseSampler(builder, noise);
 
 		if (IrisSamplers.hasShadowSamplers(builder)) {

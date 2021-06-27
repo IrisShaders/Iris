@@ -109,12 +109,14 @@ public class IrisSamplers {
 		return usesShadows;
 	}
 
-	public static void addWorldSamplers(SamplerHolder samplers, RenderTargets renderTargets, AbstractTexture normals,
-										AbstractTexture specular) {
+	public static void addWorldSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
 		samplers.addDynamicSampler(normals::getGlId, "normals");
 		samplers.addDynamicSampler(specular::getGlId, "specular");
+	}
+
+	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
 		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId, "depthtex0");
 		// TODO: Should depthtex2 be made available to gbuffer / shadow programs?
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, "depthtex1");
