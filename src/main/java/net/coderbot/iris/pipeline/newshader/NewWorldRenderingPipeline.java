@@ -307,7 +307,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			}
 		}
 
-		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programSet, createTerrainSamplers, createShadowTerrainSamplers);
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programSet, createTerrainSamplers,
+				createShadowTerrainSamplers, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
+				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
+				null);
 	}
 
 	@Nullable

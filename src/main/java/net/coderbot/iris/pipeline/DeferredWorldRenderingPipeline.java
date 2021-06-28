@@ -255,7 +255,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
 
-		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs, createTerrainSamplers, createShadowTerrainSamplers);
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs, createTerrainSamplers,
+				createShadowTerrainSamplers, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
+				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
+						null);
 	}
 
 	private void checkWorld() {

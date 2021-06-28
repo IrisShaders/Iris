@@ -461,6 +461,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		pipeline.endShadowRender();
 		// Note: This unbinds the shadow framebuffer
 		pipeline.popProgram(GbufferProgram.NONE);
+		// TODO: That doesn't unbind the framebuffer on NewWorldRenderingPipeline, so we need this
+		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
 
 		// Restore the old viewport
 		RenderSystem.viewport(0, 0, client.getWindow().getFramebufferWidth(), client.getWindow().getFramebufferHeight());
@@ -480,6 +482,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		} else {
 			GlProgramManager.useProgram(0);
 		}*/
+		// Set up the viewport
+		RenderSystem.viewport(0, 0, resolution, resolution);
 	}
 
 	public static String getEntitiesDebugString() {

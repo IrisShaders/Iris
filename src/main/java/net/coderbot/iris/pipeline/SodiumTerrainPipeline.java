@@ -3,11 +3,17 @@ package net.coderbot.iris.pipeline;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
+import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.blending.AlphaTestFunction;
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
@@ -22,32 +28,46 @@ import net.fabricmc.loader.api.FabricLoader;
 public class SodiumTerrainPipeline {
 	String terrainVertex;
 	String terrainFragment;
+	String terrainCutoutFragment;
+	GlFramebuffer terrainFramebuffer;
+
 	String translucentVertex;
 	String translucentFragment;
+	GlFramebuffer translucentFramebuffer;
+
 	String shadowVertex;
 	String shadowFragment;
-	//GlFramebuffer framebuffer;
+	String shadowCutoutFragment;
+	GlFramebuffer shadowFramebuffer;
+
 	ProgramSet programSet;
 
 	private final IntFunction<ProgramSamplers> createTerrainSamplers;
 	private final IntFunction<ProgramSamplers> createShadowSamplers;
 
 	public SodiumTerrainPipeline(ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
-								 IntFunction<ProgramSamplers> createShadowSamplers) {
+								 IntFunction<ProgramSamplers> createShadowSamplers, RenderTargets targets,
+								 ImmutableSet<Integer> flippedBeforeTranslucent,
+								 ImmutableSet<Integer> flippedAfterTranslucent, GlFramebuffer shadowFramebuffer) {
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
 
 		this.programSet = programSet;
+		this.shadowFramebuffer = shadowFramebuffer;
 
 		terrainSource.ifPresent(sources -> {
 			terrainVertex = sources.getVertexSource().orElse(null);
 			terrainFragment = sources.getFragmentSource().orElse(null);
+			terrainFramebuffer = targets.createGbufferFramebuffer(flippedBeforeTranslucent,
+					sources.getDirectives().getDrawBuffers());
 		});
 
 		translucentSource.ifPresent(sources -> {
 			translucentVertex = sources.getVertexSource().orElse(null);
 			translucentFragment = sources.getFragmentSource().orElse(null);
+			translucentFramebuffer = targets.createGbufferFramebuffer(flippedAfterTranslucent,
+					sources.getDirectives().getDrawBuffers());
 		});
 
 		shadowSource.ifPresent(sources -> {
@@ -67,16 +87,24 @@ public class SodiumTerrainPipeline {
 			shadowVertex = transformVertexShader(shadowVertex);
 		}
 
+		AlphaTest cutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
+
 		if (terrainFragment != null) {
-			terrainFragment = transformFragmentShader(terrainFragment);
+			String fragment = terrainFragment;
+
+			terrainFragment = transformFragmentShader(fragment, AlphaTest.ALWAYS);
+			terrainCutoutFragment = transformFragmentShader(fragment, cutoutAlpha);
 		}
 
 		if (translucentFragment != null) {
-			translucentFragment = transformFragmentShader(translucentFragment);
+			translucentFragment = transformFragmentShader(translucentFragment, AlphaTest.ALWAYS);
 		}
 
 		if (shadowFragment != null) {
-			shadowFragment = transformFragmentShader(shadowFragment);
+			String fragment = shadowFragment;
+
+			shadowFragment = transformFragmentShader(fragment, AlphaTest.ALWAYS);
+			shadowCutoutFragment = transformFragmentShader(fragment, cutoutAlpha);
 		}
 
 		this.createTerrainSamplers = createTerrainSamplers;
@@ -92,6 +120,7 @@ public class SodiumTerrainPipeline {
 			"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
 			"attribute vec3 a_Normal; // The vertex normal\n" +
 			"uniform mat4 u_ModelViewMatrix;\n" +
+			"uniform mat4 u_ProjectionMatrix;\n" +
 			"uniform mat4 u_ModelViewProjectionMatrix;\n" +
 			"uniform mat4 u_NormalMatrix;\n" +
 			"uniform vec3 u_ModelScale;\n" +
@@ -115,6 +144,7 @@ public class SodiumTerrainPipeline {
 		//transformations.replaceExact("gl_MultiTexCoord1", "vec4(a_LightCoord * 255.0, 0.0, 1.0)");
 		transformations.define("gl_Color", "a_Color");
 		transformations.define("gl_ModelViewMatrix", "u_ModelViewMatrix");
+		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
 		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
@@ -133,15 +163,30 @@ public class SodiumTerrainPipeline {
 		return transformations.toString();
 	}
 
-	private static String transformFragmentShader(String base) {
+	private static String transformFragmentShader(String base, AlphaTest alphaTest) {
 		StringTransformations transformations = new StringTransformations(base);
+
+		if (transformations.contains("irisMain")) {
+			throw new IllegalStateException("Shader already contains \"irisMain\"???");
+		}
+
+		// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
+		// end.
+		transformations.replaceExact("main", "irisMain");
+		transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
+				"    irisMain();\n" +
+				"\n" +
+				alphaTest.toExpression("    ") +
+				"}");
 
 		String injections =
 				"uniform mat4 u_ModelViewMatrix;\n" +
+				"uniform mat4 u_ProjectionMatrix;\n" +
 				"uniform mat4 u_ModelViewProjectionMatrix;\n" +
 				"uniform mat4 u_NormalMatrix;\n";
 
 		transformations.define("gl_ModelViewMatrix", "u_ModelViewMatrix");
+		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
 		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
@@ -169,6 +214,14 @@ public class SodiumTerrainPipeline {
 		return Optional.ofNullable(terrainFragment);
 	}
 
+	public Optional<String> getTerrainCutoutFragmentShaderSource() {
+		return Optional.ofNullable(terrainCutoutFragment);
+	}
+
+	public GlFramebuffer getTerrainFramebuffer() {
+		return terrainFramebuffer;
+	}
+
 	public Optional<String> getTranslucentVertexShaderSource() {
 		return Optional.ofNullable(translucentVertex);
 	}
@@ -177,12 +230,24 @@ public class SodiumTerrainPipeline {
 		return Optional.ofNullable(translucentFragment);
 	}
 
+	public GlFramebuffer getTranslucentFramebuffer() {
+		return translucentFramebuffer;
+	}
+
 	public Optional<String> getShadowVertexShaderSource() {
 		return Optional.ofNullable(shadowVertex);
 	}
 
 	public Optional<String> getShadowFragmentShaderSource() {
 		return Optional.ofNullable(shadowFragment);
+	}
+
+	public Optional<String> getShadowCutoutFragmentShaderSource() {
+		return Optional.ofNullable(shadowCutoutFragment);
+	}
+
+	public GlFramebuffer getShadowFramebuffer() {
+		return shadowFramebuffer;
 	}
 
 	public ProgramUniforms initUniforms(int programId) {
@@ -204,7 +269,7 @@ public class SodiumTerrainPipeline {
 			throw new IllegalStateException("Unsupported pipeline: " + pipeline);
 		}
 
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier);
 		SamplerUniforms.addCommonSamplerUniforms(uniforms);
 		SamplerUniforms.addWorldSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
