@@ -430,6 +430,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
+		// NB: execute this before resizing / clearing so that the center depth sample is retrieved properly.
+		updateNotifier.onNewFrame();
+
 		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
 		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
 
@@ -450,8 +453,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		main.beginWrite(true);
 
 		isBeforeTranslucent = true;
-
-		updateNotifier.onNewFrame();
 	}
 
 	@Override
