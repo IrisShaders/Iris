@@ -9,6 +9,7 @@ import net.coderbot.iris.fantastic.ExtendedBufferStorage;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.mixin.shadows.ChunkInfoAccessor;

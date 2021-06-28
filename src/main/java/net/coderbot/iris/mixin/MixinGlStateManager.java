@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public class MixinGlStateManager {
 	@ModifyConstant(method = "<clinit>", constant = @Constant(intValue = 12), require = 1)
 	private static int iris$increaseMaximumAllowedTextureUnits(int existingValue) {
-		return SamplerLimits.get().getMaxTextureUnits();
+		// should be enough, I hope...
+		// We can't query OpenGL for this since RenderSystem is initialized too early.
+		return 128;
 	}
 }
