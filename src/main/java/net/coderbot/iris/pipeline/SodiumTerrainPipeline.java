@@ -8,22 +8,19 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.newshader.TriforceSodiumPatcher;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
-import net.coderbot.iris.shaderpack.transform.StringTransformations;
-import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -75,135 +72,42 @@ public class SodiumTerrainPipeline {
 			shadowFragment = sources.getFragmentSource().orElse(null);
 		});
 
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(true, true, false, true, true);
+
+		AlphaTest cutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
+
 		if (terrainVertex != null) {
-			terrainVertex = transformVertexShader(terrainVertex);
+			terrainVertex = TriforceSodiumPatcher.patch(terrainVertex, ShaderType.VERTEX, null, inputs);
 		}
 
 		if (translucentVertex != null) {
-			translucentVertex = transformVertexShader(translucentVertex);
+			translucentVertex = TriforceSodiumPatcher.patch(translucentVertex, ShaderType.VERTEX, null, inputs);
 		}
 
 		if (shadowVertex != null) {
-			shadowVertex = transformVertexShader(shadowVertex);
+			shadowVertex = TriforceSodiumPatcher.patch(shadowVertex, ShaderType.VERTEX, null, inputs);
 		}
-
-		AlphaTest cutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
 
 		if (terrainFragment != null) {
 			String fragment = terrainFragment;
 
-			terrainFragment = transformFragmentShader(fragment, AlphaTest.ALWAYS);
-			terrainCutoutFragment = transformFragmentShader(fragment, cutoutAlpha);
+			terrainFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
+			terrainCutoutFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs);
 		}
 
 		if (translucentFragment != null) {
-			translucentFragment = transformFragmentShader(translucentFragment, AlphaTest.ALWAYS);
+			translucentFragment = TriforceSodiumPatcher.patch(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
 		}
 
 		if (shadowFragment != null) {
 			String fragment = shadowFragment;
 
-			shadowFragment = transformFragmentShader(fragment, AlphaTest.ALWAYS);
-			shadowCutoutFragment = transformFragmentShader(fragment, cutoutAlpha);
+			shadowFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
+			shadowCutoutFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs);
 		}
 
 		this.createTerrainSamplers = createTerrainSamplers;
 		this.createShadowSamplers = createShadowSamplers;
-	}
-
-	private static String transformVertexShader(String base) {
-		StringTransformations transformations = new StringTransformations(base);
-
-		String injections = "attribute vec3 a_Pos; // The position of the vertex\n" +
-			"attribute vec4 a_Color; // The color of the vertex\n" +
-			"attribute vec2 a_TexCoord; // The block texture coordinate of the vertex\n" +
-			"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
-			"attribute vec3 a_Normal; // The vertex normal\n" +
-			"uniform mat4 u_ModelViewMatrix;\n" +
-			"uniform mat4 u_ProjectionMatrix;\n" +
-			"uniform mat4 u_ModelViewProjectionMatrix;\n" +
-			"uniform mat4 u_NormalMatrix;\n" +
-			"uniform vec3 u_ModelScale;\n" +
-			"uniform vec2 u_TextureScale;\n" +
-			"\n" +
-			"// The model translation for this draw call.\n" +
-			"attribute vec4 d_ModelOffset;\n" +
-			"\n" +
-			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
-
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
-
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
-
-		transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
-		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
-		transformations.define("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
-		//transformations.replaceExact("gl_MultiTexCoord1", "vec4(a_LightCoord * 255.0, 0.0, 1.0)");
-		transformations.define("gl_Color", "a_Color");
-		transformations.define("gl_ModelViewMatrix", "u_ModelViewMatrix");
-		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
-		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
-		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
-		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
-		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
-		transformations.define("gl_Normal", "a_Normal");
-		// Just being careful
-		transformations.define("ftransform", "iris_ftransform");
-
-		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
-
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			System.out.println("Final patched vertex source:");
-			System.out.println(transformations);
-		}
-
-		return transformations.toString();
-	}
-
-	private static String transformFragmentShader(String base, AlphaTest alphaTest) {
-		StringTransformations transformations = new StringTransformations(base);
-
-		if (transformations.contains("irisMain")) {
-			throw new IllegalStateException("Shader already contains \"irisMain\"???");
-		}
-
-		// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
-		// end.
-		transformations.replaceExact("main", "irisMain");
-		transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
-				"    irisMain();\n" +
-				"\n" +
-				alphaTest.toExpression("    ") +
-				"}");
-
-		String injections =
-				"uniform mat4 u_ModelViewMatrix;\n" +
-				"uniform mat4 u_ProjectionMatrix;\n" +
-				"uniform mat4 u_ModelViewProjectionMatrix;\n" +
-				"uniform mat4 u_NormalMatrix;\n";
-
-		transformations.define("gl_ModelViewMatrix", "u_ModelViewMatrix");
-		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
-		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
-		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
-		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
-
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
-
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
-
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			System.out.println("Final patched fragment source:");
-			System.out.println(transformations);
-		}
-
-		return transformations.toString();
 	}
 
 	public Optional<String> getTerrainVertexShaderSource() {
