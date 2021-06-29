@@ -81,7 +81,7 @@ public class TriforceSodiumPatcher {
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasTex()) {
 				transformations.define("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec2 u_TextureScale;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float u_TextureScale;");
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 a_TexCoord;");
 			} else {
 				transformations.define("gl_MultiTexCoord0", "vec4(0.0, 0.0, 0.0, 1.0)");
@@ -133,11 +133,15 @@ public class TriforceSodiumPatcher {
 
 		if (type == ShaderType.VERTEX) {
 			// TODO: this breaks Vaporwave-Shaderpack since it expects that vertex positions will be aligned to chunks.
-			transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
+			transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale + u_ModelOffset) + a_Origin + u_RegionOrigin, 1.0)");
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 u_ModelScale;");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 a_Pos;");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 d_ModelOffset;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
+					"in vec3 a_Origin; // The model origin of the vertex\n" +
+					"in vec3 a_Pos; // The position of the vertex around the model origin\n" +
+					"uniform float u_ModelScale;\n" +
+					"uniform float u_ModelOffset;\n" +
+					"uniform vec3 u_RegionOrigin;");
+
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
