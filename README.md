@@ -42,7 +42,7 @@ Iris doesn't support Forge. This is for a few reasons:
 
 ## What's the current state of development?
 
-Iris has a public stable releases for 1.16 and 1.17 that work with a custom version of Sodium. Iris is still in heavy development and gets new improvements every week, and is progressing very rapidly!
+Iris has public stable releases for 1.16 and 1.17 that work with custom versions of Sodium. Iris is still in heavy development and gets new improvements every week, and is progressing very rapidly!
 
 Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accomondate Iris. Though a [fork of Sodium](https://github.com/IrisShaders/sodium-fabric) is still required, it's my intent that it will be unnecessary in the future. Official downloads of Iris include this modified version of Sodium for performance.
 
