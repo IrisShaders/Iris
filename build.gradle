@@ -1,13 +1,14 @@
 plugins {
 	id 'fabric-loom' version '0.8-SNAPSHOT'
 	id 'maven-publish'
+	id 'org.ajoberstar.grgit' version '4.1.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 archivesBaseName = project.archives_base_name
-version = project.mod_version
+version = "${project.mod_version}+${getVersionMetadata()}"
 group = project.maven_group
 
 minecraft {
@@ -116,4 +117,25 @@ publishing {
 
 runClient {
 	jvmArgs "-Dmixin.debug.export=true"
+}
+
+def getVersionMetadata() {
+	def build_id = System.getenv("GITHUB_RUN_NUMBER")
+
+	// CI builds only
+	if (build_id != null) {
+		return "build.${build_id}"
+	}
+
+	if (grgit != null) {
+		def head = grgit.head()
+		def id = head.abbreviatedId
+
+		// Flag the build if the build tree is not clean
+		if (!grgit.status().clean) {
+			id += "-dirty"
+		}
+
+		return "rev.${id}"
+	}
 }

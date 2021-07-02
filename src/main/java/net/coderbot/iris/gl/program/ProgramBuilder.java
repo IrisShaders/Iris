@@ -1,6 +1,8 @@
 package net.coderbot.iris.gl.program;
 
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderConstants;
@@ -10,7 +12,9 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 
-public class ProgramBuilder extends ProgramUniforms.Builder {
+import java.util.function.IntSupplier;
+
+public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
 	public static final ShaderConstants MACRO_CONSTANTS;
@@ -32,18 +36,21 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 	}
 
 	private final int program;
+	private ProgramSamplers.Builder samplers;
 
-	private ProgramBuilder(String name, int program) {
+	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
 		super(name, program);
 
 		this.program = program;
+		this.samplers = ProgramSamplers.builder(program, reservedTextureUnits);
 	}
 
 	public void bindAttributeLocation(int index, String name) {
 		GL21C.glBindAttribLocation(program, index, name);
 	}
 
-	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String geometrySource, @Nullable String fragmentSource) {
+	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String geometrySource,
+									   @Nullable String fragmentSource, ImmutableSet<Integer> reservedTextureUnits) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 
 		GlShader vertex;
@@ -76,11 +83,11 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 
 		fragment.destroy();
 
-		return new ProgramBuilder(name, programId);
+		return new ProgramBuilder(name, programId, reservedTextureUnits);
 	}
 
 	public Program build() {
-		return new Program(program, super.buildUniforms());
+		return new Program(program, super.buildUniforms(), this.samplers.build());
 	}
 
 	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {
@@ -89,5 +96,25 @@ public class ProgramBuilder extends ProgramUniforms.Builder {
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile " + shaderType + " shader for program " + name, e);
 		}
+	}
+
+	@Override
+	public void addExternalSampler(int textureUnit, String... names) {
+		samplers.addExternalSampler(textureUnit, names);
+	}
+
+	@Override
+	public boolean hasSampler(String name) {
+		return samplers.hasSampler(name);
+	}
+
+	@Override
+	public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+		return samplers.addDefaultSampler(sampler, postBind, names);
+	}
+
+	@Override
+	public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
+		return samplers.addDynamicSampler(sampler, postBind, names);
 	}
 }

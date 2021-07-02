@@ -4,11 +4,12 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
-public class TriforcePatcher {
-	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
+public class TriforceSodiumPatcher {
+	public static String patch(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs) {
 		if (source.contains("moj_import")) {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
@@ -37,18 +38,14 @@ public class TriforcePatcher {
 		}
 
 		// TODO: More solid way to handle texture matrices
-		transformations.replaceExact("gl_TextureMatrix[0]", "iris_TextureMat");
-		transformations.replaceExact("gl_TextureMatrix[1]", "iris_LightmapTextureMatrix");
-
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_LightmapTextureMatrix;");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_TextureMat;");
+		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 
 		// TODO: Other fog things
 		// TODO: fogDensity isn't actually implemented!
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_FogDensity;\n" +
-				"uniform float iris_FogStart;\n" +
-				"uniform float iris_FogEnd;\n" +
-				"uniform vec4 iris_FogColor;\n" +
+				"uniform float u_FogStart;\n" +
+				"uniform float u_FogEnd;\n" +
+				"uniform vec4 u_FogColor;\n" +
 				"\n" +
 				"struct iris_FogParameters {\n" +
 				"    vec4 color;\n" +
@@ -58,9 +55,9 @@ public class TriforcePatcher {
 				"    float scale;\n" +
 				"};\n" +
 				"\n" +
-				"iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));\n" +
-				"\n" +
-				"#define gl_Fog iris_Fog");
+				"iris_FogParameters iris_Fog = iris_FogParameters(u_FogColor, iris_FogDensity, u_FogStart, u_FogEnd, 1.0 / (u_FogEnd - u_FogStart));");
+
+		transformations.define("gl_Fog", "iris_Fog");
 
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 		transformations.define("gl_FogFragCoord", "iris_FogFragCoord");
@@ -78,20 +75,21 @@ public class TriforcePatcher {
 			transformations.define("gl_FrontColor", "iris_FrontColor");
 		}
 
-		transformations.define("gl_ProjectionMatrix", "iris_ProjMat");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_ProjMat;");
+		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasTex()) {
-				transformations.define("gl_MultiTexCoord0", "vec4(UV0, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 UV0;");
+				transformations.define("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float u_TextureScale;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 a_TexCoord;");
 			} else {
 				transformations.define("gl_MultiTexCoord0", "vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 
 			if (inputs.hasLight()) {
-				transformations.define("gl_MultiTexCoord1", "vec4(UV2, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 UV2;");
+				new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 a_LightCoord;");
 			} else {
 				transformations.define("gl_MultiTexCoord1", "vec4(0.0, 0.0, 0.0, 1.0)");
 			}
@@ -102,55 +100,48 @@ public class TriforcePatcher {
 			}
 		}
 
-		// TODO: Patching should take in mind cases where there are not color or normal vertex attributes
-
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec4 iris_ColorModulator;");
-
 		if (inputs.hasColor()) {
 			// TODO: Handle the fragment shader here
-			transformations.define("gl_Color", "(Color * iris_ColorModulator)");
+			transformations.define("gl_Color", "a_Color");
 
 			if (type == ShaderType.VERTEX) {
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 Color;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 a_Color;");
 			}
 		} else {
-			transformations.define("gl_Color", "iris_ColorModulator");
+			transformations.define("gl_Color", "vec4(1.0)");
 		}
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasNormal()) {
-				transformations.define("gl_Normal", "Normal");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Normal;");
+				transformations.define("gl_Normal", "a_Normal");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 a_Normal;");
 			} else {
 				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
 		}
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
-		transformations.define("gl_NormalMatrix", "mat3(transpose(inverse(gl_ModelViewMatrix)))");
+		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_NormalMatrix;");
 
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_ModelViewMat;");
-
-		if (hasChunkOffset) {
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 iris_ChunkOffset;");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4 _iris_internal_translate(vec3 offset) {\n" +
-					"    // NB: Column-major order\n" +
-					"    return mat4(1.0, 0.0, 0.0, 0.0,\n" +
-					"                0.0, 1.0, 0.0, 0.0,\n" +
-					"                0.0, 0.0, 1.0, 0.0,\n" +
-					"                offset.x, offset.y, offset.z, 1.0);\n" +
-					"}");
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix (iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))");
-		} else {
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix iris_ModelViewMat");
-		}
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewProjectionMatrix;");
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix u_ModelViewMatrix");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix u_ModelViewProjectionMatrix");
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(Position, 1.0)");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Position;");
+			// TODO: this breaks Vaporwave-Shaderpack since it expects that vertex positions will be aligned to chunks.
+			transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale + u_ModelOffset) + a_Origin + u_RegionOrigin, 1.0)");
+
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
+					"in vec3 a_Origin; // The model origin of the vertex\n" +
+					"in vec3 a_Pos; // The position of the vertex around the model origin\n" +
+					"uniform float u_ModelScale;\n" +
+					"uniform float u_ModelOffset;\n" +
+					"uniform vec3 u_RegionOrigin;");
+
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
@@ -187,6 +178,9 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
 
 		//System.out.println(transformations.toString());
+
+		// Just being careful
+		transformations.define("ftransform", "iris_ftransform");
 
 		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
 		// constants.
