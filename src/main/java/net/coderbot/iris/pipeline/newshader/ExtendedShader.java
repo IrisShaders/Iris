@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline.newshader;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.minecraft.client.MinecraftClient;
@@ -11,13 +12,14 @@ import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.resource.ResourceFactory;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL20C;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
-public class ExtendedShader extends Shader {
+public class ExtendedShader extends Shader implements SamplerHolder {
 	NewWorldRenderingPipeline parent;
 	ProgramUniforms uniforms;
 	GlFramebuffer writingToBeforeTranslucent;
@@ -101,5 +103,41 @@ public class ExtendedShader extends Shader {
 	public GlUniform getUniform(String name) {
 		// Prefix all uniforms with Iris to help avoid conflicts with existing names within the shader.
 		return super.getUniform("iris_" + name);
+	}
+
+	// TODO: This is kind of a mess. The interface might need some cleanup here.
+	@Override
+	public void addExternalSampler(int textureUnit, String... names) {
+		throw new UnsupportedOperationException("not yet implemented");
+	}
+
+	@Override
+	public boolean hasSampler(String name) {
+		return GL20C.glGetUniformLocation(this.getProgramRef(), name) != -1;
+	}
+
+	@Override
+	public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+		throw new UnsupportedOperationException("addDefaultSampler is not yet implemented");
+	}
+
+	@Override
+	public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
+		throw new UnsupportedOperationException("postBind isn't supported.");
+	}
+
+	@Override
+	public boolean addDynamicSampler(IntSupplier sampler, String... names) {
+		boolean used = false;
+
+		for (String name : names) {
+			if (hasSampler(name)) {
+				used = true;
+			}
+
+			addIrisSampler(name, sampler);
+		}
+
+		return used;
 	}
 }
