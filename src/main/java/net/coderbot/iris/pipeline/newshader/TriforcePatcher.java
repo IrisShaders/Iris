@@ -8,7 +8,8 @@ import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforcePatcher {
-	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
+	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean injectLegacyLines) {
+
 		if (source.contains("moj_import")) {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
@@ -121,6 +122,7 @@ public class TriforcePatcher {
 			if (inputs.hasNormal()) {
 				transformations.define("gl_Normal", "Normal");
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Normal;");
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define _IRIS_INTERNAL_VERTEX_SHADER"); // Needed for shaders that have multiple main functions
 			} else {
 				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
@@ -150,7 +152,13 @@ public class TriforcePatcher {
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(Position, 1.0)");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Position;");
+			if(injectLegacyLines) {
+				// We will first update the position internally to make lines visible
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 _iris_internal_position;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec3 Position;");
+			} else {
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Position;");
+			}
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
@@ -192,6 +200,23 @@ public class TriforcePatcher {
 		// constants.
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
 				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
+
+		// Inject the legacy lines transformation after everything else
+		if(type == ShaderType.VERTEX && injectLegacyLines) {
+			if(!transformations.contains("cameraPosition")) {
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
+			}
+			// TODO: Support the line width uniform
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 0.01;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "void _iris_internal_legacy_lines() {\n" +
+					"vec3 _iris_internal_line_offset = normalize(cross(Normal, _iris_internal_position - cameraPosition)) * _iris_internal_line_width;\n" +
+					"if(gl_VertexID % 2 == 0) {\n" +
+					"Position = _iris_internal_position - _iris_internal_line_offset;\n" +
+					"} else {\n"+
+					"Position = _iris_internal_position + _iris_internal_line_offset;\n" +
+					"}\n}");
+			transformations.injectLine(Transformations.InjectionPoint.MAIN_HEAD, "\n#ifdef _IRIS_INTERNAL_VERTEX_SHADER\n_iris_internal_legacy_lines();\n#endif");
+		}
 
 		return transformations.toString();
 	}

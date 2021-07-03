@@ -4,6 +4,7 @@ public class StringTransformations implements Transformations {
 	private String prefix;
 	private String extensions;
 	private StringBuilder injections;
+	private StringBuilder mainHead;
 	private String body;
 	private StringBuilder suffix;
 
@@ -22,6 +23,7 @@ public class StringTransformations implements Transformations {
 		this.prefix = prefix + base.substring(0, splitPoint);
 		this.extensions = "";
 		this.injections = new StringBuilder();
+		this.mainHead = new StringBuilder();
 		this.body = base.substring(splitPoint);
 		this.suffix = new StringBuilder("\n");
 
@@ -94,6 +96,9 @@ public class StringTransformations implements Transformations {
 		} else if (at == InjectionPoint.END) {
 			suffix.append(line);
 			suffix.append('\n');
+		} else if (at == InjectionPoint.MAIN_HEAD) {
+			mainHead.append(line);
+			mainHead.append('\n');
 		} else {
 			throw new IllegalArgumentException("Unsupported injection point: " + at);
 		}
@@ -110,12 +115,36 @@ public class StringTransformations implements Transformations {
 		prefix = prefix.replace(from, to);
 		extensions = extensions.replace(from, to);
 		injections = new StringBuilder(injections.toString().replace(from, to));
+		mainHead = new StringBuilder(mainHead.toString().replace(from, to));
 		body = body.replace(from, to);
 		suffix = new StringBuilder(suffix.toString().replace(from, to));
 	}
 
 	@Override
 	public String toString() {
+		String body = this.body;
+
+		String mainInject = mainHead.toString();
+		if(!mainInject.isEmpty()) {
+			StringBuilder newBody = new StringBuilder();
+			int splitPoint = body.indexOf("void main()");
+			while(splitPoint >= 0) {
+				splitPoint = body.indexOf('{', splitPoint);
+				if(splitPoint == -1) {
+					throw new IllegalArgumentException("Shader has missing { after main()");
+				}
+
+				newBody.append(body, 0, splitPoint + 1);
+				body = body.substring(splitPoint + 1);
+
+				newBody.append(mainInject);
+
+				splitPoint = body.indexOf("void main()");
+			}
+
+			body = newBody.append(body).toString();
+		}
+
 		return prefix + extensions + injections + body + suffix;
 	}
 }

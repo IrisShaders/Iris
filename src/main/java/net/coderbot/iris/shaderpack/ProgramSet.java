@@ -37,6 +37,9 @@ public class ProgramSet {
 	private final ProgramSource gbuffersEntityEyes;
 	private final ProgramSource gbuffersBlock;
 	private final ProgramSource gbuffersHand;
+	private final ProgramSource gbuffersLines;
+
+	private final boolean legacyLines;
 
 	private final ProgramSource[] deferred;
 
@@ -74,6 +77,9 @@ public class ProgramSet {
 		this.gbuffersEntityEyes = readProgramSource(root, inclusionRoot, "gbuffers_spidereyes", this, shaderProperties);
 		this.gbuffersBlock = readProgramSource(root, inclusionRoot, "gbuffers_block", this, shaderProperties);
 		this.gbuffersHand = readProgramSource(root, inclusionRoot, "gbuffers_hand", this, shaderProperties);
+		// TODO: Support non legacy lines shader
+		this.gbuffersLines = this.gbuffersBasic;
+		this.legacyLines = true;
 
 		this.deferred = readProgramArray(root, inclusionRoot, "deferred", shaderProperties);
 
@@ -129,6 +135,12 @@ public class ProgramSet {
 		this.gbuffersEntityEyes = merge(base.gbuffersEntityEyes, overrides.gbuffersEntityEyes);
 		this.gbuffersBlock = merge(base.gbuffersBlock, overrides.gbuffersBlock);
 		this.gbuffersHand = merge(base.gbuffersHand, overrides.gbuffersHand);
+		this.gbuffersLines = merge(base.gbuffersLines, overrides.gbuffersLines);
+		this.legacyLines = base.legacyLines;
+		if(base.legacyLines != overrides.legacyLines) {
+			// TODO: Do we want to allow this?
+			throw new IllegalStateException("Legacy lines usage is different in base and override shader");
+		}
 
 		this.deferred = merge(base.deferred, overrides.deferred);
 
@@ -286,6 +298,14 @@ public class ProgramSet {
 
 	public Optional<ProgramSource> getGbuffersHand() {
 		return gbuffersHand.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersLines() {
+		return gbuffersLines.requireValid();
+	}
+
+	public boolean isLegacyLines() {
+		return legacyLines;
 	}
 
 	public ProgramSource[] getDeferred() {

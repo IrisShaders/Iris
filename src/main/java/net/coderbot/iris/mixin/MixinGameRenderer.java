@@ -248,6 +248,15 @@ public class MixinGameRenderer {
 		}
 	}
 
+	@Inject(method = {
+			"getRenderTypeLinesShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideLinesShader(CallbackInfoReturnable<Shader> cir) {
+		if (!ShadowRenderer.ACTIVE && isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getLines, cir);
+		}
+	}
+
 	private static boolean isPhase(WorldRenderingPhase phase) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
