@@ -606,7 +606,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public Shader getLines() { return lines; }
+	public Shader getLines() {
+		return lines;
+	}
 
 	private void destroyShaders() {
 		// NB: If you forget this, shader reloads won't work!
