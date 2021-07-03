@@ -203,9 +203,10 @@ public class TriforcePatcher {
 
 		// Inject the legacy lines transformation after everything else
 		if(type == ShaderType.VERTEX && injectLegacyLines) {
-			if(!transformations.contains("cameraPosition")) {
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
-			}
+			// TODO: Need a better way to do this
+			transformations.replaceExact("uniform vec3 cameraPosition;", ""); // Required if shader has cameraPosition inside a guard
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
+
 			// TODO: Support the line width uniform
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 0.01;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "void _iris_internal_legacy_lines() {\n" +
