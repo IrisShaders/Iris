@@ -122,7 +122,6 @@ public class TriforcePatcher {
 			if (inputs.hasNormal()) {
 				transformations.define("gl_Normal", "Normal");
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Normal;");
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define _IRIS_INTERNAL_VERTEX_SHADER"); // Needed for shaders that have multiple main functions
 			} else {
 				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
@@ -216,7 +215,7 @@ public class TriforcePatcher {
 					"} else {\n"+
 					"Position = _iris_internal_position + _iris_internal_line_offset;\n" +
 					"}\n}");
-			transformations.injectLine(Transformations.InjectionPoint.MAIN_HEAD, "\n#ifdef _IRIS_INTERNAL_VERTEX_SHADER\n_iris_internal_legacy_lines();\n#endif");
+			transformations.injectLine(Transformations.InjectionPoint.MAIN_HEAD, "\n_iris_internal_legacy_lines();");
 		}
 
 		return transformations.toString();
