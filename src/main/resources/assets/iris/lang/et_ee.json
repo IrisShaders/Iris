@@ -1,6 +1,6 @@
 {
   "iris.shaders.reloaded": "Varjutajad taaslaaditud!",
-  "iris.shaders.toggled": "Varjutajad on %s!",
+  "iris.shaders.toggled": "Varjutajad on nüüd %s!",
   "iris.keybind.reload": "Laadi varjutajad uuesti",
   "iris.keybind.shaderPackSelection": "Varjutajapaki valikukuva",
   "iris.keybind.toggleShaders": "Lülita varjutajad sisse/välja",
