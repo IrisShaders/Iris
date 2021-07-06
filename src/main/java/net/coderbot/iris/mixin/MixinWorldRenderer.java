@@ -91,12 +91,6 @@ public class MixinWorldRenderer {
 		pipeline.setPhase(WorldRenderingPhase.SKY);
 	}
 
-	@Redirect(method = RENDER, at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;viewDistance:I"),
-			slice = @Slice(from = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V")))
-	private int iris$alwaysRenderSky(GameOptions options) {
-		return Math.max(options.viewDistance, 4);
-	}
-
 	// TODO(21w10a): Restore sky render hooks
 	/*
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableTexture()V"))
