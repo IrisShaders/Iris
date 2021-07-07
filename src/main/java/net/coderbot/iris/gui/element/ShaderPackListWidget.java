@@ -134,7 +134,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 		// Appears to be some accessibility thing
 		@Override
-		public Text method_37006() {
+		public Text getNarration() {
 			return new TranslatableText("narrator.select", packName);
 		}
 
@@ -188,7 +188,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 		// Appears to be some accessibility thing
 		@Override
-		public Text method_37006() {
+		public Text getNarration() {
 			return label;
 		}
 
@@ -218,7 +218,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 		// Appears to be some accessibility thing
 		@Override
-		public Text method_37006() {
+		public Text getNarration() {
 			return new TranslatableText("narration.button", this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
 		}
 
@@ -235,3 +235,5 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 		}
 	}
 }
+
+// Far was here - This comment can be removed later, it's just for proof that I did a thing lol .
