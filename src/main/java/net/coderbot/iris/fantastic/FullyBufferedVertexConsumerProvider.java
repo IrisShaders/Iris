@@ -8,11 +8,7 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.Immediate {
 	private final Map<RenderLayer, BufferBuilder> bufferBuilders;
@@ -40,7 +36,7 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		}
 
 		// If this buffer is scheduled to be removed, unschedule it since it's now being used.
-		unused.remove(renderLayer);
+		unused.removeInt(renderLayer);
 
 		return buffer;
 	}
@@ -51,6 +47,8 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 			return;
 		}
 
+		List<RenderLayer> removedLayers = new ArrayList<>();
+
 		unused.forEach((unusedLayer, unusedCount) -> {
 			if (unusedCount < 10) {
 				// Removed after 10 frames of not being used
@@ -58,12 +56,17 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 			}
 
 			BufferBuilder buffer = bufferBuilders.remove(unusedLayer);
+			removedLayers.add(unusedLayer);
 
 			if (activeBuffers.contains(buffer)) {
 				throw new IllegalStateException(
 						"A buffer was simultaneously marked as inactive and as active, something is very wrong...");
 			}
 		});
+
+		for (RenderLayer removed : removedLayers) {
+			unused.removeInt(removed);
+		}
 
 		bufferBuilders.keySet().forEach(this::drawInternal);
 
