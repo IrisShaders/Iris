@@ -121,12 +121,13 @@ public class TriforcePatcher {
 		if(inputs.hasOverlay()) {
 			transformations.replaceExact("entityColor", "overlayColor");
 			transformations.replaceExact("overlayColor.a", "1 - overlayColor.a");
+			//This doesn't work seemingly, although logically it's more correct
+			//transformations.replaceRegex("/([a-zA-Z0-9]+).rgb\\s?,\\s?overlayColor.rgb,/g", "overlayColor.rgb, $1, ");
 			if(type == ShaderType.VERTEX) {
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D overlay;");
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 UV1;");
+				transformations.replaceExact("uniform vec4 overlayColor;", "");
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 overlayColor;");
-				//This doesn't work seemingly, although logically it's more correct
-				//transformations.replaceRegex("/([a-zA-Z0-9]+).rgb\\s?,\\s?overlayColor.rgb,/g", "overlayColor.rgb, $1, ");
 				if (transformations.contains("irisMain")) {
 					throw new IllegalStateException("Shader already contains \"irisMain\"???");
 				}
