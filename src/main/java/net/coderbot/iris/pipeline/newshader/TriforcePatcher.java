@@ -117,6 +117,33 @@ public class TriforcePatcher {
 			transformations.define("gl_Color", "iris_ColorModulator");
 		}
 
+		//Add entity color support.
+		if(inputs.hasOverlay()) {
+			transformations.replaceExact("entityColor", "overlayColor");
+			transformations.replaceExact("overlayColor.a", "1 - overlayColor.a");
+			if(type == ShaderType.VERTEX) {
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D overlay;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 UV1;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 overlayColor;");
+				//This doesn't work seemingly, although logically it's more correct
+				//transformations.replaceRegex("/([a-zA-Z0-9]+).rgb\\s?,\\s?overlayColor.rgb,/g", "overlayColor.rgb, $1, ");
+				if (transformations.contains("irisMain")) {
+					throw new IllegalStateException("Shader already contains \"irisMain\"???");
+				}
+
+				// Create our own main function to wrap the existing main function, so that we can pass through the overlay color at the
+				// end.
+				transformations.replaceExact("main", "irisMain");
+				transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
+						"    irisMain();\n" +
+						"\n" +
+						"	overlayColor = texelFetch(overlay, UV1, 0);\n" +
+						"}");
+			} else {
+				transformations.replaceExact("uniform vec4 overlayColor;", "in vec4 overlayColor;");
+			}
+		}
+
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasNormal()) {
 				transformations.define("gl_Normal", "Normal");

@@ -50,6 +50,7 @@ public class NewShaderTests {
 				"        \"Position\",\n" +
 				"        \"Color\",\n" +
 				"        \"UV0\",\n" +
+				"        \"UV1\",\n" +
 				"        \"UV2\",\n" +
 				"        \"Normal\"\n" +
 				"    ],\n" +
@@ -58,6 +59,7 @@ public class NewShaderTests {
 				"        { \"name\": \"texture\" },\n" +
 				"        { \"name\": \"tex\" },\n" +
 				"        { \"name\": \"lightmap\" },\n" +
+				"        { \"name\": \"overlay\" },\n" +
 				"        { \"name\": \"normals\" },\n" +
 				"        { \"name\": \"specular\" },\n" +
 				"        { \"name\": \"shadow\" },\n" +

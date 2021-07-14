@@ -80,6 +80,8 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 
 			// "tex" is also a valid sampler name.
 			super.addSampler("tex", sampler);
+		} else if (name.equals("Sampler1")) {
+			name = "overlay";
 		} else if (name.equals("Sampler2")) {
 			name = "lightmap";
 		} else if (name.startsWith("Sampler")) {
@@ -90,8 +92,6 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 			Iris.logger.warn("Iris: didn't recognize the sampler name " + name + " in addSampler, please use addIrisSampler for custom Iris-specific samplers instead.");
 			return;
 		}
-
-		// TODO: Expose Sampler1 (the mob overlay flash)
 
 		super.addSampler(name, sampler);
 	}
