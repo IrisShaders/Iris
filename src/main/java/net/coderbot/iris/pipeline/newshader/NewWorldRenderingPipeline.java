@@ -64,6 +64,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader skyBasicColor;
 	private final Shader skyTextured;
 	private final Shader skyTexturedColor;
+	private final Shader clouds;
 	private final Shader shadowTerrainCutout;
 
 	private final Shader terrainSolid;
@@ -228,6 +229,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> cloudsSource = first(programSet.getGbuffersClouds(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 
 		Optional<ProgramSource> particleSource = first(programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> weatherSource = first(programSet.getGbuffersWeather(), particleSource);
@@ -255,6 +257,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true);
 			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false);
 			this.skyTexturedColor = createShader("gbuffers_sky_textured_tex_color", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE_COLOR, true);
+			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL, true);
 			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true);
 			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
 			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true);
@@ -564,6 +567,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public Shader getSkyTexturedColor() {
 		return skyTexturedColor;
+	}
+
+	@Override
+	public Shader getClouds() {
+		return clouds;
 	}
 
 	@Override
