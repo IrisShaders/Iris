@@ -29,7 +29,9 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.LightType;
 
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.*;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
