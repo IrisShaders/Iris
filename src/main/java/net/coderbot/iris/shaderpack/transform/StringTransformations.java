@@ -129,13 +129,13 @@ public class StringTransformations implements Transformations {
 			StringBuilder newBody = new StringBuilder();
 			int splitPoint = body.indexOf("void main()");
 			while(splitPoint >= 0) {
-				splitPoint = body.indexOf('{', splitPoint);
+				splitPoint = findEndOfFunction(body, splitPoint);
 				if(splitPoint == -1) {
-					throw new IllegalArgumentException("Shader has missing { after main()");
+					throw new RuntimeException("Main function is illegal");
 				}
 
-				newBody.append(body, 0, splitPoint + 1);
-				body = body.substring(splitPoint + 1);
+				newBody.append(body, 0, splitPoint);
+				body = body.substring(splitPoint);
 
 				newBody.append(mainInject);
 
@@ -146,5 +146,30 @@ public class StringTransformations implements Transformations {
 		}
 
 		return prefix + extensions + injections + body + suffix;
+	}
+
+	private int findEndOfFunction(String code, int beginIndex) {
+		int currentIndex = code.indexOf('{', beginIndex);
+		if(currentIndex == -1) {
+			return -1;
+		}
+
+		int blockDepth = 1;
+		while(blockDepth > 0) {
+			int nextOpen = code.indexOf('{', currentIndex + 1);
+			int nextClose = code.indexOf('}', currentIndex + 1);
+
+			if(nextClose == -1) {
+				return -1;
+			}
+			if(nextOpen == -1 || nextOpen > nextClose) {
+				currentIndex = nextClose;
+				blockDepth--;
+			} else {
+				currentIndex = nextOpen;
+				blockDepth++;
+			}
+		}
+		return currentIndex;
 	}
 }

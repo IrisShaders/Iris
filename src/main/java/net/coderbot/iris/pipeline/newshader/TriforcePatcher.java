@@ -151,13 +151,7 @@ public class TriforcePatcher {
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(Position, 1.0)");
-			if(injectLegacyLines) {
-				// We will first update the position internally to make lines visible
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 _iris_internal_position;");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec3 Position;");
-			} else {
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Position;");
-			}
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Position;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
@@ -214,8 +208,8 @@ public class TriforcePatcher {
 			// TODO: Support the line width uniform
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 4;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "void _iris_internal_legacy_lines() {\n" +
-					"vec4 _iris_internal_ndcStart4 = gl_ModelViewProjectionMatrix * vec4(_iris_internal_position, 1.0);\n" +
-					"vec4 _iris_internal_ndcEnd4 = gl_ModelViewProjectionMatrix * vec4(_iris_internal_position + Normal, 1.0);\n" +
+					"vec4 _iris_internal_ndcStart4 = iris_ProjMat * iris_ModelViewMat * vec4(Position, 1.0);\n" +
+					"vec4 _iris_internal_ndcEnd4 = iris_ProjMat * iris_ModelViewMat * vec4(Position + Normal, 1.0);\n" +
 					"vec3 _iris_internal_ndcStart = _iris_internal_ndcStart4.xyz / _iris_internal_ndcStart4.w;\n" +
 					"vec3 _iris_internal_ndcEnd = _iris_internal_ndcEnd4.xyz / _iris_internal_ndcEnd4.w;\n" +
 					"vec2 _iris_internal_screenSize = vec2(viewHeight, viewWidth);\n" +
@@ -223,14 +217,12 @@ public class TriforcePatcher {
 					"vec2 _iris_internal_lineOffset = (vec2(-_iris_internal_lineDir.y, _iris_internal_lineDir.x) * _iris_internal_line_width) / _iris_internal_screenSize;\n" +
 					"if(_iris_internal_lineOffset.x < 0) { _iris_internal_lineOffset = _iris_internal_lineOffset * -1; }\n" +
 					"if(gl_VertexID % 2 == 0) {\n" +
-					"_iris_internal_ndcStart = _iris_internal_ndcStart + vec3(_iris_internal_lineOffset, 0.0);\n" +
+					"gl_Position = vec4(_iris_internal_ndcStart, 1.0) + vec4(_iris_internal_lineOffset, 0.0, 0.0);\n" +
 					"} else {\n"+
-					"_iris_internal_ndcStart = _iris_internal_ndcStart - vec3(_iris_internal_lineOffset, 0.0);\n" +
+					"gl_Position = vec4(_iris_internal_ndcStart, 1.0) - vec4(_iris_internal_lineOffset, 0.0, 0.0);\n" +
 					"}\n" +
-					"vec4 _iris_internal_recPos = inverse(gl_ModelViewProjectionMatrix) * vec4(_iris_internal_ndcStart, 1.0);\n" +
-					"Position = _iris_internal_recPos.xyz / _iris_internal_recPos.w;\n" +
-					"}");
-			transformations.injectLine(Transformations.InjectionPoint.MAIN_HEAD, "\n_iris_internal_legacy_lines();");
+					"}\n");
+			transformations.injectLine(Transformations.InjectionPoint.MAIN_HEAD, "_iris_internal_legacy_lines();\n");
 		}
 
 		return transformations.toString();
