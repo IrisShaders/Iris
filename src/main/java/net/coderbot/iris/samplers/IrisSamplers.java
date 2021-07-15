@@ -100,7 +100,7 @@ public class IrisSamplers {
 					"shadowtex1", "shadow");
 		} else {
 			usesShadows = samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "shadow");
-			usesShadows |= samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex1");
+			usesShadows |= samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId, "shadowtex1");
 		}
 
 		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture0Id, "shadowcolor", "shadowcolor0");

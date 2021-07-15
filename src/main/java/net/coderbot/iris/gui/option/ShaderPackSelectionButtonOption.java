@@ -24,7 +24,7 @@ public class ShaderPackSelectionButtonOption extends Option {
 		return new ButtonWidget(
 				x, y, width, 20,
 				new TranslatableText("options.iris.shaderPackSelection"),
-				button -> client.openScreen(new ShaderPackScreen(parent))
+				button -> client.setScreen(new ShaderPackScreen(parent))
 		);
 	}
 }

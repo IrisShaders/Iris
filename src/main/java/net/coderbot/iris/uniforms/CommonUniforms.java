@@ -165,8 +165,9 @@ public final class CommonUniforms {
 			return 1;
 		} else if (submersionType == CameraSubmersionType.LAVA) {
 			return 2;
+		} else if (submersionType == CameraSubmersionType.POWDER_SNOW) {
+			return 3;
 		} else {
-			// TODO: handle CameraSubmersionType.POWDERED_SNOW
 			return 0;
 		}
 	}

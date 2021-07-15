@@ -9,6 +9,7 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getSkyBasicColor();
 	Shader getSkyTextured();
 	Shader getSkyTexturedColor();
+	Shader getClouds();
 	Shader getTerrain();
 	Shader getTerrainCutout();
 	Shader getTerrainCutoutMipped();

@@ -43,20 +43,18 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 		this.parent = parent;
 	}
 
-	// TODO: Yarn WTF: That's the unbind method, not the bind method!
 	@Override
-	public void bind() {
-		super.bind();
+	public void unbind() {
+		super.unbind();
 
 		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
 	}
 
-	// TODO: Yarn WTF: That's the bind method...
 	@Override
-	public void upload() {
+	public void bind() {
 		dynamicSamplers.forEach((name, supplier) -> this.addIrisSampler(name, supplier.getAsInt()));
 
-		super.upload();
+		super.bind();
 		uniforms.update();
 
 		if (parent.isBeforeTranslucent) {

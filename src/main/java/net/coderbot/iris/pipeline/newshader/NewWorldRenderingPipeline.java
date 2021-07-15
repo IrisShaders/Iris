@@ -66,6 +66,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader skyBasicColor;
 	private final Shader skyTextured;
 	private final Shader skyTexturedColor;
+	private final Shader clouds;
 	private final Shader shadowTerrainCutout;
 
 	private final Shader terrainSolid;
@@ -231,6 +232,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> cloudsSource = first(programSet.getGbuffersClouds(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 
 		Optional<ProgramSource> particleSource = first(programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> weatherSource = first(programSet.getGbuffersWeather(), particleSource);
@@ -261,6 +263,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, true, false);
 			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, false, false);
 			this.skyTexturedColor = createShader("gbuffers_sky_textured_tex_color", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE_COLOR, true, false);
+			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL, true, false);
 			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true, false);
 			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true, false);
 			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, true, false);
@@ -281,7 +284,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			} else {
 				this.lines = createShader("gbuffers_lines", linesSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL, true, false);
 			}
-
 			if (translucentSource != terrainSource) {
 				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, true, false);
 			} else {
@@ -580,6 +582,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
+	public Shader getClouds() {
+		return clouds;
+	}
+
+	@Override
 	public Shader getTerrain() {
 		return terrainSolid;
 	}
@@ -667,8 +674,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private void destroyShaders() {
 		// NB: If you forget this, shader reloads won't work!
 		loadedShaders.forEach(shader -> {
-			// TODO: Yarn WTF: This is the unbind method, not the bind method...
-			shader.bind();
+			shader.unbind();
 			shader.close();
 		});
 	}
