@@ -13,6 +13,7 @@
     "MixinImmediateVertexConsumerProvider",
     "MixinModelViewBobbing",
     "MixinParticleManager",
+    "MixinSpriteAtlasTexture",
     "MixinTranslationStorage",
     "MixinTweakFarPlane",
     "MixinWorldRenderer",
