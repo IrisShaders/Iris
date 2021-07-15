@@ -207,15 +207,22 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
 
 			// TODO: Support the line width uniform
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 0.01;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 0.005;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "void _iris_internal_legacy_lines() {\n" +
-					"float _iris_internal_scaled_line_width = length(_iris_internal_position - cameraPosition) * _iris_internal_line_width\n" +
-					"vec3 _iris_internal_line_offset = normalize(cross(Normal, _iris_internal_position - cameraPosition)) * _iris_internal_line_width;\n" +
+					"vec4 ndcStart4 = gl_ModelViewProjectionMatrix * vec4(_iris_internal_position, 1.0);\n" +
+					"vec4 ndcEnd4 = gl_ModelViewProjectionMatrix * vec4(_iris_internal_position + Normal, 1.0);\n" +
+					"vec3 ndcStart = ndcStart4.xyz / ndcStart4.w;\n" +
+					"vec3 ndcEnd = ndcEnd4.xyz / ndcEnd4.w;\n" +
+					"vec2 lineDir = normalize(ndcEnd.xy - ndcStart.xy);\n" +
+					"vec2 lineOffset = vec2(-lineDir.y, lineDir.x) * _iris_internal_line_width;\n" +
 					"if(gl_VertexID % 2 == 0) {\n" +
-					"Position = _iris_internal_position - _iris_internal_line_offset;\n" +
+					"ndcStart = ndcStart - lineOffset;\n" +
 					"} else {\n"+
-					"Position = _iris_internal_position + _iris_internal_line_offset;\n" +
-					"}\n}");
+					"ndcStart = ndcStart + lineOffset;\n" +
+					"}\n" +
+					"vec4 recPos = inverse(gl_ModelViewProjectionMatrix) * vec4(ndcStart, 1.0);\n" +
+					"Position = recPos.xyz / recPos.w;\n" +
+					"}");
 			transformations.injectLine(Transformations.InjectionPoint.MAIN_HEAD, "\n_iris_internal_legacy_lines();");
 		}
 
