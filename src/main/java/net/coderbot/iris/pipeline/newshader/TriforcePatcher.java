@@ -209,6 +209,7 @@ public class TriforcePatcher {
 			// TODO: Support the line width uniform
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 0.01;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "void _iris_internal_legacy_lines() {\n" +
+					"float _iris_internal_scaled_line_width = length(_iris_internal_position - cameraPosition) * _iris_internal_line_width\n" +
 					"vec3 _iris_internal_line_offset = normalize(cross(Normal, _iris_internal_position - cameraPosition)) * _iris_internal_line_width;\n" +
 					"if(gl_VertexID % 2 == 0) {\n" +
 					"Position = _iris_internal_position - _iris_internal_line_offset;\n" +
