@@ -3,7 +3,6 @@ package net.coderbot.iris.uniforms;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -15,7 +14,6 @@ import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
