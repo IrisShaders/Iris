@@ -3,6 +3,7 @@ package net.coderbot.iris.uniforms;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -75,8 +76,7 @@ public final class CommonUniforms {
 	}
 
 	private static Vec2f getAtlasSize() {
-		//TODO: is the block atlas used for this uniform all the time???
-		return ((SpriteAtlasTextureInterface) MinecraftClient.getInstance().getBakedModelManager().method_24153(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)).getAtlasSize();
+		return ((SpriteAtlasTextureInterface) CapturedRenderingState.INSTANCE.getCurrentAtlas()).getAtlasSize();
 	}
 
 	private static Vec3d getSkyColor() {

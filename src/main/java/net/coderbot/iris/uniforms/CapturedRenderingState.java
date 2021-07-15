@@ -2,6 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
@@ -15,6 +16,7 @@ public class CapturedRenderingState {
 	private float tickDelta;
 	private BlockEntity currentRenderedBlockEntity;
 	private Entity currentRenderedEntity;
+	private SpriteAtlasTexture currentAtlas;
 
 	private CapturedRenderingState() {
 	}
@@ -69,5 +71,13 @@ public class CapturedRenderingState {
 
 	public Entity getCurrentRenderedEntity() {
 		return currentRenderedEntity;
+	}
+
+	public void setCurrentAtlas(SpriteAtlasTexture atlas) {
+		this.currentAtlas = atlas;
+	}
+
+	public SpriteAtlasTexture getCurrentAtlas() {
+		return currentAtlas;
 	}
 }
