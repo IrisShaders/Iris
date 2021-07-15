@@ -207,14 +207,15 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
 
 			// TODO: Support the line width uniform
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 0.002;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 4;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "void _iris_internal_legacy_lines() {\n" +
 					"vec4 ndcStart4 = gl_ModelViewProjectionMatrix * vec4(_iris_internal_position, 1.0);\n" +
 					"vec4 ndcEnd4 = gl_ModelViewProjectionMatrix * vec4(_iris_internal_position + Normal, 1.0);\n" +
 					"vec3 ndcStart = ndcStart4.xyz / ndcStart4.w;\n" +
 					"vec3 ndcEnd = ndcEnd4.xyz / ndcEnd4.w;\n" +
-					"vec2 lineDir = normalize(ndcEnd.xy - ndcStart.xy);\n" +
-					"vec2 lineOffset = vec2(-lineDir.y, lineDir.x) * _iris_internal_line_width;\n" +
+					"vec2 screenSize = vec2(viewHeight, viewWidth);\n" +
+					"vec2 lineDir = normalize((ndcEnd.xy - ndcStart.xy) * screenSize);\n" +
+					"vec2 lineOffset = (vec2(-lineDir.y, lineDir.x) * _iris_internal_line_width) / screenSize;\n" +
 					"if(gl_VertexID % 2 == 0) {\n" +
 					"ndcStart = ndcStart - vec3(lineOffset, 0.0);\n" +
 					"} else {\n"+
