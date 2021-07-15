@@ -206,6 +206,11 @@ public class TriforcePatcher {
 			transformations.replaceExact("uniform vec3 cameraPosition;", ""); // Required if shader has cameraPosition inside a guard
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
 
+			transformations.replaceExact("uniform float viewWidth;", "");
+			transformations.replaceExact("uniform float viewHeight;", "");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float viewWidth;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float viewHeight;");
+
 			// TODO: Support the line width uniform
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 4;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "void _iris_internal_legacy_lines() {\n" +
