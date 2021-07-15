@@ -222,7 +222,7 @@ public class TriforcePatcher {
 					"gl_Position = vec4(_iris_internal_ndcStart, 1.0) - vec4(_iris_internal_lineOffset, 0.0, 0.0);\n" +
 					"}\n" +
 					"}\n");
-			transformations.injectLine(Transformations.InjectionPoint.MAIN_HEAD, "_iris_internal_legacy_lines();\n");
+			transformations.injectLine(Transformations.InjectionPoint.MAIN_TAIL, "_iris_internal_legacy_lines();\n");
 		}
 
 		return transformations.toString();

@@ -4,7 +4,7 @@ public class StringTransformations implements Transformations {
 	private String prefix;
 	private String extensions;
 	private StringBuilder injections;
-	private StringBuilder mainHead;
+	private StringBuilder mainTail;
 	private String body;
 	private StringBuilder suffix;
 
@@ -23,7 +23,7 @@ public class StringTransformations implements Transformations {
 		this.prefix = prefix + base.substring(0, splitPoint);
 		this.extensions = "";
 		this.injections = new StringBuilder();
-		this.mainHead = new StringBuilder();
+		this.mainTail = new StringBuilder();
 		this.body = base.substring(splitPoint);
 		this.suffix = new StringBuilder("\n");
 
@@ -96,9 +96,9 @@ public class StringTransformations implements Transformations {
 		} else if (at == InjectionPoint.END) {
 			suffix.append(line);
 			suffix.append('\n');
-		} else if (at == InjectionPoint.MAIN_HEAD) {
-			mainHead.append(line);
-			mainHead.append('\n');
+		} else if (at == InjectionPoint.MAIN_TAIL) {
+			mainTail.append(line);
+			mainTail.append('\n');
 		} else {
 			throw new IllegalArgumentException("Unsupported injection point: " + at);
 		}
@@ -115,7 +115,7 @@ public class StringTransformations implements Transformations {
 		prefix = prefix.replace(from, to);
 		extensions = extensions.replace(from, to);
 		injections = new StringBuilder(injections.toString().replace(from, to));
-		mainHead = new StringBuilder(mainHead.toString().replace(from, to));
+		mainTail = new StringBuilder(mainTail.toString().replace(from, to));
 		body = body.replace(from, to);
 		suffix = new StringBuilder(suffix.toString().replace(from, to));
 	}
@@ -124,7 +124,7 @@ public class StringTransformations implements Transformations {
 	public String toString() {
 		String body = this.body;
 
-		String mainInject = mainHead.toString();
+		String mainInject = mainTail.toString();
 		if(!mainInject.isEmpty()) {
 			StringBuilder newBody = new StringBuilder();
 			int splitPoint = body.indexOf("void main()");

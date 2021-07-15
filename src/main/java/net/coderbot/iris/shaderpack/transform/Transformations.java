@@ -11,7 +11,7 @@ public interface Transformations {
 	enum InjectionPoint {
 		DEFINES,
 		BEFORE_CODE,
-		MAIN_HEAD,
+        MAIN_TAIL,
 		END
 	}
 }
