@@ -86,12 +86,8 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 		// endDrawing is a member of RenderPhase.
 		String endDrawing = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23518", "()V");
 
-		// getSolid is a member of RenderLayer.
-		String getSolid = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_1921", "method_23577", "()Lnet/minecraft/class_1921;");
-
 		redirect(found, renderLayer, startDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectStartDrawing", "(L" + renderLayer + ";)V");
 		redirect(found, renderLayer, endDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectEndDrawing", "(L" + renderLayer + ";)V");
-		redirect(found, renderLayer, getSolid, "()L" + renderLayer + ";", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "getTargetRenderLayer", "()L" + renderLayer + ";");
 	}
 
 	private static void redirect(MethodNode found, String owner, String name, String desc, String replacementOwner, String replacementName, String replacementDesc) {

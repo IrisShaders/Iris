@@ -134,7 +134,7 @@ public class Iris implements ClientModInitializer {
 					currentPackName = "(off) [fallback, check your logs for errors]";
 				}
 			} else if (shaderpackScreenKeybind.wasPressed()) {
-				minecraftClient.openScreen(new ShaderPackScreen(null));
+				minecraftClient.setScreen(new ShaderPackScreen(null));
 			}
 		});
 

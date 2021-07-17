@@ -221,7 +221,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			applyChanges();
 		}
 
-		this.client.openScreen(parent);
+		this.client.setScreen(parent);
 	}
 
 	private void dropChangesAndClose() {
