@@ -150,14 +150,14 @@ public class IdMap {
 				intId = Integer.parseInt(key.substring(keyPrefix.length()));
 			} catch (NumberFormatException e) {
 				// Not a valid property line
-				Iris.logger.warn("Failed to parse line in " + fileName + ": invalid key " + key);
+				Iris.logText("Failed to parse line in " + fileName + ": invalid key " + key);
 				return;
 			}
 
 			for (String part : value.split(" ")) {
 				if (part.contains("=")) {
 					// Avoid tons of logspam for now
-					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
+					Iris.logText("Failed to parse an identifier in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
 					continue;
 				}
 
@@ -166,7 +166,7 @@ public class IdMap {
 
 					idMap.put(identifier, intId);
 				} catch (InvalidIdentifierException e) {
-					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
+					Iris.logText("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
 			}
@@ -193,7 +193,7 @@ public class IdMap {
 				intId = Integer.parseInt(key.substring(keyPrefix.length()));
 			} catch (NumberFormatException e) {
 				// Not a valid property line
-				Iris.logger.warn("Failed to parse line in " + fileName + ": invalid key " + key);
+				Iris.logText("Failed to parse line in " + fileName + ": invalid key " + key);
 				return;
 			}
 
@@ -201,7 +201,7 @@ public class IdMap {
 				try {
 					addBlockStates(part, idMap, intId);
 				} catch (InvalidIdentifierException e) {
-					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
+					Iris.logText("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
 			}
@@ -261,8 +261,8 @@ public class IdMap {
 		// If the block doesn't exist, by default the registry will return AIR. That probably isn't what we want.
 		// TODO: Assuming that Registry.BLOCK.getDefaultId() == "minecraft:air" here
 		if (block == Blocks.AIR && !entry.contains("air")) {
-			Iris.logger.warn("Failed to parse the block ID map entry \"" + entry + "\":");
-			Iris.logger.warn("- There is no block with the name " + identifier + "!");
+			Iris.logText("Failed to parse the block ID map entry \"" + entry + "\":");
+			Iris.logText("- There is no block with the name " + identifier + "!");
 
 			return;
 		}
@@ -288,8 +288,8 @@ public class IdMap {
 			String[] propertyParts = splitStates[index].split("=");
 
 			if (propertyParts.length != 2) {
-				Iris.logger.warn("Failed to parse the block ID map entry \"" + entry + "\":");
-				Iris.logger.warn("- Block state property filters must be of the form \"key=value\", but " + splitStates[index] + " is not of that form!");
+				Iris.logText("Failed to parse the block ID map entry \"" + entry + "\":");
+				Iris.logText("- Block state property filters must be of the form \"key=value\", but " + splitStates[index] + " is not of that form!");
 
 				// TODO: Should we just "continue" here and ignore the invalid property entry?
 				return;
@@ -301,8 +301,8 @@ public class IdMap {
 			Property<?> property = stateManager.getProperty(key);
 
 			if (property == null) {
-				Iris.logger.warn("Error while parsing the block ID map entry \"" + entry + "\":");
-				Iris.logger.warn("- The block " + identifier + " has no property with the name " + key + ", ignoring!");
+				Iris.logText("Error while parsing the block ID map entry \"" + entry + "\":");
+				Iris.logText("- The block " + identifier + " has no property with the name " + key + ", ignoring!");
 
 				continue;
 			}
@@ -367,7 +367,7 @@ public class IdMap {
 					layer = RenderLayer.getTranslucent();
 					break;
 				default:
-					Iris.logger.warn("Failed to parse line in " + fileName + ": invalid render layer type: " + key);
+					Iris.logText("Failed to parse line in " + fileName + ": invalid render layer type: " + key);
 					return;
 			}
 
@@ -377,7 +377,7 @@ public class IdMap {
 
 					layerMap.put(identifier, layer);
 				} catch (InvalidIdentifierException e) {
-					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
+					Iris.logText("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
 			}

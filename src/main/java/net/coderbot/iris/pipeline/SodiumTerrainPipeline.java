@@ -123,7 +123,7 @@ public class SodiumTerrainPipeline {
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (Iris.isLoggingEnabled() && FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			System.out.println("Final patched vertex source:");
 			System.out.println(transformations);
 		}
@@ -151,7 +151,7 @@ public class SodiumTerrainPipeline {
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
 				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (Iris.isLoggingEnabled() && FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			System.out.println("Final patched fragment source:");
 			System.out.println(transformations);
 		}

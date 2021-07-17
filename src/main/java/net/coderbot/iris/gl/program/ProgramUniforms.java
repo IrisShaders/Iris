@@ -144,9 +144,9 @@ public class ProgramUniforms {
 					String typeName = getTypeName(type);
 
 					if (size == 1) {
-						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
+						Iris.logText("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
 					} else {
-						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + name + " of size " + size + " and type " + typeName);
+						Iris.logText("[" + this.name + "] Unsupported uniform: " + name + " of size " + size + " and type " + typeName);
 					}
 				}
 

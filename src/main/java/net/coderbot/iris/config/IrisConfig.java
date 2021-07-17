@@ -26,11 +26,14 @@ public class IrisConfig {
 	 */
 	private boolean enableShaders;
 
+	private boolean enableLogging;
+
 	private Path propertiesPath;
 
 	public IrisConfig() {
 		shaderPackName = null;
 		enableShaders = true;
+		enableLogging = FabricLoader.getInstance().isDevelopmentEnvironment();
 		propertiesPath = FabricLoader.getInstance().getConfigDir().resolve("iris.properties");
 	}
 
@@ -92,6 +95,15 @@ public class IrisConfig {
 	}
 
 	/**
+	 * Determines whether or not extensive logging is done.
+	 *
+	 * @return False to disable all non-fatal output.
+	 */
+	public boolean isLoggingEnabled() {
+		return enableLogging;
+	}
+
+	/**
 	 * loads the config file and then populates the string, int, and boolean entries with the parsed entries
 	 *
 	 * @throws IOException if the file cannot be loaded
@@ -106,6 +118,7 @@ public class IrisConfig {
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
+		enableLogging = !"false".equals(properties.getProperty("enableLogging"));
 
 		if (shaderPackName != null) {
 			if (shaderPackName.equals("(internal)") || shaderPackName.isEmpty()) {
@@ -123,6 +136,7 @@ public class IrisConfig {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName().orElse(""));
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
+		properties.setProperty("enableLogging", enableLogging ? "true" : "false");
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
 	}
 }

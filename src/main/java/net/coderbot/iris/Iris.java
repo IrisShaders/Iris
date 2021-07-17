@@ -44,6 +44,7 @@ public class Iris implements ClientModInitializer {
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static boolean internal;
+	private static boolean enableLogging;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
@@ -85,10 +86,11 @@ public class Iris implements ClientModInitializer {
 		try {
 			irisConfig.initialize();
 		} catch (IOException e) {
-			logger.error("Failed to initialize Iris configuration, default values will be used instead");
+			logger.error("Failed to initialize Iris configuration, default values will be used instead!");
 			logger.catching(Level.ERROR, e);
 		}
 
+		enableLogging = irisConfig.isLoggingEnabled();
 
 		loadShaderpack();
 
@@ -301,6 +303,12 @@ public class Iris implements ClientModInitializer {
 		logger.info("Shaders are disabled");
 	}
 
+	public static void logText(String string) {
+		if(irisConfig.isLoggingEnabled()) {
+			logger.warn(string);
+		}
+	}
+
 	public static boolean isValidShaderpack(Path pack) {
 		if (Files.isDirectory(pack)) {
 			// Sometimes the shaderpack directory itself can be
@@ -430,6 +438,10 @@ public class Iris implements ClientModInitializer {
 
 	public static IrisConfig getIrisConfig() {
 		return irisConfig;
+	}
+
+	public static boolean isLoggingEnabled() {
+		return enableLogging;
 	}
 
 	public static String getVersion() {
