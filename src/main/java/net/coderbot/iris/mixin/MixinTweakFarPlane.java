@@ -48,7 +48,7 @@ public class MixinTweakFarPlane {
 	private float iris$tweakViewDistanceToMatchOptiFine(GameRenderer renderer) {
 		if (!Iris.getCurrentPack().isPresent()) {
 			// Don't mess with the far plane if no shaderpack is loaded
-			return this.viewDistance;
+			return this.viewDistance * 4.0F;
 		}
 
 		float tweakedViewDistance = this.method_32796();

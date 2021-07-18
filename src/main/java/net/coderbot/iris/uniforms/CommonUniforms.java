@@ -7,6 +7,7 @@ import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.texunits.SpriteAtlasTextureInterface;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 
@@ -14,6 +15,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -30,6 +32,7 @@ import net.minecraft.world.LightType;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -66,9 +69,15 @@ public final class CommonUniforms {
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
 			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier))
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-		  .uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
+		  	.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
-			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor);
+			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor)
+			.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize);
+	}
+
+	private static Vec2f getAtlasSize() {
+		//TODO: is the block atlas used for this uniform all the time???
+		return ((SpriteAtlasTextureInterface) MinecraftClient.getInstance().getBakedModelManager().method_24153(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)).getAtlasSize();
 	}
 
 	private static Vec3d getSkyColor() {
