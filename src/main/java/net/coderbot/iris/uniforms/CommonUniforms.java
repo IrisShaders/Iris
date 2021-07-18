@@ -77,7 +77,7 @@ public final class CommonUniforms {
 
 	private static Vec2f getAtlasSize() {
 		//TODO: is the block atlas used for this uniform all the time???
-		return ((SpriteAtlasTextureInterface) MinecraftClient.getInstance().getBakedModelManager().method_24153(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)).getAtlasSize();
+		return ((SpriteAtlasTextureInterface) MinecraftClient.getInstance().getBakedModelManager().getAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)).getAtlasSize();
 	}
 
 	private static Vec3d getSkyColor() {
