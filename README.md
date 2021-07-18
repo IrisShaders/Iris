@@ -67,6 +67,7 @@ Iris has been progressing quite rapidly recently. The following shader packs mos
 * [Skylec Shader](https://www.curseforge.com/minecraft/customization/skylec-shader) - a very lightweight shaderpack that pulls off some neat effects
     * Underwater is broken
     * Weather is broken
+* [CUDA v4 Shader](http://www.4minecraft.com/cuda-shaders-v4-2-shader-pack/) - Another lightweight pack , I dont think anything is broken
 
 Other shaderpacks aren't officially supported currently.
 
