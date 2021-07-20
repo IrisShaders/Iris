@@ -1,7 +1,10 @@
 package net.coderbot.iris.gl.uniform;
 
+import net.minecraft.client.util.math.Vector4f;
+
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public interface DynamicLocationalUniformHolder extends LocationalUniformHolder, DynamicUniformHolder {
 	DynamicLocationalUniformHolder addDynamicUniform(Uniform uniform, ValueUpdateNotifier notifier);
@@ -26,6 +29,12 @@ public interface DynamicLocationalUniformHolder extends LocationalUniformHolder,
 
 	default DynamicLocationalUniformHolder uniform1i(String name, IntSupplier value, ValueUpdateNotifier notifier) {
 		location(name, UniformType.INT).ifPresent(id -> addDynamicUniform(new IntUniform(id, value, notifier), notifier));
+
+		return this;
+	}
+
+	default DynamicUniformHolder uniform4f(String name, Supplier<Vector4f> value, ValueUpdateNotifier notifier) {
+		location(name, UniformType.VEC4).ifPresent(id -> addDynamicUniform(new Vector4Uniform(id, value, notifier), notifier));
 
 		return this;
 	}
