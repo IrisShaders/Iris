@@ -22,7 +22,10 @@ public abstract class MixinLivingEntityRenderer {
 		float whiteFlash = getAnimationCounter(entity, tickDelta);
 
 		if (hurt || whiteFlash > 0.0) {
-			EntityColorRenderPhase phase = new EntityColorRenderPhase(hurt, whiteFlash);
+			// TODO: Don't round the white flash?
+			// This rounding kinda changes how creeper flashes work but it isn't particularly noticeable.
+			// It avoids a big waste of memory with the current buffered entity rendering code creepers are exploding.
+			EntityColorRenderPhase phase = new EntityColorRenderPhase(hurt, Math.round(whiteFlash));
 			return layer -> provider.getBuffer(new EntityColorWrappedRenderLayer("iris_entity_color", layer, phase));
 		} else {
 			return provider;
