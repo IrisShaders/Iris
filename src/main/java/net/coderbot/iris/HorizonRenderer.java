@@ -133,6 +133,10 @@ public class HorizonRenderer {
 		return MinecraftClient.getInstance().options.viewDistance * 16;
 	}
 
+	public void close() {
+		buffer.close();
+	}
+
 	public void renderHorizon(Matrix4f modelView, Matrix4f projection, Shader shader) {
 		// Despite the name, this actually dispatches the draw call using the specified shader.
 		buffer.setShader(modelView, projection, shader);
