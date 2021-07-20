@@ -51,7 +51,7 @@ public class MixinWorldRenderer {
 	private static final String RENDER_WORLD_BORDER = "Lnet/minecraft/client/render/WorldRenderer;renderWorldBorder(Lnet/minecraft/client/render/Camera;)V";
 
 	@Unique
-	HorizonRenderer horizonRenderer = new HorizonRenderer();
+	private HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	@Unique
 	private boolean skyTextureEnabled;
