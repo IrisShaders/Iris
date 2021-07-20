@@ -29,7 +29,9 @@
     "mixins.iris.yeetphysicsmod.json",
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",
-    "mixins.iris.bettermipmaps.json"
+    "mixins.iris.bettermipmaps.json",
+    "mixins.iris.compat.indigo.json",
+    "mixins.iris.compat.indium.json"
   ],
 
   "depends": {
