@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
+import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -49,6 +50,9 @@ public class MixinWorldRenderer {
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
+
+		Program.unbind();
+
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 
 		pipeline.beginWorldRendering();
@@ -60,6 +64,7 @@ public class MixinWorldRenderer {
 		MinecraftClient.getInstance().getProfiler().swap("iris_final");
 		pipeline.finalizeWorldRendering();
 		pipeline = null;
+		Program.unbind();
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V", shift = At.Shift.AFTER))
