@@ -31,6 +31,22 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage {
 		provider.setReturnValue(buffered);
 	}
 
+	@Inject(method = "getEffectVertexConsumers", at = @At("HEAD"), cancellable = true)
+	private void iris$replaceEffectVertexConsumers(CallbackInfoReturnable<VertexConsumerProvider.Immediate> provider) {
+		if (begins == 0) {
+			return;
+		}
+
+		// NB: We can return the same VertexConsumerProvider here as long as the block entity and its breaking animation
+		// use different render layers. This seems like a sound assumption to make. This only works with our fully
+		// buffered vertex consumer provider - vanilla's Immediate cannot be used here since it would try to return the
+		// same buffer for the block entity and its breaking animation in many cases.
+		//
+		// If anything goes wrong here, Vanilla *will* catch the "duplicate delegates" error, so
+		// this shouldn't cause silent bugs.
+		provider.setReturnValue(buffered);
+	}
+
 	@Inject(method = "getOutlineVertexConsumers", at = @At("HEAD"), cancellable = true)
 	private void iris$replaceOutlineVertexConsumers(CallbackInfoReturnable<OutlineVertexConsumerProvider> provider) {
 		if (begins == 0) {

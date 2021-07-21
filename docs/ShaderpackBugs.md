@@ -20,3 +20,10 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
       otherwise issues like this show up.
     * Fix: Replace the content of lines 27-29 of gbuffers_armor_glint.vsh with `gl_Position = ftransform();`
     * Tracking issue: https://github.com/Sildurs-shaders/sildurs-shaders.github.io/issues/158
+* Block breaking animations have weird colors at certain camera angles, and don't show up on chests / other block entities.
+    * Diagnosis: No gbuffers_damagedblock program is provided, meaning that gbuffers_terrain is used for rendering block
+      breaking animations. This program is not set up to handle translucency, causing the weird colorations due to it
+      blending oddly with existing terrain data. Furthermore, since the deferred rendering code handles terrain separately
+      from block entities, the block breaking animation is written to the terrain render target instead of being blended
+      with the block entity.
+    * Workaround: unknown.
