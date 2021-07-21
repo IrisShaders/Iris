@@ -231,11 +231,8 @@ public class MixinWorldRenderer {
 										CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
 										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
 										VertexConsumerProvider.Immediate immediate) {
-		profiler.swap("iris_opaque_entity_draws");
-
-		if (immediate instanceof FlushableVertexConsumerProvider) {
-			((FlushableVertexConsumerProvider) immediate).flushNonTranslucentContent();
-		}
+		profiler.swap("iris_entity_draws");
+		immediate.draw();
 
 		profiler.swap("iris_pre_translucent");
 		pipeline.beginTranslucents();

@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.client.render.RenderLayer;
 
-public class IrisRenderLayerWrapper extends RenderLayer {
+public class IrisRenderLayerWrapper extends RenderLayer implements WrappableRenderLayer {
 	private final UseProgramRenderPhase useProgram;
 	private final RenderLayer wrapped;
 
@@ -34,6 +34,7 @@ public class IrisRenderLayerWrapper extends RenderLayer {
 		super.endDrawing();
 	}
 
+	@Override
 	public RenderLayer unwrap() {
 		return this.wrapped;
 	}
