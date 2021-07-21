@@ -2,6 +2,7 @@ package net.coderbot.iris.compat.indium.mixin;
 
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
@@ -9,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * Small tweak to Indium to make it obey our separateAo setting.
  */
 @Mixin(targets = "link/infra/indium/renderer/render/AbstractQuadRenderer")
+@Pseudo
 public class MixinAbstractQuadRenderer {
 	@Redirect(method = {"tesselateSmooth", "tesselateSmoothEmissive"},
 			at = @At(value = "INVOKE",
