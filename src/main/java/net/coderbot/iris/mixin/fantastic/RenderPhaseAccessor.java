@@ -10,4 +10,14 @@ public interface RenderPhaseAccessor {
 	static RenderPhase.Transparency getNO_TRANSPARENCY() {
 		throw new AssertionError();
 	}
+
+	@Accessor("GLINT_TRANSPARENCY")
+	static RenderPhase.Transparency getGLINT_TRANSPARENCY() {
+		throw new AssertionError();
+	}
+
+	@Accessor("CRUMBLING_TRANSPARENCY")
+	static RenderPhase.Transparency getCRUMBLING_TRANSPARENCY() {
+		throw new AssertionError();
+	}
 }
