@@ -5,10 +5,12 @@ import java.util.*;
 
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.Uniform;
 import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20C;
@@ -16,17 +18,23 @@ import org.lwjgl.opengl.GL20C;
 import net.minecraft.client.MinecraftClient;
 
 public class ProgramUniforms {
+	private static ProgramUniforms active;
 	private final ImmutableList<Uniform> perTick;
 	private final ImmutableList<Uniform> perFrame;
+	private final ImmutableList<Uniform> dynamic;
+	private final ImmutableList<ValueUpdateNotifier> notifiersToReset;
 
 	private ImmutableList<Uniform> once;
 	long lastTick = -1;
 	int lastFrame = -1;
 
-	public ProgramUniforms(ImmutableList<Uniform> once, ImmutableList<Uniform> perTick, ImmutableList<Uniform> perFrame) {
+	public ProgramUniforms(ImmutableList<Uniform> once, ImmutableList<Uniform> perTick, ImmutableList<Uniform> perFrame,
+						   ImmutableList<Uniform> dynamic, ImmutableList<ValueUpdateNotifier> notifiersToReset) {
 		this.once = once;
 		this.perTick = perTick;
 		this.perFrame = perFrame;
+		this.dynamic = dynamic;
+		this.notifiersToReset = notifiersToReset;
 	}
 
 	private void updateStage(ImmutableList<Uniform> uniforms) {
@@ -40,6 +48,14 @@ public class ProgramUniforms {
 	}
 
 	public void update() {
+		if (active != null) {
+			active.removeListeners();
+		}
+
+		active = this;
+
+		updateStage(dynamic);
+
 		if (once != null) {
 			updateStage(once);
 			updateStage(perTick);
@@ -68,11 +84,25 @@ public class ProgramUniforms {
 		}
 	}
 
+	public void removeListeners() {
+		active = null;
+
+		for (ValueUpdateNotifier notifier : notifiersToReset) {
+			notifier.setListener(null);
+		}
+	}
+
+	public static void clearActiveUniforms() {
+		if (active != null) {
+			active.removeListeners();
+		}
+	}
+
 	public static Builder builder(String name, int program) {
 		return new Builder(name, program);
 	}
 
-	public static class Builder implements LocationalUniformHolder {
+	public static class Builder implements DynamicLocationalUniformHolder {
 		private final String name;
 		private final int program;
 
@@ -80,7 +110,9 @@ public class ProgramUniforms {
 		private final Map<String, Uniform> once;
 		private final Map<String, Uniform> perTick;
 		private final Map<String, Uniform> perFrame;
+		private final Map<String, Uniform> dynamic;
 		private final Map<String, UniformType> uniformNames;
+		private final List<ValueUpdateNotifier> notifiersToReset;
 
 		protected Builder(String name, int program) {
 			this.name = name;
@@ -90,7 +122,9 @@ public class ProgramUniforms {
 			once = new HashMap<>();
 			perTick = new HashMap<>();
 			perFrame = new HashMap<>();
+			dynamic = new HashMap<>();
 			uniformNames = new HashMap<>();
+			notifiersToReset = new ArrayList<>();
 		}
 
 		@Override
@@ -170,10 +204,20 @@ public class ProgramUniforms {
 					once.remove(name);
 					perTick.remove(name);
 					perFrame.remove(name);
+					dynamic.remove(name);
 				}
 			}
 
-			return new ProgramUniforms(ImmutableList.copyOf(once.values()), ImmutableList.copyOf(perTick.values()), ImmutableList.copyOf(perFrame.values()));
+			return new ProgramUniforms(ImmutableList.copyOf(once.values()), ImmutableList.copyOf(perTick.values()), ImmutableList.copyOf(perFrame.values()),
+					ImmutableList.copyOf(dynamic.values()), ImmutableList.copyOf(notifiersToReset));
+		}
+
+		@Override
+		public Builder addDynamicUniform(Uniform uniform, ValueUpdateNotifier notifier) {
+			dynamic.put(locations.get(uniform.getLocation()), uniform);
+			notifiersToReset.add(notifier);
+
+			return this;
 		}
 	}
 

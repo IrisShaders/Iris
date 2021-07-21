@@ -2,6 +2,7 @@ package net.coderbot.iris.gl.program;
 
 import net.coderbot.iris.gl.GlResource;
 
+import net.minecraft.client.gl.GlProgramManager;
 import org.lwjgl.opengl.GL20C;
 
 public final class Program extends GlResource {
@@ -16,10 +17,15 @@ public final class Program extends GlResource {
 	}
 
 	public void use() {
-		GL20C.glUseProgram(getGlId());
+		GlProgramManager.useProgram(getGlId());
 
 		uniforms.update();
 		samplers.update();
+	}
+
+	public static void unbind() {
+		ProgramUniforms.clearActiveUniforms();
+		GlProgramManager.useProgram(0);
 	}
 
 	public void destroyInternal() {
