@@ -27,7 +27,7 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 	GlFramebuffer baseline;
 	HashMap<String, IntSupplier> dynamicSamplers;
 
-	public ExtendedShader(ResourceFactory resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, Consumer<LocationalUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
+	public ExtendedShader(ResourceFactory resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, Consumer<ProgramUniforms.Builder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getProgramRef();
@@ -45,6 +45,7 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 
 	@Override
 	public void unbind() {
+		ProgramUniforms.clearActiveUniforms();
 		super.unbind();
 
 		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);

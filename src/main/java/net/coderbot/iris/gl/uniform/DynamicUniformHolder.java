@@ -1,6 +1,6 @@
 package net.coderbot.iris.gl.uniform;
 
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vector4f;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
