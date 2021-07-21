@@ -56,6 +56,7 @@ public class NewShaderTests {
 				"    \"samplers\": [\n" +
 				// TODO: Don't duplicate these definitions!
 				"        { \"name\": \"texture\" },\n" +
+				"        { \"name\": \"gtexture\" },\n" +
 				"        { \"name\": \"tex\" },\n" +
 				"        { \"name\": \"lightmap\" },\n" +
 				"        { \"name\": \"normals\" },\n" +
