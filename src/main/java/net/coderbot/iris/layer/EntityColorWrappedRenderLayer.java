@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 
-public class EntityColorWrappedRenderLayer extends RenderLayer {
+public class EntityColorWrappedRenderLayer extends RenderLayer implements WrappableRenderLayer {
 	private final EntityColorRenderPhase entityColor;
 	private final RenderLayer wrapped;
 
@@ -33,6 +33,7 @@ public class EntityColorWrappedRenderLayer extends RenderLayer {
 		super.endDrawing();
 	}
 
+	@Override
 	public RenderLayer unwrap() {
 		return this.wrapped;
 	}

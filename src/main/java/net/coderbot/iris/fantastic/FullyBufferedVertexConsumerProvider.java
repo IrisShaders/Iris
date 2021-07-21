@@ -2,7 +2,7 @@ package net.coderbot.iris.fantastic;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.client.MinecraftClient;
+import net.coderbot.iris.layer.WrappableRenderLayer;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -16,6 +16,9 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	private final Set<BufferBuilder> activeBuffers;
 	private boolean flushed;
 
+	private final Set<RenderLayer> layersThisFrame;
+	private final List<RenderLayer> layersInOrder;
+
 	public FullyBufferedVertexConsumerProvider() {
 		super(new BufferBuilder(0), Collections.emptyMap());
 
@@ -23,6 +26,22 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		this.unused = new Object2IntOpenHashMap<>();
 		this.activeBuffers = new HashSet<>();
 		this.flushed = false;
+
+		this.layersThisFrame = new HashSet<>();
+		this.layersInOrder = new ArrayList<>();
+	}
+
+	private TransparencyType getTransparencyType(RenderLayer layer) {
+		while (layer instanceof WrappableRenderLayer) {
+			layer = ((WrappableRenderLayer) layer).unwrap();
+		}
+
+		if (layer instanceof BlendingStateHolder) {
+			return ((BlendingStateHolder) layer).getTransparencyType();
+		}
+
+		// Default to "generally transparent" if we can't figure it out.
+		return TransparencyType.GENERAL_TRANSPARENT;
 	}
 
 	@Override
@@ -33,6 +52,18 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 
 		if (activeBuffers.add(buffer)) {
 			buffer.begin(renderLayer.getDrawMode(), renderLayer.getVertexFormat());
+		}
+
+		if (this.layersThisFrame.add(renderLayer)) {
+			// If we haven't seen this layer yet, add it to the list of layers to render.
+			//
+			// We keep track of the order that layers were added, in order to ensure that if layers are not
+			// sorted relative each other due to translucency, that they are sorted in the order that they were
+			// drawn in.
+			//
+			// This is important for things like villager rendering, where the clothes and skin of villagers overlap
+			// each other, so if the clothes are drawn before the skin, they appear to be poorly-clothed.
+			this.layersInOrder.add(renderLayer);
 		}
 
 		// If this buffer is scheduled to be removed, unschedule it since it's now being used.
@@ -68,7 +99,15 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 			unused.removeInt(removed);
 		}
 
-		bufferBuilders.keySet().forEach(this::drawInternal);
+		// Make sure translucent layers are rendered after non-translucent ones.
+		layersInOrder.sort(Comparator.comparing(this::getTransparencyType));
+
+		for (RenderLayer layer : layersInOrder) {
+			drawInternal(layer);
+		}
+
+		layersInOrder.clear();
+		layersThisFrame.clear();
 
 		flushed = true;
 	}

@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin.fantastic;
 
 import net.coderbot.iris.fantastic.ExtendedBufferStorage;
-import net.coderbot.iris.fantastic.FantasticVertexConsumerProvider;
+import net.coderbot.iris.fantastic.FullyBufferedVertexConsumerProvider;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.OutlineVertexConsumerProvider;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(BufferBuilderStorage.class)
 public class MixinBufferBuilderStorage implements ExtendedBufferStorage {
 	@Unique
-	private final VertexConsumerProvider.Immediate buffered = new FantasticVertexConsumerProvider();
+	private final VertexConsumerProvider.Immediate buffered = new FullyBufferedVertexConsumerProvider();
 
 	@Unique
 	private int begins = 0;
