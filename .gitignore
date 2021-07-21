@@ -28,3 +28,9 @@ bin/
 
 run/
 /logs/latest.log
+
+# macOS
+
+.DS_Store
+.AppleDouble
+.LSOverride
