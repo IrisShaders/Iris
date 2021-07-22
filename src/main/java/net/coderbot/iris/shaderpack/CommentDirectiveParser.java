@@ -118,6 +118,54 @@ public class CommentDirectiveParser {
 		return Optional.of(haystack);
 	}
 
+	public static Optional<String> findDirectiveType(String haystack) {
+		String prefix = "/*";
+		String suffix = ":";
+
+		/*// Search for the last occurrence of the directive within the text, since those take precedence.
+		int indexOfPrefix = haystack.lastIndexOf(prefix);*/
+
+		// TODO: Temporary workaround for the fact that BSL uses multiple drawbuffers directives in some files, and
+		// expects preprocessor directives for comment directives to be properly, handled. But we don't do that! After
+		// observation, it seems like the first DRAWBUFFERS directive is generally the "default" directive.
+		//
+		// This is important because if we add a draw buffer that isn't written to, undefined behavior happens!
+		int indexOfPrefix;
+
+		if ((haystack.contains("https://bitslablab.com") || haystack.contains("By LexBoosT"))) {
+			indexOfPrefix = haystack.indexOf(prefix);
+		} else {
+			indexOfPrefix = haystack.lastIndexOf(prefix);
+		}
+
+		if (indexOfPrefix == -1) {
+			return Optional.empty();
+		}
+
+		String before = haystack.substring(0, indexOfPrefix).trim();
+
+		if (!before.endsWith("/*")) {
+			// Reject a match if it doesn't actually start with a comment marker
+			// TODO: If a line has two directives, one valid, and the other invalid, then this might not work properly
+			return Optional.empty();
+		}
+
+		// Remove everything up to and including the prefix
+		haystack = haystack.substring(indexOfPrefix + prefix.length());
+
+		int indexOfSuffix = haystack.indexOf(suffix);
+
+		// If there isn't a proper suffix, this directive is malformed and should be discarded.
+		if (indexOfSuffix == -1) {
+			return Optional.empty();
+		}
+
+		// Remove the suffix and everything afterwards, also trim any whitespace
+		haystack = haystack.substring(0, indexOfSuffix).trim();
+
+		return Optional.of(haystack);
+	}
+
 	// Test code for directive parsing. It's a bit homegrown but it works.
 	@SuppressWarnings("unused")
 	private static class Tests {
