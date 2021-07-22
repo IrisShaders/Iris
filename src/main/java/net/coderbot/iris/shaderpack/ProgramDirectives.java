@@ -28,7 +28,11 @@ public class ProgramDirectives {
 		// undefined data to be written to colortex7.
 		//
 		// TODO: Figure out how to infer the DRAWBUFFERS directive when it is missing.
-		drawBuffers = findDrawbuffersDirective(source.getFragmentSource()).orElse(new int[] { 0 });
+		if(findbuffersDirective(source.getFragmentSource())) {
+			drawBuffers = findDrawbuffersDirective(source.getFragmentSource(), "RENDERTARGETS").orElse(new int[]{0});
+		} else {
+			drawBuffers = findDrawbuffersDirective(source.getFragmentSource(), "DRAWBUFFERS").orElse(new int[]{0});
+		}
 
 		if (properties != null) {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
@@ -68,11 +72,23 @@ public class ProgramDirectives {
 		this.mipmappedBuffers = ImmutableSet.copyOf(mipmappedBuffers);
 	}
 
-	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource) {
+	private static boolean findbuffersDirective(Optional<String> stageSource) {
+		stageSource
+				.flatMap(fragment -> CommentDirectiveParser.findDirectiveType(fragment))
+				.map(String::toString);
+		String mappedStageSource = stageSource.orElse("");
+
+		if(mappedStageSource.contains("RENDERTARGETS")) {
+			return true;
+		}
+		return false;
+	}
+
+	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource, String needle) {
 		return stageSource
-			.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
-			.map(String::toCharArray)
-			.map(ProgramDirectives::parseDigits);
+				.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, needle))
+				.map(String::toCharArray)
+				.map(ProgramDirectives::parseDigits);
 	}
 
 	private static int[] parseDigits(char[] directiveChars) {
@@ -80,7 +96,11 @@ public class ProgramDirectives {
 		int index = 0;
 
 		for (char buffer : directiveChars) {
-			buffers[index++] = Character.digit(buffer, 10);
+			if(Character.isDigit(buffer)) {
+				buffers[index++] = Character.digit(buffer, 10);
+			} else {
+				continue;
+			}
 		}
 
 		return buffers;
