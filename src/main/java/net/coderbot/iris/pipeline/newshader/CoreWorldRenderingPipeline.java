@@ -23,6 +23,7 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getCrumbling();
 	Shader getText();
 	Shader getBlock();
+	Shader getBeacon();
 	Shader getShadowTerrainCutout();
 	Shader getShadowEntitiesCutout();
 	Shader getTranslucent();
