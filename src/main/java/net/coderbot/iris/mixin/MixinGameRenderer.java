@@ -253,6 +253,11 @@ public class MixinGameRenderer {
 		}
 	}
 
+	@Inject(method = "getRenderTypeBeaconBeamShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideBeaconBeamShader(CallbackInfoReturnable<Shader> cir) {
+			override(CoreWorldRenderingPipeline::getBeacon, cir);
+	}
+
 	private static boolean isPhase(WorldRenderingPhase phase) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
