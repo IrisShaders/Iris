@@ -220,7 +220,7 @@ public class CommentDirectiveParser {
 			});
 
 			test("matchInMiddle", Optional.of("31"), () -> {
-				String line = "This is a line /* DRAWBUFFERS:31 */ containg a drawbuffers directive";
+				String line = "This is a line /* DRAWBUFFERS:3,1 */ containg a drawbuffers directive";
 
 				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
@@ -235,19 +235,6 @@ public class CommentDirectiveParser {
 				String line = "/* TEST:2 */ This line contains multiple directives, the last one should be used /* TEST:3 */";
 
 				return CommentDirectiveParser.findDirective(line, "TEST");
-			});
-
-			test("lines", Optional.of("It works"), () -> {
-				String[] linesArray = new String[]{
-						"/* Here's a random comment line */",
-						"/* Test directive:Duplicate handling? */",
-						"uniform sampler2D test;",
-						"/* Test directive:Duplicate handling within a line? */ Let's see /* Test directive:It works */"
-				};
-
-				List<String> lines = Arrays.asList(linesArray);
-
-				return CommentDirectiveParser.findDirectiveInLines(lines, "Test directive");
 			});
 
 			// OptiFine finds this directive, but ShadersMod does not...
@@ -273,6 +260,43 @@ public class CommentDirectiveParser {
 				String line = "/*RENDERTARGETS:3,2,1*/ OptiFine will detect this directive, but ShadersMod will not...";
 
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
+			});
+
+			test("matchAtEnd rendertargets", Optional.of("321"), () -> {
+				String line = "A line containg a drawbuffers directive: /* RENDERTARGETS:3,2,1 */";
+
+				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
+			});
+
+			test("matchAtStart rendertargets", Optional.of("31"), () -> {
+				String line = "/* RENDERTARGETS:3,1 */ This is a line containg a drawbuffers directive";
+
+				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
+			});
+
+			test("matchInMiddle rendertargets", Optional.of("31"), () -> {
+				String line = "This is a line /* RENDERTARGETS:3,1 */ containg a drawbuffers directive";
+
+				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+			});
+
+			test("emptyMatch rendertargets", Optional.of(""), () -> {
+				String line = "/* RENDERTARGETS: */ This is a line containg an invalid but still matching drawbuffers directive";
+
+				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
+			});
+
+			test("lines", Optional.of("It works"), () -> {
+				String[] linesArray = new String[]{
+						"/* Here's a random comment line */",
+						"/* Test directive:Duplicate handling? */",
+						"uniform sampler2D test;",
+						"/* Test directive:Duplicate handling within a line? */ Let's see /* Test directive:It works */"
+				};
+
+				List<String> lines = Arrays.asList(linesArray);
+
+				return CommentDirectiveParser.findDirectiveInLines(lines, "Test directive");
 			});
 		}
 	}
