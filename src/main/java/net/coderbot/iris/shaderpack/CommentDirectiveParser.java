@@ -256,6 +256,24 @@ public class CommentDirectiveParser {
 
 				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
+
+			test("normal text rendertargets", Optional.empty(), () -> {
+				String line = "Some normal text that doesn't contain a RENDERTARGETS directive of any sort";
+
+				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
+			});
+
+			test("partial directive rendertargets", Optional.empty(), () -> {
+				String line = "Some normal text that doesn't contain a /* RENDERTARGETS: directive of any sort";
+
+				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
+			});
+
+			test("bad spacing rendertargets", Optional.of("321"), () -> {
+				String line = "/*RENDERTARGETS:3,2,1*/ OptiFine will detect this directive, but ShadersMod will not...";
+
+				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
+			});
 		}
 	}
 }
