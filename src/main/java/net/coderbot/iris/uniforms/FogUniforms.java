@@ -12,6 +12,7 @@ public class FogUniforms {
 	}
 
 	public static void addFogUniforms(DynamicUniformHolder uniforms) {
+		//TODO: (1.17) Fix fog uniforms
 		/*uniforms.uniform1i("fogMode", () -> {
 			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
 

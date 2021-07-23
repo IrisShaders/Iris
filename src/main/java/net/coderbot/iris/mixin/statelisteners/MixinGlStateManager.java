@@ -10,25 +10,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager {
+	//TODO: (1.17) Fix fog uniforms
+	/*
 	private static Runnable fogToggleListener;
 	private static Runnable fogModeListener;
 	private static Runnable fogDensityListener;
 
-	//@Inject(method = { "enableFog()V", "disableFog()V" }, at = @At("RETURN"))
+	@Inject(method = { "enableFog()V", "disableFog()V" }, at = @At("RETURN"))
 	private static void iris$onFogToggle(CallbackInfo ci) {
 		if (fogToggleListener != null) {
 			fogToggleListener.run();
 		}
 	}
 
-	//@Inject(method = "fogMode(I)V", at = @At(value = "FIELD", target = "com/mojang/blaze3d/platform/GlStateManager$FogState.mode : I", shift = At.Shift.AFTER))
+	@Inject(method = "fogMode(I)V", at = @At(value = "FIELD", target = "com/mojang/blaze3d/platform/GlStateManager$FogState.mode : I", shift = At.Shift.AFTER))
 	private static void iris$onFogMode(int mode, CallbackInfo ci) {
 		if (fogModeListener != null) {
 			fogModeListener.run();
 		}
 	}
 
-	//@Inject(method = "fogDensity(F)V", at = @At(value = "FIELD", target = "com/mojang/blaze3d/platform/GlStateManager$FogState.density : F", shift = At.Shift.AFTER))
+	@Inject(method = "fogDensity(F)V", at = @At(value = "FIELD", target = "com/mojang/blaze3d/platform/GlStateManager$FogState.density : F", shift = At.Shift.AFTER))
 	private static void iris$onFogDensity(float density, CallbackInfo ci) {
 		if (fogDensityListener != null) {
 			fogDensityListener.run();
@@ -39,5 +41,5 @@ public class MixinGlStateManager {
 		StateUpdateNotifiers.fogToggleNotifier = listener -> fogToggleListener = listener;
 		StateUpdateNotifiers.fogModeNotifier = listener -> fogModeListener = listener;
 		StateUpdateNotifiers.fogDensityNotifier = listener -> fogDensityListener = listener;
-	}
+	}*/
 }
