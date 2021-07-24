@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -88,15 +89,15 @@ public class ProgramDirectives {
 		return stageSource
 				.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, needle))
 				.map(String::toCharArray)
-				.map(ProgramDirectives::parseDigits);
+				.map(ProgramDirectives::parseNumbers);
 	}
 
-	private static int[] parseDigits(char[] directiveChars) {
+	private static int[] parseNumbers(char[] directiveChars) {
 		int[] buffers = new int[directiveChars.length];
 		int index = 0;
 
 		for (char buffer : directiveChars) {
-			if(Character.isDigit(buffer)) {
+			if(Character.isLetter(buffer)) {
 				buffers[index++] = Character.digit(buffer, 10);
 			} else {
 				continue;
@@ -124,5 +125,42 @@ public class ProgramDirectives {
 
 	public ImmutableSet<Integer> getMipmappedBuffers() {
 		return mipmappedBuffers;
+	}
+
+	// Test code for directive parsing. It's a bit homegrown but it works.
+	@SuppressWarnings("unused")
+	private static class Tests {
+		private static <T> void test(String name, T expected, Supplier<T> testCase) {
+			T actual;
+
+			try {
+				actual = testCase.get();
+			} catch (Throwable e) {
+				System.err.println("Test \"" + name + "\" failed with an exception:");
+				e.printStackTrace();
+
+				return;
+			}
+
+			if (!expected.equals(actual)) {
+				System.err.println("Test \"" + name + "\" failed: Expected " + expected + ", got " + actual);
+			} else {
+				System.out.println("Test \"" + name + "\" passed");
+			}
+		}
+
+		public static void main(String[] args) {
+			test("normal text", Optional.empty(), () -> {
+				String line = "01";
+
+				return parseNumbers(line.toCharArray());
+			});
+
+			test("rendertarget text", Optional.empty(), () -> {
+				String line = "12, 5, 15";
+
+				return parseNumbers(line.toCharArray());
+			});
+		}
 	}
 }

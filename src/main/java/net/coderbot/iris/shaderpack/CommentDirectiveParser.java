@@ -220,7 +220,7 @@ public class CommentDirectiveParser {
 			});
 
 			test("matchInMiddle", Optional.of("31"), () -> {
-				String line = "This is a line /* DRAWBUFFERS:3,1 */ containg a drawbuffers directive";
+				String line = "This is a line /* DRAWBUFFERS:31 */ containg a drawbuffers directive";
 
 				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
 			});
@@ -256,31 +256,31 @@ public class CommentDirectiveParser {
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
 			});
 
-			test("bad spacing rendertargets", Optional.of("321"), () -> {
+			test("bad spacing rendertargets", Optional.of("3,2,1"), () -> {
 				String line = "/*RENDERTARGETS:3,2,1*/ OptiFine will detect this directive, but ShadersMod will not...";
 
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
 			});
 
-			test("matchAtEnd rendertargets", Optional.of("321"), () -> {
+			test("matchAtEnd rendertargets", Optional.of("3,2,1"), () -> {
 				String line = "A line containg a drawbuffers directive: /* RENDERTARGETS:3,2,1 */";
 
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
 			});
 
-			test("matchAtStart rendertargets", Optional.of("31"), () -> {
+			test("matchAtStart rendertargets", Optional.of("3,1"), () -> {
 				String line = "/* RENDERTARGETS:3,1 */ This is a line containg a drawbuffers directive";
 
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
 			});
 
-			test("matchInMiddle rendertargets", Optional.of("31"), () -> {
+			test("matchInMiddle rendertargets", Optional.of("3,1"), () -> {
 				String line = "This is a line /* RENDERTARGETS:3,1 */ containg a drawbuffers directive";
 
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
 			});
 
-			test("double digits rendertargets", Optional.of("121155"), () -> {
+			test("double digits rendertargets", Optional.of("12,1,15,5"), () -> {
 				String line = "/* RENDERTARGETS: 12,1,15,5 */";
 
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
