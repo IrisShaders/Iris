@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.EntityColorRenderPhase;
 import net.coderbot.iris.layer.EntityColorWrappedRenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -18,7 +19,12 @@ public abstract class MixinLivingEntityRenderer {
 
 	@ModifyVariable(method = "render", at = @At("HEAD"))
 	private VertexConsumerProvider iris$wrapProvider(VertexConsumerProvider provider, LivingEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		boolean hurt = entity.hurtTime > 0 || entity.deathTime > 0;
+		boolean hurt;
+		if(Iris.physicsModInstalled) {
+			hurt = entity.hurtTime > 0 && !entity.isDead();
+		} else {
+			hurt = entity.hurtTime > 0 || entity.deathTime > 0;
+		}
 		float whiteFlash = getAnimationCounter(entity, tickDelta);
 
 		if (hurt || whiteFlash > 0.0) {
