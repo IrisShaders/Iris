@@ -294,10 +294,10 @@ public class CommentDirectiveParser {
 
 			test("lines", Optional.of("It works"), () -> {
 				String[] linesArray = new String[]{
-						"/* Here's a random comment line */",
-						"/* Test directive:Duplicate handling? */",
-						"uniform sampler2D test;",
-						"/* Test directive:Duplicate handling within a line? */ Let's see /* Test directive:It works */"
+					"/* Here's a random comment line */",
+					"/* Test directive:Duplicate handling? */",
+					"uniform sampler2D test;",
+					"/* Test directive:Duplicate handling within a line? */ Let's see /* Test directive:It works */"
 				};
 
 				List<String> lines = Arrays.asList(linesArray);
