@@ -280,8 +280,8 @@ public class CommentDirectiveParser {
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
 			});
 
-			test("double digits rendertargets", Optional.of("12,1,15,5"), () -> {
-				String line = "/* RENDERTARGETS: 12, 1, 15, 5 */";
+			test("double digits rendertargets", Optional.of("121155"), () -> {
+				String line = "/* RENDERTARGETS: 12,1,15,5 */";
 
 				return CommentDirectiveParser.findDirective(line, "RENDERTARGETS");
 			});
