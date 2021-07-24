@@ -116,8 +116,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 
-	private static final List<GbufferProgram> programStack = new ArrayList<>();
-	private static final List<String> programStackLog = new ArrayList<>();
+	private final List<GbufferProgram> programStack = new ArrayList<>();
+	private final List<String> programStackLog = new ArrayList<>();
 
 	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
 

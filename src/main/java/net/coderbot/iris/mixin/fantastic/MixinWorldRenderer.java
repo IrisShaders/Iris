@@ -45,6 +45,8 @@ public class MixinWorldRenderer {
 												boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 												LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
 												CallbackInfo callback) {
+		client.getProfiler().swap("opaque_particles");
+
 		VertexConsumerProvider.Immediate immediate = bufferBuilders.getEntityVertexConsumers();
 
 		((PhasedParticleManager) client.particleManager).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
