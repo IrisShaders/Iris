@@ -77,15 +77,10 @@ public class MixinWorldRenderer {
 	}
 
 	// Inject a bit early so that we can end our rendering in time.
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;method_23792()V"))
-	private void iris$finalizeWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	@Inject(method = RENDER, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
+	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		MinecraftClient.getInstance().getProfiler().swap("iris_final");
 		pipeline.finalizeWorldRendering();
-	}
-
-	// This is needed in order to render everything in 1.17 with our shaders.
-	@Inject(method = RENDER, at = @At("TAIL"))
-	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.NOT_RENDERING_WORLD);
 		pipeline = null;
 	}
