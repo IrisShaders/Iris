@@ -74,7 +74,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture noise;
 
 	public static boolean ACTIVE = false;
-	public static List<BlockEntity> visibleBlockEntities;
+	public static List<BlockEntity> visibleBlockEntities = new ArrayList<>();
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
@@ -116,8 +116,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}*/
 
 		this.sunPathRotation = directives.getSunPathRotation();
-
-		this.visibleBlockEntities = new ArrayList<>();
 
 		this.buffers = new BufferBuilderStorage();
 
