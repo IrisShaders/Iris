@@ -74,6 +74,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture noise;
 
 	public static boolean ACTIVE = false;
+	public static List<BlockEntity> visibleBlockEntities;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
@@ -115,6 +116,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}*/
 
 		this.sunPathRotation = directives.getSunPathRotation();
+
+		this.visibleBlockEntities = new ArrayList<>();
 
 		this.buffers = new BufferBuilderStorage();
 
@@ -401,16 +404,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		int shadowBlockEntities = 0;
 
-		for (WorldRenderer.ChunkInfo chunk : worldRenderer.getVisibleChunks()) {
-			for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getData().getBlockEntities()) {
-				modelView.push();
-				BlockPos pos = entity.getPos();
-				modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-				MinecraftClient.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, provider);
-				modelView.pop();
+		for (BlockEntity entity : visibleBlockEntities) {
+			modelView.push();
+			BlockPos pos = entity.getPos();
+			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+			MinecraftClient.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, provider);
+			modelView.pop();
 
-				shadowBlockEntities++;
-			}
+			shadowBlockEntities++;
 		}
 
 		renderedShadowEntities = shadowEntities;
