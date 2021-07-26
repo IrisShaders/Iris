@@ -159,7 +159,6 @@ public class MixinGameRenderer {
 	@Inject(method = {
 			"getRenderTypeEntitySolidShader()Lnet/minecraft/client/render/Shader;",
 			"getRenderTypeWaterMaskShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEntityNoOutlineShader()Lnet/minecraft/client/render/Shader;",
 			"getRenderTypeEntityShadowShader()Lnet/minecraft/client/render/Shader;"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntitySolidShader(CallbackInfoReturnable<Shader> cir) {
@@ -170,6 +169,14 @@ public class MixinGameRenderer {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getEntitiesSolid, cir);
+		}
+	}
+
+	// Not doing this causes banners to render with the entity shader, instead of the block entity shader which causes issues with Complementary.
+	@Inject(method = "getRenderTypeEntityNoOutlineShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityNoOutlineShader(CallbackInfoReturnable<Shader> cir) {
+		if(isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getBlock, cir);
 		}
 	}
 
