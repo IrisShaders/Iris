@@ -1,11 +1,15 @@
 package net.coderbot.iris.mixin.shadows;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.WorldRenderer;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,6 +23,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(WorldRenderer.class)
 public class MixinPreventRebuildNearInShadowPass {
+	@Shadow
+	@Final
+	private ObjectArrayList<WorldRenderer.ChunkInfo> visibleChunks;
+
 	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V";
 
 	@Inject(method = "setupTerrain", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=rebuildNear"), cancellable = true)
@@ -26,6 +34,16 @@ public class MixinPreventRebuildNearInShadowPass {
 		if (ShadowRenderer.ACTIVE) {
 			MinecraftClient.getInstance().getProfiler().pop();
 			callback.cancel();
+		}
+	}
+
+	@Inject(method = "setupTerrain", at = @At("TAIL"))
+	private void iris$copyBlockEntities(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo ci) {
+		ShadowRenderer.visibleBlockEntities.clear();
+		for (WorldRenderer.ChunkInfo chunk : this.visibleChunks) {
+			for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getData().getBlockEntities()) {
+				ShadowRenderer.visibleBlockEntities.add(entity);
+			}
 		}
 	}
 }
