@@ -175,7 +175,10 @@ public class MixinGameRenderer {
 	// Not doing this causes banners to render with the entity shader, instead of the block entity shader which causes issues with Complementary.
 	@Inject(method = "getRenderTypeEntityNoOutlineShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityNoOutlineShader(CallbackInfoReturnable<Shader> cir) {
-		if(isRenderingWorld()) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
+		} else if(isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		}
 	}
