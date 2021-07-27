@@ -237,7 +237,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
-		Optional<ProgramSource> blockSource = programSet.getGbuffersBlock();
+		Optional<ProgramSource> blockSource = first(programSet.getGbuffersBlock(), terrainSource);
 		Optional<ProgramSource> beaconSource = first(programSet.getGbuffersBeaconBeam(), programSet.getGbuffersTextured());
 
 		Optional<ProgramSource> entitiesSource = first(programSet.getGbuffersEntities(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
