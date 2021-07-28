@@ -196,6 +196,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getEntitiesEyes, cir);
 		}
