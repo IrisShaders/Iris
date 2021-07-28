@@ -12,7 +12,8 @@ public class FogUniforms {
 	}
 
 	public static void addFogUniforms(DynamicUniformHolder uniforms) {
-		uniforms.uniform1i("fogMode", () -> {
+		//TODO: (1.17) Fix fog uniforms
+		/*uniforms.uniform1i("fogMode", () -> {
 			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
 
 			if (!((CapabilityTrackerAccessor) fog.capState).getState()) {
@@ -36,6 +37,6 @@ public class FogUniforms {
 		}, listener -> {
 			StateUpdateNotifiers.fogToggleNotifier.setListener(listener);
 			StateUpdateNotifiers.fogDensityNotifier.setListener(listener);
-		});
+		});*/
 	}
 }
