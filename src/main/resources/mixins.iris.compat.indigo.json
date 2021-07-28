@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "plugin": "net.coderbot.iris.compat.indigo.mixin.IrisIndigoCompatMixinPlugin",
+  "package": "net.coderbot.iris.compat.indigo.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinAbstractQuadRenderer"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -45,6 +45,8 @@ public class MixinWorldRenderer {
 												boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 												LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
 												CallbackInfo callback) {
+		client.getProfiler().swap("opaque_particles");
+
 		VertexConsumerProvider.Immediate immediate = bufferBuilders.getEntityVertexConsumers();
 
 		((PhasedParticleManager) client.particleManager).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
@@ -59,17 +61,6 @@ public class MixinWorldRenderer {
 	@Inject(method = "render", at = @At("HEAD"))
 	private void iris$fantastic$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		((ExtendedBufferStorage) bufferBuilders).beginWorldRendering();
-	}
-
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "net/minecraft/client/render/RenderLayer.getTranslucent ()Lnet/minecraft/client/render/RenderLayer;"))
-	private void iris$fantastic$preRenderTranslucentTerrain(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		VertexConsumerProvider.Immediate vertexConsumers = bufferBuilders.getEntityVertexConsumers();
-
-		if (vertexConsumers instanceof FlushableVertexConsumerProvider) {
-			MinecraftClient.getInstance().getProfiler().swap("iris_translucent_entity_draws");
-			((FlushableVertexConsumerProvider) vertexConsumers).flushTranslucentContent();
-			MinecraftClient.getInstance().getProfiler().swap("translucent");
-		}
 	}
 
 	@Inject(method = "render", at = @At("RETURN"))
