@@ -2,35 +2,36 @@ package net.coderbot.iris.layer;
 
 import net.coderbot.iris.mixin.renderlayer.RenderLayerAccessor;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderPhase;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 
-public class EntityColorWrappedRenderLayer extends RenderLayer implements WrappableRenderLayer {
-	private final EntityColorRenderPhase entityColor;
+public class OuterWrappedRenderLayer extends RenderLayer implements WrappableRenderLayer {
+	private final RenderPhase extra;
 	private final RenderLayer wrapped;
 
-	public EntityColorWrappedRenderLayer(String name, RenderLayer wrapped, EntityColorRenderPhase entityColor) {
+	public OuterWrappedRenderLayer(String name, RenderLayer wrapped, RenderPhase extra) {
 		super(name, wrapped.getVertexFormat(), wrapped.getDrawMode(), wrapped.getExpectedBufferSize(),
 			wrapped.hasCrumbling(), isTranslucent(wrapped), wrapped::startDrawing, wrapped::endDrawing);
 
-		this.entityColor = entityColor;
+		this.extra = extra;
 		this.wrapped = wrapped;
 	}
 
 	@Override
 	public void startDrawing() {
-		super.startDrawing();
+		extra.startDrawing();
 
-		entityColor.startDrawing();
+		super.startDrawing();
 	}
 
 	@Override
 	public void endDrawing() {
-		entityColor.endDrawing();
-
 		super.endDrawing();
+
+		extra.endDrawing();
 	}
 
 	@Override
@@ -58,9 +59,9 @@ public class EntityColorWrappedRenderLayer extends RenderLayer implements Wrappa
 			return false;
 		}
 
-		EntityColorWrappedRenderLayer other = (EntityColorWrappedRenderLayer) object;
+		OuterWrappedRenderLayer other = (OuterWrappedRenderLayer) object;
 
-		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.entityColor, other.entityColor);
+		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.extra, other.extra);
 	}
 
 	@Override
@@ -72,7 +73,7 @@ public class EntityColorWrappedRenderLayer extends RenderLayer implements Wrappa
 
 	@Override
 	public String toString() {
-		return "iris:" + this.wrapped.toString();
+		return "iris_wrapped:" + this.wrapped.toString();
 	}
 
 	private static boolean isTranslucent(RenderLayer layer) {

@@ -1,8 +1,6 @@
 package net.coderbot.iris.mixin.fantastic;
 
 import net.coderbot.iris.fantastic.ExtendedBufferStorage;
-import net.coderbot.iris.layer.EntityColorRenderPhase;
-import net.coderbot.iris.layer.EntityColorWrappedRenderLayer;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.RenderLayer;
@@ -15,8 +13,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.SortedMap;
 
 @Mixin(BufferBuilderStorage.class)
