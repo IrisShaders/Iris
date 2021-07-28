@@ -217,9 +217,9 @@ public class TriforcePatcher {
 					"vec2 _iris_internal_lineOffset = (vec2(-_iris_internal_lineDir.y, _iris_internal_lineDir.x) * _iris_internal_line_width) / _iris_internal_screenSize;\n" +
 					"if(_iris_internal_lineOffset.x < 0) { _iris_internal_lineOffset = _iris_internal_lineOffset * -1; }\n" +
 					"if(gl_VertexID % 2 == 0) {\n" +
-					"gl_Position = vec4(_iris_internal_ndcStart, 1.0) + vec4(_iris_internal_lineOffset, 0.0, 0.0);\n" +
+					"gl_Position = (vec4(_iris_internal_ndcStart, 1.0) + vec4(_iris_internal_lineOffset, 0.0, 0.0)) * _iris_internal_ndcStart4.w;\n" +
 					"} else {\n"+
-					"gl_Position = vec4(_iris_internal_ndcStart, 1.0) - vec4(_iris_internal_lineOffset, 0.0, 0.0);\n" +
+					"gl_Position = (vec4(_iris_internal_ndcStart, 1.0) - vec4(_iris_internal_lineOffset, 0.0, 0.0)) * _iris_internal_ndcStart4.w;\n" +
 					"}\n" +
 					"}\n");
 			transformations.injectLine(Transformations.InjectionPoint.MAIN_TAIL, "_iris_internal_legacy_lines();\n");
