@@ -197,13 +197,15 @@ public class TriforcePatcher {
 		// Inject the legacy lines transformation after everything else
 		if(type == ShaderType.VERTEX && injectLegacyLines) {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_LineWidth;");
-			// TODO: Need a better way to do this
-			transformations.replaceExact("uniform vec3 cameraPosition;", ""); // Required if shader has cameraPosition inside a guard
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
 
+			// The shader might define these itself after our injection so we need to remove any such definitions by the shader first
+			// TODO: this is can easily break even with valid code. We could use a better way to do this
+			transformations.replaceExact("uniform vec3 cameraPosition;", "");
 			transformations.replaceExact("uniform float viewWidth;", "");
 			transformations.replaceExact("uniform float viewHeight;", "");
-			transformations.replaceExact("uniform float viewWidth, viewHeight;", ""); // This is sooo scuffed
+			transformations.replaceExact("uniform float viewWidth, viewHeight;", "");
+
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float viewWidth;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float viewHeight;");
 
