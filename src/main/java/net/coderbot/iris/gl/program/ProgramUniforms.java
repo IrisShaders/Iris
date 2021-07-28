@@ -196,6 +196,8 @@ public class ProgramUniforms {
 			typeName = "mat2";
 		} else if (type == GL20C.GL_FLOAT_VEC2) {
 			typeName = "vec2";
+		} else if (type == GL20C.GL_INT_VEC2) {
+			typeName = "vec2i";
 		} else if (type == GL20C.GL_SAMPLER_3D) {
 			typeName = "sampler3D";
 		} else if (type == GL20C.GL_SAMPLER_2D) {

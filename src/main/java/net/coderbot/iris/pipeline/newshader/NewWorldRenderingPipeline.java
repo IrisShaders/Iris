@@ -85,6 +85,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader text;
 	private final Shader block;
 	private final Shader lines;
+	private final Shader beacon;
+	private final Shader glint;
 
 	private final Shader terrainTranslucent;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
@@ -239,10 +241,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
-		Optional<ProgramSource> blockSource = programSet.getGbuffersBlock();
+		Optional<ProgramSource> blockSource = first(programSet.getGbuffersBlock(), terrainSource);
+		Optional<ProgramSource> beaconSource = first(programSet.getGbuffersBeaconBeam(), programSet.getGbuffersTextured());
 
 		Optional<ProgramSource> entitiesSource = first(programSet.getGbuffersEntities(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> entityEyesSource = first(programSet.getGbuffersEntityEyes(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> glintSource = first(programSet.getGbuffersGlint(), programSet.getGbuffersTextured());
 
 		Optional<ProgramSource> damagedBlockSource = first(programSet.getGbuffersDamagedBlock(), terrainSource);
 
@@ -277,6 +281,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, true, false);
 			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT, true, false);
 			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, true, false);
+			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, true, false);
+			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, VertexFormats.POSITION_TEXTURE, false, false);
 			if(legacyLines) {
 				// Allowing textures breaks some shaderpacks
 				VertexFormat format = new VertexFormat(ImmutableMap.<String, VertexFormatElement>builder().put("Position", VertexFormats.POSITION_ELEMENT).put("Color", VertexFormats.COLOR_ELEMENT).put("Normal", VertexFormats.NORMAL_ELEMENT).build());
@@ -543,7 +549,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public void finalizeWorldRendering() {
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
-		phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 	}
 
 	@Override
@@ -647,6 +652,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
+	public Shader getBeacon() {
+		return beacon;
+	}
+
+	@Override
 	public Shader getEntitiesSolid() {
 		return entitiesSolid;
 	}
@@ -669,6 +679,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public Shader getLines() {
 		return lines;
+	}
+
+	@Override
+	public Shader getGlint() {
+		return glint;
 	}
 
 	private void destroyShaders() {

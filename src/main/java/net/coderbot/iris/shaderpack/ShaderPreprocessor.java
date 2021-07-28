@@ -39,6 +39,16 @@ public class ShaderPreprocessor {
 				continue;
 			}
 
+			if (trimmedLine.startsWith("#version")) {
+				// macOS cannot handle whitespace before the #version directive.
+				lines.add(trimmedLine);
+
+				// That was the first line. Add our preprocessor lines
+				lines.add("#define MC_RENDER_QUALITY 1.0");
+				lines.add("#define MC_SHADOW_QUALITY 1.0");
+				continue;
+			}
+
 			lines.add(line);
 		}
 
