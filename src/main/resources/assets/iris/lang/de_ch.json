@@ -1,0 +1,28 @@
+{
+  "iris.shaders.reloaded": "Shaders neu glade!",
+  "iris.shaders.toggled": "Shaders umgschalte zu %s!",
+  "iris.keybind.reload": "Shaders neu lade",
+  "iris.keybind.shaderPackSelection": "Shaderpack uswähle",
+  "iris.keybind.toggleShaders": "Shaders i/uschalte",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "Shader neu lade hed ned funktioniert! Grund: %s",
+  "iris.shaders.toggled.failure": "Shader i/uschalte hed ned funktioniert! Grund: %s",
+
+  "options.iris.apply": "Awende",
+  "options.iris.refresh": "Neu lade",
+  "options.iris.openShaderPackFolder": "Shader Pack Ordner öffne...",
+  "options.iris.refreshShaderPacks": "Shader Packs aktualisiere",
+  "options.iris.shaderPackSelection": "Shader Packs...",
+  "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "Shader Pack hinzuegfüegt \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "%s Shader Packs hinzuegfüegt",
+  "options.iris.shaderPackSelection.failedAdd": "Dateie sind kei gültigi Shader Packs gsi",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" isch keis gültiges Shader Pack",
+  "options.iris.shaderPackSelection.copyError": "Shader Pack \"%s\" hinzuefüege hed ned funktioniert",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" isch bereits i dim Shader Pack Ordner",
+  "options.iris.shaders.disabled": "Shaders: Usgschalte",
+  "options.iris.shaders.enabled": "Shaders: Igschalte",
+
+  "pack.iris.select.title": "Uswähle",
+  "pack.iris.list.label": "+ zum hinzuefüege Shader Packs hie ine zieh"
+}
