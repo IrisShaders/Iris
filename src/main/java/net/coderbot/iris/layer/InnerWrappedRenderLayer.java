@@ -1,22 +1,22 @@
 package net.coderbot.iris.layer;
 
+import net.coderbot.iris.mixin.renderlayer.RenderLayerAccessor;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderPhase;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Objects;
 import java.util.Optional;
 
-import net.coderbot.iris.mixin.renderlayer.RenderLayerAccessor;
-import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.client.render.RenderLayer;
-
-public class IrisRenderLayerWrapper extends RenderLayer implements WrappableRenderLayer {
-	private final UseProgramRenderPhase useProgram;
+public class InnerWrappedRenderLayer extends RenderLayer implements WrappableRenderLayer {
+	private final RenderPhase extra;
 	private final RenderLayer wrapped;
 
-	public IrisRenderLayerWrapper(String name, RenderLayer wrapped, UseProgramRenderPhase useProgram) {
+	public InnerWrappedRenderLayer(String name, RenderLayer wrapped, RenderPhase extra) {
 		super(name, wrapped.getVertexFormat(), wrapped.getDrawMode(), wrapped.getExpectedBufferSize(),
 			wrapped.hasCrumbling(), isTranslucent(wrapped), wrapped::startDrawing, wrapped::endDrawing);
 
-		this.useProgram = useProgram;
+		this.extra = extra;
 		this.wrapped = wrapped;
 	}
 
@@ -24,12 +24,12 @@ public class IrisRenderLayerWrapper extends RenderLayer implements WrappableRend
 	public void startDrawing() {
 		super.startDrawing();
 
-		useProgram.startDrawing();
+		extra.startDrawing();
 	}
 
 	@Override
 	public void endDrawing() {
-		useProgram.endDrawing();
+		extra.endDrawing();
 
 		super.endDrawing();
 	}
@@ -59,9 +59,9 @@ public class IrisRenderLayerWrapper extends RenderLayer implements WrappableRend
 			return false;
 		}
 
-		IrisRenderLayerWrapper other = (IrisRenderLayerWrapper) object;
+		InnerWrappedRenderLayer other = (InnerWrappedRenderLayer) object;
 
-		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.useProgram, other.useProgram);
+		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.extra, other.extra);
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class IrisRenderLayerWrapper extends RenderLayer implements WrappableRend
 
 	@Override
 	public String toString() {
-		return "iris:" + this.wrapped.toString();
+		return "iris_wrapped:" + this.wrapped.toString();
 	}
 
 	private static boolean isTranslucent(RenderLayer layer) {

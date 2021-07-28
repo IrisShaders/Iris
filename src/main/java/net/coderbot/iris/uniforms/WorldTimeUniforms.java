@@ -5,7 +5,7 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 import java.util.Objects;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
-
+import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 
@@ -27,7 +27,9 @@ public final class WorldTimeUniforms {
 
 	private static int getWorldDayTime() {
 		long timeOfDay = getWorld().getTimeOfDay();
-		long dayTime = timeOfDay % 24000L;
+
+		long dayTime = ((DimensionTypeAccessor) getWorld().getDimension()).getFixedTime()
+																		  .orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}
