@@ -74,7 +74,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture noise;
 
 	public static boolean ACTIVE = false;
-	public static List<BlockEntity> visibleBlockEntities = new ArrayList<>();
+	public static List<BlockEntity> visibleBlockEntities;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
@@ -247,6 +247,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		worldRenderer.getWorld().getProfiler().swap("shadows");
 		ACTIVE = true;
+		this.visibleBlockEntities = new ArrayList<>();
 
 		// Create our camera
 		MatrixStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
@@ -470,6 +471,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			((CullingDataCache) worldRenderer).restoreState();
 		}
 
+		this.visibleBlockEntities = null;
 		ACTIVE = false;
 		worldRenderer.getWorld().getProfiler().swap("updatechunks");
 	}
