@@ -41,19 +41,6 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage {
 
 		// Similar deal with wool on sheeps.
 		iris$assignBufferBuilder(entityBuilders, RenderLayer.getEntityCutoutNoCull(new Identifier("textures/entity/sheep/sheep_fur.png")));
-
-		// Vanilla depends on being able to write to some buffers at the same time as other ones
-		// This includes enchantment glints.
-		//
-		// We need to make sure that wrapped variants of buffered render layers are buffered too,
-		// or else we'll get crashes with this approach.
-		List<RenderLayer> existingLayers = new ArrayList<>(entityBuilders.keySet());
-		EntityColorRenderPhase entityColorPhase = new EntityColorRenderPhase(true, 0.0F);
-
-		for (RenderLayer existingLayer : existingLayers) {
-			RenderLayer wrappedLayer = new EntityColorWrappedRenderLayer("iris_entity_color", existingLayer, entityColorPhase);
-			iris$assignBufferBuilder(entityBuilders, wrappedLayer);
-		}
 	}
 
 	@Unique
