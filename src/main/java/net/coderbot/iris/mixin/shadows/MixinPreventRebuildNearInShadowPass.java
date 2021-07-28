@@ -32,18 +32,13 @@ public class MixinPreventRebuildNearInShadowPass {
 	@Inject(method = "setupTerrain", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=rebuildNear"), cancellable = true)
 	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo callback) {
 		if (ShadowRenderer.ACTIVE) {
+			for (WorldRenderer.ChunkInfo chunk : this.visibleChunks) {
+				for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getData().getBlockEntities()) {
+					ShadowRenderer.visibleBlockEntities.add(entity);
+				}
+			}
 			MinecraftClient.getInstance().getProfiler().pop();
 			callback.cancel();
-		}
-	}
-
-	@Inject(method = "setupTerrain", at = @At("TAIL"))
-	private void iris$copyBlockEntities(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo ci) {
-		ShadowRenderer.visibleBlockEntities.clear();
-		for (WorldRenderer.ChunkInfo chunk : this.visibleChunks) {
-			for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getData().getBlockEntities()) {
-				ShadowRenderer.visibleBlockEntities.add(entity);
-			}
 		}
 	}
 }
