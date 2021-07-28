@@ -1,32 +1,24 @@
 package net.coderbot.iris.uniforms;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.coderbot.iris.gl.state.StateUpdateNotifiers;
-import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
-import net.coderbot.iris.mixin.statelisteners.CapabilityTrackerAccessor;
-import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
+import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.pipeline.newshader.FogMode;
+import org.lwjgl.opengl.GL11;
 
 public class FogUniforms {
 	private FogUniforms() {
 		// no construction
 	}
 
-	public static void addFogUniforms(DynamicUniformHolder uniforms) {
-		//TODO: (1.17) Fix fog uniforms
-		/*uniforms.uniform1i("fogMode", () -> {
-			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
+	public static void addFogUniforms(UniformHolder uniforms, FogMode fogMode) {
+		if (fogMode == FogMode.OFF) {
+			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> 0);
+		} else if (fogMode == FogMode.LINEAR) {
+			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> GL11.GL_LINEAR);
+		}
 
-			if (!((CapabilityTrackerAccessor) fog.capState).getState()) {
-				return 0;
-			}
-
-			return GlStateManagerAccessor.getFOG().mode;
-		}, listener -> {
-			StateUpdateNotifiers.fogToggleNotifier.setListener(listener);
-			StateUpdateNotifiers.fogModeNotifier.setListener(listener);
-		});
-
-		uniforms.uniform1f("fogDensity", () -> {
+		//TODO: (1.17) Fix fog density
+		/*uniforms.uniform1f("fogDensity", () -> {
 			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
 
 			if (!((CapabilityTrackerAccessor) fog.capState).getState()) {

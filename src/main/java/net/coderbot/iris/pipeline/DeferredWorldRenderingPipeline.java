@@ -466,7 +466,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, null);
 
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;

@@ -6,6 +6,7 @@ import java.util.function.IntSupplier;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.EntityColorRenderPhase;
+import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.texunits.SpriteAtlasTextureInterface;
@@ -42,7 +43,7 @@ public final class CommonUniforms {
 	}
 
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
-	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
+	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier, FogMode fogMode) {
 		CameraUniforms.addCameraUniforms(uniforms, updateNotifier);
 		ViewportUniforms.addViewportUniforms(uniforms);
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
@@ -51,7 +52,7 @@ public final class CommonUniforms {
 		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
-		FogUniforms.addFogUniforms(uniforms);
+		FogUniforms.addFogUniforms(uniforms, fogMode);
 
 		uniforms.uniform4f("entityColor", () -> {
 			if (EntityColorRenderPhase.currentHurt) {

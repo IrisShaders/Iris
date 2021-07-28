@@ -13,6 +13,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.mixin.shadows.ChunkInfoAccessor;
+import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
@@ -184,7 +185,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier(), FogMode.LINEAR);
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
 		IrisSamplers.addWorldSamplers(builder, normals, specular);
 		IrisSamplers.addNoiseSampler(builder, noise);
