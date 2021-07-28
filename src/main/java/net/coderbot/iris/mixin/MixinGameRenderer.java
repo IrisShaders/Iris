@@ -157,6 +157,21 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
+			"getRenderTypeGlintShader",
+			"getRenderTypeGlintDirectShader",
+			"getRenderTypeGlintTranslucentShader",
+			"getRenderTypeArmorGlintShader",
+			"getRenderTypeEntityGlintDirectShader",
+			"getRenderTypeEntityGlintShader",
+			"getRenderTypeArmorEntityGlintShader"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideGlintShader(CallbackInfoReturnable<Shader> cir) {
+		if(isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getGlint, cir);
+		}
+	}
+
+	@Inject(method = {
 			"getRenderTypeEntitySolidShader()Lnet/minecraft/client/render/Shader;",
 			"getRenderTypeWaterMaskShader()Lnet/minecraft/client/render/Shader;",
 			"getRenderTypeEntityNoOutlineShader()Lnet/minecraft/client/render/Shader;",
