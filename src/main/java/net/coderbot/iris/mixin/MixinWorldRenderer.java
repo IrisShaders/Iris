@@ -94,7 +94,8 @@ public class MixinWorldRenderer {
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}
 
-	// Inject a bit early so that we can end our rendering in time.
+	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
+	// render their waypoint beams.
 	@Inject(method = RENDER, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		MinecraftClient.getInstance().getProfiler().swap("iris_final");
