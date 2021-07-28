@@ -196,6 +196,7 @@ public class TriforcePatcher {
 
 		// Inject the legacy lines transformation after everything else
 		if(type == ShaderType.VERTEX && injectLegacyLines) {
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_LineWidth;");
 			// TODO: Need a better way to do this
 			transformations.replaceExact("uniform vec3 cameraPosition;", ""); // Required if shader has cameraPosition inside a guard
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 cameraPosition;");
@@ -206,8 +207,6 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float viewWidth;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float viewHeight;");
 
-			// TODO: Support the line width uniform
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float _iris_internal_line_width = 4;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "void _iris_internal_legacy_lines() {\n" +
 					"vec4 _iris_internal_ndcStart4 = iris_ProjMat * iris_ModelViewMat * vec4(Position, 1.0);\n" +
 					"vec4 _iris_internal_ndcEnd4 = iris_ProjMat * iris_ModelViewMat * vec4(Position + Normal, 1.0);\n" +
@@ -215,12 +214,12 @@ public class TriforcePatcher {
 					"vec3 _iris_internal_ndcEnd = _iris_internal_ndcEnd4.xyz / _iris_internal_ndcEnd4.w;\n" +
 					"vec2 _iris_internal_screenSize = vec2(viewWidth, viewHeight);\n" +
 					"vec2 _iris_internal_lineDir = normalize(_iris_internal_ndcEnd.xy - _iris_internal_ndcStart.xy);\n" +
-					"vec2 _iris_internal_lineOffset = (vec2(-_iris_internal_lineDir.y, _iris_internal_lineDir.x) * (_iris_internal_line_width / _iris_internal_screenSize));\n" +
+					"vec2 _iris_internal_lineOffset = (vec2(-_iris_internal_lineDir.y, _iris_internal_lineDir.x) * (iris_LineWidth / _iris_internal_screenSize));\n" +
 					"if(_iris_internal_lineOffset.x < 0) { _iris_internal_lineOffset = _iris_internal_lineOffset * -1; }\n" +
 					"if(gl_VertexID % 2 == 0) {\n" +
-					"gl_Position = (vec4(_iris_internal_ndcStart, 1.0) + vec4(_iris_internal_lineOffset, 0.0, 0.0) - vec4(0.0, 0.0, 0.0001, 0.0));\n" +
+					"gl_Position = (vec4(_iris_internal_ndcStart, 1.0) + vec4(_iris_internal_lineOffset, 0.0, 0.0) - vec4(0.0, 0.0, 0.0001, 0.0)) * _iris_internal_ndcStart4.w;\n" +
 					"} else {\n"+
-					"gl_Position = (vec4(_iris_internal_ndcStart, 1.0) - vec4(_iris_internal_lineOffset, 0.0, 0.0) - vec4(0.0, 0.0, 0.0001, 0.0));\n" +
+					"gl_Position = (vec4(_iris_internal_ndcStart, 1.0) - vec4(_iris_internal_lineOffset, 0.0, 0.0) - vec4(0.0, 0.0, 0.0001, 0.0)) * _iris_internal_ndcStart4.w;\n" +
 					"}\n" +
 					"}\n");
 			transformations.injectLine(Transformations.InjectionPoint.MAIN_TAIL, "_iris_internal_legacy_lines();\n");
