@@ -81,6 +81,7 @@ public class SamplerUniforms {
 		uniforms
 			.uniform1i(ONCE, "tex", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)
+			.uniform1i(ONCE, "gtexture", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "lightmap", TextureUnit.LIGHTMAP::getSamplerId)
 			.uniform1i(ONCE, "normals", () -> 2)
 			.uniform1i(ONCE, "specular", () -> 3);

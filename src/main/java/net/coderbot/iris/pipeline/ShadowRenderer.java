@@ -36,6 +36,7 @@ import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
@@ -46,8 +47,11 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.nio.FloatBuffer;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -389,6 +393,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 			renderedEntities.add(entity);
 		}
+
+		worldRenderer.getWorld().getProfiler().swap("sort");
+
+		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
+		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
 
 		worldRenderer.getWorld().getProfiler().swap("build geometry");
 
