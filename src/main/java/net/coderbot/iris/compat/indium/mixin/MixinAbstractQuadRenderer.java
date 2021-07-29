@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 /**
  * Small tweak to Indium to make it obey our separateAo setting.
  */
-@Mixin(targets = "link/infra/indium/renderer/render/AbstractQuadRenderer")
+@Mixin(targets = "link/infra/indium/renderer/render/AbstractQuadRenderer", remap = false)
 @Pseudo
 public class MixinAbstractQuadRenderer {
 	@Redirect(method = {"tesselateSmooth", "tesselateSmoothEmissive"},
