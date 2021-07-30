@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.shaderpack.parsing.ParsedString;
 
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class encapsulates the source code of a single shader source file along with the
@@ -384,8 +385,25 @@ public final class OptionAnnotatedSource {
 		return diagnostics;
 	}
 
+	// TODO: Actually do something with this
 	public ImmutableMap<String, Integer> getBooleanDefineReferences() {
 		return booleanDefineReferences;
+	}
+
+	public OptionSet getOptionSet(String filePath) {
+		OptionSet.Builder builder = OptionSet.builder();
+
+		booleanOptions.forEach((lineIndex, option) -> {
+			OptionLocation location = new OptionLocation(filePath, lineIndex);
+			builder.addBooleanOption(location, option);
+		});
+
+		stringOptions.forEach((lineIndex, option) -> {
+			OptionLocation location = new OptionLocation(filePath, lineIndex);
+			builder.addStringOption(location, option);
+		});
+
+		return builder.build();
 	}
 
 	public String apply(OptionValues values) {
@@ -403,9 +421,18 @@ public final class OptionAnnotatedSource {
 		// See if it's a boolean option
 		BooleanOption booleanOption = booleanOptions.get(index);
 
+		// TODO: Check all of this code
+
 		if (booleanOption != null) {
 			if (values.shouldFlip(booleanOption.getName())) {
-				return flipBooleanDefine(existing);
+				if (booleanOption.getType() == OptionType.DEFINE) {
+					return flipBooleanDefine(existing);
+				} else if (booleanOption.getType() == OptionType.CONST) {
+					return editConst(existing, Boolean.toString(booleanOption.getDefaultValue()), Boolean.toString(!booleanOption.getDefaultValue()));
+				} else {
+					// TODO: This shouldn't be possible.
+					throw new IllegalArgumentException("Unknown option type " + booleanOption.getType());
+				}
 			} else {
 				return existing;
 			}
@@ -414,13 +441,42 @@ public final class OptionAnnotatedSource {
 		StringOption stringOption = stringOptions.get(index);
 
 		if (stringOption != null) {
-			// TODO
-			throw new UnsupportedOperationException("not yet implemented");
+			return values.getStringValue(stringOption.getName()).map(value -> {
+				if (stringOption.getType() == OptionType.DEFINE) {
+					if (stringOption.getName().contains(stringOption.getDefaultValue())) {
+						// TODO
+						throw new IllegalStateException("Not yet implemented: setting option value " +
+							"where the name contains the default value; name = " + stringOption.getName() +
+							", default value = " + stringOption.getDefaultValue());
+					}
+
+					return existing.replaceFirst(Pattern.quote(stringOption.getDefaultValue()), Matcher.quoteReplacement(value));
+				} else if (stringOption.getType() == OptionType.CONST) {
+					return editConst(existing, stringOption.getDefaultValue(), value);
+				} else {
+					// TODO: This shouldn't be possible.
+					throw new IllegalArgumentException("Unknown option type " + stringOption.getType());
+				}
+			}).orElse(existing);
 		}
 
-		// TODO: Other option types?
-
 		return existing;
+	}
+
+	private String editConst(String line, String currentValue, String newValue) {
+		int equalsIndex = line.indexOf('=');
+
+		if (equalsIndex == -1) {
+			// This shouldn't be possible.
+			throw new IllegalStateException();
+		}
+
+		String firstPart = line.substring(0, equalsIndex);
+		String secondPart = line.substring(equalsIndex);
+
+		secondPart = secondPart.replaceFirst(Pattern.quote(currentValue), Matcher.quoteReplacement(newValue));
+
+		return firstPart + secondPart;
 	}
 
 	private static boolean hasLeadingComment(String line) {
@@ -428,8 +484,12 @@ public final class OptionAnnotatedSource {
 	}
 
 	private static String removeLeadingComment(String line) {
-		// TODO: What about ///#define OPTION
-		return line.replaceFirst(Matcher.quoteReplacement("//"), "");
+		ParsedString parsed = new ParsedString(line);
+
+		parsed.takeSomeWhitespace();
+		parsed.takeComments();
+
+		return parsed.takeRest();
 	}
 
 	private static String flipBooleanDefine(String line) {
