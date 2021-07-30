@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlDebugInfo;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
@@ -149,10 +150,25 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
-		} else if (isPhase(WorldRenderingPhase.BLOCK_ENTITIES)) {
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getEntitiesCutout, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRenderTypeGlintShader",
+			"getRenderTypeGlintDirectShader",
+			"getRenderTypeGlintTranslucentShader",
+			"getRenderTypeArmorGlintShader",
+			"getRenderTypeEntityGlintDirectShader",
+			"getRenderTypeEntityGlintShader",
+			"getRenderTypeArmorEntityGlintShader"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideGlintShader(CallbackInfoReturnable<Shader> cir) {
+		if(isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getGlint, cir);
 		}
 	}
 
@@ -166,7 +182,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
-		} else if (isPhase(WorldRenderingPhase.BLOCK_ENTITIES)) {
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getEntitiesSolid, cir);
@@ -180,6 +196,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getEntitiesEyes, cir);
 		}
@@ -251,6 +269,11 @@ public class MixinGameRenderer {
 		if(!ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		}
+	}
+
+	@Inject(method = "getRenderTypeBeaconBeamShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideBeaconBeamShader(CallbackInfoReturnable<Shader> cir) {
+			override(CoreWorldRenderingPipeline::getBeacon, cir);
 	}
 
 	private static boolean isPhase(WorldRenderingPhase phase) {

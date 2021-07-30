@@ -137,7 +137,7 @@ public class TriforceSodiumPatcher {
 
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 					"struct DrawParameters {\n" +
-					"    vec3 Offset;\n" +
+					"    vec4 Offset;\n" +
 					"};\n" +
 					"layout(std140) uniform ubo_DrawParameters {\n" +
 					"    DrawParameters Chunks[256];\n" +
@@ -147,7 +147,7 @@ public class TriforceSodiumPatcher {
 					"uniform float u_ModelOffset;\n" +
 					"uniform vec3 u_CameraTranslation;");
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec3 getVertexPosition() { vec3 vertexPosition = a_Pos.xyz * u_ModelScale + u_ModelOffset; vec3 chunkOffset = Chunks[int(a_Pos.w)].Offset; return chunkOffset + vertexPosition + u_CameraTranslation; }");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec3 getVertexPosition() { vec3 vertexPosition = a_Pos.xyz * u_ModelScale + u_ModelOffset; vec3 chunkOffset = Chunks[int(a_Pos.w)].Offset.xyz; return chunkOffset + vertexPosition + u_CameraTranslation; }");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 

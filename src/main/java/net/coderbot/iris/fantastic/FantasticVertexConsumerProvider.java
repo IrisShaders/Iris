@@ -31,7 +31,7 @@ public class FantasticVertexConsumerProvider extends VertexConsumerProvider.Imme
 		}
 
 		if (layer instanceof BlendingStateHolder) {
-			return ((BlendingStateHolder) layer).hasBlend();
+			return ((BlendingStateHolder) layer).getTransparencyType() != TransparencyType.OPAQUE;
 		}
 
 		return true;

@@ -13,6 +13,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.mixin.shadows.ChunkInfoAccessor;
+import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
@@ -36,6 +37,7 @@ import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
@@ -46,8 +48,11 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.nio.FloatBuffer;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -74,6 +79,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture noise;
 
 	public static boolean ACTIVE = false;
+	public static List<BlockEntity> visibleBlockEntities;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
@@ -179,7 +185,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier(), FogMode.LINEAR);
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
 		IrisSamplers.addWorldSamplers(builder, normals, specular);
 		IrisSamplers.addNoiseSampler(builder, noise);
@@ -246,6 +252,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		worldRenderer.getWorld().getProfiler().swap("shadows");
 		ACTIVE = true;
+		this.visibleBlockEntities = new ArrayList<>();
 
 		// Create our camera
 		MatrixStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
@@ -311,7 +318,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// TODO: Support shadow clear color directives & disable buffer clearing
 		// Ensure that the color and depth values are cleared appropriately
-		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.clearDepth(1.0f);
 		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
 
@@ -388,6 +395,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			renderedEntities.add(entity);
 		}
 
+		worldRenderer.getWorld().getProfiler().swap("sort");
+
+		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
+		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
+
 		worldRenderer.getWorld().getProfiler().swap("build geometry");
 
 		for (Entity entity : renderedEntities) {
@@ -401,16 +413,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		int shadowBlockEntities = 0;
 
-		for (WorldRenderer.ChunkInfo chunk : worldRenderer.getVisibleChunks()) {
-			for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getData().getBlockEntities()) {
-				modelView.push();
-				BlockPos pos = entity.getPos();
-				modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-				MinecraftClient.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, provider);
-				modelView.pop();
+		for (BlockEntity entity : visibleBlockEntities) {
+			modelView.push();
+			BlockPos pos = entity.getPos();
+			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+			MinecraftClient.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, provider);
+			modelView.pop();
 
-				shadowBlockEntities++;
-			}
+			shadowBlockEntities++;
 		}
 
 		renderedShadowEntities = shadowEntities;
@@ -471,6 +481,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			((CullingDataCache) worldRenderer).restoreState();
 		}
 
+		this.visibleBlockEntities = null;
 		ACTIVE = false;
 		worldRenderer.getWorld().getProfiler().swap("updatechunks");
 	}

@@ -2,9 +2,11 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.world.World;
 
 // These expressions are copied directly from BSL
 //
@@ -25,8 +27,10 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static int getWorldDayTime() {
-		long timeOfDay = MinecraftClient.getInstance().world.getTimeOfDay();
-		long dayTime = timeOfDay % 24000L;
+		World world     = MinecraftClient.getInstance().world;
+		long  timeOfDay = world.getTimeOfDay();
+		long dayTime = ((DimensionTypeAccessor) world.getDimension()).getFixedTime()
+																	 .orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}
