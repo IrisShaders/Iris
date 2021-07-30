@@ -40,7 +40,7 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 	// The recommended version of Sodium for use with Iris
-	private static final String SODIUM_VERSION = "0.3.0-IRIS2";
+	private static final String SODIUM_VERSION = "0.3.0+IRIS2";
 
 	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
@@ -66,7 +66,7 @@ public class Iris implements ClientModInitializer {
 				// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
 				// the right fork of Sodium, it will just crash.
 				if (!versionString.startsWith(SODIUM_VERSION)) {
-					throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but" + SODIUM_VERSION + "is expected");
+					throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but " + SODIUM_VERSION + " is expected");
 				}
 			}
 		);
