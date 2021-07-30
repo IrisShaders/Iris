@@ -28,7 +28,7 @@ public class CameraUniforms {
 	}
 
 	private static int getRenderDistanceInBlocks() {
-		return client.options.viewDistance * 16;
+		return client.gameRenderer.getViewDistance();
 	}
 
 	public static Vec3d getCameraPosition() {
