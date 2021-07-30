@@ -24,8 +24,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.FogUniforms117;
-import net.coderbot.iris.uniforms.FogUniforms117;
+import net.coderbot.iris.uniforms.FogUniformsConverter;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -41,7 +40,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 public class FinalPassRenderer {
@@ -249,7 +247,7 @@ public class FinalPassRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, FogMode.OFF);
-		FogUniforms117.addFogUniforms(builder);
+		FogUniformsConverter.addFogUniforms(builder);
 
 		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
 		IrisSamplers.addNoiseSampler(builder, noiseTexture);

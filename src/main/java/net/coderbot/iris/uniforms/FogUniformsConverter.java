@@ -7,8 +7,12 @@ import net.minecraft.util.math.Vector4f;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
-public class FogUniforms117 {
-	private FogUniforms117() {
+/**
+ * Converts the vanilla fog uniforms to shader-compatible ones
+ * @see FogUniforms
+ */
+public class FogUniformsConverter {
+	private FogUniformsConverter() {
 		// no construction
 	}
 
