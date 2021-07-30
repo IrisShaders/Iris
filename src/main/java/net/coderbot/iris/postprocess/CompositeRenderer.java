@@ -28,7 +28,6 @@ import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.FogUniformsConverter;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.texture.AbstractTexture;
 import net.fabricmc.loader.api.FabricLoader;
@@ -208,7 +207,6 @@ public class CompositeRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, FogMode.OFF);
-		FogUniformsConverter.addFogUniforms(builder);
 
 		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
 		IrisSamplers.addNoiseSampler(builder, noiseTexture);
