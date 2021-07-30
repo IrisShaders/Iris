@@ -36,8 +36,8 @@ public class MixinGlStateManager {
 	}
 
 	static {
-		StateUpdateNotifiers.fogToggleNotifier = listener -> fogToggleListener = listener;
-		StateUpdateNotifiers.fogModeNotifier = listener -> fogModeListener = listener;
-		StateUpdateNotifiers.fogDensityNotifier = listener -> fogDensityListener = listener;
+	//	StateUpdateNotifiers.fogToggleNotifier = listener -> fogToggleListener = listener;
+	//	StateUpdateNotifiers.fogModeNotifier = listener -> fogModeListener = listener;
+	//	StateUpdateNotifiers.fogDensityNotifier = listener -> fogDensityListener = listener;
 	}
 }

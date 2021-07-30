@@ -44,6 +44,7 @@
     "statelisteners.CapabilityTrackerAccessor",
     "statelisteners.GlStateManagerAccessor",
     "statelisteners.MixinGlStateManager",
+    "statelisteners.MixinRenderSystem",
     "DimensionTypeAccessor"
   ],
   "injectors": {
