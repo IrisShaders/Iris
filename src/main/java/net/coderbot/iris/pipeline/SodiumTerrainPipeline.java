@@ -19,10 +19,13 @@ import net.fabricmc.loader.api.FabricLoader;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
+	String terrainGeometry;
 	String terrainFragment;
 	String translucentVertex;
+	String translucentGeometry;
 	String translucentFragment;
 	String shadowVertex;
+	String shadowGeometry;
 	String shadowFragment;
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
@@ -40,16 +43,19 @@ public class SodiumTerrainPipeline {
 
 		terrainSource.ifPresent(sources -> {
 			terrainVertex = sources.getVertexSource().orElse(null);
+			terrainGeometry = sources.getGeometrySource().orElse(null);
 			terrainFragment = sources.getFragmentSource().orElse(null);
 		});
 
 		translucentSource.ifPresent(sources -> {
 			translucentVertex = sources.getVertexSource().orElse(null);
+			translucentGeometry = sources.getGeometrySource().orElse(null);
 			translucentFragment = sources.getFragmentSource().orElse(null);
 		});
 
 		shadowSource.ifPresent(sources -> {
 			shadowVertex = sources.getVertexSource().orElse(null);
+			shadowGeometry = sources.getGeometrySource().orElse(null);
 			shadowFragment = sources.getFragmentSource().orElse(null);
 		});
 
@@ -163,6 +169,10 @@ public class SodiumTerrainPipeline {
 		return Optional.ofNullable(terrainVertex);
 	}
 
+	public Optional<String> getTerrainGeometryShaderSource() {
+		return Optional.ofNullable(terrainGeometry);
+	}
+
 	public Optional<String> getTerrainFragmentShaderSource() {
 		return Optional.ofNullable(terrainFragment);
 	}
@@ -171,12 +181,20 @@ public class SodiumTerrainPipeline {
 		return Optional.ofNullable(translucentVertex);
 	}
 
+	public Optional<String> getTranslucentGeometryShaderSource() {
+		return Optional.ofNullable(translucentGeometry);
+	}
+
 	public Optional<String> getTranslucentFragmentShaderSource() {
 		return Optional.ofNullable(translucentFragment);
 	}
 
 	public Optional<String> getShadowVertexShaderSource() {
 		return Optional.ofNullable(shadowVertex);
+	}
+
+	public Optional<String> getShadowGeometryShaderSource() {
+		return Optional.ofNullable(shadowGeometry);
 	}
 
 	public Optional<String> getShadowFragmentShaderSource() {
