@@ -12,7 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BackgroundRenderer.class)
 public class MixinBackgroundRenderer {
-	@Shadow private static float red, green, blue;
+	@Shadow
+	private static float red, green, blue;
+	
 	@Inject(method = "render", at = @At("TAIL"))
 	private static void render(Camera camera, float tickDelta, ClientWorld world, int i, float f, CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setFogColor(red, green, blue);

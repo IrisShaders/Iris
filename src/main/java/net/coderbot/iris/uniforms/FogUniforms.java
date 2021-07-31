@@ -1,6 +1,7 @@
 package net.coderbot.iris.uniforms;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.newshader.FogMode;
@@ -11,11 +12,13 @@ import org.lwjgl.opengl.GL11;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 public class FogUniforms {
+	private static final float FOG_MULTIPLIER = 1.225F;
+	
 	private FogUniforms() {
 		// no construction
 	}
 
-	public static void addFogUniforms(UniformHolder uniforms, FogMode fogMode) {
+	public static void addFogUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
 		if (fogMode == FogMode.OFF) {
 			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> 0);
 		} else if (fogMode == FogMode.LINEAR) {
@@ -28,6 +31,9 @@ public class FogUniforms {
 					float[] fogColor = RenderSystem.getShaderFogColor();
 					return new Vec3f(fogColor[0], fogColor[1], fogColor[2]);
 				})
+				.uniform1f(PER_FRAME, "fogStart", () -> RenderSystem.getShaderFogStart() * FOG_MULTIPLIER)
+				.uniform1f(PER_FRAME, "fogEnd", () -> RenderSystem.getShaderFogEnd() * FOG_MULTIPLIER)
+				.uniform1f(PER_FRAME, "fogDensity", () -> 0)
 				.uniform4f(PER_FRAME, "iris_FogColor", () -> {
 					float[] fogColor = RenderSystem.getShaderFogColor();
 					return new Vector4f(fogColor[0], fogColor[1], fogColor[2], fogColor[3]);
