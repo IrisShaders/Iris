@@ -108,7 +108,7 @@ public class HorizonRenderer {
 	}
 
 	private void buildHorizon(VertexConsumer consumer) {
-		int radius = getRenderDistanceInBlocks();
+		float radius = getRenderDistanceInBlocks();
 
 		if (radius > 256) {
 			// Prevent the prism from getting too large, this causes issues on some shader packs that modify the vanilla
@@ -122,8 +122,8 @@ public class HorizonRenderer {
 		buildBottomPlane(consumer, 384);
 	}
 
-	private int getRenderDistanceInBlocks() {
-		return MinecraftClient.getInstance().options.viewDistance * 16;
+	private float getRenderDistanceInBlocks() {
+		return MinecraftClient.getInstance().gameRenderer.getViewDistance()  * 16;
 	}
 
 	public void renderHorizon(MatrixStack matrices) {

@@ -27,7 +27,7 @@ public class CameraUniforms {
 			.uniform3d(PER_FRAME, "previousCameraPosition", new PreviousCameraPosition(notifier));
 	}
 
-	private static int getRenderDistanceInBlocks() {
+	private static float getRenderDistanceInBlocks() {
 		return client.gameRenderer.getViewDistance() * 16;
 	}
 
