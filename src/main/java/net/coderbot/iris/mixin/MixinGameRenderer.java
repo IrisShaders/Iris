@@ -144,7 +144,8 @@ public class MixinGameRenderer {
 			"getRenderTypeEntityTranslucentShader()Lnet/minecraft/client/render/Shader;",
 			"getRenderTypeEntityTranslucentCullShader()Lnet/minecraft/client/render/Shader;",
 			"getRenderTypeItemEntityTranslucentCullShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeArmorCutoutNoCullShader()Lnet/minecraft/client/render/Shader;"
+			"getRenderTypeArmorCutoutNoCullShader()Lnet/minecraft/client/render/Shader;",
+			"getRenderTypeEnergySwirlShader()Lnet/minecraft/client/render/Shader;"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<Shader> cir) {
 		if (ShadowRenderer.ACTIVE) {
