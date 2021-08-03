@@ -1,18 +1,18 @@
 package net.coderbot.iris.mixin.fantastic;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.fantastic.BlendingStateHolder;
 import net.coderbot.iris.fantastic.TransparencyType;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
-import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net/minecraft/client/render/RenderLayer$MultiPhase")
-public abstract class MixinMultiPhaseRenderLayer extends RenderLayer implements BlendingStateHolder {
+@Mixin(targets = "net/minecraft/client/renderer/RenderType$CompositeRenderType")
+public abstract class MixinMultiPhaseRenderLayer extends RenderType implements BlendingStateHolder {
 	@Unique
 	private TransparencyType transparencyType;
 
@@ -22,9 +22,9 @@ public abstract class MixinMultiPhaseRenderLayer extends RenderLayer implements 
 
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void iris$onMultiPhaseInit(String name, VertexFormat vertexFormat, int drawMode, int expectedBufferSize,
-									   boolean hasCrumbling, boolean translucent, RenderLayer.MultiPhaseParameters phases,
+									   boolean hasCrumbling, boolean translucent, RenderType.CompositeState phases,
 									   CallbackInfo ci) {
-		RenderPhase.Transparency transparency = ((MultiPhaseParametersAccessor) (Object) phases).getTransparency();
+		RenderStateShard.TransparencyStateShard transparency = ((MultiPhaseParametersAccessor) (Object) phases).getTransparency();
 
 		if ("water_mask".equals(name)) {
 			transparencyType = TransparencyType.WATER_MASK;

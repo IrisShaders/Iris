@@ -1,23 +1,22 @@
 package net.coderbot.iris.fantastic;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.layer.WrappableRenderLayer;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import java.util.*;
 
-public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.Immediate {
-	private final Map<RenderLayer, BufferBuilder> bufferBuilders;
-	private final Object2IntMap<RenderLayer> unused;
+public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.BufferSource {
+	private final Map<RenderType, BufferBuilder> bufferBuilders;
+	private final Object2IntMap<RenderType> unused;
 	private final Set<BufferBuilder> activeBuffers;
 	private boolean flushed;
 
-	private final Set<RenderLayer> layersThisFrame;
-	private final List<RenderLayer> layersInOrder;
+	private final Set<RenderType> layersThisFrame;
+	private final List<RenderType> layersInOrder;
 
 	public FullyBufferedVertexConsumerProvider() {
 		super(new BufferBuilder(0), Collections.emptyMap());
@@ -31,7 +30,7 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		this.layersInOrder = new ArrayList<>();
 	}
 
-	private TransparencyType getTransparencyType(RenderLayer layer) {
+	private TransparencyType getTransparencyType(RenderType layer) {
 		while (layer instanceof WrappableRenderLayer) {
 			layer = ((WrappableRenderLayer) layer).unwrap();
 		}
@@ -45,13 +44,13 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	}
 
 	@Override
-	public VertexConsumer getBuffer(RenderLayer renderLayer) {
+	public VertexConsumer getBuffer(RenderType renderLayer) {
 		flushed = false;
 
-		BufferBuilder buffer = bufferBuilders.computeIfAbsent(renderLayer, layer -> new BufferBuilder(layer.getExpectedBufferSize()));
+		BufferBuilder buffer = bufferBuilders.computeIfAbsent(renderLayer, layer -> new BufferBuilder(layer.bufferSize()));
 
 		if (activeBuffers.add(buffer)) {
-			buffer.begin(renderLayer.getDrawMode(), renderLayer.getVertexFormat());
+			buffer.begin(renderLayer.mode(), renderLayer.format());
 		}
 
 		if (this.layersThisFrame.add(renderLayer)) {
@@ -73,12 +72,12 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	}
 
 	@Override
-	public void draw() {
+	public void endBatch() {
 		if (flushed) {
 			return;
 		}
 
-		List<RenderLayer> removedLayers = new ArrayList<>();
+		List<RenderType> removedLayers = new ArrayList<>();
 
 		unused.forEach((unusedLayer, unusedCount) -> {
 			if (unusedCount < 10) {
@@ -95,14 +94,14 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 			}
 		});
 
-		for (RenderLayer removed : removedLayers) {
+		for (RenderType removed : removedLayers) {
 			unused.removeInt(removed);
 		}
 
 		// Make sure translucent layers are rendered after non-translucent ones.
 		layersInOrder.sort(Comparator.comparing(this::getTransparencyType));
 
-		for (RenderLayer layer : layersInOrder) {
+		for (RenderType layer : layersInOrder) {
 			drawInternal(layer);
 		}
 
@@ -113,11 +112,11 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	}
 
 	@Override
-	public void draw(RenderLayer layer) {
+	public void endBatch(RenderType layer) {
 		// Disable explicit flushing
 	}
 
-	private void drawInternal(RenderLayer layer) {
+	private void drawInternal(RenderType layer) {
 		BufferBuilder buffer = bufferBuilders.get(layer);
 
 		if (buffer == null) {
@@ -125,8 +124,8 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		}
 
 		if (activeBuffers.remove(buffer)) {
-			layer.draw(buffer, 0, 0, 0);
-			buffer.reset();
+			layer.end(buffer, 0, 0, 0);
+			buffer.discard();
 		} else {
 			// Schedule the buffer for removal next frame if it isn't used this frame.
 			int unusedCount = unused.getOrDefault(layer, 0);

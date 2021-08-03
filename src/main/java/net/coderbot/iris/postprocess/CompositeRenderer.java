@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -22,13 +23,11 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
 
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
@@ -114,9 +113,9 @@ public class CompositeRenderer {
 		RenderSystem.disableBlend();
 		RenderSystem.disableAlphaTest();
 
-		final Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-		final int baseWidth = main.textureWidth;
-		final int baseHeight = main.textureHeight;
+		final RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+		final int baseWidth = main.width;
+		final int baseHeight = main.height;
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 
@@ -143,8 +142,8 @@ public class CompositeRenderer {
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
-		main.beginWrite(true);
-		GlStateManager.useProgram(0);
+		main.bindWrite(true);
+		GlStateManager._glUseProgram(0);
 
 		// NB: Unbinding all of these textures is necessary for proper shaderpack reloading.
 		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {
@@ -157,7 +156,7 @@ public class CompositeRenderer {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
-	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
+	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
 		RenderSystem.bindTexture(readFromAlt ? target.getAltTexture() : target.getMainTexture());
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer

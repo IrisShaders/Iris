@@ -1,9 +1,8 @@
 package net.coderbot.iris.postprocess;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import org.lwjgl.opengl.GL11;
-
-import net.minecraft.client.render.VertexFormats;
 import org.lwjgl.opengl.GL20C;
 
 /**
@@ -39,7 +38,7 @@ public class FullScreenQuadRenderer {
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, quadBuffer);
-		VertexFormats.POSITION_TEXTURE.startDrawing(0L);
+		DefaultVertexFormat.POSITION_TEX.setupBufferState(0L);
 	}
 
 	public void renderQuad() {
@@ -47,7 +46,7 @@ public class FullScreenQuadRenderer {
 	}
 
 	public static void end() {
-		VertexFormats.POSITION_TEXTURE.endDrawing();
+		DefaultVertexFormat.POSITION_TEX.clearBufferState();
 		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
 
 		RenderSystem.enableDepthTest();

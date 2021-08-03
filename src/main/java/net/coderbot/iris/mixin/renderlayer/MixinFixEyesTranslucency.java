@@ -4,15 +4,13 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 
 @Environment(EnvType.CLIENT)
-@Mixin(RenderLayer.class)
+@Mixin(RenderType.class)
 public class MixinFixEyesTranslucency {
 	// Minecraft interprets an alpha value of zero as a signal to disable the alpha test.
 	// However, we actually want to reject all nonzero alpha values.
@@ -21,11 +19,11 @@ public class MixinFixEyesTranslucency {
 	// purposes zero, except when it comes to Minecraft's hardcoded `alpha > 0.0` check. Otherwise, it works just fine
 	// for the alpha test.
 	@Unique
-	private static final RenderPhase.Alpha REJECT_ZERO_ALPHA = new RenderPhase.Alpha(Float.MIN_VALUE);
+	private static final RenderStateShard.AlphaStateShard REJECT_ZERO_ALPHA = new RenderStateShard.AlphaStateShard(Float.MIN_VALUE);
 
-	@Redirect(method = "getEyes", at = @At(value = "INVOKE",
-		target = "Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;transparency(Lnet/minecraft/client/render/RenderPhase$Transparency;)Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;"))
-	private static RenderLayer.MultiPhaseParameters.Builder iris$fixEyesTranslucency(RenderLayer.MultiPhaseParameters.Builder instance, RenderPhase.Transparency ignored) {
-		return instance.transparency(RenderPhaseAccessor.getTranslucentTransparency()).alpha(REJECT_ZERO_ALPHA);
+	@Redirect(method = "eyes", at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;setTransparencyState(Lnet/minecraft/client/renderer/RenderStateShard$TransparencyStateShard;)Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;"))
+	private static RenderType.CompositeState.CompositeStateBuilder iris$fixEyesTranslucency(RenderType.CompositeState.CompositeStateBuilder instance, RenderStateShard.TransparencyStateShard ignored) {
+		return instance.setTransparencyState(RenderPhaseAccessor.getTranslucentTransparency()).setAlphaState(REJECT_ZERO_ALPHA);
 	}
 }

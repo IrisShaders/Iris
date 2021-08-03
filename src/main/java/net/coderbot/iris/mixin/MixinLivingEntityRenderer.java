@@ -1,11 +1,11 @@
 package net.coderbot.iris.mixin;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.layer.EntityColorRenderPhase;
 import net.coderbot.iris.layer.InnerWrappedRenderLayer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,12 +14,12 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(LivingEntityRenderer.class)
 public abstract class MixinLivingEntityRenderer {
 	@Shadow
-	abstract float getAnimationCounter(LivingEntity entity, float tickDelta);
+	abstract float getAttackAnim(LivingEntity entity, float tickDelta);
 
 	@ModifyVariable(method = "render", at = @At("HEAD"))
-	private VertexConsumerProvider iris$wrapProvider(VertexConsumerProvider provider, LivingEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+	private MultiBufferSource iris$wrapProvider(MultiBufferSource provider, LivingEntity entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
 		boolean hurt = entity.hurtTime > 0 || entity.deathTime > 0;
-		float whiteFlash = getAnimationCounter(entity, tickDelta);
+		float whiteFlash = getAttackAnim(entity, tickDelta);
 
 		if (hurt || whiteFlash > 0.0) {
 			// TODO: Don't round the white flash?

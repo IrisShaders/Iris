@@ -1,21 +1,19 @@
 package net.coderbot.iris.mixin.normals;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Matrix4f;
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 
 /**
  * An attempt to fix entity vertex normals so that they are more similar to how they were in 1.14
@@ -36,11 +34,11 @@ import net.fabricmc.api.Environment;
  * has been preserved for now in case it ends up being necessary again at some point in the future.
  */
 @Environment(EnvType.CLIENT)
-@Mixin(WorldRenderer.class)
+@Mixin(LevelRenderer.class)
 public class MixinFixEntityVertexNormals {
-	private static final String RENDER = "render(Lnet/minecraft/client/util/math/MatrixStack;FJZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lnet/minecraft/client/render/LightmapTextureManager;Lnet/minecraft/util/math/Matrix4f;)V";
-	private static final String CHECK_EMPTY = "net/minecraft/client/render/WorldRenderer.checkEmpty(Lnet/minecraft/client/util/math/MatrixStack;)V";
-	private static final String PROFILER_SWAP = "net/minecraft/util/profiler/Profiler.swap(Ljava/lang/String;)V";
+	private static final String RENDER = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
+	private static final String CHECK_EMPTY = "Lnet/minecraft/client/renderer/LevelRenderer;checkPoseStack(Lcom/mojang/blaze3d/vertex/PoseStack;)V";
+	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V";
 	private static final String PUSH_MATRIX = "Lcom/mojang/blaze3d/systems/RenderSystem;pushMatrix()V";
 
 	@Inject(method = RENDER, at = {
@@ -72,18 +70,18 @@ public class MixinFixEntityVertexNormals {
 				"Lnet/minecraft/client/render/WorldRenderer;transparencyShader:Lnet/minecraft/client/gl/ShaderEffect;")
 		)
 	})
-	private void iris$setupGlMatrix(MatrixStack matrices, float tickDelta, long limitTime,
+	private void iris$setupGlMatrix(PoseStack matrices, float tickDelta, long limitTime,
 									boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-									LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
+									LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
 		// Don't bake the camera rotation / position into the vertices and vertex normals
-		matrices.push();
+		matrices.pushPose();
 
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
-		RenderSystem.multMatrix(matrices.peek().getModel());
+		RenderSystem.multMatrix(matrices.last().pose());
 
-		matrices.peek().getModel().loadIdentity();
-		matrices.peek().getNormal().loadIdentity();
+		matrices.last().pose().setIdentity();
+		matrices.last().normal().setIdentity();
 	}
 
 	@Inject(method = RENDER, at = {
@@ -102,11 +100,11 @@ public class MixinFixEntityVertexNormals {
 		to = @At(value = "INVOKE", target =
 			"Lnet/minecraft/client/render/debug/DebugRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;DDD)V")
 	))
-	private void iris$teardownGlMatrix(MatrixStack matrices, float tickDelta, long limitTime,
+	private void iris$teardownGlMatrix(PoseStack matrices, float tickDelta, long limitTime,
 									   boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-									   LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
+									   LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
 		// Pop our modified normal matrix from the stack
-		matrices.pop();
+		matrices.popPose();
 
 		// Pop the matrix from the GL stack
 		RenderSystem.popMatrix();

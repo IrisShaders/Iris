@@ -5,7 +5,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.rendertarget.DepthTexture;
-import net.minecraft.client.render.Camera;
+import net.minecraft.client.Camera;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -19,7 +19,7 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 		});
 
 		// NB: We don't use getDepthTextureNoTranslucents
-		GlStateManager.bindTexture(targets.getDepthTexture().getTextureId());
+		GlStateManager._bindTexture(targets.getDepthTexture().getTextureId());
 
 		// We have to do this or else sampling a sampler2DShadow produces "undefined" results.
 		//
@@ -33,7 +33,7 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
 		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
 
-		GlStateManager.bindTexture(0);
+		GlStateManager._bindTexture(0);
 
 		targets.getFramebuffer().bind();
 

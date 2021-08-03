@@ -1,11 +1,10 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
-import net.minecraft.client.render.RenderPhase;
-
+import net.minecraft.client.renderer.RenderStateShard;
 import java.util.Objects;
 
-public class EntityColorRenderPhase extends RenderPhase {
+public class EntityColorRenderPhase extends RenderStateShard {
 	public static boolean currentHurt;
 	public static float currentWhiteFlash;
 	private static Runnable listener;

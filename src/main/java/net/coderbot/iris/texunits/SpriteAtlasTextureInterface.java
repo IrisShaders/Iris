@@ -1,7 +1,7 @@
 package net.coderbot.iris.texunits;
 
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.world.phys.Vec2;
 
 public interface SpriteAtlasTextureInterface {
-	Vec2f getAtlasSize();
+	Vec2 getAtlasSize();
 }

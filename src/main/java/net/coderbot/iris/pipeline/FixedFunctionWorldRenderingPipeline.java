@@ -4,9 +4,8 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import java.util.List;
 
 public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
@@ -18,8 +17,8 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	@Override
 	public void beginWorldRendering() {
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
-		MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
-		GlStateManager.useProgram(0);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
+		GlStateManager._glUseProgram(0);
 	}
 
 	@Override

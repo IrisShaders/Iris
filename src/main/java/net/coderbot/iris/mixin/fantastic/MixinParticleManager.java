@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.fantastic.IrisParticleTextureSheets;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleManager;
-import net.minecraft.client.particle.ParticleManager;
-import net.minecraft.client.particle.ParticleTextureSheet;
+import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.particle.ParticleRenderType;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,34 +41,34 @@ import java.util.List;
  *
  * As the saying goes, "Work smarter, not harder."
  */
-@Mixin(ParticleManager.class)
+@Mixin(ParticleEngine.class)
 public class MixinParticleManager implements PhasedParticleManager {
 	@Unique
 	private ParticleRenderingPhase phase = ParticleRenderingPhase.EVERYTHING;
 
 	@Shadow
 	@Final
-	private static List<ParticleTextureSheet> PARTICLE_TEXTURE_SHEETS;
+	private static List<ParticleRenderType> RENDER_ORDER;
 
-	private static final List<ParticleTextureSheet> OPAQUE_PARTICLE_TEXTURE_SHEETS;
+	private static final List<ParticleRenderType> OPAQUE_PARTICLE_TEXTURE_SHEETS;
 
 	static {
 		OPAQUE_PARTICLE_TEXTURE_SHEETS = ImmutableList.of(
 			IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET,
-			ParticleTextureSheet.PARTICLE_SHEET_OPAQUE,
-			ParticleTextureSheet.PARTICLE_SHEET_LIT,
-			ParticleTextureSheet.CUSTOM,
-			ParticleTextureSheet.NO_RENDER
+			ParticleRenderType.PARTICLE_SHEET_OPAQUE,
+			ParticleRenderType.PARTICLE_SHEET_LIT,
+			ParticleRenderType.CUSTOM,
+			ParticleRenderType.NO_RENDER
 		);
 	}
 
-	@Redirect(method = "renderParticles", at = @At(value = "FIELD", target = "Lnet/minecraft/client/particle/ParticleManager;PARTICLE_TEXTURE_SHEETS:Ljava/util/List;"))
-	private List<ParticleTextureSheet> iris$selectParticlesToRender() {
+	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/particle/ParticleEngine;RENDER_ORDER:Ljava/util/List;"))
+	private List<ParticleRenderType> iris$selectParticlesToRender() {
 		if (phase == ParticleRenderingPhase.TRANSLUCENT) {
 			// Create a copy of the list
 			//
 			// We re-copy the list every time in case someone has added new particle texture sheets behind our back.
-			List<ParticleTextureSheet> toRender = new ArrayList<>(PARTICLE_TEXTURE_SHEETS);
+			List<ParticleRenderType> toRender = new ArrayList<>(RENDER_ORDER);
 
 			// Remove all known opaque particle texture sheets.
 			toRender.removeAll(OPAQUE_PARTICLE_TEXTURE_SHEETS);
@@ -79,7 +79,7 @@ public class MixinParticleManager implements PhasedParticleManager {
 			return OPAQUE_PARTICLE_TEXTURE_SHEETS;
 		} else {
 			// Don't override particle rendering
-			return PARTICLE_TEXTURE_SHEETS;
+			return RENDER_ORDER;
 		}
 	}
 

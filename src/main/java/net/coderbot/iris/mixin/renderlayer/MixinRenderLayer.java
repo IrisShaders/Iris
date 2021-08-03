@@ -13,67 +13,65 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
-import net.minecraft.util.Identifier;
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 
 @Environment(EnvType.CLIENT)
-@Mixin(RenderLayer.class)
+@Mixin(RenderType.class)
 public class MixinRenderLayer {
 	@Shadow
 	@Final
 	@Mutable
-	private static RenderLayer SOLID;
+	private static RenderType SOLID;
 
 	@Shadow
 	@Final
 	@Mutable
-	private static RenderLayer CUTOUT_MIPPED;
+	private static RenderType CUTOUT_MIPPED;
 
 	@Shadow
 	@Final
 	@Mutable
-	private static RenderLayer CUTOUT;
+	private static RenderType CUTOUT;
 
 	@Shadow
 	@Final
 	@Mutable
-	private static RenderLayer TRANSLUCENT;
+	private static RenderType TRANSLUCENT;
 
 	@Shadow
 	@Final
 	@Mutable
-	private static RenderLayer TRIPWIRE;
+	private static RenderType TRIPWIRE;
 
 	@Unique
-	private static RenderLayer iris$LINES;
+	private static RenderType iris$LINES;
 
-	@Shadow @Final @Mutable private static RenderLayer LEASH;
-	@Shadow @Final @Mutable private static RenderLayer ARMOR_GLINT;
-	@Shadow @Final @Mutable private static RenderLayer ARMOR_ENTITY_GLINT;
-	@Shadow @Final @Mutable private static RenderLayer GLINT_TRANSLUCENT;
-	@Shadow @Final @Mutable private static RenderLayer GLINT;
-	@Shadow @Final @Mutable private static RenderLayer DIRECT_GLINT;
-	@Shadow @Final @Mutable private static RenderLayer ENTITY_GLINT;
-	@Shadow @Final @Mutable private static RenderLayer DIRECT_ENTITY_GLINT;
+	@Shadow @Final @Mutable private static RenderType LEASH;
+	@Shadow @Final @Mutable private static RenderType ARMOR_GLINT;
+	@Shadow @Final @Mutable private static RenderType ARMOR_ENTITY_GLINT;
+	@Shadow @Final @Mutable private static RenderType GLINT_TRANSLUCENT;
+	@Shadow @Final @Mutable private static RenderType GLINT;
+	@Shadow @Final @Mutable private static RenderType GLINT_DIRECT;
+	@Shadow @Final @Mutable private static RenderType ENTITY_GLINT;
+	@Shadow @Final @Mutable private static RenderType ENTITY_GLINT_DIRECT;
 
-	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_MOVING_BLOCK;
-	@Shadow @Final @Mutable private static RenderLayer LIGHTNING;
+	@Shadow @Final @Mutable private static RenderType TRANSLUCENT_MOVING_BLOCK;
+	@Shadow @Final @Mutable private static RenderType LIGHTNING;
 
-	@Shadow @Final @Mutable private static RenderLayer WATER_MASK;
+	@Shadow @Final @Mutable private static RenderType WATER_MASK;
 
-	@Shadow @Final @Mutable private static RenderLayer TRANSLUCENT_NO_CRUMBLING;
+	@Shadow @Final @Mutable private static RenderType TRANSLUCENT_NO_CRUMBLING;
 
-	@Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;alpha(Lnet/minecraft/client/render/RenderPhase$Alpha;)Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;"))
-	private static RenderLayer.MultiPhaseParameters.Builder iris$tweakCutoutAlpha(RenderLayer.MultiPhaseParameters.Builder builder, RenderPhase.Alpha alpha) {
+	@Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;setAlphaState(Lnet/minecraft/client/renderer/RenderStateShard$AlphaStateShard;)Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;"))
+	private static RenderType.CompositeState.CompositeStateBuilder iris$tweakCutoutAlpha(RenderType.CompositeState.CompositeStateBuilder builder, RenderStateShard.AlphaStateShard alpha) {
 		// OptiFine makes CUTOUT and CUTOUT_MIPPED use an alpha test of 0.1 instead of 0.5.
 		//
 		// We must replicate this behavior or else there will be issues.
-		return builder.alpha(new RenderPhase.Alpha(0.1F));
+		return builder.setAlphaState(new RenderStateShard.AlphaStateShard(0.1F));
 	}
 
 	static {
@@ -84,7 +82,7 @@ public class MixinRenderLayer {
 		TRIPWIRE = wrap("iris:tripwire", TRIPWIRE, GbufferProgram.TRANSLUCENT_TERRAIN);
 		// TODO: figure out how to assign to RenderLayer.LINES
 		// We cannot use @Shadow easily because the type of the field is a package-private class
-		iris$LINES = wrap("iris:lines", RenderLayer.LINES, GbufferProgram.BASIC);
+		iris$LINES = wrap("iris:lines", RenderType.LINES, GbufferProgram.BASIC);
 
 		// TODO: SOLID / CUTOUT_MIPPED / CUTOUT are used for falling blocks and blocks being pushed by pistons
 		// Should they still be rendered in terrain?
@@ -100,9 +98,9 @@ public class MixinRenderLayer {
 		ARMOR_ENTITY_GLINT = wrapGlint("armor_entity", ARMOR_ENTITY_GLINT);
 		GLINT_TRANSLUCENT = wrapGlint("translucent", GLINT_TRANSLUCENT);
 		GLINT = wrapGlint(null, GLINT);
-		DIRECT_GLINT = wrapGlint("direct", DIRECT_GLINT);
+		GLINT_DIRECT = wrapGlint("direct", GLINT_DIRECT);
 		ENTITY_GLINT = wrapGlint("entity", ENTITY_GLINT);
-		DIRECT_ENTITY_GLINT = wrapGlint("direct_entity_glint", DIRECT_ENTITY_GLINT);
+		ENTITY_GLINT_DIRECT = wrapGlint("direct_entity_glint", ENTITY_GLINT_DIRECT);
 
 		LIGHTNING = wrap("iris:lightning", LIGHTNING, GbufferProgram.ENTITIES);
 	}
@@ -112,15 +110,15 @@ public class MixinRenderLayer {
 	 * @reason Use the wrapped render layer instead.
 	 */
 	@Overwrite
-	public static RenderLayer getLines() {
+	public static RenderType lines() {
 		return iris$LINES;
 	}
 
-	private static RenderLayer wrap(String name, RenderLayer wrapped, GbufferProgram program) {
+	private static RenderType wrap(String name, RenderType wrapped, GbufferProgram program) {
 		return new IrisRenderLayerWrapper(name, wrapped, new UseProgramRenderPhase(program));
 	}
 
-	private static RenderLayer wrapGlint(String glintType, RenderLayer wrapped) {
+	private static RenderType wrapGlint(String glintType, RenderType wrapped) {
 		String wrappedName = "iris:" + glintType + "_glint";
 
 		if (glintType == null) {
@@ -130,84 +128,84 @@ public class MixinRenderLayer {
 		return wrap(wrappedName, wrapped, GbufferProgram.ARMOR_GLINT);
 	}
 
-	private static RenderLayer wrap(RenderLayer wrapped, GbufferProgram program) {
+	private static RenderType wrap(RenderType wrapped, GbufferProgram program) {
 		String name = ((RenderPhaseAccessor) wrapped).getName();
 
 		return wrap("iris:" + name, wrapped, program);
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getArmorCutoutNoCull(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntitySolid(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntityCutout(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getItemEntityTranslucentCull(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntityTranslucentCull(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntitySmoothCutout(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntityDecal(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntityNoOutline(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntityShadow(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getText(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
-		"getTextSeeThrough(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
+		"armorCutoutNoCull",
+		"entitySolid",
+		"entityCutout",
+		"itemEntityTranslucentCull",
+		"entityTranslucentCull",
+		"entitySmoothCutout",
+		"entityDecal",
+		"entityNoOutline",
+		"entityShadow",
+		"text",
+		"textSeeThrough",
 	}, cancellable = true)
-	private static void iris$wrapEntityRenderLayers(Identifier texture, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapEntityRenderLayers(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getEntityCutoutNoCull(Lnet/minecraft/util/Identifier;Z)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntityCutoutNoCullZOffset(Lnet/minecraft/util/Identifier;Z)Lnet/minecraft/client/render/RenderLayer;",
-		"getEntityTranslucent(Lnet/minecraft/util/Identifier;Z)Lnet/minecraft/client/render/RenderLayer;",
+		"entityCutoutNoCull(Lnet/minecraft/resources/ResourceLocation;Z)Lnet/minecraft/client/renderer/RenderType;",
+		"entityCutoutNoCullZOffset(Lnet/minecraft/resources/ResourceLocation;Z)Lnet/minecraft/client/renderer/RenderType;",
+		"entityTranslucent(Lnet/minecraft/resources/ResourceLocation;Z)Lnet/minecraft/client/renderer/RenderType;",
 	}, cancellable = true)
-	private static void iris$wrapEntityRenderLayersZ(Identifier texture, boolean affectsOutline, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapEntityRenderLayersZ(ResourceLocation texture, boolean affectsOutline, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getEntityAlpha(Lnet/minecraft/util/Identifier;F)Lnet/minecraft/client/render/RenderLayer;",
+		"dragonExplosionAlpha",
 	}, cancellable = true)
-	private static void iris$wrapEntityAlpha(Identifier texture, float alpha, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapEntityAlpha(ResourceLocation texture, float alpha, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getBeaconBeam(Lnet/minecraft/util/Identifier;Z)Lnet/minecraft/client/render/RenderLayer;"
+		"beaconBeam"
 	}, cancellable = true)
-	private static void iris$wrapBeaconBeam(Identifier texture, boolean affectsOutline, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapBeaconBeam(ResourceLocation texture, boolean affectsOutline, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.BEACON_BEAM));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getEyes(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"
+		"eyes"
 	}, cancellable = true)
-	private static void iris$wrapEyes(Identifier texture, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapEyes(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.EYES));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getEnergySwirl(Lnet/minecraft/util/Identifier;FF)Lnet/minecraft/client/render/RenderLayer;"
+		"energySwirl"
 	}, cancellable = true)
-	private static void iris$wrapEnergySwirl(Identifier texture, float x, float y, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapEnergySwirl(ResourceLocation texture, float x, float y, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		// TODO: What render layer to use for this? It's used by charged creepers and withers.
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getOutline(Lnet/minecraft/util/Identifier;Lnet/minecraft/client/render/RenderPhase$Cull;)Lnet/minecraft/client/render/RenderLayer;",
+		"outline(Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/RenderStateShard$CullStateShard;)Lnet/minecraft/client/renderer/RenderType;",
 	}, cancellable = true)
-	private static void iris$wrapGlowingOutline(Identifier texture, RenderPhase.Cull cull, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapGlowingOutline(ResourceLocation texture, RenderStateShard.CullStateShard cull, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		// Note that instead of using GbufferProgram.ENTITIES_GLOWING here, we're using GbufferProgram.NONE. This is
 		// intentional!
@@ -225,19 +223,19 @@ public class MixinRenderLayer {
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getBlockBreaking(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"
+		"crumbling"
 	}, cancellable = true)
-	private static void iris$wrapBlockBreakingRenderLayer(Identifier texture, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapBlockBreakingRenderLayer(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.DAMAGED_BLOCKS));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"getEndPortal(I)Lnet/minecraft/client/render/RenderLayer;"
+		"endPortal"
 	}, cancellable = true)
-	private static void iris$wrapEndPortalRenderLayer(int layer, CallbackInfoReturnable<RenderLayer> cir) {
-		RenderLayer base = cir.getReturnValue();
+	private static void iris$wrapEndPortalRenderLayer(int layer, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.BLOCK_ENTITIES));
 	}

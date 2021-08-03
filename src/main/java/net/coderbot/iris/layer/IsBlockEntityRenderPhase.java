@@ -1,8 +1,8 @@
 package net.coderbot.iris.layer;
 
-import net.minecraft.client.render.RenderPhase;
+import net.minecraft.client.renderer.RenderStateShard;
 
-public class IsBlockEntityRenderPhase extends RenderPhase {
+public class IsBlockEntityRenderPhase extends RenderStateShard {
 	public static final IsBlockEntityRenderPhase INSTANCE = new IsBlockEntityRenderPhase();
 
 	private IsBlockEntityRenderPhase() {

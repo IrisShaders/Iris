@@ -18,18 +18,16 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.minecraft.block.Blocks;
-import net.minecraft.state.StateManager;
-import net.minecraft.tag.BlockTags;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.apache.logging.log4j.Level;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.InvalidIdentifierException;
-import net.minecraft.util.registry.Registry;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -38,12 +36,12 @@ public class IdMap {
 	/**
 	 * Maps a given item ID to an integer ID
 	 */
-	private final Object2IntMap<Identifier> itemIdMap;
+	private final Object2IntMap<ResourceLocation> itemIdMap;
 
 	/**
 	 * Maps a given entity ID to an integer ID
 	 */
-	private final Object2IntMap<Identifier> entityIdMap;
+	private final Object2IntMap<ResourceLocation> entityIdMap;
 
 	/**
 	 * A map that contains the identifier of an item to the integer value parsed in block.properties
@@ -53,7 +51,7 @@ public class IdMap {
 	/**
 	 * A map that contains render layers for blocks in block.properties
 	 */
-	private Map<Identifier, RenderLayer> blockRenderLayerMap;
+	private Map<ResourceLocation, RenderType> blockRenderLayerMap;
 
 	IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
@@ -121,19 +119,19 @@ public class IdMap {
 		}
 	}
 
-	private static Object2IntMap<Identifier> parseItemIdMap(Properties properties) {
+	private static Object2IntMap<ResourceLocation> parseItemIdMap(Properties properties) {
 		return parseIdMap(properties, "item.", "item.properties");
 	}
 
-	private static Object2IntMap<Identifier> parseEntityIdMap(Properties properties) {
+	private static Object2IntMap<ResourceLocation> parseEntityIdMap(Properties properties) {
 		return parseIdMap(properties, "entity.", "entity.properties");
 	}
 
 	/**
 	 * Parses an identifier map in OptiFine format
 	 */
-	private static Object2IntMap<Identifier> parseIdMap(Properties properties, String keyPrefix, String fileName) {
-		Object2IntMap<Identifier> idMap = new Object2IntOpenHashMap<>();
+	private static Object2IntMap<ResourceLocation> parseIdMap(Properties properties, String keyPrefix, String fileName) {
+		Object2IntMap<ResourceLocation> idMap = new Object2IntOpenHashMap<>();
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -162,10 +160,10 @@ public class IdMap {
 				}
 
 				try {
-					Identifier identifier = new Identifier(part);
+					ResourceLocation identifier = new ResourceLocation(part);
 
 					idMap.put(identifier, intId);
-				} catch (InvalidIdentifierException e) {
+				} catch (ResourceLocationException e) {
 					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
@@ -200,7 +198,7 @@ public class IdMap {
 			for (String part : value.split(" ")) {
 				try {
 					addBlockStates(part, idMap, intId);
-				} catch (InvalidIdentifierException e) {
+				} catch (ResourceLocationException e) {
 					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
@@ -210,7 +208,7 @@ public class IdMap {
 		return Object2IntMaps.unmodifiable(idMap);
 	}
 
-	private static void addBlockStates(String entry, Object2IntMap<BlockState> idMap, int intId) throws InvalidIdentifierException {
+	private static void addBlockStates(String entry, Object2IntMap<BlockState> idMap, int intId) throws ResourceLocationException {
 		String[] splitStates = entry.split(":");
 
 		if (splitStates.length == 0) {
@@ -224,7 +222,7 @@ public class IdMap {
 		// The second term, if it does not contain an equals sign, must be a valid identifier component.
 		if (splitStates.length == 1 || splitStates.length == 2 && !splitStates[1].contains("=")) {
 			// We parse this as a normal identifier here.
-			Identifier identifier = new Identifier(entry);
+			ResourceLocation identifier = new ResourceLocation(entry);
 
 			Block block = Registry.BLOCK.get(identifier);
 
@@ -234,7 +232,7 @@ public class IdMap {
 				return;
 			}
 
-			for (BlockState state : block.getStateManager().getStates()) {
+			for (BlockState state : block.getStateDefinition().getPossibleStates()) {
 				idMap.put(state, intId);
 			}
 
@@ -243,16 +241,16 @@ public class IdMap {
 
 		// Complex case: One or more states involved...
 		int statesStart;
-		Identifier identifier;
+		ResourceLocation identifier;
 
 		if (splitStates[1].contains("=")) {
 			// We have an entry of the form "tall_grass:half=upper"
 			statesStart = 1;
-			identifier = new Identifier(splitStates[0]);
+			identifier = new ResourceLocation(splitStates[0]);
 		} else {
 			// We have an entry of the form "minecraft:tall_grass:half=upper"
 			statesStart = 2;
-			identifier = new Identifier(splitStates[0], splitStates[1]);
+			identifier = new ResourceLocation(splitStates[0], splitStates[1]);
 		}
 
 		// Let's look up the block and make sure that it exists.
@@ -281,7 +279,7 @@ public class IdMap {
 		//
 		// As a result, we first parse each key=value pair in order to determine what properties we need to filter on.
 		Map<Property<?>, String> properties = new HashMap<>();
-		StateManager<Block, BlockState> stateManager = block.getStateManager();
+		StateDefinition<Block, BlockState> stateManager = block.getStateDefinition();
 
 		for (int index = statesStart; index < splitStates.length; index++) {
 			// Split "key=value" into the key and value
@@ -312,7 +310,7 @@ public class IdMap {
 
 		// Once we have a list of properties and their expected values, we iterate over every possible state of this
 		// block and check for ones that match the filters. This isn't particularly efficient, but it works!
-		for (BlockState state : stateManager.getStates()) {
+		for (BlockState state : stateManager.getPossibleStates()) {
 			boolean matches = true;
 
 			for (Map.Entry<Property<?>, String> condition : properties.entrySet()) {
@@ -320,7 +318,7 @@ public class IdMap {
 				Property property = condition.getKey();
 				String expectedValue = condition.getValue();
 
-				String actualValue = property.name((Comparable) state.get(property));
+				String actualValue = property.getName((Comparable) state.getValue(property));
 
 				if (!expectedValue.equals(actualValue)) {
 					matches = false;
@@ -337,9 +335,9 @@ public class IdMap {
 	/**
 	 * Parses a render layer map
 	 */
-	private static Map<Identifier, RenderLayer> parseRenderLayerMap(Properties properties, String keyPrefix, String fileName) {
+	private static Map<ResourceLocation, RenderType> parseRenderLayerMap(Properties properties, String keyPrefix, String fileName) {
 		// TODO: Most of this is copied from parseIdMap, it would be nice to reduce duplication.
-		Map<Identifier, RenderLayer> layerMap = new HashMap<>();
+		Map<ResourceLocation, RenderType> layerMap = new HashMap<>();
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -350,21 +348,21 @@ public class IdMap {
 				return;
 			}
 
-			RenderLayer layer;
+			RenderType layer;
 
 			// See: https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L556-L576
 			switch (key) {
 				case "solid":
-					layer = RenderLayer.getSolid();
+					layer = RenderType.solid();
 					break;
 				case "cutout":
-					layer = RenderLayer.getCutout();
+					layer = RenderType.cutout();
 					break;
 				case "cutout_mipped":
-					layer = RenderLayer.getCutoutMipped();
+					layer = RenderType.cutoutMipped();
 					break;
 				case "translucent":
-					layer = RenderLayer.getTranslucent();
+					layer = RenderType.translucent();
 					break;
 				default:
 					Iris.logger.warn("Failed to parse line in " + fileName + ": invalid render layer type: " + key);
@@ -373,10 +371,10 @@ public class IdMap {
 
 			for (String part : value.split(" ")) {
 				try {
-					Identifier identifier = new Identifier(part);
+					ResourceLocation identifier = new ResourceLocation(part);
 
 					layerMap.put(identifier, layer);
-				} catch (InvalidIdentifierException e) {
+				} catch (ResourceLocationException e) {
 					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
@@ -390,11 +388,11 @@ public class IdMap {
 		return blockPropertiesMap;
 	}
 
-	public Map<Identifier, Integer> getItemIdMap() {
+	public Map<ResourceLocation, Integer> getItemIdMap() {
 		return itemIdMap;
 	}
 
-	public Map<Identifier, Integer> getEntityIdMap() {
+	public Map<ResourceLocation, Integer> getEntityIdMap() {
 		return entityIdMap;
 	}
 

@@ -3,29 +3,28 @@ package net.coderbot.iris.mixin.gui;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.screen.HudHideable;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mixin(InGameHud.class)
+@Mixin(Gui.class)
 public class MixinInGameHud {
-	@Shadow @Final private MinecraftClient client;
+	@Shadow @Final private Minecraft minecraft;
 
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
-	public void iris$handleHudHidingScreens(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-		Screen screen = this.client.currentScreen;
+	public void iris$handleHudHidingScreens(PoseStack matrices, float tickDelta, CallbackInfo ci) {
+		Screen screen = this.minecraft.screen;
 
 		if (screen instanceof HudHideable) {
 			ci.cancel();
@@ -34,14 +33,14 @@ public class MixinInGameHud {
 
 	// TODO: Move this to a more appropriate mixin
 	@Inject(method = "render", at = @At("RETURN"))
-	public void iris$displayBigSodiumWarning(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+	public void iris$displayBigSodiumWarning(PoseStack matrices, float tickDelta, CallbackInfo ci) {
 		if (FabricLoader.getInstance().isModLoaded("sodium")
-				|| MinecraftClient.getInstance().options.debugEnabled
+				|| Minecraft.getInstance().options.renderDebug
 				|| !Iris.getCurrentPack().isPresent()) {
 			return;
 		}
 
-		TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+		Font textRenderer = Minecraft.getInstance().font;
 
 		List<String> warningLines = new ArrayList<>();
 		warningLines.add("[Iris] Sodium isn't installed; you will have poor performance.");
@@ -51,10 +50,10 @@ public class MixinInGameHud {
 			String string = warningLines.get(i);
 
 			final int lineHeight = 9;
-			final int lineWidth = textRenderer.getWidth(string);
+			final int lineWidth = textRenderer.width(string);
 			final int y = 2 + lineHeight * i;
 
-			DrawableHelper.fill(matrices, 1, y - 1, 2 + lineWidth + 1, y + lineHeight - 1, 0x9050504E);
+			GuiComponent.fill(matrices, 1, y - 1, 2 + lineWidth + 1, y + lineHeight - 1, 0x9050504E);
 			textRenderer.draw(matrices, string, 2.0F, y, 0xFFFF55);
 		}
 	}

@@ -1,16 +1,15 @@
 package net.coderbot.iris.rendertarget;
 
 import net.coderbot.iris.shaderpack.CustomTexture;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
-
+import com.mojang.blaze3d.platform.NativeImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class NativeImageBackedCustomTexture extends NativeImageBackedTexture {
+public class NativeImageBackedCustomTexture extends DynamicTexture {
 	public NativeImageBackedCustomTexture(CustomTexture texture) throws IOException {
 		super(create(texture.getContent()));
 
@@ -37,9 +36,9 @@ public class NativeImageBackedCustomTexture extends NativeImageBackedTexture {
 
 	@Override
 	public void upload() {
-		NativeImage image = Objects.requireNonNull(getImage());
+		NativeImage image = Objects.requireNonNull(getPixels());
 
-		bindTexture();
+		bind();
 		image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), false, false, false, false);
 	}
 }

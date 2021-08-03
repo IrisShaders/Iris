@@ -1,17 +1,17 @@
 package net.coderbot.iris.uniforms;
 
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.math.Matrix4f;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 
 public class CapturedRenderingState {
 	public static final CapturedRenderingState INSTANCE = new CapturedRenderingState();
 
 	private Matrix4f gbufferModelView;
 	private Matrix4f gbufferProjection;
-	private Vec3d fogColor;
+	private Vec3 fogColor;
 	private float tickDelta;
 	private BlockEntity currentRenderedBlockEntity;
 	private Entity currentRenderedEntity;
@@ -35,16 +35,16 @@ public class CapturedRenderingState {
 		this.gbufferProjection = gbufferProjection.copy();
 	}
 
-	public Vec3d getFogColor() {
-		if (MinecraftClient.getInstance().world == null || fogColor == null) {
-			return Vec3d.ZERO;
+	public Vec3 getFogColor() {
+		if (Minecraft.getInstance().level == null || fogColor == null) {
+			return Vec3.ZERO;
 		}
 
 		return fogColor;
 	}
 
 	public void setFogColor(float red, float green, float blue) {
-		fogColor = new Vec3d(red, green, blue);
+		fogColor = new Vec3(red, green, blue);
 	}
 
 	public void setTickDelta(float tickDelta) {

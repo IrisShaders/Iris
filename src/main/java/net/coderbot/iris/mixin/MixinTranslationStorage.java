@@ -7,6 +7,9 @@ import java.util.Map;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.minecraft.client.resources.language.ClientLanguage;
+import net.minecraft.client.resources.language.LanguageInfo;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,24 +17,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import net.minecraft.client.resource.language.LanguageDefinition;
-import net.minecraft.client.resource.language.TranslationStorage;
-import net.minecraft.resource.ResourceManager;
-
-@Mixin(TranslationStorage.class)
+@Mixin(ClientLanguage.class)
 public class MixinTranslationStorage {
 
 	// This is needed to keep track of which language code we need to grab our lang files from
 	private static List<String> languageCodes = new ArrayList<>();
 
-	private static final String LOAD = "load(Lnet/minecraft/resource/ResourceManager;Ljava/util/List;)Lnet/minecraft/client/resource/language/TranslationStorage;";
+	private static final String LOAD = "Lnet/minecraft/client/resources/language/ClientLanguage;loadFrom(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/List;)Lnet/minecraft/client/resources/language/ClientLanguage;";
 
 	@Shadow
 	@Final
-	private Map<String, String> translations;
+	private Map<String, String> storage;
 
 
-	@Inject(method = "get", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "getOrDefault", at = @At("HEAD"), cancellable = true)
 	private void iris$addLanguageEntries(String key, CallbackInfoReturnable<String> cir) {
 		ShaderPack pack = Iris.getCurrentPack().orElse(null);
 
@@ -48,7 +47,7 @@ public class MixinTranslationStorage {
 		// language. If they do, we load that, but if they do not, we load "en_us" instead.
 		Map<String, Map<String, String>> languageMap = pack.getLangMap();
 
-		if (!translations.containsKey(key)) {
+		if (!storage.containsKey(key)) {
 			languageCodes.forEach(code -> {
 				Map<String, String> translations = languageMap.get(code);
 
@@ -64,7 +63,7 @@ public class MixinTranslationStorage {
 	}
 
 	@Inject(method = LOAD, at = @At("HEAD"))
-	private static void check(ResourceManager resourceManager, List<LanguageDefinition> definitions, CallbackInfoReturnable<TranslationStorage> cir) {
+	private static void check(ResourceManager resourceManager, List<LanguageInfo> definitions, CallbackInfoReturnable<ClientLanguage> cir) {
 		// make sure the language codes dont carry over!
 		languageCodes.clear();
 

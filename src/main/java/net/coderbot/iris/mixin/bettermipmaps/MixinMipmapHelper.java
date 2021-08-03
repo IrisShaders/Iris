@@ -1,6 +1,6 @@
 package net.coderbot.iris.mixin.bettermipmaps;
 
-import net.minecraft.client.texture.MipmapHelper;
+import net.minecraft.client.renderer.texture.MipmapGenerator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.Unique;
  *         artifacts.</ul>
  * </li>
  */
-@Mixin(MipmapHelper.class)
+@Mixin(MipmapGenerator.class)
 public class MixinMipmapHelper {
 	// Generate some color tables for gamma correction.
 	private static final float[] SRGB_TO_LINEAR = new float[256];
@@ -34,7 +34,7 @@ public class MixinMipmapHelper {
 	}
 
 	@Overwrite
-	private static int blend(int one, int two, int three, int four, boolean checkAlpha) {
+	private static int alphaBlend(int one, int two, int three, int four, boolean checkAlpha) {
 		// First blend horizontally, then blend vertically.
 		//
 		// This works well for the case where our change is the most impactful (grass side overlays)

@@ -1,23 +1,23 @@
 package net.coderbot.iris.mixin.fantastic;
 
-import net.minecraft.client.render.RenderPhase;
+import net.minecraft.client.renderer.RenderStateShard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(RenderPhase.class)
+@Mixin(RenderStateShard.class)
 public interface RenderPhaseAccessor {
 	@Accessor("NO_TRANSPARENCY")
-	static RenderPhase.Transparency getNO_TRANSPARENCY() {
+	static RenderStateShard.TransparencyStateShard getNO_TRANSPARENCY() {
 		throw new AssertionError();
 	}
 
 	@Accessor("GLINT_TRANSPARENCY")
-	static RenderPhase.Transparency getGLINT_TRANSPARENCY() {
+	static RenderStateShard.TransparencyStateShard getGLINT_TRANSPARENCY() {
 		throw new AssertionError();
 	}
 
 	@Accessor("CRUMBLING_TRANSPARENCY")
-	static RenderPhase.Transparency getCRUMBLING_TRANSPARENCY() {
+	static RenderStateShard.TransparencyStateShard getCRUMBLING_TRANSPARENCY() {
 		throw new AssertionError();
 	}
 }

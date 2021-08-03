@@ -1,12 +1,12 @@
 package net.coderbot.iris.mixin.fantastic;
 
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(RenderLayer.MultiPhaseParameters.class)
+@Mixin(RenderType.CompositeState.class)
 public interface MultiPhaseParametersAccessor {
-	@Accessor("transparency")
-	RenderPhase.Transparency getTransparency();
+	@Accessor("transparencyState")
+	RenderStateShard.TransparencyStateShard getTransparency();
 }

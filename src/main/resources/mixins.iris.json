@@ -19,7 +19,7 @@
     "MixinTntMinecartEntityRenderer",
     "MixinTranslationStorage",
     "MixinTweakFarPlane",
-    "MixinWorldRenderer",
+    "MixinLevelRenderer",
     "WorldRendererAccessor",
     "fabulous.MixinDisableFabulousGraphics",
     "fabulous.MixinOption",

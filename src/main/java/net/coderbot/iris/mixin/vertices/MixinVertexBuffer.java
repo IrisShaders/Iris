@@ -1,9 +1,9 @@
 package net.coderbot.iris.mixin.vertices;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.vertices.IrisVertexFormats;
-import net.minecraft.client.gl.VertexBuffer;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -19,9 +19,9 @@ public class MixinVertexBuffer {
 	@Mutable
 	private VertexFormat format;
 
-	@Inject(method = "<init>(Lnet/minecraft/client/render/VertexFormat;)V", at = @At("RETURN"))
+	@Inject(method = "<init>", at = @At("RETURN"))
 	private void iris$onInit(VertexFormat format, CallbackInfo ci) {
-		if (format == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL) {
+		if (format == DefaultVertexFormat.BLOCK) {
 			// We have to fix the vertex format here, or else the vertex count will be calculated wrongly and too many
 			// vertices will be drawn.
 			//

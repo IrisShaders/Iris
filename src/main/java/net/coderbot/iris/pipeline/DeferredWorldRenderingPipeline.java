@@ -33,20 +33,17 @@ import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.particle.ParticleTextureSheet;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import org.lwjgl.opengl.GL30C;
 
 /**
@@ -119,7 +116,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final List<GbufferProgram> programStack = new ArrayList<>();
 	private final List<String> programStackLog = new ArrayList<>();
 
-	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
+	private static final ResourceLocation WATER_IDENTIFIER = new ResourceLocation("minecraft", "water");
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -129,8 +126,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.allPasses = new ArrayList<>();
 
-		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives().getRenderTargetDirectives());
-		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
+		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programs.getPackDirectives().getRenderTargetDirectives());
+		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).defaultBlockState(), -1);
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
 		BlockRenderingSettings.INSTANCE.setIdMap(programs.getPack().getIdMap());
@@ -138,7 +135,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programs.getPackDirectives().shouldUseSeparateAo());
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE2);
+		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);
 
 		// Create some placeholder PBR textures for now
 		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
@@ -159,7 +156,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
 		});
 
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
 		// TODO: Change this once earlier passes are implemented.
 		ImmutableSet<Integer> flippedBeforeTerrain = ImmutableSet.of();
@@ -260,7 +257,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private void checkWorld() {
 		// If we're not in a world, then obviously we cannot possibly be rendering a world.
-		if (MinecraftClient.getInstance().world == null) {
+		if (Minecraft.getInstance().level == null) {
 			isRenderingWorld = false;
 			programStackLog.clear();
 			programStack.clear();
@@ -384,7 +381,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// Sildur's Vibrant Shaders. Instead, it should be cleared to solid black like the other buffers. The
 			// horizon rendered by HorizonRenderer ensures that shaderpacks that don't override the sky rendering don't
 			// have issues, and this also gives shaderpacks more control over sky rendering in general.
-			MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
+			Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 			Program.unbind();
 
 			return;
@@ -532,7 +529,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			}
 
 			if (disableBlend) {
-				GlStateManager.disableBlend();
+				GlStateManager._disableBlend();
 			}
 		}
 
@@ -562,11 +559,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		finalPassRenderer.destroy();
 
 		// Make sure that any custom framebuffers are not bound before destroying render targets
-		GlStateManager.bindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
-		GlStateManager.bindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
-		GlStateManager.bindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
 
-		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
 		// Destroy our render targets
 		//
@@ -626,17 +623,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
+		com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+		renderTargets.resizeIfNeeded(main.width, main.height);
 
 		clearMainBuffers.bind();
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
 
 		clearAltBuffers.bind();
 		// Not clearing the depth buffer since there's only one of those and it was already cleared
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
 	}
 
 	@Override
@@ -646,9 +643,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
-		GlStateManager.bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
+		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
-		GlStateManager.bindTexture(0);
+		GlStateManager._bindTexture(0);
 
 		deferredRenderer.renderAll();
 		Program.unbind();
@@ -656,8 +653,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderSystem.enableBlend();
 		RenderSystem.enableAlphaTest();
 
-		MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().enable();
-		MinecraftClient.getInstance().gameRenderer.getOverlayTexture().setupOverlayColor();
+		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
+		Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
 
 		if (!programStack.isEmpty()) {
 			GbufferProgram toUse = programStack.get(programStack.size() - 1);
@@ -669,10 +666,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 	}
 
-	public static GbufferProgram getProgramForSheet(ParticleTextureSheet sheet) {
-		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_OPAQUE || sheet == ParticleTextureSheet.TERRAIN_SHEET || sheet == ParticleTextureSheet.CUSTOM) {
+	public static GbufferProgram getProgramForSheet(ParticleRenderType sheet) {
+		if (sheet == ParticleRenderType.PARTICLE_SHEET_OPAQUE || sheet == ParticleRenderType.TERRAIN_SHEET || sheet == ParticleRenderType.CUSTOM) {
 			return GbufferProgram.TEXTURED_LIT;
-		} else if (sheet == ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT) {
+		} else if (sheet == ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT) {
 			// TODO: Should we be using some other pass? (gbuffers_water?)
 			return GbufferProgram.TEXTURED_LIT;
 		} else {

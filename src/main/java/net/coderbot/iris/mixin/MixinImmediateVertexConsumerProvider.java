@@ -9,6 +9,8 @@ import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
 import net.coderbot.iris.layer.InnerWrappedRenderLayer;
 import net.coderbot.iris.layer.IrisRenderLayerWrapper;
 import net.coderbot.iris.mixin.renderlayer.RenderPhaseAccessor;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,16 +18,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumerProvider;
-
-@Mixin(VertexConsumerProvider.Immediate.class)
+@Mixin(MultiBufferSource.BufferSource.class)
 public class MixinImmediateVertexConsumerProvider implements WrappingVertexConsumerProvider {
 	@Unique
 	private final Set<String> unwrapped = new ObjectOpenHashSet<>();
 
-	@Inject(method = "draw(Lnet/minecraft/client/render/RenderLayer;)V", at = @At("HEAD"))
-	private void iris$beginDraw(RenderLayer layer, CallbackInfo callback) {
+	@Inject(method = "endBatch(Lnet/minecraft/client/renderer/RenderType;)V", at = @At("HEAD"))
+	private void iris$beginDraw(RenderType layer, CallbackInfo callback) {
 		if (!(layer instanceof IrisRenderLayerWrapper) && !(layer instanceof InnerWrappedRenderLayer)) {
 			String name = ((RenderPhaseAccessor) layer).getName();
 
@@ -40,11 +39,11 @@ public class MixinImmediateVertexConsumerProvider implements WrappingVertexConsu
 	}
 
 	@Unique
-	private Function<RenderLayer, RenderLayer> wrappingFunction;
+	private Function<RenderType, RenderType> wrappingFunction;
 
-	@ModifyVariable(method = "getBuffer(Lnet/minecraft/client/render/RenderLayer;)Lnet/minecraft/client/render/VertexConsumer;",
+	@ModifyVariable(method = "getBuffer",
 			at = @At("HEAD"), ordinal = 0)
-	private RenderLayer iris$applyWrappingFunction(RenderLayer layer) {
+	private RenderType iris$applyWrappingFunction(RenderType layer) {
 		if (wrappingFunction == null) {
 			return layer;
 		}
@@ -53,7 +52,7 @@ public class MixinImmediateVertexConsumerProvider implements WrappingVertexConsu
 	}
 
 	@Override
-	public void setWrappingFunction(Function<RenderLayer, RenderLayer> wrappingFunction) {
+	public void setWrappingFunction(Function<RenderType, RenderType> wrappingFunction) {
 		this.wrappingFunction = wrappingFunction;
 	}
 }

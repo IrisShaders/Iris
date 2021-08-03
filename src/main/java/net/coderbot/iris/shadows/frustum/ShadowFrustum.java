@@ -1,8 +1,8 @@
 package net.coderbot.iris.shadows.frustum;
 
-import net.minecraft.client.render.Frustum;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Matrix4f;
+import com.mojang.math.Matrix4f;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.world.phys.AABB;
 
 public class ShadowFrustum extends Frustum {
 	private final double maxDistance;
@@ -20,8 +20,8 @@ public class ShadowFrustum extends Frustum {
 		this.maxDistance = maxDistance;
 	}
 
-	public void setPosition(double cameraX, double cameraY, double cameraZ) {
-		super.setPosition(cameraX, cameraY, cameraZ);
+	public void prepare(double cameraX, double cameraY, double cameraZ) {
+		super.prepare(cameraX, cameraY, cameraZ);
 
 		this.minAllowedX = cameraX - maxDistance;
 		this.maxAllowedX = cameraX + maxDistance;
@@ -49,7 +49,7 @@ public class ShadowFrustum extends Frustum {
 		return true;
 	}
 
-	public boolean isVisible(Box box) {
+	public boolean isVisible(AABB box) {
 		if (box.maxX < this.minAllowedX || box.minX > this.maxAllowedX) {
 			return false;
 		}

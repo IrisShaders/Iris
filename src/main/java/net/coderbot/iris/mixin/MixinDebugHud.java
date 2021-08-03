@@ -3,8 +3,8 @@ package net.coderbot.iris.mixin;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.hud.DebugHud;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +18,7 @@ import java.text.StringCharacterIterator;
 import java.util.List;
 import java.util.Objects;
 
-@Mixin(DebugHud.class)
+@Mixin(DebugScreenOverlay.class)
 public abstract class MixinDebugHud {
 	@Unique
 	private static final List<BufferPoolMXBean> pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
@@ -39,7 +39,7 @@ public abstract class MixinDebugHud {
 		directPool = Objects.requireNonNull(found);
 	}
 
-    @Inject(method = "getRightText", at = @At("RETURN"))
+    @Inject(method = "getSystemInformation", at = @At("RETURN"))
     private void appendShaderPackText(CallbackInfoReturnable<List<String>> cir) {
         List<String> messages = cir.getReturnValue();
 
@@ -55,13 +55,13 @@ public abstract class MixinDebugHud {
 		}
     }
 
-	@Inject(method = "getLeftText", at = @At("RETURN"))
+	@Inject(method = "getGameInformation", at = @At("RETURN"))
 	private void appendShadowDebugText(CallbackInfoReturnable<List<String>> cir) {
 		List<String> messages = cir.getReturnValue();
 
 		if (!FabricLoader.getInstance().isModLoaded("sodium") && Iris.getCurrentPack().isPresent()) {
-			messages.add(1, Formatting.YELLOW + "[Iris] Sodium isn't installed; you will have poor performance.");
-			messages.add(2, Formatting.YELLOW + "[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
+			messages.add(1, ChatFormatting.YELLOW + "[Iris] Sodium isn't installed; you will have poor performance.");
+			messages.add(2, ChatFormatting.YELLOW + "[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
 		}
 
 		Iris.getPipelineManager().getPipeline().addDebugText(messages);

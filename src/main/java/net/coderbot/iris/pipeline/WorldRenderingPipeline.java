@@ -2,8 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
-import net.minecraft.client.render.Camera;
-
+import net.minecraft.client.Camera;
 import java.util.List;
 
 public interface WorldRenderingPipeline {

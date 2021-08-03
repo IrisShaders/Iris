@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin.vertices.block_rendering;
 
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.minecraft.client.render.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(BakedQuad.class)
 public class MixinBakedQuad {
-	@Inject(method = "hasShade()Z", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "isShade", at = @At("HEAD"), cancellable = true)
 	private void hasShade(CallbackInfoReturnable<Boolean> cir) {
 		if (BlockRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
 			cir.setReturnValue(false);

@@ -1,18 +1,18 @@
 package net.coderbot.iris.gui.element;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.ObjectSelectionList;
 
-public class IrisScreenEntryListWidget<E extends AlwaysSelectedEntryListWidget.Entry<E>> extends AlwaysSelectedEntryListWidget<E> {
-	public IrisScreenEntryListWidget(MinecraftClient client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {
+public class IrisScreenEntryListWidget<E extends ObjectSelectionList.Entry<E>> extends ObjectSelectionList<E> {
+	public IrisScreenEntryListWidget(Minecraft client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {
 		super(client, width, height, top, bottom, itemHeight);
 
-		this.left = left;
-		this.right = right;
+		this.x0 = left;
+		this.x1 = right;
 	}
 
 	@Override
-	protected int getScrollbarPositionX() {
+	protected int getScrollbarPosition() {
 		// Position the scrollbar at the rightmost edge of the screen.
 		// By default, the scrollbar is positioned moderately offset from the center.
 		return width - 6;

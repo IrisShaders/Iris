@@ -1,11 +1,11 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.texunits.SpriteAtlasTextureInterface;
-import net.minecraft.client.texture.Sprite;
-import net.minecraft.client.texture.SpriteAtlasTexture;
-import net.minecraft.client.texture.TextureStitcher;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.client.renderer.texture.Stitcher;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.world.phys.Vec2;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,17 +13,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-@Mixin(SpriteAtlasTexture.class)
+@Mixin(TextureAtlas.class)
 public class MixinSpriteAtlasTexture implements SpriteAtlasTextureInterface {
-	private Vec2f atlasSize;
+	private Vec2 atlasSize;
 
-	@Inject(method = "loadSprites(Lnet/minecraft/resource/ResourceManager;Lnet/minecraft/client/texture/TextureStitcher;I)Ljava/util/List;", at = @At("HEAD"))
-	private void getAtlasSize(ResourceManager resourceManager, TextureStitcher textureStitcher, int maxLevel, CallbackInfoReturnable<List<Sprite>> cir) {
-		atlasSize = new Vec2f(textureStitcher.getWidth(), textureStitcher.getHeight());
+	@Inject(method = "getLoadedSprites", at = @At("HEAD"))
+	private void getAtlasSize(ResourceManager resourceManager, Stitcher textureStitcher, int maxLevel, CallbackInfoReturnable<List<TextureAtlasSprite>> cir) {
+		atlasSize = new Vec2(textureStitcher.getWidth(), textureStitcher.getHeight());
 	}
 
 	@Override
-	public Vec2f getAtlasSize() {
+	public Vec2 getAtlasSize() {
 		return atlasSize;
 	}
 }

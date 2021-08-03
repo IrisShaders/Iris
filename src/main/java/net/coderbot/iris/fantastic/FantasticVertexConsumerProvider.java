@@ -1,14 +1,13 @@
 package net.coderbot.iris.fantastic;
 
 import net.coderbot.iris.layer.IrisRenderLayerWrapper;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.Collections;
 
-public class FantasticVertexConsumerProvider extends VertexConsumerProvider.Immediate implements FlushableVertexConsumerProvider {
+public class FantasticVertexConsumerProvider extends MultiBufferSource.BufferSource implements FlushableVertexConsumerProvider {
 	private final FullyBufferedVertexConsumerProvider opaque;
 	private final FullyBufferedVertexConsumerProvider transparent;
 
@@ -19,8 +18,8 @@ public class FantasticVertexConsumerProvider extends VertexConsumerProvider.Imme
 		this.transparent = new FullyBufferedVertexConsumerProvider();
 	}
 
-	private boolean isTransparent(RenderLayer layer) {
-		if (layer == RenderLayer.getWaterMask()) {
+	private boolean isTransparent(RenderType layer) {
+		if (layer == RenderType.waterMask()) {
 			// Don't break boats...
 			return true;
 		}
@@ -38,7 +37,7 @@ public class FantasticVertexConsumerProvider extends VertexConsumerProvider.Imme
 	}
 
 	@Override
-	public VertexConsumer getBuffer(RenderLayer renderLayer) {
+	public VertexConsumer getBuffer(RenderType renderLayer) {
 		if (isTransparent(renderLayer)) {
 			return transparent.getBuffer(renderLayer);
 		} else {
@@ -47,27 +46,27 @@ public class FantasticVertexConsumerProvider extends VertexConsumerProvider.Imme
 	}
 
 	@Override
-	public void draw() {
-		opaque.draw();
-		transparent.draw();
+	public void endBatch() {
+		opaque.endBatch();
+		transparent.endBatch();
 	}
 
 	@Override
-	public void draw(RenderLayer layer) {
+	public void endBatch(RenderType layer) {
 		if (isTransparent(layer)) {
-			transparent.draw(layer);
+			transparent.endBatch(layer);
 		} else {
-			opaque.draw(layer);
+			opaque.endBatch(layer);
 		}
 	}
 
 	@Override
 	public void flushNonTranslucentContent() {
-		opaque.draw();
+		opaque.endBatch();
 	}
 
 	@Override
 	public void flushTranslucentContent() {
-		transparent.draw();
+		transparent.endBatch();
 	}
 }

@@ -8,8 +8,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.texunits.TextureUnit;
-import net.minecraft.client.texture.AbstractTexture;
-
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -69,7 +68,7 @@ public class IrisSamplers {
 	}
 
 	public static void addNoiseSampler(SamplerHolder samplers, AbstractTexture texture) {
-		samplers.addDynamicSampler(texture::getGlId, "noisetex");
+		samplers.addDynamicSampler(texture::getId, "noisetex");
 	}
 
 	public static boolean hasShadowSamplers(SamplerHolder samplers) {
@@ -112,8 +111,8 @@ public class IrisSamplers {
 	public static void addWorldSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
-		samplers.addDynamicSampler(normals::getGlId, "normals");
-		samplers.addDynamicSampler(specular::getGlId, "specular");
+		samplers.addDynamicSampler(normals::getId, "normals");
+		samplers.addDynamicSampler(specular::getId, "specular");
 	}
 
 	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
