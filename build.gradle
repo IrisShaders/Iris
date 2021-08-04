@@ -11,8 +11,8 @@ archivesBaseName = project.archives_base_name
 version = "${project.mod_version}+${getVersionMetadata()}"
 group = project.maven_group
 
-minecraft {
-	accessWidener = file("src/main/resources/iris.accesswidener")
+loom {
+	accessWidenerPath = file("src/main/resources/iris.accesswidener")
 }
 
 dependencies {
