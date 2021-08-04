@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.DimensionId;
+import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.opengl.GL20C;
 
@@ -15,7 +16,6 @@ public class PipelineManager {
 	private static PipelineManager instance;
 	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
 	private final Map<DimensionId, WorldRenderingPipeline> pipelinesPerDimension = new HashMap<>();
-	private boolean isInitialized = false;
 	private WorldRenderingPipeline pipeline;
 	private boolean sodiumShaderReloadNeeded;
 
@@ -24,19 +24,24 @@ public class PipelineManager {
 	}
 
 	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
-		WorldRenderingPipeline currentPipeline = pipelinesPerDimension.computeIfAbsent(currentDimension, pipelineFactory);
+		if (!pipelinesPerDimension.containsKey(currentDimension)) {
+			SystemTimeUniforms.COUNTER.reset();
+			SystemTimeUniforms.TIMER.reset();
 
-		if (!isInitialized) {
+			Iris.logger.info("Creating pipeline {}", currentDimension);
+			pipeline = pipelineFactory.apply(currentDimension);
+			pipelinesPerDimension.put(currentDimension, pipeline);
+			sodiumShaderReloadNeeded = true;
+
 			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
 				MinecraftClient.getInstance().worldRenderer.reload();
 				BlockRenderingSettings.INSTANCE.clearReloadRequired();
 			}
-			isInitialized = true;
+		} else {
+			pipeline = pipelinesPerDimension.get(currentDimension);
 		}
 
-		pipeline = currentPipeline;
-
-		return currentPipeline;
+		return pipeline;
 	}
 
 	public WorldRenderingPipeline getPipeline() {
@@ -76,7 +81,6 @@ public class PipelineManager {
 
 		pipelinesPerDimension.clear();
 		pipeline = null;
-		isInitialized = false;
 	}
 
 	private void resetTextureState() {
