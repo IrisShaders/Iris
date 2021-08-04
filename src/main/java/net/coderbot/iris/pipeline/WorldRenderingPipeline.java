@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface WorldRenderingPipeline {
 	void beginWorldRendering();
-	void renderShadows(LevelRendererAccessor worldRenderer, Camera camera);
+	void renderShadows(LevelRendererAccessor levelRenderer, Camera camera);
 	void addDebugText(List<String> messages);
 	void beginShadowRender();
 	void endShadowRender();

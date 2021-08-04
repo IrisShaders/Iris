@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(targets = "net.minecraft.client.particle.FireworksSparkParticle$Explosion")
 public class MixinFireworkSparkParticle extends SimpleAnimatedParticle {
-	private MixinFireworkSparkParticle(ClientLevel world, double x, double y, double z, SpriteSet spriteProvider, float upwardsAcceleration) {
-		super(world, x, y, z, spriteProvider, upwardsAcceleration);
+	private MixinFireworkSparkParticle(ClientLevel level, double x, double y, double z, SpriteSet spriteProvider, float upwardsAcceleration) {
+		super(level, x, y, z, spriteProvider, upwardsAcceleration);
 	}
 
 	@Override

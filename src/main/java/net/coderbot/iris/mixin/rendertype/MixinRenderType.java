@@ -1,8 +1,8 @@
-package net.coderbot.iris.mixin.renderlayer;
+package net.coderbot.iris.mixin.rendertype;
 
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.IrisRenderLayerWrapper;
-import net.coderbot.iris.layer.UseProgramRenderPhase;
+import net.coderbot.iris.layer.IrisRenderTypeWrapper;
+import net.coderbot.iris.layer.UseProgramRenderState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -80,7 +80,7 @@ public class MixinRenderType {
 		CUTOUT = wrap("iris:terrain_cutout", CUTOUT, GbufferProgram.TERRAIN);
 		TRANSLUCENT = wrap("iris:translucent", TRANSLUCENT, GbufferProgram.TRANSLUCENT_TERRAIN);
 		TRIPWIRE = wrap("iris:tripwire", TRIPWIRE, GbufferProgram.TRANSLUCENT_TERRAIN);
-		// TODO: figure out how to assign to RenderLayer.LINES
+		// TODO: figure out how to assign to RenderType.LINES
 		// We cannot use @Shadow easily because the type of the field is a package-private class
 		iris$LINES = wrap("iris:lines", RenderType.LINES, GbufferProgram.BASIC);
 
@@ -107,7 +107,7 @@ public class MixinRenderType {
 
 	/**
 	 * @author coderbot
-	 * @reason Use the wrapped render layer instead.
+	 * @reason Use the wrapped render type instead.
 	 */
 	@Overwrite
 	public static RenderType lines() {
@@ -115,7 +115,7 @@ public class MixinRenderType {
 	}
 
 	private static RenderType wrap(String name, RenderType wrapped, GbufferProgram program) {
-		return new IrisRenderLayerWrapper(name, wrapped, new UseProgramRenderPhase(program));
+		return new IrisRenderTypeWrapper(name, wrapped, new UseProgramRenderState(program));
 	}
 
 	private static RenderType wrapGlint(String glintType, RenderType wrapped) {
@@ -147,7 +147,7 @@ public class MixinRenderType {
 		"text",
 		"textSeeThrough",
 	}, cancellable = true)
-	private static void iris$wrapEntityRenderLayers(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
+	private static void iris$wrapEntityRenderTypes(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
@@ -158,7 +158,7 @@ public class MixinRenderType {
 		"entityCutoutNoCullZOffset(Lnet/minecraft/resources/ResourceLocation;Z)Lnet/minecraft/client/renderer/RenderType;",
 		"entityTranslucent(Lnet/minecraft/resources/ResourceLocation;Z)Lnet/minecraft/client/renderer/RenderType;",
 	}, cancellable = true)
-	private static void iris$wrapEntityRenderLayersZ(ResourceLocation texture, boolean affectsOutline, CallbackInfoReturnable<RenderType> cir) {
+	private static void iris$wrapEntityRenderTypesZ(ResourceLocation texture, boolean affectsOutline, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
@@ -197,7 +197,7 @@ public class MixinRenderType {
 	private static void iris$wrapEnergySwirl(ResourceLocation texture, float x, float y, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		// TODO: What render layer to use for this? It's used by charged creepers and withers.
+		// TODO: What render type to use for this? It's used by charged creepers and withers.
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
@@ -225,7 +225,7 @@ public class MixinRenderType {
 	@Inject(at = @At("RETURN"), method = {
 		"crumbling"
 	}, cancellable = true)
-	private static void iris$wrapBlockBreakingRenderLayer(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
+	private static void iris$wrapBlockBreakingRenderType(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.DAMAGED_BLOCKS));
@@ -234,7 +234,7 @@ public class MixinRenderType {
 	@Inject(at = @At("RETURN"), method = {
 		"endPortal"
 	}, cancellable = true)
-	private static void iris$wrapEndPortalRenderLayer(int layer, CallbackInfoReturnable<RenderType> cir) {
+	private static void iris$wrapEndPortalRenderType(int type, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.BLOCK_ENTITIES));

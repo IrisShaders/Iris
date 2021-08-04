@@ -681,8 +681,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
-		this.shadowMapRenderer.renderShadows(worldRenderer, playerCamera);
+	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		this.shadowMapRenderer.renderShadows(levelRenderer, playerCamera);
 	}
 
 	@Override

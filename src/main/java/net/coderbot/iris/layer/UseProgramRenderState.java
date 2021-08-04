@@ -3,10 +3,10 @@ package net.coderbot.iris.layer;
 import java.util.Objects;
 import net.minecraft.client.renderer.RenderStateShard;
 
-public class UseProgramRenderPhase extends RenderStateShard {
+public class UseProgramRenderState extends RenderStateShard {
 	private GbufferProgram program;
 
-	public UseProgramRenderPhase(GbufferProgram program) {
+	public UseProgramRenderState(GbufferProgram program) {
 		super("iris:use_program", () -> GbufferPrograms.push(program), () -> GbufferPrograms.pop(program));
 
 		this.program = program;
@@ -22,7 +22,7 @@ public class UseProgramRenderPhase extends RenderStateShard {
 			return false;
 		}
 
-		UseProgramRenderPhase other = (UseProgramRenderPhase) object;
+		UseProgramRenderState other = (UseProgramRenderState) object;
 
 		return Objects.equals(this.program, other.program);
 	}

@@ -76,9 +76,9 @@ public final class IdMapUniforms {
 			return -1;
 		}
 
-		ClientLevel world = Objects.requireNonNull(Minecraft.getInstance().level);
+		ClientLevel level = Objects.requireNonNull(Minecraft.getInstance().level);
 
-		BlockState blockAt = world.getBlockState(entity.getBlockPos());
+		BlockState blockAt = level.getBlockState(entity.getBlockPos());
 
 		if (!entity.getType().isValid(blockAt.getBlock())) {
 			// Somehow the block here isn't compatible with the block entity at this location.

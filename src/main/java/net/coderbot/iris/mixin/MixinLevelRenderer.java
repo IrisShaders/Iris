@@ -9,9 +9,9 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.IsBlockEntityRenderPhase;
-import net.coderbot.iris.layer.IsEntityRenderPhase;
-import net.coderbot.iris.layer.OuterWrappedRenderLayer;
+import net.coderbot.iris.layer.IsBlockEntityRenderState;
+import net.coderbot.iris.layer.IsEntityRenderState;
+import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
@@ -230,7 +230,7 @@ public class MixinLevelRenderer {
 
 		if (provider instanceof WrappingVertexConsumerProvider) {
 			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
-				new OuterWrappedRenderLayer("iris:is_entity", layer, IsEntityRenderPhase.INSTANCE));
+				new OuterWrappedRenderType("iris:is_entity", layer, IsEntityRenderState.INSTANCE));
 		}
 	}
 
@@ -240,7 +240,7 @@ public class MixinLevelRenderer {
 
 		if (provider instanceof WrappingVertexConsumerProvider) {
 			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
-					new OuterWrappedRenderLayer("iris:is_block_entity", layer, IsBlockEntityRenderPhase.INSTANCE));
+					new OuterWrappedRenderType("iris:is_block_entity", layer, IsBlockEntityRenderState.INSTANCE));
 		}
 	}
 
@@ -279,9 +279,9 @@ public class MixinLevelRenderer {
 	}
 
 	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;entitiesForRendering()Ljava/lang/Iterable;"))
-	private Iterable<Entity> iris$sortEntityList(ClientLevel world) {
+	private Iterable<Entity> iris$sortEntityList(ClientLevel level) {
 		// Sort the entity list first in order to allow vanilla's entity batching code to work better.
-		Iterable<Entity> entityIterable = world.entitiesForRendering();
+		Iterable<Entity> entityIterable = level.entitiesForRendering();
 
 		Map<EntityType<?>, List<Entity>> sortedEntities = new HashMap<>();
 

@@ -1,21 +1,22 @@
 package net.coderbot.iris.layer;
 
-import java.util.Objects;
-import java.util.Optional;
-
-import net.coderbot.iris.mixin.renderlayer.RenderTypeAccessor;
+import net.coderbot.iris.mixin.rendertype.RenderTypeAccessor;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.Nullable;
 
-public class IrisRenderLayerWrapper extends RenderType implements WrappableRenderLayer {
-	private final UseProgramRenderPhase useProgram;
+import java.util.Objects;
+import java.util.Optional;
+
+public class InnerWrappedRenderType extends RenderType implements WrappableRenderType {
+	private final RenderStateShard extra;
 	private final RenderType wrapped;
 
-	public IrisRenderLayerWrapper(String name, RenderType wrapped, UseProgramRenderPhase useProgram) {
+	public InnerWrappedRenderType(String name, RenderType wrapped, RenderStateShard extra) {
 		super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
 			wrapped.affectsCrumbling(), isTranslucent(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
 
-		this.useProgram = useProgram;
+		this.extra = extra;
 		this.wrapped = wrapped;
 	}
 
@@ -23,12 +24,12 @@ public class IrisRenderLayerWrapper extends RenderType implements WrappableRende
 	public void setupRenderState() {
 		super.setupRenderState();
 
-		useProgram.setupRenderState();
+		extra.setupRenderState();
 	}
 
 	@Override
 	public void clearRenderState() {
-		useProgram.clearRenderState();
+		extra.clearRenderState();
 
 		super.clearRenderState();
 	}
@@ -58,9 +59,9 @@ public class IrisRenderLayerWrapper extends RenderType implements WrappableRende
 			return false;
 		}
 
-		IrisRenderLayerWrapper other = (IrisRenderLayerWrapper) object;
+		InnerWrappedRenderType other = (InnerWrappedRenderType) object;
 
-		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.useProgram, other.useProgram);
+		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.extra, other.extra);
 	}
 
 	@Override
@@ -72,7 +73,7 @@ public class IrisRenderLayerWrapper extends RenderType implements WrappableRende
 
 	@Override
 	public String toString() {
-		return "iris:" + this.wrapped.toString();
+		return "iris_wrapped:" + this.wrapped.toString();
 	}
 
 	private static boolean isTranslucent(RenderType layer) {

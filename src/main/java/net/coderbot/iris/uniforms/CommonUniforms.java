@@ -5,7 +5,7 @@ import java.util.function.IntSupplier;
 
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.layer.EntityColorRenderPhase;
+import net.coderbot.iris.layer.EntityColorRenderState;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.texunits.TextureAtlasInterface;
@@ -56,18 +56,18 @@ public final class CommonUniforms {
 		FogUniforms.addFogUniforms(uniforms);
 
 		uniforms.uniform4f("entityColor", () -> {
-			if (EntityColorRenderPhase.currentHurt) {
+			if (EntityColorRenderState.currentHurt) {
 				return new Vector4f(1.0f, 0.0f, 0.0f, 0.3f);
 			}
 
-			float shade = EntityColorRenderPhase.currentWhiteFlash;
+			float shade = EntityColorRenderState.currentWhiteFlash;
 
 			if (shade != 0.0f) {
 				return new Vector4f(shade, shade, shade, 0.5f);
 			}
 
 			return new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-		}, EntityColorRenderPhase.getUpdateNotifier());
+		}, EntityColorRenderState.getUpdateNotifier());
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}

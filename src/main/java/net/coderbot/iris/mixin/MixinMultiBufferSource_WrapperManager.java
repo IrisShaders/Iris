@@ -1,11 +1,11 @@
 package net.coderbot.iris.mixin;
 
-import net.coderbot.iris.layer.EntityColorRenderPhase;
-import net.coderbot.iris.layer.IsBlockEntityRenderPhase;
-import net.coderbot.iris.layer.IsEntityRenderPhase;
-import net.coderbot.iris.layer.InnerWrappedRenderLayer;
-import net.coderbot.iris.layer.OuterWrappedRenderLayer;
-import net.coderbot.iris.layer.WrappableRenderLayer;
+import net.coderbot.iris.layer.EntityColorRenderState;
+import net.coderbot.iris.layer.IsBlockEntityRenderState;
+import net.coderbot.iris.layer.IsEntityRenderState;
+import net.coderbot.iris.layer.InnerWrappedRenderType;
+import net.coderbot.iris.layer.OuterWrappedRenderType;
+import net.coderbot.iris.layer.WrappableRenderType;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Final;
@@ -105,9 +105,9 @@ public class MixinMultiBufferSource_WrapperManager {
 		if (fixedBuffers.containsKey(layer) && !wrappers.contains(layer)) {
 			// If this is a buffered layer that isn't a wrapper itself, add the corresponding wrapped buffers.
 			ensureWrapped(layer);
-		} else if (layer instanceof WrappableRenderLayer) {
+		} else if (layer instanceof WrappableRenderType) {
 			// If this is a wrapper, try to unwrap it to find the base layer.
-			RenderType unwrapped = ((WrappableRenderLayer) layer).unwrap();
+			RenderType unwrapped = ((WrappableRenderType) layer).unwrap();
 
 			if (unwrapped != layer && unwrapped != null) {
 				ensureBuffersPresent(unwrapped);
@@ -146,17 +146,17 @@ public class MixinMultiBufferSource_WrapperManager {
 
 	@Unique
 	private RenderType iris$wrapWithEntityColor(RenderType base, boolean hurt, boolean whiteFlash) {
-		EntityColorRenderPhase phase = new EntityColorRenderPhase(hurt, whiteFlash ? 1.0F : 0.0F);
-		return new InnerWrappedRenderLayer("iris_entity_color", base, phase);
+		EntityColorRenderState phase = new EntityColorRenderState(hurt, whiteFlash ? 1.0F : 0.0F);
+		return new InnerWrappedRenderType("iris_entity_color", base, phase);
 	}
 
 	@Unique
 	private RenderType iris$wrapWithIsEntity(RenderType base) {
-		return new OuterWrappedRenderLayer("iris:is_entity", base, IsEntityRenderPhase.INSTANCE);
+		return new OuterWrappedRenderType("iris:is_entity", base, IsEntityRenderState.INSTANCE);
 	}
 
 	@Unique
 	private RenderType iris$wrapWithIsBlockEntity(RenderType base) {
-		return new OuterWrappedRenderLayer("iris:is_block_entity", base, IsBlockEntityRenderPhase.INSTANCE);
+		return new OuterWrappedRenderType("iris:is_block_entity", base, IsBlockEntityRenderState.INSTANCE);
 	}
 }

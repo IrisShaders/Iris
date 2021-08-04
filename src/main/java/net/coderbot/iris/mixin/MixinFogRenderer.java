@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinFogRenderer {
 	@Shadow private static float fogRed, fogGreen, fogBlue;
 	@Inject(method = "setupColor", at = @At("TAIL"))
-	private static void render(Camera camera, float tickDelta, ClientLevel world, int i, float f, CallbackInfo ci) {
+	private static void render(Camera camera, float tickDelta, ClientLevel level, int i, float f, CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setFogColor(fogRed, fogGreen, fogBlue);
 	}
 }

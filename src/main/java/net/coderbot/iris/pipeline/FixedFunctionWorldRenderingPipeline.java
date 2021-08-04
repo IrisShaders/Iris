@@ -22,7 +22,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void renderShadows(LevelRendererAccessor worldRenderer, Camera camera) {
+	public void renderShadows(LevelRendererAccessor levelRenderer, Camera camera) {
 		// stub: nothing to do here
 	}
 

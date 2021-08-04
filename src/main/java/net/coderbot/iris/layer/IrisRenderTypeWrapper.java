@@ -1,22 +1,21 @@
 package net.coderbot.iris.layer;
 
-import net.coderbot.iris.mixin.renderlayer.RenderTypeAccessor;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Objects;
 import java.util.Optional;
 
-public class InnerWrappedRenderLayer extends RenderType implements WrappableRenderLayer {
-	private final RenderStateShard extra;
+import net.coderbot.iris.mixin.rendertype.RenderTypeAccessor;
+import net.minecraft.client.renderer.RenderType;
+import org.jetbrains.annotations.Nullable;
+
+public class IrisRenderTypeWrapper extends RenderType implements WrappableRenderType {
+	private final UseProgramRenderState useProgram;
 	private final RenderType wrapped;
 
-	public InnerWrappedRenderLayer(String name, RenderType wrapped, RenderStateShard extra) {
+	public IrisRenderTypeWrapper(String name, RenderType wrapped, UseProgramRenderState useProgram) {
 		super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
 			wrapped.affectsCrumbling(), isTranslucent(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
 
-		this.extra = extra;
+		this.useProgram = useProgram;
 		this.wrapped = wrapped;
 	}
 
@@ -24,12 +23,12 @@ public class InnerWrappedRenderLayer extends RenderType implements WrappableRend
 	public void setupRenderState() {
 		super.setupRenderState();
 
-		extra.setupRenderState();
+		useProgram.setupRenderState();
 	}
 
 	@Override
 	public void clearRenderState() {
-		extra.clearRenderState();
+		useProgram.clearRenderState();
 
 		super.clearRenderState();
 	}
@@ -59,9 +58,9 @@ public class InnerWrappedRenderLayer extends RenderType implements WrappableRend
 			return false;
 		}
 
-		InnerWrappedRenderLayer other = (InnerWrappedRenderLayer) object;
+		IrisRenderTypeWrapper other = (IrisRenderTypeWrapper) object;
 
-		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.extra, other.extra);
+		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.useProgram, other.useProgram);
 	}
 
 	@Override
@@ -73,7 +72,7 @@ public class InnerWrappedRenderLayer extends RenderType implements WrappableRend
 
 	@Override
 	public String toString() {
-		return "iris_wrapped:" + this.wrapped.toString();
+		return "iris:" + this.wrapped.toString();
 	}
 
 	private static boolean isTranslucent(RenderType layer) {

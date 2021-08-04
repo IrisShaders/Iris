@@ -1,6 +1,6 @@
 package net.coderbot.iris.layer;
 
-import net.coderbot.iris.mixin.renderlayer.RenderTypeAccessor;
+import net.coderbot.iris.mixin.rendertype.RenderTypeAccessor;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.Nullable;
@@ -8,11 +8,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 
-public class OuterWrappedRenderLayer extends RenderType implements WrappableRenderLayer {
+public class OuterWrappedRenderType extends RenderType implements WrappableRenderType {
 	private final RenderStateShard extra;
 	private final RenderType wrapped;
 
-	public OuterWrappedRenderLayer(String name, RenderType wrapped, RenderStateShard extra) {
+	public OuterWrappedRenderType(String name, RenderType wrapped, RenderStateShard extra) {
 		super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
 			wrapped.affectsCrumbling(), isTranslucent(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
 
@@ -59,7 +59,7 @@ public class OuterWrappedRenderLayer extends RenderType implements WrappableRend
 			return false;
 		}
 
-		OuterWrappedRenderLayer other = (OuterWrappedRenderLayer) object;
+		OuterWrappedRenderType other = (OuterWrappedRenderType) object;
 
 		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.extra, other.extra);
 	}

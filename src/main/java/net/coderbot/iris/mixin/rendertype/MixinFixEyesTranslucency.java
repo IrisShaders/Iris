@@ -1,4 +1,4 @@
-package net.coderbot.iris.mixin.renderlayer;
+package net.coderbot.iris.mixin.rendertype;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;

@@ -2,9 +2,8 @@ package net.coderbot.iris.layer;
 
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 import net.minecraft.client.renderer.RenderStateShard;
-import java.util.Objects;
 
-public class EntityColorRenderPhase extends RenderStateShard {
+public class EntityColorRenderState extends RenderStateShard {
 	public static boolean currentHurt;
 	public static float currentWhiteFlash;
 	private static Runnable listener;
@@ -12,7 +11,7 @@ public class EntityColorRenderPhase extends RenderStateShard {
 	private final boolean hurt;
 	private final float whiteFlash;
 
-	public EntityColorRenderPhase(boolean hurt, float whiteFlash) {
+	public EntityColorRenderState(boolean hurt, float whiteFlash) {
 		super("iris:entity_color", () -> {
 			currentHurt = hurt;
 			currentWhiteFlash = whiteFlash;
@@ -47,7 +46,7 @@ public class EntityColorRenderPhase extends RenderStateShard {
 			return false;
 		}
 
-		EntityColorRenderPhase other = (EntityColorRenderPhase) object;
+		EntityColorRenderState other = (EntityColorRenderState) object;
 
 		if (this.hurt != other.hurt) {
 			return false;

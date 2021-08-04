@@ -6,9 +6,9 @@ import java.util.function.Function;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
-import net.coderbot.iris.layer.InnerWrappedRenderLayer;
-import net.coderbot.iris.layer.IrisRenderLayerWrapper;
-import net.coderbot.iris.mixin.renderlayer.RenderStateShardAccessor;
+import net.coderbot.iris.layer.InnerWrappedRenderType;
+import net.coderbot.iris.layer.IrisRenderTypeWrapper;
+import net.coderbot.iris.mixin.rendertype.RenderStateShardAccessor;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,7 +25,7 @@ public class MixinMultiBufferSource implements WrappingVertexConsumerProvider {
 
 	@Inject(method = "endBatch(Lnet/minecraft/client/renderer/RenderType;)V", at = @At("HEAD"))
 	private void iris$beginDraw(RenderType layer, CallbackInfo callback) {
-		if (!(layer instanceof IrisRenderLayerWrapper) && !(layer instanceof InnerWrappedRenderLayer)) {
+		if (!(layer instanceof IrisRenderTypeWrapper) && !(layer instanceof InnerWrappedRenderType)) {
 			String name = ((RenderStateShardAccessor) layer).getName();
 
 			if (unwrapped.contains(name)) {

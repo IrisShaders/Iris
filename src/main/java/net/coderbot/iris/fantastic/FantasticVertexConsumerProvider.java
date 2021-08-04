@@ -1,6 +1,6 @@
 package net.coderbot.iris.fantastic;
 
-import net.coderbot.iris.layer.IrisRenderLayerWrapper;
+import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -24,8 +24,8 @@ public class FantasticVertexConsumerProvider extends MultiBufferSource.BufferSou
 			return true;
 		}
 
-		if (layer instanceof IrisRenderLayerWrapper) {
-			IrisRenderLayerWrapper wrapped = (IrisRenderLayerWrapper) layer;
+		if (layer instanceof IrisRenderTypeWrapper) {
+			IrisRenderTypeWrapper wrapped = (IrisRenderTypeWrapper) layer;
 			layer = wrapped.unwrap();
 		}
 

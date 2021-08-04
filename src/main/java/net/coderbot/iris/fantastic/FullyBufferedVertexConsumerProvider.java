@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.coderbot.iris.layer.WrappableRenderLayer;
+import net.coderbot.iris.layer.WrappableRenderType;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import java.util.*;
@@ -15,8 +15,8 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 	private final Set<BufferBuilder> activeBuffers;
 	private boolean flushed;
 
-	private final Set<RenderType> layersThisFrame;
-	private final List<RenderType> layersInOrder;
+	private final Set<RenderType> typeThisFrame;
+	private final List<RenderType> typesInOrder;
 
 	public FullyBufferedVertexConsumerProvider() {
 		super(new BufferBuilder(0), Collections.emptyMap());
@@ -26,17 +26,17 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 		this.activeBuffers = new HashSet<>();
 		this.flushed = false;
 
-		this.layersThisFrame = new HashSet<>();
-		this.layersInOrder = new ArrayList<>();
+		this.typeThisFrame = new HashSet<>();
+		this.typesInOrder = new ArrayList<>();
 	}
 
-	private TransparencyType getTransparencyType(RenderType layer) {
-		while (layer instanceof WrappableRenderLayer) {
-			layer = ((WrappableRenderLayer) layer).unwrap();
+	private TransparencyType getTransparencyType(RenderType type) {
+		while (type instanceof WrappableRenderType) {
+			type = ((WrappableRenderType) type).unwrap();
 		}
 
-		if (layer instanceof BlendingStateHolder) {
-			return ((BlendingStateHolder) layer).getTransparencyType();
+		if (type instanceof BlendingStateHolder) {
+			return ((BlendingStateHolder) type).getTransparencyType();
 		}
 
 		// Default to "generally transparent" if we can't figure it out.
@@ -44,29 +44,29 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 	}
 
 	@Override
-	public VertexConsumer getBuffer(RenderType renderLayer) {
+	public VertexConsumer getBuffer(RenderType renderType) {
 		flushed = false;
 
-		BufferBuilder buffer = bufferBuilders.computeIfAbsent(renderLayer, layer -> new BufferBuilder(layer.bufferSize()));
+		BufferBuilder buffer = bufferBuilders.computeIfAbsent(renderType, type -> new BufferBuilder(type.bufferSize()));
 
 		if (activeBuffers.add(buffer)) {
-			buffer.begin(renderLayer.mode(), renderLayer.format());
+			buffer.begin(renderType.mode(), renderType.format());
 		}
 
-		if (this.layersThisFrame.add(renderLayer)) {
-			// If we haven't seen this layer yet, add it to the list of layers to render.
+		if (this.typeThisFrame.add(renderType)) {
+			// If we haven't seen this type yet, add it to the list of types to render.
 			//
-			// We keep track of the order that layers were added, in order to ensure that if layers are not
+			// We keep track of the order that types were added, in order to ensure that if types are not
 			// sorted relative each other due to translucency, that they are sorted in the order that they were
 			// drawn in.
 			//
 			// This is important for things like villager rendering, where the clothes and skin of villagers overlap
 			// each other, so if the clothes are drawn before the skin, they appear to be poorly-clothed.
-			this.layersInOrder.add(renderLayer);
+			this.typesInOrder.add(renderType);
 		}
 
 		// If this buffer is scheduled to be removed, unschedule it since it's now being used.
-		unused.removeInt(renderLayer);
+		unused.removeInt(renderType);
 
 		return buffer;
 	}
@@ -77,16 +77,16 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 			return;
 		}
 
-		List<RenderType> removedLayers = new ArrayList<>();
+		List<RenderType> removedTypes = new ArrayList<>();
 
-		unused.forEach((unusedLayer, unusedCount) -> {
+		unused.forEach((unusedType, unusedCount) -> {
 			if (unusedCount < 10) {
 				// Removed after 10 frames of not being used
 				return;
 			}
 
-			BufferBuilder buffer = bufferBuilders.remove(unusedLayer);
-			removedLayers.add(unusedLayer);
+			BufferBuilder buffer = bufferBuilders.remove(unusedType);
+			removedTypes.add(unusedType);
 
 			if (activeBuffers.contains(buffer)) {
 				throw new IllegalStateException(
@@ -94,45 +94,45 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 			}
 		});
 
-		for (RenderType removed : removedLayers) {
+		for (RenderType removed : removedTypes) {
 			unused.removeInt(removed);
 		}
 
-		// Make sure translucent layers are rendered after non-translucent ones.
-		layersInOrder.sort(Comparator.comparing(this::getTransparencyType));
+		// Make sure translucent types are rendered after non-translucent ones.
+		typesInOrder.sort(Comparator.comparing(this::getTransparencyType));
 
-		for (RenderType layer : layersInOrder) {
-			drawInternal(layer);
+		for (RenderType type : typesInOrder) {
+			drawInternal(type);
 		}
 
-		layersInOrder.clear();
-		layersThisFrame.clear();
+		typesInOrder.clear();
+		typeThisFrame.clear();
 
 		flushed = true;
 	}
 
 	@Override
-	public void endBatch(RenderType layer) {
+	public void endBatch(RenderType type) {
 		// Disable explicit flushing
 	}
 
-	private void drawInternal(RenderType layer) {
-		BufferBuilder buffer = bufferBuilders.get(layer);
+	private void drawInternal(RenderType type) {
+		BufferBuilder buffer = bufferBuilders.get(type);
 
 		if (buffer == null) {
 			return;
 		}
 
 		if (activeBuffers.remove(buffer)) {
-			layer.end(buffer, 0, 0, 0);
+			type.end(buffer, 0, 0, 0);
 			buffer.discard();
 		} else {
 			// Schedule the buffer for removal next frame if it isn't used this frame.
-			int unusedCount = unused.getOrDefault(layer, 0);
+			int unusedCount = unused.getOrDefault(type, 0);
 
 			unusedCount += 1;
 
-			unused.put(layer, unusedCount);
+			unused.put(type, unusedCount);
 		}
 	}
 }

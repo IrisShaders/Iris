@@ -20,10 +20,10 @@ public class MixinTerrainParticle {
 	private boolean isOpaque;
 
 	@Inject(method = "<init>", at = @At("RETURN"))
-	private void iris$resolveTranslucency(ClientLevel world, double x, double y, double z, double velocityX, double velocityY, double velocityZ, BlockState blockState, CallbackInfo callback) {
-		RenderType layer = ItemBlockRenderTypes.getChunkRenderType(blockState);
+	private void iris$resolveTranslucency(ClientLevel level, double x, double y, double z, double velocityX, double velocityY, double velocityZ, BlockState blockState, CallbackInfo callback) {
+		RenderType type = ItemBlockRenderTypes.getChunkRenderType(blockState);
 
-		if (layer == RenderType.solid() || layer == RenderType.cutout() || layer == RenderType.cutoutMipped()) {
+		if (type == RenderType.solid() || type == RenderType.cutout() || type == RenderType.cutoutMipped()) {
 			isOpaque = true;
 		}
 	}
