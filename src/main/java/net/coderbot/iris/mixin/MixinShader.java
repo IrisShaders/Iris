@@ -16,9 +16,13 @@ public class MixinShader {
 			location = GlUniform.getUniformLocation(programId, "tex");
 
 			if (location == -1) {
-				location = GlUniform.getUniformLocation(programId, "texture");
+				location = GlUniform.getUniformLocation(programId, "gtexture");
 
-				// TODO: If a shader samples from *any* sampler with a name that isn't known, then it should act like sampler 0.
+				if (location == -1) {
+					location = GlUniform.getUniformLocation(programId, "texture");
+
+					// TODO: If a shader samples from *any* sampler with a name that isn't known, then it should act like sampler 0.
+				}
 			}
 		}
 

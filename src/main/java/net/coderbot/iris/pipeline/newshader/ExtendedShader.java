@@ -78,9 +78,10 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 	public void addSampler(String name, Object sampler) {
 		// Translate vanilla sampler names to Iris / ShadersMod sampler names
 		if (name.equals("Sampler0")) {
-			name = "texture";
+			name = "gtexture";
 
-			// "tex" is also a valid sampler name.
+			// "tex" and "texture" are also valid sampler names.
+			super.addSampler("texture", sampler);
 			super.addSampler("tex", sampler);
 		} else if (name.equals("Sampler2")) {
 			name = "lightmap";
