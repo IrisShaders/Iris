@@ -93,7 +93,7 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;compileChunksUntil(J)V", shift = At.Shift.AFTER))
 	private void iris$renderTerrainShadows(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		pipeline.renderShadows((WorldRendererAccessor) this, camera);
+		pipeline.renderShadows((LevelRendererAccessor) this, camera);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR))

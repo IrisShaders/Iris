@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(FogRenderer.class)
-public class MixinBackgroundRenderer {
+public class MixinFogRenderer {
 	@Shadow private static float fogRed, fogGreen, fogBlue;
 	@Inject(method = "setupColor", at = @At("TAIL"))
 	private static void render(Camera camera, float tickDelta, ClientLevel world, int i, float f, CallbackInfo ci) {

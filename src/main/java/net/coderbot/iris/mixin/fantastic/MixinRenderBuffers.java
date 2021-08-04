@@ -15,7 +15,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import java.util.SortedMap;
 
 @Mixin(RenderBuffers.class)
-public class MixinBufferBuilderStorage implements ExtendedBufferStorage {
+public class MixinRenderBuffers implements ExtendedBufferStorage {
 	@Shadow
 	@Final
 	private SortedMap<RenderType, BufferBuilder> fixedBuffers;

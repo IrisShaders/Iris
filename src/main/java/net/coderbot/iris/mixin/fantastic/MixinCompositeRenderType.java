@@ -12,11 +12,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(targets = "net/minecraft/client/renderer/RenderType$CompositeRenderType")
-public abstract class MixinMultiPhaseRenderLayer extends RenderType implements BlendingStateHolder {
+public abstract class MixinCompositeRenderType extends RenderType implements BlendingStateHolder {
 	@Unique
 	private TransparencyType transparencyType;
 
-	private MixinMultiPhaseRenderLayer(String name, VertexFormat vertexFormat, int drawMode, int expectedBufferSize, boolean hasCrumbling, boolean translucent, Runnable startAction, Runnable endAction) {
+	private MixinCompositeRenderType(String name, VertexFormat vertexFormat, int drawMode, int expectedBufferSize, boolean hasCrumbling, boolean translucent, Runnable startAction, Runnable endAction) {
 		super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
 	}
 
@@ -24,14 +24,14 @@ public abstract class MixinMultiPhaseRenderLayer extends RenderType implements B
 	private void iris$onMultiPhaseInit(String name, VertexFormat vertexFormat, int drawMode, int expectedBufferSize,
 									   boolean hasCrumbling, boolean translucent, RenderType.CompositeState phases,
 									   CallbackInfo ci) {
-		RenderStateShard.TransparencyStateShard transparency = ((MultiPhaseParametersAccessor) (Object) phases).getTransparency();
+		RenderStateShard.TransparencyStateShard transparency = ((CompositeStateAccessor) (Object) phases).getTransparencyState();
 
 		if ("water_mask".equals(name)) {
 			transparencyType = TransparencyType.WATER_MASK;
-		} else if (transparency == RenderPhaseAccessor.getNO_TRANSPARENCY()) {
+		} else if (transparency == RenderStateShardAccessor.getNO_TRANSPARENCY()) {
 			transparencyType = TransparencyType.OPAQUE;
-		} else if (transparency == RenderPhaseAccessor.getGLINT_TRANSPARENCY() ||
-		           transparency == RenderPhaseAccessor.getCRUMBLING_TRANSPARENCY()) {
+		} else if (transparency == RenderStateShardAccessor.getGLINT_TRANSPARENCY() ||
+		           transparency == RenderStateShardAccessor.getCRUMBLING_TRANSPARENCY()) {
 			transparencyType = TransparencyType.DECAL;
 		} else {
 			transparencyType = TransparencyType.GENERAL_TRANSPARENT;

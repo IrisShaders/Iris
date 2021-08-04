@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.RenderType;
 
 @Environment(EnvType.CLIENT)
 @Mixin(RenderType.class)
-public interface RenderLayerAccessor {
+public interface RenderTypeAccessor {
 	@Accessor("sortOnUpload")
 	boolean isTranslucent();
 }

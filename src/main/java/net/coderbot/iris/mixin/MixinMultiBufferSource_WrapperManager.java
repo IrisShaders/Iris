@@ -38,7 +38,7 @@ import java.util.Set;
  * which adds colored enchantment glints.
  */
 @Mixin(MultiBufferSource.BufferSource.class)
-public class MixinImmediateVertexConsumerProvider_WrapperManager {
+public class MixinMultiBufferSource_WrapperManager {
 	@Shadow
 	@Final
 	protected Map<RenderType, BufferBuilder> fixedBuffers;

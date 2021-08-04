@@ -24,6 +24,6 @@ public class MixinFixEyesTranslucency {
 	@Redirect(method = "eyes", at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;setTransparencyState(Lnet/minecraft/client/renderer/RenderStateShard$TransparencyStateShard;)Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;"))
 	private static RenderType.CompositeState.CompositeStateBuilder iris$fixEyesTranslucency(RenderType.CompositeState.CompositeStateBuilder instance, RenderStateShard.TransparencyStateShard ignored) {
-		return instance.setTransparencyState(RenderPhaseAccessor.getTranslucentTransparency()).setAlphaState(REJECT_ZERO_ALPHA);
+		return instance.setTransparencyState(RenderStateShardAccessor.getTranslucentTransparency()).setAlphaState(REJECT_ZERO_ALPHA);
 	}
 }

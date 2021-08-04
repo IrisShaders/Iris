@@ -11,14 +11,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(LevelRenderer.class)
-public class MixinWorldRenderer implements CullingDataCache {
+public class MixinLevelRenderer implements CullingDataCache {
 	@Shadow
 	@Final
 	@Mutable
 	private ObjectList renderChunks;
 
 	@Unique
-	private ObjectList savedVisibleChunks = new ObjectArrayList(69696);
+	private ObjectList savedRenderChunks = new ObjectArrayList(69696);
 
 	@Shadow
 	private boolean needsUpdate;
@@ -69,8 +69,8 @@ public class MixinWorldRenderer implements CullingDataCache {
 	@Unique
 	private void swap() {
 		ObjectList tmpList = renderChunks;
-		renderChunks = savedVisibleChunks;
-		savedVisibleChunks = tmpList;
+		renderChunks = savedRenderChunks;
+		savedRenderChunks = tmpList;
 
 		// TODO: If the normal chunks need a terrain update, these chunks probably do too...
 		// We probably should copy it over

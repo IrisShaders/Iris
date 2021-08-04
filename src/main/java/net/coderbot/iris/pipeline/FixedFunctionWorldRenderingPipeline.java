@@ -3,7 +3,7 @@ package net.coderbot.iris.pipeline;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import java.util.List;
@@ -22,7 +22,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void renderShadows(WorldRendererAccessor worldRenderer, Camera camera) {
+	public void renderShadows(LevelRendererAccessor worldRenderer, Camera camera) {
 		// stub: nothing to do here
 	}
 

@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TextureAtlasSprite.class)
-public class MixinSprite {
+public class MixinTextureAtlasSprite {
 	// Generate some color tables for gamma correction.
 	private static final float[] SRGB_TO_LINEAR = new float[256];
 

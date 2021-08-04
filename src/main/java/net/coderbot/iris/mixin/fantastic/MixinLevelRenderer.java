@@ -24,10 +24,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Uses the PhasedParticleManager changes to render opaque particles much earlier than other particles.
  *
- * See the comments in {@link MixinParticleManager} for more details.
+ * See the comments in {@link MixinParticleEngine} for more details.
  */
 @Mixin(LevelRenderer.class)
-public class MixinWorldRenderer {
+public class MixinLevelRenderer {
 	@Shadow
 	@Final
 	private Minecraft minecraft;

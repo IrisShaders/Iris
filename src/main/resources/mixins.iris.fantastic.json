@@ -5,14 +5,14 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinBarrierParticle",
-    "MixinBlockDustParticle",
-    "MixinBufferBuilderStorage",
+    "MixinTerrainParticle",
+    "MixinRenderBuffers",
     "MixinFireworkSparkParticle",
-    "MixinMultiPhaseRenderLayer",
-    "MixinParticleManager",
-    "MixinWorldRenderer",
-    "MultiPhaseParametersAccessor",
-    "RenderPhaseAccessor"
+    "MixinCompositeRenderType",
+    "MixinParticleEngine",
+    "MixinLevelRenderer",
+    "CompositeStateAccessor",
+    "RenderStateShardAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

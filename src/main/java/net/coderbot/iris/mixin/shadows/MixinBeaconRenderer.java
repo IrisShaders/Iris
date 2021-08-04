@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BeaconRenderer.class)
-public class MixinBeaconBlockEntityRenderer {
+public class MixinBeaconRenderer {
 	@Inject(method = "renderBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/resources/ResourceLocation;FFJII[FFF)V",
 	        at = @At("HEAD"), cancellable = true)
 	private static void iris$noLightBeamInShadowPass(PoseStack matrixStack, MultiBufferSource vertexConsumerProvider,

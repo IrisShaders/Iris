@@ -5,7 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinMipmapHelper",
-    "MixinSprite"
+    "MixinTextureAtlasSprite"
   ],
   "injectors": {
     "defaultRequire": 1

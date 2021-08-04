@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.RenderStateShard;
 
 @Environment(EnvType.CLIENT)
 @Mixin(RenderStateShard.class)
-public interface RenderPhaseAccessor {
+public interface RenderStateShardAccessor {
 	@Accessor("name")
 	String getName();
 

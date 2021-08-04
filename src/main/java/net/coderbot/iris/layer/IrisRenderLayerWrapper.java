@@ -3,7 +3,7 @@ package net.coderbot.iris.layer;
 import java.util.Objects;
 import java.util.Optional;
 
-import net.coderbot.iris.mixin.renderlayer.RenderLayerAccessor;
+import net.coderbot.iris.mixin.renderlayer.RenderTypeAccessor;
 import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,6 +76,6 @@ public class IrisRenderLayerWrapper extends RenderType implements WrappableRende
 	}
 
 	private static boolean isTranslucent(RenderType layer) {
-		return ((RenderLayerAccessor) layer).isTranslucent();
+		return ((RenderTypeAccessor) layer).isTranslucent();
 	}
 }

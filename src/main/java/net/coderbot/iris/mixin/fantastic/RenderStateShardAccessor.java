@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(RenderStateShard.class)
-public interface RenderPhaseAccessor {
+public interface RenderStateShardAccessor {
 	@Accessor("NO_TRANSPARENCY")
 	static RenderStateShard.TransparencyStateShard getNO_TRANSPARENCY() {
 		throw new AssertionError();

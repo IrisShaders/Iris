@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(RenderType.CompositeState.class)
-public interface MultiPhaseParametersAccessor {
+public interface CompositeStateAccessor {
 	@Accessor("transparencyState")
-	RenderStateShard.TransparencyStateShard getTransparency();
+	RenderStateShard.TransparencyStateShard getTransparencyState();
 }

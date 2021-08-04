@@ -15,7 +15,7 @@ import net.minecraft.client.renderer.LightTexture;
  */
 @Mixin(LightTexture.class)
 @Environment(EnvType.CLIENT)
-public class MixinLightmapTextureManager {
+public class MixinLightTexture {
 	@ModifyConstant(method = "turnOffLightLayer", constant = @Constant(intValue = GL15.GL_TEXTURE2), require = 1)
 	private int iris$fixLightmapTextureUnit$disable(int texUnit) {
 		return TextureUnit.LIGHTMAP.getUnitId();

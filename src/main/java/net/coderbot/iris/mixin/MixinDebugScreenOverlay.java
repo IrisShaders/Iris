@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Mixin(DebugScreenOverlay.class)
-public abstract class MixinDebugHud {
+public abstract class MixinDebugScreenOverlay {
 	@Unique
 	private static final List<BufferPoolMXBean> pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
 

@@ -13,7 +13,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
@@ -243,10 +243,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	@Override
-	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
+	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
 		Minecraft client = Minecraft.getInstance();
 
-		worldRenderer.getWorld().getProfiler().popPush("shadows");
+		worldRenderer.getLevel().getProfiler().popPush("shadows");
 		ACTIVE = true;
 
 		// Create our camera
@@ -257,7 +257,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		ORTHO = new Matrix4f();
 		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
 
-		worldRenderer.getWorld().getProfiler().push("terrain_setup");
+		worldRenderer.getLevel().getProfiler().push("terrain_setup");
 
 		if (worldRenderer instanceof CullingDataCache) {
 			((CullingDataCache) worldRenderer).saveState();
@@ -291,16 +291,16 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		((LevelRenderer) worldRenderer).needsUpdate();
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
-		worldRenderer.invokeSetupTerrain(playerCamera, frustum, false, worldRenderer.getFrame(), false);
+		worldRenderer.invokeSetupRender(playerCamera, frustum, false, worldRenderer.getFrameId(), false);
 
 		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
 		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
 		// chunks during traversal, and break rendering in concerning ways.
-		worldRenderer.setFrame(worldRenderer.getFrame() + 1);
+		worldRenderer.setFrameId(worldRenderer.getFrameId() + 1);
 
 		client.smartCull = wasChunkCullingEnabled;
 
-		worldRenderer.getWorld().getProfiler().popPush("terrain");
+		worldRenderer.getLevel().getProfiler().popPush("terrain");
 
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
@@ -346,7 +346,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// without shaders, which doesn't integrate with their shadow distortion code.
 		setupShadowProgram();
 
-		worldRenderer.getWorld().getProfiler().popPush("entities");
+		worldRenderer.getLevel().getProfiler().popPush("entities");
 
 		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
 		// it is set to a fixed value.
@@ -370,7 +370,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		int shadowEntities = 0;
 
-		worldRenderer.getWorld().getProfiler().push("cull");
+		worldRenderer.getLevel().getProfiler().push("cull");
 
 		List<Entity> renderedEntities = new ArrayList<>(32);
 
@@ -383,21 +383,21 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			renderedEntities.add(entity);
 		}
 
-		worldRenderer.getWorld().getProfiler().popPush("sort");
+		worldRenderer.getLevel().getProfiler().popPush("sort");
 
 		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
 		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
 
-		worldRenderer.getWorld().getProfiler().popPush("build geometry");
+		worldRenderer.getLevel().getProfiler().popPush("build geometry");
 
 		for (Entity entity : renderedEntities) {
 			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
 			shadowEntities++;
 		}
 
-		worldRenderer.getWorld().getProfiler().pop();
+		worldRenderer.getLevel().getProfiler().pop();
 
-		worldRenderer.getWorld().getProfiler().popPush("build blockentities");
+		worldRenderer.getLevel().getProfiler().popPush("build blockentities");
 
 		int shadowBlockEntities = 0;
 
@@ -415,14 +415,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		renderedShadowEntities = shadowEntities;
 		renderedShadowBlockEntities = shadowBlockEntities;
 
-		worldRenderer.getWorld().getProfiler().popPush("draw entities");
+		worldRenderer.getLevel().getProfiler().popPush("draw entities");
 
 		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
 		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
 		// shadow...
 		provider.endBatch();
 
-		worldRenderer.getWorld().getProfiler().popPush("translucent depth copy");
+		worldRenderer.getLevel().getProfiler().popPush("translucent depth copy");
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
@@ -431,7 +431,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 		RenderSystem.bindTexture(0);
 
-		worldRenderer.getWorld().getProfiler().popPush("translucent terrain");
+		worldRenderer.getLevel().getProfiler().popPush("translucent terrain");
 
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
@@ -449,7 +449,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		SHADOW_DEBUG_STRING = ((LevelRenderer) worldRenderer).getChunkStatistics();
 
-		worldRenderer.getWorld().getProfiler().pop();
+		worldRenderer.getLevel().getProfiler().pop();
 
 		// Restore backface culling
 		RenderSystem.enableCull();
@@ -471,7 +471,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		ACTIVE = false;
-		worldRenderer.getWorld().getProfiler().popPush("updatechunks");
+		worldRenderer.getLevel().getProfiler().popPush("updatechunks");
 	}
 
 	private void setupShadowProgram() {

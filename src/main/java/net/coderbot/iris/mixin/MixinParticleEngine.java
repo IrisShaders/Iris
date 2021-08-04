@@ -25,7 +25,7 @@ import net.fabricmc.api.Environment;
 
 @Mixin(ParticleEngine.class)
 @Environment(EnvType.CLIENT)
-public class MixinParticleManager {
+public class MixinParticleEngine {
 	private static final String RENDER_PARTICLES = "Lnet/minecraft/client/particle/ParticleEngine;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V";
 	private static final String DRAW = "Lnet/minecraft/client/particle/ParticleRenderType;end(Lcom/mojang/blaze3d/vertex/Tesselator;)V";
 

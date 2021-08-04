@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(LevelRenderer.class)
-public interface WorldRendererAccessor {
+public interface LevelRendererAccessor {
 	@Accessor("entityRenderDispatcher")
 	EntityRenderDispatcher getEntityRenderDispatcher();
 
@@ -22,17 +22,17 @@ public interface WorldRendererAccessor {
 	void invokeRenderChunkLayer(RenderType terrainLayer, PoseStack modelView, double cameraX, double cameraY, double cameraZ);
 
 	@Invoker("setupRender")
-	void invokeSetupTerrain(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator);
+	void invokeSetupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator);
 
 	@Invoker("renderEntity")
 	void invokeRenderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers);
 
 	@Accessor("level")
-	ClientLevel getWorld();
+	ClientLevel getLevel();
 
 	@Accessor("frameId")
-	int getFrame();
+	int getFrameId();
 
 	@Accessor("frameId")
-	void setFrame(int frame);
+	void setFrameId(int frame);
 }

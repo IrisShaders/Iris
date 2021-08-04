@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TerrainParticle.class)
-public class MixinBlockDustParticle {
+public class MixinTerrainParticle {
 	@Unique
 	private boolean isOpaque;
 

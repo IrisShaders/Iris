@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(VideoSettingsScreen.class)
-public abstract class MixinVideoOptionsScreen extends Screen {
-	protected MixinVideoOptionsScreen(Component title) {
+public abstract class MixinVideoSettingsScreen extends Screen {
+	protected MixinVideoSettingsScreen(Component title) {
 		super(title);
 	}
 

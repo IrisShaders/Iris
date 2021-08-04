@@ -21,7 +21,7 @@ import net.minecraft.resources.ResourceLocation;
 
 @Environment(EnvType.CLIENT)
 @Mixin(RenderType.class)
-public class MixinRenderLayer {
+public class MixinRenderType {
 	@Shadow
 	@Final
 	@Mutable
@@ -129,7 +129,7 @@ public class MixinRenderLayer {
 	}
 
 	private static RenderType wrap(RenderType wrapped, GbufferProgram program) {
-		String name = ((RenderPhaseAccessor) wrapped).getName();
+		String name = ((RenderStateShardAccessor) wrapped).getName();
 
 		return wrap("iris:" + name, wrapped, program);
 	}

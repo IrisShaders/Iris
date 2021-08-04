@@ -36,18 +36,18 @@ import net.minecraft.client.renderer.LightTexture;
 @Environment(EnvType.CLIENT)
 @Mixin(LevelRenderer.class)
 public class MixinFixEntityVertexNormals {
-	private static final String RENDER = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
-	private static final String CHECK_EMPTY = "Lnet/minecraft/client/renderer/LevelRenderer;checkPoseStack(Lcom/mojang/blaze3d/vertex/PoseStack;)V";
+	private static final String RENDER_LEVEL = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
+	private static final String CHECK_POSE_STACK = "Lnet/minecraft/client/renderer/LevelRenderer;checkPoseStack(Lcom/mojang/blaze3d/vertex/PoseStack;)V";
 	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V";
 	private static final String PUSH_MATRIX = "Lcom/mojang/blaze3d/systems/RenderSystem;pushMatrix()V";
 
-	@Inject(method = RENDER, at = {
+	@Inject(method = RENDER_LEVEL, at = {
 		// We're in a slice so this doesn't actually target the head of the method, but rather the head of the slice
 		// That is, this @At targets the call to profiler.swap("entities")
 		@At("HEAD"),
 		// Every time Minecraft checks whether the matrix stack is empty, we tear down our modifications to the state
 		// Once it's done checking, we restore our modifications
-		@At(value = "INVOKE", target = CHECK_EMPTY, shift = At.Shift.AFTER),
+		@At(value = "INVOKE", target = CHECK_POSE_STACK, shift = At.Shift.AFTER),
 		// Right before Minecraft starts rendering VertexConsumerProvider.Immediate buffers again
 		@At(value = "INVOKE", target = "Lnet/minecraft/client/render/TexturedRenderLayers;getEntityTranslucentCull()Lnet/minecraft/client/render/RenderLayer;"),
 		// The last of the immediate buffer drawing happens within translucency rendering
@@ -84,8 +84,8 @@ public class MixinFixEntityVertexNormals {
 		matrices.last().normal().setIdentity();
 	}
 
-	@Inject(method = RENDER, at = {
-		@At(value = "INVOKE", target = CHECK_EMPTY),
+	@Inject(method = RENDER_LEVEL, at = {
+		@At(value = "INVOKE", target = CHECK_POSE_STACK),
 		// We only want to select the pushMatrix call that happens right before DebugRenderer::render
 		// We use a custom slice here to make sure that we only target this single call.
 		// Since the slice has a custom ID, it won't be used for any of the other @At entries here.

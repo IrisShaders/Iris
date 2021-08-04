@@ -1,6 +1,6 @@
 package net.coderbot.iris.layer;
 
-import net.coderbot.iris.mixin.renderlayer.RenderLayerAccessor;
+import net.coderbot.iris.mixin.renderlayer.RenderTypeAccessor;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.Nullable;
@@ -77,6 +77,6 @@ public class InnerWrappedRenderLayer extends RenderType implements WrappableRend
 	}
 
 	private static boolean isTranslucent(RenderType layer) {
-		return ((RenderLayerAccessor) layer).isTranslucent();
+		return ((RenderTypeAccessor) layer).isTranslucent();
 	}
 }

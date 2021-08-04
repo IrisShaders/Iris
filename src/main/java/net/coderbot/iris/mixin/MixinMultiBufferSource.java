@@ -8,7 +8,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
 import net.coderbot.iris.layer.InnerWrappedRenderLayer;
 import net.coderbot.iris.layer.IrisRenderLayerWrapper;
-import net.coderbot.iris.mixin.renderlayer.RenderPhaseAccessor;
+import net.coderbot.iris.mixin.renderlayer.RenderStateShardAccessor;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,14 +19,14 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MultiBufferSource.BufferSource.class)
-public class MixinImmediateVertexConsumerProvider implements WrappingVertexConsumerProvider {
+public class MixinMultiBufferSource implements WrappingVertexConsumerProvider {
 	@Unique
 	private final Set<String> unwrapped = new ObjectOpenHashSet<>();
 
 	@Inject(method = "endBatch(Lnet/minecraft/client/renderer/RenderType;)V", at = @At("HEAD"))
 	private void iris$beginDraw(RenderType layer, CallbackInfo callback) {
 		if (!(layer instanceof IrisRenderLayerWrapper) && !(layer instanceof InnerWrappedRenderLayer)) {
-			String name = ((RenderPhaseAccessor) layer).getName();
+			String name = ((RenderStateShardAccessor) layer).getName();
 
 			if (unwrapped.contains(name)) {
 				return;

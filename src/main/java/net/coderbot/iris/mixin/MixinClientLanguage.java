@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientLanguage.class)
-public class MixinTranslationStorage {
+public class MixinClientLanguage {
 
 	// This is needed to keep track of which language code we need to grab our lang files from
 	private static List<String> languageCodes = new ArrayList<>();

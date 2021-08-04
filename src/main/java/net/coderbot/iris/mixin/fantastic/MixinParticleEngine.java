@@ -42,7 +42,7 @@ import java.util.List;
  * As the saying goes, "Work smarter, not harder."
  */
 @Mixin(ParticleEngine.class)
-public class MixinParticleManager implements PhasedParticleManager {
+public class MixinParticleEngine implements PhasedParticleManager {
 	@Unique
 	private ParticleRenderingPhase phase = ParticleRenderingPhase.EVERYTHING;
 

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(Gui.class)
-public class MixinInGameHud {
+public class MixinGui {
 	@Shadow @Final private Minecraft minecraft;
 
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)

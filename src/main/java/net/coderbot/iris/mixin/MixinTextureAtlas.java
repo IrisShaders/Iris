@@ -1,6 +1,6 @@
 package net.coderbot.iris.mixin;
 
-import net.coderbot.iris.texunits.SpriteAtlasTextureInterface;
+import net.coderbot.iris.texunits.TextureAtlasInterface;
 import net.minecraft.client.renderer.texture.Stitcher;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(TextureAtlas.class)
-public class MixinSpriteAtlasTexture implements SpriteAtlasTextureInterface {
+public class MixinTextureAtlas implements TextureAtlasInterface {
 	private Vec2 atlasSize;
 
 	@Inject(method = "getLoadedSprites", at = @At("HEAD"))

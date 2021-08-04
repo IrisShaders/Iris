@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(TntMinecartRenderer.class)
-public abstract class MixinTntMinecartEntityRenderer {
+public abstract class MixinTntMinecartRenderer {
 	@ModifyVariable(method = "renderWhiteSolidBlock", at = @At("HEAD"))
 	private static MultiBufferSource iris$wrapProvider(MultiBufferSource provider, BlockState blockState, PoseStack matrices, MultiBufferSource vertexConsumers, int light, boolean drawFlash) {
 		if (drawFlash) {

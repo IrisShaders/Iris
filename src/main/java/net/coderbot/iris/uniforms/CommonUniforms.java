@@ -8,7 +8,7 @@ import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.EntityColorRenderPhase;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
-import net.coderbot.iris.texunits.SpriteAtlasTextureInterface;
+import net.coderbot.iris.texunits.TextureAtlasInterface;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.Minecraft;
@@ -94,7 +94,7 @@ public final class CommonUniforms {
 
 	private static Vec2 getAtlasSize() {
 		//TODO: is the block atlas used for this uniform all the time???
-		return ((SpriteAtlasTextureInterface) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getAtlasSize();
+		return ((TextureAtlasInterface) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getAtlasSize();
 	}
 
 	private static Vec3 getSkyColor() {
