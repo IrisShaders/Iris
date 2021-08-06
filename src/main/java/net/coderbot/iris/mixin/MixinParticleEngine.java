@@ -33,14 +33,14 @@ public class MixinParticleEngine {
 	private ParticleRenderType lastSheet;
 
 	@Inject(method = RENDER_PARTICLES, at = @At("HEAD"))
-	private void iris$beginDrawingParticles(PoseStack matrixStack, MultiBufferSource.BufferSource immediate,
+	private void iris$beginDrawingParticles(PoseStack poseStack, MultiBufferSource.BufferSource immediate,
 											 LightTexture lightmapTextureManager, Camera camera, float f,
 											 CallbackInfo ci) {
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
 	}
 
 	@Inject(method = RENDER_PARTICLES, at = @At(value = "INVOKE", target = DRAW), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$preDrawParticleSheet(PoseStack matrixStack, MultiBufferSource.BufferSource immediate,
+	private void iris$preDrawParticleSheet(PoseStack poseStack, MultiBufferSource.BufferSource immediate,
 										LightTexture lightmapTextureManager, Camera camera, float f,
 										CallbackInfo ci, Iterator<ParticleRenderType> sheets, ParticleRenderType sheet,
 										Iterable<Particle> particles, Tesselator tessellator) {
@@ -54,7 +54,7 @@ public class MixinParticleEngine {
 	}
 
 	@Inject(method = RENDER_PARTICLES, at = @At(value = "INVOKE", target = DRAW, shift = At.Shift.AFTER))
-	private void iris$postDrawParticleSheet(PoseStack matrixStack, MultiBufferSource.BufferSource immediate,
+	private void iris$postDrawParticleSheet(PoseStack poseStack, MultiBufferSource.BufferSource immediate,
 											 LightTexture lightmapTextureManager, Camera camera, float f,
 											 CallbackInfo ci) {
 		GbufferPrograms.pop(DeferredWorldRenderingPipeline.getProgramForSheet(Objects.requireNonNull(lastSheet)));
@@ -62,7 +62,7 @@ public class MixinParticleEngine {
 	}
 
 	@Inject(method = RENDER_PARTICLES, at = @At("RETURN"))
-	private void iris$finishDrawingParticles(PoseStack matrixStack, MultiBufferSource.BufferSource immediate,
+	private void iris$finishDrawingParticles(PoseStack poseStack, MultiBufferSource.BufferSource immediate,
 										LightTexture lightmapTextureManager, Camera camera, float f,
 										CallbackInfo ci) {
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);

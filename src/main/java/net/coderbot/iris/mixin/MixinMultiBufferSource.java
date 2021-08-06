@@ -24,9 +24,9 @@ public class MixinMultiBufferSource implements WrappingVertexConsumerProvider {
 	private final Set<String> unwrapped = new ObjectOpenHashSet<>();
 
 	@Inject(method = "endBatch(Lnet/minecraft/client/renderer/RenderType;)V", at = @At("HEAD"))
-	private void iris$beginDraw(RenderType layer, CallbackInfo callback) {
-		if (!(layer instanceof IrisRenderTypeWrapper) && !(layer instanceof InnerWrappedRenderType)) {
-			String name = ((RenderStateShardAccessor) layer).getName();
+	private void iris$beginDraw(RenderType type, CallbackInfo callback) {
+		if (!(type instanceof IrisRenderTypeWrapper) && !(type instanceof InnerWrappedRenderType)) {
+			String name = ((RenderStateShardAccessor) type).getName();
 
 			if (unwrapped.contains(name)) {
 				return;
@@ -34,7 +34,7 @@ public class MixinMultiBufferSource implements WrappingVertexConsumerProvider {
 
 			unwrapped.add(name);
 
-			Iris.logger.warn("Iris has detected a non-wrapped render layer, it will not be rendered with the correct shader program: " + name);
+			Iris.logger.warn("Iris has detected a non-wrapped render type, it will not be rendered with the correct shader program: " + name);
 		}
 	}
 
@@ -43,12 +43,12 @@ public class MixinMultiBufferSource implements WrappingVertexConsumerProvider {
 
 	@ModifyVariable(method = "getBuffer",
 			at = @At("HEAD"), ordinal = 0)
-	private RenderType iris$applyWrappingFunction(RenderType layer) {
+	private RenderType iris$applyWrappingFunction(RenderType type) {
 		if (wrappingFunction == null) {
-			return layer;
+			return type;
 		}
 
-		return wrappingFunction.apply(layer);
+		return wrappingFunction.apply(type);
 	}
 
 	@Override

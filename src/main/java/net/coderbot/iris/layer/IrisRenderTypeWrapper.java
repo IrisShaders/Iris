@@ -75,7 +75,7 @@ public class IrisRenderTypeWrapper extends RenderType implements WrappableRender
 		return "iris:" + this.wrapped.toString();
 	}
 
-	private static boolean isTranslucent(RenderType layer) {
-		return ((RenderTypeAccessor) layer).isTranslucent();
+	private static boolean isTranslucent(RenderType type) {
+		return ((RenderTypeAccessor) type).isTranslucent();
 	}
 }

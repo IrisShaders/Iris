@@ -16,7 +16,7 @@ public abstract class MixinTntMinecartRenderer {
 	private static MultiBufferSource iris$wrapProvider(MultiBufferSource provider, BlockState blockState, PoseStack matrices, MultiBufferSource vertexConsumers, int light, boolean drawFlash) {
 		if (drawFlash) {
 			EntityColorRenderState phase = new EntityColorRenderState(false, 1.0F);
-			return layer -> provider.getBuffer(new InnerWrappedRenderType("iris_entity_color", layer, phase));
+			return type -> provider.getBuffer(new InnerWrappedRenderType("iris_entity_color", type, phase));
 		} else {
 			return provider;
 		}

@@ -44,7 +44,7 @@ public class MixinMultiBufferSource_WrapperManager {
 	protected Map<RenderType, BufferBuilder> fixedBuffers;
 
 	@Shadow
-	public void endBatch(RenderType layer) {
+	public void endBatch(RenderType type) {
 		throw new AssertionError();
 	}
 
@@ -62,22 +62,22 @@ public class MixinMultiBufferSource_WrapperManager {
 
 	@Inject(method = "getBuffer",
 			at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;fixedBuffers:Ljava/util/Map;"))
-	private void iris$fillInWrappers(RenderType layer, CallbackInfoReturnable<VertexConsumer> cir) {
-		ensureBuffersPresent(layer);
+	private void iris$fillInWrappers(RenderType type, CallbackInfoReturnable<VertexConsumer> cir) {
+		ensureBuffersPresent(type);
 	}
 
 	@Inject(method = "getBuilderRaw", at = @At("HEAD"))
-	private void iris$onGetBuffer(RenderType layer, CallbackInfoReturnable<BufferBuilder> cir) {
-		ensureBuffersPresent(layer);
+	private void iris$onGetBuffer(RenderType type, CallbackInfoReturnable<BufferBuilder> cir) {
+		ensureBuffersPresent(type);
 	}
 
 	// Ensure that when Minecraft explicitly flushes a buffer, its corresponding wrapped buffers are flushed too.
 	// This might avoid rendering issues.
 	@Inject(method = "endBatch(Lnet/minecraft/client/renderer/RenderType;)V", at = @At("RETURN"))
-	private void iris$onExplicitDraw(RenderType layer, CallbackInfo callback) {
-		ensureBuffersPresent(layer);
+	private void iris$onExplicitDraw(RenderType type, CallbackInfo callback) {
+		ensureBuffersPresent(type);
 
-		List<RenderType> correspondingWrappers = wrappedToWrapper.get(layer);
+		List<RenderType> correspondingWrappers = wrappedToWrapper.get(type);
 
 		if (correspondingWrappers == null) {
 			return;
@@ -101,15 +101,15 @@ public class MixinMultiBufferSource_WrapperManager {
 	}
 
 	@Unique
-	private void ensureBuffersPresent(RenderType layer) {
-		if (fixedBuffers.containsKey(layer) && !wrappers.contains(layer)) {
-			// If this is a buffered layer that isn't a wrapper itself, add the corresponding wrapped buffers.
-			ensureWrapped(layer);
-		} else if (layer instanceof WrappableRenderType) {
-			// If this is a wrapper, try to unwrap it to find the base layer.
-			RenderType unwrapped = ((WrappableRenderType) layer).unwrap();
+	private void ensureBuffersPresent(RenderType type) {
+		if (fixedBuffers.containsKey(type) && !wrappers.contains(type)) {
+			// If this is a buffered type that isn't a wrapper itself, add the corresponding wrapped buffers.
+			ensureWrapped(type);
+		} else if (type instanceof WrappableRenderType) {
+			// If this is a wrapper, try to unwrap it to find the base type.
+			RenderType unwrapped = ((WrappableRenderType) type).unwrap();
 
-			if (unwrapped != layer && unwrapped != null) {
+			if (unwrapped != type && unwrapped != null) {
 				ensureBuffersPresent(unwrapped);
 			}
 		}

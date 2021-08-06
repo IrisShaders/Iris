@@ -348,21 +348,21 @@ public class IdMap {
 				return;
 			}
 
-			RenderType layer;
+			RenderType type;
 
 			// See: https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L556-L576
 			switch (key) {
 				case "solid":
-					layer = RenderType.solid();
+					type = RenderType.solid();
 					break;
 				case "cutout":
-					layer = RenderType.cutout();
+					type = RenderType.cutout();
 					break;
 				case "cutout_mipped":
-					layer = RenderType.cutoutMipped();
+					type = RenderType.cutoutMipped();
 					break;
 				case "translucent":
-					layer = RenderType.translucent();
+					type = RenderType.translucent();
 					break;
 				default:
 					Iris.logger.warn("Failed to parse line in " + fileName + ": invalid render layer type: " + key);
@@ -373,7 +373,7 @@ public class IdMap {
 				try {
 					ResourceLocation identifier = new ResourceLocation(part);
 
-					layerMap.put(identifier, layer);
+					layerMap.put(identifier, type);
 				} catch (ResourceLocationException e) {
 					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);

@@ -18,30 +18,30 @@ public class FantasticVertexConsumerProvider extends MultiBufferSource.BufferSou
 		this.transparent = new FullyBufferedVertexConsumerProvider();
 	}
 
-	private boolean isTransparent(RenderType layer) {
-		if (layer == RenderType.waterMask()) {
+	private boolean isTransparent(RenderType type) {
+		if (type == RenderType.waterMask()) {
 			// Don't break boats...
 			return true;
 		}
 
-		if (layer instanceof IrisRenderTypeWrapper) {
-			IrisRenderTypeWrapper wrapped = (IrisRenderTypeWrapper) layer;
-			layer = wrapped.unwrap();
+		if (type instanceof IrisRenderTypeWrapper) {
+			IrisRenderTypeWrapper wrapped = (IrisRenderTypeWrapper) type;
+			type = wrapped.unwrap();
 		}
 
-		if (layer instanceof BlendingStateHolder) {
-			return ((BlendingStateHolder) layer).getTransparencyType() != TransparencyType.OPAQUE;
+		if (type instanceof BlendingStateHolder) {
+			return ((BlendingStateHolder) type).getTransparencyType() != TransparencyType.OPAQUE;
 		}
 
 		return true;
 	}
 
 	@Override
-	public VertexConsumer getBuffer(RenderType renderLayer) {
-		if (isTransparent(renderLayer)) {
-			return transparent.getBuffer(renderLayer);
+	public VertexConsumer getBuffer(RenderType renderType) {
+		if (isTransparent(renderType)) {
+			return transparent.getBuffer(renderType);
 		} else {
-			return opaque.getBuffer(renderLayer);
+			return opaque.getBuffer(renderType);
 		}
 	}
 
@@ -52,11 +52,11 @@ public class FantasticVertexConsumerProvider extends MultiBufferSource.BufferSou
 	}
 
 	@Override
-	public void endBatch(RenderType layer) {
-		if (isTransparent(layer)) {
-			transparent.endBatch(layer);
+	public void endBatch(RenderType type) {
+		if (isTransparent(type)) {
+			transparent.endBatch(type);
 		} else {
-			opaque.endBatch(layer);
+			opaque.endBatch(type);
 		}
 	}
 

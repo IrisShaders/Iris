@@ -50,13 +50,13 @@ import java.util.Map;
 @Mixin(LevelRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinLevelRenderer {
-	private static final String RENDER = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
+	private static final String RENDER_LEVEL = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
 	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;F)V";
 	private static final String RENDER_LAYER = "Lnet/minecraft/client/renderer/LevelRenderer;renderChunkLayer(Lnet/minecraft/client/renderer/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;DDD)V";
 	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;FDDD)V";
 	private static final String RENDER_WEATHER = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V";
-	private static final String RENDER_WORLD_BORDER = "Lnet/minecraft/client/renderer/LevelRenderer;renderWorldBounds(Lnet/minecraft/client/Camera;)V";
+	private static final String RENDER_WORLD_BOUNDS = "Lnet/minecraft/client/renderer/LevelRenderer;renderWorldBounds(Lnet/minecraft/client/Camera;)V";
 	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V";
 
 	@Unique
@@ -69,7 +69,7 @@ public class MixinLevelRenderer {
 	@Final
 	private RenderBuffers renderBuffers;
 
-	@Inject(method = RENDER, at = @At("HEAD"))
+	@Inject(method = RENDER_LEVEL, at = @At("HEAD"))
 	private void iris$beginWorldRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.last().pose());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
@@ -83,7 +83,7 @@ public class MixinLevelRenderer {
 
 	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
 	// render their waypoint beams.
-	@Inject(method = RENDER, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
+	@Inject(method = RENDER_LEVEL, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
 	private void iris$endWorldRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeWorldRendering();
@@ -176,24 +176,24 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
-	private void iris$beginTerrainLayer(RenderType renderLayer, PoseStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		if (renderLayer == RenderType.solid() || renderLayer == RenderType.cutout() || renderLayer == RenderType.cutoutMipped()) {
+	private void iris$beginTerrainLayer(RenderType renderType, PoseStack poseStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+		if (renderType == RenderType.solid() || renderType == RenderType.cutout() || renderType == RenderType.cutoutMipped()) {
 			pipeline.pushProgram(GbufferProgram.TERRAIN);
-		} else if (renderLayer == RenderType.translucent() || renderLayer == RenderType.tripwire()) {
+		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
 			pipeline.pushProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
-			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderLayer);
+			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
 		}
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
-	private void iris$endTerrainLayer(RenderType renderLayer, PoseStack matrixStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		if (renderLayer == RenderType.solid() || renderLayer == RenderType.cutout() || renderLayer == RenderType.cutoutMipped()) {
+	private void iris$endTerrainLayer(RenderType renderType, PoseStack poseStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+		if (renderType == RenderType.solid() || renderType == RenderType.cutout() || renderType == RenderType.cutoutMipped()) {
 			pipeline.popProgram(GbufferProgram.TERRAIN);
-		} else if (renderLayer == RenderType.translucent() || renderLayer == RenderType.tripwire()) {
+		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
 			pipeline.popProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
-			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderLayer);
+			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
 		}
 	}
 
@@ -207,12 +207,12 @@ public class MixinLevelRenderer {
 		pipeline.popProgram(GbufferProgram.WEATHER);
 	}
 
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER))
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BOUNDS))
 	private void iris$beginWorldBorder(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER, shift = At.Shift.AFTER))
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BOUNDS, shift = At.Shift.AFTER))
 	private void iris$endWorldBorder(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}

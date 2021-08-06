@@ -21,8 +21,8 @@ public class MixinRenderBuffers implements ExtendedBufferStorage {
 	private SortedMap<RenderType, BufferBuilder> fixedBuffers;
 
 	@Unique
-	private static void iris$assignBufferBuilder(SortedMap<RenderType, BufferBuilder> builderStorage, RenderType layer) {
-		builderStorage.put(layer, new BufferBuilder(layer.bufferSize()));
+	private static void iris$assignBufferBuilder(SortedMap<RenderType, BufferBuilder> builderStorage, RenderType type) {
+		builderStorage.put(type, new BufferBuilder(type.bufferSize()));
 	}
 
 	@Inject(method = "<init>()V", at = @At("RETURN"))
