@@ -149,6 +149,9 @@ public class MixinRenderLayer {
 		"getEntityShadow(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
 		"getText(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
 		"getTextSeeThrough(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
+		"getTextIntensity(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
+		"getTextIntensitySeeThrough(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
+		"getTextIntensityPolygonOffset(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;",
 	}, cancellable = true)
 	private static void iris$wrapEntityRenderLayers(Identifier texture, CallbackInfoReturnable<RenderLayer> cir) {
 		RenderLayer base = cir.getReturnValue();
