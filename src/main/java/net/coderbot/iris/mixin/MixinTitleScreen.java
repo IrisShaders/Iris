@@ -19,7 +19,7 @@ public class MixinTitleScreen {
 		if(Iris.sodiumInvalid) {
 			MinecraftClient.getInstance().openScreen(new NoticeScreen(() -> {
 				MinecraftClient.getInstance().scheduleStop();
-			}, new LiteralText("Iris failed to load!").formatted(Formatting.RED), new LiteralText("You have Sodium in your mods folder, but Iris includes it. Please close the game, and remove Sodium from your mods folder.")));
+			}, new LiteralText("Iris failed to load!").formatted(Formatting.RED), new LiteralText("You have Sodium in your mods folder, however Iris includes it. Please close the game, and remove Sodium from your mods folder.")));
 		}
 	}
 }
