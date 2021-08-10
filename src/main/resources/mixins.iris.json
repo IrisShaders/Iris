@@ -16,6 +16,7 @@
     "MixinModelViewBobbing",
     "MixinParticleManager",
     "MixinSpriteAtlasTexture",
+    "MixinTitleScreen",
     "MixinTntMinecartEntityRenderer",
     "MixinTranslationStorage",
     "MixinTweakFarPlane",
