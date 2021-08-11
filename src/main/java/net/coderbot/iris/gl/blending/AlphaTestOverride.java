@@ -11,14 +11,14 @@ public class AlphaTestOverride {
 		this.reference = reference;
 	}
 
-	public void setup() {
-		GlStateManager.enableAlphaTest();
-		GlStateManager.alphaFunc(function.getGlId(), reference);
-	}
-
 	public static void teardown() {
 		GlStateManager.disableAlphaTest();
 		GlStateManager.alphaFunc(AlphaTestFunction.GREATER.getGlId(), 0.1F);
+	}
+
+	public void setup() {
+		GlStateManager.enableAlphaTest();
+		GlStateManager.alphaFunc(function.getGlId(), reference);
 	}
 
 	@Override

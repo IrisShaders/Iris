@@ -16,16 +16,16 @@ public final class Program extends GlResource {
 		this.samplers = samplers;
 	}
 
+	public static void unbind() {
+		ProgramUniforms.clearActiveUniforms();
+		GlProgramManager.useProgram(0);
+	}
+
 	public void use() {
 		GlProgramManager.useProgram(getGlId());
 
 		uniforms.update();
 		samplers.update();
-	}
-
-	public static void unbind() {
-		ProgramUniforms.clearActiveUniforms();
-		GlProgramManager.useProgram(0);
 	}
 
 	public void destroyInternal() {

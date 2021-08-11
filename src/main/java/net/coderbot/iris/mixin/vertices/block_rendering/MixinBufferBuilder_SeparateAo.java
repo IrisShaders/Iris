@@ -12,11 +12,11 @@ import java.util.Arrays;
 
 /**
  * Allows directional shading and ambient occlusion data to be stored separately in the vertex format.
- *
+ * <p>
  * By default, directional shading and ambient occlusion lighting coefficients are pre-multiplied into the vertex color
  * RGB. However, this causes issues with shader packs which would like to operate on this data separately from the
  * actual vertex color, which is generally Minecraft's built-in block tinting such as water color and foliage color.
- *
+ * <p>
  * Since the alpha field of the vertex color is unused for blocks (always set to 1.0), it is possible to use the alpha
  * field to store the directional shading / ambient occlusion coefficient for each vertex. This mixin implements that
  * behavior, though conditionally controlled by the current shader pack of course.

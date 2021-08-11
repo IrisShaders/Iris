@@ -30,16 +30,25 @@ import java.util.Set;
 /**
  * Vanilla depends on being able to write to some buffers at the same time as other ones.
  * This includes enchantment glints.
- *
+ * <p>
  * We need to make sure that wrapped variants of buffered render layers are buffered too,
  * or else we'll get crashes with this approach.
- *
+ * <p>
  * This mixin dynamically creates buffers for the wrapped variants of buffered layers.
  * This strategy is needed for mods that dynamically add buffered layers, like Charm
  * which adds colored enchantment glints.
  */
 @Mixin(VertexConsumerProvider.Immediate.class)
 public class MixinImmediateVertexConsumerProvider_WrapperManager {
+	// A set of wrapped layers - layers that have corresponding wrappers
+	@Unique
+	private final Set<RenderLayer> wrapped = new HashSet<>();
+	// A set of wrapper layers - layers that wrap an existing layer to provide additional information
+	@Unique
+	private final Set<RenderLayer> wrappers = new HashSet<>();
+	// Maps a wrapped layer to its list of wrapper layers
+	@Unique
+	private final Map<RenderLayer, List<RenderLayer>> wrappedToWrapper = new HashMap<>();
 	@Shadow
 	@Final
 	protected Map<RenderLayer, BufferBuilder> layerBuffers;
@@ -48,18 +57,6 @@ public class MixinImmediateVertexConsumerProvider_WrapperManager {
 	public void draw(RenderLayer layer) {
 		throw new AssertionError();
 	}
-
-	// A set of wrapped layers - layers that have corresponding wrappers
-	@Unique
-	private final Set<RenderLayer> wrapped = new HashSet<>();
-
-	// A set of wrapper layers - layers that wrap an existing layer to provide additional information
-	@Unique
-	private final Set<RenderLayer> wrappers = new HashSet<>();
-
-	// Maps a wrapped layer to its list of wrapper layers
-	@Unique
-	private final Map<RenderLayer, List<RenderLayer>> wrappedToWrapper = new HashMap<>();
 
 	@Inject(method = "getBuffer(Lnet/minecraft/client/render/RenderLayer;)Lnet/minecraft/client/render/VertexConsumer;",
 			at = @At(value = "FIELD", target = "net/minecraft/client/render/VertexConsumerProvider$Immediate.layerBuffers : Ljava/util/Map;"))

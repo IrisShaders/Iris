@@ -11,11 +11,11 @@ import net.fabricmc.api.Environment;
 @Environment(EnvType.CLIENT)
 @Mixin(RenderPhase.class)
 public interface RenderPhaseAccessor {
-	@Accessor("name")
-	String getName();
-
 	@Accessor("TRANSLUCENT_TRANSPARENCY")
 	static RenderPhase.Transparency getTranslucentTransparency() {
 		return null;
 	}
+
+	@Accessor("name")
+	String getName();
 }

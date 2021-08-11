@@ -134,6 +134,13 @@ public class ConstDirectiveParser {
 		return true;
 	}
 
+	public enum Type {
+		INT,
+		FLOAT,
+		VEC4,
+		BOOL
+	}
+
 	public static class ConstDirective {
 		private final Type type;
 		private final String key;
@@ -160,12 +167,5 @@ public class ConstDirectiveParser {
 		public String toString() {
 			return "ConstDirective { " + type + " " + key + " = " + value + "; }";
 		}
-	}
-
-	public enum Type {
-		INT,
-		FLOAT,
-		VEC4,
-		BOOL
 	}
 }

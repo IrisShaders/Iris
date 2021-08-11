@@ -8,9 +8,9 @@ import java.nio.FloatBuffer;
 import java.util.function.Supplier;
 
 public class JomlMatrixUniform extends Uniform {
-	private FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-	private Matrix4f cachedValue;
 	private final Supplier<Matrix4f> value;
+	private final FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+	private Matrix4f cachedValue;
 
 	JomlMatrixUniform(int location, Supplier<Matrix4f> value) {
 		super(location);

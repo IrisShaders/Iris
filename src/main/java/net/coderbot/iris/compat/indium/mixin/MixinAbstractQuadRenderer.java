@@ -12,6 +12,16 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(targets = "link/infra/indium/renderer/render/AbstractQuadRenderer", remap = false)
 @Pseudo
 public class MixinAbstractQuadRenderer {
+	// Copied from ColorHelper from Indigo, licensed under the Apache v2 license.
+	private static int iris$multiplyRGB(int color, float shade) {
+		final int alpha = ((color >> 24) & 0xFF);
+		final int red = (int) (((color >> 16) & 0xFF) * shade);
+		final int green = (int) (((color >> 8) & 0xFF) * shade);
+		final int blue = (int) ((color & 0xFF) * shade);
+
+		return (alpha << 24) | (red << 16) | (green << 8) | blue;
+	}
+
 	@Redirect(method = {"tesselateSmooth", "tesselateSmoothEmissive"},
 			at = @At(value = "INVOKE",
 					target = "Llink/infra/indium/renderer/helper/ColorHelper;multiplyRGB(IF)I"))
@@ -24,15 +34,5 @@ public class MixinAbstractQuadRenderer {
 		} else {
 			return iris$multiplyRGB(color, ao);
 		}
-	}
-
-	// Copied from ColorHelper from Indigo, licensed under the Apache v2 license.
-	private static int iris$multiplyRGB(int color, float shade) {
-		final int alpha = ((color >> 24) & 0xFF);
-		final int red = (int) (((color >> 16) & 0xFF) * shade);
-		final int green = (int) (((color >> 8) & 0xFF) * shade);
-		final int blue = (int) ((color & 0xFF) * shade);
-
-		return (alpha << 24) | (red << 16) | (green << 8) | blue;
 	}
 }

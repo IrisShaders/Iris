@@ -9,9 +9,9 @@ import org.lwjgl.opengl.GL21;
 import net.minecraft.util.math.Matrix4f;
 
 public class MatrixUniform extends Uniform {
-	private FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-	private Matrix4f cachedValue;
 	private final Supplier<Matrix4f> value;
+	private final FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+	private Matrix4f cachedValue;
 
 	MatrixUniform(int location, Supplier<Matrix4f> value) {
 		super(location);

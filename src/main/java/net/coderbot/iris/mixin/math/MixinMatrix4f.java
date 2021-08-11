@@ -10,26 +10,42 @@ import org.spongepowered.asm.mixin.Shadow;
  */
 @Mixin(Matrix4f.class)
 public class MixinMatrix4f implements Matrix4fAccess {
-	@Shadow protected float a00;
-	@Shadow protected float a01;
-	@Shadow protected float a02;
-	@Shadow protected float a03;
-	@Shadow protected float a10;
-	@Shadow protected float a11;
-	@Shadow protected float a12;
-	@Shadow protected float a13;
-	@Shadow protected float a20;
-	@Shadow protected float a21;
-	@Shadow protected float a22;
-	@Shadow protected float a23;
-	@Shadow protected float a30;
-	@Shadow protected float a31;
-	@Shadow protected float a32;
-	@Shadow protected float a33;
+	@Shadow
+	protected float a00;
+	@Shadow
+	protected float a01;
+	@Shadow
+	protected float a02;
+	@Shadow
+	protected float a03;
+	@Shadow
+	protected float a10;
+	@Shadow
+	protected float a11;
+	@Shadow
+	protected float a12;
+	@Shadow
+	protected float a13;
+	@Shadow
+	protected float a20;
+	@Shadow
+	protected float a21;
+	@Shadow
+	protected float a22;
+	@Shadow
+	protected float a23;
+	@Shadow
+	protected float a30;
+	@Shadow
+	protected float a31;
+	@Shadow
+	protected float a32;
+	@Shadow
+	protected float a33;
 
 	@Override
 	public void copyFromArray(float[] m) {
-		if(m.length != 16) return;
+		if (m.length != 16) return;
 		this.a00 = m[0];
 		this.a10 = m[1];
 		this.a20 = m[2];
@@ -50,7 +66,7 @@ public class MixinMatrix4f implements Matrix4fAccess {
 
 	@Override
 	public float[] copyIntoArray() {
-		return new float[] {
+		return new float[]{
 				a00, a10, a20, a30,
 				a01, a11, a21, a31,
 				a02, a12, a22, a32,

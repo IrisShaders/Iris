@@ -14,10 +14,9 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	private final Map<RenderLayer, BufferBuilder> bufferBuilders;
 	private final Object2IntMap<RenderLayer> unused;
 	private final Set<BufferBuilder> activeBuffers;
-	private boolean flushed;
-
 	private final Set<RenderLayer> layersThisFrame;
 	private final List<RenderLayer> layersInOrder;
+	private boolean flushed;
 
 	public FullyBufferedVertexConsumerProvider() {
 		super(new BufferBuilder(0), Collections.emptyMap());

@@ -1,9 +1,8 @@
 package net.coderbot.iris.shaderpack.transform;
 
 public class BuiltinUniformReplacementTransformer {
-	private String normalizedLightmapCoords;
-
 	private static final String NORMALIZED_PLACEHOLDER = "iris_NormalizedLightmapCoords";
+	private final String normalizedLightmapCoords;
 
 	public BuiltinUniformReplacementTransformer(float lightmapScale) {
 		// TODO: I don't think that this is the same as vanilla!
@@ -33,33 +32,33 @@ public class BuiltinUniformReplacementTransformer {
 		}
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1]*gl_MultiTexCoord1).st",
-			NORMALIZED_PLACEHOLDER
+				"(gl_TextureMatrix[1]*gl_MultiTexCoord1).st",
+				NORMALIZED_PLACEHOLDER
 		);
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1] * gl_MultiTexCoord1).st",
-			NORMALIZED_PLACEHOLDER
+				"(gl_TextureMatrix[1] * gl_MultiTexCoord1).st",
+				NORMALIZED_PLACEHOLDER
 		);
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1]*gl_MultiTexCoord1).xy",
-			NORMALIZED_PLACEHOLDER
+				"(gl_TextureMatrix[1]*gl_MultiTexCoord1).xy",
+				NORMALIZED_PLACEHOLDER
 		);
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1] * gl_MultiTexCoord1).xy",
-			NORMALIZED_PLACEHOLDER
+				"(gl_TextureMatrix[1] * gl_MultiTexCoord1).xy",
+				NORMALIZED_PLACEHOLDER
 		);
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1] * gl_MultiTexCoord1).s",
-			NORMALIZED_PLACEHOLDER + ".s"
+				"(gl_TextureMatrix[1] * gl_MultiTexCoord1).s",
+				NORMALIZED_PLACEHOLDER + ".s"
 		);
 
 		transformations.replaceExact(
-			"gl_TextureMatrix[1] * gl_MultiTexCoord1",
-			"vec4(" + NORMALIZED_PLACEHOLDER + ", 0.0, 1.0)"
+				"gl_TextureMatrix[1] * gl_MultiTexCoord1",
+				"vec4(" + NORMALIZED_PLACEHOLDER + ", 0.0, 1.0)"
 		);
 
 		// NB: Technically this isn't a correct transformation (it changes the values slightly), however the shader code
@@ -68,23 +67,23 @@ public class BuiltinUniformReplacementTransformer {
 		//
 		// This code shows up in Sildur's shaderpacks.
 		transformations.replaceExact(
-			"gl_MultiTexCoord1.xy/255.0",
-			NORMALIZED_PLACEHOLDER
+				"gl_MultiTexCoord1.xy/255.0",
+				NORMALIZED_PLACEHOLDER
 		);
 	}
 
 	private void applyFallbackCases(Transformations transformations) {
 		transformations.replaceExact("gl_TextureMatrix[1]", "iris_LightmapTextureMatrix");
 		transformations.replaceExact(
-			"gl_MultiTexCoord1",
-			"vec4(" + NORMALIZED_PLACEHOLDER + " * 255.0, 0.0, 1.0)"
+				"gl_MultiTexCoord1",
+				"vec4(" + NORMALIZED_PLACEHOLDER + " * 255.0, 0.0, 1.0)"
 		);
 
 		// If there are references to the fallback lightmap texture matrix, then make it available to the shader program.
 		if (transformations.contains("iris_LightmapTextureMatrix")) {
 			transformations.injectLine(
-				Transformations.InjectionPoint.BEFORE_CODE,
-				"uniform mat4 iris_LightmapTextureMatrix;"
+					Transformations.InjectionPoint.BEFORE_CODE,
+					"uniform mat4 iris_LightmapTextureMatrix;"
 			);
 		}
 	}

@@ -86,18 +86,6 @@ public class ProgramSet {
 		locateDirectives();
 	}
 
-	private ProgramSource[] readProgramArray(Path root, Path inclusionRoot, String name, ShaderProperties shaderProperties) throws IOException {
-		ProgramSource[] programs = new ProgramSource[16];
-
-		for (int i = 0; i < programs.length; i++) {
-			String suffix = i == 0 ? "" : Integer.toString(i);
-
-			programs[i] = readProgramSource(root, inclusionRoot, name + suffix, this, shaderProperties);
-		}
-
-		return programs;
-	}
-
 	private ProgramSet(ProgramSet base, ProgramSet overrides) {
 		this.pack = base.pack;
 
@@ -171,6 +159,70 @@ public class ProgramSet {
 		return new ProgramSet(base, overrides);
 	}
 
+	private static ProgramSource readProgramSource(Path root, Path inclusionRoot, String program, ProgramSet programSet, ShaderProperties properties) throws IOException {
+		String vertexSource = null;
+		String geometrySource = null;
+		String fragmentSource = null;
+
+		try {
+			Path vertexPath = root.resolve(program + ".vsh");
+			vertexSource = readFile(vertexPath);
+
+			if (vertexSource != null) {
+				vertexSource = ShaderPreprocessor.process(inclusionRoot, vertexPath, vertexSource);
+			}
+		} catch (IOException e) {
+			// TODO: Better handling?
+			throw e;
+		}
+
+		try {
+			Path geometryPath = root.resolve(program + ".gsh");
+			geometrySource = readFile(geometryPath);
+
+			if (geometrySource != null) {
+				geometrySource = ShaderPreprocessor.process(inclusionRoot, geometryPath, geometrySource);
+			}
+		} catch (IOException e) {
+			// TODO: Better handling?
+			throw e;
+		}
+
+		try {
+			Path fragmentPath = root.resolve(program + ".fsh");
+			fragmentSource = readFile(fragmentPath);
+
+			if (fragmentSource != null) {
+				fragmentSource = ShaderPreprocessor.process(inclusionRoot, fragmentPath, fragmentSource);
+			}
+		} catch (IOException e) {
+			// TODO: Better handling?
+			throw e;
+		}
+
+		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties);
+	}
+
+	private static String readFile(Path path) throws IOException {
+		try {
+			return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+		} catch (FileNotFoundException | NoSuchFileException e) {
+			return null;
+		}
+	}
+
+	private ProgramSource[] readProgramArray(Path root, Path inclusionRoot, String name, ShaderProperties shaderProperties) throws IOException {
+		ProgramSource[] programs = new ProgramSource[16];
+
+		for (int i = 0; i < programs.length; i++) {
+			String suffix = i == 0 ? "" : Integer.toString(i);
+
+			programs[i] = readProgramSource(root, inclusionRoot, name + suffix, this, shaderProperties);
+		}
+
+		return programs;
+	}
+
 	private void locateDirectives() {
 		List<ProgramSource> programs = new ArrayList<>();
 
@@ -178,7 +230,7 @@ public class ProgramSet {
 		programs.addAll(Arrays.asList(shadowcomp));
 		programs.addAll(Arrays.asList(prepare));
 
-		programs.addAll (Arrays.asList(
+		programs.addAll(Arrays.asList(
 				gbuffersBasic, gbuffersBeaconBeam, gbuffersTextured, gbuffersTexturedLit, gbuffersTerrain,
 				gbuffersDamagedBlock, gbuffersSkyBasic, gbuffersSkyTextured, gbuffersClouds, gbuffersWeather,
 				gbuffersEntities, gbuffersEntitiesGlowing, gbuffersGlint, gbuffersEntityEyes, gbuffersBlock,
@@ -314,57 +366,5 @@ public class ProgramSet {
 
 	public ShaderPack getPack() {
 		return pack;
-	}
-
-	private static ProgramSource readProgramSource(Path root, Path inclusionRoot, String program, ProgramSet programSet, ShaderProperties properties) throws IOException {
-		String vertexSource = null;
-		String geometrySource = null;
-		String fragmentSource = null;
-
-		try {
-			Path vertexPath = root.resolve(program + ".vsh");
-			vertexSource = readFile(vertexPath);
-
-			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(inclusionRoot, vertexPath, vertexSource);
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		try {
-			Path geometryPath = root.resolve(program + ".gsh");
-			geometrySource = readFile(geometryPath);
-
-			if (geometrySource != null) {
-				geometrySource = ShaderPreprocessor.process(inclusionRoot, geometryPath, geometrySource);
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		try {
-			Path fragmentPath = root.resolve(program + ".fsh");
-			fragmentSource = readFile(fragmentPath);
-
-			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(inclusionRoot, fragmentPath, fragmentSource);
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties);
-	}
-
-	private static String readFile(Path path) throws IOException {
-		try {
-			return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-		} catch (FileNotFoundException | NoSuchFileException e) {
-			return null;
-		}
 	}
 }

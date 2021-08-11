@@ -10,15 +10,13 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 
 public class RenderTarget {
+	private static final ByteBuffer NULL_BUFFER = null;
 	private final InternalTextureFormat internalFormat;
 	private final PixelFormat format;
 	private final PixelType type;
-
-	private boolean isValid;
 	private final int mainTexture;
 	private final int altTexture;
-
-	private static final ByteBuffer NULL_BUFFER = null;
+	private boolean isValid;
 
 	private RenderTarget(Builder builder) {
 		this.isValid = true;
@@ -42,6 +40,10 @@ public class RenderTarget {
 		// Clean up after ourselves
 		// This is strictly defensive to ensure that other buggy code doesn't tamper with our textures
 		GlStateManager.bindTexture(0);
+	}
+
+	public static Builder builder() {
+		return new Builder();
 	}
 
 	private void setupCurrentlyBoundTexture(int width, int height) {
@@ -91,10 +93,6 @@ public class RenderTarget {
 		if (!isValid) {
 			throw new IllegalStateException("Attempted to use a deleted composite render target");
 		}
-	}
-
-	public static Builder builder() {
-		return new Builder();
 	}
 
 	public static class Builder {

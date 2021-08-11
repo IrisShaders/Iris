@@ -21,15 +21,23 @@ import net.minecraft.resource.ResourceManager;
 @Mixin(TranslationStorage.class)
 public class MixinTranslationStorage {
 
-	// This is needed to keep track of which language code we need to grab our lang files from
-	private static List<String> languageCodes = new ArrayList<>();
-
 	private static final String LOAD = "load(Lnet/minecraft/resource/ResourceManager;Ljava/util/List;)Lnet/minecraft/client/resource/language/TranslationStorage;";
-
+	// This is needed to keep track of which language code we need to grab our lang files from
+	private static final List<String> languageCodes = new ArrayList<>();
 	@Shadow
 	@Final
 	private Map<String, String> translations;
 
+	@Inject(method = LOAD, at = @At("HEAD"))
+	private static void check(ResourceManager resourceManager, List<LanguageDefinition> definitions, CallbackInfoReturnable<TranslationStorage> cir) {
+		// make sure the language codes dont carry over!
+		languageCodes.clear();
+
+		// Reverse order due to how minecraft has English and then the primary language in the language definitions list
+		new LinkedList<>(definitions).descendingIterator().forEachRemaining(languageDefinition -> {
+			languageCodes.add(languageDefinition.getCode());
+		});
+	}
 
 	@Inject(method = "get", at = @At("HEAD"), cancellable = true)
 	private void iris$addLanguageEntries(String key, CallbackInfoReturnable<String> cir) {
@@ -61,16 +69,5 @@ public class MixinTranslationStorage {
 				}
 			});
 		}
-	}
-
-	@Inject(method = LOAD, at = @At("HEAD"))
-	private static void check(ResourceManager resourceManager, List<LanguageDefinition> definitions, CallbackInfoReturnable<TranslationStorage> cir) {
-		// make sure the language codes dont carry over!
-		languageCodes.clear();
-
-		// Reverse order due to how minecraft has English and then the primary language in the language definitions list
-		new LinkedList<>(definitions).descendingIterator().forEachRemaining(languageDefinition -> {
-			languageCodes.add(languageDefinition.getCode());
-		});
 	}
 }

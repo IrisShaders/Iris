@@ -40,105 +40,17 @@ public class Iris implements ClientModInitializer {
 	public static final Logger logger = LogManager.getLogger(MODID);
 
 	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
-
+	public static DimensionId lastDimension = DimensionId.OVERWORLD;
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static boolean internal;
-
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
 	private static KeyBinding reloadKeybind;
 	private static KeyBinding toggleShadersKeybind;
 	private static KeyBinding shaderpackScreenKeybind;
-
 	private static String IRIS_VERSION;
-
-	@Override
-	public void onInitializeClient() {
-		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
-				modContainer -> {
-					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
-
-					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will just crash.
-					if (!versionString.startsWith("0.2.0+IRIS3")) {
-						throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but 0.2.0+IRIS3 is expected");
-					}
-				}
-		);
-
-		FabricLoader.getInstance().getModContainer("iris").ifPresent(
-				modContainer -> {
-					IRIS_VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
-				}
-		);
-		try {
-			Files.createDirectories(SHADERPACKS_DIRECTORY);
-		} catch (IOException e) {
-			Iris.logger.warn("Failed to create shaderpacks directory!");
-			Iris.logger.catching(Level.WARN, e);
-		}
-
-		irisConfig = new IrisConfig();
-
-		try {
-			irisConfig.initialize();
-		} catch (IOException e) {
-			logger.error("Failed to initialize Iris configuration, default values will be used instead");
-			logger.catching(Level.ERROR, e);
-		}
-
-
-		loadShaderpack();
-
-		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
-		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.toggleShaders", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
-		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.shaderPackSelection", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
-
-		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			if (reloadKeybind.wasPressed()) {
-				try {
-					reload();
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
-					}
-
-				} catch (Exception e) {
-					Iris.logger.error("Error while reloading Shaders for Iris!", e);
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
-					}
-				}
-			} else if (toggleShadersKeybind.wasPressed()) {
-				IrisConfig config = getIrisConfig();
-				try {
-					config.setShadersEnabled(!config.areShadersEnabled());
-					config.save();
-
-					reload();
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
-					}
-				} catch (Exception e) {
-					Iris.logger.error("Error while toggling shaders!", e);
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
-					}
-
-					setShadersDisabled();
-					currentPackName = "(off) [fallback, check your logs for errors]";
-				}
-			} else if (shaderpackScreenKeybind.wasPressed()) {
-				minecraftClient.openScreen(new ShaderPackScreen(null));
-			}
-		});
-
-		pipelineManager = new PipelineManager(Iris::createPipeline);
-	}
 
 	public static void loadShaderpack() {
 		if (!irisConfig.areShadersEnabled()) {
@@ -370,8 +282,6 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	public static DimensionId lastDimension = DimensionId.OVERWORLD;
-
 	public static DimensionId getCurrentDimension() {
 		ClientWorld world = MinecraftClient.getInstance().world;
 
@@ -453,5 +363,91 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return color + version;
+	}
+
+	@Override
+	public void onInitializeClient() {
+		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
+				modContainer -> {
+					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
+
+					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
+					// the right fork of Sodium, it will just crash.
+					if (!versionString.startsWith("0.2.0+IRIS3")) {
+						throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but 0.2.0+IRIS3 is expected");
+					}
+				}
+		);
+
+		FabricLoader.getInstance().getModContainer("iris").ifPresent(
+				modContainer -> {
+					IRIS_VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
+				}
+		);
+		try {
+			Files.createDirectories(SHADERPACKS_DIRECTORY);
+		} catch (IOException e) {
+			Iris.logger.warn("Failed to create shaderpacks directory!");
+			Iris.logger.catching(Level.WARN, e);
+		}
+
+		irisConfig = new IrisConfig();
+
+		try {
+			irisConfig.initialize();
+		} catch (IOException e) {
+			logger.error("Failed to initialize Iris configuration, default values will be used instead");
+			logger.catching(Level.ERROR, e);
+		}
+
+
+		loadShaderpack();
+
+		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
+		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.toggleShaders", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
+		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.shaderPackSelection", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
+
+		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
+			if (reloadKeybind.wasPressed()) {
+				try {
+					reload();
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
+					}
+
+				} catch (Exception e) {
+					Iris.logger.error("Error while reloading Shaders for Iris!", e);
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
+					}
+				}
+			} else if (toggleShadersKeybind.wasPressed()) {
+				IrisConfig config = getIrisConfig();
+				try {
+					config.setShadersEnabled(!config.areShadersEnabled());
+					config.save();
+
+					reload();
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
+					}
+				} catch (Exception e) {
+					Iris.logger.error("Error while toggling shaders!", e);
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
+					}
+
+					setShadersDisabled();
+					currentPackName = "(off) [fallback, check your logs for errors]";
+				}
+			} else if (shaderpackScreenKeybind.wasPressed()) {
+				minecraftClient.openScreen(new ShaderPackScreen(null));
+			}
+		});
+
+		pipelineManager = new PipelineManager(Iris::createPipeline);
 	}
 }

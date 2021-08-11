@@ -21,7 +21,9 @@ import java.util.List;
 
 @Mixin(InGameHud.class)
 public class MixinInGameHud {
-	@Shadow @Final private MinecraftClient client;
+	@Shadow
+	@Final
+	private MinecraftClient client;
 
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
 	public void iris$handleHudHidingScreens(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
@@ -47,7 +49,7 @@ public class MixinInGameHud {
 		warningLines.add("[Iris] Sodium isn't installed; you will have poor performance.");
 		warningLines.add("[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
 
-		for(int i = 0; i < warningLines.size(); ++i) {
+		for (int i = 0; i < warningLines.size(); ++i) {
 			String string = warningLines.get(i);
 
 			final int lineHeight = 9;

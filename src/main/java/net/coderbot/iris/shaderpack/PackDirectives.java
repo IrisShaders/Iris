@@ -3,13 +3,12 @@ package net.coderbot.iris.shaderpack;
 import java.util.Set;
 
 public class PackDirectives {
+	private final PackRenderTargetDirectives renderTargetDirectives;
+	private final PackShadowDirectives shadowDirectives;
 	private int noiseTextureResolution;
 	private float sunPathRotation;
 	private boolean areCloudsEnabled;
 	private boolean separateAo;
-
-	private final PackRenderTargetDirectives renderTargetDirectives;
-	private final PackShadowDirectives shadowDirectives;
 
 	private PackDirectives(Set<Integer> supportedRenderTargets) {
 		noiseTextureResolution = 256;

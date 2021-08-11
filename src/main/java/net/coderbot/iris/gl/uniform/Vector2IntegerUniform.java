@@ -6,8 +6,8 @@ import org.lwjgl.opengl.GL20;
 import java.util.function.Supplier;
 
 public class Vector2IntegerUniform extends Uniform {
-	private Vec2f cachedValue;
 	private final Supplier<Vec2f> value;
+	private Vec2f cachedValue;
 
 	Vector2IntegerUniform(int location, Supplier<Vec2f> value) {
 		super(location);

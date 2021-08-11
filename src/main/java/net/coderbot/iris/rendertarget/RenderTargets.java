@@ -59,10 +59,10 @@ public class RenderTargets {
 		// TODO: Make this respect the clear color of each buffer, destroy these framebuffers afterwards.
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-		createFramebufferWritingToMain(new int[] {0,1,2,3,4,5,6,7}).bind();
+		createFramebufferWritingToMain(new int[]{0, 1, 2, 3, 4, 5, 6, 7}).bind();
 		RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT, false);
 
-		createFramebufferWritingToAlt(new int[] {0,1,2,3,4,5,6,7}).bind();
+		createFramebufferWritingToAlt(new int[]{0, 1, 2, 3, 4, 5, 6, 7}).bind();
 		RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT, false);
 
 		// Make sure to rebind the vanilla framebuffer.
@@ -125,7 +125,7 @@ public class RenderTargets {
 
 		flipped.forEach(index -> stageWritesToAlt[index] = true);
 
-		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToAlt, drawBuffers);
+		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToAlt, drawBuffers);
 
 		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
 
@@ -137,7 +137,7 @@ public class RenderTargets {
 
 		Arrays.fill(stageWritesToAlt, clearsAlt);
 
-		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToAlt, drawBuffers);
+		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToAlt, drawBuffers);
 
 		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
 
@@ -149,7 +149,7 @@ public class RenderTargets {
 
 		Arrays.fill(stageWritesToAlt, false);
 
-		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToAlt, new int[] {0, 1});
+		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToAlt, new int[]{0, 1});
 
 		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
 

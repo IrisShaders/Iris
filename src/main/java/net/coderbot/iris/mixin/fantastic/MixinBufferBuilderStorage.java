@@ -20,6 +20,8 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage {
 	@Shadow
 	@Final
 	private SortedMap<RenderLayer, BufferBuilder> entityBuilders;
+	@Unique
+	private int begins = 0;
 
 	@Unique
 	private static void iris$assignBufferBuilder(SortedMap<RenderLayer, BufferBuilder> builderStorage, RenderLayer layer) {
@@ -38,9 +40,6 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage {
 		// Similar deal with wool on sheeps.
 		iris$assignBufferBuilder(entityBuilders, RenderLayer.getEntityCutoutNoCull(new Identifier("textures/entity/sheep/sheep_fur.png")));
 	}
-
-	@Unique
-	private int begins = 0;
 
 	@Override
 	public void beginWorldRendering() {

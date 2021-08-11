@@ -21,48 +21,20 @@ import net.minecraft.util.registry.Registry;
 
 public final class IdMapUniforms {
 
-	private IdMapUniforms() {
-	}
+	private IdMapUniforms() {}
 
 	public static void addIdMapUniforms(UniformHolder uniforms, IdMap idMap) {
 		Map<BlockState, Integer> blockIdMap = idMap.getBlockProperties();
 		Map<Identifier, Integer> entityIdMap = idMap.getEntityIdMap();
 
 		uniforms
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
-				new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemIdMap()))
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",
-				new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemIdMap()))
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "blockEntityId", () -> getBlockEntityId(blockIdMap))
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "entityId", () -> getEntityId(entityIdMap));
+				.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
+						new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemIdMap()))
+				.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",
+						new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemIdMap()))
+				.uniform1i(UniformUpdateFrequency.PER_FRAME, "blockEntityId", () -> getBlockEntityId(blockIdMap))
+				.uniform1i(UniformUpdateFrequency.PER_FRAME, "entityId", () -> getEntityId(entityIdMap));
 
-	}
-
-	/**
-	 * Provides the currently held item in the given hand as a uniform. Uses the item.properties ID map to map the item
-	 * to an integer.
-	 */
-	private static class HeldItemSupplier implements IntSupplier {
-		private final Hand hand;
-		private final Map<Identifier, Integer> itemIdMap;
-
-		HeldItemSupplier(Hand hand, Map<Identifier, Integer> itemIdMap) {
-			this.hand = hand;
-			this.itemIdMap = itemIdMap;
-		}
-
-		@Override
-		public int getAsInt() {
-			if (MinecraftClient.getInstance().player == null) {
-				// Not valid when the player doesn't exist
-				return -1;
-			}
-
-			ItemStack heldStack = MinecraftClient.getInstance().player.getStackInHand(hand);
-			Identifier heldItemId = Registry.ITEM.getId(heldStack.getItem());
-
-			return itemIdMap.getOrDefault(heldItemId, -1);
-		}
 	}
 
 	/**
@@ -107,5 +79,32 @@ public final class IdMapUniforms {
 		Identifier entityId = Registry.ENTITY_TYPE.getId(entity.getType());
 
 		return entityIdMap.getOrDefault(entityId, -1);
+	}
+
+	/**
+	 * Provides the currently held item in the given hand as a uniform. Uses the item.properties ID map to map the item
+	 * to an integer.
+	 */
+	private static class HeldItemSupplier implements IntSupplier {
+		private final Hand hand;
+		private final Map<Identifier, Integer> itemIdMap;
+
+		HeldItemSupplier(Hand hand, Map<Identifier, Integer> itemIdMap) {
+			this.hand = hand;
+			this.itemIdMap = itemIdMap;
+		}
+
+		@Override
+		public int getAsInt() {
+			if (MinecraftClient.getInstance().player == null) {
+				// Not valid when the player doesn't exist
+				return -1;
+			}
+
+			ItemStack heldStack = MinecraftClient.getInstance().player.getStackInHand(hand);
+			Identifier heldItemId = Registry.ITEM.getId(heldStack.getItem());
+
+			return itemIdMap.getOrDefault(heldItemId, -1);
+		}
 	}
 }

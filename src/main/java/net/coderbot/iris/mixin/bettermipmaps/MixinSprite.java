@@ -20,9 +20,25 @@ public class MixinSprite {
 		}
 	}
 
+	// Unpacks a single color component into linear color space from sRGB.
+	@Unique
+	private static float unpackLinearComponent(int color, int shift) {
+		return SRGB_TO_LINEAR[(color >> shift) & 255];
+	}
+
+	// Packs 3 color components into sRGB from linear color space.
+	@Unique
+	private static int packLinearToSrgb(float r, float g, float b) {
+		int srgbR = (int) (Math.pow(r, 1.0 / 2.2) * 255.0);
+		int srgbG = (int) (Math.pow(g, 1.0 / 2.2) * 255.0);
+		int srgbB = (int) (Math.pow(b, 1.0 / 2.2) * 255.0);
+
+		return (srgbB << 16) | (srgbG << 8) | srgbR;
+	}
+
 	/**
 	 * Fixes a common issue in image editing programs where fully transparent pixels are saved with fully black colors.
-	 *
+	 * <p>
 	 * This causes issues with mipmapped texture filtering, since the black color is used to calculate the final color
 	 * even though the alpha value is zero. While ideally it would be disregarded, we do not control that. Instead,
 	 * this code tries to calculate a decent average color to assign to these fully-transparent pixels so that their
@@ -90,21 +106,5 @@ public class MixinSprite {
 				image.setPixelColor(x, y, resultColor);
 			}
 		}
-	}
-
-	// Unpacks a single color component into linear color space from sRGB.
-	@Unique
-	private static float unpackLinearComponent(int color, int shift) {
-		return SRGB_TO_LINEAR[(color >> shift) & 255];
-	}
-
-	// Packs 3 color components into sRGB from linear color space.
-	@Unique
-	private static int packLinearToSrgb(float r, float g, float b) {
-		int srgbR = (int) (Math.pow(r, 1.0 / 2.2) * 255.0);
-		int srgbG = (int) (Math.pow(g, 1.0 / 2.2) * 255.0);
-		int srgbB = (int) (Math.pow(b, 1.0 / 2.2) * 255.0);
-
-		return (srgbB << 16) | (srgbG << 8) | srgbR;
 	}
 }

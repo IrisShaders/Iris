@@ -7,8 +7,8 @@ import org.lwjgl.opengl.GL20;
 import net.minecraft.util.math.Vec2f;
 
 public class Vector2Uniform extends Uniform {
-	private Vec2f cachedValue;
 	private final Supplier<Vec2f> value;
+	private Vec2f cachedValue;
 
 	Vector2Uniform(int location, Supplier<Vec2f> value) {
 		super(location);

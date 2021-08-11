@@ -15,32 +15,24 @@ import org.lwjgl.opengl.GL21C;
 import java.util.function.IntSupplier;
 
 public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder {
-	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
-
 	public static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
-		.define(StandardMacros.getOsString())
-		.define("MC_VERSION", StandardMacros.getMcVersion())
-		.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
-		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
-		.define(StandardMacros.getRenderer())
-		.define(StandardMacros.getVendor())
-		.defineAll(StandardMacros.getGlExtensions())
-		.build();
-
-
-
+			.define(StandardMacros.getOsString())
+			.define("MC_VERSION", StandardMacros.getMcVersion())
+			.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
+			.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+			.define(StandardMacros.getRenderer())
+			.define(StandardMacros.getVendor())
+			.defineAll(StandardMacros.getGlExtensions())
+			.build();
+	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 	private final int program;
-	private ProgramSamplers.Builder samplers;
+	private final ProgramSamplers.Builder samplers;
 
 	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
 		super(name, program);
 
 		this.program = program;
 		this.samplers = ProgramSamplers.builder(program, reservedTextureUnits);
-	}
-
-	public void bindAttributeLocation(int index, String name) {
-		GL21C.glBindAttribLocation(program, index, name);
 	}
 
 	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String geometrySource,
@@ -62,7 +54,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		fragment = buildShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource);
 
 		int programId;
-		
+
 		if (geometry != null) {
 			programId = ProgramCreator.create(name, vertex, geometry, fragment);
 		} else {
@@ -80,16 +72,20 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		return new ProgramBuilder(name, programId, reservedTextureUnits);
 	}
 
-	public Program build() {
-		return new Program(program, super.buildUniforms(), this.samplers.build());
-	}
-
 	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {
 		try {
 			return new GlShader(shaderType, name, source, MACRO_CONSTANTS);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile " + shaderType + " shader for program " + name, e);
 		}
+	}
+
+	public void bindAttributeLocation(int index, String name) {
+		GL21C.glBindAttribLocation(program, index, name);
+	}
+
+	public Program build() {
+		return new Program(program, super.buildUniforms(), this.samplers.build());
 	}
 
 	@Override

@@ -8,9 +8,9 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 
 public class MatrixFromFloatArrayUniform extends Uniform {
-	private FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-	private float[] cachedValue;
 	private final Supplier<float[]> value;
+	private final FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+	private float[] cachedValue;
 
 	MatrixFromFloatArrayUniform(int location, Supplier<float[]> value) {
 		super(location);

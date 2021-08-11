@@ -23,6 +23,8 @@ import net.minecraft.client.render.VertexConsumerProvider;
 public class MixinImmediateVertexConsumerProvider implements WrappingVertexConsumerProvider {
 	@Unique
 	private final Set<String> unwrapped = new ObjectOpenHashSet<>();
+	@Unique
+	private Function<RenderLayer, RenderLayer> wrappingFunction;
 
 	@Inject(method = "draw(Lnet/minecraft/client/render/RenderLayer;)V", at = @At("HEAD"))
 	private void iris$beginDraw(RenderLayer layer, CallbackInfo callback) {
@@ -38,9 +40,6 @@ public class MixinImmediateVertexConsumerProvider implements WrappingVertexConsu
 			Iris.logger.warn("Iris has detected a non-wrapped render layer, it will not be rendered with the correct shader program: " + name);
 		}
 	}
-
-	@Unique
-	private Function<RenderLayer, RenderLayer> wrappingFunction;
 
 	@ModifyVariable(method = "getBuffer(Lnet/minecraft/client/render/RenderLayer;)Lnet/minecraft/client/render/VertexConsumer;",
 			at = @At("HEAD"), ordinal = 0)

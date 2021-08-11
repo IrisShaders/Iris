@@ -70,7 +70,7 @@ public class FinalPassRenderer {
 
 		IntList buffersToBeCleared = pack.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared();
 
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[]{0});
 
 		// TODO: We don't actually fully swap the content, we merely copy it from alt to main
 		// This works for the most part, but it's not perfect. A better approach would be creating secondary
@@ -85,7 +85,7 @@ public class FinalPassRenderer {
 			}
 
 			SwapPass swap = new SwapPass();
-			swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {target});
+			swap.from = renderTargets.createFramebufferWritingToAlt(new int[]{target});
 			swap.from.readBuffer(target);
 			swap.targetTexture = renderTargets.get(target).getMainTexture();
 
@@ -97,19 +97,34 @@ public class FinalPassRenderer {
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 	}
 
-	private static final class Pass {
-		Program program;
-		ImmutableSet<Integer> stageReadsFromAlt;
-		ImmutableSet<Integer> mipmappedBuffers;
+	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
+		RenderSystem.bindTexture(readFromAlt ? target.getAltTexture() : target.getMainTexture());
 
-		private void destroy() {
-			this.program.destroy();
-		}
+		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
+		// (since the last mipmap was generated)
+		//
+		// NB: We leave mipmapping enabled even if the buffer is written to again, this appears to match the
+		// behavior of ShadersMod/OptiFine, however I'm not sure if it's desired behavior. It's possible that a
+		// program could use mipmapped sampling with a stale mipmap, which probably isn't great. However, the
+		// sampling mode is always reset between frames, so this only persists after the first program to use
+		// mipmapping on this buffer.
+		//
+		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
+		// unlikely that this issue occurs in practice with most shader packs.
+		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
+		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
 	}
 
-	private static final class SwapPass {
-		GlFramebuffer from;
-		int targetTexture;
+	private static void resetRenderTarget(RenderTarget target) {
+		// Resets the sampling mode of the given render target and then unbinds it to prevent accidental sampling of it
+		// elsewhere.
+		RenderSystem.bindTexture(target.getMainTexture());
+		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+
+		RenderSystem.bindTexture(target.getAltTexture());
+		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+
+		RenderSystem.bindTexture(0);
 	}
 
 	public void renderFinalPass() {
@@ -184,36 +199,6 @@ public class FinalPassRenderer {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
-	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
-		RenderSystem.bindTexture(readFromAlt ? target.getAltTexture() : target.getMainTexture());
-
-		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
-		// (since the last mipmap was generated)
-		//
-		// NB: We leave mipmapping enabled even if the buffer is written to again, this appears to match the
-		// behavior of ShadersMod/OptiFine, however I'm not sure if it's desired behavior. It's possible that a
-		// program could use mipmapped sampling with a stale mipmap, which probably isn't great. However, the
-		// sampling mode is always reset between frames, so this only persists after the first program to use
-		// mipmapping on this buffer.
-		//
-		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
-		// unlikely that this issue occurs in practice with most shader packs.
-		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
-		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
-	}
-
-	private static void resetRenderTarget(RenderTarget target) {
-		// Resets the sampling mode of the given render target and then unbinds it to prevent accidental sampling of it
-		// elsewhere.
-		RenderSystem.bindTexture(target.getMainTexture());
-		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-
-		RenderSystem.bindTexture(target.getAltTexture());
-		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-
-		RenderSystem.bindTexture(0);
-	}
-
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped,
 								  Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
@@ -224,7 +209,7 @@ public class FinalPassRenderer {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+					source.getFragmentSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -248,5 +233,20 @@ public class FinalPassRenderer {
 		if (finalPass != null) {
 			finalPass.destroy();
 		}
+	}
+
+	private static final class Pass {
+		Program program;
+		ImmutableSet<Integer> stageReadsFromAlt;
+		ImmutableSet<Integer> mipmappedBuffers;
+
+		private void destroy() {
+			this.program.destroy();
+		}
+	}
+
+	private static final class SwapPass {
+		GlFramebuffer from;
+		int targetTexture;
 	}
 }

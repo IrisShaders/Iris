@@ -8,6 +8,12 @@ public enum TextureUnit {
 	// TODO: Relocate this to a different texture unit, this is used by depthtex0...
 	OVERLAY(6);
 
+	static {
+		if (TERRAIN.getSamplerId() != 0) {
+			throw new IllegalStateException("The texture unit number of TERRAIN is not configurable.");
+		}
+	}
+
 	private final int samplerId;
 	private final int unitId;
 
@@ -22,11 +28,5 @@ public enum TextureUnit {
 
 	public int getUnitId() {
 		return unitId;
-	}
-
-	static {
-		if (TERRAIN.getSamplerId() != 0) {
-			throw new IllegalStateException("The texture unit number of TERRAIN is not configurable.");
-		}
 	}
 }

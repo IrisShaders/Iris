@@ -52,32 +52,27 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public class ShadowRenderer implements ShadowMapRenderer {
-	private final float halfPlaneLength;
-	private final float renderDistanceMultiplier;
-	private final int resolution;
-	private final float intervalSize;
 	public static Matrix4f MODELVIEW;
 	public static Matrix4f ORTHO;
-
-	private final WorldRenderingPipeline pipeline;
-	private final ShadowRenderTargets targets;
-
-	private final Program shadowProgram;
-	private final float sunPathRotation;
-
-	private final BufferBuilderStorage buffers;
-	private final ExtendedBufferStorage extendedBufferStorage;
-
-	private final RenderTargets gbufferRenderTargets;
-	private final AbstractTexture normals;
-	private final AbstractTexture specular;
-	private final AbstractTexture noise;
-
 	public static boolean ACTIVE = false;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
 	private static int renderedShadowBlockEntities = 0;
+	private final float halfPlaneLength;
+	private final float renderDistanceMultiplier;
+	private final int resolution;
+	private final float intervalSize;
+	private final WorldRenderingPipeline pipeline;
+	private final ShadowRenderTargets targets;
+	private final Program shadowProgram;
+	private final float sunPathRotation;
+	private final BufferBuilderStorage buffers;
+	private final ExtendedBufferStorage extendedBufferStorage;
+	private final RenderTargets gbufferRenderTargets;
+	private final AbstractTexture normals;
+	private final AbstractTexture specular;
+	private final AbstractTexture noise;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
 						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
@@ -99,8 +94,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		this.targets = new ShadowRenderTargets(resolution, new InternalTextureFormat[]{
-			InternalTextureFormat.RGBA,
-			InternalTextureFormat.RGBA
+				InternalTextureFormat.RGBA,
+				InternalTextureFormat.RGBA
 		});
 
 		this.gbufferRenderTargets = gbufferRenderTargets;
@@ -125,6 +120,77 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		configureSamplingSettings(shadowDirectives);
+	}
+
+	private static void setupAttributes(Program program) {
+		// Add default attribute values to avoid undefined behavior on content rendered without an extended vertex format
+		// TODO: Avoid duplication with DeferredWorldRenderingPipeline
+		setupAttribute(program, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
+		setupAttribute(program, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(program, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
+	}
+
+	private static void setupAttribute(Program program, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
+		int location = GL20.glGetAttribLocation(program.getProgramId(), name);
+
+		if (location != -1) {
+			if (location != expectedLocation) {
+				throw new IllegalStateException();
+			}
+
+			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
+		}
+	}
+
+	public static MatrixStack createShadowModelView(float sunPathRotation, float intervalSize) {
+		// Determine the camera position
+		Vec3d cameraPos = CameraUniforms.getCameraPosition();
+
+		double cameraX = cameraPos.getX();
+		double cameraY = cameraPos.getY();
+		double cameraZ = cameraPos.getZ();
+
+		// Set up our modelview matrix stack
+		MatrixStack modelView = new MatrixStack();
+		ShadowMatrices.createModelViewMatrix(modelView.peek().getModel(), getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
+
+		return modelView;
+	}
+
+	public static String getEntitiesDebugString() {
+		return renderedShadowEntities + "/" + MinecraftClient.getInstance().world.getRegularEntityCount();
+	}
+
+	public static String getBlockEntitiesDebugString() {
+		return renderedShadowBlockEntities + "/" + MinecraftClient.getInstance().world.blockEntities.size();
+	}
+
+	private static ClientWorld getWorld() {
+		return Objects.requireNonNull(MinecraftClient.getInstance().world);
+	}
+
+	private static float getSkyAngle() {
+		return getWorld().getSkyAngle(CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
+	private static float getSunAngle() {
+		float skyAngle = getSkyAngle();
+
+		if (skyAngle < 0.75F) {
+			return skyAngle + 0.25F;
+		} else {
+			return skyAngle - 0.75F;
+		}
+	}
+
+	private static float getShadowAngle() {
+		float shadowAngle = getSunAngle();
+
+		if (!CelestialUniforms.isDay()) {
+			shadowAngle -= 0.5F;
+		}
+
+		return shadowAngle;
 	}
 
 	private void configureSamplingSettings(PackShadowDirectives shadowDirectives) {
@@ -186,41 +252,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		IrisSamplers.addShadowSamplers(builder, this);
 
 		return builder.build();
-	}
-
-	private static void setupAttributes(Program program) {
-		// Add default attribute values to avoid undefined behavior on content rendered without an extended vertex format
-		// TODO: Avoid duplication with DeferredWorldRenderingPipeline
-		setupAttribute(program, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
-		setupAttribute(program, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
-		setupAttribute(program, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
-	}
-
-	private static void setupAttribute(Program program, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = GL20.glGetAttribLocation(program.getProgramId(), name);
-
-		if (location != -1) {
-			if (location != expectedLocation) {
-				throw new IllegalStateException();
-			}
-
-			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
-		}
-	}
-
-	public static MatrixStack createShadowModelView(float sunPathRotation, float intervalSize) {
-		// Determine the camera position
-		Vec3d cameraPos = CameraUniforms.getCameraPosition();
-
-		double cameraX = cameraPos.getX();
-		double cameraY = cameraPos.getY();
-		double cameraZ = cameraPos.getZ();
-
-		// Set up our modelview matrix stack
-		MatrixStack modelView = new MatrixStack();
-		ShadowMatrices.createModelViewMatrix(modelView.peek().getModel(), getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
-
-		return modelView;
 	}
 
 	private Frustum createShadowFrustum(MatrixStack modelview, float[] ortho) {
@@ -479,42 +510,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		} else {
 			GlProgramManager.useProgram(0);
 		}
-	}
-
-	public static String getEntitiesDebugString() {
-		return renderedShadowEntities + "/" + MinecraftClient.getInstance().world.getRegularEntityCount();
-	}
-
-	public static String getBlockEntitiesDebugString() {
-		return renderedShadowBlockEntities + "/" + MinecraftClient.getInstance().world.blockEntities.size();
-	}
-
-	private static ClientWorld getWorld() {
-		return Objects.requireNonNull(MinecraftClient.getInstance().world);
-	}
-
-	private static float getSkyAngle() {
-		return getWorld().getSkyAngle(CapturedRenderingState.INSTANCE.getTickDelta());
-	}
-
-	private static float getSunAngle() {
-		float skyAngle = getSkyAngle();
-
-		if (skyAngle < 0.75F) {
-			return skyAngle + 0.25F;
-		} else {
-			return skyAngle - 0.75F;
-		}
-	}
-
-	private static float getShadowAngle() {
-		float shadowAngle = getSunAngle();
-
-		if (!CelestialUniforms.isDay()) {
-			shadowAngle -= 0.5F;
-		}
-
-		return shadowAngle;
 	}
 
 	@Override

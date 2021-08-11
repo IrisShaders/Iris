@@ -5,8 +5,8 @@ import java.util.function.IntSupplier;
 import org.lwjgl.opengl.GL21;
 
 public class IntUniform extends Uniform {
-	private int cachedValue;
 	private final IntSupplier value;
+	private int cachedValue;
 
 	IntUniform(int location, IntSupplier value) {
 		this(location, value, null);

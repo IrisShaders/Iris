@@ -22,6 +22,14 @@ public class PipelineManager {
 		this.pipelineFactory = pipelineFactory;
 	}
 
+	public static void resetInstance() {
+		instance = null;
+	}
+
+	public static PipelineManager getInstance() {
+		return instance;
+	}
+
 	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
 		if (currentDimension != lastDimension) {
 			Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
@@ -71,14 +79,6 @@ public class PipelineManager {
 		} else {
 			instance = this;
 		}
-	}
-
-	public static void resetInstance() {
-		instance = null;
-	}
-
-	public static PipelineManager getInstance() {
-		return instance;
 	}
 
 	public void destroyPipeline() {

@@ -19,6 +19,19 @@ import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 
 public class ShaderProperties {
+	// TODO: Custom textures
+	// TODO: private Map<String, String> optifineVersionRequirements;
+	// TODO: private Set<String> sliderOptions;
+	// TODO: Parse profiles
+	// TODO: private Map<String, String> profiles;
+	// TODO: private List<String> mainScreenOptions;
+	// TODO: private final Map<String, List<String>> subScreenOptions = new HashMap<>();
+	// TODO: private Integer mainScreenColumnCount;
+	// TODO: private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
+	// TODO: Parse custom uniforms / variables
+	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
+	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
 	private boolean enableClouds = true;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
@@ -39,19 +52,6 @@ public class ShaderProperties {
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
-	// TODO: Custom textures
-	// TODO: private Map<String, String> optifineVersionRequirements;
-	// TODO: private Set<String> sliderOptions;
-	// TODO: Parse profiles
-	// TODO: private Map<String, String> profiles;
-	// TODO: private List<String> mainScreenOptions;
-	// TODO: private final Map<String, List<String>> subScreenOptions = new HashMap<>();
-	// TODO: private Integer mainScreenColumnCount;
-	// TODO: private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
-	// TODO: Parse custom uniforms / variables
-	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
-	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
-	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
 	private String noiseTexturePath = null;
 
 	private ShaderProperties() {

@@ -26,8 +26,8 @@ public class ShaderPack {
 
 	public ShaderPack(Path root) throws IOException {
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
-			.map(ShaderProperties::new)
-			.orElseGet(ShaderProperties::empty);
+				.map(ShaderProperties::new)
+				.orElseGet(ShaderProperties::empty);
 
 		this.base = new ProgramSet(root, root, shaderProperties, this);
 		this.overworld = loadOverrides(root, "world0", shaderProperties, this);

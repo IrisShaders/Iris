@@ -13,17 +13,13 @@ import org.lwjgl.opengl.GL20C;
 import java.nio.ByteBuffer;
 
 public class ShadowRenderTargets {
+	private static final ByteBuffer NULL_BUFFER = null;
 	// TODO: Make this match the value of GL_MAX_DRAW_BUFFERS (or whatever property name it is)
 	public static int MAX_SHADOW_RENDER_TARGETS = 8;
-
 	private final int[] targets;
-
 	private final DepthTexture depthTexture;
 	private final DepthTexture noTranslucents;
-
 	private final GlFramebuffer framebuffer;
-
-	private static final ByteBuffer NULL_BUFFER = null;
 
 	public ShadowRenderTargets(int resolution, InternalTextureFormat[] formats) {
 		if (formats.length > MAX_SHADOW_RENDER_TARGETS) {

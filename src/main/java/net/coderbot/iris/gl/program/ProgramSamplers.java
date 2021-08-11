@@ -22,6 +22,10 @@ public class ProgramSamplers {
 		this.initializer = initializer;
 	}
 
+	public static Builder builder(int program, Set<Integer> reservedTextureUnits) {
+		return new Builder(program, reservedTextureUnits);
+	}
+
 	public void update() {
 		if (initializer != null) {
 			for (GlUniform1iCall call : initializer) {
@@ -36,10 +40,6 @@ public class ProgramSamplers {
 		}
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
-	}
-
-	public static Builder builder(int program, Set<Integer> reservedTextureUnits) {
-		return new Builder(program, reservedTextureUnits);
 	}
 
 	public static final class Builder implements SamplerHolder {
@@ -115,6 +115,7 @@ public class ProgramSamplers {
 
 		/**
 		 * Adds a sampler
+		 *
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override

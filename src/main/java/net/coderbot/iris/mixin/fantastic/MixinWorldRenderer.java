@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Uses the PhasedParticleManager changes to render opaque particles much earlier than other particles.
- *
+ * <p>
  * See the comments in {@link MixinParticleManager} for more details.
  */
 @Mixin(WorldRenderer.class)
@@ -42,9 +42,9 @@ public class MixinWorldRenderer {
 
 	@Inject(method = "render", at = @At(value = "CONSTANT", args = "stringValue=entities"))
 	private void iris$renderOpaqueParticles(MatrixStack matrices, float tickDelta, long limitTime,
-												boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-												LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
-												CallbackInfo callback) {
+											boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
+											LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
+											CallbackInfo callback) {
 		client.getProfiler().swap("opaque_particles");
 
 		VertexConsumerProvider.Immediate immediate = bufferBuilders.getEntityVertexConsumers();

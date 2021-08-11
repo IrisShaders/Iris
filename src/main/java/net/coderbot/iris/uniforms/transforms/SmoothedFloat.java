@@ -64,6 +64,30 @@ public class SmoothedFloat implements FloatSupplier {
 	}
 
 	/**
+	 * Computes an exponential decay factor based on the given decay constant and time value
+	 *
+	 * @param k the decay constant, derived from the half life
+	 * @param t the time that has passed since the decay started
+	 */
+	private static float exponentialDecayFactor(float k, float t) {
+		// https://en.wikipedia.org/wiki/Exponential_decay
+		// e^(-kt)
+		return (float) Math.exp(-k * t);
+	}
+
+	/**
+	 * Computes a linearly interpolated value between v0 and v1
+	 *
+	 * @param v0 the starting value (t = 0)
+	 * @param v1 the ending value (t = 1)
+	 * @param t  the time/progress value - should be in the range of 0.0 to 1.0
+	 */
+	private static float lerp(float v0, float v1, float t) {
+		// https://en.wikipedia.org/wiki/Linear_interpolation
+		return (1 - t) * v0 + t * v1;
+	}
+
+	/**
 	 * Takes one value from the unsmoothed value sequence, and smooths it into our accumulator
 	 */
 	private void update() {
@@ -106,29 +130,5 @@ public class SmoothedFloat implements FloatSupplier {
 		}
 
 		return accumulator;
-	}
-
-	/**
-	 * Computes an exponential decay factor based on the given decay constant and time value
-	 *
-	 * @param k the decay constant, derived from the half life
-	 * @param t the time that has passed since the decay started
-	 */
-	private static float exponentialDecayFactor(float k, float t) {
-		// https://en.wikipedia.org/wiki/Exponential_decay
-		// e^(-kt)
-		return (float) Math.exp(-k * t);
-	}
-
-	/**
-	 * Computes a linearly interpolated value between v0 and v1
-	 *
-	 * @param v0 the starting value (t = 0)
-	 * @param v1 the ending value (t = 1)
-	 * @param t  the time/progress value - should be in the range of 0.0 to 1.0
-	 */
-	private static float lerp(float v0, float v1, float t) {
-		// https://en.wikipedia.org/wiki/Linear_interpolation
-		return (1 - t) * v0 + t * v1;
 	}
 }

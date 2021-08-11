@@ -53,10 +53,9 @@ import org.lwjgl.opengl.GL30C;
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
 public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
+	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
 	private final RenderTargets renderTargets;
-
 	private final List<Pass> allPasses;
-
 	@Nullable
 	private final Pass basic;
 	@Nullable
@@ -89,13 +88,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final Pass glint;
 	@Nullable
 	private final Pass eyes;
-
 	private final GlFramebuffer clearAltBuffers;
 	private final GlFramebuffer clearMainBuffers;
 	private final GlFramebuffer baseline;
-
-	private Runnable createShadowMapRenderer;
-	private ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final FinalPassRenderer finalPassRenderer;
@@ -104,22 +99,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final AbstractTexture noise;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
-
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
-
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
-
-	private boolean isBeforeTranslucent;
-
 	private final int waterId;
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
-
 	private final List<GbufferProgram> programStack = new ArrayList<>();
 	private final List<String> programStackLog = new ArrayList<>();
-
-	private static final Identifier WATER_IDENTIFIER = new Identifier("minecraft", "water");
+	private Runnable createShadowMapRenderer;
+	private ShadowMapRenderer shadowMapRenderer;
+	private boolean isBeforeTranslucent;
+	// TODO: better way to avoid this global state?
+	private boolean isRenderingWorld = false;
+	private boolean isRenderingShadow = false;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -167,7 +160,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
 					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise);
-			createShadowMapRenderer = () -> {};
+			createShadowMapRenderer = () -> {
+			};
 		};
 
 		BufferFlipper flipper = new BufferFlipper();
@@ -247,7 +241,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[]{0});
 
 		if (shadowMapRenderer == null) {
 			// Fallback just in case.
@@ -256,6 +250,60 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs, createTerrainSamplers, createShadowTerrainSamplers);
+	}
+
+	private static void destroyPasses(List<Pass> passes) {
+		Set<Pass> destroyed = new HashSet<>();
+
+		for (Pass pass : passes) {
+			if (pass == null) {
+				continue;
+			}
+
+			if (destroyed.contains(pass)) {
+				continue;
+			}
+
+			pass.destroy();
+			destroyed.add(pass);
+		}
+	}
+
+	private static void setupAttributes(Pass pass) {
+		// TODO: Properly add these attributes into the vertex format
+
+		float blockId = -1.0F;
+
+		setupAttribute(pass, "mc_Entity", 10, blockId, -1.0F, -1.0F, -1.0F);
+		setupAttribute(pass, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(pass, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
+	}
+
+	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
+		int location = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), name);
+
+		if (location != -1) {
+			if (location != expectedLocation) {
+				throw new IllegalStateException();
+			}
+
+			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
+		}
+	}
+
+	public static GbufferProgram getProgramForSheet(ParticleTextureSheet sheet) {
+		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_OPAQUE || sheet == ParticleTextureSheet.TERRAIN_SHEET || sheet == ParticleTextureSheet.CUSTOM) {
+			return GbufferProgram.TEXTURED_LIT;
+		} else if (sheet == ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT) {
+			// TODO: Should we be using some other pass? (gbuffers_water?)
+			return GbufferProgram.TEXTURED_LIT;
+		} else {
+			// sheet == ParticleTextureSheet.PARTICLE_SHEET_LIT
+			//
+			// Yes, this seems backwards. However, in this case, these particles are always bright regardless of the
+			// lighting condition, and therefore don't use the textured_lit program.
+			return GbufferProgram.TEXTURED;
+		}
 	}
 
 	private void checkWorld() {
@@ -457,7 +505,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+					source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -501,56 +549,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		return pass;
 	}
 
-	private final class Pass {
-		private final Program program;
-		private final GlFramebuffer framebufferBeforeTranslucents;
-		private final GlFramebuffer framebufferAfterTranslucents;
-		private final AlphaTestOverride alphaTestOverride;
-		private final boolean disableBlend;
-
-		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
-			this.program = program;
-			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
-			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
-			this.alphaTestOverride = alphaTestOverride;
-			this.disableBlend = disableBlend;
-		}
-
-		public void use() {
-			if (isBeforeTranslucent) {
-				framebufferBeforeTranslucents.bind();
-			} else {
-				framebufferAfterTranslucents.bind();
-			}
-
-			program.use();
-
-			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
-			// that.
-			if (alphaTestOverride != null) {
-				alphaTestOverride.setup();
-			}
-
-			if (disableBlend) {
-				GlStateManager.disableBlend();
-			}
-		}
-
-		public void stopUsing() {
-			if (alphaTestOverride != null) {
-				AlphaTestOverride.teardown();
-			}
-		}
-
-		public Program getProgram() {
-			return program;
-		}
-
-		public void destroy() {
-			this.program.destroy();
-		}
-	}
-
 	public void destroy() {
 		destroyPasses(allPasses);
 
@@ -581,45 +579,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		specular.close();
 		normals.close();
 		noise.close();
-	}
-
-	private static void destroyPasses(List<Pass> passes) {
-		Set<Pass> destroyed = new HashSet<>();
-
-		for (Pass pass : passes) {
-			if (pass == null) {
-				continue;
-			}
-
-			if (destroyed.contains(pass)) {
-				continue;
-			}
-
-			pass.destroy();
-			destroyed.add(pass);
-		}
-	}
-
-	private static void setupAttributes(Pass pass) {
-		// TODO: Properly add these attributes into the vertex format
-
-		float blockId = -1.0F;
-
-		setupAttribute(pass, "mc_Entity", 10, blockId, -1.0F, -1.0F, -1.0F);
-		setupAttribute(pass, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
-		setupAttribute(pass, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
-	}
-
-	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), name);
-
-		if (location != -1) {
-			if (location != expectedLocation) {
-				throw new IllegalStateException();
-			}
-
-			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
-		}
 	}
 
 	private void prepareRenderTargets() {
@@ -669,21 +628,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 	}
 
-	public static GbufferProgram getProgramForSheet(ParticleTextureSheet sheet) {
-		if (sheet == ParticleTextureSheet.PARTICLE_SHEET_OPAQUE || sheet == ParticleTextureSheet.TERRAIN_SHEET || sheet == ParticleTextureSheet.CUSTOM) {
-			return GbufferProgram.TEXTURED_LIT;
-		} else if (sheet == ParticleTextureSheet.PARTICLE_SHEET_TRANSLUCENT) {
-			// TODO: Should we be using some other pass? (gbuffers_water?)
-			return GbufferProgram.TEXTURED_LIT;
-		} else {
-			// sheet == ParticleTextureSheet.PARTICLE_SHEET_LIT
-			//
-			// Yes, this seems backwards. However, in this case, these particles are always bright regardless of the
-			// lighting condition, and therefore don't use the textured_lit program.
-			return GbufferProgram.TEXTURED;
-		}
-	}
-
 	@Override
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
 		this.shadowMapRenderer.renderShadows(worldRenderer, playerCamera);
@@ -704,9 +648,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new IllegalStateException("Unknown shadow map renderer type!");
 		}
 	}
-
-	// TODO: better way to avoid this global state?
-	private boolean isRenderingWorld = false;
 
 	@Override
 	public void beginWorldRendering() {
@@ -764,8 +705,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		return sodiumTerrainPipeline;
 	}
 
-	private boolean isRenderingShadow = false;
-
 	public void beginShadowRender() {
 		isRenderingShadow = true;
 	}
@@ -776,5 +715,55 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	public FrameUpdateNotifier getUpdateNotifier() {
 		return updateNotifier;
+	}
+
+	private final class Pass {
+		private final Program program;
+		private final GlFramebuffer framebufferBeforeTranslucents;
+		private final GlFramebuffer framebufferAfterTranslucents;
+		private final AlphaTestOverride alphaTestOverride;
+		private final boolean disableBlend;
+
+		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
+			this.program = program;
+			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
+			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
+			this.alphaTestOverride = alphaTestOverride;
+			this.disableBlend = disableBlend;
+		}
+
+		public void use() {
+			if (isBeforeTranslucent) {
+				framebufferBeforeTranslucents.bind();
+			} else {
+				framebufferAfterTranslucents.bind();
+			}
+
+			program.use();
+
+			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
+			// that.
+			if (alphaTestOverride != null) {
+				alphaTestOverride.setup();
+			}
+
+			if (disableBlend) {
+				GlStateManager.disableBlend();
+			}
+		}
+
+		public void stopUsing() {
+			if (alphaTestOverride != null) {
+				AlphaTestOverride.teardown();
+			}
+		}
+
+		public Program getProgram() {
+			return program;
+		}
+
+		public void destroy() {
+			this.program.destroy();
+		}
 	}
 }

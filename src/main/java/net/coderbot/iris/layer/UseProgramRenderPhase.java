@@ -5,7 +5,7 @@ import net.minecraft.client.render.RenderPhase;
 import java.util.Objects;
 
 public class UseProgramRenderPhase extends RenderPhase {
-	private GbufferProgram program;
+	private final GbufferProgram program;
 
 	public UseProgramRenderPhase(GbufferProgram program) {
 		super("iris:use_program", () -> GbufferPrograms.push(program), () -> GbufferPrograms.pop(program));

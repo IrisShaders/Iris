@@ -7,16 +7,14 @@ public class PackShadowDirectives {
 	// This is currently set at 2 for ShadersMod / OptiFine parity but can theoretically be bumped up to 8.
 	// TODO: Make this configurable?
 	public static final int MAX_SHADOW_COLOR_BUFFERS = 2;
-
+	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
+	private final ImmutableList<SamplingSettings> colorSamplingSettings;
 	private int resolution;
 	// Use a boxed form so we can use null to indicate that there is not an FOV specified.
 	private Float fov;
 	private float distance;
 	private float distanceRenderMul;
 	private float intervalSize;
-
-	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
-	private final ImmutableList<SamplingSettings> colorSamplingSettings;
 
 	public PackShadowDirectives() {
 		// By default, the shadow map has a resolution of 1024x1024. It's recommended to increase this for better
@@ -65,57 +63,6 @@ public class PackShadowDirectives {
 		}
 
 		this.colorSamplingSettings = colorSamplingSettings.build();
-	}
-
-	public int getResolution() {
-		return resolution;
-	}
-
-	public Float getFov() {
-		return fov;
-	}
-
-	public float getDistance() {
-		return distance;
-	}
-
-	public float getDistanceRenderMul() {
-		return distanceRenderMul;
-	}
-
-	public float getIntervalSize() {
-		return intervalSize;
-	}
-
-	public ImmutableList<DepthSamplingSettings> getDepthSamplingSettings() {
-		return depthSamplingSettings;
-	}
-
-	public ImmutableList<SamplingSettings> getColorSamplingSettings() {
-		return colorSamplingSettings;
-	}
-
-	public void acceptDirectives(DirectiveHolder directives) {
-		directives.acceptCommentIntDirective("SHADOWRES", resolution -> this.resolution = resolution);
-		directives.acceptConstIntDirective("shadowMapResolution", resolution -> this.resolution = resolution);
-
-		directives.acceptCommentFloatDirective("SHADOWFOV", fov -> this.fov = fov);
-		directives.acceptConstFloatDirective("shadowMapFov", fov -> this.fov = fov);
-
-		directives.acceptCommentFloatDirective("SHADOWHPL", distance -> this.distance = distance);
-		directives.acceptConstFloatDirective("shadowDistance", distance -> this.distance = distance);
-
-		directives.acceptConstFloatDirective("shadowDistanceRenderMul",
-				distanceRenderMul -> this.distanceRenderMul = distanceRenderMul);
-
-		directives.acceptConstFloatDirective("shadowIntervalSize",
-				intervalSize -> this.intervalSize = intervalSize);
-
-		acceptHardwareFilteringSettings(directives, depthSamplingSettings);
-		acceptDepthMipmapSettings(directives, depthSamplingSettings);
-		acceptColorMipmapSettings(directives, colorSamplingSettings);
-		acceptDepthFilteringSettings(directives, depthSamplingSettings);
-		acceptColorFilteringSettings(directives, colorSamplingSettings);
 	}
 
 	/**
@@ -210,6 +157,57 @@ public class PackShadowDirectives {
 		}
 	}
 
+	public int getResolution() {
+		return resolution;
+	}
+
+	public Float getFov() {
+		return fov;
+	}
+
+	public float getDistance() {
+		return distance;
+	}
+
+	public float getDistanceRenderMul() {
+		return distanceRenderMul;
+	}
+
+	public float getIntervalSize() {
+		return intervalSize;
+	}
+
+	public ImmutableList<DepthSamplingSettings> getDepthSamplingSettings() {
+		return depthSamplingSettings;
+	}
+
+	public ImmutableList<SamplingSettings> getColorSamplingSettings() {
+		return colorSamplingSettings;
+	}
+
+	public void acceptDirectives(DirectiveHolder directives) {
+		directives.acceptCommentIntDirective("SHADOWRES", resolution -> this.resolution = resolution);
+		directives.acceptConstIntDirective("shadowMapResolution", resolution -> this.resolution = resolution);
+
+		directives.acceptCommentFloatDirective("SHADOWFOV", fov -> this.fov = fov);
+		directives.acceptConstFloatDirective("shadowMapFov", fov -> this.fov = fov);
+
+		directives.acceptCommentFloatDirective("SHADOWHPL", distance -> this.distance = distance);
+		directives.acceptConstFloatDirective("shadowDistance", distance -> this.distance = distance);
+
+		directives.acceptConstFloatDirective("shadowDistanceRenderMul",
+				distanceRenderMul -> this.distanceRenderMul = distanceRenderMul);
+
+		directives.acceptConstFloatDirective("shadowIntervalSize",
+				intervalSize -> this.intervalSize = intervalSize);
+
+		acceptHardwareFilteringSettings(directives, depthSamplingSettings);
+		acceptDepthMipmapSettings(directives, depthSamplingSettings);
+		acceptColorMipmapSettings(directives, colorSamplingSettings);
+		acceptDepthFilteringSettings(directives, depthSamplingSettings);
+		acceptColorFilteringSettings(directives, colorSamplingSettings);
+	}
+
 	@Override
 	public String toString() {
 		return "PackShadowDirectives{" +
@@ -240,20 +238,20 @@ public class PackShadowDirectives {
 			nearest = false;
 		}
 
-		protected void setMipmap(boolean mipmap) {
-			this.mipmap = mipmap;
-		}
-
-		protected void setNearest(boolean nearest) {
-			this.nearest = nearest;
-		}
-
 		public boolean getMipmap() {
 			return this.mipmap;
 		}
 
+		protected void setMipmap(boolean mipmap) {
+			this.mipmap = mipmap;
+		}
+
 		public boolean getNearest() {
 			return this.nearest;
+		}
+
+		protected void setNearest(boolean nearest) {
+			this.nearest = nearest;
 		}
 
 		@Override
@@ -272,12 +270,12 @@ public class PackShadowDirectives {
 			hardwareFiltering = false;
 		}
 
-		private void setHardwareFiltering(boolean hardwareFiltering) {
-			this.hardwareFiltering = hardwareFiltering;
-		}
-
 		public boolean getHardwareFiltering() {
 			return hardwareFiltering;
+		}
+
+		private void setHardwareFiltering(boolean hardwareFiltering) {
+			this.hardwareFiltering = hardwareFiltering;
 		}
 
 		@Override

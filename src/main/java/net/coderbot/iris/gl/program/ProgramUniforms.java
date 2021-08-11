@@ -23,10 +23,9 @@ public class ProgramUniforms {
 	private final ImmutableList<Uniform> perFrame;
 	private final ImmutableList<Uniform> dynamic;
 	private final ImmutableList<ValueUpdateNotifier> notifiersToReset;
-
-	private ImmutableList<Uniform> once;
 	long lastTick = -1;
 	int lastFrame = -1;
+	private ImmutableList<Uniform> once;
 
 	public ProgramUniforms(ImmutableList<Uniform> once, ImmutableList<Uniform> perTick, ImmutableList<Uniform> perFrame,
 						   ImmutableList<Uniform> dynamic, ImmutableList<ValueUpdateNotifier> notifiersToReset) {
@@ -37,14 +36,100 @@ public class ProgramUniforms {
 		this.notifiersToReset = notifiersToReset;
 	}
 
+	private static long getCurrentTick() {
+		return Objects.requireNonNull(MinecraftClient.getInstance().world).getTime();
+	}
+
+	public static void clearActiveUniforms() {
+		if (active != null) {
+			active.removeListeners();
+		}
+	}
+
+	public static Builder builder(String name, int program) {
+		return new Builder(name, program);
+	}
+
+	private static String getTypeName(int type) {
+		String typeName;
+
+		if (type == GL20C.GL_FLOAT) {
+			typeName = "float";
+		} else if (type == GL20C.GL_INT) {
+			typeName = "int";
+		} else if (type == GL20C.GL_FLOAT_MAT4) {
+			typeName = "mat4";
+		} else if (type == GL20C.GL_FLOAT_VEC4) {
+			typeName = "vec4";
+		} else if (type == GL20C.GL_FLOAT_MAT3) {
+			typeName = "mat3";
+		} else if (type == GL20C.GL_FLOAT_VEC3) {
+			typeName = "vec3";
+		} else if (type == GL20C.GL_FLOAT_MAT2) {
+			typeName = "mat2";
+		} else if (type == GL20C.GL_FLOAT_VEC2) {
+			typeName = "vec2";
+		} else if (type == GL20C.GL_INT_VEC2) {
+			typeName = "vec2i";
+		} else if (type == GL20C.GL_SAMPLER_3D) {
+			typeName = "sampler3D";
+		} else if (type == GL20C.GL_SAMPLER_2D) {
+			typeName = "sampler2D";
+		} else if (type == GL20C.GL_SAMPLER_1D) {
+			typeName = "sampler1D";
+		} else if (type == GL20C.GL_SAMPLER_2D_SHADOW) {
+			typeName = "sampler2DShadow";
+		} else if (type == GL20C.GL_SAMPLER_1D_SHADOW) {
+			typeName = "sampler1DShadow";
+		} else {
+			typeName = "(unknown:" + type + ")";
+		}
+
+		return typeName;
+	}
+
+	private static UniformType getExpectedType(int type) {
+		if (type == GL20C.GL_FLOAT) {
+			return UniformType.FLOAT;
+		} else if (type == GL20C.GL_INT) {
+			return UniformType.INT;
+		} else if (type == GL20C.GL_FLOAT_MAT4) {
+			return UniformType.MAT4;
+		} else if (type == GL20C.GL_FLOAT_VEC4) {
+			return UniformType.VEC4;
+		} else if (type == GL20C.GL_INT_VEC4) {
+			return null;
+		} else if (type == GL20C.GL_FLOAT_MAT3) {
+			return null;
+		} else if (type == GL20C.GL_FLOAT_VEC3) {
+			return UniformType.VEC3;
+		} else if (type == GL20C.GL_INT_VEC3) {
+			return null;
+		} else if (type == GL20C.GL_FLOAT_MAT2) {
+			return null;
+		} else if (type == GL20C.GL_FLOAT_VEC2) {
+			return UniformType.VEC2;
+		} else if (type == GL20C.GL_INT_VEC2) {
+			return UniformType.VEC2I;
+		} else if (type == GL20C.GL_SAMPLER_3D) {
+			return UniformType.INT;
+		} else if (type == GL20C.GL_SAMPLER_2D) {
+			return UniformType.INT;
+		} else if (type == GL20C.GL_SAMPLER_1D) {
+			return UniformType.INT;
+		} else if (type == GL20C.GL_SAMPLER_2D_SHADOW) {
+			return UniformType.INT;
+		} else if (type == GL20C.GL_SAMPLER_1D_SHADOW) {
+			return UniformType.INT;
+		} else {
+			return null;
+		}
+	}
+
 	private void updateStage(ImmutableList<Uniform> uniforms) {
 		for (Uniform uniform : uniforms) {
 			uniform.update();
 		}
-	}
-
-	private static long getCurrentTick() {
-		return Objects.requireNonNull(MinecraftClient.getInstance().world).getTime();
 	}
 
 	public void update() {
@@ -90,16 +175,6 @@ public class ProgramUniforms {
 		for (ValueUpdateNotifier notifier : notifiersToReset) {
 			notifier.setListener(null);
 		}
-	}
-
-	public static void clearActiveUniforms() {
-		if (active != null) {
-			active.removeListeners();
-		}
-	}
-
-	public static Builder builder(String name, int program) {
-		return new Builder(name, program);
 	}
 
 	public static class Builder implements DynamicLocationalUniformHolder {
@@ -218,82 +293,6 @@ public class ProgramUniforms {
 			notifiersToReset.add(notifier);
 
 			return this;
-		}
-	}
-
-	private static String getTypeName(int type) {
-		String typeName;
-
-		if (type == GL20C.GL_FLOAT) {
-			typeName = "float";
-		} else if (type == GL20C.GL_INT) {
-			typeName = "int";
-		} else if (type == GL20C.GL_FLOAT_MAT4) {
-			typeName = "mat4";
-		} else if (type == GL20C.GL_FLOAT_VEC4) {
-			typeName = "vec4";
-		} else if (type == GL20C.GL_FLOAT_MAT3) {
-			typeName = "mat3";
-		} else if (type == GL20C.GL_FLOAT_VEC3) {
-			typeName = "vec3";
-		} else if (type == GL20C.GL_FLOAT_MAT2) {
-			typeName = "mat2";
-		} else if (type == GL20C.GL_FLOAT_VEC2) {
-			typeName = "vec2";
-		} else if (type == GL20C.GL_INT_VEC2) {
-			typeName = "vec2i";
-		} else if (type == GL20C.GL_SAMPLER_3D) {
-			typeName = "sampler3D";
-		} else if (type == GL20C.GL_SAMPLER_2D) {
-			typeName = "sampler2D";
-		} else if (type == GL20C.GL_SAMPLER_1D) {
-			typeName = "sampler1D";
-		} else if (type == GL20C.GL_SAMPLER_2D_SHADOW) {
-			typeName = "sampler2DShadow";
-		} else if (type == GL20C.GL_SAMPLER_1D_SHADOW) {
-			typeName = "sampler1DShadow";
-		} else {
-			typeName = "(unknown:" + type + ")";
-		}
-
-		return typeName;
-	}
-
-	private static UniformType getExpectedType(int type) {
-		if (type == GL20C.GL_FLOAT) {
-			return UniformType.FLOAT;
-		} else if (type == GL20C.GL_INT) {
-			return UniformType.INT;
-		} else if (type == GL20C.GL_FLOAT_MAT4) {
-			return UniformType.MAT4;
-		} else if (type == GL20C.GL_FLOAT_VEC4) {
-			return UniformType.VEC4;
-		} else if (type == GL20C.GL_INT_VEC4) {
-			return null;
-		} else if (type == GL20C.GL_FLOAT_MAT3) {
-			return null;
-		} else if (type == GL20C.GL_FLOAT_VEC3) {
-			return UniformType.VEC3;
-		} else if (type == GL20C.GL_INT_VEC3) {
-			return null;
-		} else if (type == GL20C.GL_FLOAT_MAT2) {
-			return null;
-		} else if (type == GL20C.GL_FLOAT_VEC2) {
-			return UniformType.VEC2;
-		} else if (type == GL20C.GL_INT_VEC2) {
-			return UniformType.VEC2I;
-		} else if (type == GL20C.GL_SAMPLER_3D) {
-			return UniformType.INT;
-		} else if (type == GL20C.GL_SAMPLER_2D) {
-			return UniformType.INT;
-		} else if (type == GL20C.GL_SAMPLER_1D) {
-			return UniformType.INT;
-		} else if (type == GL20C.GL_SAMPLER_2D_SHADOW) {
-			return UniformType.INT;
-		} else if (type == GL20C.GL_SAMPLER_1D_SHADOW) {
-			return UniformType.INT;
-		} else {
-			return null;
 		}
 	}
 }

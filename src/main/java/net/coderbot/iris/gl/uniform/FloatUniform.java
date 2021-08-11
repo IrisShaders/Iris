@@ -3,8 +3,8 @@ package net.coderbot.iris.gl.uniform;
 import org.lwjgl.opengl.GL21;
 
 public class FloatUniform extends Uniform {
-	private float cachedValue;
 	private final FloatSupplier value;
+	private float cachedValue;
 
 	FloatUniform(int location, FloatSupplier value) {
 		this(location, value, null);

@@ -131,15 +131,15 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 
 				if (parts.length != 4) {
 					Iris.logger.error("Failed to process " + directive +
-						": expected 4 arguments to a vec4 constructor, got " + parts.length);
+							": expected 4 arguments to a vec4 constructor, got " + parts.length);
 				}
 
 				try {
 					consumer.accept(new Vector4f(
-						Float.parseFloat(parts[0]),
-						Float.parseFloat(parts[1]),
-						Float.parseFloat(parts[2]),
-						Float.parseFloat(parts[3])
+							Float.parseFloat(parts[0]),
+							Float.parseFloat(parts[1]),
+							Float.parseFloat(parts[2]),
+							Float.parseFloat(parts[3])
 					));
 				} catch (NumberFormatException e) {
 					Iris.logger.error("Failed to process " + directive, e);

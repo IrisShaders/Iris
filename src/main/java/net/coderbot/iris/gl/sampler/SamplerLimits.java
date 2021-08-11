@@ -3,15 +3,11 @@ package net.coderbot.iris.gl.sampler;
 import org.lwjgl.opengl.GL20C;
 
 public class SamplerLimits {
-	private final int maxTextureUnits;
 	private static SamplerLimits instance;
+	private final int maxTextureUnits;
 
 	private SamplerLimits() {
 		this.maxTextureUnits = GL20C.glGetInteger(GL20C.GL_MAX_TEXTURE_IMAGE_UNITS);
-	}
-
-	public int getMaxTextureUnits() {
-		return maxTextureUnits;
 	}
 
 	public static SamplerLimits get() {
@@ -20,5 +16,9 @@ public class SamplerLimits {
 		}
 
 		return instance;
+	}
+
+	public int getMaxTextureUnits() {
+		return maxTextureUnits;
 	}
 }

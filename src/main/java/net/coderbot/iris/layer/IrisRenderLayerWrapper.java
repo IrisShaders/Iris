@@ -14,10 +14,14 @@ public class IrisRenderLayerWrapper extends RenderLayer implements WrappableRend
 
 	public IrisRenderLayerWrapper(String name, RenderLayer wrapped, UseProgramRenderPhase useProgram) {
 		super(name, wrapped.getVertexFormat(), wrapped.getDrawMode(), wrapped.getExpectedBufferSize(),
-			wrapped.hasCrumbling(), isTranslucent(wrapped), wrapped::startDrawing, wrapped::endDrawing);
+				wrapped.hasCrumbling(), isTranslucent(wrapped), wrapped::startDrawing, wrapped::endDrawing);
 
 		this.useProgram = useProgram;
 		this.wrapped = wrapped;
+	}
+
+	private static boolean isTranslucent(RenderLayer layer) {
+		return ((RenderLayerAccessor) layer).isTranslucent();
 	}
 
 	@Override
@@ -74,9 +78,5 @@ public class IrisRenderLayerWrapper extends RenderLayer implements WrappableRend
 	@Override
 	public String toString() {
 		return "iris:" + this.wrapped.toString();
-	}
-
-	private static boolean isTranslucent(RenderLayer layer) {
-		return ((RenderLayerAccessor) layer).isTranslucent();
 	}
 }

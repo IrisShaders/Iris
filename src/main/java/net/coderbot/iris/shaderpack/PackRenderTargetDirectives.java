@@ -14,14 +14,14 @@ import java.util.Set;
 
 public class PackRenderTargetDirectives {
 	public static final ImmutableList<String> LEGACY_RENDER_TARGETS = ImmutableList.of(
-		"gcolor",
-		"gdepth",
-		"gnormal",
-		"composite",
-		"gaux1",
-		"gaux2",
-		"gaux3",
-		"gaux4"
+			"gcolor",
+			"gdepth",
+			"gnormal",
+			"composite",
+			"gaux1",
+			"gaux2",
+			"gaux3",
+			"gaux4"
 	);
 
 	// TODO: Support 16 render targets instead of just 8, we need other changes elsewhere first.
@@ -65,7 +65,7 @@ public class PackRenderTargetDirectives {
 					colortex7.requestedFormat = InternalTextureFormat.RGB16;
 				} else {
 					Iris.logger.warn("Ignoring GAUX4FORMAT directive /* GAUX4FORMAT:" + format + "*/ because " + format
-						+ " must be RGBA32F, RGB32F, or RGB16. Use `const int colortex7Format = " + format + ";` + instead.");
+							+ " must be RGBA32F, RGB32F, or RGB16. Use `const int colortex7Format = " + format + ";` + instead.");
 				}
 			});
 		});

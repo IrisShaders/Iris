@@ -20,7 +20,7 @@ import java.nio.ByteBuffer;
  * Dynamically and transparently extends the vanilla vertex formats with additional data
  */
 @Mixin(BufferBuilder.class)
-public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder  {
+public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder {
 	@Unique
 	boolean extending;
 
@@ -28,10 +28,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private int vertexCount;
 
 	@Unique
-	private QuadView quad = new QuadView();
+	private final QuadView quad = new QuadView();
 
 	@Unique
-	private Vector3f normal = new Vector3f();
+	private final Vector3f normal = new Vector3f();
 
 	@Unique
 	private int normalOffset;
@@ -59,6 +59,17 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 	@Shadow
 	private @Nullable VertexFormatElement currentElement;
+
+	@Unique
+	private static float rsqrt(float value) {
+		if (value == 0.0f) {
+			// You heard it here first, folks: 1 divided by 0 equals 1
+			// In actuality, this is a workaround for normalizing a zero length vector (leaving it as zero length)
+			return 1.0f;
+		} else {
+			return (float) (1.0 / Math.sqrt(value));
+		}
+	}
 
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
@@ -235,9 +246,9 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		// tx ty tz
 		// nx ny nz
 
-		float pbitangentx =   tangenty * normal.z - tangentz * normal.y;
+		float pbitangentx = tangenty * normal.z - tangentz * normal.y;
 		float pbitangenty = -(tangentx * normal.z - tangentz * normal.x);
-		float pbitangentz =   tangentx * normal.x - tangenty * normal.y;
+		float pbitangentz = tangentx * normal.x - tangenty * normal.y;
 
 		float dot = bitangentx * pbitangentx + bitangenty + pbitangenty + bitangentz * pbitangentz;
 		float tangentW;
@@ -263,17 +274,6 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			buffer.putFloat(this.elementOffset - 12 - stride * vertex, tangenty);
 			buffer.putFloat(this.elementOffset - 8 - stride * vertex, tangentz);
 			buffer.putFloat(this.elementOffset - 4 - stride * vertex, 1.0F);
-		}
-	}
-
-	@Unique
-	private static float rsqrt(float value) {
-		if (value == 0.0f) {
-			// You heard it here first, folks: 1 divided by 0 equals 1
-			// In actuality, this is a workaround for normalizing a zero length vector (leaving it as zero length)
-			return 1.0f;
-		} else {
-			return (float) (1.0 / Math.sqrt(value));
 		}
 	}
 }

@@ -16,8 +16,7 @@ public class CapturedRenderingState {
 	private BlockEntity currentRenderedBlockEntity;
 	private Entity currentRenderedEntity;
 
-	private CapturedRenderingState() {
-	}
+	private CapturedRenderingState() {}
 
 	public Matrix4f getGbufferModelView() {
 		return gbufferModelView;
@@ -47,12 +46,12 @@ public class CapturedRenderingState {
 		fogColor = new Vec3d(red, green, blue);
 	}
 
-	public void setTickDelta(float tickDelta) {
-		this.tickDelta = tickDelta;
-	}
-
 	public float getTickDelta() {
 		return tickDelta;
+	}
+
+	public void setTickDelta(float tickDelta) {
+		this.tickDelta = tickDelta;
 	}
 
 	public void setCurrentBlockEntity(BlockEntity entity) {

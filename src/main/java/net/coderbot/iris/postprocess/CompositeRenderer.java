@@ -98,16 +98,22 @@ public class CompositeRenderer {
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 	}
 
-	private static final class Pass {
-		Program program;
-		GlFramebuffer framebuffer;
-		ImmutableSet<Integer> stageReadsFromAlt;
-		ImmutableSet<Integer> mipmappedBuffers;
-		float viewportScale;
+	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
+		RenderSystem.bindTexture(readFromAlt ? target.getAltTexture() : target.getMainTexture());
 
-		private void destroy() {
-			this.program.destroy();
-		}
+		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
+		// (since the last mipmap was generated)
+		//
+		// NB: We leave mipmapping enabled even if the buffer is written to again, this appears to match the
+		// behavior of ShadersMod/OptiFine, however I'm not sure if it's desired behavior. It's possible that a
+		// program could use mipmapped sampling with a stale mipmap, which probably isn't great. However, the
+		// sampling mode is always reset between frames, so this only persists after the first program to use
+		// mipmapping on this buffer.
+		//
+		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
+		// unlikely that this issue occurs in practice with most shader packs.
+		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
+		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
 	}
 
 	public void renderAll() {
@@ -157,27 +163,9 @@ public class CompositeRenderer {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
-	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
-		RenderSystem.bindTexture(readFromAlt ? target.getAltTexture() : target.getMainTexture());
-
-		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
-		// (since the last mipmap was generated)
-		//
-		// NB: We leave mipmapping enabled even if the buffer is written to again, this appears to match the
-		// behavior of ShadersMod/OptiFine, however I'm not sure if it's desired behavior. It's possible that a
-		// program could use mipmapped sampling with a stale mipmap, which probably isn't great. However, the
-		// sampling mode is always reset between frames, so this only persists after the first program to use
-		// mipmapping on this buffer.
-		//
-		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
-		// unlikely that this issue occurs in practice with most shader packs.
-		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
-		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
-	}
-
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped,
-														   Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
+								  Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -186,7 +174,7 @@ public class CompositeRenderer {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+					source.getFragmentSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -209,6 +197,18 @@ public class CompositeRenderer {
 	public void destroy() {
 		for (Pass renderPass : passes) {
 			renderPass.destroy();
+		}
+	}
+
+	private static final class Pass {
+		Program program;
+		GlFramebuffer framebuffer;
+		ImmutableSet<Integer> stageReadsFromAlt;
+		ImmutableSet<Integer> mipmappedBuffers;
+		float viewportScale;
+
+		private void destroy() {
+			this.program.destroy();
 		}
 	}
 }

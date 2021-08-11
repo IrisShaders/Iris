@@ -17,7 +17,7 @@ public class FramebufferBlitter {
 
 		// TODO: Support OpenGL 2.1?
 		GL30C.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
-			GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
+				GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
 	}
 
 	public static void copyDepthBufferContent(GlFramebuffer from, Framebuffer to) {

@@ -9,12 +9,20 @@ import java.util.function.IntConsumer;
 
 public interface DirectiveHolder {
 	void acceptUniformDirective(String name, Runnable onDetected);
+
 	void acceptCommentStringDirective(String name, Consumer<String> consumer);
+
 	void acceptCommentIntDirective(String name, IntConsumer consumer);
+
 	void acceptCommentFloatDirective(String name, FloatConsumer consumer);
+
 	void acceptConstBooleanDirective(String name, BooleanConsumer consumer);
+
 	void acceptConstStringDirective(String name, Consumer<String> consumer);
+
 	void acceptConstIntDirective(String name, IntConsumer consumer);
+
 	void acceptConstFloatDirective(String name, FloatConsumer consumer);
+
 	void acceptConstVec4Directive(String name, Consumer<Vector4f> consumer);
 }

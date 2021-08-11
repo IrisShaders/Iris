@@ -19,7 +19,7 @@ import net.fabricmc.api.Environment;
 @Mixin(EntityRenderDispatcher.class)
 public class MixinEntityRenderDispatcher {
 	private static final String RENDER_SHADOW =
-		"renderShadow(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/entity/Entity;FFLnet/minecraft/world/WorldView;F)V";
+			"renderShadow(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/entity/Entity;FFLnet/minecraft/world/WorldView;F)V";
 
 	@Inject(method = RENDER_SHADOW, at = @At("HEAD"), cancellable = true)
 	private static void iris$maybeSuppressEntityShadow(MatrixStack matrices, VertexConsumerProvider vertexConsumers,

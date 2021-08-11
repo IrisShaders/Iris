@@ -38,6 +38,39 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.parent = parent;
 	}
 
+	private static void copyShaderPack(Path pack, String name) throws IOException {
+		Path target = Iris.SHADERPACKS_DIRECTORY.resolve(name);
+
+		// Copy the pack file into the shaderpacks folder.
+		Files.copy(pack, target);
+		// Zip or other archive files will be copied without issue,
+		// however normal folders will require additional handling below.
+
+		// Manually copy the contents of the pack if it is a folder
+		if (Files.isDirectory(pack)) {
+			// Use for loops instead of forEach due to createDirectory throwing an IOException
+			// which requires additional handling when used in a lambda
+
+			// Copy all sub folders, collected as a list in order to prevent issues with non-ordered sets
+			for (Path p : Files.walk(pack).filter(Files::isDirectory).collect(Collectors.toList())) {
+				Path folder = pack.relativize(p);
+
+				if (Files.exists(folder)) {
+					continue;
+				}
+
+				Files.createDirectory(target.resolve(folder));
+			}
+			// Copy all non-folder files
+			for (Path p : Files.walk(pack).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
+				Path file = pack.relativize(p);
+
+				Files.copy(p, target.resolve(file));
+			}
+		}
+
+	}
+
 	@Override
 	public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
 		if (this.client.world == null) {
@@ -48,12 +81,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		this.shaderPackList.render(matrices, mouseX, mouseY, delta);
 
-		drawCenteredText(matrices, this.textRenderer, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
+		drawCenteredText(matrices, this.textRenderer, this.title, (int) (this.width * 0.5), 8, 0xFFFFFF);
 
 		if (addedPackDialog != null && addedPackDialogTimer > 0) {
-			drawCenteredText(matrices, this.textRenderer, addedPackDialog, (int)(this.width * 0.5), 21, 0xFFFFFF);
+			drawCenteredText(matrices, this.textRenderer, addedPackDialog, (int) (this.width * 0.5), 21, 0xFFFFFF);
 		} else {
-			drawCenteredText(matrices, this.textRenderer, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
+			drawCenteredText(matrices, this.textRenderer, SELECT_TITLE, (int) (this.width * 0.5), 21, 0xFFFFFF);
 		}
 
 		super.render(matrices, mouseX, mouseY, delta);
@@ -75,19 +108,19 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.children.add(shaderPackList);
 
 		this.addButton(new ButtonWidget(bottomCenter + 104, this.height - 27, 100, 20,
-			ScreenTexts.DONE, button -> onClose()));
+				ScreenTexts.DONE, button -> onClose()));
 
 		this.addButton(new ButtonWidget(bottomCenter, this.height - 27, 100, 20,
-			new TranslatableText("options.iris.apply"), button -> this.applyChanges()));
+				new TranslatableText("options.iris.apply"), button -> this.applyChanges()));
 
 		this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20,
-			ScreenTexts.CANCEL, button -> this.dropChangesAndClose()));
+				ScreenTexts.CANCEL, button -> this.dropChangesAndClose()));
 
 		this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20,
-			new TranslatableText("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
+				new TranslatableText("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
 
 		this.addButton(new ButtonWidget(topCenter + 78, this.height - 51, 152, 20,
-			new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPackList.refresh()));
+				new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPackList.refresh()));
 	}
 
 	@Override
@@ -145,14 +178,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				String fileName = paths.get(0).getFileName().toString();
 
 				this.addedPackDialog = new TranslatableText(
-					"options.iris.shaderPackSelection.failedAddSingle",
-					fileName
+						"options.iris.shaderPackSelection.failedAddSingle",
+						fileName
 				).formatted(Formatting.ITALIC, Formatting.RED);
 			} else {
 				// Otherwise, show a generic message.
 
 				this.addedPackDialog = new TranslatableText(
-					"options.iris.shaderPackSelection.failedAdd"
+						"options.iris.shaderPackSelection.failedAdd"
 				).formatted(Formatting.ITALIC, Formatting.RED);
 			}
 
@@ -181,39 +214,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.addedPackDialogTimer = 100;
 	}
 
-	private static void copyShaderPack(Path pack, String name) throws IOException {
-		Path target = Iris.SHADERPACKS_DIRECTORY.resolve(name);
-
-		// Copy the pack file into the shaderpacks folder.
-		Files.copy(pack, target);
-		// Zip or other archive files will be copied without issue,
-		// however normal folders will require additional handling below.
-
-		// Manually copy the contents of the pack if it is a folder
-		if (Files.isDirectory(pack)) {
-			// Use for loops instead of forEach due to createDirectory throwing an IOException
-			// which requires additional handling when used in a lambda
-
-			// Copy all sub folders, collected as a list in order to prevent issues with non-ordered sets
-			for (Path p : Files.walk(pack).filter(Files::isDirectory).collect(Collectors.toList())) {
-				Path folder = pack.relativize(p);
-
-				if (Files.exists(folder)) {
-					continue;
-				}
-
-				Files.createDirectory(target.resolve(folder));
-			}
-			// Copy all non-folder files
-			for (Path p : Files.walk(pack).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
-				Path file = pack.relativize(p);
-
-				Files.copy(p, target.resolve(file));
-			}
-		}
-
-	}
-
 	@Override
 	public void onClose() {
 		if (!dropChanges) {
@@ -236,7 +236,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			return;
 		}
 
-		ShaderPackListWidget.ShaderPackEntry entry = (ShaderPackListWidget.ShaderPackEntry)base;
+		ShaderPackListWidget.ShaderPackEntry entry = (ShaderPackListWidget.ShaderPackEntry) base;
 		String name = entry.getPackName();
 		Iris.getIrisConfig().setShaderPackName(name);
 		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().enabled);
