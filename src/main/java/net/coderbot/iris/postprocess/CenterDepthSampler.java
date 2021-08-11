@@ -20,7 +20,7 @@ public class CenterDepthSampler {
 		centerDepthSmooth = new SmoothedFloat(1.0f, this::sampleCenterDepth, updateNotifier);
 
 		// Prior to OpenGL 4.1, all framebuffers must have at least 1 color target.
-		depthBufferHolder = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		depthBufferHolder = renderTargets.createFramebufferWritingToMain(new int[]{0});
 		this.renderTargets = renderTargets;
 	}
 
@@ -39,8 +39,8 @@ public class CenterDepthSampler {
 		// Read a single pixel from the depth buffer
 		// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
 		GL11C.glReadPixels(
-			renderTargets.getCurrentWidth() / 2, renderTargets.getCurrentHeight() / 2, 1, 1,
-			GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
+				renderTargets.getCurrentWidth() / 2, renderTargets.getCurrentHeight() / 2, 1, 1,
+				GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
 		);
 
 		return depthValue[0];

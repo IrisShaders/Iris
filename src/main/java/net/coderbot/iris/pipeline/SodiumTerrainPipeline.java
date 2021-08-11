@@ -91,27 +91,27 @@ public class SodiumTerrainPipeline {
 		StringTransformations transformations = new StringTransformations(base);
 
 		String injections = "attribute vec3 a_Pos; // The position of the vertex\n" +
-			"attribute vec4 a_Color; // The color of the vertex\n" +
-			"attribute vec2 a_TexCoord; // The block texture coordinate of the vertex\n" +
-			"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
-			"attribute vec3 a_Normal; // The vertex normal\n" +
-			"uniform mat4 u_ModelViewMatrix;\n" +
-			"uniform mat4 u_ModelViewProjectionMatrix;\n" +
-			"uniform mat4 u_NormalMatrix;\n" +
-			"uniform vec3 u_ModelScale;\n" +
-			"uniform vec2 u_TextureScale;\n" +
-			"\n" +
-			"// The model translation for this draw call.\n" +
-			"attribute vec4 d_ModelOffset;\n" +
-			"\n" +
-			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
+				"attribute vec4 a_Color; // The color of the vertex\n" +
+				"attribute vec2 a_TexCoord; // The block texture coordinate of the vertex\n" +
+				"attribute vec2 a_LightCoord; // The light map texture coordinate of the vertex\n" +
+				"attribute vec3 a_Normal; // The vertex normal\n" +
+				"uniform mat4 u_ModelViewMatrix;\n" +
+				"uniform mat4 u_ModelViewProjectionMatrix;\n" +
+				"uniform mat4 u_NormalMatrix;\n" +
+				"uniform vec3 u_ModelScale;\n" +
+				"uniform vec2 u_TextureScale;\n" +
+				"\n" +
+				"// The model translation for this draw call.\n" +
+				"attribute vec4 d_ModelOffset;\n" +
+				"\n" +
+				"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
 
 		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
 		// constants.
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
 		transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
 		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
@@ -142,8 +142,8 @@ public class SodiumTerrainPipeline {
 
 		String injections =
 				"uniform mat4 u_ModelViewMatrix;\n" +
-				"uniform mat4 u_ModelViewProjectionMatrix;\n" +
-				"uniform mat4 u_NormalMatrix;\n";
+						"uniform mat4 u_ModelViewProjectionMatrix;\n" +
+						"uniform mat4 u_NormalMatrix;\n";
 
 		transformations.define("gl_ModelViewMatrix", "u_ModelViewMatrix");
 		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");

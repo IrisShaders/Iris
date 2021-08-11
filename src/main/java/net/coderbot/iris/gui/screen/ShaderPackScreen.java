@@ -48,12 +48,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		this.shaderPackList.render(matrices, mouseX, mouseY, delta);
 
-		drawCenteredText(matrices, this.textRenderer, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
+		drawCenteredText(matrices, this.textRenderer, this.title, (int) (this.width * 0.5), 8, 0xFFFFFF);
 
 		if (addedPackDialog != null && addedPackDialogTimer > 0) {
-			drawCenteredText(matrices, this.textRenderer, addedPackDialog, (int)(this.width * 0.5), 21, 0xFFFFFF);
+			drawCenteredText(matrices, this.textRenderer, addedPackDialog, (int) (this.width * 0.5), 21, 0xFFFFFF);
 		} else {
-			drawCenteredText(matrices, this.textRenderer, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
+			drawCenteredText(matrices, this.textRenderer, SELECT_TITLE, (int) (this.width * 0.5), 21, 0xFFFFFF);
 		}
 
 		super.render(matrices, mouseX, mouseY, delta);
@@ -75,19 +75,19 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.children.add(shaderPackList);
 
 		this.addButton(new ButtonWidget(bottomCenter + 104, this.height - 27, 100, 20,
-			ScreenTexts.DONE, button -> onClose()));
+				ScreenTexts.DONE, button -> onClose()));
 
 		this.addButton(new ButtonWidget(bottomCenter, this.height - 27, 100, 20,
-			new TranslatableText("options.iris.apply"), button -> this.applyChanges()));
+				new TranslatableText("options.iris.apply"), button -> this.applyChanges()));
 
 		this.addButton(new ButtonWidget(bottomCenter - 104, this.height - 27, 100, 20,
-			ScreenTexts.CANCEL, button -> this.dropChangesAndClose()));
+				ScreenTexts.CANCEL, button -> this.dropChangesAndClose()));
 
 		this.addButton(new ButtonWidget(topCenter - 78, this.height - 51, 152, 20,
-			new TranslatableText("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
+				new TranslatableText("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
 
 		this.addButton(new ButtonWidget(topCenter + 78, this.height - 51, 152, 20,
-			new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPackList.refresh()));
+				new TranslatableText("options.iris.refreshShaderPacks"), button -> this.shaderPackList.refresh()));
 	}
 
 	@Override
@@ -145,14 +145,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				String fileName = paths.get(0).getFileName().toString();
 
 				this.addedPackDialog = new TranslatableText(
-					"options.iris.shaderPackSelection.failedAddSingle",
-					fileName
+						"options.iris.shaderPackSelection.failedAddSingle",
+						fileName
 				).formatted(Formatting.ITALIC, Formatting.RED);
 			} else {
 				// Otherwise, show a generic message.
 
 				this.addedPackDialog = new TranslatableText(
-					"options.iris.shaderPackSelection.failedAdd"
+						"options.iris.shaderPackSelection.failedAdd"
 				).formatted(Formatting.ITALIC, Formatting.RED);
 			}
 
@@ -236,7 +236,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			return;
 		}
 
-		ShaderPackListWidget.ShaderPackEntry entry = (ShaderPackListWidget.ShaderPackEntry)base;
+		ShaderPackListWidget.ShaderPackEntry entry = (ShaderPackListWidget.ShaderPackEntry) base;
 		String name = entry.getPackName();
 		Iris.getIrisConfig().setShaderPackName(name);
 		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().enabled);

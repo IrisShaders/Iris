@@ -18,19 +18,18 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
 	public static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
-		.define(StandardMacros.getOsString())
-		.define("MC_VERSION", StandardMacros.getMcVersion())
-		.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
-		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
-		.define(StandardMacros.getRenderer())
-		.define(StandardMacros.getVendor())
-		.defineAll(StandardMacros.getGlExtensions())
-		.build();
-
+			.define(StandardMacros.getOsString())
+			.define("MC_VERSION", StandardMacros.getMcVersion())
+			.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
+			.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+			.define(StandardMacros.getRenderer())
+			.define(StandardMacros.getVendor())
+			.defineAll(StandardMacros.getGlExtensions())
+			.build();
 
 
 	private final int program;
-	private ProgramSamplers.Builder samplers;
+	private final ProgramSamplers.Builder samplers;
 
 	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
 		super(name, program);
@@ -62,7 +61,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		fragment = buildShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource);
 
 		int programId;
-		
+
 		if (geometry != null) {
 			programId = ProgramCreator.create(name, vertex, geometry, fragment);
 		} else {

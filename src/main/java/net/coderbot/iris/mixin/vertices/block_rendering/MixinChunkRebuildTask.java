@@ -27,7 +27,7 @@ import java.util.Set;
 
 /**
  * Captures and tracks the current block being rendered.
- *
+ * <p>
  * Uses a priority of 999 so that we apply before Indigo's mixins.
  */
 @Mixin(targets = "net.minecraft.client.render.chunk.ChunkBuilder$BuiltChunk$RebuildTask", priority = 999)

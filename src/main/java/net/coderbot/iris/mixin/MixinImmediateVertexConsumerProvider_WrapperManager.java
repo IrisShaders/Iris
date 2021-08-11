@@ -30,10 +30,10 @@ import java.util.Set;
 /**
  * Vanilla depends on being able to write to some buffers at the same time as other ones.
  * This includes enchantment glints.
- *
+ * <p>
  * We need to make sure that wrapped variants of buffered render layers are buffered too,
  * or else we'll get crashes with this approach.
- *
+ * <p>
  * This mixin dynamically creates buffers for the wrapped variants of buffered layers.
  * This strategy is needed for mods that dynamically add buffered layers, like Charm
  * which adds colored enchantment glints.

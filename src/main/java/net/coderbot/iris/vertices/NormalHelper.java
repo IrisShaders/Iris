@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
  * designed to be usable without the default renderer.
  */
 public abstract class NormalHelper {
-	private NormalHelper() { }
+	private NormalHelper() {}
 
 	/**
 	 * Stores a normal plus an extra value as a quartet of signed bytes.
@@ -97,7 +97,7 @@ public abstract class NormalHelper {
 		float normY = dz0 * dx1 - dx0 * dz1;
 		float normZ = dx0 * dy1 - dy0 * dx1;
 
-		float l = (float) Math.sqrt(normX * normX + normY * normY + normZ * normZ);
+		float l = Math.sqrt(normX * normX + normY * normY + normZ * normZ);
 
 		if (l != 0) {
 			normX /= l;

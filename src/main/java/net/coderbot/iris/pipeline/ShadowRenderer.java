@@ -99,8 +99,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		this.targets = new ShadowRenderTargets(resolution, new InternalTextureFormat[]{
-			InternalTextureFormat.RGBA,
-			InternalTextureFormat.RGBA
+				InternalTextureFormat.RGBA,
+				InternalTextureFormat.RGBA
 		});
 
 		this.gbufferRenderTargets = gbufferRenderTargets;

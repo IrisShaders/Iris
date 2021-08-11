@@ -10,8 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 
 public final class WorldTimeUniforms {
-	private WorldTimeUniforms() {
-	}
+	private WorldTimeUniforms() {}
 
 	/**
 	 * Makes world time uniforms available to the given program
@@ -20,16 +19,16 @@ public final class WorldTimeUniforms {
 	 */
 	public static void addWorldTimeUniforms(UniformHolder uniforms) {
 		uniforms
-			.uniform1i(PER_TICK, "worldTime", WorldTimeUniforms::getWorldDayTime)
-			.uniform1i(PER_TICK, "worldDay", WorldTimeUniforms::getWorldDay)
-			.uniform1i(PER_TICK, "moonPhase", () -> getWorld().getMoonPhase());
+				.uniform1i(PER_TICK, "worldTime", WorldTimeUniforms::getWorldDayTime)
+				.uniform1i(PER_TICK, "worldDay", WorldTimeUniforms::getWorldDay)
+				.uniform1i(PER_TICK, "moonPhase", () -> getWorld().getMoonPhase());
 	}
 
 	private static int getWorldDayTime() {
 		long timeOfDay = getWorld().getTimeOfDay();
 
 		long dayTime = ((DimensionTypeAccessor) getWorld().getDimension()).getFixedTime()
-																		  .orElse(timeOfDay % 24000L);
+				.orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}

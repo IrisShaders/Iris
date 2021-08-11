@@ -28,7 +28,7 @@ public class ProgramDirectives {
 		// undefined data to be written to colortex7.
 		//
 		// TODO: Figure out how to infer the DRAWBUFFERS directive when it is missing.
-		drawBuffers = findDrawbuffersDirective(source.getFragmentSource()).orElse(new int[] { 0 });
+		drawBuffers = findDrawbuffersDirective(source.getFragmentSource()).orElse(new int[]{0});
 
 		if (properties != null) {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
@@ -70,9 +70,9 @@ public class ProgramDirectives {
 
 	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource) {
 		return stageSource
-			.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
-			.map(String::toCharArray)
-			.map(ProgramDirectives::parseDigits);
+				.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
+				.map(String::toCharArray)
+				.map(ProgramDirectives::parseDigits);
 	}
 
 	private static int[] parseDigits(char[] directiveChars) {

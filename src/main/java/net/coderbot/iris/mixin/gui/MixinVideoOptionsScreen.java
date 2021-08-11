@@ -26,7 +26,7 @@ public abstract class MixinVideoOptionsScreen extends Screen {
 	private Option[] iris$addShaderPackScreenButton(Option[] old) {
 		Option[] options = new Option[old.length + 1];
 		System.arraycopy(old, 0, options, 0, old.length);
-		options[options.length - 1] = new ShaderPackSelectionButtonOption((VideoOptionsScreen)(Object)this, this.client);
+		options[options.length - 1] = new ShaderPackSelectionButtonOption((VideoOptionsScreen) (Object) this, this.client);
 		return options;
 	}
 }

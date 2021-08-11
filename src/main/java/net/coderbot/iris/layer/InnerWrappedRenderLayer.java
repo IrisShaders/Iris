@@ -14,7 +14,7 @@ public class InnerWrappedRenderLayer extends RenderLayer implements WrappableRen
 
 	public InnerWrappedRenderLayer(String name, RenderLayer wrapped, RenderPhase extra) {
 		super(name, wrapped.getVertexFormat(), wrapped.getDrawMode(), wrapped.getExpectedBufferSize(),
-			wrapped.hasCrumbling(), isTranslucent(wrapped), wrapped::startDrawing, wrapped::endDrawing);
+				wrapped.hasCrumbling(), isTranslucent(wrapped), wrapped::startDrawing, wrapped::endDrawing);
 
 		this.extra = extra;
 		this.wrapped = wrapped;

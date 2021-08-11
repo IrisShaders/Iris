@@ -16,15 +16,14 @@ import net.minecraft.util.math.Vec3d;
 public class CameraUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
 
-	private CameraUniforms() {
-	}
+	private CameraUniforms() {}
 
 	public static void addCameraUniforms(UniformHolder uniforms, FrameUpdateNotifier notifier) {
 		uniforms
-			.uniform1f(ONCE, "near", () -> 0.05)
-			.uniform1f(PER_FRAME, "far", CameraUniforms::getRenderDistanceInBlocks)
-			.uniform3d(PER_FRAME, "cameraPosition", CameraUniforms::getCameraPosition)
-			.uniform3d(PER_FRAME, "previousCameraPosition", new PreviousCameraPosition(notifier));
+				.uniform1f(ONCE, "near", () -> 0.05)
+				.uniform1f(PER_FRAME, "far", CameraUniforms::getRenderDistanceInBlocks)
+				.uniform3d(PER_FRAME, "cameraPosition", CameraUniforms::getCameraPosition)
+				.uniform3d(PER_FRAME, "previousCameraPosition", new PreviousCameraPosition(notifier));
 	}
 
 	private static int getRenderDistanceInBlocks() {

@@ -12,7 +12,7 @@ import net.minecraft.util.Identifier;
  * Class serving as abstraction and
  * centralization for common GUI
  * rendering/other code calls.
- *
+ * <p>
  * Helps allow for easier portability
  * to Minecraft 1.17 by abstracting
  * some code that will be changed.
@@ -38,11 +38,11 @@ public final class GuiUtil {
 	 * Draws a button. Button textures must be mapped with the
 	 * same coordinates as those on the vanilla widgets texture.
 	 *
-	 * @param x X position of the left of the button
-	 * @param y Y position of the top of the button
-	 * @param width Width of the button, maximum 398
-	 * @param height Height of the button, maximum 20
-	 * @param hovered Whether the button is being hovered over with the mouse
+	 * @param x        X position of the left of the button
+	 * @param y        Y position of the top of the button
+	 * @param width    Width of the button, maximum 398
+	 * @param height   Height of the button, maximum 20
+	 * @param hovered  Whether the button is being hovered over with the mouse
 	 * @param disabled Whether the button should use the "disabled" texture
 	 */
 	public static void drawButton(MatrixStack matrices, int x, int y, int width, int height, boolean hovered, boolean disabled) {
@@ -75,7 +75,7 @@ public final class GuiUtil {
 	/**
 	 * Plays the {@code UI_BUTTON_CLICK} sound event as a
 	 * master sound effect.
-	 *
+	 * <p>
 	 * Used in non-{@code ButtonWidget} UI elements upon click
 	 * or other action.
 	 */

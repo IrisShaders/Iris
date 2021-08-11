@@ -21,20 +21,19 @@ import net.minecraft.util.registry.Registry;
 
 public final class IdMapUniforms {
 
-	private IdMapUniforms() {
-	}
+	private IdMapUniforms() {}
 
 	public static void addIdMapUniforms(UniformHolder uniforms, IdMap idMap) {
 		Map<BlockState, Integer> blockIdMap = idMap.getBlockProperties();
 		Map<Identifier, Integer> entityIdMap = idMap.getEntityIdMap();
 
 		uniforms
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
-				new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemIdMap()))
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",
-				new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemIdMap()))
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "blockEntityId", () -> getBlockEntityId(blockIdMap))
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "entityId", () -> getEntityId(entityIdMap));
+				.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
+						new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemIdMap()))
+				.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",
+						new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemIdMap()))
+				.uniform1i(UniformUpdateFrequency.PER_FRAME, "blockEntityId", () -> getBlockEntityId(blockIdMap))
+				.uniform1i(UniformUpdateFrequency.PER_FRAME, "entityId", () -> getEntityId(entityIdMap));
 
 	}
 

@@ -24,12 +24,12 @@ public final class CelestialUniforms {
 
 	public void addCelestialUniforms(UniformHolder uniforms) {
 		uniforms
-			.uniform1f(PER_FRAME, "sunAngle", CelestialUniforms::getSunAngle)
-			.uniformTruncated3f(PER_FRAME, "sunPosition", this::getSunPosition)
-			.uniformTruncated3f(PER_FRAME, "moonPosition", this::getMoonPosition)
-			.uniform1f(PER_FRAME, "shadowAngle", CelestialUniforms::getShadowAngle)
-			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", this::getShadowLightPosition)
-			.uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
+				.uniform1f(PER_FRAME, "sunAngle", CelestialUniforms::getSunAngle)
+				.uniformTruncated3f(PER_FRAME, "sunPosition", this::getSunPosition)
+				.uniformTruncated3f(PER_FRAME, "moonPosition", this::getMoonPosition)
+				.uniform1f(PER_FRAME, "shadowAngle", CelestialUniforms::getShadowAngle)
+				.uniformTruncated3f(PER_FRAME, "shadowLightPosition", this::getShadowLightPosition)
+				.uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
 	}
 
 	public static float getSunAngle() {

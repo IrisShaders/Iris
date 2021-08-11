@@ -71,24 +71,24 @@ public final class CommonUniforms {
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
 
-	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier){
+	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier) {
 		uniforms
-			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
-			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
-			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
-			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
-			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(Hand.MAIN_HAND))
-			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(Hand.OFF_HAND))
-			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
-			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
-			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
-			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
-			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier))
-			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
-			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
-			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor)
-			.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize);
+				.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
+				.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
+				.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
+				.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
+				.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(Hand.MAIN_HAND))
+				.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(Hand.OFF_HAND))
+				.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
+				.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
+				.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
+				.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
+				.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier))
+				.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
+				.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
+				.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
+				.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor)
+				.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize);
 	}
 
 	private static Vec2f getAtlasSize() {
@@ -125,7 +125,7 @@ public final class CommonUniforms {
 			return 0.0F;
 		}
 
-		return ((ClientPlayerEntity)client.cameraEntity).getMoodPercentage();
+		return ((ClientPlayerEntity) client.cameraEntity).getMoodPercentage();
 	}
 
 	static float getRainStrength() {

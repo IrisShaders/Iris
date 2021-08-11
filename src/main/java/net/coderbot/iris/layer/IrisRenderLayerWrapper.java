@@ -14,7 +14,7 @@ public class IrisRenderLayerWrapper extends RenderLayer implements WrappableRend
 
 	public IrisRenderLayerWrapper(String name, RenderLayer wrapped, UseProgramRenderPhase useProgram) {
 		super(name, wrapped.getVertexFormat(), wrapped.getDrawMode(), wrapped.getExpectedBufferSize(),
-			wrapped.hasCrumbling(), isTranslucent(wrapped), wrapped::startDrawing, wrapped::endDrawing);
+				wrapped.hasCrumbling(), isTranslucent(wrapped), wrapped::startDrawing, wrapped::endDrawing);
 
 		this.useProgram = useProgram;
 		this.wrapped = wrapped;

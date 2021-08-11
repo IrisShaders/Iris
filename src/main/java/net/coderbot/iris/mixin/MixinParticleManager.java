@@ -36,16 +36,16 @@ public class MixinParticleManager {
 
 	@Inject(method = RENDER_PARTICLES, at = @At("HEAD"))
 	private void iris$beginDrawingParticles(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate,
-											 LightmapTextureManager lightmapTextureManager, Camera camera, float f,
-											 CallbackInfo ci) {
+											LightmapTextureManager lightmapTextureManager, Camera camera, float f,
+											CallbackInfo ci) {
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
 	}
 
 	@Inject(method = RENDER_PARTICLES, at = @At(value = "INVOKE", target = DRAW), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void iris$preDrawParticleSheet(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate,
-										LightmapTextureManager lightmapTextureManager, Camera camera, float f,
-										CallbackInfo ci, Iterator<ParticleTextureSheet> sheets, ParticleTextureSheet sheet,
-										Iterable<Particle> particles, Tessellator tessellator) {
+										   LightmapTextureManager lightmapTextureManager, Camera camera, float f,
+										   CallbackInfo ci, Iterator<ParticleTextureSheet> sheets, ParticleTextureSheet sheet,
+										   Iterable<Particle> particles, Tessellator tessellator) {
 		GbufferPrograms.push(DeferredWorldRenderingPipeline.getProgramForSheet(sheet));
 
 		if (lastSheet != null) {
@@ -57,16 +57,16 @@ public class MixinParticleManager {
 
 	@Inject(method = RENDER_PARTICLES, at = @At(value = "INVOKE", target = DRAW, shift = At.Shift.AFTER))
 	private void iris$postDrawParticleSheet(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate,
-											 LightmapTextureManager lightmapTextureManager, Camera camera, float f,
-											 CallbackInfo ci) {
+											LightmapTextureManager lightmapTextureManager, Camera camera, float f,
+											CallbackInfo ci) {
 		GbufferPrograms.pop(DeferredWorldRenderingPipeline.getProgramForSheet(Objects.requireNonNull(lastSheet)));
 		lastSheet = null;
 	}
 
 	@Inject(method = RENDER_PARTICLES, at = @At("RETURN"))
 	private void iris$finishDrawingParticles(MatrixStack matrixStack, VertexConsumerProvider.Immediate immediate,
-										LightmapTextureManager lightmapTextureManager, Camera camera, float f,
-										CallbackInfo ci) {
+											 LightmapTextureManager lightmapTextureManager, Camera camera, float f,
+											 CallbackInfo ci) {
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 	}
 }

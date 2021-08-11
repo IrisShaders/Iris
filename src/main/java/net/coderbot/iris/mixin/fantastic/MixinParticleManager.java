@@ -18,27 +18,27 @@ import java.util.List;
 
 /**
  * Extends the ParticleManager class to allow multiple phases of particle rendering.
- *
+ * <p>
  * This is used to enable the rendering of known-opaque particles much earlier than other particles, most notably before
  * translucent content. Normally, particles behind translucent blocks are not visible on Fancy graphics, and a user must
  * enable the much more intensive Fabulous graphics option. This is not ideal because Fabulous graphics is fundamentally
  * incompatible with most shaderpacks.
- *
+ * <p>
  * So what causes this? Essentially, on Fancy graphics, all particles are rendered after translucent terrain. Aside from
  * causing problems with particles being invisible, this also causes particles to write to the translucent depth buffer,
  * even when they are not translucent. This notably causes problems with particles on Sildur's Enhanced Default when
  * underwater.
- *
+ * <p>
  * So, what these mixins do is try to render known-opaque particles right before entities are rendered and right after
  * opaque terrain has been rendered. This seems to be an acceptable injection point, and has worked in my testing. It
  * fixes issues with particles when underwater, fixes a vanilla bug, and doesn't have any significant performance hit.
  * A win-win!
- *
+ * <p>
  * Unfortunately, there are limitations. Some particles rendering in texture sheets where translucency is supported. So,
  * even if an individual particle from that sheet is not translucent, it will still be treated as translucent, and thus
  * will not be affected by this patch. Without making more invasive and sweeping changes, there isn't a great way to get
  * around this.
- *
+ * <p>
  * As the saying goes, "Work smarter, not harder."
  */
 @Mixin(ParticleManager.class)
@@ -54,11 +54,11 @@ public class MixinParticleManager implements PhasedParticleManager {
 
 	static {
 		OPAQUE_PARTICLE_TEXTURE_SHEETS = ImmutableList.of(
-			IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET,
-			ParticleTextureSheet.PARTICLE_SHEET_OPAQUE,
-			ParticleTextureSheet.PARTICLE_SHEET_LIT,
-			ParticleTextureSheet.CUSTOM,
-			ParticleTextureSheet.NO_RENDER
+				IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET,
+				ParticleTextureSheet.PARTICLE_SHEET_OPAQUE,
+				ParticleTextureSheet.PARTICLE_SHEET_LIT,
+				ParticleTextureSheet.CUSTOM,
+				ParticleTextureSheet.NO_RENDER
 		);
 	}
 

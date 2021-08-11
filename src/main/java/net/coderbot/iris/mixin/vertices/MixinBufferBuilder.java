@@ -20,7 +20,7 @@ import java.nio.ByteBuffer;
  * Dynamically and transparently extends the vanilla vertex formats with additional data
  */
 @Mixin(BufferBuilder.class)
-public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder  {
+public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder {
 	@Unique
 	boolean extending;
 
@@ -28,10 +28,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private int vertexCount;
 
 	@Unique
-	private QuadView quad = new QuadView();
+	private final QuadView quad = new QuadView();
 
 	@Unique
-	private Vector3f normal = new Vector3f();
+	private final Vector3f normal = new Vector3f();
 
 	@Unique
 	private int normalOffset;
@@ -235,9 +235,9 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		// tx ty tz
 		// nx ny nz
 
-		float pbitangentx =   tangenty * normal.z - tangentz * normal.y;
+		float pbitangentx = tangenty * normal.z - tangentz * normal.y;
 		float pbitangenty = -(tangentx * normal.z - tangentz * normal.x);
-		float pbitangentz =   tangentx * normal.x - tangenty * normal.y;
+		float pbitangentz = tangentx * normal.x - tangenty * normal.y;
 
 		float dot = bitangentx * pbitangentx + bitangenty + pbitangenty + bitangentz * pbitangentz;
 		float tangentW;

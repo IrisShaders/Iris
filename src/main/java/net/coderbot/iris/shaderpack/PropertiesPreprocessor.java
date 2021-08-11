@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public class PropertiesPreprocessor {
 	private static final ImmutableMap<String, String> MACRO_CONSTANTS = ImmutableMap.of("MC_VERSION", StandardMacros.getMcVersion());
-	
+
 	public static String process(String fileName, String fileContents) {
 		List<String> lines = new ArrayList<>();
 
@@ -107,9 +107,7 @@ public class PropertiesPreprocessor {
 				}
 
 				continue;
-			}
-
-			else if (trimmedLine.startsWith("#else")) {
+			} else if (trimmedLine.startsWith("#else")) {
 				if (Objects.equals(currentConditional, "#if")) {
 					currentConditional = "#else";
 					currentConditionPassed = !currentConditionPassed;
@@ -118,9 +116,7 @@ public class PropertiesPreprocessor {
 				}
 
 				continue;
-			}
-
-			else if (trimmedLine.startsWith("#endif")) {
+			} else if (trimmedLine.startsWith("#endif")) {
 				if (Objects.equals(currentConditional, "#if") || Objects.equals(currentConditional, "#else")) {
 					currentConditional = null;
 					currentConditionPassed = false;
@@ -129,9 +125,7 @@ public class PropertiesPreprocessor {
 				}
 
 				continue;
-			}
-
-			else if (trimmedLine.startsWith("#elif")) {
+			} else if (trimmedLine.startsWith("#elif")) {
 				Iris.logger.error("#elif conditions in " + fileName + " are not yet supported, but the current shaderpack is trying to use them!");
 				continue;
 			}

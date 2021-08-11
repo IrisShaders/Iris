@@ -24,7 +24,7 @@ public class MixinFixEyesTranslucency {
 	private static final RenderPhase.Alpha REJECT_ZERO_ALPHA = new RenderPhase.Alpha(Float.MIN_VALUE);
 
 	@Redirect(method = "getEyes", at = @At(value = "INVOKE",
-		target = "Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;transparency(Lnet/minecraft/client/render/RenderPhase$Transparency;)Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;"))
+			target = "Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;transparency(Lnet/minecraft/client/render/RenderPhase$Transparency;)Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters$Builder;"))
 	private static RenderLayer.MultiPhaseParameters.Builder iris$fixEyesTranslucency(RenderLayer.MultiPhaseParameters.Builder instance, RenderPhase.Transparency ignored) {
 		return instance.transparency(RenderPhaseAccessor.getTranslucentTransparency()).alpha(REJECT_ZERO_ALPHA);
 	}

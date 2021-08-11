@@ -24,8 +24,7 @@ public final class ViewportUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
 
 	// cannot be constructed
-	private ViewportUniforms() {
-	}
+	private ViewportUniforms() {}
 
 	/**
 	 * Makes the viewport uniforms available to the given program
@@ -35,9 +34,9 @@ public final class ViewportUniforms {
 	public static void addViewportUniforms(UniformHolder uniforms) {
 		// TODO: What about the custom scale.composite3 property?
 		uniforms
-			.uniform1f(PER_FRAME, "viewHeight", () -> FRAMEBUFFER.textureHeight)
-			.uniform1f(PER_FRAME, "viewWidth", () -> FRAMEBUFFER.textureWidth)
-			.uniform1f(PER_FRAME, "aspectRatio", ViewportUniforms::getAspectRatio);
+				.uniform1f(PER_FRAME, "viewHeight", () -> FRAMEBUFFER.textureHeight)
+				.uniform1f(PER_FRAME, "viewWidth", () -> FRAMEBUFFER.textureWidth)
+				.uniform1f(PER_FRAME, "aspectRatio", ViewportUniforms::getAspectRatio);
 	}
 
 	/**

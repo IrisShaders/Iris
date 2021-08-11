@@ -42,11 +42,7 @@ public class ShadowFrustum extends Frustum {
 			return false;
 		}
 
-		if (maxZ < this.minAllowedZ || minZ > this.maxAllowedZ) {
-			return false;
-		}
-
-		return true;
+		return !(maxZ < this.minAllowedZ) && !(minZ > this.maxAllowedZ);
 	}
 
 	public boolean isVisible(Box box) {

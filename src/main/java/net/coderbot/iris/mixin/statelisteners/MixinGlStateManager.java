@@ -14,7 +14,7 @@ public class MixinGlStateManager {
 	private static Runnable fogModeListener;
 	private static Runnable fogDensityListener;
 
-	@Inject(method = { "enableFog()V", "disableFog()V" }, at = @At("RETURN"))
+	@Inject(method = {"enableFog()V", "disableFog()V"}, at = @At("RETURN"))
 	private static void iris$onFogToggle(CallbackInfo ci) {
 		if (fogToggleListener != null) {
 			fogToggleListener.run();

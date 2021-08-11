@@ -27,20 +27,20 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static int getWorldDayTime() {
-		World world     = MinecraftClient.getInstance().world;
-		long  timeOfDay = world.getTimeOfDay();
+		World world = MinecraftClient.getInstance().world;
+		long timeOfDay = world.getTimeOfDay();
 		long dayTime = ((DimensionTypeAccessor) world.getDimension()).getFixedTime()
-																	 .orElse(timeOfDay % 24000L);
+				.orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}
 
 	private static float getTimeBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * 2.0),0.0);
+		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * 2.0), 0.0);
 	}
 
 	private static float getMoonBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * (-2.0)),0.0);
+		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * (-2.0)), 0.0);
 	}
 
 	private static float getShadowFade() {

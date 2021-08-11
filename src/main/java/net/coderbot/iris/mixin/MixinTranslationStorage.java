@@ -22,7 +22,7 @@ import net.minecraft.resource.ResourceManager;
 public class MixinTranslationStorage {
 
 	// This is needed to keep track of which language code we need to grab our lang files from
-	private static List<String> languageCodes = new ArrayList<>();
+	private static final List<String> languageCodes = new ArrayList<>();
 
 	private static final String LOAD = "load(Lnet/minecraft/resource/ResourceManager;Ljava/util/List;)Lnet/minecraft/client/resource/language/TranslationStorage;";
 

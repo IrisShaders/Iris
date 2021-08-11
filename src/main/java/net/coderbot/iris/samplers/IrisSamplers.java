@@ -15,16 +15,16 @@ import java.util.function.Supplier;
 
 public class IrisSamplers {
 	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
-		TextureUnit.TERRAIN.getSamplerId(),
-		TextureUnit.LIGHTMAP.getSamplerId(),
-		TextureUnit.OVERLAY.getSamplerId()
+			TextureUnit.TERRAIN.getSamplerId(),
+			TextureUnit.LIGHTMAP.getSamplerId(),
+			TextureUnit.OVERLAY.getSamplerId()
 	);
 
 	// TODO: In composite programs, there shouldn't be any reserved textures.
 	// We need a way to restore these texture bindings.
 	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
-		TextureUnit.LIGHTMAP.getSamplerId(),
-		TextureUnit.OVERLAY.getSamplerId()
+			TextureUnit.LIGHTMAP.getSamplerId(),
+			TextureUnit.OVERLAY.getSamplerId()
 	);
 
 	private IrisSamplers() {
@@ -78,7 +78,7 @@ public class IrisSamplers {
 				"shadowcolor", "shadowcolor0", "shadowcolor1");
 
 		for (String samplerName : shadowSamplers) {
-			if(samplers.hasSampler(samplerName)) {
+			if (samplers.hasSampler(samplerName)) {
 				return true;
 			}
 		}

@@ -31,7 +31,7 @@ public abstract class MixinMultiPhaseRenderLayer extends RenderLayer implements 
 		} else if (transparency == RenderPhaseAccessor.getNO_TRANSPARENCY()) {
 			transparencyType = TransparencyType.OPAQUE;
 		} else if (transparency == RenderPhaseAccessor.getGLINT_TRANSPARENCY() ||
-		           transparency == RenderPhaseAccessor.getCRUMBLING_TRANSPARENCY()) {
+				transparency == RenderPhaseAccessor.getCRUMBLING_TRANSPARENCY()) {
 			transparencyType = TransparencyType.DECAL;
 		} else {
 			transparencyType = TransparencyType.GENERAL_TRANSPARENT;

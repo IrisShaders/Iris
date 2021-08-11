@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BeaconBlockEntityRenderer.class)
 public class MixinBeaconBlockEntityRenderer {
 	@Inject(method = "renderLightBeam(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/util/Identifier;FFJII[FFF)V",
-	        at = @At("HEAD"), cancellable = true)
+			at = @At("HEAD"), cancellable = true)
 	private static void iris$noLightBeamInShadowPass(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
 													 Identifier identifier, float f, float g, long l, int i, int j,
 													 float[] fs, float h, float k, CallbackInfo ci) {

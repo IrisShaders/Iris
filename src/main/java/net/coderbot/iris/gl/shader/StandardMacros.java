@@ -29,9 +29,9 @@ public class StandardMacros {
 	 */
 	public static String getMcVersion() {
 		String version = SharedConstants.getGameVersion().getReleaseTarget();
-			// release target so snapshots are set to the higher version
-			//
-			// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
+		// release target so snapshots are set to the higher version
+		//
+		// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
 
 		if (version == null) {
 			throw new IllegalStateException("Could not get the current minecraft version!");
@@ -40,7 +40,7 @@ public class StandardMacros {
 		String[] splitVersion = version.split("\\.");
 
 		if (splitVersion.length < 2) {
-			throw new IllegalStateException("Could not parse game version \"" + version +  "\"");
+			throw new IllegalStateException("Could not parse game version \"" + version + "\"");
 		}
 
 		String major = splitVersion[0];
@@ -138,8 +138,8 @@ public class StandardMacros {
 	 * Returns the list of currently enabled GL extensions
 	 * This is done by calling {@link GL11#glGetString} with the arg {@link GL11#GL_EXTENSIONS}
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L735-L738">Optifine Doc</a>
 	 * @return list of activated extensions prefixed with "MC_"
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L735-L738">Optifine Doc</a>
 	 */
 	public static List<String> getGlExtensions() {
 		String[] extensions = Objects.requireNonNull(GL11.glGetString(GL11.GL_EXTENSIONS)).split("\\s+");
@@ -153,9 +153,8 @@ public class StandardMacros {
 	/**
 	 * Returns the graphics driver being used
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L725-L733">Optifine Doc</a>
-	 *
 	 * @return graphics driver prefixed with "MC_GL_RENDERER_"
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L725-L733">Optifine Doc</a>
 	 */
 	public static String getRenderer() {
 		String renderer = Objects.requireNonNull(GL11.glGetString(GL11C.GL_RENDERER)).toLowerCase(Locale.ROOT);
@@ -186,9 +185,8 @@ public class StandardMacros {
 	/**
 	 * Returns a string indicating the graphics card being used
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L716-L723"></a>
-	 *
 	 * @return the graphics card prefixed with "MC_GL_VENDOR_"
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L716-L723"></a>
 	 */
 	public static String getVendor() {
 		String vendor = Objects.requireNonNull(GL11.glGetString(GL11C.GL_VENDOR)).toLowerCase(Locale.ROOT);

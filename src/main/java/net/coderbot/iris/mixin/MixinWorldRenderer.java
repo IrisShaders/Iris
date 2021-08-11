@@ -109,7 +109,7 @@ public class MixinWorldRenderer {
 	}
 
 	@Redirect(method = RENDER, at = @At(value = "FIELD", target = "Lnet/minecraft/client/options/GameOptions;viewDistance:I"),
-	          slice = @Slice(from = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V")))
+			slice = @Slice(from = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V")))
 	private int iris$alwaysRenderSky(GameOptions options) {
 		return Math.max(options.viewDistance, 4);
 	}
@@ -123,7 +123,7 @@ public class MixinWorldRenderer {
 	}
 
 	@Inject(method = RENDER_SKY,
-		at = @At(value = "INVOKE", target = "net/minecraft/client/render/BackgroundRenderer.setFogBlack()V"))
+			at = @At(value = "INVOKE", target = "net/minecraft/client/render/BackgroundRenderer.setFogBlack()V"))
 	private void iris$renderSky$drawHorizon(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		RenderSystem.depthMask(false);
 
@@ -136,7 +136,7 @@ public class MixinWorldRenderer {
 	}
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getSkyAngle(F)F"),
-		slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/client/util/math/Vector3f;POSITIVE_Y:Lnet/minecraft/client/util/math/Vector3f;")))
+			slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/client/util/math/Vector3f;POSITIVE_Y:Lnet/minecraft/client/util/math/Vector3f;")))
 	private void iris$renderSky$tiltSun(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
 		matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(pipeline.getSunPathRotation()));
 	}
@@ -226,7 +226,7 @@ public class MixinWorldRenderer {
 
 		if (provider instanceof WrappingVertexConsumerProvider) {
 			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
-				new OuterWrappedRenderLayer("iris:is_entity", layer, IsEntityRenderPhase.INSTANCE));
+					new OuterWrappedRenderLayer("iris:is_entity", layer, IsEntityRenderPhase.INSTANCE));
 		}
 	}
 

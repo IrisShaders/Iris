@@ -178,7 +178,7 @@ public class ProgramSet {
 		programs.addAll(Arrays.asList(shadowcomp));
 		programs.addAll(Arrays.asList(prepare));
 
-		programs.addAll (Arrays.asList(
+		programs.addAll(Arrays.asList(
 				gbuffersBasic, gbuffersBeaconBeam, gbuffersTextured, gbuffersTexturedLit, gbuffersTerrain,
 				gbuffersDamagedBlock, gbuffersSkyBasic, gbuffersSkyTextured, gbuffersClouds, gbuffersWeather,
 				gbuffersEntities, gbuffersEntitiesGlowing, gbuffersGlint, gbuffersEntityEyes, gbuffersBlock,

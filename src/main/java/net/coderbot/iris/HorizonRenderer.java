@@ -43,8 +43,7 @@ public class HorizonRenderer {
 	 */
 	private static final double SIN_22_5 = Math.sin(Math.toRadians(22.5));
 
-	public HorizonRenderer() {
-	}
+	public HorizonRenderer() {}
 
 	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {
 		consumer.vertex(x1, BOTTOM, z1);
@@ -93,8 +92,8 @@ public class HorizonRenderer {
 	}
 
 	private void buildBottomPlane(VertexConsumer consumer, int radius) {
-		for(int x = -radius; x <= radius; x += 64) {
-			for(int z = -radius; z <= radius; z += 64) {
+		for (int x = -radius; x <= radius; x += 64) {
+			for (int z = -radius; z <= radius; z += 64) {
 				consumer.vertex(x + 64, BOTTOM, z);
 				consumer.next();
 				consumer.vertex(x, BOTTOM, z);

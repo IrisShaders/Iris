@@ -21,9 +21,9 @@ public class BufferFlipper {
 
 	/**
 	 * Returns true if this buffer is flipped.
-	 *
+	 * <p>
 	 * If this buffer is not flipped, then users should write to the alternate variant and read from the main variant.
-	 *
+	 * <p>
 	 * If this buffer is flipped, then users should write to the main variant and read from the alternate variant.
 	 */
 	public boolean isFlipped(int target) {

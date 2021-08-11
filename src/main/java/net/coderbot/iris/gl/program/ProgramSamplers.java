@@ -115,6 +115,7 @@ public class ProgramSamplers {
 
 		/**
 		 * Adds a sampler
+		 *
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override

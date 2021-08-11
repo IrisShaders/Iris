@@ -11,10 +11,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * This mixin makes the effects of view bobbing and nausea apply to the model view matrix, not the projection matrix.
- *
+ * <p>
  * Applying these effects to the projection matrix causes severe issues with most shaderpacks. As it turns out, OptiFine
  * applies these effects to the modelview matrix. As such, we must do the same to properly run shaderpacks.
- *
+ * <p>
  * This mixin make use of the matrix stack in order to make these changes without more invasive changes.
  */
 @Mixin(GameRenderer.class)

@@ -22,7 +22,7 @@ public class MixinSprite {
 
 	/**
 	 * Fixes a common issue in image editing programs where fully transparent pixels are saved with fully black colors.
-	 *
+	 * <p>
 	 * This causes issues with mipmapped texture filtering, since the black color is used to calculate the final color
 	 * even though the alpha value is zero. While ideally it would be disregarded, we do not control that. Instead,
 	 * this code tries to calculate a decent average color to assign to these fully-transparent pixels so that their
