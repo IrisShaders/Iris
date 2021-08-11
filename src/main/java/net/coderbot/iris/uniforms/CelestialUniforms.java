@@ -32,7 +32,7 @@ public final class CelestialUniforms {
 			.uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
 	}
 
-	private static float getSunAngle() {
+	public static float getSunAngle() {
 		float skyAngle = getSkyAngle();
 
 		if (skyAngle < 0.75F) {
@@ -96,7 +96,7 @@ public final class CelestialUniforms {
 		return upVector;
 	}
 
-	private static boolean isDay() {
+	public static boolean isDay() {
 		// Determine whether it is day or night based on the sky angle.
 		//
 		// World#isDay appears to do some nontrivial calculations that appear to not entirely work for us here.

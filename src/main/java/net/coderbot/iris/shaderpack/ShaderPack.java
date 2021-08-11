@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -21,6 +22,7 @@ public class ShaderPack {
 
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
+	private final CustomTexture customNoiseTexture;
 
 	public ShaderPack(Path root) throws IOException {
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
@@ -34,6 +36,20 @@ public class ShaderPack {
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
+
+		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
+			try {
+				// TODO: Make sure the resulting path is within the shaderpack?
+				byte[] content = Files.readAllBytes(root.resolve(path));
+
+				// TODO: Read the blur / clamp data from the shaderpack...
+				return new CustomTexture(content, true, false);
+			} catch (IOException e) {
+				Iris.logger.error("Unable to read the custom noise texture at " + path);
+
+				return null;
+			}
+		}).orElse(null);
 	}
 
 	@Nullable
@@ -86,6 +102,10 @@ public class ShaderPack {
 		return idMap;
 	}
 
+	public Optional<CustomTexture> getCustomNoiseTexture() {
+		return Optional.ofNullable(customNoiseTexture);
+	}
+
 	public Map<String, Map<String, String>> getLangMap() {
 		return langMap;
 	}
@@ -107,7 +127,7 @@ public class ShaderPack {
 			//some shaderpacks use optifines file name coding which is different than minecraft's.
 			//An example of this is using "en_US.lang" compared to "en_us.json"
 			//also note that optifine uses a property scheme for loading language entries to keep parity with other optifine features
-			String currentFileName = path.getFileName().toString().toLowerCase();
+			String currentFileName = path.getFileName().toString().toLowerCase(Locale.ROOT);
 			String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
 			Properties properties = new Properties();
 

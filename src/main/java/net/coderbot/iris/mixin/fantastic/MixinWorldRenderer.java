@@ -1,5 +1,7 @@
 package net.coderbot.iris.mixin.fantastic;
 
+import net.coderbot.iris.fantastic.ExtendedBufferStorage;
+import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleManager;
 import net.coderbot.iris.layer.GbufferProgram;
@@ -43,6 +45,8 @@ public class MixinWorldRenderer {
 												boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 												LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
 												CallbackInfo callback) {
+		client.getProfiler().swap("opaque_particles");
+
 		VertexConsumerProvider.Immediate immediate = bufferBuilders.getEntityVertexConsumers();
 
 		((PhasedParticleManager) client.particleManager).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
@@ -52,5 +56,15 @@ public class MixinWorldRenderer {
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 
 		((PhasedParticleManager) client.particleManager).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
+	}
+
+	@Inject(method = "render", at = @At("HEAD"))
+	private void iris$fantastic$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		((ExtendedBufferStorage) bufferBuilders).beginWorldRendering();
+	}
+
+	@Inject(method = "render", at = @At("RETURN"))
+	private void iris$fantastic$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		((ExtendedBufferStorage) bufferBuilders).endWorldRendering();
 	}
 }

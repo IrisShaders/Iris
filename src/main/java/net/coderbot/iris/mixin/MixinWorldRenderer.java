@@ -1,18 +1,29 @@
 package net.coderbot.iris.mixin;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
+import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
+import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.layer.IsBlockEntityRenderPhase;
+import net.coderbot.iris.layer.IsEntityRenderPhase;
+import net.coderbot.iris.layer.InnerWrappedRenderLayer;
+import net.coderbot.iris.layer.OuterWrappedRenderLayer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.GameOptions;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.profiler.Profiler;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,6 +38,11 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Mixin(WorldRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinWorldRenderer {
@@ -37,27 +53,43 @@ public class MixinWorldRenderer {
 	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/render/WorldRenderer;renderClouds(Lnet/minecraft/client/util/math/MatrixStack;FDDD)V";
 	private static final String RENDER_WEATHER = "Lnet/minecraft/client/render/WorldRenderer;renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V";
 	private static final String RENDER_WORLD_BORDER = "Lnet/minecraft/client/render/WorldRenderer;renderWorldBorder(Lnet/minecraft/client/render/Camera;)V";
+	private static final String PROFILER_SWAP = "net/minecraft/util/profiler/Profiler.swap (Ljava/lang/String;)V";
 
 	@Unique
 	private boolean skyTextureEnabled;
-	
+
 	@Unique
 	private WorldRenderingPipeline pipeline;
+
+	@Shadow
+	@Final
+	private BufferBuilderStorage bufferBuilders;
 
 	@Inject(method = RENDER, at = @At("HEAD"))
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
+
+		Program.unbind();
+
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
-		
+
 		pipeline.beginWorldRendering();
 	}
 
-	// Inject a bit early so that we can end our rendering in time.
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;method_23792()V"))
+	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
+	// render their waypoint beams.
+	@Inject(method = RENDER, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
 	private void iris$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		MinecraftClient.getInstance().getProfiler().swap("iris_final");
 		pipeline.finalizeWorldRendering();
 		pipeline = null;
+		Program.unbind();
+	}
+
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateChunks(J)V", shift = At.Shift.AFTER))
+	private void iris$renderTerrainShadows(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		pipeline.renderShadows((WorldRendererAccessor) this, camera);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR))
@@ -91,11 +123,16 @@ public class MixinWorldRenderer {
 	}
 
 	@Inject(method = RENDER_SKY,
-		at = @At(value = "INVOKE:FIRST", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableFog()V"),
-		slice = @Slice(from = @At(value = "FIELD:FIRST", target = "Lnet/minecraft/client/render/WorldRenderer;lightSkyBuffer:Lnet/minecraft/client/gl/VertexBuffer;"),
-			to = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/client/render/SkyProperties;getFogColorOverride(FF)[F")))
+		at = @At(value = "INVOKE", target = "net/minecraft/client/render/BackgroundRenderer.setFogBlack()V"))
 	private void iris$renderSky$drawHorizon(MatrixStack matrices, float tickDelta, CallbackInfo callback) {
+		RenderSystem.depthMask(false);
+
+		Vec3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
+		RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
+
 		new HorizonRenderer().renderHorizon(matrices);
+
+		RenderSystem.depthMask(true);
 	}
 
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getSkyAngle(F)F"),
@@ -120,6 +157,13 @@ public class MixinWorldRenderer {
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS))
 	private void iris$beginClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.CLOUDS);
+	}
+
+	@Inject(method = "renderClouds", at = @At("HEAD"), cancellable = true)
+	private void iris$maybeRemoveClouds(MatrixStack matrices, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
+		if (!pipeline.shouldRenderClouds()) {
+			ci.cancel();
+		}
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))
@@ -169,6 +213,42 @@ public class MixinWorldRenderer {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
+	@Inject(method = "renderWeather", at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.defaultAlphaFunc ()V", shift = At.Shift.AFTER))
+	private void iris$applyWeatherOverrides(LightmapTextureManager manager, float f, double d, double e, double g, CallbackInfo ci) {
+		// TODO: This is a temporary workaround for https://github.com/IrisShaders/Iris/issues/219
+		pipeline.pushProgram(GbufferProgram.WEATHER);
+		pipeline.popProgram(GbufferProgram.WEATHER);
+	}
+
+	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities", shift = At.Shift.AFTER))
+	private void iris$beginEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		VertexConsumerProvider provider = bufferBuilders.getEntityVertexConsumers();
+
+		if (provider instanceof WrappingVertexConsumerProvider) {
+			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
+				new OuterWrappedRenderLayer("iris:is_entity", layer, IsEntityRenderPhase.INSTANCE));
+		}
+	}
+
+	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=blockentities", shift = At.Shift.AFTER))
+	private void iris$beginBlockEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		VertexConsumerProvider provider = bufferBuilders.getEntityVertexConsumers();
+
+		if (provider instanceof WrappingVertexConsumerProvider) {
+			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
+					new OuterWrappedRenderLayer("iris:is_block_entity", layer, IsBlockEntityRenderPhase.INSTANCE));
+		}
+	}
+
+	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=destroyProgress"))
+	private void iris$endBlockEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		VertexConsumerProvider provider = bufferBuilders.getEntityVertexConsumers();
+
+		if (provider instanceof WrappingVertexConsumerProvider) {
+			((WrappingVertexConsumerProvider) provider).setWrappingFunction(null);
+		}
+	}
+
 	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
 	/*@Inject(method = "renderEntity", at = @At("HEAD"))
 	private void iris$beginEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
@@ -187,10 +267,27 @@ public class MixinWorldRenderer {
 										CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
 										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
 										VertexConsumerProvider.Immediate immediate) {
-		if (immediate instanceof FlushableVertexConsumerProvider) {
-			((FlushableVertexConsumerProvider) immediate).flushNonTranslucentContent();
-		}
+		profiler.swap("iris_entity_draws");
+		immediate.draw();
 
+		profiler.swap("iris_pre_translucent");
 		pipeline.beginTranslucents();
+	}
+
+	@Redirect(method = RENDER, at = @At(value = "INVOKE", target = "net/minecraft/client/world/ClientWorld.getEntities ()Ljava/lang/Iterable;"))
+	private Iterable<Entity> iris$sortEntityList(ClientWorld world) {
+		// Sort the entity list first in order to allow vanilla's entity batching code to work better.
+		Iterable<Entity> entityIterable = world.getEntities();
+
+		Map<EntityType<?>, List<Entity>> sortedEntities = new HashMap<>();
+
+		List<Entity> entities = new ArrayList<>();
+		entityIterable.forEach(entity -> {
+			sortedEntities.computeIfAbsent(entity.getType(), entityType -> new ArrayList<>(32)).add(entity);
+		});
+
+		sortedEntities.values().forEach(entities::addAll);
+
+		return entities;
 	}
 }

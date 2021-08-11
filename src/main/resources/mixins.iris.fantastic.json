@@ -6,9 +6,13 @@
   "client": [
     "MixinBarrierParticle",
     "MixinBlockDustParticle",
+    "MixinBufferBuilderStorage",
     "MixinFireworkSparkParticle",
+    "MixinMultiPhaseRenderLayer",
     "MixinParticleManager",
-    "MixinWorldRenderer"
+    "MixinWorldRenderer",
+    "MultiPhaseParametersAccessor",
+    "RenderPhaseAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

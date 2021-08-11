@@ -3,16 +3,20 @@ package net.coderbot.iris.uniforms;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
-import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
+import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.layer.EntityColorRenderPhase;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.texunits.SpriteAtlasTextureInterface;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.texture.SpriteAtlasTexture;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -29,6 +33,7 @@ import net.minecraft.world.LightType;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 
 public final class CommonUniforms {
 	private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -38,20 +43,35 @@ public final class CommonUniforms {
 	}
 
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
-	public static void addCommonUniforms(LocationalUniformHolder uniforms, IdMap idMap, PackDirectives directives) {
-		CameraUniforms.addCameraUniforms(uniforms);
+	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
+		CameraUniforms.addCameraUniforms(uniforms, updateNotifier);
 		ViewportUniforms.addViewportUniforms(uniforms);
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
 		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
 		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
-		MatrixUniforms.addMatrixUniforms(uniforms);
-		SamplerUniforms.addCommonSamplerUniforms(uniforms);
+		MatrixUniforms.addMatrixUniforms(uniforms, directives);
+		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
+		FogUniforms.addFogUniforms(uniforms);
 
-		CommonUniforms.generalCommonUniforms(uniforms);
+		uniforms.uniform4f("entityColor", () -> {
+			if (EntityColorRenderPhase.currentHurt) {
+				return new Vector4f(1.0f, 0.0f, 0.0f, 0.3f);
+			}
+
+			float shade = EntityColorRenderPhase.currentWhiteFlash;
+
+			if (shade != 0.0f) {
+				return new Vector4f(shade, shade, shade, 0.5f);
+			}
+
+			return new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+		}, EntityColorRenderPhase.getUpdateNotifier());
+
+		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
 
-	public static void generalCommonUniforms(UniformHolder uniforms){
+	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier){
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
@@ -63,10 +83,17 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
-			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness))
+			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier))
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength))
-			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
+			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
+			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
+			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor)
+			.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize);
+	}
+
+	private static Vec2f getAtlasSize() {
+		//TODO: is the block atlas used for this uniform all the time???
+		return ((SpriteAtlasTextureInterface) MinecraftClient.getInstance().getBakedModelManager().method_24153(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)).getAtlasSize();
 	}
 
 	private static Vec3d getSkyColor() {
@@ -77,7 +104,7 @@ public final class CommonUniforms {
 		return client.world.method_23777(client.cameraEntity.getBlockPos(), CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
-	private static float getBlindness() {
+	static float getBlindness() {
 		Entity cameraEntity = client.getCameraEntity();
 
 		if (cameraEntity instanceof LivingEntity) {
@@ -101,7 +128,7 @@ public final class CommonUniforms {
 		return ((ClientPlayerEntity)client.cameraEntity).getMoodPercentage();
 	}
 
-	private static float getRainStrength() {
+	static float getRainStrength() {
 		if (client.world == null) {
 			return 0f;
 		}

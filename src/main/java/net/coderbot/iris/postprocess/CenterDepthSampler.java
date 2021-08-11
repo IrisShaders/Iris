@@ -2,6 +2,7 @@ package net.coderbot.iris.postprocess;
 
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import org.lwjgl.opengl.GL11C;
 
@@ -9,12 +10,14 @@ public class CenterDepthSampler {
 	private final SmoothedFloat centerDepthSmooth;
 	private final GlFramebuffer depthBufferHolder;
 	private final RenderTargets renderTargets;
-	private float centerDepthSmoothSample;
 	private boolean hasFirstSample;
 	private boolean everRetrieved;
 
-	public CenterDepthSampler(RenderTargets renderTargets) {
-		centerDepthSmooth = new SmoothedFloat(1.0f, this::sampleCenterDepth);
+	public CenterDepthSampler(RenderTargets renderTargets, FrameUpdateNotifier updateNotifier) {
+		// NB: This will always be one frame behind compared to the current frame.
+		// That's probably for the best, since it can help avoid some pipeline stalls.
+		// We're still going to get stalls, though.
+		centerDepthSmooth = new SmoothedFloat(1.0f, this::sampleCenterDepth, updateNotifier);
 
 		// Prior to OpenGL 4.1, all framebuffers must have at least 1 color target.
 		depthBufferHolder = renderTargets.createFramebufferWritingToMain(new int[] {0});
@@ -43,13 +46,9 @@ public class CenterDepthSampler {
 		return depthValue[0];
 	}
 
-	public void endWorldRendering() {
-		centerDepthSmoothSample = centerDepthSmooth.getAsFloat();
-	}
-
 	public float getCenterDepthSmoothSample() {
 		everRetrieved = true;
 
-		return centerDepthSmoothSample;
+		return centerDepthSmooth.getAsFloat();
 	}
 }

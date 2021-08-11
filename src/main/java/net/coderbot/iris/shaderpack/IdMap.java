@@ -9,15 +9,18 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
+import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.minecraft.block.Blocks;
 import net.minecraft.state.StateManager;
+import net.minecraft.tag.BlockTags;
 import org.apache.logging.log4j.Level;
 
 import net.minecraft.block.Block;
@@ -68,7 +71,9 @@ public class IdMap {
 		// TODO: Properly override block render layers
 
 		if (blockPropertiesMap == null) {
-			blockPropertiesMap = Object2IntMaps.emptyMap();
+			// Fill in with default values...
+			blockPropertiesMap = new Object2IntOpenHashMap<>();
+			LegacyIdMap.addLegacyValues(blockPropertiesMap);
 		}
 
 		if (blockRenderLayerMap == null) {
@@ -391,5 +396,28 @@ public class IdMap {
 
 	public Map<Identifier, Integer> getEntityIdMap() {
 		return entityIdMap;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		IdMap idMap = (IdMap) o;
+
+		return Objects.equals(itemIdMap, idMap.itemIdMap)
+				&& Objects.equals(entityIdMap, idMap.entityIdMap)
+				&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
+				&& Objects.equals(blockRenderLayerMap, idMap.blockRenderLayerMap);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderLayerMap);
 	}
 }

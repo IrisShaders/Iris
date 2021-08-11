@@ -1,11 +1,9 @@
-package net.coderbot.iris.mixin.vertices;
+package net.coderbot.iris.mixin.vertices.block_rendering;
 
-import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.IdMap;
-import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.block.BlockRenderManager;
@@ -15,9 +13,7 @@ import net.minecraft.client.render.chunk.ChunkOcclusionDataBuilder;
 import net.minecraft.client.render.chunk.ChunkRendererRegion;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -43,17 +39,11 @@ public class MixinChunkRebuildTask {
 
 	// Resolve the ID map on the main thread to avoid thread safety issues
 	@Unique
-	private IdMap idMap = getIdMap();
+	private final IdMap idMap = getIdMap();
 
 	@Unique
 	private IdMap getIdMap() {
-		ShaderPack pack = Iris.getCurrentPack().orElse(null);
-
-		if (pack == null) {
-			return null;
-		}
-
-		return pack.getIdMap();
+		return BlockRenderingSettings.INSTANCE.getIdMap();
 	}
 
 	@Unique
@@ -69,7 +59,8 @@ public class MixinChunkRebuildTask {
 	private void iris$onRenderFluid(float cameraX, float cameraY, float cameraZ, ChunkBuilder.ChunkData data, BlockBufferBuilderStorage buffers, CallbackInfoReturnable<Set> cir, int i, BlockPos blockPos, BlockPos blockPos2, ChunkOcclusionDataBuilder chunkOcclusionDataBuilder, Set set, ChunkRendererRegion chunkRendererRegion, MatrixStack matrixStack, Random random, BlockRenderManager blockRenderManager, Iterator var15, BlockPos blockPos3, BlockState blockState, FluidState fluidState, RenderLayer renderLayer, BufferBuilder bufferBuilder) {
 		if (bufferBuilder instanceof BlockSensitiveBufferBuilder) {
 			lastBufferBuilder = ((BlockSensitiveBufferBuilder) bufferBuilder);
-			lastBufferBuilder.beginBlock(resolveBlockId(fluidState.getBlockState()));
+			// All fluids have a ShadersMod render type of 1, to match behavior of Minecraft 1.7 and earlier.
+			lastBufferBuilder.beginBlock(resolveBlockId(fluidState.getBlockState()), (short) 1);
 		}
 	}
 
@@ -85,7 +76,8 @@ public class MixinChunkRebuildTask {
 	private void iris$onRenderBlock(float cameraX, float cameraY, float cameraZ, ChunkBuilder.ChunkData data, BlockBufferBuilderStorage buffers, CallbackInfoReturnable<Set> cir, int i, BlockPos blockPos, BlockPos blockPos2, ChunkOcclusionDataBuilder chunkOcclusionDataBuilder, Set set, ChunkRendererRegion chunkRendererRegion, MatrixStack matrixStack, Random random, BlockRenderManager blockRenderManager, Iterator var15, BlockPos blockPos3, BlockState blockState, RenderLayer renderLayer2, BufferBuilder bufferBuilder) {
 		if (bufferBuilder instanceof BlockSensitiveBufferBuilder) {
 			lastBufferBuilder = ((BlockSensitiveBufferBuilder) bufferBuilder);
-			lastBufferBuilder.beginBlock(resolveBlockId(blockState));
+			// TODO: Resolve render types for normal blocks?
+			lastBufferBuilder.beginBlock(resolveBlockId(blockState), (short) -1);
 		}
 	}
 

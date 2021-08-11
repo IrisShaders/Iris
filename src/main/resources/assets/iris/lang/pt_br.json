@@ -1,0 +1,19 @@
+{
+  "iris.shaders.reloaded": "Shaders Recarregados!",
+  "iris.keybind.reload": "Recarregar Shaders",
+  "iris.shaders.reloaded.failure": "Falha ao Recarregar Shaders! Motivo: %s",
+  
+  "options.iris.apply": "Aplicar",
+  "options.iris.refresh": "Atualizar",
+  "options.iris.openShaderPackFolder": "Abrir Pasta de Pacotes de Shader...",
+  "options.iris.refreshShaderPacks": "Atualizar Pacotes de Shader",
+  "options.iris.shaderPackSelection.addedPack": "Adicionado Pacotes de Shader \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Adicionados %s Pacotes de Shader",
+  "options.iris.shaderPackSelection.failedAdd": "Os arquivos não eram Pacotes de Shader válidos",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" não é um Pacotes de Shader válido",
+  "options.iris.shaderPackSelection.copyError": "Não foi possível acrescentar Pacotes de Shader \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" já está na sua pasta de Pacotes de Shader!",
+  
+  "pack.iris.select.title": "Selecionar",
+  "pack.iris.list.label": "+ Arraste e Solte Pacotes de Shader Para Adicioná-los"
+  }
