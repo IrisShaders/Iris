@@ -33,21 +33,17 @@ import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -197,14 +193,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private static void setupAttribute(Program program, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = GL20.glGetAttribLocation(program.getProgramId(), name);
+		int location = GL20C.glGetAttribLocation(program.getProgramId(), name);
 
 		if (location != -1) {
 			if (location != expectedLocation) {
 				throw new IllegalStateException();
 			}
 
-			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
+			GL20C.glVertexAttrib4f(location, v0, v1, v2, v3);
 		}
 	}
 
@@ -255,24 +251,73 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		ORTHO = new Matrix4f();
 		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
 
-		worldRenderer.getWorld().getProfiler().push("terrain_setup");
-
-		if (worldRenderer instanceof CullingDataCache) {
-			((CullingDataCache) worldRenderer).saveState();
-		}
-
 		Frustum frustum;
 
 		// NB: This frustum assumes that the shader pack uses standard shadow mapping techniques
 		// TODO: If a shader pack tries to use voxelization, we must use a different culling method!
 		frustum = createShadowFrustum(modelView, orthoMatrix);
 
-		// Determine the player camera position
 		Vec3d cameraPos = CameraUniforms.getCameraPosition();
 
 		double cameraX = cameraPos.getX();
 		double cameraY = cameraPos.getY();
 		double cameraZ = cameraPos.getZ();
+
+		// Setup terrain.
+		setupShadowTerrain(client, playerCamera, worldRenderer, frustum, cameraX, cameraY, cameraZ);
+
+		pipeline.pushProgram(GbufferProgram.NONE);
+		pipeline.beginShadowRender();
+
+		startShadowRender(orthoMatrix);
+
+		//Render terrain.
+		renderShadowTerrain(worldRenderer, modelView, cameraX, cameraY, cameraZ);
+
+		worldRenderer.getWorld().getProfiler().swap("entities");
+
+		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
+		// it is set to a fixed value.
+		final float tickDelta = CapturedRenderingState.INSTANCE.getTickDelta();
+
+		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
+		// rendering.
+		if (extendedBufferStorage != null) {
+			extendedBufferStorage.beginWorldRendering();
+		}
+
+		VertexConsumerProvider.Immediate provider = buffers.getEntityVertexConsumers();
+		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
+
+		int shadowEntities = renderShadowEntities(worldRenderer, modelView, frustum, provider, dispatcher, cameraX, cameraY, cameraZ, tickDelta);
+		int shadowBlockEntities = renderShadowBlockEntities(worldRenderer, modelView, frustum, provider, dispatcher, cameraX, cameraY, cameraZ, tickDelta);
+
+		renderedShadowEntities = shadowEntities;
+		renderedShadowBlockEntities = shadowBlockEntities;
+
+		renderTranslucentShadowTerrain(worldRenderer, modelView, provider, cameraX, cameraY, cameraZ);
+
+		if (extendedBufferStorage != null) {
+			extendedBufferStorage.endWorldRendering();
+		}
+
+		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
+
+		worldRenderer.getWorld().getProfiler().pop();
+
+		pipeline.endShadowRender();
+		endShadowRender(client, worldRenderer);
+
+		ACTIVE = false;
+		worldRenderer.getWorld().getProfiler().swap("updatechunks");
+	}
+
+	private void setupShadowTerrain(MinecraftClient client, Camera playerCamera, WorldRendererAccessor worldRenderer, Frustum frustum, double cameraX, double cameraY, double cameraZ) {
+		worldRenderer.getWorld().getProfiler().push("terrain_setup");
+
+		if (worldRenderer instanceof CullingDataCache) {
+			((CullingDataCache) worldRenderer).saveState();
+		}
 
 		// Center the frustum on the player camera position
 		frustum.setPosition(cameraX, cameraY, cameraZ);
@@ -297,32 +342,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		worldRenderer.setFrame(worldRenderer.getFrame() + 1);
 
 		client.chunkCullingEnabled = wasChunkCullingEnabled;
+	}
 
+	private void renderShadowTerrain(WorldRendererAccessor worldRenderer, MatrixStack modelView, double cameraX, double cameraY, double cameraZ) {
 		worldRenderer.getWorld().getProfiler().swap("terrain");
-
-		pipeline.pushProgram(GbufferProgram.NONE);
-		pipeline.beginShadowRender();
-
-		// Set up the shadow program
-		setupShadowProgram();
-
-		// Set up and clear our framebuffer
-		targets.getFramebuffer().bind();
-
-		// TODO: Support shadow clear color directives & disable buffer clearing
-		// Ensure that the color and depth values are cleared appropriately
-		RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		RenderSystem.clearDepth(1.0f);
-		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
-
-		// Set up the viewport
-		RenderSystem.viewport(0, 0, resolution, resolution);
-
-		// Set up our orthographic projection matrix and load it into the legacy matrix stack
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.pushMatrix();
-		GL11.glLoadMatrixf(orthoMatrix);
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
@@ -343,76 +366,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// If we forget to do this entities will be very small on most shaderpacks since they're being rendered
 		// without shaders, which doesn't integrate with their shadow distortion code.
 		setupShadowProgram();
+	}
 
-		worldRenderer.getWorld().getProfiler().swap("entities");
-
-		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
-		// it is set to a fixed value.
-		final float tickDelta = CapturedRenderingState.INSTANCE.getTickDelta();
-
-		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
-		// TODO: Make this configurable and disable-able
-		final Frustum entityShadowFrustum = frustum; // createEntityShadowFrustum(modelView);
-		// entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
-
-		// Render nearby entities
-		//
-		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
-		// rendering.
-		if (extendedBufferStorage != null) {
-			extendedBufferStorage.beginWorldRendering();
-		}
-
-		VertexConsumerProvider.Immediate provider = buffers.getEntityVertexConsumers();
-		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
-
-		int shadowEntities = 0;
-
-		worldRenderer.getWorld().getProfiler().push("cull");
-
-		List<Entity> renderedEntities = new ArrayList<>(32);
-
-		// TODO: I'm sure that this can be improved / optimized.
-		for (Entity entity : getWorld().getEntities()) {
-			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ) || entity.isSpectator()) {
-				continue;
-			}
-
-			renderedEntities.add(entity);
-		}
-
-		worldRenderer.getWorld().getProfiler().swap("sort");
-
-		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
-		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
-
-		worldRenderer.getWorld().getProfiler().swap("build geometry");
-
-		for (Entity entity : renderedEntities) {
-			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
-			shadowEntities++;
-		}
-
-		worldRenderer.getWorld().getProfiler().pop();
-
-		worldRenderer.getWorld().getProfiler().swap("build blockentities");
-
-		int shadowBlockEntities = 0;
-
-		// TODO: Use visibleChunks to cull block entities
-		for (BlockEntity entity : getWorld().blockEntities) {
-			modelView.push();
-			BlockPos pos = entity.getPos();
-			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			BlockEntityRenderDispatcher.INSTANCE.render(entity, tickDelta, modelView, provider);
-			modelView.pop();
-
-			shadowBlockEntities++;
-		}
-
-		renderedShadowEntities = shadowEntities;
-		renderedShadowBlockEntities = shadowBlockEntities;
-
+	private void renderTranslucentShadowTerrain(WorldRendererAccessor worldRenderer, MatrixStack modelView, VertexConsumerProvider.Immediate provider, double cameraX, double cameraY, double cameraZ) {
 		worldRenderer.getWorld().getProfiler().swap("draw entities");
 
 		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
@@ -441,14 +397,90 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// NB: If we want to render anything after translucent terrain, we need to uncomment this line!
 		// setupShadowProgram();
 
-		if (extendedBufferStorage != null) {
-			extendedBufferStorage.endWorldRendering();
+	}
+
+	private int renderShadowEntities(WorldRendererAccessor worldRenderer, MatrixStack modelView, Frustum frustum, VertexConsumerProvider.Immediate provider, EntityRenderDispatcher dispatcher, double cameraX, double cameraY, double cameraZ, float tickDelta) {
+		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
+		// TODO: Make this configurable and disable-able
+		final Frustum entityShadowFrustum = frustum; // createEntityShadowFrustum(modelView);
+		// entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
+
+		// Render nearby entities
+		worldRenderer.getWorld().getProfiler().push("cull");
+
+		List<Entity> renderedEntities = new ArrayList<>(32);
+
+		// TODO: I'm sure that this can be improved / optimized.
+		for (Entity entity : getWorld().getEntities()) {
+			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ) || entity.isSpectator()) {
+				continue;
+			}
+
+			renderedEntities.add(entity);
 		}
 
-		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
+		worldRenderer.getWorld().getProfiler().swap("sort");
+
+		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
+		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
+
+		worldRenderer.getWorld().getProfiler().swap("build geometry");
+
+		int shadowEntityCount = 0;
+
+		for (Entity entity : renderedEntities) {
+			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
+			shadowEntityCount++;
+		}
 
 		worldRenderer.getWorld().getProfiler().pop();
 
+		return shadowEntityCount;
+	}
+
+	private int renderShadowBlockEntities(WorldRendererAccessor worldRenderer, MatrixStack modelView, Frustum frustum, VertexConsumerProvider.Immediate provider, EntityRenderDispatcher dispatcher, double cameraX, double cameraY, double cameraZ, float tickDelta) {
+		worldRenderer.getWorld().getProfiler().swap("build blockentities");
+
+		int shadowBlockEntityCount = 0;
+
+		// TODO: Use visibleChunks to cull block entities
+		for (BlockEntity entity : getWorld().blockEntities) {
+			modelView.push();
+			BlockPos pos = entity.getPos();
+			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+			BlockEntityRenderDispatcher.INSTANCE.render(entity, tickDelta, modelView, provider);
+			modelView.pop();
+
+			shadowBlockEntityCount++;
+		}
+
+		return shadowBlockEntityCount;
+	}
+
+	private void startShadowRender(float[] orthoMatrix) {
+		// Set up the shadow program
+		setupShadowProgram();
+
+		// Set up and clear our framebuffer
+		targets.getFramebuffer().bind();
+
+		// TODO: Support shadow clear color directives & disable buffer clearing
+		// Ensure that the color and depth values are cleared appropriately
+		RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		RenderSystem.clearDepth(1.0f);
+		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
+
+		// Set up the viewport
+		RenderSystem.viewport(0, 0, resolution, resolution);
+
+		// Set up our orthographic projection matrix and load it into the legacy matrix stack
+		RenderSystem.matrixMode(GL11.GL_PROJECTION);
+		RenderSystem.pushMatrix();
+		GL11.glLoadMatrixf(orthoMatrix);
+		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+	}
+
+	private void endShadowRender(MinecraftClient client, WorldRendererAccessor worldRenderer) {
 		// Restore backface culling
 		RenderSystem.enableCull();
 
@@ -467,9 +499,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		if (worldRenderer instanceof CullingDataCache) {
 			((CullingDataCache) worldRenderer).restoreState();
 		}
-
-		ACTIVE = false;
-		worldRenderer.getWorld().getProfiler().swap("updatechunks");
 	}
 
 	private void setupShadowProgram() {
