@@ -1,9 +1,6 @@
 package net.coderbot.iris.gl.shader;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -148,6 +145,13 @@ public class StandardMacros {
 		// see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
 
 		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toList());
+	}
+
+	public static List<String> getIrisDefines() {
+		List<String> defines = new ArrayList<>();
+		defines.add("dragonDeathProgressSupported");
+
+		return defines;
 	}
 
 	/**
