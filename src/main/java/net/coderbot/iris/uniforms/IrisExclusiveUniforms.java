@@ -11,6 +11,6 @@ public class IrisExclusiveUniforms {
 	}
 
 	private static float getDragonDeathProgress() {
-		return CapturedRenderingState.INSTANCE.getTicksSinceDragonDeath() / 200;
+		return CapturedRenderingState.INSTANCE.getTicksSinceDragonDeath() / 200F;
 	}
 }
