@@ -50,6 +50,7 @@ public final class CommonUniforms {
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
 		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
 		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
+		IrisUniforms.addIrisUniforms(uniforms);
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
 		FogUniforms.addFogUniforms(uniforms);
@@ -88,8 +89,7 @@ public final class CommonUniforms {
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
 			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor)
-			.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize)
-			.uniform1f(PER_TICK, "dragonDeathProgress", CapturedRenderingState.INSTANCE::getTicksSinceDragonDeath);
+			.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize);
 	}
 
 	private static Vec2f getAtlasSize() {
