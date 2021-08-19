@@ -153,7 +153,7 @@ public class StandardMacros {
 
 	public static List<String> getIrisDefines() {
 		List<String> defines = new ArrayList<>();
-		defines.add("dragonDeathProgressSupported");
+		defines.add("MC_UNIFORM_DRAGON_DEATH_PROGRESS");
 
 		return defines;
 	}
