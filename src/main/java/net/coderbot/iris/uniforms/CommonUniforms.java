@@ -88,7 +88,8 @@ public final class CommonUniforms {
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
 			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor)
-			.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize);
+			.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize)
+			.uniform1f(PER_TICK, "dragonDeathProgress", CapturedRenderingState.INSTANCE::getTicksSinceDragonDeath);
 	}
 
 	private static Vec2f getAtlasSize() {

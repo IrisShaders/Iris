@@ -13,6 +13,7 @@ public class CapturedRenderingState {
 	private Matrix4f gbufferProjection;
 	private Vec3d fogColor;
 	private float tickDelta;
+	private float ticksSinceDragonDeath;
 	private BlockEntity currentRenderedBlockEntity;
 	private Entity currentRenderedEntity;
 
@@ -53,6 +54,14 @@ public class CapturedRenderingState {
 
 	public float getTickDelta() {
 		return tickDelta;
+	}
+
+	public void setTicksSinceDragonDeath(float ticksSinceDragonDeath) {
+		this.ticksSinceDragonDeath = ticksSinceDragonDeath;
+	}
+
+	public float getTicksSinceDragonDeath() {
+		return ticksSinceDragonDeath;
 	}
 
 	public void setCurrentBlockEntity(BlockEntity entity) {
