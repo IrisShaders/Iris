@@ -84,6 +84,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader block;
 	private final Shader beacon;
 	private final Shader glint;
+	private final Shader lines;
+	private final Shader shadowLines;
 
 	private final Shader terrainTranslucent;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
@@ -277,6 +279,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, FogMode.LINEAR);
 			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, FogMode.LINEAR);
 			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, VertexFormats.POSITION_TEXTURE, FogMode.LINEAR);
+			this.lines = createShader("gbuffers_lines", programSet.getGbuffersBasic(), AlphaTest.ALWAYS, VertexFormats.LINES, FogMode.LINEAR);
 
 			if (translucentSource != terrainSource) {
 				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
@@ -304,11 +307,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programSet.getPackDirectives().getShadowDirectives().getResolution());
 			this.shadowTerrainCutout = null;
 			this.shadowEntitiesCutout = null;
+			this.shadowLines = null;
 		} else {
 			try {
 				// TODO: Shadow programs should have access to different samplers.
 				this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN);
 				this.shadowEntitiesCutout = createShadowShader("shadow_entities_cutout", shadowSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL);
+				this.shadowLines = createShadowShader("shadow_lines", shadowSource, AlphaTest.ALWAYS, VertexFormats.LINES);
 			}  catch (RuntimeException e) {
 				destroyShaders();
 
@@ -667,6 +672,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public Shader getGlint() {
 		return glint;
+	}
+
+	@Override
+	public Shader getLines() {
+		return lines;
+	}
+
+	@Override
+	public Shader getShadowLines() {
+		return shadowLines;
 	}
 
 	private void destroyShaders() {

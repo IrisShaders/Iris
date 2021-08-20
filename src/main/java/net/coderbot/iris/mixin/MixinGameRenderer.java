@@ -274,7 +274,18 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getRenderTypeBeaconBeamShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideBeaconBeamShader(CallbackInfoReturnable<Shader> cir) {
-			override(CoreWorldRenderingPipeline::getBeacon, cir);
+		override(CoreWorldRenderingPipeline::getBeacon, cir);
+	}
+
+	@Inject(method = {
+			"getRenderTypeLinesShader()Lnet/minecraft/client/render/Shader;"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideLinesShader(CallbackInfoReturnable<Shader> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			override(CoreWorldRenderingPipeline::getShadowLines, cir);
+		} else if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getLines, cir);
+		}
 	}
 
 	private static boolean isPhase(WorldRenderingPhase phase) {

@@ -9,6 +9,8 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforcePatcher {
 	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
+		// TODO: Only do the NewLines patches if the source code isn't from gbuffers_lines
+
 		if (source.contains("moj_import")) {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
@@ -119,7 +121,12 @@ public class TriforcePatcher {
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasNormal()) {
-				transformations.define("gl_Normal", "Normal");
+				if (!inputs.isNewLines()) {
+					transformations.define("gl_Normal", "Normal");
+				} else {
+					transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
+				}
+
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Normal;");
 			} else {
 				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
@@ -141,6 +148,16 @@ public class TriforcePatcher {
 					"                offset.x, offset.y, offset.z, 1.0);\n" +
 					"}");
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix (iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))");
+		} else if (inputs.isNewLines()) {
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
+					"const float iris_VIEW_SHRINK = 1.0 - (1.0 / 256.0);\n" +
+					"const mat4 iris_VIEW_SCALE = mat4(\n" +
+					"    iris_VIEW_SHRINK, 0.0, 0.0, 0.0,\n" +
+					"    0.0, iris_VIEW_SHRINK, 0.0, 0.0,\n" +
+					"    0.0, 0.0, iris_VIEW_SHRINK, 0.0,\n" +
+					"    0.0, 0.0, 0.0, 1.0\n" +
+					");");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix (iris_VIEW_SCALE * iris_ModelViewMat)");
 		} else {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix iris_ModelViewMat");
 		}
@@ -149,7 +166,58 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
 
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(Position, 1.0)");
+			if (inputs.isNewLines()) {
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec3 iris_vertex_offset = vec3(0.0);");
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(Position + iris_vertex_offset, 1.0)");
+
+				if (transformations.contains("irisMain")) {
+					throw new IllegalStateException("Shader already contains \"irisMain\"???");
+				}
+
+				// Create our own main function to wrap the existing main function, so that we can do our line shenanagains.
+				transformations.replaceExact("main", "irisMain");
+
+				transformations.injectLine(Transformations.InjectionPoint.END,
+						"uniform vec2 iris_ScreenSize;\n" +
+							"uniform float iris_LineWidth;\n" +
+							"\n" +
+							"// Widen the line into a rectangle of appropriate width\n" +
+							"// Isolated from Minecraft's rendertype_lines.vsh\n" +
+							"// Both arguments are positions in NDC space (the same space as gl_Position)\n" +
+							"void iris_widen_lines(vec4 linePosStart, vec4 linePosEnd) {\n" +
+							"    vec3 ndc1 = linePosStart.xyz / linePosStart.w;\n" +
+							"    vec3 ndc2 = linePosEnd.xyz / linePosEnd.w;\n" +
+							"\n" +
+							"    vec2 lineScreenDirection = normalize((ndc2.xy - ndc1.xy) * iris_ScreenSize);\n" +
+							"    vec2 lineOffset = vec2(-lineScreenDirection.y, lineScreenDirection.x) * iris_LineWidth / iris_ScreenSize;\n" +
+							"\n" +
+							"    if (lineOffset.x < 0.0) {\n" +
+							"        lineOffset *= -1.0;\n" +
+							"    }\n" +
+							"\n" +
+							"    if (gl_VertexID % 2 == 0) {\n" +
+							"        gl_Position = vec4((ndc1 + vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);\n" +
+							"    } else {\n" +
+							"        gl_Position = vec4((ndc1 - vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);\n" +
+							"    }\n" +
+							"}\n" +
+							"\n" +
+							"void main() {\n" +
+							"    iris_vertex_offset = Normal;\n" +
+							"    irisMain();\n" +
+							"    vec4 linePosEnd = gl_Position;\n" +
+							"    gl_Position = vec4(0.0);\n" +
+							"\n" +
+							"    iris_vertex_offset = vec3(0.0);\n" +
+							"    irisMain();\n" +
+							"    vec4 linePosStart = gl_Position;\n" +
+							"\n" +
+							"    iris_widen_lines(linePosStart, linePosEnd);\n" +
+							"}");
+			} else {
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(Position, 1.0)");
+			}
+
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 Position;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}

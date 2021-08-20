@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline.newshader;
 
 import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 
 public class ShaderAttributeInputs {
 	private boolean color;
@@ -8,8 +9,13 @@ public class ShaderAttributeInputs {
 	private boolean overlay;
 	private boolean light;
 	private boolean normal;
+	private boolean newLines;
 
 	public ShaderAttributeInputs(VertexFormat format) {
+		if (format == VertexFormats.LINES) {
+			newLines = true;
+		}
+
 		format.getShaderAttributes().forEach(name -> {
 			if ("Color".equals(name)) {
 				color = true;
@@ -59,5 +65,9 @@ public class ShaderAttributeInputs {
 
 	public boolean hasNormal() {
 		return normal;
+	}
+
+	public boolean isNewLines() {
+		return newLines;
 	}
 }
