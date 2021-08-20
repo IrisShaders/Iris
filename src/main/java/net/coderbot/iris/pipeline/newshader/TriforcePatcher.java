@@ -88,14 +88,14 @@ public class TriforcePatcher {
 				transformations.define("gl_MultiTexCoord0", "vec4(UV0, 0.0, 1.0)");
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 UV0;");
 			} else {
-				transformations.define("gl_MultiTexCoord0", "vec4(0.0, 0.0, 0.0, 1.0)");
+				transformations.define("gl_MultiTexCoord0", "vec4(0.5, 0.5, 0.0, 1.0)");
 			}
 
 			if (inputs.hasLight()) {
 				transformations.define("gl_MultiTexCoord1", "vec4(UV2, 0.0, 1.0)");
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 UV2;");
 			} else {
-				transformations.define("gl_MultiTexCoord1", "vec4(0.0, 0.0, 0.0, 1.0)");
+				transformations.define("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other texture coordinates are not valid inputs.
