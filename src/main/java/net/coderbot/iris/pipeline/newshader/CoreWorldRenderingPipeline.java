@@ -9,6 +9,10 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getBasicColor();
 	// TODO: Shader getShadowBasic();
 	// TODO: Shader getShadowBasicColor();
+	Shader getTextured();
+	Shader getTexturedColor();
+	// TODO: Shader getShadowTextured();
+	// TODO: Shader getShadowTexturedColor();
 
 	Shader getSkyBasic();
 	Shader getSkyBasicColor();

@@ -62,6 +62,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private final Shader basic;
 	private final Shader basicColor;
+	private final Shader textured;
+	private final Shader texturedColor;
 	private final Shader skyBasic;
 	private final Shader skyBasicColor;
 	private final Shader skyTextured;
@@ -232,6 +234,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		};
 
 		Optional<ProgramSource> basicSource = programSet.getGbuffersBasic();
+		Optional<ProgramSource> texturedSource = first(programSet.getGbuffersTextured(), basicSource);
 
 		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
@@ -263,6 +266,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		try {
 			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, VertexFormats.POSITION, FogMode.LINEAR);
 			this.basicColor = createShader("gbuffers_basic_color", basicSource, nonZeroAlpha, VertexFormats.POSITION_COLOR, FogMode.OFF);
+			this.textured = createShader("gbuffers_textured", texturedSource, nonZeroAlpha, VertexFormats.POSITION_TEXTURE, FogMode.OFF);
+			this.texturedColor = createShader("gbuffers_textured_color", texturedSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR, FogMode.OFF);
 			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, VertexFormats.POSITION, FogMode.LINEAR);
 			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, nonZeroAlpha, VertexFormats.POSITION_COLOR, FogMode.OFF);
 			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, FogMode.OFF);
@@ -571,6 +576,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public Shader getBasicColor() {
 		return basicColor;
+	}
+
+	@Override
+	public Shader getTextured() {
+		return textured;
+	}
+
+	@Override
+	public Shader getTexturedColor() {
+		return texturedColor;
 	}
 
 	@Override

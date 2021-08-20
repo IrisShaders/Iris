@@ -82,16 +82,22 @@ public class MixinGameRenderer {
 	private static void iris$overridePositionTexShader(CallbackInfoReturnable<Shader> cir) {
 		if (isPhase(WorldRenderingPhase.SKY)) {
 			override(CoreWorldRenderingPipeline::getSkyTextured, cir);
+		} else if (ShadowRenderer.ACTIVE) {
+			// TODO: shadowTextured
+		} else if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getTextured, cir);
 		}
-		// TODO: shadows, non sky
 	}
 
 	@Inject(method = "getPositionTexColorShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorShader(CallbackInfoReturnable<Shader> cir) {
 		if (isPhase(WorldRenderingPhase.SKY)) {
 			override(CoreWorldRenderingPipeline::getSkyTexturedColor, cir);
+		} else if (ShadowRenderer.ACTIVE) {
+			// TODO: shadowTexturedColor
+		} else if (isRenderingWorld()) {
+			override(CoreWorldRenderingPipeline::getTexturedColor, cir);
 		}
-		// TODO: shadows, non sky
 	}
 
 	// TODO: getBlockShader, getNewEntityShader
