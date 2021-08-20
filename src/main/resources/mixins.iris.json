@@ -8,6 +8,7 @@
     "MixinBackgroundRenderer",
     "MixinDebugHud",
     "MixinEnderDragonEntityRenderer",
+    "MixinEndPortalBlockEntityRenderer",
     "MixinEntityRenderDispatcher",
     "MixinGameRenderer",
     "MixinGlStateManager",
