@@ -41,21 +41,4 @@ public class AlphaTest {
 	public String toString() {
 		return "AlphaTestOverride { " + function + " " + reference + " }";
 	}
-
-	public static class Off extends AlphaTest {
-		public Off() {
-			super(null, 0.0f);
-		}
-
-		@Override
-		public void setup() {
-			// no-op, alpha test doesn't exist on core profile
-			// TODO(21w10a): GlStateManager.disableAlphaTest();
-		}
-
-		@Override
-		public String toString() {
-			return "AlphaTestOverride { off }";
-		}
-	}
 }
