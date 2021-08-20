@@ -60,6 +60,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private final RenderTargets renderTargets;
 
+	private final Shader basic;
+	private final Shader basicColor;
 	private final Shader skyBasic;
 	private final Shader skyBasicColor;
 	private final Shader skyTextured;
@@ -259,8 +261,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// TODO: Resolve hasColorAttrib based on the vertex format
 		try {
+			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, VertexFormats.POSITION, FogMode.LINEAR);
+			this.basicColor = createShader("gbuffers_basic_color", basicSource, nonZeroAlpha, VertexFormats.POSITION_COLOR, FogMode.OFF);
 			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, VertexFormats.POSITION, FogMode.LINEAR);
-			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, FogMode.OFF);
+			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, nonZeroAlpha, VertexFormats.POSITION_COLOR, FogMode.OFF);
 			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, FogMode.OFF);
 			this.skyTexturedColor = createShader("gbuffers_sky_textured_tex_color", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE_COLOR, FogMode.OFF);
 			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL, FogMode.LINEAR);
@@ -557,6 +561,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldDisableDirectionalShading() {
 		return true;
+	}
+
+	@Override
+	public Shader getBasic() {
+		return basic;
+	}
+
+	@Override
+	public Shader getBasicColor() {
+		return basicColor;
 	}
 
 	@Override

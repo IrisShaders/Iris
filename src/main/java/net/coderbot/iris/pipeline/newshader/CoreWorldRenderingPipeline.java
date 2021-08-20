@@ -5,6 +5,11 @@ import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.render.Shader;
 
 public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
+	Shader getBasic();
+	Shader getBasicColor();
+	// TODO: Shader getShadowBasic();
+	// TODO: Shader getShadowBasicColor();
+
 	Shader getSkyBasic();
 	Shader getSkyBasicColor();
 	Shader getSkyTextured();
