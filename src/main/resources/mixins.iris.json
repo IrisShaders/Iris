@@ -7,6 +7,7 @@
   "client": [
     "MixinBackgroundRenderer",
     "MixinDebugHud",
+    "MixinEndPortalBlockEntityRenderer",
     "MixinEntityRenderDispatcher",
     "MixinGameRenderer",
     "MixinGlShader",
