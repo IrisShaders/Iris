@@ -55,7 +55,7 @@ import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
+public class EnhancedWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
 	private boolean destroyed = false;
 
 	private final RenderTargets renderTargets;
@@ -122,7 +122,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 
-	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
+	public EnhancedWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
 		if (Files.exists(debugOutDir)) {

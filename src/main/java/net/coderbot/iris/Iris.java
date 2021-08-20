@@ -9,11 +9,10 @@ import com.google.common.base.Throwables;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.*;
-import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.EnhancedWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
-import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
@@ -420,9 +419,9 @@ public class Iris implements ClientModInitializer {
 		}*/
 
 		try {
-			return new NewWorldRenderingPipeline(programs);
+			return new EnhancedWorldRenderingPipeline(programs);
 		} catch (Throwable e) {
-			Iris.logger.error("Couldn't load NewWorldRenderingPipeline, falling back to vanilla shaders.", e);
+			Iris.logger.error("Couldn't load EnhancedWorldRenderingPipeline, falling back to vanilla shaders.", e);
 			return new FixedFunctionWorldRenderingPipeline();
 		}
 	}

@@ -471,7 +471,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		pipeline.endShadowRender();
 		// Note: This unbinds the shadow framebuffer
 		pipeline.popProgram(GbufferProgram.NONE);
-		// TODO: That doesn't unbind the framebuffer on NewWorldRenderingPipeline, so we need this
+		// TODO: That doesn't unbind the framebuffer on EnhancedWorldRenderingPipeline, so we need this
 		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
 
 		// Restore the old viewport
