@@ -34,7 +34,7 @@ public class MixinGlUniform {
 	@Unique
 	private boolean isScreenSize;
 
-	@Inject(method = "<init>()V", at = @At("RETURN"))
+	@Inject(method = "<init>(Ljava/lang/String;IILnet/minecraft/client/gl/GlShader;)V", at = @At("RETURN"))
 	private void iris$onInit(String name, int dataType, int count, GlShader program, CallbackInfo ci) {
 		isScreenSize = "ScreenSize".equals(name) || "iris_ScreenSize".equals(name);
 	}
