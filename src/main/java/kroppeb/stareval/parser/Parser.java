@@ -4,17 +4,56 @@ import kroppeb.stareval.element.AccessibleExpression;
 import kroppeb.stareval.element.Element;
 import kroppeb.stareval.element.Expression;
 import kroppeb.stareval.element.PriorityOperatorElement;
-import kroppeb.stareval.element.tree.*;
+import kroppeb.stareval.element.token.BinaryOperatorToken;
+import kroppeb.stareval.element.token.IdToken;
+import kroppeb.stareval.element.token.NumberToken;
+import kroppeb.stareval.element.token.UnaryOperatorToken;
+import kroppeb.stareval.element.tree.AccessExpression;
+import kroppeb.stareval.element.tree.BinaryExpression;
+import kroppeb.stareval.element.tree.FunctionCall;
+import kroppeb.stareval.element.tree.UnaryExpression;
 import kroppeb.stareval.element.tree.partial.PartialBinaryExpressionToken;
 import kroppeb.stareval.element.tree.partial.UnfinishedArgsExpression;
 import kroppeb.stareval.exception.MissingTokenException;
 import kroppeb.stareval.exception.ParseException;
 import kroppeb.stareval.exception.UnexpectedTokenException;
-import kroppeb.stareval.element.token.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * <p>
+ * A parser for parsing expressions with operator precedences.
+ * <p/><p>
+ * I can't actually find a parser type on wikipedia that matches this type of parser
+ * <p/><p>
+ * The following parser is a bottom-up parser, meaning that the input tokens get combined into elements
+ * which then get merged with other elements and tokens until a valid expression is formed, or an expression
+ * is thrown.
+ * <p/><p>
+ * The uniqueness of this parser lies in how it handles operator precedence without using any lookahead, instead any
+ * binary operators trigger a simplification on the left-hand side of the operator until the left-hand side has a
+ * precedence that is strictly higher than the new operator (assuming any expression that is not operator-based is the
+ * highest possible precedence, eg: function calls, numbers and brackets). Note that making this relationship require
+ * higher or equal, would make the operator right associative instead of left associative, in case that is ever needed.
+ * <p/><p>
+ * Once the left-hand side of a binary operator has been sufficiently combined, the operator is combined with the
+ * expression and is converted into a "partial binary expression" which acts like a unary operator with the precedence
+ * level. The comments inside {@link #visitBinaryOperator} show a few cases on what this reduction does with a given
+ * stack.
+ * <p/><p>
+ * The parsing of brackets is a bit strange, and due to the fact this documentation has been written 5 months after I
+ * made the design decision and 3 months after my latest code change, I can't fully explain why I put mutable state
+ * inside one of the elements of the parser, as it does not provide any significant speedup that I could think of.
+ * <p/><p>
+ * When an opening parenthesis is encountered, an "unfinished argument list" is pushed to the stack. Any comma will
+ * fully combine the expression on the left of the comma and push it to that list. When a closing parenthesis is
+ * encountered, a similar reduction is performed if the top of the stack is an expression. Then the parser checks if
+ * the top of the stack is a Identifier, if so, this is a call expression, otherwise it is simply a bracketed expression
+ * </p>
+ *
+ * @author Kroppeb
+ */
 public class Parser {
 	private final List<Element> stack = new ArrayList<>();
 
