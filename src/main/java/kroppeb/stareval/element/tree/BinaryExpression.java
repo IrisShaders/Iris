@@ -1,13 +1,14 @@
-package kroppeb.stareval.token;
+package kroppeb.stareval.element.tree;
 
+import kroppeb.stareval.element.Expression;
 import kroppeb.stareval.parser.BinaryOp;
 
-public class BinaryExpressionToken extends ExpressionToken {
+public class BinaryExpression implements Expression {
 	private final BinaryOp op;
-	private ExpressionToken left;
-	private ExpressionToken right;
+	private Expression left;
+	private Expression right;
 
-	public BinaryExpressionToken(BinaryOp op, ExpressionToken left, ExpressionToken right) {
+	public BinaryExpression(BinaryOp op, Expression left, Expression right) {
 		this.op = op;
 		this.left = left;
 		this.right = right;
@@ -19,7 +20,7 @@ public class BinaryExpressionToken extends ExpressionToken {
 	}
 
 	@Override
-	public ExpressionToken simplify() {
+	public Expression simplify() {
 		this.left = this.left.simplify();
 		this.right = this.right.simplify();
 		return this;

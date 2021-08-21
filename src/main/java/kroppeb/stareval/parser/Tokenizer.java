@@ -4,7 +4,7 @@ package kroppeb.stareval.parser;
 import kroppeb.stareval.exception.ParseException;
 import kroppeb.stareval.exception.UnexpectedCharacterException;
 import kroppeb.stareval.exception.UnexpectedEndingException;
-import kroppeb.stareval.token.ExpressionToken;
+import kroppeb.stareval.element.Expression;
 import net.minecraft.client.util.CharPredicate;
 
 
@@ -12,11 +12,11 @@ class Tokenizer {
 	private Tokenizer() {
 	}
 
-	static ExpressionToken parse(String input, ParserOptions options) throws ParseException {
+	static Expression parse(String input, ParserOptions options) throws ParseException {
 		return parseInternal(new StringReader(input), options);
 	}
 
-	static ExpressionToken parseInternal(StringReader input, ParserOptions options) throws ParseException {
+	static Expression parseInternal(StringReader input, ParserOptions options) throws ParseException {
 		// parser stack
 		final Parser stack = new Parser();
 		ParserOptions.ParserParts parserParts = options.getParserParts();

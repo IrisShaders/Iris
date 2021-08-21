@@ -1,6 +1,8 @@
-package kroppeb.stareval.token;
+package kroppeb.stareval.element.token;
 
-public class NumberToken extends ExpressionToken {
+import kroppeb.stareval.element.Expression;
+
+public class NumberToken extends Token implements Expression {
 	private final String number;
 
 	public NumberToken(String number) {

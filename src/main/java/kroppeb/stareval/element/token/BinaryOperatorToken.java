@@ -1,4 +1,4 @@
-package kroppeb.stareval.token;
+package kroppeb.stareval.element.token;
 
 import kroppeb.stareval.parser.BinaryOp;
 
