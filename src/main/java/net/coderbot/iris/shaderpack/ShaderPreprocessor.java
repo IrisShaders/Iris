@@ -93,6 +93,7 @@ public class ShaderPreprocessor {
 	}
 
 
+	// Derived from GlShader from Canvas, originally licensed under the Apache v2 license.
 	public static String glslPreprocessSource(String source) {
 		// NB: This doesn't work when ran in the above methods, only directly when creating the pass for some reason.
 		// The C preprocessor won't understand the #version token, so we must remove it and readd it later.
