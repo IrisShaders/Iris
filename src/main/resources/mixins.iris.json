@@ -7,7 +7,7 @@
   "client": [
     "MixinFogRenderer",
     "MixinDebugScreenOverlay",
-    "MixinEndPortalBlockEntityRenderer",
+    "MixinTheEndPortalRenderer",
     "MixinEntityRenderDispatcher",
     "MixinGameRenderer",
     "MixinGlStateManager",
