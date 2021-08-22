@@ -29,12 +29,15 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.ShaderPreprocessor;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.texture.AbstractTexture;
+import org.anarres.cpp.*;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
@@ -453,11 +456,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
+		String geometry = null;
+		if (source.getGeometrySource().isPresent()) {
+			geometry = ShaderPreprocessor.glslPreprocessSource(source.getGeometrySource().orElse(null));
+		}
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), ShaderPreprocessor.glslPreprocessSource(source.getVertexSource().orElse(null)), geometry,
+					ShaderPreprocessor.glslPreprocessSource(source.getFragmentSource().orElse(null)), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);

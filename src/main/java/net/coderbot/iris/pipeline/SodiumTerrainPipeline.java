@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.ShaderPreprocessor;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -60,27 +61,39 @@ public class SodiumTerrainPipeline {
 		});
 
 		if (terrainVertex != null) {
-			terrainVertex = transformVertexShader(terrainVertex);
+			terrainVertex = ShaderPreprocessor.glslPreprocessSource(transformVertexShader(terrainVertex));
 		}
 
 		if (translucentVertex != null) {
-			translucentVertex = transformVertexShader(translucentVertex);
+			translucentVertex = ShaderPreprocessor.glslPreprocessSource(transformVertexShader(translucentVertex));
 		}
 
 		if (shadowVertex != null) {
-			shadowVertex = transformVertexShader(shadowVertex);
+			shadowVertex = ShaderPreprocessor.glslPreprocessSource(transformVertexShader(shadowVertex));
+		}
+
+		if (terrainGeometry != null) {
+			terrainGeometry = ShaderPreprocessor.glslPreprocessSource(terrainGeometry);
+		}
+
+		if (translucentGeometry != null) {
+			translucentGeometry = ShaderPreprocessor.glslPreprocessSource(translucentGeometry);
+		}
+
+		if (shadowGeometry != null) {
+			shadowGeometry = ShaderPreprocessor.glslPreprocessSource(shadowGeometry);
 		}
 
 		if (terrainFragment != null) {
-			terrainFragment = transformFragmentShader(terrainFragment);
+			terrainFragment = ShaderPreprocessor.glslPreprocessSource(transformFragmentShader(terrainFragment));
 		}
 
 		if (translucentFragment != null) {
-			translucentFragment = transformFragmentShader(translucentFragment);
+			translucentFragment = ShaderPreprocessor.glslPreprocessSource(transformFragmentShader(translucentFragment));
 		}
 
 		if (shadowFragment != null) {
-			shadowFragment = transformFragmentShader(shadowFragment);
+			shadowFragment = ShaderPreprocessor.glslPreprocessSource(transformFragmentShader(shadowFragment));
 		}
 
 		this.createTerrainSamplers = createTerrainSamplers;
