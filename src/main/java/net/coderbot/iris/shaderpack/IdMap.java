@@ -46,6 +46,11 @@ public class IdMap {
 	private final Object2IntMap<Identifier> entityIdMap;
 
 	/**
+	 * Maps a given dimension ID to an integer ID
+	 */
+	private Object2IntMap<Identifier> dimensionIdMap;
+
+	/**
 	 * A map that contains the identifier of an item to the integer value parsed in block.properties
 	 */
 	private Object2IntMap<BlockState> blockPropertiesMap;
@@ -62,6 +67,9 @@ public class IdMap {
 		entityIdMap = loadProperties(shaderPath, "entity.properties")
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
+		dimensionIdMap = loadProperties(shaderPath, "dimension.properties")
+				.map(IdMap::parseDimensionIdMap).orElse(Object2IntMaps.emptyMap());
+
 		loadProperties(shaderPath, "block.properties").ifPresent(blockProperties -> {
 			// TODO: This won't parse block states in block.properties properly
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
@@ -70,10 +78,15 @@ public class IdMap {
 
 		// TODO: Properly override block render layers
 
-		if (blockPropertiesMap == null) {
-			// Fill in with default values...
+		// Fill in with default values...
+		if (blockPropertiesMap == null || blockPropertiesMap.isEmpty()) {
 			blockPropertiesMap = new Object2IntOpenHashMap<>();
-			LegacyIdMap.addLegacyValues(blockPropertiesMap);
+			LegacyIdMap.addLegacyBlockValues(blockPropertiesMap);
+		}
+
+		if (dimensionIdMap == null || dimensionIdMap.isEmpty()) {
+			dimensionIdMap = new Object2IntOpenHashMap<>();
+			LegacyIdMap.addVanillaDimensions(dimensionIdMap);
 		}
 
 		if (blockRenderLayerMap == null) {
@@ -127,6 +140,10 @@ public class IdMap {
 
 	private static Object2IntMap<Identifier> parseEntityIdMap(Properties properties) {
 		return parseIdMap(properties, "entity.", "entity.properties");
+	}
+
+	private static Object2IntMap<Identifier> parseDimensionIdMap(Properties properties) {
+		return parseIdMap(properties, "dimension.", "dimension.properties");
 	}
 
 	/**
@@ -398,6 +415,10 @@ public class IdMap {
 		return entityIdMap;
 	}
 
+	public Map<Identifier, Integer> getDimensionIdMap() {
+		return dimensionIdMap;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -412,12 +433,13 @@ public class IdMap {
 
 		return Objects.equals(itemIdMap, idMap.itemIdMap)
 				&& Objects.equals(entityIdMap, idMap.entityIdMap)
+				&& Objects.equals(dimensionIdMap, idMap.dimensionIdMap)
 				&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
 				&& Objects.equals(blockRenderLayerMap, idMap.blockRenderLayerMap);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderLayerMap);
+		return Objects.hash(itemIdMap, entityIdMap, dimensionIdMap, blockPropertiesMap, blockRenderLayerMap);
 	}
 }

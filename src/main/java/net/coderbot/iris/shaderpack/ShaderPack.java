@@ -15,24 +15,21 @@ import org.jetbrains.annotations.Nullable;
 
 public class ShaderPack {
 	private final ProgramSet base;
-	@Nullable
-	private final ProgramSet overworld;
-	private final ProgramSet nether;
-	private final ProgramSet end;
 
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 	private final CustomTexture customNoiseTexture;
 
+	private final ShaderProperties shaderProperties;
+	private final Path root;
+
 	public ShaderPack(Path root) throws IOException {
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
 
+		this.root = root;
 		this.base = new ProgramSet(root, root, shaderProperties, this);
-		this.overworld = loadOverrides(root, "world0", shaderProperties, this);
-		this.nether = loadOverrides(root, "world-1", shaderProperties, this);
-		this.end = loadOverrides(root, "world1", shaderProperties, this);
 
 		this.idMap = new IdMap(root);
 		this.langMap = parseLangEntries(root);
@@ -78,21 +75,13 @@ public class ShaderPack {
 		return Optional.of(properties);
 	}
 
-	public ProgramSet getProgramSet(DimensionId dimension) {
-		ProgramSet overrides;
+	public ProgramSet getProgramSet(int dimension) {
+		ProgramSet overrides = null;
 
-		switch (dimension) {
-			case OVERWORLD:
-				overrides = overworld;
-				break;
-			case NETHER:
-				overrides = nether;
-				break;
-			case END:
-				overrides = end;
-				break;
-			default:
-				throw new IllegalArgumentException("Unknown dimension " + dimension);
+		try {
+			overrides = loadOverrides(root, "world" + dimension, shaderProperties, this);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
 		return ProgramSet.merged(base, overrides);

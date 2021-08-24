@@ -14,6 +14,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.Level;
@@ -370,21 +371,17 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	public static DimensionId lastDimension = DimensionId.OVERWORLD;
+	public static int lastDimension = 0;
 
-	public static DimensionId getCurrentDimension() {
+	public static int getCurrentDimension() {
 		ClientWorld world = MinecraftClient.getInstance().world;
 
 		if (world != null) {
 			RegistryKey<World> worldRegistryKey = world.getRegistryKey();
 
-			if (worldRegistryKey.equals(World.END)) {
-				return DimensionId.END;
-			} else if (worldRegistryKey.equals(World.NETHER)) {
-				return DimensionId.NETHER;
-			} else {
-				return DimensionId.OVERWORLD;
-			}
+			Identifier dimensionId = worldRegistryKey.getValue();
+
+			return getCurrentPack().get().getIdMap().getDimensionIdMap().getOrDefault(dimensionId, 0);
 		} else {
 			// This prevents us from reloading the shaderpack unless we need to. Otherwise, if the player is in the
 			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the world
@@ -393,7 +390,7 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	private static WorldRenderingPipeline createPipeline(DimensionId dimensionId) {
+	private static WorldRenderingPipeline createPipeline(int dimensionId) {
 		if (currentPack == null) {
 			// completely disable shader-based rendering
 			return new FixedFunctionWorldRenderingPipeline();

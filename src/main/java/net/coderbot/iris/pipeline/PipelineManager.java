@@ -13,16 +13,16 @@ import java.util.function.Function;
 
 public class PipelineManager {
 	private static PipelineManager instance;
-	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
+	private final Function<Integer, WorldRenderingPipeline> pipelineFactory;
 	private WorldRenderingPipeline pipeline;
 	private boolean sodiumShaderReloadNeeded;
-	private DimensionId lastDimension;
+	private int lastDimension;
 
-	public PipelineManager(Function<DimensionId, WorldRenderingPipeline> pipelineFactory) {
+	public PipelineManager(Function<Integer, WorldRenderingPipeline> pipelineFactory) {
 		this.pipelineFactory = pipelineFactory;
 	}
 
-	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
+	public WorldRenderingPipeline preparePipeline(int currentDimension) {
 		if (currentDimension != lastDimension) {
 			Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
 
