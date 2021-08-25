@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -27,6 +28,9 @@ public class ShaderPack {
 	private final CustomTexture customNoiseTexture;
 
 	public ShaderPack(Path root) throws IOException {
+		// A null path is not allowed.
+		Objects.requireNonNull(root);
+
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
