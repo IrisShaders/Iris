@@ -46,7 +46,7 @@ public class IdMap {
 	private final Object2IntMap<Identifier> entityIdMap;
 
 	/**
-	 * A map that contains the identifier of an item to the integer value parsed in block.properties
+	 * Maps block states to block ids defined in block.properties
 	 */
 	private Object2IntMap<BlockState> blockPropertiesMap;
 
