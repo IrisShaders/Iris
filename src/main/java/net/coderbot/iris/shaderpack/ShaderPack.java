@@ -121,10 +121,10 @@ public class ShaderPack {
 		if (!Files.exists(langFolderPath)) {
 			return allLanguagesMap;
 		}
-		//We are using a max depth of one to ensure we only get the surface level *files* without going deeper
+		// We are using a max depth of one to ensure we only get the surface level *files* without going deeper
 		// we also want to avoid any directories while filtering
-		//Basically, we want the immediate files nested in the path for the langFolder
-		//There is also Files.list which can be used for similar behavior
+		// Basically, we want the immediate files nested in the path for the langFolder
+		// There is also Files.list which can be used for similar behavior
 		Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
 
 			Map<String, String> currentLanguageMap = new HashMap<>();
