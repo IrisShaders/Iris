@@ -95,6 +95,8 @@ public class IdMap {
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
 		try {
+			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
+			//     so we don't need to do the UTF-8 workaround here.
 			properties.load(propertiesReader);
 		} catch (IOException e) {
 			Iris.logger.error("Error loading " + name + " at " + shaderPath);
