@@ -79,7 +79,7 @@ public class Iris implements ClientModInitializer {
 		try {
 			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
-			Iris.logger.warn("Failed to create shaderpacks directory!");
+			Iris.logger.warn("Failed to create the shaderpacks directory!");
 			Iris.logger.catching(Level.WARN, e);
 		}
 
@@ -147,9 +147,7 @@ public class Iris implements ClientModInitializer {
 		if (!irisConfig.areShadersEnabled()) {
 			logger.info("Shaders are disabled because enableShaders is set to false in iris.properties");
 
-			currentPack = null;
-			currentPackName = "(off)";
-			internal = false;
+			setShadersDisabled();
 
 			return;
 		}
@@ -161,9 +159,7 @@ public class Iris implements ClientModInitializer {
 			if (!externalName.isPresent()) {
 				logger.info("Shaders are disabled because no valid shaderpack is selected");
 
-				currentPack = null;
-				currentPackName = "(off)";
-				internal = false;
+				setShadersDisabled();
 
 				return;
 			}
@@ -261,19 +257,22 @@ public class Iris implements ClientModInitializer {
 	private static Optional<Path> loadExternalZipShaderpack(Path shaderpackPath) throws IOException {
 		FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
 		zipFileSystem = zipSystem;
-		Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
+
+		// Should only be one root directory for a zip shaderpack
+		Path root = zipSystem.getRootDirectories().iterator().next();
 
 		Path potentialShaderDir = zipSystem.getPath("shaders");
-		//if the shaders dir was immediately found return it
-		//otherwise, manually search through each directory path until it ends with "shaders"
+
+		// If the shaders dir was immediately found return it
+		// Otherwise, manually search through each directory path until it ends with "shaders"
 		if (Files.exists(potentialShaderDir)) {
 			return Optional.of(potentialShaderDir);
 		}
 
-		//sometimes shaderpacks have their shaders directory within another folder in the shaderpack
-		//for example Sildurs-Vibrant-Shaders.zip/shaders
-		//while other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
-		//this makes it hard to determine what is the actual shaders dir
+		// Sometimes shaderpacks have their shaders directory within another folder in the shaderpack
+		// For example Sildurs-Vibrant-Shaders.zip/shaders
+		// While other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
+		// This makes it hard to determine what is the actual shaders dir
 		return Files.walk(root)
 				.filter(Files::isDirectory)
 				.filter(path -> path.endsWith("shaders"))
@@ -398,7 +397,7 @@ public class Iris implements ClientModInitializer {
 
 	private static WorldRenderingPipeline createPipeline(DimensionId dimensionId) {
 		if (currentPack == null) {
-			// completely disable shader-based rendering
+			// Completely disables shader-based rendering
 			return new FixedFunctionWorldRenderingPipeline();
 		}
 
@@ -412,7 +411,7 @@ public class Iris implements ClientModInitializer {
 				return new DeferredWorldRenderingPipeline(programs);
 			}
 		} catch (Exception e) {
-			Iris.logger.error("Failed to create shader rendering pipeline, falling back to internal shaders!", e);
+			Iris.logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
 			currentPackName = "(off) [fallback, check your logs for details]";
 

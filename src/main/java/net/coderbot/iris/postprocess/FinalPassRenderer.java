@@ -259,6 +259,8 @@ public class FinalPassRenderer {
 			IrisSamplers.addShadowSamplers(builder, shadowMapRendererSupplier.get());
 		}
 
+		// TODO: Don't duplicate this with CompositeRenderer
+		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
 
 		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");

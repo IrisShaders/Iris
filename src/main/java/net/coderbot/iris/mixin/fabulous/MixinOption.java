@@ -14,7 +14,7 @@ import net.minecraft.client.option.Option;
 public class MixinOption {
 	@Redirect(method = "method_32563", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resource/VideoWarningManager;hasCancelledAfterWarning()Z"))
 	private static boolean iris$onAttemptedToSelectFabulousGraphics(VideoWarningManager manager) {
-		// Returning true here will cause Minecraft to cycle between Fancy and Fast, disabling Fabulous graphics
+		// Returning false here will cause Minecraft to cycle between Fancy and Fast, disabling Fabulous graphics
 		return Iris.getIrisConfig().areShadersEnabled();
 	}
 }
