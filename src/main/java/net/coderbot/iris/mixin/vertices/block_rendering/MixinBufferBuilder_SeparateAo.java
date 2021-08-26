@@ -37,7 +37,7 @@ public abstract class MixinBufferBuilder_SeparateAo extends FixedColorVertexCons
 			this.brightnessIndex = 0;
 
 			brightnesses = new float[brightnesses.length];
-			Arrays.fill(brightnesses, 1.0f);
+			Arrays.fill(brightnesses, BlockRenderingSettings.INSTANCE.getAmbientOcclusionLevel());
 		}
 
 		super.quad(matrixEntry, quad, brightnesses, red, green, blue, lights, overlay, useQuadColorData);
@@ -46,7 +46,7 @@ public abstract class MixinBufferBuilder_SeparateAo extends FixedColorVertexCons
 	@Override
 	public void vertex(float x, float y, float z, float red, float green, float blue, float alpha, float u, float v,
 					   int overlay, int light, float normalX, float normalY, float normalZ) {
-		float ao = 1.0f;
+		float ao = BlockRenderingSettings.INSTANCE.getAmbientOcclusionLevel();
 
 		if (brightnesses != null && BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			if (brightnessIndex < brightnesses.length) {

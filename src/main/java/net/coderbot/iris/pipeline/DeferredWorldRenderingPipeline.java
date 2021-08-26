@@ -134,6 +134,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
 		BlockRenderingSettings.INSTANCE.setIdMap(programs.getPack().getIdMap());
+		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programs.getPackDirectives().getAmbientOcclusionLevel());
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programs.getPackDirectives().shouldUseSeparateAo());
 
