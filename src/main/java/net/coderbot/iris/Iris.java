@@ -79,8 +79,8 @@ public class Iris implements ClientModInitializer {
 		try {
 			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
-			Iris.logger.warn("Failed to create the shaderpacks directory!");
-			Iris.logger.catching(Level.WARN, e);
+			logger.warn("Failed to create the shaderpacks directory!");
+			logger.catching(Level.WARN, e);
 		}
 
 		irisConfig = new IrisConfig();
@@ -109,7 +109,7 @@ public class Iris implements ClientModInitializer {
 					}
 
 				} catch (Exception e) {
-					Iris.logger.error("Error while reloading Shaders for Iris!", e);
+					logger.error("Error while reloading Shaders for Iris!", e);
 
 					if (minecraftClient.player != null) {
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
@@ -126,7 +126,7 @@ public class Iris implements ClientModInitializer {
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
 					}
 				} catch (Exception e) {
-					Iris.logger.error("Error while toggling shaders!", e);
+					logger.error("Error while toggling shaders!", e);
 
 					if (minecraftClient.player != null) {
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
@@ -365,9 +365,9 @@ public class Iris implements ClientModInitializer {
 			try {
 				zipFileSystem.close();
 			} catch (NoSuchFileException e) {
-				Iris.logger.warn("Failed to close the shaderpack zip when reloading because it was deleted, proceeding anyways.");
+				logger.warn("Failed to close the shaderpack zip when reloading because it was deleted, proceeding anyways.");
 			} catch (IOException e) {
-				Iris.logger.error("Failed to close zip file system?", e);
+				logger.error("Failed to close zip file system?", e);
 			}
 		}
 	}
@@ -411,7 +411,7 @@ public class Iris implements ClientModInitializer {
 				return new DeferredWorldRenderingPipeline(programs);
 			}
 		} catch (Exception e) {
-			Iris.logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
+			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
 			currentPackName = "(off) [fallback, check your logs for details]";
 
