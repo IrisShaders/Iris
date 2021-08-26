@@ -16,6 +16,7 @@ public class MixinAbstractQuadRenderer {
 	          at = @At(value = "INVOKE",
 	                   target = "Lnet/fabricmc/fabric/impl/client/indigo/renderer/helper/ColorHelper;multiplyRGB(IF)I"))
 	private int iris$separateAoColorMultiply(int color, float ao) {
+		ao = ao * BlockRenderingSettings.INSTANCE.getAmbientOcclusionLevel();
 		if (BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			color &= 0x00FFFFFF;
 			color |= ((int) (ao * 255.0f)) << 24;
