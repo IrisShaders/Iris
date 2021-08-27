@@ -31,15 +31,6 @@ These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achi
 * **Agnostic of Minecraft versions.** This is more of a long-term goal, but if it is possible to make the majority of Iris version-independent, then porting to new versions should be straightforward and quick. This theoretically works in the other direction as well, though Iris for 1.8.9 (and similar old versions) isn't very practical currently since Sodium doesn't exist for these versions of the game.
 
 
-## But where's the Forge version?
-
-Iris doesn't support Forge. This is for a few reasons:
-
-* Sodium, which Iris depends on to achieve its great performance, does not support Forge. It's a long story, but in short: the lead developers of Forge were incredibly hostile to JellySquid when she developed for Forge, and since then have made no credible attempts to repair relations or even admit wrongdoing.
-* My time is limited, and properly supporting all of the mods available for Forge (as well as Forge itself) is a huge amount of work. I don't play with Forge on modern versions of the game, and Forge is a continually shrinking segment of the Minecraft community.
-* The Forge toolchain isn't really designed to play nice with mods like Iris that need to make many patches to the game code. It's possible, but Fabric & Quilt are just *better* for mods like Iris. It's no coincidence that the emergence of Fabric and the initial emergence of OptiFine replacements happened at around the same time.
-
-
 ## What's the current state of development?
 
 Iris has a public stable release for 1.16 that works with a custom version of Sodium, and a public beta release for 1.17 that currently does not work with Sodium (currently, there is no official version of Sodium for 1.17). Iris is still in heavy development and gets new improvements every week, and is progressing very rapidly!
@@ -76,6 +67,20 @@ Other shaderpacks aren't officially supported currently.
 * The Iris Discord server is looking for people willing to provide support and moderate the server! Send @IMS#7902 a message if you'd like to apply.
 * Code review on open PRs is appreciated! This helps get important issues with PRs resolved before I give them a look.
 * Code contributions through PRs are also welcome! If you're working on a large / significant feature it's usually a good idea to talk about your plans beforehand, to make sure that work isn't wasted.
+
+
+## But where's the Forge version?
+
+Iris doesn't support Forge. This is for a few reasons:
+
+* My time is limited, and properly supporting all the mods available for Forge (as well as Forge itself) is a huge amount of work. When people ask for Forge support, they aren't asking just for Iris to run on Forge, they are also asking for it to be compatible out of the box with their kitchen sink modpack that contains over 300 mods. As a result, properly supporting Forge would require me to divert large amounts precious time into fixing tedious compatibility issues and bugs, time that could instead be spent making the Fabric version of Iris better.
+* The Forge toolchain isn't really designed to play nice with mods like Iris that need to make many patches to the game code. It's possible, but Fabric & Quilt are just *better* for mods like Iris. It's no coincidence that the emergence of Fabric and the initial emergence of OptiFine replacements happened at around the same time.
+* Sodium, which Iris depends on to achieve its great performance, has no official Forge version. It's a long story, but in short: the lead developers of Forge were incredibly hostile to JellySquid when she developed for Forge, and since then have made no credible attempts to repair relations or even admit wrongdoing.
+
+The license of Iris does permit others to legally port Iris to Forge, and we are not strictly opposed to the existence of an Iris Forge port created by others. However, what we are opposed to is someone doing a bare-minimum port of Iris to Forge, releasing it to the public, and then abandoning it or poorly maintaining it while compatibility issues and bug reports accumulate. When that happens, not only does that hurt the reputation of Iris, but we also ultimately get flooded by users wanting support with a low-effort Forge port that we didn't even make.
+
+So, if you want to distribute a Forge port of Iris, we'd prefer if you let us know. Please don't just name your port "Iris Forge," "Iris for Forge," or "Iris Forge Port" either. Be original, and don't just hijack our name, unless we've given you permission to use one of those kinds of names. If a well-qualified group of people willing to maintain a Forge port of Iris does appear, then a name like "Iris Forge" might be appropriate - otherwise, it probably isn't appropriate.
+
 
 ## Credits
 
