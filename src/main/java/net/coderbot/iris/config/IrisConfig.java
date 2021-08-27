@@ -103,6 +103,7 @@ public class IrisConfig {
 		}
 
 		Properties properties = new Properties();
+		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
@@ -123,6 +124,7 @@ public class IrisConfig {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName().orElse(""));
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
+		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
 	}
 }
