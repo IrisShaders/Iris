@@ -33,14 +33,14 @@ These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achi
 
 ## What's the current state of development?
 
-Iris has a public stable release for 1.16 that works with a custom version of Sodium, and a public beta release for 1.17 that currently does not work with Sodium (currently, there is no official version of Sodium for 1.17). Iris is still in heavy development and gets new improvements every week, and is progressing very rapidly!
+Iris has public releases for 1.16 and 1.17 that work with a custom versions of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
 
-Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accomondate Iris. Though a [fork of Sodium](https://github.com/IrisShaders/sodium-fabric) is still required, it's my intent that it will be unnecessary in the future. Official downloads of Iris include this modified version of Sodium for performance.
+Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris. Though a [fork of Sodium](https://github.com/IrisShaders/sodium-fabric) is still required, it's my intent that it will be unnecessary in the future. Official downloads of Iris include this modified version of Sodium for performance.
 
 
 ## What shader packs can I use right now?
 
-Iris has been progressing quite rapidly recently. The following shader packs mostly work, though with a few bugs of course:
+The following shader packs mostly work, though with a few bugs of course:
 
 * [Sildur's Vibrant Shaders](https://sildurs-shaders.github.io/)
 * [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
