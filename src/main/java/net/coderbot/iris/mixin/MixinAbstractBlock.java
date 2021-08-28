@@ -20,7 +20,12 @@ public class MixinAbstractBlock {
 	@Deprecated
 	@Overwrite
 	public float getAmbientOcclusionLightLevel(BlockState state, BlockView world, BlockPos pos) {
-		float aoLightValue = 1.0F - BlockRenderingSettings.INSTANCE.getAmbientOcclusionLevel();
+		float aoLightValue;
+		if (BlockRenderingSettings.INSTANCE.getAmbientOcclusionLevel() == 1.0F) {
+			aoLightValue = 1.0F;
+		} else {
+			aoLightValue = 1.0F - BlockRenderingSettings.INSTANCE.getAmbientOcclusionLevel();
+		}
 		return state.isFullCube(world, pos) ? aoLightValue * 0.2F : aoLightValue;
 	}
 }
