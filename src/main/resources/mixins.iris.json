@@ -16,6 +16,7 @@
     "MixinImmediateVertexConsumerProvider",
     "MixinImmediateVertexConsumerProvider_WrapperManager",
     "MixinLivingEntityRenderer",
+    "MixinMinecraftClient",
     "MixinModelViewBobbing",
     "MixinShader",
     "MixinSpriteAtlasTexture",
