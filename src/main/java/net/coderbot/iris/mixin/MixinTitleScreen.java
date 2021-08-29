@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TitleScreen.class)
 public class MixinTitleScreen {
 	@Inject(method = "init", at = @At("RETURN"))
-	public void showError(CallbackInfo ci) {
+	public void iris$showSodiumIncompatScreen(CallbackInfo ci) {
 		if(Iris.sodiumInvalid) {
 			MinecraftClient.getInstance().openScreen(new NoticeScreen(() -> {
 				MinecraftClient.getInstance().scheduleStop();
