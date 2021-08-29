@@ -25,9 +25,6 @@ public abstract class MixinAbstractBlockState {
 	public float getAmbientOcclusionLightLevel(BlockView world, BlockPos pos) {
 		float originalValue = this.isFullCube(world, pos) ? 0.2F : 1.0F;
 		float aoLightValue = BlockRenderingSettings.INSTANCE.getAmbientOcclusionLevel();
-		if (aoLightValue == 1.0F) {
-			return originalValue;
-		}
 		return 1.0F - aoLightValue * (1.0F - originalValue);
 	}
 }
