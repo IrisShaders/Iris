@@ -65,14 +65,36 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 sourceSets {
+	// "header" API stubs for implementing APIs from other mods
+	// These are not compiled into the resulting JAR file or loaded at runtime,
+	// they are for compilation purposes only.
+	//
+	// Proper implementations of these classes *might* be available at runtime,
+	// but that is not guaranteed. Generally, we must detect whether they are
+	// available through mod loading checks (or if a corresponding entrypoint is
+	// called by Fabric Loader / Quilt Loader / etc).
+	headers {
+		java {
+			compileClasspath += main.compileClasspath
+		}
+	}
+
+	// "vendored" libraries copied and repackaged into the Iris source tree
+	// These are compiled into the resulting JAR file and are available
+	// at runtime.
 	vendored {
 		java {
 			compileClasspath += main.compileClasspath
 		}
 	}
 
+	// The main source code of Iris.
 	main {
 		java {
+			// headers / API stubs are only available at compilation time.
+			compileClasspath += headers.output
+
+			// Vendored sources are available at compilation time and runtime.
 			compileClasspath += vendored.output
 			runtimeClasspath += vendored.output
 		}
@@ -91,6 +113,10 @@ jar {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
 
+	// NB: headers / API stubs are not included in the resulting JAR file.
+	// We don't have a "from sourceSets.headers.output" here as a result.
+
+	// Vendored sources are included in the resulting JAR file.
 	from sourceSets.vendored.output
 }
 

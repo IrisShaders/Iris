@@ -47,6 +47,9 @@ public class Iris implements ClientModInitializer {
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static boolean internal;
+	private static boolean sodiumInvalid;
+	private static boolean sodiumInstalled;
+	private static boolean physicsModInstalled;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
@@ -61,14 +64,15 @@ public class Iris implements ClientModInitializer {
 	public void onInitializeClient() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
+					sodiumInstalled = true;
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
-				// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-				// the right fork of Sodium, it will just crash.
-				if (!versionString.startsWith(SODIUM_VERSION)) {
-					throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but " + SODIUM_VERSION + " is expected");
+					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
+					// the right fork of Sodium, it will just crash.
+					if (!versionString.startsWith(SODIUM_VERSION)) {
+						sodiumInvalid = true;
+					}
 				}
-			}
 		);
 
 		FabricLoader.getInstance().getModContainer("iris").ifPresent(
@@ -76,6 +80,7 @@ public class Iris implements ClientModInitializer {
 					IRIS_VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
 				}
 		);
+		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
 		try {
 			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
@@ -463,5 +468,17 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return color + version;
+	}
+
+	public static boolean isSodiumInvalid() {
+		return sodiumInvalid;
+  }
+
+	public static boolean isSodiumInstalled() {
+		return sodiumInstalled;
+	}
+
+	public static boolean isPhysicsModInstalled() {
+		return physicsModInstalled;
 	}
 }

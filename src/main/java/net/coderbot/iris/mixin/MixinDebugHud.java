@@ -55,7 +55,7 @@ public abstract class MixinDebugHud {
 
 		messages.add(3, "Direct Buffers: +" + humanReadableByteCountBin(directPool.getMemoryUsed()));
 
-		if (!FabricLoader.getInstance().isModLoaded("sodium")) {
+		if (!Iris.isSodiumInstalled()) {
 			messages.add(3, "Native Memory: +" + humanReadableByteCountBin(getNativeMemoryUsage()));
 		}
 	}
@@ -64,7 +64,7 @@ public abstract class MixinDebugHud {
 	private void appendShadowDebugText(CallbackInfoReturnable<List<String>> cir) {
 		List<String> messages = cir.getReturnValue();
 
-		if (!FabricLoader.getInstance().isModLoaded("sodium") && Iris.getCurrentPack().isPresent()) {
+		if (!Iris.isSodiumInstalled() && Iris.getCurrentPack().isPresent()) {
 			messages.add(1, Formatting.YELLOW + "[Iris] Sodium isn't installed; you will have poor performance.");
 			messages.add(2, Formatting.YELLOW + "[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
 		}
