@@ -1,11 +1,14 @@
 package net.coderbot.iris.shaderpack;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -25,6 +28,9 @@ public class ShaderPack {
 	private final CustomTexture customNoiseTexture;
 
 	public ShaderPack(Path root) throws IOException {
+		// A null path is not allowed.
+		Objects.requireNonNull(root);
+
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
@@ -68,6 +74,8 @@ public class ShaderPack {
 		Properties properties = new Properties();
 
 		try {
+			// NB: shaders.properties is specified to be encoded with ISO-8859-1 by OptiFine,
+			//     so we don't need to do the UTF-8 workaround here.
 			properties.load(Files.newInputStream(shaderPath.resolve(name)));
 		} catch (IOException e) {
 			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
@@ -117,10 +125,10 @@ public class ShaderPack {
 		if (!Files.exists(langFolderPath)) {
 			return allLanguagesMap;
 		}
-		//We are using a max depth of one to ensure we only get the surface level *files* without going deeper
+		// We are using a max depth of one to ensure we only get the surface level *files* without going deeper
 		// we also want to avoid any directories while filtering
-		//Basically, we want the immediate files nested in the path for the langFolder
-		//There is also Files.list which can be used for similar behavior
+		// Basically, we want the immediate files nested in the path for the langFolder
+		// There is also Files.list which can be used for similar behavior
 		Files.walk(langFolderPath, 1).filter(path -> !Files.isDirectory(path)).forEach(path -> {
 
 			Map<String, String> currentLanguageMap = new HashMap<>();
@@ -132,7 +140,9 @@ public class ShaderPack {
 			Properties properties = new Properties();
 
 			try {
-				properties.load(Files.newInputStream(path));
+				// Use InputStreamReader to avoid the default charset of ISO-8859-1.
+				// This is needed since shader language files are specified to be in UTF-8.
+				properties.load(new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8));
 			} catch (IOException e) {
 				Iris.logger.error("Error while parsing languages for shaderpacks! Expected File Path: {}", path);
 				Iris.logger.catching(Level.ERROR, e);
