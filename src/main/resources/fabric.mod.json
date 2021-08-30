@@ -48,6 +48,8 @@
 
   "breaks": {
     "canvas": "*",
-    "optifabric": "*"
+    "optifabric": "*",
+    "imm_ptl_core": "*",
+    "immersive_portals": "*"
   }
 }

@@ -68,19 +68,21 @@ public class Iris implements ClientModInitializer {
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
 					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will just crash.
+					// the right fork of Sodium, it will show the user a nice warning, and prevent them from playing the
+					// game with a wrong version of Sodium.
 					if (!versionString.startsWith(SODIUM_VERSION)) {
 						sodiumInvalid = true;
 					}
 				}
 		);
 
-		FabricLoader.getInstance().getModContainer("iris").ifPresent(
-				modContainer -> {
-					IRIS_VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
-				}
-		);
+		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
+				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
+
+		IRIS_VERSION = iris.getMetadata().getVersion().getFriendlyString();
+
 		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
+
 		try {
 			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
