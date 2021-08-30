@@ -18,10 +18,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import net.minecraft.client.resource.language.LanguageDefinition;
-import net.minecraft.client.resource.language.TranslationStorage;
-import net.minecraft.resource.ResourceManager;
-
 /**
  * Allows shader packs to provide extra usable language entries outside of resource packs.
  *
@@ -51,7 +47,7 @@ public class MixinClientLanguage {
 		}
 	}
 
-	@Inject(method = "hasTranslation", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "has", at = @At("HEAD"), cancellable = true)
 	private void iris$addLanguageEntriesToTranslationChecks(String key, CallbackInfoReturnable<Boolean> cir) {
 		String override = iris$lookupOverriddenEntry(key);
 
@@ -77,7 +73,7 @@ public class MixinClientLanguage {
 		// language. If they do, we load that, but if they do not, we load "en_us" instead.
 		Map<String, Map<String, String>> languageMap = pack.getLangMap();
 
-		if (translations.containsKey(key)) {
+		if (storage.containsKey(key)) {
 			// TODO: Should we allow shader packs to override existing MC translations?
 			return null;
 		}
@@ -98,7 +94,7 @@ public class MixinClientLanguage {
 	}
 
 	@Inject(method = LOAD, at = @At("HEAD"))
-	private static void check(ResourceManager resourceManager, List<LanguageDefinition> definitions, CallbackInfoReturnable<TranslationStorage> cir) {
+	private static void check(ResourceManager resourceManager, List<LanguageInfo> definitions, CallbackInfoReturnable<ClientLanguage> cir) {
 		// Make sure the language codes dont carry over!
 		languageCodes.clear();
 
