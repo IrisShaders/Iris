@@ -18,7 +18,7 @@ public class MixinTitleScreen {
 	@Inject(method = "init", at = @At("RETURN"))
 	public void iris$showSodiumIncompatScreen(CallbackInfo ci) {
 		if(Iris.isSodiumInvalid()) {
-			MinecraftClient.getInstance().openScreen(new NoticeScreen(() -> {
+			MinecraftClient.getInstance().setScreen(new NoticeScreen(() -> {
 				MinecraftClient.getInstance().scheduleStop();
 			}, new TranslatableText("iris.sodium.failure.title").formatted(Formatting.RED), new TranslatableText("iris.sodium.failure.reason")));
 		}
