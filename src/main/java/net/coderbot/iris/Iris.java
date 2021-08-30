@@ -245,9 +245,9 @@ public class Iris implements ClientModInitializer {
 
 		try {
 			currentPack = new ShaderPack(shaderPackPath);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
-			logger.error(e);
+			logger.catching(e);
 
 			return false;
 		}
