@@ -1,0 +1,28 @@
+{
+  "iris.shaders.reloaded": "Varjutajad taaslaaditud!",
+  "iris.shaders.toggled": "Varjutajad on nüüd %s!",
+  "iris.keybind.reload": "Laadi varjutajad uuesti",
+  "iris.keybind.shaderPackSelection": "Varjutajapaki valikukuva",
+  "iris.keybind.toggleShaders": "Lülita varjutajad sisse/välja",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "Varjutajate taaslaadimine ebaõnnestus! Põhjus: %s",
+  "iris.shaders.toggled.failure": "Varjutajate lülitamine ebaõnnestus! Põhjus: %s",
+
+  "options.iris.apply": "Rakenda",
+  "options.iris.refresh": "Värskenda",
+  "options.iris.openShaderPackFolder": "Ava varjutajapakkide kaust...",
+  "options.iris.refreshShaderPacks": "Värskenda varjutajapakid",
+  "options.iris.shaderPackSelection": "Varjutajapakid...",
+  "options.iris.shaderPackSelection.title": "Varjutajapakid",
+  "options.iris.shaderPackSelection.addedPack": "Varjutajapakk \"%s\" lisatud",
+  "options.iris.shaderPackSelection.addedPacks": "%s varjutajapakki lisatud",
+  "options.iris.shaderPackSelection.failedAdd": "Failid ei olnud sobivad varjutajapakid",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" ei ole sobiv varjutajapakk",
+  "options.iris.shaderPackSelection.copyError": "Varjutajapakki \"%s\" ei saanud lisada",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" on juba varjutajapakkide kaustas!",
+  "options.iris.shaders.disabled": "Varjutajad: keelatud",
+  "options.iris.shaders.enabled": "Varjutajad: lubatud",
+
+  "pack.iris.select.title": "Vali",
+  "pack.iris.list.label": "+ Varjutajapakkide lisamiseks sikuta need siia"
+}
