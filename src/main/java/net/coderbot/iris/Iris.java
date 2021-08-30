@@ -195,7 +195,7 @@ public class Iris implements ClientModInitializer {
 		try {
 			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
 		} catch (InvalidPathException e) {
-			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", irisConfig.getShaderPackName());
+			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
 			return false;
 		}
@@ -208,15 +208,15 @@ public class Iris implements ClientModInitializer {
 			try {
 				optionalPath = loadExternalZipShaderpack(shaderPackRoot);
 			} catch (FileSystemNotFoundException e) {
-				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist in your shaderpacks folder!", name);
 
 				return false;
 			} catch (ZipException e) {
-				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", irisConfig.getShaderPackName());
+				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", name);
 
 				return false;
 			} catch (IOException e) {
-				logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\"!", name);
 				logger.catching(Level.ERROR, e);
 
 				return false;
@@ -225,12 +225,12 @@ public class Iris implements ClientModInitializer {
 			if (optionalPath.isPresent()) {
 				shaderPackPath = optionalPath.get();
 			} else {
-				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", name);
 				return false;
 			}
 		} else {
 			if (!Files.exists(shaderPackRoot)) {
-				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", name);
 				return false;
 			}
 
@@ -239,14 +239,14 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (!Files.exists(shaderPackPath)) {
-			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", name);
 			return false;
 		}
 
 		try {
 			currentPack = new ShaderPack(shaderPackPath);
 		} catch (IOException e) {
-			logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
+			logger.error("Failed to load the shaderpack \"{}\"!", name);
 			logger.error(e);
 
 			return false;
