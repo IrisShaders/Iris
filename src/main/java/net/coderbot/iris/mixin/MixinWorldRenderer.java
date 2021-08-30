@@ -67,6 +67,11 @@ public class MixinWorldRenderer {
 
 	@Inject(method = RENDER, at = @At("HEAD"))
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		if (Iris.isSodiumInvalid()) {
+			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
+					" didn't work. This is a bug! Please report it to the Iris developers.");
+		}
+
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 
