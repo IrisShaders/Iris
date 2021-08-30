@@ -44,7 +44,7 @@ public class Iris implements ClientModInitializer {
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static boolean internal;
-	public static boolean sodiumInvalid;
+	private static boolean sodiumInvalid;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
@@ -454,5 +454,9 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return color + version;
+	}
+
+	public static boolean isSodiumInvalid() {
+		return sodiumInvalid;
 	}
 }
