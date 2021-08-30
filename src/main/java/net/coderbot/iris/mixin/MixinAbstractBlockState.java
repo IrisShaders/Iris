@@ -15,9 +15,6 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(AbstractBlock.AbstractBlockState.class)
 public abstract class MixinAbstractBlockState {
 	@Shadow
-	public abstract boolean isFullCube(BlockView world, BlockPos pos);
-
-	@Shadow
 	public abstract Block getBlock();
 
 	@Shadow
