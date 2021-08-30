@@ -75,12 +75,13 @@ public class Iris implements ClientModInitializer {
 				}
 		);
 
-		FabricLoader.getInstance().getModContainer("iris").ifPresent(
-				modContainer -> {
-					IRIS_VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
-				}
-		);
+		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
+				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
+
+		IRIS_VERSION = iris.getMetadata().getVersion().getFriendlyString();
+
 		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
+
 		try {
 			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
