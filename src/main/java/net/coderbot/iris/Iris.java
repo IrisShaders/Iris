@@ -207,7 +207,7 @@ public class Iris implements ClientModInitializer {
 
 			try {
 				optionalPath = loadExternalZipShaderpack(shaderPackRoot);
-			} catch (FileSystemNotFoundException e) {
+			} catch (FileSystemNotFoundException | NoSuchFileException e) {
 				logger.error("Failed to load the shaderpack \"{}\" because it does not exist in your shaderpacks folder!", name);
 
 				return false;
