@@ -84,8 +84,10 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
+			// TODO: Parse the value of const float eyeBrightnessHalflife from the shaderpack's fragment shader configuration
 			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier))
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
+			// TODO: Parse the value of const float wetnessHalfLife and const float drynessHalfLife from the shaderpack's fragment shader configuration
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
 			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor)
@@ -93,7 +95,7 @@ public final class CommonUniforms {
 	}
 
 	private static Vec2 getAtlasSize() {
-		//TODO: is the block atlas used for this uniform all the time???
+		// TODO: is the block atlas used for this uniform all the time???
 		return ((TextureAtlasInterface) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getAtlasSize();
 	}
 

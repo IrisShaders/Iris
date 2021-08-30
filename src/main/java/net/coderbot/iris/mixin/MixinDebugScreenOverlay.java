@@ -43,17 +43,22 @@ public abstract class MixinDebugScreenOverlay {
     private void appendShaderPackText(CallbackInfoReturnable<List<String>> cir) {
         List<String> messages = cir.getReturnValue();
 
-        messages.add("");
-        messages.add("[Iris] Version: " + Iris.getFormattedVersion());
-        messages.add("");
-        messages.add("[Iris] Shaderpack: " + Iris.getCurrentPackName());
+		messages.add("");
+		messages.add("[Iris] Version: " + Iris.getFormattedVersion());
+		messages.add("");
+
+		if (Iris.getIrisConfig().areShadersEnabled()) {
+			messages.add("[Iris] Shaderpack: " + Iris.getCurrentPackName());
+		} else {
+			messages.add("[Iris] Shaders are disabled");
+		}
 
 		messages.add(3, "Direct Buffers: +" + humanReadableByteCountBin(directPool.getMemoryUsed()));
 
 		if (!FabricLoader.getInstance().isModLoaded("sodium")) {
 			messages.add(3, "Native Memory: +" + humanReadableByteCountBin(getNativeMemoryUsage()));
 		}
-    }
+	}
 
 	@Inject(method = "getGameInformation", at = @At("RETURN"))
 	private void appendShadowDebugText(CallbackInfoReturnable<List<String>> cir) {

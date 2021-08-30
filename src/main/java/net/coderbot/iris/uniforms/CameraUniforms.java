@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#celestial-bodies">Uniforms: Camera</a>
+ * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#camera">Uniforms: Camera</a>
  */
 public class CameraUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
