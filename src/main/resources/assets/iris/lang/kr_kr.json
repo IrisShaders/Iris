@@ -1,0 +1,28 @@
+{
+  "iris.shaders.reloaded": "셰이더 릴로드!",
+  "iris.shaders.toggled": "셰이더 토글！",
+  "iris.keybind.reload": "릴로드 키",
+  "iris.keybind.shaderPackSelection": "셰이더 셀렉트 키",
+  "iris.keybind.toggleShaders": "셰이더 토글 키",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "셰이더 릴로드 에러！",
+  "iris.shaders.toggled.failure": "셰이더 토글 에러！",
+
+  "options.iris.apply": "확인",
+  "options.iris.refresh": "새로고침",
+  "options.iris.openShaderPackFolder": "셰이더 폴더 열기",
+  "options.iris.refreshShaderPacks": "셰이더 폴더 새로고침",
+  "options.iris.shaderPackSelection": "셰이더들...",
+  "options.iris.shaderPackSelection.title": "셰이더",
+  "options.iris.shaderPackSelection.addedPack": "\"%s\" 셰이더가 추가되었습니다.",
+  "options.iris.shaderPackSelection.addedPacks": "%s 셰이더들이 추가되었습니다.",
+  "options.iris.shaderPackSelection.failedAdd": "파일들이 유효한 셰이더들이 아닙니다.",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" 는 유효한 셰이더가 아닙니다.",
+  "options.iris.shaderPackSelection.copyError": "다음 셰이더들을 추가하지 못하였습니다: \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 는 이미 셰이더 폴더에 있습니다！",
+  "options.iris.shaders.disabled": "셰이더：오프",
+  "options.iris.shaders.enabled": "셰이더: 온",
+
+  "pack.iris.select.title": "셀렉트",
+  "pack.iris.list.label": "추가할 셰이더를 드래그 & 드롭하세요"
+}
