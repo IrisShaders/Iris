@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin;
 
+import net.coderbot.iris.Iris;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.layer.EntityColorRenderState;
 import net.coderbot.iris.layer.InnerWrappedRenderType;
@@ -18,7 +19,12 @@ public abstract class MixinLivingEntityRenderer {
 
 	@ModifyVariable(method = "render", at = @At("HEAD"))
 	private MultiBufferSource iris$wrapProvider(MultiBufferSource provider, LivingEntity entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
-		boolean hurt = entity.hurtTime > 0 || entity.deathTime > 0;
+		boolean hurt;
+		if(Iris.isPhysicsModInstalled()) {
+			hurt = entity.hurtTime > 0 && !entity.isDead();
+		} else {
+			hurt = entity.hurtTime > 0 || entity.deathTime > 0;
+		}
 		float whiteFlash = getAttackAnim(entity, tickDelta);
 
 		if (hurt || whiteFlash > 0.0) {

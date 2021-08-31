@@ -35,12 +35,17 @@ import net.fabricmc.loader.api.FabricLoader;
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
+	// The recommended version of Sodium for use with Iris
+	private static final String SODIUM_VERSION = "0.2.0+IRIS3";
 
 	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static boolean internal;
+	private static boolean sodiumInvalid;
+	private static boolean sodiumInstalled;
+	private static boolean physicsModInstalled;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
@@ -55,21 +60,25 @@ public class Iris implements ClientModInitializer {
 	public void onInitializeClient() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
+					sodiumInstalled = true;
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
 					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will just crash.
-					if (!versionString.startsWith("0.2.0+IRIS3")) {
-						throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but 0.2.0+IRIS3 is expected");
+					// the right fork of Sodium, it will show the user a nice warning, and prevent them from playing the
+					// game with a wrong version of Sodium.
+					if (!versionString.startsWith(SODIUM_VERSION)) {
+						sodiumInvalid = true;
 					}
 				}
 		);
 
-		FabricLoader.getInstance().getModContainer("iris").ifPresent(
-				modContainer -> {
-					IRIS_VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
-				}
-		);
+		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
+				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
+
+		IRIS_VERSION = iris.getMetadata().getVersion().getFriendlyString();
+
+		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
+
 		try {
 			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
@@ -183,7 +192,7 @@ public class Iris implements ClientModInitializer {
 		try {
 			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
 		} catch (InvalidPathException e) {
-			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", irisConfig.getShaderPackName());
+			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
 			return false;
 		}
@@ -195,16 +204,16 @@ public class Iris implements ClientModInitializer {
 
 			try {
 				optionalPath = loadExternalZipShaderpack(shaderPackRoot);
-			} catch (FileSystemNotFoundException e) {
-				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+			} catch (FileSystemNotFoundException | NoSuchFileException e) {
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist in your shaderpacks folder!", name);
 
 				return false;
 			} catch (ZipException e) {
-				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", irisConfig.getShaderPackName());
+				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", name);
 
 				return false;
 			} catch (IOException e) {
-				logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\"!", name);
 				logger.catching(Level.ERROR, e);
 
 				return false;
@@ -213,12 +222,12 @@ public class Iris implements ClientModInitializer {
 			if (optionalPath.isPresent()) {
 				shaderPackPath = optionalPath.get();
 			} else {
-				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", name);
 				return false;
 			}
 		} else {
 			if (!Files.exists(shaderPackRoot)) {
-				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", name);
 				return false;
 			}
 
@@ -227,14 +236,14 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (!Files.exists(shaderPackPath)) {
-			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", name);
 			return false;
 		}
 
 		try {
 			currentPack = new ShaderPack(shaderPackPath);
 		} catch (IOException e) {
-			logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
+			logger.error("Failed to load the shaderpack \"{}\"!", name);
 			logger.error(e);
 
 			return false;
@@ -449,5 +458,17 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return color + version;
+	}
+
+	public static boolean isSodiumInvalid() {
+		return sodiumInvalid;
+  }
+  
+	public static boolean isSodiumInstalled() {
+		return sodiumInstalled;
+	}
+
+	public static boolean isPhysicsModInstalled() {
+		return physicsModInstalled;
 	}
 }

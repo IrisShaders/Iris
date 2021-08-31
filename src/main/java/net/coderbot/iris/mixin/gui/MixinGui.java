@@ -34,7 +34,7 @@ public class MixinGui {
 	// TODO: Move this to a more appropriate mixin
 	@Inject(method = "render", at = @At("RETURN"))
 	public void iris$displayBigSodiumWarning(PoseStack matrices, float tickDelta, CallbackInfo ci) {
-		if (FabricLoader.getInstance().isModLoaded("sodium")
+		if (Iris.isSodiumInstalled()
 				|| Minecraft.getInstance().options.renderDebug
 				|| !Iris.getCurrentPack().isPresent()) {
 			return;

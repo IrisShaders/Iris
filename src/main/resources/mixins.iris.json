@@ -16,6 +16,7 @@
     "MixinLivingEntityRenderer",
     "MixinModelViewBobbing",
     "MixinParticleEngine",
+    "MixinTitleScreen",
     "MixinTextureAtlas",
     "MixinTntMinecartRenderer",
     "MixinClientLanguage",
