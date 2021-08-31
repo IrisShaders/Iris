@@ -21,7 +21,7 @@ public abstract class MixinLivingEntityRenderer {
 	private MultiBufferSource iris$wrapProvider(MultiBufferSource provider, LivingEntity entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
 		boolean hurt;
 		if(Iris.isPhysicsModInstalled()) {
-			hurt = entity.hurtTime > 0 && !entity.isDead();
+			hurt = entity.hurtTime > 0 && !entity.isDeadOrDying();
 		} else {
 			hurt = entity.hurtTime > 0 || entity.deathTime > 0;
 		}
