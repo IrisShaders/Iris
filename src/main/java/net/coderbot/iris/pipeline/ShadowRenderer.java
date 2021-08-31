@@ -359,10 +359,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// Render nearby entities
 		//
-		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
+		// Note: We must use a separate RenderBuffers object here, or else very weird things will happen during
 		// rendering.
 		if (extendedBufferStorage != null) {
-			extendedBufferStorage.beginWorldRendering();
+			extendedBufferStorage.beginLevelRendering();
 		}
 
 		MultiBufferSource.BufferSource provider = buffers.bufferSource();
@@ -438,13 +438,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// Just something to watch out for, however...
 		levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ);
 		// Note: Apparently tripwire isn't rendered in the shadow pass.
-		// levelRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ);
+		// levelRenderer.renderChunkLayer(RenderLayer.tripwire(), modelView, cameraX, cameraY, cameraZ);
 
 		// NB: If we want to render anything after translucent terrain, we need to uncomment this line!
 		// setupShadowProgram();
 
 		if (extendedBufferStorage != null) {
-			extendedBufferStorage.endWorldRendering();
+			extendedBufferStorage.endLevelRendering();
 		}
 
 		SHADOW_DEBUG_STRING = ((LevelRenderer) levelRenderer).getChunkStatistics();

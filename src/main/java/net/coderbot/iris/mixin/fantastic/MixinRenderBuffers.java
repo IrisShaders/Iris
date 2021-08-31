@@ -42,12 +42,12 @@ public class MixinRenderBuffers implements ExtendedBufferStorage {
 	private int begins = 0;
 
 	@Override
-	public void beginWorldRendering() {
+	public void beginLevelRendering() {
 		begins += 1;
 	}
 
 	@Override
-	public void endWorldRendering() {
+	public void endLevelRendering() {
 		begins -= 1;
 	}
 }

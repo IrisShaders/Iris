@@ -49,16 +49,16 @@ public class MixinFixEntityVertexNormals {
 		// Once it's done checking, we restore our modifications
 		@At(value = "INVOKE", target = CHECK_POSE_STACK, shift = At.Shift.AFTER),
 		// Right before Minecraft starts rendering VertexConsumerProvider.Immediate buffers again
-		@At(value = "INVOKE", target = "Lnet/minecraft/client/render/TexturedRenderLayers;getEntityTranslucentCull()Lnet/minecraft/client/render/RenderLayer;"),
+		@At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Sheets;translucentCullBlockSheet()Lnet/minecraft/client/renderer/RenderType;"),
 		// The last of the immediate buffer drawing happens within translucency rendering
 		// Use a custom slice here instead of the default one to avoid catching the getLines() call
 		// around drawBlockOutline
 		@At(value = "INVOKE", slice = "after_translucent_rendering",
-			target = "Lnet/minecraft/client/render/RenderLayer;getLines()Lnet/minecraft/client/render/RenderLayer;")
+			target = "Lnet/minecraft/client/renderer/RenderType;lines()Lnet/minecraft/client/renderer/RenderType;")
 	}, slice = {
 		// The default slice, used for all @At values above that don't specify a custom slice
 		@Slice(from = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities")),
-		// Used for making sure that we don't catch the RenderLayer.getLines() call that happens in outline rendering,
+		// Used for making sure that we don't catch the RenderType.lines() call that happens in outline rendering,
 		// we're only interested in it because we want to restore the matrix state before rendering the last
 		// immediate buffers
 		@Slice(id = "after_translucent_rendering", from = @At(value = "FIELD:FIRST",
@@ -93,12 +93,12 @@ public class MixinFixEntityVertexNormals {
 		// NB: Make sure the custom slice name here matches the ID of the slice defined below!
 		// Otherwise Mixin will silently ignore that fact that you're trying to use a slice at all.
 		@At(value = "INVOKE", target = PUSH_MATRIX, slice = "before_debug_rendering"),
-		@At(value = "INVOKE", target = "Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;draw()V",
+		@At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;getBuffer(Lnet/minecraft/client/renderer/RenderType;)Lcom/mojang/blaze3d/vertex/VertexConsumer;",
 			shift = At.Shift.AFTER)
 	}, slice = @Slice(id = "before_debug_rendering",
-		from = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;crosshairTarget:Lnet/minecraft/util/hit/HitResult;"),
+		from = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;crosshairPickEntity:Lnet/minecraft/world/entity/Entity;"),
 		to = @At(value = "INVOKE", target =
-			"Lnet/minecraft/client/render/debug/DebugRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;DDD)V")
+			"Lnet/minecraft/client/renderer/LevelRenderer;renderDebug(Lnet/minecraft/client/Camera;)V")
 	))
 	private void iris$teardownGlMatrix(PoseStack matrices, float tickDelta, long limitTime,
 									   boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,

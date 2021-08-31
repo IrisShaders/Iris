@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.Unique;
  * </li>
  */
 @Mixin(MipmapGenerator.class)
-public class MixinMipmapHelper {
+public class MixinMipmapGenerator {
 	// Generate some color tables for gamma correction.
 	private static final float[] SRGB_TO_LINEAR = new float[256];
 

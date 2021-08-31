@@ -51,7 +51,7 @@ public class IdMap {
 	/**
 	 * A map that contains render layers for blocks in block.properties
 	 */
-	private Map<ResourceLocation, RenderType> blockRenderLayerMap;
+	private Map<ResourceLocation, RenderType> blockRenderTypeMap;
 
 	IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
@@ -63,7 +63,7 @@ public class IdMap {
 		loadProperties(shaderPath, "block.properties").ifPresent(blockProperties -> {
 			// TODO: This won't parse block states in block.properties properly
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
-			blockRenderLayerMap = parseRenderLayerMap(blockProperties, "layer.", "block.properties");
+			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});
 
 		// TODO: Properly override block render layers
@@ -74,8 +74,8 @@ public class IdMap {
 			LegacyIdMap.addLegacyValues(blockPropertiesMap);
 		}
 
-		if (blockRenderLayerMap == null) {
-			blockRenderLayerMap = Collections.emptyMap();
+		if (blockRenderTypeMap == null) {
+			blockRenderTypeMap = Collections.emptyMap();
 		}
 	}
 
@@ -337,9 +337,9 @@ public class IdMap {
 	/**
 	 * Parses a render layer map
 	 */
-	private static Map<ResourceLocation, RenderType> parseRenderLayerMap(Properties properties, String keyPrefix, String fileName) {
+	private static Map<ResourceLocation, RenderType> parseRenderTypeMap(Properties properties, String keyPrefix, String fileName) {
 		// TODO: Most of this is copied from parseIdMap, it would be nice to reduce duplication.
-		Map<ResourceLocation, RenderType> layerMap = new HashMap<>();
+		Map<ResourceLocation, RenderType> typeMap = new HashMap<>();
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -367,7 +367,7 @@ public class IdMap {
 					type = RenderType.translucent();
 					break;
 				default:
-					Iris.logger.warn("Failed to parse line in " + fileName + ": invalid render layer type: " + key);
+					Iris.logger.warn("Failed to parse line in " + fileName + ": invalid render type: " + key);
 					return;
 			}
 
@@ -375,7 +375,7 @@ public class IdMap {
 				try {
 					ResourceLocation identifier = new ResourceLocation(part);
 
-					layerMap.put(identifier, type);
+					typeMap.put(identifier, type);
 				} catch (ResourceLocationException e) {
 					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
@@ -383,7 +383,7 @@ public class IdMap {
 			}
 		});
 
-		return layerMap;
+		return typeMap;
 	}
 
 	public Map<BlockState, Integer> getBlockProperties() {
@@ -413,11 +413,11 @@ public class IdMap {
 		return Objects.equals(itemIdMap, idMap.itemIdMap)
 				&& Objects.equals(entityIdMap, idMap.entityIdMap)
 				&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
-				&& Objects.equals(blockRenderLayerMap, idMap.blockRenderLayerMap);
+				&& Objects.equals(blockRenderTypeMap, idMap.blockRenderTypeMap);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderLayerMap);
+		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderTypeMap);
 	}
 }

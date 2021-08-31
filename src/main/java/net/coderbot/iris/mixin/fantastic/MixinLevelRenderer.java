@@ -63,12 +63,12 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void iris$fantastic$beginWorldRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		((ExtendedBufferStorage) renderBuffers).beginWorldRendering();
+	private void iris$fantastic$beginLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		((ExtendedBufferStorage) renderBuffers).beginLevelRendering();
 	}
 
 	@Inject(method = "renderLevel", at = @At("RETURN"))
-	private void iris$fantastic$endWorldRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		((ExtendedBufferStorage) renderBuffers).endWorldRendering();
+	private void iris$fantastic$endLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		((ExtendedBufferStorage) renderBuffers).endLevelRendering();
 	}
 }

@@ -10,12 +10,12 @@ public class PhysicsModHooks {
 	}
 
 	public static void redirectStartDrawing(RenderType type) {
-		if (type == getTargetRenderLayer()) {
+		if (type == getTargetRenderType()) {
 			GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 		}
 	}
 
-	public static RenderType getTargetRenderLayer() {
+	public static RenderType getTargetRenderType() {
 		return RenderType.cutout();
 	}
 }

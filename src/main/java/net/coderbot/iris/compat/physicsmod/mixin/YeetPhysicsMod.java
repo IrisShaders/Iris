@@ -78,7 +78,7 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 		}
 
 		MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
-		String renderLayer = mappingResolver.mapClassName("intermediary", "net.minecraft.class_1921").replace('.', '/');
+		String renderType = mappingResolver.mapClassName("intermediary", "net.minecraft.class_1921").replace('.', '/');
 
 		// startDrawing is a member of RenderPhase.
 		String startDrawing = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23516", "()V");
@@ -86,12 +86,12 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 		// endDrawing is a member of RenderPhase.
 		String endDrawing = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23518", "()V");
 
-		// getSolid is a member of RenderLayer.
-		String getSolid = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_1921", "method_23577", "()Lnet/minecraft/class_1921;");
+		// Solid is a member of RenderType.
+		String solid = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_1921", "method_23577", "()Lnet/minecraft/class_1921;");
 
-		redirect(found, renderLayer, startDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectStartDrawing", "(L" + renderLayer + ";)V");
-		redirect(found, renderLayer, endDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectEndDrawing", "(L" + renderLayer + ";)V");
-		redirect(found, renderLayer, getSolid, "()L" + renderLayer + ";", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "getTargetRenderLayer", "()L" + renderLayer + ";");
+		redirect(found, renderType, startDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectStartDrawing", "(L" + renderType + ";)V");
+		redirect(found, renderType, endDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectEndDrawing", "(L" + renderType + ";)V");
+		redirect(found, renderType, solid, "()L" + renderType + ";", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "getTargetRenderType", "()L" + renderType + ";");
 	}
 
 	private static void redirect(MethodNode found, String owner, String name, String desc, String replacementOwner, String replacementName, String replacementDesc) {
