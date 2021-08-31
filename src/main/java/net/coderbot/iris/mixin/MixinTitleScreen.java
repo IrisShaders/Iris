@@ -20,7 +20,7 @@ public class MixinTitleScreen {
 		if(Iris.isSodiumInvalid()) {
 			MinecraftClient.getInstance().setScreen(new NoticeScreen(() -> {
 				MinecraftClient.getInstance().scheduleStop();
-			}, new TranslatableText("iris.sodium.failure.title").formatted(Formatting.RED), new TranslatableText("iris.sodium.failure.reason")));
+			}, new TranslatableText("iris.sodium.failure.title").formatted(Formatting.RED), new TranslatableText("iris.sodium.failure.reason"), new TranslatableText("menu.quit")));
 		}
 	}
 }
