@@ -12,7 +12,7 @@ import net.minecraft.client.Option;
 @Environment(EnvType.CLIENT)
 @Mixin(Option.class)
 public class MixinOption {
-	@Redirect(method = "lambda$static$65", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;supportsFramebufferBlit()Z"))
+	@Redirect(method = {"lambda$static$65", "method_18554"}, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;supportsFramebufferBlit()Z", remap = true), remap = false)
 	private static boolean iris$onAttemptedToSelectFabulousGraphics() {
 		// Returning false here will cause Minecraft to cycle between Fancy and Fast, disabling Fabulous graphics
 		if(!Iris.getIrisConfig().areShadersEnabled()) {
