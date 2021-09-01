@@ -9,6 +9,7 @@ import net.coderbot.iris.fantastic.ExtendedBufferStorage;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -22,8 +23,9 @@ import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
-import net.coderbot.iris.shadows.frustum.ShadowFrustum;
+import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
+import net.coderbot.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.*;
 import net.minecraft.block.entity.BlockEntity;
@@ -64,6 +66,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
 
 	private final Program shadowProgram;
+	private final boolean packHasVoxelization;
 	private final float sunPathRotation;
 
 	private final BufferBuilderStorage buffers;
@@ -76,6 +79,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public static boolean ACTIVE = false;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
+	public static String SHADOW_DISTANCE_STRING = "(unavailable)";
+	public static String SHADOW_CULLING_STRING = "(unavailable)";
 	public static String SHADOW_DEBUG_STRING = "(unavailable)";
 	private static int renderedShadowEntities = 0;
 	private static int renderedShadowBlockEntities = 0;
@@ -92,7 +97,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.resolution = shadowDirectives.getResolution();
 		this.intervalSize = shadowDirectives.getIntervalSize();
 
-		OVERALL_DEBUG_STRING = "render distance = " + (renderDistanceMultiplier > 0 ? (halfPlaneLength * renderDistanceMultiplier) + " blocks" : "unlimited") + " @ " + resolution + "x" + resolution;
+		OVERALL_DEBUG_STRING = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
 
 		if (shadowDirectives.getFov() != null) {
 			// TODO: Support FOV in the shadow map for legacy shaders
@@ -111,8 +116,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		if (shadow != null) {
 			this.shadowProgram = createProgram(shadow, directives, flipped);
+			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
+			// TODO: Check for image load / store too once supported.
+			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
 		} else {
 			this.shadowProgram = null;
+			this.packHasVoxelization = false;
 		}
 
 		this.sunPathRotation = directives.getSunPathRotation();
@@ -224,26 +233,49 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		return modelView;
 	}
 
-	private Frustum createShadowFrustum(MatrixStack modelview, float[] ortho) {
-		// The sneak key switches back to the old culling for testing purposes.
-		if (MinecraftClient.getInstance().player.isSneaking()) {
-			Matrix4f orthoMatrix = new Matrix4f();
+	private Frustum createShadowFrustum() {
+		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
+		if (packHasVoxelization) {
+			double distance = halfPlaneLength * renderDistanceMultiplier;
 
-			((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
-
-			if (renderDistanceMultiplier <= 0) {
-				return new ShadowFrustum(modelview.peek().getModel(), orthoMatrix, new BoxCuller(halfPlaneLength));
+			if (distance <= 0 || distance > MinecraftClient.getInstance().options.viewDistance * 16) {
+				SHADOW_DISTANCE_STRING = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
+						+ " blocks (capped by normal render distance)";
+				SHADOW_CULLING_STRING = "disabled (voxelization detected)";
+				return new NonCullingFrustum();
+			} else {
+				SHADOW_DISTANCE_STRING = "render distance = " + distance + " blocks (set by shader pack)";
+				SHADOW_CULLING_STRING = "distance only (voxelization detected)";
+				BoxCuller boxCuller = new BoxCuller(distance);
+				return new BoxCullingFrustum(boxCuller);
 			}
-
-			return new ShadowFrustum(modelview.peek().getModel(), orthoMatrix, new BoxCuller(halfPlaneLength * renderDistanceMultiplier));
 		} else {
 			BoxCuller boxCuller;
 
-			if (renderDistanceMultiplier <= 0) {
+			double distance = halfPlaneLength * renderDistanceMultiplier;
+			String setter = "(set by shader pack)";
+
+			if (renderDistanceMultiplier < 0) {
+				distance = IrisVideoSettings.shadowDistance * 16;
+				setter = "(set by user)";
+			}
+
+			if (distance >= MinecraftClient.getInstance().options.viewDistance * 16) {
+				SHADOW_DISTANCE_STRING = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
+						+ " blocks (capped by normal render distance)";
 				boxCuller = null;
 			} else {
-				boxCuller = new BoxCuller(halfPlaneLength * renderDistanceMultiplier);
+				SHADOW_DISTANCE_STRING = "render distance = " + distance + " blocks " + setter;
+
+				if (distance == 0.0) {
+					SHADOW_CULLING_STRING = "no shadows rendered";
+					return new CullEverythingFrustum();
+				}
+
+				boxCuller = new BoxCuller(distance);
 			}
+
+			SHADOW_CULLING_STRING = "Advanced Frustum Culling enabled";
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
@@ -255,10 +287,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			return new AdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
 					CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller);
 		}
-	}
-
-	private Frustum createEntityShadowFrustum(MatrixStack modelview) {
-		return createShadowFrustum(modelview, ShadowMatrices.createOrthoMatrix(16.0f));
 	}
 
 	@Override
@@ -284,11 +312,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		worldRenderer.getWorld().getProfiler().push("initialize frustum");
 
-		Frustum frustum;
-
-		// NB: This frustum assumes that the shader pack uses standard shadow mapping techniques
-		// TODO: If a shader pack tries to use voxelization, we must use a different culling method!
-		frustum = createShadowFrustum(modelView, orthoMatrix);
+		Frustum frustum = createShadowFrustum();
 
 		// Determine the player camera position
 		Vec3d cameraPos = CameraUniforms.getCameraPosition();

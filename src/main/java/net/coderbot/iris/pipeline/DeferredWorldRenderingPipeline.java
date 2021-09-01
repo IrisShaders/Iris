@@ -693,6 +693,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		if (shadowMapRenderer instanceof ShadowRenderer) {
 			messages.add("");
 			messages.add("[Iris] Shadow Maps: " + ShadowRenderer.OVERALL_DEBUG_STRING);
+			messages.add("[Iris] Shadow Distance: " + ShadowRenderer.SHADOW_DISTANCE_STRING);
+			messages.add("[Iris] Shadow Culling: " + ShadowRenderer.SHADOW_CULLING_STRING);
 			messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
 			messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
 			messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
