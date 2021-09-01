@@ -21,6 +21,8 @@ import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
+import net.coderbot.iris.shadows.frustum.BoxCuller;
+import net.coderbot.iris.shadows.frustum.ShadowFrustum;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.*;
@@ -223,16 +225,36 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private Frustum createShadowFrustum(MatrixStack modelview, float[] ortho) {
-		Matrix4f orthoMatrix = new Matrix4f();
+		// The sneak key switches back to the old culling for testing purposes.
+		if (MinecraftClient.getInstance().player.isSneaking()) {
+			Matrix4f orthoMatrix = new Matrix4f();
 
-		((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
+			((Matrix4fAccess) (Object) orthoMatrix).copyFromArray(ortho);
 
-		// TODO: Don't use the box culling thing if the render distance is less than the shadow distance, saves a few operations
-		if (renderDistanceMultiplier <= 0) {
-			return new Frustum(modelview.peek().getModel(), orthoMatrix);
+			if (renderDistanceMultiplier <= 0) {
+				return new ShadowFrustum(modelview.peek().getModel(), orthoMatrix, new BoxCuller(halfPlaneLength));
+			}
+
+			return new ShadowFrustum(modelview.peek().getModel(), orthoMatrix, new BoxCuller(halfPlaneLength * renderDistanceMultiplier));
+		} else {
+			BoxCuller boxCuller;
+
+			if (renderDistanceMultiplier <= 0) {
+				boxCuller = null;
+			} else {
+				boxCuller = new BoxCuller(halfPlaneLength * renderDistanceMultiplier);
+			}
+
+			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
+
+			Vector3f shadowLightVectorFromOrigin =
+					new Vector3f(shadowLightPosition.getX(), shadowLightPosition.getY(), shadowLightPosition.getZ());
+
+			shadowLightVectorFromOrigin.normalize();
+
+			return new AdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
+					CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller);
 		}
-
-		return new ShadowFrustum(modelview.peek().getModel(), orthoMatrix, halfPlaneLength * renderDistanceMultiplier);
 	}
 
 	private Frustum createEntityShadowFrustum(MatrixStack modelview) {

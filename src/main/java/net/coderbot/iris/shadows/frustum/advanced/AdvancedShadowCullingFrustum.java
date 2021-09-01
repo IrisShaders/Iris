@@ -1,5 +1,6 @@
 package net.coderbot.iris.shadows.frustum.advanced;
 
+import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
@@ -48,8 +49,10 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	private double z;
 
 	private final Vector3f shadowLightVectorFromOrigin;
+	private final BoxCuller boxCuller;
 
-	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vector3f shadowLightVectorFromOrigin) {
+	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vector3f shadowLightVectorFromOrigin,
+										BoxCuller boxCuller) {
 		// We're overriding all of the methods, don't pass any matrices down.
 		super(new Matrix4f(), new Matrix4f());
 
@@ -58,6 +61,8 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 
 		boolean[] isBack = addBackPlanes(baseClippingPlanes);
 		addEdgePlanes(baseClippingPlanes, isBack);
+
+		this.boxCuller = boxCuller;
 	}
 
 	private void addPlane(Vector4f plane) {
@@ -245,13 +250,30 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	// Note: These functions are copied & modified from the vanilla Frustum class.
 	@Override
 	public void setPosition(double cameraX, double cameraY, double cameraZ) {
+		if (this.boxCuller != null) {
+			boxCuller.setPosition(cameraX, cameraY, cameraZ);
+		}
+
 		this.x = cameraX;
 		this.y = cameraY;
 		this.z = cameraZ;
 	}
 
 	public boolean isVisible(Box box) {
+		if (boxCuller != null && boxCuller.isCulled(box)) {
+			return false;
+		}
+
 		return this.isVisible(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+	}
+
+	// For Sodium
+	public boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		if (boxCuller != null && boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ)) {
+			return false;
+		}
+
+		return isVisible(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	private boolean isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
