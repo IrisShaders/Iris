@@ -48,6 +48,7 @@
   },
 
   "breaks": {
+    "iris-explorer": "*",
     "canvas": "*",
     "optifabric": "*",
     "imm_ptl_core": "*",
