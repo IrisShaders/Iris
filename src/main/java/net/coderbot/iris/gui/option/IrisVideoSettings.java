@@ -1,6 +1,6 @@
 package net.coderbot.iris.gui.option;
 
-import net.minecraft.client.options.DoubleOption;
+import net.minecraft.client.option.DoubleOption;
 import net.minecraft.text.TranslatableText;
 
 public class IrisVideoSettings {

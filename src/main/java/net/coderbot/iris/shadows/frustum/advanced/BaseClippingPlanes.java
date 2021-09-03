@@ -1,6 +1,6 @@
 package net.coderbot.iris.shadows.frustum.advanced;
 
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vector4f;
 import net.minecraft.util.math.Matrix4f;
 
 public class BaseClippingPlanes {

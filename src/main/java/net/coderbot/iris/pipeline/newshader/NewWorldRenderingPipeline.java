@@ -492,10 +492,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		if (shadowMapRenderer instanceof ShadowRenderer) {
 			messages.add("");
-			messages.add("[Iris] Shadow Maps: " + ShadowRenderer.OVERALL_DEBUG_STRING);
-			messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
-			messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
-			messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
+			shadowMapRenderer.addDebugText(messages);
 		} else if (shadowMapRenderer instanceof EmptyShadowMapRenderer) {
 			messages.add("");
 			messages.add("[Iris] Shadow Maps: not used by shader pack");

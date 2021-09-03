@@ -2,8 +2,8 @@ package net.coderbot.iris.shadows.frustum.advanced;
 
 import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.render.Frustum;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Matrix4f;
 
@@ -48,10 +48,10 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	private double y;
 	private double z;
 
-	private final Vector3f shadowLightVectorFromOrigin;
+	private final Vec3f shadowLightVectorFromOrigin;
 	private final BoxCuller boxCuller;
 
-	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vector3f shadowLightVectorFromOrigin,
+	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vec3f shadowLightVectorFromOrigin,
 										BoxCuller boxCuller) {
 		// We're overriding all of the methods, don't pass any matrices down.
 		super(new Matrix4f(), new Matrix4f());
@@ -81,7 +81,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 
 		for (int planeIndex = 0; planeIndex < planes.length; planeIndex++) {
 			Vector4f plane = planes[planeIndex];
-			Vector3f planeNormal = truncate(plane);
+			Vec3f planeNormal = truncate(plane);
 
 			// Find back planes by looking for planes with a normal vector that points
 			// in the same general direction as the vector pointing from the origin to the shadow light
@@ -135,15 +135,15 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		}
 	}
 
-	private Vector3f truncate(Vector4f base) {
-		return new Vector3f(base.getX(), base.getY(), base.getZ());
+	private Vec3f truncate(Vector4f base) {
+		return new Vec3f(base.getX(), base.getY(), base.getZ());
 	}
 
-	private Vector4f extend(Vector3f base, float w) {
+	private Vector4f extend(Vec3f base, float w) {
 		return new Vector4f(base.getX(), base.getY(), base.getZ(), w);
 	}
 
-	private float lengthSquared(Vector3f v) {
+	private float lengthSquared(Vec3f v) {
 		float x = v.getX();
 		float y = v.getY();
 		float z = v.getZ();
@@ -151,24 +151,24 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		return x * x + y * y + z * z;
 	}
 
-	private Vector3f cross(Vector3f first, Vector3f second) {
-		Vector3f result = new Vector3f(first.getX(), first.getY(), first.getZ());
+	private Vec3f cross(Vec3f first, Vec3f second) {
+		Vec3f result = new Vec3f(first.getX(), first.getY(), first.getZ());
 		result.cross(second);
 
 		return result;
 	}
 
 	private void addEdgePlane(Vector4f backPlane4, Vector4f frontPlane4) {
-		Vector3f backPlaneNormal = truncate(backPlane4);
-		Vector3f frontPlaneNormal = truncate(frontPlane4);
+		Vec3f backPlaneNormal = truncate(backPlane4);
+		Vec3f frontPlaneNormal = truncate(frontPlane4);
 
 		// vector along the intersection of the two planes
-		Vector3f intersection = cross(backPlaneNormal, frontPlaneNormal);
+		Vec3f intersection = cross(backPlaneNormal, frontPlaneNormal);
 
 		// compute edge plane normal, we want the normal vector of the edge plane
 		// to always be perpendicular to the shadow light vector (since that's
 		// what makes it an edge plane!)
-		Vector3f edgePlaneNormal = cross(intersection, shadowLightVectorFromOrigin);
+		Vec3f edgePlaneNormal = cross(intersection, shadowLightVectorFromOrigin);
 
 		// At this point, we have a normal vector for our new edge plane, but we don't
 		// have a value for distance (d). We can solve for it with a little algebra,
@@ -188,7 +188,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		// Fortunately, we can compute that point. If we create a plane passing through the origin
 		// with a normal vector parallel to the intersection line, then the intersection
 		// of all 3 planes will be a point on the line of intersection between the two planes we care about.
-		Vector3f point;
+		Vec3f point;
 
 		{
 			// "Line of intersection between two planes"
@@ -196,8 +196,8 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 			// (a modified version of "Intersection of 2-planes" from Graphics Gems 1, page 305
 
 			// NB: We can assume that the intersection vector has a non-zero length.
-			Vector3f ixb = cross(intersection, backPlaneNormal);
-			Vector3f fxi = cross(frontPlaneNormal, intersection);
+			Vec3f ixb = cross(intersection, backPlaneNormal);
+			Vec3f fxi = cross(frontPlaneNormal, intersection);
 
 			ixb.scale(-frontPlane4.getW());
 			fxi.scale(-backPlane4.getW());

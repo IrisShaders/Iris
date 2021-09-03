@@ -41,8 +41,8 @@ import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
@@ -324,8 +324,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
-			Vector3f shadowLightVectorFromOrigin =
-					new Vector3f(shadowLightPosition.getX(), shadowLightPosition.getY(), shadowLightPosition.getZ());
+			Vec3f shadowLightVectorFromOrigin =
+					new Vec3f(shadowLightPosition.getX(), shadowLightPosition.getY(), shadowLightPosition.getZ());
 
 			shadowLightVectorFromOrigin.normalize();
 

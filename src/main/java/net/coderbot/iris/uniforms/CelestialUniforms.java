@@ -77,9 +77,9 @@ public final class CelestialUniforms {
 
 		// This is the same transformation applied by renderSky, however, it's been moved to here.
 		// This is because we need the result of it before it's actually performed in vanilla.
-		celestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
-		celestial.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(sunPathRotation));
-		celestial.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
+		celestial.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
+		celestial.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(sunPathRotation));
+		celestial.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
 
 		position.transform(celestial);
 
