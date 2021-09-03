@@ -36,8 +36,7 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 
 	@Inject(method = "getEntityVertexConsumers", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceEntityVertexConsumers(CallbackInfoReturnable<VertexConsumerProvider.Immediate> provider) {
-		// TODO: Don't toggle when sneaking
-		if (begins == 0 || MinecraftClient.getInstance().player.isSneaking()) {
+		if (begins == 0) {
 			return;
 		}
 
@@ -46,8 +45,7 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 
 	@Inject(method = "getEffectVertexConsumers", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceEffectVertexConsumers(CallbackInfoReturnable<VertexConsumerProvider.Immediate> provider) {
-		// TODO: Don't toggle when sneaking
-		if (begins == 0 || MinecraftClient.getInstance().player.isSneaking()) {
+		if (begins == 0) {
 			return;
 		}
 
@@ -57,8 +55,7 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 
 	@Inject(method = "getOutlineVertexConsumers", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceOutlineVertexConsumers(CallbackInfoReturnable<OutlineVertexConsumerProvider> provider) {
-		// TODO: Don't toggle when sneaking
-		if (begins == 0 || MinecraftClient.getInstance().player.isSneaking()) {
+		if (begins == 0) {
 			return;
 		}
 
