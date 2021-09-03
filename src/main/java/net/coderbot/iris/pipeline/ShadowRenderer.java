@@ -381,11 +381,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			renderedEntities.add(entity);
 		}
 
-		worldRenderer.getWorld().getProfiler().swap("sort");
-
-		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
-		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
-
 		worldRenderer.getWorld().getProfiler().swap("build geometry");
 
 		for (Entity entity : renderedEntities) {

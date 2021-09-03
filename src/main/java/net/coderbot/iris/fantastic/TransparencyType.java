@@ -15,8 +15,13 @@ public enum TransparencyType {
 	 */
 	DECAL,
 	/**
-	 * Water mask, must be drawn after all other things.
+	 * Water mask, should be drawn after pretty much everything except for translucent terrain and lines.
 	 * Prevents water from appearing inside of boats.
 	 */
-	WATER_MASK
+	WATER_MASK,
+	/**
+	 * Block outlines and other debug things that are overlaid on to the world.
+	 * Should be drawn last to avoid weirdness with entity shadows / banners.
+	 */
+	LINES
 }

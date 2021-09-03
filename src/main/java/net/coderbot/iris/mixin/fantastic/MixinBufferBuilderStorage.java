@@ -1,54 +1,92 @@
 package net.coderbot.iris.mixin.fantastic;
 
 import net.coderbot.iris.fantastic.ExtendedBufferStorage;
-import net.minecraft.client.render.BufferBuilder;
+import net.coderbot.iris.fantastic.FullyBufferedVertexConsumerProvider;
+import net.coderbot.iris.fantastic.MemoryTrackingBuffer;
+import net.coderbot.iris.fantastic.MemoryTrackingBufferBuilderStorage;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilderStorage;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.render.OutlineVertexConsumerProvider;
+import net.minecraft.client.render.VertexConsumerProvider;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.SortedMap;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BufferBuilderStorage.class)
-public class MixinBufferBuilderStorage implements ExtendedBufferStorage {
-	@Shadow
-	@Final
-	private SortedMap<RenderLayer, BufferBuilder> entityBuilders;
-
+public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryTrackingBufferBuilderStorage {
 	@Unique
-	private static void iris$assignBufferBuilder(SortedMap<RenderLayer, BufferBuilder> builderStorage, RenderLayer layer) {
-		builderStorage.put(layer, new BufferBuilder(layer.getExpectedBufferSize()));
-	}
-
-	@Inject(method = "<init>()V", at = @At("RETURN"))
-	private void iris$onInit(CallbackInfo ci) {
-		// Add a few render layers to the list of specially-buffered layers in order to improve batching in some
-		// common survival scenes.
-
-		// Special-case for enderman eyes and spider eyes since they're so common.
-		iris$assignBufferBuilder(entityBuilders, RenderLayer.getEyes(new Identifier("textures/entity/enderman/enderman_eyes.png")));
-		iris$assignBufferBuilder(entityBuilders, RenderLayer.getEyes(new Identifier("textures/entity/enderman/spider_eyes.png")));
-
-		// Similar deal with wool on sheeps.
-		iris$assignBufferBuilder(entityBuilders, RenderLayer.getEntityCutoutNoCull(new Identifier("textures/entity/sheep/sheep_fur.png")));
-	}
+	private final FullyBufferedVertexConsumerProvider buffered = new FullyBufferedVertexConsumerProvider();
 
 	@Unique
 	private int begins = 0;
 
+	@Unique
+	private int maxBegins = 0;
+
+	@Unique
+	private final OutlineVertexConsumerProvider outlineVertexConsumers = new OutlineVertexConsumerProvider(buffered);
+
+	@Shadow
+	@Final
+	private VertexConsumerProvider.Immediate entityVertexConsumers;
+
+	@Inject(method = "getEntityVertexConsumers", at = @At("HEAD"), cancellable = true)
+	private void batchedentityrendering$replaceEntityVertexConsumers(CallbackInfoReturnable<VertexConsumerProvider.Immediate> provider) {
+		// TODO: Don't toggle when sneaking
+		if (begins == 0 || MinecraftClient.getInstance().player.isSneaking()) {
+			return;
+		}
+
+		provider.setReturnValue(buffered);
+	}
+
+	@Inject(method = "getEffectVertexConsumers", at = @At("HEAD"), cancellable = true)
+	private void batchedentityrendering$replaceEffectVertexConsumers(CallbackInfoReturnable<VertexConsumerProvider.Immediate> provider) {
+		if (begins == 0) {
+			return;
+		}
+
+		// Prevent vanilla from explicitly flushing the wrapper at the wrong time.
+		provider.setReturnValue(buffered.getUnflushableWrapper());
+	}
+
+	@Inject(method = "getOutlineVertexConsumers", at = @At("HEAD"), cancellable = true)
+	private void batchedentityrendering$replaceOutlineVertexConsumers(CallbackInfoReturnable<OutlineVertexConsumerProvider> provider) {
+		if (begins == 0) {
+			return;
+		}
+
+		provider.setReturnValue(outlineVertexConsumers);
+	}
+
 	@Override
 	public void beginWorldRendering() {
 		begins += 1;
+
+		maxBegins = Math.max(begins, maxBegins);
 	}
 
 	@Override
 	public void endWorldRendering() {
 		begins -= 1;
+	}
+
+	@Override
+	public int getEntityBufferAllocatedSize() {
+		return ((MemoryTrackingBuffer) buffered).getAllocatedSize();
+	}
+
+	@Override
+	public int getMiscBufferAllocatedSize() {
+		return ((MemoryTrackingBuffer) entityVertexConsumers).getAllocatedSize();
+	}
+
+	@Override
+	public int getMaxBegins() {
+		return maxBegins;
 	}
 }

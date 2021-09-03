@@ -4,14 +4,20 @@
   "package": "net.coderbot.iris.mixin.fantastic",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "MixinBannerBlockEntityRenderer",
     "MixinBarrierParticle",
     "MixinBlockDustParticle",
+    "MixinBufferBuilder",
+    "MixinBufferBuilder_SegmentRendering",
     "MixinBufferBuilderStorage",
     "MixinFireworkSparkParticle",
+    "MixinImmediateVertexConsumerProvider",
     "MixinMultiPhaseRenderLayer",
     "MixinParticleManager",
     "MixinWorldRenderer",
+    "MixinWorldRenderer_EntityListSorting",
     "MultiPhaseParametersAccessor",
+    "RenderLayerAccessor",
     "RenderPhaseAccessor"
   ],
   "injectors": {

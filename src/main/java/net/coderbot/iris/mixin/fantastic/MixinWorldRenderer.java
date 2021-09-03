@@ -1,70 +1,82 @@
 package net.coderbot.iris.mixin.fantastic;
 
 import net.coderbot.iris.fantastic.ExtendedBufferStorage;
-import net.coderbot.iris.fantastic.FlushableVertexConsumerProvider;
-import net.coderbot.iris.fantastic.ParticleRenderingPhase;
-import net.coderbot.iris.fantastic.PhasedParticleManager;
-import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.GbufferPrograms;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.*;
+import net.coderbot.iris.fantastic.FullyBufferedVertexConsumerProvider;
+import net.coderbot.iris.fantastic.Groupable;
+import net.minecraft.client.render.BufferBuilderStorage;
+import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.Frustum;
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-/**
- * Uses the PhasedParticleManager changes to render opaque particles much earlier than other particles.
- *
- * See the comments in {@link MixinParticleManager} for more details.
- */
 @Mixin(WorldRenderer.class)
 public class MixinWorldRenderer {
-	@Shadow
-	@Final
-	private MinecraftClient client;
+	private static final String RENDER_ENTITY =
+			"net/minecraft/client/render/WorldRenderer.renderEntity (Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
 
 	@Shadow
 	@Final
 	private BufferBuilderStorage bufferBuilders;
 
-	@Inject(method = "render", at = @At("HEAD"))
-	private void iris$resetParticleManagerPhase(MatrixStack matrices, float tickDelta, long limitTime,
-												boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-												LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
-												CallbackInfo callback) {
-		((PhasedParticleManager) client.particleManager).setParticleRenderingPhase(ParticleRenderingPhase.EVERYTHING);
-	}
-
-	@Inject(method = "render", at = @At(value = "CONSTANT", args = "stringValue=entities"))
-	private void iris$renderOpaqueParticles(MatrixStack matrices, float tickDelta, long limitTime,
-												boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-												LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
-												CallbackInfo callback) {
-		client.getProfiler().swap("opaque_particles");
-
-		VertexConsumerProvider.Immediate immediate = bufferBuilders.getEntityVertexConsumers();
-
-		((PhasedParticleManager) client.particleManager).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
-
-		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
-		client.particleManager.renderParticles(matrices, immediate, lightmapTextureManager, camera, tickDelta);
-		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
-
-		((PhasedParticleManager) client.particleManager).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
-	}
+	@Unique
+	private Groupable groupable;
 
 	@Inject(method = "render", at = @At("HEAD"))
-	private void iris$fantastic$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void batchedentityrendering$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		if (FullyBufferedVertexConsumerProvider.instance != null) {
+			FullyBufferedVertexConsumerProvider.instance.resetDrawCalls();
+		}
+
 		((ExtendedBufferStorage) bufferBuilders).beginWorldRendering();
+		VertexConsumerProvider provider = bufferBuilders.getEntityVertexConsumers();
+
+		if (provider instanceof Groupable) {
+			groupable = (Groupable) provider;
+		}
+	}
+
+	@Inject(method = "render", at = @At(value = "INVOKE", target = RENDER_ENTITY))
+	private void batchedentityrendering$preRenderEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		if (groupable != null) {
+			groupable.startGroup();
+		}
+	}
+
+	@Inject(method = "render", at = @At(value = "INVOKE", target = RENDER_ENTITY, shift = At.Shift.AFTER))
+	private void batchedentityrendering$postRenderEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		if (groupable != null) {
+			groupable.endGroup();
+		}
+	}
+
+	@Inject(method = "render", at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void batchedentityrendering$beginTranslucents(MatrixStack matrices, float tickDelta, long limitTime,
+										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
+										LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f,
+										CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f,
+										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
+										VertexConsumerProvider.Immediate immediate) {
+		profiler.swap("entity_draws");
+		immediate.draw();
 	}
 
 	@Inject(method = "render", at = @At("RETURN"))
-	private void iris$fantastic$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void batchedentityrendering$endWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		((ExtendedBufferStorage) bufferBuilders).endWorldRendering();
+		groupable = null;
 	}
 }
