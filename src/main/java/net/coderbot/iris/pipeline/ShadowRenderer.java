@@ -2,10 +2,9 @@ package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.fantastic.ExtendedBufferStorage;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -33,7 +32,6 @@ import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
@@ -45,9 +43,7 @@ import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
