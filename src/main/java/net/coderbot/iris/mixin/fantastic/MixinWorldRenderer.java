@@ -1,9 +1,8 @@
 package net.coderbot.iris.mixin.fantastic;
 
-import net.coderbot.iris.fantastic.*;
-import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.GbufferPrograms;
-import net.minecraft.client.MinecraftClient;
+import net.coderbot.iris.fantastic.ExtendedBufferStorage;
+import net.coderbot.iris.fantastic.FullyBufferedVertexConsumerProvider;
+import net.coderbot.iris.fantastic.Groupable;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Frustum;
