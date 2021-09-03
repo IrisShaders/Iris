@@ -325,7 +325,7 @@ public class MixinWorldRenderer {
 
 				// If this is false, then somehow the block here isn't compatible with the block entity at this location.
 				// I'm not sure how this could ever reasonably happen, but we're checking anyways.
-				if (blockEntity.getType().supports(blockAt.getBlock())) {
+				if (blockEntity.getType().supports(blockAt)) {
 					entityIntId = idMap.getBlockProperties().getOrDefault(blockAt, -1);
 				}
 			}
