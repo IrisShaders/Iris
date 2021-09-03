@@ -56,7 +56,9 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		this.unflushableWrapper = new UnflushableWrapper(this);
 
 		// TODO: Eh
-		instance = this;
+		if (instance == null) {
+			instance = this;
+		}
 	}
 
 	@Override
