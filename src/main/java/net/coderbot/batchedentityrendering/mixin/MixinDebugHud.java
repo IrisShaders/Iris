@@ -1,5 +1,6 @@
 package net.coderbot.batchedentityrendering.mixin;
 
+import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.DebugHud;
@@ -18,20 +19,8 @@ public abstract class MixinDebugHud {
 
 		DrawCallTrackingBufferBuilderStorage drawTracker = (DrawCallTrackingBufferBuilderStorage) MinecraftClient.getInstance().getBufferBuilders();
 
-        int drawCalls = drawTracker.getDrawCalls();
-        int renderTypes = drawTracker.getRenderTypes();
-
         // blank line separator
         messages.add("");
-
-        if (drawCalls > 0) {
-        	int effectivenessTimes10 = renderTypes * 1000 / drawCalls;
-        	float effectiveness = effectivenessTimes10 / 10.0F;
-
-            messages.add("[Entity Batching] " + drawCalls + " draw calls / " + renderTypes + " render types = "
-					+ effectiveness + "% batching effectiveness)");
-        } else {
-            messages.add("[Entity Batching] (no draw calls)");
-        }
+		messages.add("[Entity Batching] " + BatchingDebugMessageHelper.getDebugMessage(drawTracker));
     }
 }

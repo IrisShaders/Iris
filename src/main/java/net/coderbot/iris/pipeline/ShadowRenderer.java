@@ -3,6 +3,8 @@ package net.coderbot.iris.pipeline;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
+import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
 import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
@@ -448,6 +450,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			extendedBufferStorage.beginWorldRendering();
 		}
 
+		if (buffers instanceof DrawCallTrackingBufferBuilderStorage) {
+			((DrawCallTrackingBufferBuilderStorage) buffers).resetDrawCounts();
+		}
+
 		VertexConsumerProvider.Immediate provider = buffers.getEntityVertexConsumers();
 		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
 
@@ -569,6 +575,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain);
 		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[Iris] Shadow Block Entities: " + getBlockEntitiesDebugString());
+
+		if (buffers instanceof DrawCallTrackingBufferBuilderStorage) {
+			DrawCallTrackingBufferBuilderStorage drawCallTracker = (DrawCallTrackingBufferBuilderStorage) buffers;
+			messages.add("[Iris] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
+		}
 	}
 
 	private void setupShadowProgram() {
