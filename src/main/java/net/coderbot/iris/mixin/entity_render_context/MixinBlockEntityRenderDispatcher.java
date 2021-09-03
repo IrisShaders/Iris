@@ -25,7 +25,8 @@ public class MixinBlockEntityRenderDispatcher {
 	private static final String RENDER =
 			"render(Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
 
-	private static final String RUN_REPORTED = "runReported(Lnet/minecraft/block/entity/BlockEntity;Ljava/lang/Runnable;)V";
+	private static final String RUN_REPORTED =
+			"net/minecraft/client/render/block/entity/BlockEntityRenderDispatcher.runReported(Lnet/minecraft/block/entity/BlockEntity;Ljava/lang/Runnable;)V";
 
 	// I inject here in the method so that:
 	//
