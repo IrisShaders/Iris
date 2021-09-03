@@ -80,12 +80,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
 
 	public static boolean ACTIVE = false;
-	public static String OVERALL_DEBUG_STRING = "(unavailable)";
-	public static String SHADOW_DISTANCE_STRING = "(unavailable)";
-	public static String SHADOW_CULLING_STRING = "(unavailable)";
-	public static String SHADOW_DEBUG_STRING = "(unavailable)";
-	private static int renderedShadowEntities = 0;
-	private static int renderedShadowBlockEntities = 0;
+	private final String debugStringOverall;
+	private String debugStringShadowDistance = "(unavailable)";
+	private String debugStringShadowCulling = "(unavailable)";
+	private String debugStringTerrain = "(unavailable)";
+	private int renderedShadowEntities = 0;
+	private int renderedShadowBlockEntities = 0;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
 						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
@@ -99,7 +99,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.resolution = shadowDirectives.getResolution();
 		this.intervalSize = shadowDirectives.getIntervalSize();
 
-		OVERALL_DEBUG_STRING = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
+		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
 
 		if (shadowDirectives.getFov() != null) {
 			// TODO: Support FOV in the shadow map for legacy shaders
@@ -275,13 +275,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			double distance = halfPlaneLength * renderDistanceMultiplier;
 
 			if (distance <= 0 || distance > MinecraftClient.getInstance().options.viewDistance * 16) {
-				SHADOW_DISTANCE_STRING = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
+				debugStringShadowDistance = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
 						+ " blocks (capped by normal render distance)";
-				SHADOW_CULLING_STRING = "disabled (voxelization detected)";
+				debugStringShadowCulling = "disabled (voxelization detected)";
 				return new NonCullingFrustum();
 			} else {
-				SHADOW_DISTANCE_STRING = "render distance = " + distance + " blocks (set by shader pack)";
-				SHADOW_CULLING_STRING = "distance only (voxelization detected)";
+				debugStringShadowDistance = "render distance = " + distance + " blocks (set by shader pack)";
+				debugStringShadowCulling = "distance only (voxelization detected)";
 				BoxCuller boxCuller = new BoxCuller(distance);
 				return new BoxCullingFrustum(boxCuller);
 			}
@@ -297,21 +297,21 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			}
 
 			if (distance >= MinecraftClient.getInstance().options.viewDistance * 16) {
-				SHADOW_DISTANCE_STRING = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
+				debugStringShadowDistance = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
 						+ " blocks (capped by normal render distance)";
 				boxCuller = null;
 			} else {
-				SHADOW_DISTANCE_STRING = "render distance = " + distance + " blocks " + setter;
+				debugStringShadowDistance = "render distance = " + distance + " blocks " + setter;
 
 				if (distance == 0.0) {
-					SHADOW_CULLING_STRING = "no shadows rendered";
+					debugStringShadowCulling = "no shadows rendered";
 					return new CullEverythingFrustum();
 				}
 
 				boxCuller = new BoxCuller(distance);
 			}
 
-			SHADOW_CULLING_STRING = "Advanced Frustum Culling enabled";
+			debugStringShadowCulling = "Advanced Frustum Culling enabled";
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
@@ -530,7 +530,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			extendedBufferStorage.endWorldRendering();
 		}
 
-		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
+		debugStringTerrain = ((WorldRenderer) worldRenderer).getChunksDebugString();
 
 		worldRenderer.getWorld().getProfiler().swap("generate mipmaps");
 
@@ -561,6 +561,16 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		worldRenderer.getWorld().getProfiler().swap("updatechunks");
 	}
 
+	@Override
+	public void addDebugText(List<String> messages) {
+		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
+		messages.add("[Iris] Shadow Distance: " + debugStringShadowDistance);
+		messages.add("[Iris] Shadow Culling: " + debugStringShadowCulling);
+		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain);
+		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
+		messages.add("[Iris] Shadow Block Entities: " + getBlockEntitiesDebugString());
+	}
+
 	private void setupShadowProgram() {
 		if (shadowProgram != null) {
 			shadowProgram.use();
@@ -570,11 +580,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 	}
 
-	public static String getEntitiesDebugString() {
+	private String getEntitiesDebugString() {
 		return renderedShadowEntities + "/" + MinecraftClient.getInstance().world.getRegularEntityCount();
 	}
 
-	public static String getBlockEntitiesDebugString() {
+	private String getBlockEntitiesDebugString() {
 		return renderedShadowBlockEntities + "/" + MinecraftClient.getInstance().world.blockEntities.size();
 	}
 
