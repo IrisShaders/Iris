@@ -13,13 +13,16 @@ import java.util.List;
 @Mixin(DebugHud.class)
 public abstract class MixinDebugHud {
     @Inject(method = "getLeftText", at = @At("RETURN"))
-    private void appendShaderPackText(CallbackInfoReturnable<List<String>> cir) {
+    private void batchedentityrendering$appendStats(CallbackInfoReturnable<List<String>> cir) {
         List<String> messages = cir.getReturnValue();
 
 		DrawCallTrackingBufferBuilderStorage drawTracker = (DrawCallTrackingBufferBuilderStorage) MinecraftClient.getInstance().getBufferBuilders();
 
         int drawCalls = drawTracker.getDrawCalls();
         int renderTypes = drawTracker.getRenderTypes();
+
+        // blank line separator
+        messages.add("");
 
         if (drawCalls > 0) {
         	int effectivenessTimes10 = renderTypes * 1000 / drawCalls;
