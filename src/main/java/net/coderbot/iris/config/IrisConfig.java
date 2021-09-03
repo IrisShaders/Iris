@@ -108,7 +108,7 @@ public class IrisConfig {
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
-		IrisVideoSettings.shadowDistance = Double.parseDouble(properties.getProperty("shadowRenderDistance", "32.0"));
+		IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("shadowRenderDistance", "0"));
 
 		if (shaderPackName != null) {
 			if (shaderPackName.equals("(internal)") || shaderPackName.isEmpty()) {

@@ -291,9 +291,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			double distance = halfPlaneLength * renderDistanceMultiplier;
 			String setter = "(set by shader pack)";
 
-			if (renderDistanceMultiplier < 0) {
+			if ((renderDistanceMultiplier < 0 && IrisVideoSettings.shadowDistance != 0) || IrisVideoSettings.shadowDistance >= 1) {
 				distance = IrisVideoSettings.shadowDistance * 16;
 				setter = "(set by user)";
+			} else if (renderDistanceMultiplier < 0) {
+				distance = MinecraftClient.getInstance().options.viewDistance * 16;
 			}
 
 			if (distance >= MinecraftClient.getInstance().options.viewDistance * 16) {
