@@ -4,16 +4,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
-import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
@@ -24,18 +22,18 @@ public final class IdMapUniforms {
 	private IdMapUniforms() {
 	}
 
-	public static void addIdMapUniforms(UniformHolder uniforms, IdMap idMap) {
+	public static void addIdMapUniforms(DynamicUniformHolder uniforms, IdMap idMap) {
 		Map<BlockState, Integer> blockIdMap = idMap.getBlockProperties();
-		Map<Identifier, Integer> entityIdMap = idMap.getEntityIdMap();
 
 		uniforms
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
 				new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemIdMap()))
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",
 				new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemIdMap()))
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "blockEntityId", () -> getBlockEntityId(blockIdMap))
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "entityId", () -> getEntityId(entityIdMap));
+			.uniform1i(UniformUpdateFrequency.PER_FRAME, "blockEntityId", () -> getBlockEntityId(blockIdMap));
 
+		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
+				CapturedRenderingState.INSTANCE.getEntityIdNotifier());
 	}
 
 	/**
@@ -89,23 +87,5 @@ public final class IdMapUniforms {
 		}
 
 		return blockIdMap.getOrDefault(blockAt, -1);
-	}
-
-	/**
-	 * returns the entity id based on the parsed entity id from entity.properties
-	 *
-	 * @return the id the entity. Defaults to -1 if not specified
-	 */
-	private static int getEntityId(Map<Identifier, Integer> entityIdMap) {
-		Entity entity = CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();
-
-		if (entity == null) {
-			// Not valid if no entity is being rendered
-			return -1;
-		}
-
-		Identifier entityId = Registry.ENTITY_TYPE.getId(entity.getType());
-
-		return entityIdMap.getOrDefault(entityId, -1);
 	}
 }
