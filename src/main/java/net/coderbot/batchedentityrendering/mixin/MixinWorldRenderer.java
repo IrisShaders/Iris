@@ -1,7 +1,7 @@
 package net.coderbot.batchedentityrendering.mixin;
 
+import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
 import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
-import net.coderbot.batchedentityrendering.impl.FullyBufferedVertexConsumerProvider;
 import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.Camera;
@@ -23,7 +23,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(WorldRenderer.class)
+/**
+ * Tracks whether or not the world is being rendered, and manages grouping
+ * with different entities.
+ */
+@Mixin(value = WorldRenderer.class)
 public class MixinWorldRenderer {
 	private static final String RENDER_ENTITY =
 			"net/minecraft/client/render/WorldRenderer.renderEntity (Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
@@ -37,8 +41,8 @@ public class MixinWorldRenderer {
 
 	@Inject(method = "render", at = @At("HEAD"))
 	private void batchedentityrendering$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		if (FullyBufferedVertexConsumerProvider.instance != null) {
-			FullyBufferedVertexConsumerProvider.instance.resetDrawCalls();
+		if (bufferBuilders instanceof DrawCallTrackingBufferBuilderStorage) {
+			((DrawCallTrackingBufferBuilderStorage) bufferBuilders).resetDrawCounts();
 		}
 
 		((ExtendedBufferStorage) bufferBuilders).beginWorldRendering();

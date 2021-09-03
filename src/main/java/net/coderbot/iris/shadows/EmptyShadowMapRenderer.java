@@ -1,13 +1,13 @@
 package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.mixin.WorldRendererAccessor;
-import net.coderbot.iris.rendertarget.DepthTexture;
 import net.minecraft.client.render.Camera;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+
+import java.util.List;
 
 public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
@@ -48,6 +48,11 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 	@Override
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
 		// No-op
+	}
+
+	@Override
+	public void addDebugText(List<String> messages) {
+		messages.add("[Iris] Shadow Maps: not used by shader pack");
 	}
 
 	public int getDepthTextureId() {
