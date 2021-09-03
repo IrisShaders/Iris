@@ -3,6 +3,7 @@ package net.coderbot.batchedentityrendering.impl;
 import net.coderbot.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.coderbot.batchedentityrendering.impl.ordering.RenderOrderManager;
 import net.coderbot.batchedentityrendering.mixin.RenderLayerAccessor;
+import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
@@ -17,8 +18,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
-public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.Immediate implements MemoryTrackingBuffer, Groupable {
+public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.Immediate implements MemoryTrackingBuffer, Groupable, WrappingVertexConsumerProvider {
 	private static final int NUM_BUFFERS = 32;
 
 	private final RenderOrderManager renderOrderManager;
@@ -32,6 +34,7 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 
 	private final BufferSegmentRenderer segmentRenderer;
 	private final UnflushableWrapper unflushableWrapper;
+	private Function<RenderLayer, RenderLayer> wrappingFunction = null;
 
 	public static FullyBufferedVertexConsumerProvider instance;
 
@@ -58,6 +61,10 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 
 	@Override
 	public VertexConsumer getBuffer(RenderLayer renderLayer) {
+		if (wrappingFunction != null) {
+			renderLayer = wrappingFunction.apply(renderLayer);
+		}
+
 		renderOrderManager.begin(renderLayer);
 		Integer affinity = affinities.get(renderLayer);
 
@@ -188,6 +195,11 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	@Override
 	public void endGroup() {
 		renderOrderManager.endGroup();
+	}
+
+	@Override
+	public void setWrappingFunction(Function<RenderLayer, RenderLayer> wrappingFunction) {
+		this.wrappingFunction = wrappingFunction;
 	}
 
 	/**
