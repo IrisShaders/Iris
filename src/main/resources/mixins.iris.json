@@ -28,6 +28,8 @@
     "gui.MixinInGameHud",
     "gui.MixinVideoOptionsScreen",
     "math.MixinMatrix4f",
+    "entity_render_context.MixinBlockEntityRenderDispatcher",
+    "entity_render_context.MixinEntityRenderDispatcher",
     "renderlayer.MixinFixEyesTranslucency",
     "renderlayer.MixinRenderLayer",
     "renderlayer.RenderLayerAccessor",

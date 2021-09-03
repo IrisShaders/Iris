@@ -4,9 +4,11 @@ import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.render.RenderPhase;
 
 public final class EntityRenderPhase extends RenderPhase {
+	private static final EntityRenderPhase UNIDENTIFIED = new EntityRenderPhase(-1);
+
 	private final int entityId;
 
-	public EntityRenderPhase(int entityId) {
+	private EntityRenderPhase(int entityId) {
 		super("iris:is_entity", () -> {
 			CapturedRenderingState.INSTANCE.setCurrentEntity(entityId);
 			GbufferPrograms.beginEntities();
@@ -16,6 +18,15 @@ public final class EntityRenderPhase extends RenderPhase {
 		});
 
 		this.entityId = entityId;
+	}
+
+	public static EntityRenderPhase forId(int entityId) {
+		if (entityId == -1) {
+			return UNIDENTIFIED;
+		} else {
+			// TODO: Cache all created render phases to avoid allocations?
+			return new EntityRenderPhase(entityId);
+		}
 	}
 
 	@Override

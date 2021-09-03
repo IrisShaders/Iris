@@ -34,6 +34,7 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 
 	private final BufferSegmentRenderer segmentRenderer;
 	private final UnflushableWrapper unflushableWrapper;
+	private final List<Function<RenderLayer, RenderLayer>> wrappingFunctionStack;
 	private Function<RenderLayer, RenderLayer> wrappingFunction = null;
 
 	public static FullyBufferedVertexConsumerProvider instance;
@@ -54,6 +55,7 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		this.drawCalls = 0;
 		this.segmentRenderer = new BufferSegmentRenderer();
 		this.unflushableWrapper = new UnflushableWrapper(this);
+		this.wrappingFunctionStack = new ArrayList<>();
 
 		// TODO: Eh
 		if (instance == null) {
@@ -200,8 +202,28 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	}
 
 	@Override
-	public void setWrappingFunction(Function<RenderLayer, RenderLayer> wrappingFunction) {
+	public void pushWrappingFunction(Function<RenderLayer, RenderLayer> wrappingFunction) {
+		if (this.wrappingFunction != null) {
+			this.wrappingFunctionStack.add(this.wrappingFunction);
+		}
+
 		this.wrappingFunction = wrappingFunction;
+	}
+
+	@Override
+	public void popWrappingFunction() {
+		if (this.wrappingFunctionStack.isEmpty()) {
+			this.wrappingFunction = null;
+		} else {
+			this.wrappingFunction = this.wrappingFunctionStack.remove(this.wrappingFunctionStack.size() - 1);
+		}
+	}
+
+	@Override
+	public void assertWrapStackEmpty() {
+		if (!this.wrappingFunctionStack.isEmpty() || this.wrappingFunction != null) {
+			throw new IllegalStateException("Wrapping function stack not empty!");
+		}
 	}
 
 	/**
