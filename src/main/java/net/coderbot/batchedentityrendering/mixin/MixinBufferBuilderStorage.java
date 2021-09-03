@@ -107,4 +107,9 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 	public int getRenderTypes() {
 		return buffered.getRenderTypes();
 	}
+
+	@Override
+	public void resetDrawCounts() {
+		buffered.resetDrawCalls();
+	}
 }
