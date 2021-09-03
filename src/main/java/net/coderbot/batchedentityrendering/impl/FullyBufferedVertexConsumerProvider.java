@@ -30,14 +30,12 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	 */
 	private final LinkedHashMap<RenderLayer, Integer> affinities;
 	private int drawCalls;
-	private int renderLayers;
+	private int renderTypes;
 
 	private final BufferSegmentRenderer segmentRenderer;
 	private final UnflushableWrapper unflushableWrapper;
 	private final List<Function<RenderLayer, RenderLayer>> wrappingFunctionStack;
 	private Function<RenderLayer, RenderLayer> wrappingFunction = null;
-
-	public static FullyBufferedVertexConsumerProvider instance;
 
 	public FullyBufferedVertexConsumerProvider() {
 		super(new BufferBuilder(0), Collections.emptyMap());
@@ -56,11 +54,6 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		this.segmentRenderer = new BufferSegmentRenderer();
 		this.unflushableWrapper = new UnflushableWrapper(this);
 		this.wrappingFunctionStack = new ArrayList<>();
-
-		// TODO: Eh
-		if (instance == null) {
-			instance = this;
-		}
 	}
 
 	@Override
@@ -120,7 +113,7 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		for (RenderLayer layer : renderOrder) {
 			layer.startDrawing();
 
-			renderLayers += 1;
+			renderTypes += 1;
 
 			for (BufferSegment segment : layerToSegment.getOrDefault(layer, Collections.emptyList())) {
 				segmentRenderer.drawInner(segment);
@@ -146,13 +139,13 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 		return drawCalls;
 	}
 
-	public int getRenderLayers() {
-		return renderLayers;
+	public int getRenderTypes() {
+		return renderTypes;
 	}
 
 	public void resetDrawCalls() {
 		drawCalls = 0;
-		renderLayers = 0;
+		renderTypes = 0;
 	}
 
 	@Override
