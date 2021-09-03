@@ -1,7 +1,6 @@
 package net.coderbot.batchedentityrendering.mixin;
 
-import net.coderbot.batchedentityrendering.impl.FullyBufferedVertexConsumerProvider;
-import net.coderbot.batchedentityrendering.impl.MemoryTrackingBufferBuilderStorage;
+import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.DebugHud;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,23 +12,23 @@ import java.util.List;
 
 @Mixin(DebugHud.class)
 public abstract class MixinDebugHud {
-    @Inject(method = "getRightText", at = @At("RETURN"))
+    @Inject(method = "getLeftText", at = @At("RETURN"))
     private void appendShaderPackText(CallbackInfoReturnable<List<String>> cir) {
         List<String> messages = cir.getReturnValue();
 
-		MemoryTrackingBufferBuilderStorage memoryTracker = (MemoryTrackingBufferBuilderStorage) MinecraftClient.getInstance().getBufferBuilders();
-		messages.add(5, "[Entity Batching] Misc Buffers Allocated Size: " + memoryTracker.getMiscBufferAllocatedSize());
-		messages.add(5, "[Entity Batching] Entity Buffers Size: " + memoryTracker.getEntityBufferAllocatedSize());
-        messages.add(5, "[Entity Batching] WorldRenderer recursion depth (shouldn't go beyond 1): " + memoryTracker.getMaxBegins());
+		DrawCallTrackingBufferBuilderStorage drawTracker = (DrawCallTrackingBufferBuilderStorage) MinecraftClient.getInstance().getBufferBuilders();
 
-        int drawCalls = FullyBufferedVertexConsumerProvider.instance.getDrawCalls();
-        int renderLayers = FullyBufferedVertexConsumerProvider.instance.getRenderLayers();
+        int drawCalls = drawTracker.getDrawCalls();
+        int renderTypes = drawTracker.getRenderTypes();
 
         if (drawCalls > 0) {
-            messages.add(5, "[Entity Batching] Draw Calls: " + drawCalls);
-            messages.add(5, "[Entity Batching] Render Layers: " + renderLayers + " (" + (renderLayers * 1000 / drawCalls) / 10.0F + "% batching effectiveness)");
+        	int effectivenessTimes10 = renderTypes * 1000 / drawCalls;
+        	float effectiveness = effectivenessTimes10 / 10.0F;
+
+            messages.add("[Entity Batching] " + drawCalls + " draw calls / " + renderTypes + " render types = "
+					+ effectiveness + "% batching effectiveness)");
         } else {
-            messages.add(5, "[Entity Batching] (no draw calls)");
+            messages.add("[Entity Batching] (no draw calls)");
         }
     }
 }

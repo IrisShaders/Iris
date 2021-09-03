@@ -1,5 +1,6 @@
 package net.coderbot.batchedentityrendering.mixin;
 
+import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
 import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
 import net.coderbot.batchedentityrendering.impl.FullyBufferedVertexConsumerProvider;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingBuffer;
@@ -17,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BufferBuilderStorage.class)
-public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryTrackingBufferBuilderStorage {
+public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryTrackingBufferBuilderStorage, DrawCallTrackingBufferBuilderStorage {
 	@Unique
 	private final FullyBufferedVertexConsumerProvider buffered = new FullyBufferedVertexConsumerProvider();
 
@@ -95,5 +96,15 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 	@Override
 	public int getMaxBegins() {
 		return maxBegins;
+	}
+
+	@Override
+	public int getDrawCalls() {
+		return buffered.getDrawCalls();
+	}
+
+	@Override
+	public int getRenderTypes() {
+		return buffered.getRenderTypes();
 	}
 }
