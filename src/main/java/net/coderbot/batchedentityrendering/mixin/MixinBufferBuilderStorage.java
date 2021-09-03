@@ -64,6 +64,10 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 
 	@Override
 	public void beginWorldRendering() {
+		if (begins == 0) {
+			buffered.assertWrapStackEmpty();
+		}
+
 		begins += 1;
 
 		maxBegins = Math.max(begins, maxBegins);
@@ -72,6 +76,10 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 	@Override
 	public void endWorldRendering() {
 		begins -= 1;
+
+		if (begins == 0) {
+			buffered.assertWrapStackEmpty();
+		}
 	}
 
 	@Override

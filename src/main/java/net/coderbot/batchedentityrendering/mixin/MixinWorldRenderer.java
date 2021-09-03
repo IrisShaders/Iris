@@ -23,7 +23,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(WorldRenderer.class)
+/**
+ * Tracks whether or not the world is being rendered, and manages grouping
+ * with different entities.
+ */
+@Mixin(value = WorldRenderer.class)
 public class MixinWorldRenderer {
 	private static final String RENDER_ENTITY =
 			"net/minecraft/client/render/WorldRenderer.renderEntity (Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";

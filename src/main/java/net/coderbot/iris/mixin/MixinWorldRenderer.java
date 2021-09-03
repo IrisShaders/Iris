@@ -48,10 +48,6 @@ public class MixinWorldRenderer {
 	@Unique
 	private WorldRenderingPipeline pipeline;
 
-	@Shadow
-	@Final
-	private BufferBuilderStorage bufferBuilders;
-
 	@Inject(method = RENDER, at = @At("HEAD"))
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid()) {
