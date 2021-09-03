@@ -27,14 +27,23 @@ public abstract class MixinSpriteAtlasTexture extends AbstractTexture implements
 
 	@Override
 	public Vec2f getAtlasSize() {
-		if(this.atlasSize == null){
+		if (this.atlasSize == null) {
 			// support for DashLoader (and other mods which might mess with the other code path)
 			int glId = this.getGlId();
+
+			// Keep track of what texture was bound before
+			int existingGlId = GL20C.glGetInteger(GL20C.GL_TEXTURE_BINDING_2D);
+
+			// Bind this texture and grab the atlas size from it.
 			RenderSystem.bindTexture(glId);
 			int width = GL20C.glGetTexLevelParameteri(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_WIDTH);
 			int height = GL20C.glGetTexLevelParameteri(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_HEIGHT);
 			this.atlasSize = new Vec2f(width, height);
+
+			// Make sure to re-bind the previous texture to avoid issues.
+			RenderSystem.bindTexture(existingGlId);
 		}
+
 		return this.atlasSize;
 	}
 }
