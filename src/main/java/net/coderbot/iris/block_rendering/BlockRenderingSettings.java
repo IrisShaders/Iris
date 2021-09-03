@@ -14,6 +14,7 @@ public class BlockRenderingSettings {
 	public BlockRenderingSettings() {
 		reloadRequired = false;
 		idMap = null;
+		ambientOcclusionLevel = 1.0F;
 		disableDirectionalShading = false;
 		useSeparateAo = false;
 	}
