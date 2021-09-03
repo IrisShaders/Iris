@@ -7,6 +7,13 @@ plugins {
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
+// To build iris bundled with sodium, just run the task `gradle bundleSodium`.
+ext.includeSodium = false
+tasks.register('bundleSodium') {
+	includeSodium = true
+}
+bundleSodium.finalizedBy(build)
+
 archivesBaseName = project.archives_base_name
 version = "${project.mod_version}+${getVersionMetadata()}"
 group = project.maven_group
@@ -15,13 +22,20 @@ minecraft {
 	accessWidener = file("src/main/resources/iris.accesswidener")
 }
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
+	// include sodium jar if bundling with sodium
+	if (includeSodium) include "me.jellysquid.mods:sodium-fabric:0.3.2+IRIS2+"
+
 	// Critical, needed for loading our custom language files
-	includeFabricApiModule "fabric-resource-loader-v0"
+	includeFabricApiModule "fabric-resource-loader-v0" 
 
 	// Needed for adding the reload keybinding
 	includeFabricApiModule "fabric-key-binding-api-v1"
@@ -150,7 +164,7 @@ def getVersionMetadata() {
 
 	// CI builds only
 	if (build_id != null) {
-		return "build.${build_id}"
+		return includeSodium ? "sodium-build.${build_id}" : "build.${build_id}"
 	}
 
 	if (grgit != null) {
@@ -162,6 +176,6 @@ def getVersionMetadata() {
 			id += "-dirty"
 		}
 
-		return "rev.${id}"
+		return includeSodium ? "sodium-rev.${id}" : "rev.${id}"
 	}
 }
