@@ -45,10 +45,6 @@ import net.fabricmc.api.Environment;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Mixin(WorldRenderer.class)
@@ -62,7 +58,10 @@ public class MixinWorldRenderer {
 	private static final String RENDER_WEATHER = "Lnet/minecraft/client/render/WorldRenderer;renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V";
 	private static final String RENDER_WORLD_BORDER = "Lnet/minecraft/client/render/WorldRenderer;renderWorldBorder(Lnet/minecraft/client/render/Camera;)V";
 	private static final String PROFILER_SWAP = "net/minecraft/util/profiler/Profiler.swap (Ljava/lang/String;)V";
-	private static final String RENDER_ENTITY = "renderEntity(Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
+	private static final String RENDER_ENTITY =
+			"net/minecraft/client/render/WorldRenderer.renderEntity (Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
+	private static final String RENDER_BLOCK_ENTITY =
+			"net/minecraft/client/render/block/entity/BlockEntityRenderDispatcher.render (Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
 
 	@Unique
 	private boolean skyTextureEnabled;
@@ -246,9 +245,6 @@ public class MixinWorldRenderer {
 				new OuterWrappedRenderLayer("iris:is_entity", layer, IsEntityRenderPhase.INSTANCE));
 		}
 	}
-
-	private static final String RENDER_BLOCK_ENTITY =
-			"net/minecraft/client/render/block/entity/BlockEntityRenderDispatcher.render (Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
 
 	@Inject(method = RENDER, at = {
 			@At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=blockentities", shift = At.Shift.AFTER),
