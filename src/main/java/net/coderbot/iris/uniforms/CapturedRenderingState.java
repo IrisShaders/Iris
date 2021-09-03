@@ -13,7 +13,8 @@ public class CapturedRenderingState {
 	private Matrix4f gbufferProjection;
 	private Vec3d fogColor;
 	private float tickDelta;
-	private BlockEntity currentRenderedBlockEntity;
+	private int currentRenderedBlockEntity;
+	private Runnable blockEntityIdListener = null;
 
 	private int currentRenderedEntity = -1;
 	private Runnable entityIdListener = null;
@@ -57,11 +58,15 @@ public class CapturedRenderingState {
 		return tickDelta;
 	}
 
-	public void setCurrentBlockEntity(BlockEntity entity) {
+	public void setCurrentBlockEntity(int entity) {
 		this.currentRenderedBlockEntity = entity;
+
+		if (this.blockEntityIdListener != null) {
+			this.blockEntityIdListener.run();
+		}
 	}
 
-	public BlockEntity getCurrentRenderedBlockEntity() {
+	public int getCurrentRenderedBlockEntity() {
 		return currentRenderedBlockEntity;
 	}
 
@@ -75,6 +80,10 @@ public class CapturedRenderingState {
 
 	public ValueUpdateNotifier getEntityIdNotifier() {
 		return listener -> this.entityIdListener = listener;
+	}
+
+	public ValueUpdateNotifier getBlockEntityIdNotifier() {
+		return listener -> this.blockEntityIdListener = listener;
 	}
 
 	public int getCurrentRenderedEntity() {

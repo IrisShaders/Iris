@@ -9,10 +9,10 @@ public final class EntityRenderPhase extends RenderPhase {
 	public EntityRenderPhase(int entityId) {
 		super("iris:is_entity", () -> {
 			CapturedRenderingState.INSTANCE.setCurrentEntity(entityId);
-			GbufferPrograms.push(GbufferProgram.ENTITIES);
+			GbufferPrograms.beginEntities();
 		}, () -> {
 			CapturedRenderingState.INSTANCE.setCurrentEntity(-1);
-			GbufferPrograms.pop(GbufferProgram.ENTITIES);
+			GbufferPrograms.endEntities();
 		});
 
 		this.entityId = entityId;
