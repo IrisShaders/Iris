@@ -7,7 +7,6 @@
     "MixinBlockDustParticle",
     "MixinFireworkSparkParticle",
     "MixinItemBillboardParticle",
-    "MixinMultiPhaseRenderLayer",
     "MixinParticleManager",
     "MixinWorldRenderer"
   ],

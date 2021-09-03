@@ -3,6 +3,7 @@ package net.coderbot.batchedentityrendering.mixin;
 import net.coderbot.batchedentityrendering.impl.BufferBuilderExt;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.VertexFormat;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -48,8 +49,8 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
         this.lastParameterIndex = 0;
 
         // configure the build start (to avoid a warning message) and element offset (probably not important)
-        this.buildStart = parameters.getCount() * parameters.getVertexFormat().getVertexSize();
-        this.elementOffset = this.buildStart;
+		this.buildStart = MathHelper.roundUpToMultiple(parameters.getDrawStart(), 4);
+		this.elementOffset = this.buildStart;
 
         // should be zero, just making sure
         this.nextDrawStart = 0;
