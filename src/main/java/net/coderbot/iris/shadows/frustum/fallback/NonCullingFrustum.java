@@ -1,4 +1,4 @@
-package net.coderbot.iris.shadows.frustum;
+package net.coderbot.iris.shadows.frustum.fallback;
 
 import net.minecraft.client.render.Frustum;
 import net.minecraft.util.math.Box;
