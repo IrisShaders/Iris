@@ -115,6 +115,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final int waterId;
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
+	private final boolean oldLighting;
 
 	private final List<GbufferProgram> programStack = new ArrayList<>();
 	private final List<String> programStackLog = new ArrayList<>();
@@ -125,6 +126,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		Objects.requireNonNull(programs);
 
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
+		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
 		this.allPasses = new ArrayList<>();
@@ -428,7 +430,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	@Override
 	public boolean shouldDisableDirectionalShading() {
-		return true;
+		return !oldLighting;
 	}
 
 	@Override

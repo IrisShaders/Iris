@@ -8,6 +8,7 @@ public class PackDirectives {
 	private float ambientOcclusionLevel;
 	private boolean areCloudsEnabled;
 	private boolean separateAo;
+	private boolean oldLighting;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
@@ -24,12 +25,14 @@ public class PackDirectives {
 		this(supportedRenderTargets);
 		areCloudsEnabled = properties.areCloudsEnabled();
 		separateAo = properties.getSeparateAo().orElse(false);
+		oldLighting = properties.getOldLighting().orElse(false);
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
 		this(supportedRenderTargets);
 		areCloudsEnabled = directives.areCloudsEnabled();
 		separateAo = directives.separateAo;
+		oldLighting = directives.oldLighting;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -50,6 +53,10 @@ public class PackDirectives {
 
 	public boolean shouldUseSeparateAo() {
 		return separateAo;
+	}
+
+	public boolean isOldLighting() {
+		return oldLighting;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {
