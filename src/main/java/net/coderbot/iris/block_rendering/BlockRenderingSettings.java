@@ -1,6 +1,7 @@
 package net.coderbot.iris.block_rendering;
 
 import net.coderbot.iris.shaderpack.IdMap;
+import org.jetbrains.annotations.Nullable;
 
 public class BlockRenderingSettings {
 	public static final BlockRenderingSettings INSTANCE = new BlockRenderingSettings();
@@ -27,6 +28,7 @@ public class BlockRenderingSettings {
 		reloadRequired = false;
 	}
 
+	@Nullable
 	public IdMap getIdMap() {
 		return idMap;
 	}

@@ -13,6 +13,7 @@ import net.coderbot.iris.layer.IsBlockEntityRenderPhase;
 import net.coderbot.iris.layer.IsEntityRenderPhase;
 import net.coderbot.iris.layer.OuterWrappedRenderLayer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -273,7 +274,14 @@ public class MixinWorldRenderer {
 								   MatrixStack matrices, VertexConsumerProvider provider, CallbackInfo ci) {
 		if (provider instanceof WrappingVertexConsumerProvider) {
 			Identifier entityId = Registry.ENTITY_TYPE.getId(entity.getType());
-			int entityIntId = BlockRenderingSettings.INSTANCE.getIdMap().getEntityIdMap().getOrDefault(entityId, -1);
+
+			IdMap idMap = BlockRenderingSettings.INSTANCE.getIdMap();
+
+			if (idMap == null) {
+				return;
+			}
+
+			int entityIntId = idMap.getEntityIdMap().getOrDefault(entityId, -1);
 
 			if (entityIntId != -1) {
 				EntityRenderPhase phase = new EntityRenderPhase(entityIntId);
@@ -292,6 +300,12 @@ public class MixinWorldRenderer {
 		if (immediate instanceof WrappingVertexConsumerProvider) {
 			int entityIntId = -1;
 
+			IdMap idMap = BlockRenderingSettings.INSTANCE.getIdMap();
+
+			if (idMap == null) {
+				return;
+			}
+
 			if (blockEntity != null && blockEntity.hasWorld()) {
 				ClientWorld world = Objects.requireNonNull(MinecraftClient.getInstance().world);
 
@@ -300,7 +314,7 @@ public class MixinWorldRenderer {
 				// If this is false, then somehow the block here isn't compatible with the block entity at this location.
 				// I'm not sure how this could ever reasonably happen, but we're checking anyways.
 				if (blockEntity.getType().supports(blockAt.getBlock())) {
-					entityIntId = BlockRenderingSettings.INSTANCE.getIdMap().getBlockProperties().getOrDefault(blockAt, -1);
+					entityIntId = idMap.getBlockProperties().getOrDefault(blockAt, -1);
 				}
 			}
 
