@@ -7,12 +7,14 @@ public class BlockRenderingSettings {
 
 	private boolean reloadRequired;
 	private IdMap idMap;
+	private float ambientOcclusionLevel;
 	private boolean disableDirectionalShading;
 	private boolean useSeparateAo;
 
 	public BlockRenderingSettings() {
 		reloadRequired = false;
 		idMap = null;
+		ambientOcclusionLevel = 1.0F;
 		disableDirectionalShading = false;
 		useSeparateAo = false;
 	}
@@ -36,6 +38,19 @@ public class BlockRenderingSettings {
 
 		this.reloadRequired = true;
 		this.idMap = idMap;
+	}
+
+	public float getAmbientOcclusionLevel() {
+		return ambientOcclusionLevel;
+	}
+
+	public void setAmbientOcclusionLevel(float ambientOcclusionLevel) {
+		if (ambientOcclusionLevel == this.ambientOcclusionLevel) {
+			return;
+		}
+
+		this.reloadRequired = true;
+		this.ambientOcclusionLevel = ambientOcclusionLevel;
 	}
 
 	public boolean shouldDisableDirectionalShading() {

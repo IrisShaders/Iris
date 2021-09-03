@@ -1,4 +1,4 @@
-package net.coderbot.iris.fantastic;
+package net.coderbot.batchedentityrendering.impl;
 
 public interface ExtendedBufferStorage {
 	void beginWorldRendering();

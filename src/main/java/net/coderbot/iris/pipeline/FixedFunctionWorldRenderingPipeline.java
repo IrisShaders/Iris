@@ -13,6 +13,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	public FixedFunctionWorldRenderingPipeline() {
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(false);
+		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(1.0f);
 	}
 
 	@Override

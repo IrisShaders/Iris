@@ -1,4 +1,4 @@
-package net.coderbot.iris.mixin.fantastic;
+package net.coderbot.batchedentityrendering.mixin;
 
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;

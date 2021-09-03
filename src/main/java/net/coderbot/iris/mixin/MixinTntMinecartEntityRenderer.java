@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.layer.EntityColorRenderPhase;
+import net.coderbot.iris.layer.EntityColorVertexConsumerProvider;
 import net.coderbot.iris.layer.InnerWrappedRenderLayer;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -16,7 +17,7 @@ public abstract class MixinTntMinecartEntityRenderer {
 	private static VertexConsumerProvider iris$wrapProvider(VertexConsumerProvider provider, BlockState blockState, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, boolean drawFlash) {
 		if (drawFlash) {
 			EntityColorRenderPhase phase = new EntityColorRenderPhase(false, 1.0F);
-			return layer -> provider.getBuffer(new InnerWrappedRenderLayer("iris_entity_color", layer, phase));
+			return new EntityColorVertexConsumerProvider(provider, phase);
 		} else {
 			return provider;
 		}

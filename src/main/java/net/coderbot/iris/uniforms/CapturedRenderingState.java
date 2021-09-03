@@ -1,8 +1,8 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 
@@ -14,7 +14,9 @@ public class CapturedRenderingState {
 	private Vec3d fogColor;
 	private float tickDelta;
 	private BlockEntity currentRenderedBlockEntity;
-	private Entity currentRenderedEntity;
+
+	private int currentRenderedEntity = -1;
+	private Runnable entityIdListener = null;
 
 	private CapturedRenderingState() {
 	}
@@ -63,11 +65,19 @@ public class CapturedRenderingState {
 		return currentRenderedBlockEntity;
 	}
 
-	public void setCurrentEntity(Entity entity) {
+	public void setCurrentEntity(int entity) {
 		this.currentRenderedEntity = entity;
+
+		if (this.entityIdListener != null) {
+			this.entityIdListener.run();
+		}
 	}
 
-	public Entity getCurrentRenderedEntity() {
+	public ValueUpdateNotifier getEntityIdNotifier() {
+		return listener -> this.entityIdListener = listener;
+	}
+
+	public int getCurrentRenderedEntity() {
 		return currentRenderedEntity;
 	}
 }

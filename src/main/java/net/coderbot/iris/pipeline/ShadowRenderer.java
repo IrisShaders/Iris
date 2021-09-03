@@ -2,10 +2,9 @@ package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.fantastic.ExtendedBufferStorage;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -37,7 +36,6 @@ import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
@@ -49,7 +47,6 @@ import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.nio.FloatBuffer;
 import java.util.Map;
@@ -78,6 +75,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture specular;
 	private final AbstractTexture noise;
 
+	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
+
 	public static boolean ACTIVE = false;
 	public static List<BlockEntity> visibleBlockEntities;
 	public static String OVERALL_DEBUG_STRING = "(unavailable)";
@@ -104,7 +103,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			Iris.logger.warn("The shaderpack specifies a shadow FOV of " + shadowDirectives.getFov() + ", but Iris does not currently support perspective projections in the shadow pass.");
 		}
 
+		// TODO: Support more than two shadowcolor render targets
 		this.targets = new ShadowRenderTargets(resolution, new InternalTextureFormat[]{
+			// TODO: Custom shadowcolor format support
 			InternalTextureFormat.RGBA,
 			InternalTextureFormat.RGBA
 		});
@@ -137,26 +138,41 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		final ImmutableList<PackShadowDirectives.DepthSamplingSettings> depthSamplingSettings =
 				shadowDirectives.getDepthSamplingSettings();
 
-		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE4);
+		final ImmutableList<PackShadowDirectives.SamplingSettings> colorSamplingSettings =
+				shadowDirectives.getColorSamplingSettings();
 
-		GlStateManager._bindTexture(getDepthTextureId());
-		configureDepthSampler(depthSamplingSettings.get(0));
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
 
-		GlStateManager._bindTexture(getDepthTextureNoTranslucentsId());
-		configureDepthSampler(depthSamplingSettings.get(1));
+		RenderSystem.bindTexture(getDepthTextureId());
+		configureDepthSampler(getDepthTextureId(), depthSamplingSettings.get(0));
 
-		// TODO: Configure color samplers
+		RenderSystem.bindTexture(getDepthTextureNoTranslucentsId());
+		configureDepthSampler(getDepthTextureNoTranslucentsId(), depthSamplingSettings.get(1));
 
-		GlStateManager._bindTexture(0);
-		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0);
+		for (int i = 0; i < colorSamplingSettings.size(); i++) {
+			int glTextureId = targets.getColorTextureId(i);
+
+			RenderSystem.bindTexture(glTextureId);
+			configureSampler(glTextureId, colorSamplingSettings.get(i));
+		}
+
+		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 	}
 
-	private void configureDepthSampler(PackShadowDirectives.DepthSamplingSettings settings) {
-		// TODO: Mipmap support.
-
+	private void configureDepthSampler(int glTextureId, PackShadowDirectives.DepthSamplingSettings settings) {
 		if (settings.getHardwareFiltering()) {
 			// We have to do this or else shadow hardware filtering breaks entirely!
 			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
+		}
+
+		configureSampler(glTextureId, settings);
+	}
+
+	private void configureSampler(int glTextureId, PackShadowDirectives.SamplingSettings settings) {
+		if (settings.getMipmap()) {
+			int filteringMode = settings.getNearest() ? GL20C.GL_NEAREST_MIPMAP_NEAREST : GL20C.GL_LINEAR_MIPMAP_LINEAR;
+			mipmapPasses.add(new MipmapPass(glTextureId, filteringMode));
 		}
 
 		if (!settings.getNearest()) {
@@ -167,6 +183,23 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_NEAREST);
 			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_NEAREST);
 		}
+	}
+
+	private void generateMipmaps() {
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
+
+		for (MipmapPass mipmapPass : mipmapPasses) {
+			RenderSystem.bindTexture(mipmapPass.getTexture());
+			setupMipmappingForBoundTexture(mipmapPass.getTargetFilteringMode());
+		}
+
+		RenderSystem.bindTexture(0);
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+	}
+
+	private void setupMipmappingForBoundTexture(int filteringMode) {
+		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
+		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
@@ -463,6 +496,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		SHADOW_DEBUG_STRING = ((WorldRenderer) worldRenderer).getChunksDebugString();
 
+		worldRenderer.getWorld().getProfiler().swap("generate mipmaps");
+
+		generateMipmaps();
+
 		worldRenderer.getWorld().getProfiler().pop();
 
 		// Restore backface culling
@@ -565,5 +602,23 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public GlFramebuffer getFramebuffer() {
 		return targets.getFramebuffer();
+	}
+
+	private static class MipmapPass {
+		private final int texture;
+		private final int targetFilteringMode;
+
+		public MipmapPass(int texture, int targetFilteringMode) {
+			this.texture = texture;
+			this.targetFilteringMode = targetFilteringMode;
+		}
+
+		public int getTexture() {
+			return texture;
+		}
+
+		public int getTargetFilteringMode() {
+			return targetFilteringMode;
+		}
 	}
 }

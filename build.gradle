@@ -31,6 +31,15 @@ dependencies {
 
 	// Required by fabric-lifecycle-events-v1
 	includeFabricApiModule "fabric-api-base"
+
+	// JUnit 5 Jupiter test engine
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+	// Use JUnit 5 Platform for tests
+	useJUnitPlatform()
 }
 
 def includeFabricApiModule(String moduleName) {

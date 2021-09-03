@@ -1,16 +1,22 @@
-package net.coderbot.iris.fantastic;
+package net.coderbot.batchedentityrendering.impl;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.coderbot.iris.layer.WrappableRenderLayer;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.Immediate {
+public class OldFullyBufferedVertexConsumerProvider extends VertexConsumerProvider.Immediate {
 	private final Map<RenderLayer, BufferBuilder> bufferBuilders;
 	private final Object2IntMap<RenderLayer> unused;
 	private final Set<BufferBuilder> activeBuffers;
@@ -19,7 +25,7 @@ public class FullyBufferedVertexConsumerProvider extends VertexConsumerProvider.
 	private final Set<RenderLayer> layersThisFrame;
 	private final List<RenderLayer> layersInOrder;
 
-	public FullyBufferedVertexConsumerProvider() {
+	public OldFullyBufferedVertexConsumerProvider() {
 		super(new BufferBuilder(0), Collections.emptyMap());
 
 		this.bufferBuilders = new HashMap<>();
