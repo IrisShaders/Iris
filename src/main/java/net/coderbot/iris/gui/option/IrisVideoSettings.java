@@ -1,7 +1,10 @@
 package net.coderbot.iris.gui.option;
 
+import net.coderbot.iris.Iris;
 import net.minecraft.client.options.DoubleOption;
 import net.minecraft.text.TranslatableText;
+
+import java.io.IOException;
 
 public class IrisVideoSettings {
 	public static double shadowDistance = 32.0;
@@ -13,6 +16,11 @@ public class IrisVideoSettings {
 		return shadowDistance;
 	}, (gameOptions, viewDistance) -> {
 		shadowDistance = viewDistance;
+		try {
+			Iris.getIrisConfig().save();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}, (gameOptions, option) -> {
 		double d = option.get(gameOptions);
 
