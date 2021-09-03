@@ -7,9 +7,9 @@
     "MixinBufferBuilder",
     "MixinVertexFormatElement",
     "MixinVertexFormat",
-    "block_rendering.MixinBakedQuad",
     "block_rendering.MixinBufferBuilder_SeparateAo",
-    "block_rendering.MixinChunkRebuildTask"
+    "block_rendering.MixinChunkRebuildTask",
+    "block_rendering.MixinClientWorld"
   ],
   "injectors": {
     "defaultRequire": 1
