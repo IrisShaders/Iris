@@ -16,6 +16,7 @@
     "MixinParticleManager",
     "MixinWorldRenderer",
     "MixinWorldRenderer_EntityListSorting",
+    "MixinWorldRenderer_ParticleRendering",
     "MultiPhaseParametersAccessor",
     "RenderLayerAccessor",
     "RenderPhaseAccessor"
