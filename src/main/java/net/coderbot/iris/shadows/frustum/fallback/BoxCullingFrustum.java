@@ -1,11 +1,13 @@
 package net.coderbot.iris.shadows.frustum.fallback;
 
+import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegionVisibility;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
+import net.coderbot.iris.shadows.frustum.SodiumFrustumExt;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Matrix4f;
 
-public class BoxCullingFrustum extends Frustum {
+public class BoxCullingFrustum extends Frustum implements SodiumFrustumExt {
 	private final BoxCuller boxCuller;
 
 	public BoxCullingFrustum(BoxCuller boxCuller) {
@@ -26,5 +28,11 @@ public class BoxCullingFrustum extends Frustum {
 
 	public boolean isVisible(Box box) {
 		return !boxCuller.isCulled(box);
+	}
+
+	@Override
+	public RenderRegionVisibility aabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		// TODO: FULLY_VISIBLE?
+		return boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ) ? RenderRegionVisibility.CULLED : RenderRegionVisibility.VISIBLE;
 	}
 }
