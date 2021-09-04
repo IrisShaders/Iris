@@ -72,7 +72,7 @@ public final class CommonUniforms {
 	}
 
 	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier){
-		ExternallyManagedUniforms.addExternallyManagedUniforms116(uniforms);
+		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
