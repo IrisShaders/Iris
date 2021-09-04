@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -46,7 +47,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 				return;
 			}
 
-			if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			if (IrisLogging.ENABLE_SPAM) {
 				// Only logspam in dev
 				Iris.logger.info("Found potential unhandled directive: " + directive);
 			}
@@ -77,7 +78,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 				return;
 			}
 
-			if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			if (IrisLogging.ENABLE_SPAM) {
 				// Only logspam in dev
 				Iris.logger.info("Found potential unhandled directive: " + directive);
 			}
@@ -98,7 +99,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 				return;
 			}
 
-			if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			if (IrisLogging.ENABLE_SPAM) {
 				// Only logspam in dev
 				Iris.logger.info("Found potential unhandled directive: " + directive);
 			}
@@ -164,7 +165,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	@Override
 	public void acceptUniformDirective(String name, Runnable onDetected) {
 		// TODO
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			Iris.logger.warn("Not looking for a uniform directive with the name " + name + " since this type of directive is not currently supported.");
 		}
 	}
@@ -172,7 +173,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	@Override
 	public void acceptCommentStringDirective(String name, Consumer<String> consumer) {
 		// TODO
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			Iris.logger.warn("Not looking for a comment string directive with the name " + name + " since this type of directive is not currently supported.");
 		}
 	}
@@ -180,7 +181,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	@Override
 	public void acceptCommentIntDirective(String name, IntConsumer consumer) {
 		// TODO
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			Iris.logger.warn("Not looking for a comment int directive with the name " + name + " since this type of directive is not currently supported.");
 		}
 	}
@@ -188,7 +189,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	@Override
 	public void acceptCommentFloatDirective(String name, FloatConsumer consumer) {
 		// TODO
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			Iris.logger.warn("Not looking for a comment float directive with the name " + name + " since this type of directive is not currently supported.");
 		}
 	}

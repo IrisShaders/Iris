@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.function.IntFunction;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
@@ -129,7 +130,7 @@ public class SodiumTerrainPipeline {
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			System.out.println("Final patched vertex source:");
 			System.out.println(transformations);
 		}
@@ -157,7 +158,7 @@ public class SodiumTerrainPipeline {
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
 				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			System.out.println("Final patched fragment source:");
 			System.out.println(transformations);
 		}
