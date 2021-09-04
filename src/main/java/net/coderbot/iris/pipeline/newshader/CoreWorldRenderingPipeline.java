@@ -35,6 +35,7 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	Shader getBeacon();
 	Shader getShadowTerrainCutout();
 	Shader getShadowEntitiesCutout();
+	Shader getShadowBeaconBeam();
 	Shader getTranslucent();
 	Shader getGlint();
 	Shader getLines();

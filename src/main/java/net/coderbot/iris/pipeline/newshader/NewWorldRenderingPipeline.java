@@ -79,6 +79,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Shader entitiesCutout;
 	private final Shader entitiesEyes;
 	private final Shader shadowEntitiesCutout;
+	private final Shader shadowBeaconBeam;
 	private final Shader lightning;
 	private final Shader leash;
 	private final Shader particles;
@@ -319,12 +320,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programSet.getPackDirectives().getShadowDirectives().getResolution());
 			this.shadowTerrainCutout = null;
 			this.shadowEntitiesCutout = null;
+			this.shadowBeaconBeam = null;
 			this.shadowLines = null;
 		} else {
 			try {
 				// TODO: Shadow programs should have access to different samplers.
 				this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN);
 				this.shadowEntitiesCutout = createShadowShader("shadow_entities_cutout", shadowSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL);
+				this.shadowBeaconBeam = createShadowShader("shadow_beacon_beam", shadowSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
 				this.shadowLines = createShadowShader("shadow_lines", shadowSource, AlphaTest.ALWAYS, VertexFormats.LINES);
 			}  catch (RuntimeException e) {
 				destroyShaders();
@@ -690,6 +693,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public Shader getShadowEntitiesCutout() {
+		return shadowEntitiesCutout;
+	}
+
+	@Override
+	public Shader getShadowBeaconBeam() {
 		return shadowEntitiesCutout;
 	}
 

@@ -231,8 +231,11 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getRenderTypeBeaconBeamShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideBeaconBeamShader(CallbackInfoReturnable<Shader> cir) {
-		override(CoreWorldRenderingPipeline::getBeacon, cir);
-		// TODO: Shadows, not in world?
+		if (ShadowRenderer.ACTIVE) {
+			override(CoreWorldRenderingPipeline::getShadowBeaconBeam, cir);
+		} else {
+			override(CoreWorldRenderingPipeline::getBeacon, cir);
+		}
 	}
 
 	// TODO: getRenderTypeEntityDecalShader
