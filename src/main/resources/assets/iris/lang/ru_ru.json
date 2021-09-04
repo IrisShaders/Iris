@@ -1,23 +1,31 @@
 {
   "iris.shaders.reloaded": "Шейдеры перезагружены!",
+  "iris.shaders.toggled": "Шейдеры переключены на %s!",
   "iris.keybind.reload": "Перезагрузить шейдеры",
-  "iris.shaders.reloaded.failure": "Ошибка при перезагрузке шейдеров! Причина: %s",
-  
+  "iris.keybind.shaderPackSelection": "Экран выбора шейдеров",
+  "iris.keybind.toggleShaders": "Переключить шейдеры",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "Не удалось перезагрузить шейдеры! Причина: %s",
+  "iris.shaders.toggled.failure": "Не удалось переключить шейдеры! Причина: %s",
+  "iris.sodium.failure.title": "Ошибка загрузки Iris!",
+  "iris.sodium.failure.reason": "У вас есть Sodium в папке с модами, но Iris включает его. Закройте игру и удалите Sodium из папки модов.",
+
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
-  "options.iris.openShaderPackFolder": "Откройте папку c шейдером...",
-  "options.iris.refreshShaderPacks": "Обновить список шейдеров",
-  "options.iris.shaderPackSelection": "Шейдеры...",
-  "options.iris.shaderPackSelection.title": "Шейдеры",
+  "options.iris.openShaderPackFolder": "Открыть папку с шейдерами...",
+  "options.iris.refreshShaderPacks": "Обновить список шейдеры",
+  "options.iris.shaderPackSelection": "Пакеты шейдеров...",
+  "options.iris.shaderPackSelection.title": "Пакеты шейдеров",
   "options.iris.shaderPackSelection.addedPack": "Добавлен шейдер \"%s\"",
   "options.iris.shaderPackSelection.addedPacks": "Добавлено %s шейдеров",
-  "options.iris.shaderPackSelection.failedAdd": "Файлы не являются шейдерами",
-  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является шейдером",
-  "options.iris.shaderPackSelection.copyError": "Не удалось добавить шейдер \"%s\"",
+  "options.iris.shaderPackSelection.failedAdd": "Файлы не были действующими пакетами шейдеров",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является допустимым пакетом шейдеров",
+  "options.iris.shaderPackSelection.copyError": "Не удалось добавить пакет шейдеров \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
   "options.iris.shaders.disabled": "Шейдеры: Выключены",
   "options.iris.shaders.enabled": "Шейдеры: Включены",
-  
-  "pack.iris.select.title": "Выберите",
-  "pack.iris.list.label": "+ Перетащите шейдер для добавления"
+  "options.iris.shadowDistance": "Максимальное расстояние тени",
+
+  "pack.iris.select.title": "Выбрать",
+  "pack.iris.list.label": "+ Перетащите пакеты шейдеров для добавления"
 }
