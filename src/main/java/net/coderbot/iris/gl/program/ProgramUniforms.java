@@ -6,8 +6,8 @@ import java.util.*;
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
-import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.Uniform;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
@@ -112,6 +112,7 @@ public class ProgramUniforms {
 		private final Map<String, Uniform> perFrame;
 		private final Map<String, Uniform> dynamic;
 		private final Map<String, UniformType> uniformNames;
+		private final Map<String, UniformType> externalUniformNames;
 		private final List<ValueUpdateNotifier> notifiersToReset;
 
 		protected Builder(String name, int program) {
@@ -124,6 +125,7 @@ public class ProgramUniforms {
 			perFrame = new HashMap<>();
 			dynamic = new HashMap<>();
 			uniformNames = new HashMap<>();
+			externalUniformNames = new HashMap<>();
 			notifiersToReset = new ArrayList<>();
 		}
 
@@ -183,6 +185,24 @@ public class ProgramUniforms {
 						continue;
 					}
 
+					UniformType externalProvided = externalUniformNames.get(name);
+
+					if (externalProvided != null) {
+						if (externalProvided != expected) {
+							String expectedName;
+
+							if (expected != null) {
+								expectedName = expected.toString();
+							} else {
+								expectedName = "(unsupported type: " + getTypeName(type) + ")";
+							}
+
+							Iris.logger.error("[" + this.name + "] Wrong uniform type for externally-managed uniform " + name + ": " + externalProvided + " is provided but the program expects " + expectedName + ".");
+						}
+
+						continue;
+					}
+
 					if (size == 1) {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
 					} else {
@@ -225,6 +245,12 @@ public class ProgramUniforms {
 			dynamic.put(locations.get(uniform.getLocation()), uniform);
 			notifiersToReset.add(notifier);
 
+			return this;
+		}
+
+		@Override
+		public UniformHolder externallyManagedUniform(String name, UniformType type) {
+			externalUniformNames.put(name, type);
 			return this;
 		}
 	}
