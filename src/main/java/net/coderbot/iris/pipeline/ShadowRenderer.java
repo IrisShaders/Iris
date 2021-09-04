@@ -329,10 +329,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	@Override
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
-
-		if (IrisVideoSettings.shadowDistance == 0 && renderDistanceMultiplier < 0) {
-			return;
-		}
 		MinecraftClient client = MinecraftClient.getInstance();
 
 		worldRenderer.getWorld().getProfiler().swap("shadows");
