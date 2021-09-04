@@ -75,6 +75,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	//private final Program shadowProgram;
 	private final boolean packHasVoxelization;
+	private final boolean packHasIndirectSunBounceGi;
 	private final float sunPathRotation;
 
 	private final BufferBuilderStorage buffers;
@@ -136,6 +137,26 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			this.shadowProgram = null;
 		}*/
 		this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+
+		ProgramSource[] composite = shadow.getParent().getComposite();
+
+		if (composite.length > 0) {
+			String fsh = composite[0].getFragmentSource().orElse("");
+
+			// Detect the sun-bounce GI in SEUS Renewed and SEUS v11.
+			// TODO: This is very hacky, we need a better way to detect sun-bounce GI.
+			if (fsh.contains("GI_QUALITY") && fsh.contains("GI_RENDER_RESOLUTION")
+					&& fsh.contains("GI_RADIUS")
+					&& fsh.contains("#define GI\t// Indirect lighting from sunlight.")
+					&& !fsh.contains("//#define GI\t// Indirect lighting from sunlight.")
+					&& !fsh.contains("// #define GI\t// Indirect lighting from sunlight.")) {
+				this.packHasIndirectSunBounceGi = true;
+			} else {
+				this.packHasIndirectSunBounceGi = false;
+			}
+		} else {
+			this.packHasIndirectSunBounceGi = false;
+		}
 
 		this.sunPathRotation = directives.getSunPathRotation();
 
@@ -280,17 +301,25 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	private Frustum createShadowFrustum() {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
-		if (packHasVoxelization) {
+		if (packHasVoxelization || packHasIndirectSunBounceGi) {
 			double distance = halfPlaneLength * renderDistanceMultiplier;
+
+			String reason;
+
+			if (packHasVoxelization) {
+				reason = "(voxelization detected)";
+			} else {
+				reason = "(indirect sunlight GI detected)";
+			}
 
 			if (distance <= 0 || distance > MinecraftClient.getInstance().options.viewDistance * 16) {
 				debugStringShadowDistance = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
 						+ " blocks (capped by normal render distance)";
-				debugStringShadowCulling = "disabled (voxelization detected)";
+				debugStringShadowCulling = "disabled " + reason;
 				return new NonCullingFrustum();
 			} else {
 				debugStringShadowDistance = "render distance = " + distance + " blocks (set by shader pack)";
-				debugStringShadowCulling = "distance only (voxelization detected)";
+				debugStringShadowCulling = "distance only " + reason;
 				BoxCuller boxCuller = new BoxCuller(distance);
 				return new BoxCullingFrustum(boxCuller);
 			}

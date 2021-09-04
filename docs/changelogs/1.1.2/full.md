@@ -8,9 +8,10 @@ This update includes six weeks of bug fixes and other improvements, including so
 
 ## Big Reworks
 
-- Shadow culling has been completely rewritten. It no longer incorrectly culls chunks compared to OptiFine, and overall performance has improved greatly compared to the previous system (especially with shader packs like Enhanced Default, BSL, Complementary Shaders, and SEUS Renewed).
+- Shadow culling has been completely rewritten. It no longer incorrectly culls chunks compared to OptiFine, and overall performance has improved greatly compared to the previous system (especially with shader packs like Enhanced Default, BSL, and Complementary Shaders).
     - An advanced system for shadow frustum culling with shader packs that do not use voxelization has been added that takes the player's view into account. If Iris can determine that something cannot cast a shadow anywhere in the player's view frustum, that object is not rendered.
     - This system detects when a shader pack like SEUS PTGI uses voxelization (through the presence of a geometry shader, Iris has no support for image load/store yet) and automatically disables this culling mode in that case to prevent bugs (such as light not being emitted from lights behind you).
+    - This system also detects the sun-bounce GI in SEUS Renewed / SEUS v11 and automatically disables itself if the pack is configured to have sun-bounce GI enabled. If you disable the sun bounce GI (currently by editing the pack and in the future through the config GUI), shadow frustum culling will activate again.
     - Previous implementations of shadow culling had a bug with some packs, such as Sildur's Vibrant Shaders, that would cause shadows to be cast much less far away than they would on OptiFine. This issue has been completely fixed.
     - In the unlikely case that you observe a performance decrease, you can restore the old behavior using the newly-added Max Shadow Distance slider in Video Settings, which is active on packs that do not themselves specify a shadow render distance.
 - Batched entity rendering has been completely rewritten, fixing a number of memory management, correctness, and performance issues.
