@@ -203,6 +203,11 @@ public class ProgramUniforms {
 						continue;
 					}
 
+					if (name.startsWith("Chunks[")) {
+						// explicitly filter out Chunks[] UBO stuff
+						continue;
+					}
+
 					if (size == 1) {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
 					} else {
