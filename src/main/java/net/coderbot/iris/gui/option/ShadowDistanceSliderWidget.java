@@ -1,12 +1,15 @@
 package net.coderbot.iris.gui.option;
 
 import net.minecraft.client.gui.widget.DoubleOptionSliderWidget;
-import net.minecraft.client.options.DoubleOption;
-import net.minecraft.client.options.GameOptions;
+import net.minecraft.client.option.DoubleOption;
+import net.minecraft.client.option.GameOptions;
+import net.minecraft.text.OrderedText;
+
+import java.util.List;
 
 public class ShadowDistanceSliderWidget extends DoubleOptionSliderWidget {
-	public ShadowDistanceSliderWidget(GameOptions gameOptions, int x, int y, int width, int height, DoubleOption option) {
-		super(gameOptions, x, y, width, height, option);
+	public ShadowDistanceSliderWidget(GameOptions gameOptions, int x, int y, int width, int height, DoubleOption option, List<OrderedText> orderedTooltip) {
+		super(gameOptions, x, y, width, height, option, orderedTooltip);
 	}
 
 	public boolean isMouseOver(double mouseX, double mouseY) {

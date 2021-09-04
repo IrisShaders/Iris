@@ -23,6 +23,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
@@ -51,6 +52,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
@@ -123,6 +125,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 	private final boolean oldLighting;
+	private final OptionalInt forcedShadowRenderDistanceChunks;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
@@ -146,6 +149,20 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programSet.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
+
+		PackShadowDirectives shadowDirectives = programSet.getPackDirectives().getShadowDirectives();
+
+		if (shadowDirectives.isDistanceRenderMulExplicit()) {
+			if (shadowDirectives.getDistanceRenderMul() >= 0.0) {
+				// add 15 and then divide by 16 to ensure we're rounding up
+				forcedShadowRenderDistanceChunks =
+						OptionalInt.of(((int) (shadowDirectives.getDistance() * shadowDirectives.getDistanceRenderMul()) + 15) / 16);
+			} else {
+				forcedShadowRenderDistanceChunks = OptionalInt.of(-1);
+			}
+		} else {
+			forcedShadowRenderDistanceChunks = OptionalInt.empty();
+		}
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);
@@ -502,6 +519,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		} else {
 			throw new IllegalStateException("Unknown shadow map renderer type!");
 		}
+	}
+
+	@Override
+	public OptionalInt getForcedShadowRenderDistanceChunksForDisplay() {
+		return forcedShadowRenderDistanceChunks;
 	}
 
 	@Override

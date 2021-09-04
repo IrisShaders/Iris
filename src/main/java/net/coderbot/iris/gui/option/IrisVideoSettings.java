@@ -43,11 +43,23 @@ public class IrisVideoSettings {
 
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
+		if (pipeline != null) {
+			d = pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(d);
+		}
+
+		if (d <= 0.0) {
+			return new TranslatableText("options.generic_value", new TranslatableText("options.iris.shadowDistance"), "0 (disabled)");
+		} else {
+			return new TranslatableText("options.generic_value",
+					new TranslatableText("options.iris.shadowDistance"),
+					new TranslatableText("options.chunks", d));
+		}
+	}, client -> {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+
 		Text tooltip;
 
 		if (pipeline != null) {
-			d = pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(d);
-
 			if (pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent()) {
 				tooltip = DISABLED_TOOLTIP;
 			} else {
@@ -57,14 +69,6 @@ public class IrisVideoSettings {
 			tooltip = ENABLED_TOOLTIP;
 		}
 
-		option.setTooltip(MinecraftClient.getInstance().textRenderer.wrapLines(tooltip, 200));
-
-		if (d <= 0.0) {
-			return new TranslatableText("options.generic_value", new TranslatableText("options.iris.shadowDistance"), "0 (disabled)");
-		} else {
-			return new TranslatableText("options.generic_value",
-					new TranslatableText("options.iris.shadowDistance"),
-					new TranslatableText("options.chunks", d));
-		}
+		return MinecraftClient.getInstance().textRenderer.wrapLines(tooltip, 200);
 	});
 }
