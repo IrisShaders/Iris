@@ -27,7 +27,7 @@ This update includes six weeks of bug fixes and other improvements, including so
 
 - Fog now fully works in most shader packs, including Sildur's Enhanced Default and other vanilla-like shaders
     - fogMode and fogDensity are fully supported on 1.16.5
-    - fogMode is fully supported on 1.17, fogDensity is yet not supported on 1.7
+    - fogMode is fully supported on 1.17, fogDensity is yet not supported on 1.17
 - Entities now flash red when hurt, and flash white when they are going to explode
     - entityColor is now fully supported
     - The overlay texture is now stored in texture unit 2, not texture unit 6. Eventually we will want to restore vanilla behavior of storing it in texture unit 1.
