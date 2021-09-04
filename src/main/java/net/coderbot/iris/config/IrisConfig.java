@@ -108,7 +108,13 @@ public class IrisConfig {
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
-		IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("shadowRenderDistance", "0"));
+		try {
+			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("shadowRenderDistance", "32"));
+		} catch (NumberFormatException e) {
+			Iris.logger.error("Shadow distance setting reset; value is invalid.");
+			IrisVideoSettings.shadowDistance = 32;
+			save();
+		}
 
 		if (shaderPackName != null) {
 			if (shaderPackName.equals("(internal)") || shaderPackName.isEmpty()) {

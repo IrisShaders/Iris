@@ -293,11 +293,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			double distance = halfPlaneLength * renderDistanceMultiplier;
 			String setter = "(set by shader pack)";
 
-			if ((renderDistanceMultiplier < 0 && IrisVideoSettings.shadowDistance != 0) || (IrisVideoSettings.shadowDistance >= 1 && (IrisVideoSettings.shadowDistance * 16) <= halfPlaneLength)) {
+			if (renderDistanceMultiplier < 0) {
 				distance = IrisVideoSettings.shadowDistance * 16;
 				setter = "(set by user)";
-			} else if (renderDistanceMultiplier < 0) {
-				distance = MinecraftClient.getInstance().options.viewDistance * 16;
 			}
 
 			if (distance >= MinecraftClient.getInstance().options.viewDistance * 16) {
@@ -331,6 +329,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	@Override
 	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
+
+		if (IrisVideoSettings.shadowDistance == 0 && renderDistanceMultiplier < 0) {
+			return;
+		}
 		MinecraftClient client = MinecraftClient.getInstance();
 
 		worldRenderer.getWorld().getProfiler().swap("shadows");

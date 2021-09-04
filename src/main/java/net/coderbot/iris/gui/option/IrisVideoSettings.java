@@ -7,7 +7,7 @@ import net.minecraft.text.TranslatableText;
 import java.io.IOException;
 
 public class IrisVideoSettings {
-	public static int shadowDistance = 0;
+	public static int shadowDistance = 32;
 
 	// TODO: Grey out button when the shader pack is overriding the shadow distance
 	// TODO: Save this to a file
@@ -26,7 +26,7 @@ public class IrisVideoSettings {
 		double d = option.get(gameOptions);
 
 		if (d <= 0.0) {
-			return new TranslatableText("options.generic_value", new TranslatableText("options.iris.shadowDistance"), "unlimited");
+			return new TranslatableText("options.generic_value", new TranslatableText("options.iris.shadowDistance"), "0 (disabled)");
 		} else {
 			return new TranslatableText("options.generic_value",
 					new TranslatableText("options.iris.shadowDistance"),
