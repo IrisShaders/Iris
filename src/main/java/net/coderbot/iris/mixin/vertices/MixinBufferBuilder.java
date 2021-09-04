@@ -239,7 +239,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		float pbitangenty = -(tangentx * normal.z - tangentz * normal.x);
 		float pbitangentz =   tangentx * normal.x - tangenty * normal.y;
 
-		float dot = bitangentx * pbitangentx + bitangenty + pbitangenty + bitangentz * pbitangentz;
+		float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
 		float tangentW;
 
 		if (dot < 0) {

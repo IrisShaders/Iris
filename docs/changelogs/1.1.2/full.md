@@ -66,6 +66,7 @@ This update includes six weeks of bug fixes and other improvements, including so
 
 ## Other Miscellaneous Fixes
 
+- Iris is much more selective about what messages it prints to the log now. Previous versions printed a huge amount of messages to the log, many of them not being very useful, and a bunch of these messages were actually wrong. This is pretty much fixed.
 - Translucent falling blocks no longer render through solid terrain with some packs
     - This was caused by gbuffers_terrain being used, instead of gbuffers_entities
 - A number of small tweaks and bug fixes from the Starline fork (credit Justsnoopy30) have been merged, including:
@@ -78,6 +79,11 @@ This update includes six weeks of bug fixes and other improvements, including so
     - Messages no longer contain "Optional[]"
     - A stack trace is no longer printed on NoSuchFileException errors
     - Shader pack loading errors no longer fatally crash the game on startup
+- Fixed an issue where Complementary's fancy nether portal effects in the v4.2 dev versions would break in some cases
+
+## 1.17-specific fixes
+
+- End gateway beams no longer appear to render twice.
 
 ## Translations
 

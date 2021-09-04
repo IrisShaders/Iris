@@ -72,6 +72,8 @@ public final class CommonUniforms {
 	}
 
 	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier){
+		ExternallyManagedUniforms.addExternallyManagedUniforms116(uniforms);
+
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hudHidden)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
