@@ -49,7 +49,7 @@ This update includes six weeks of bug fixes and other improvements, including so
 
 - Iris is now fully compatible with Physics Mod (thanks IMS212)
     - Though 1.1.1 was compatible, there were a few bugs and issues.
-    - Credit goes to haubna (the author of Physics Mod) for giving us access to the source code of Physics Mod in order aid with debugging & fix the compatibility issues.
+    - Credit goes to haubna (the author of Physics Mod) for giving us access to the source code of Physics Mod in order aid with debugging & fixing the compatibility issues.
 - Added a new screen for when you have an incompatible version of Sodium installed.
     - Iris bundles a compatible modified version of Sodium with all official releases.
     - A common user mistake is installing an official build of Sodium, which Iris does not support.
