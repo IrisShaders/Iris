@@ -9,6 +9,11 @@ public class CullEverythingFrustum extends Frustum {
 		super(new Matrix4f(), new Matrix4f());
 	}
 
+	// for Sodium
+	public boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		return false;
+	}
+
 	public boolean isVisible(Box box) {
 		return false;
 	}
