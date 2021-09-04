@@ -26,6 +26,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
@@ -114,6 +115,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 	private final boolean oldLighting;
+	private final OptionalInt forcedShadowRenderDistanceChunks;
 
 	private final List<GbufferProgram> programStack = new ArrayList<>();
 	private final List<String> programStackLog = new ArrayList<>();
@@ -132,6 +134,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programs.getPackDirectives().getRenderTargetDirectives());
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).getDefaultState(), -1);
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
+
+		PackShadowDirectives shadowDirectives = programs.getPackDirectives().getShadowDirectives();
+
+		if (shadowDirectives.isDistanceRenderMulExplicit()) {
+			if (shadowDirectives.getDistanceRenderMul() >= 0.0) {
+				// add 15 and then divide by 16 to ensure we're rounding up
+				forcedShadowRenderDistanceChunks =
+						OptionalInt.of(((int) (shadowDirectives.getDistance() * shadowDirectives.getDistanceRenderMul()) + 15) / 16);
+			} else {
+				forcedShadowRenderDistanceChunks = OptionalInt.of(-1);
+			}
+		} else {
+			forcedShadowRenderDistanceChunks = OptionalInt.empty();
+		}
 
 		BlockRenderingSettings.INSTANCE.setIdMap(programs.getPack().getIdMap());
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programs.getPackDirectives().getAmbientOcclusionLevel());
@@ -694,6 +710,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			messages.add("");
 			shadowMapRenderer.addDebugText(messages);
 		}
+	}
+
+	@Override
+	public OptionalInt getForcedShadowRenderDistanceChunksForDisplay() {
+		return forcedShadowRenderDistanceChunks;
 	}
 
 	// TODO: better way to avoid this global state?

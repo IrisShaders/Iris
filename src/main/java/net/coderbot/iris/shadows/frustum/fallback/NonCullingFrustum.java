@@ -11,6 +11,11 @@ public class NonCullingFrustum extends Frustum implements SodiumFrustumExt {
 		super(new Matrix4f(), new Matrix4f());
 	}
 
+	// for Sodium
+	public boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		return true;
+	}
+
 	public boolean isVisible(Box box) {
 		return true;
 	}
