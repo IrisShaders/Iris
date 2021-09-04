@@ -6,12 +6,6 @@ Iris 1.1.2 has been released for Minecraft 1.16.5 and Minecraft 1.17.1! You can 
 
 This update includes six weeks of bug fixes and other improvements, including some nice performance improvements! It's a fairly large update, and we recommend that everyone using previous versions of Iris update to this new version.
 
-## Changelog TODO
-
-- Collect all of the bugs fixed with the new entity rendering & rewritten Shadow Culling
-- Collect fixes from the Sodium fork, both 1.16 and 1.17
-- Collect 1.17-specific fixes
-
 ## Big Reworks
 
 - Shadow culling has been completely rewritten. It no longer incorrectly culls chunks compared to OptiFine, and overall performance has improved greatly compared to the previous system (especially with shader packs like Enhanced Default, BSL, Complementary Shaders, and SEUS Renewed).
@@ -80,10 +74,22 @@ This update includes six weeks of bug fixes and other improvements, including so
     - A stack trace is no longer printed on NoSuchFileException errors
     - Shader pack loading errors no longer fatally crash the game on startup
 - Fixed an issue where Complementary's fancy nether portal effects in the v4.2 dev versions would break in some cases
+    - A dot product wasn't being computed properly in vertex writing code.
+- You can now enable Fabulous Graphics when shaders are fully disabled.
+- Fixed an issue where some blocks would be see-through with Continuum Shaders
+    - An unexpected sign extension in vertex writing caused part of mc_midTexCoord to get corrupted.
+    - This was highly dependent on resource packs and load order.
 
 ## 1.17-specific fixes
 
-- End gateway beams no longer appear to render twice.
+- End gateway beams no longer appear to render twice with shader packs that use shadows.
+- Fixed separate leads incorrectly rendering as connected
+- Block selection outlines now render properly, even with world curvature enabled.
+- Chunk borders (F3 + G), hitboxes, and other lines now render properly with shaders enabled.
+    - Chunk borders and hitboxes are properly colored and lit as well
+- Fixed a shader patch failure when an "off" alpha test was specified in shaders.properties
+- World borders render properly with most packs now.
+- The energy swirl around charged creepers now renders properly.
 
 ## Translations
 
