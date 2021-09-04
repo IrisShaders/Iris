@@ -31,11 +31,7 @@ public class ShadowDistanceOption extends DoubleOption {
 		List<OrderedText> list = shadowTooltipsGetter.apply(MinecraftClient.getInstance());
 		ClickableWidget widget = new ShadowDistanceSliderWidget(options, x, y, width, 20, this, list);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-
-		if (pipeline != null && pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent()) {
-			widget.active = false;
-		}
+		widget.active = IrisVideoSettings.isShadowDistanceSliderEnabled();
 
 		return widget;
 	}
