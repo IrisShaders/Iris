@@ -50,6 +50,14 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 			return;
 		}
 
+		// NB: We can return the same VertexConsumerProvider here as long as the block entity and its breaking animation
+		// use different render layers. This seems like a sound assumption to make. This only works with our fully
+		// buffered vertex consumer provider - vanilla's Immediate cannot be used here since it would try to return the
+		// same buffer for the block entity and its breaking animation in many cases.
+		//
+		// If anything goes wrong here, Vanilla *will* catch the "duplicate delegates" error, so
+		// this shouldn't cause silent bugs.
+
 		// Prevent vanilla from explicitly flushing the wrapper at the wrong time.
 		provider.setReturnValue(buffered.getUnflushableWrapper());
 	}
