@@ -13,15 +13,9 @@ import java.io.IOException;
 public class IrisVideoSettings {
 	public static int shadowDistance = 32;
 
-	// TODO: Translateable
 	// TODO: Tell the user to check in the shader options once that's supported.
-	private static final Text DISABLED_TOOLTIP =
-			new LiteralText("Your current shader pack has already set a render distance for shadows, you cannot change it.");
-
-	private static final Text ENABLED_TOOLTIP =
-			new LiteralText("Allows you to change the maximum distance for shadows. " +
-					"Terrain and entities beyond this distance will not cast shadows. " +
-					"Lowering the shadow distance can significantly increase performance.");
+	private static final Text DISABLED_TOOLTIP = new TranslatableText("options.iris.shadowDistance.disabled");
+	private static final Text ENABLED_TOOLTIP = new TranslatableText("options.iris.shadowDistance.enabled");
 
 	private static int getOverriddenShadowDistance(int base) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
