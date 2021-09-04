@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.8-SNAPSHOT'
+	id 'fabric-loom' version '0.9-SNAPSHOT'
 	id 'maven-publish'
 	id 'org.ajoberstar.grgit' version '4.1.0'
 }
@@ -11,8 +11,8 @@ archivesBaseName = project.archives_base_name
 version = "${project.mod_version}+${getVersionMetadata()}"
 group = project.maven_group
 
-minecraft {
-	accessWidener = file("src/main/resources/iris.accesswidener")
+loom {
+	accessWidenerPath = file("src/main/resources/iris.accesswidener")
 }
 
 dependencies {

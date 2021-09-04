@@ -12,14 +12,14 @@ public class NativeImageBackedNoiseTexture extends NativeImageBackedTexture {
 	}
 
 	private static NativeImage create(int size) {
-		NativeImage image = new NativeImage(NativeImage.Format.ABGR, size, size, false);
+		NativeImage image = new NativeImage(NativeImage.Format.RGBA, size, size, false);
 		Random random = new Random(0);
 
 		for (int x = 0; x < size; x++) {
 			for (int y = 0; y < size; y++) {
 				int color = random.nextInt() | (255 << 24);
 
-				image.setPixelColor(x, y, color);
+				image.setColor(x, y, color);
 			}
 		}
 
