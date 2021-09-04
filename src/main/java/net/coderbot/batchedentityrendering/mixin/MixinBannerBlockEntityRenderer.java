@@ -41,11 +41,13 @@ public class MixinBannerBlockEntityRenderer {
             if (started) {
                 groupableToEnd = groupable;
             }
+
+			index = 0;
+			// NB: Groupable not needed for this implementation of VertexConsumerProvider.
+			return layer -> vertexConsumers.getBuffer(new TaggingRenderLayerWrapper(layer.toString(), layer, index++));
         }
 
-        index = 0;
-        // NB: Groupable not needed for this implementation of VertexConsumerProvider.
-        return layer -> vertexConsumers.getBuffer(new TaggingRenderLayerWrapper(layer.toString(), layer, index++));
+        return vertexConsumers;
     }
 
     @Inject(method = RENDER_CANVAS, at = @At("RETURN"))
@@ -56,8 +58,7 @@ public class MixinBannerBlockEntityRenderer {
         if (groupableToEnd != null) {
             groupableToEnd.endGroup();
             groupableToEnd = null;
+			index = 0;
         }
-
-        index = 0;
     }
 }

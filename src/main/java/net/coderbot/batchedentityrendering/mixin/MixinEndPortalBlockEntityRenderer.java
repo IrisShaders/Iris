@@ -41,23 +41,24 @@ public class MixinEndPortalBlockEntityRenderer {
 
             if (started) {
                 groupableToEnd = groupable;
-            }
-        }
+			}
 
-        index = 0;
-        // NB: Groupable not needed for this implementation of VertexConsumerProvider.
-        return layer -> vertexConsumers.getBuffer(new TaggingRenderLayerWrapper(layer.toString(), layer, index++));
+			index = 0;
+			// NB: Groupable not needed for this implementation of VertexConsumerProvider.
+			return layer -> vertexConsumers.getBuffer(new TaggingRenderLayerWrapper(layer.toString(), layer, index++));
+		}
+
+		return vertexConsumers;
     }
 
     @Inject(method = RENDER, at = @At("RETURN"))
     private void iris$endRenderingPortal(EndPortalBlockEntity entity, float tickDelta, MatrixStack matrices,
 										 VertexConsumerProvider vertexConsumers, int light, int overlay,
 										 CallbackInfo ci) {
-        if (groupableToEnd != null) {
-            groupableToEnd.endGroup();
-            groupableToEnd = null;
-        }
-
-        index = 0;
+		if (groupableToEnd != null) {
+			groupableToEnd.endGroup();
+			groupableToEnd = null;
+			index = 0;
+		}
     }
 }
