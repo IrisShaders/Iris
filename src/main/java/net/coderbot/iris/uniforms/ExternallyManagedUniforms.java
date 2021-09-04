@@ -42,6 +42,7 @@ public class ExternallyManagedUniforms {
 		uniformHolder.externallyManagedUniform("iris_ColorModulator", UniformType.VEC4);
 		uniformHolder.externallyManagedUniform("iris_FogStart", UniformType.FLOAT);
 		uniformHolder.externallyManagedUniform("iris_FogEnd", UniformType.FLOAT);
+		uniformHolder.externallyManagedUniform("iris_FogDensity", UniformType.FLOAT);
 		uniformHolder.externallyManagedUniform("iris_LineWidth", UniformType.FLOAT);
 		uniformHolder.externallyManagedUniform("iris_ScreenSize", UniformType.VEC2);
 		uniformHolder.externallyManagedUniform("iris_FogColor", UniformType.VEC4);
