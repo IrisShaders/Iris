@@ -17,7 +17,7 @@ public class IrisVideoSettings {
 	private static final Text DISABLED_TOOLTIP = new TranslatableText("options.iris.shadowDistance.disabled");
 	private static final Text ENABLED_TOOLTIP = new TranslatableText("options.iris.shadowDistance.enabled");
 
-	private static int getOverriddenShadowDistance(int base) {
+	public static int getOverriddenShadowDistance(int base) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		if (pipeline != null) {
@@ -25,6 +25,12 @@ public class IrisVideoSettings {
 		} else {
 			return base;
 		}
+	}
+
+	public static boolean isShadowDistanceSliderEnabled() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+
+		return pipeline == null || !pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent();
 	}
 
 	// TODO: Add a Sodium video settings button too.

@@ -20,11 +20,7 @@ public class ShadowDistanceOption extends DoubleOption {
 	public AbstractButtonWidget createButton(GameOptions options, int x, int y, int width) {
 		AbstractButtonWidget widget = new ShadowDistanceSliderWidget(options, x, y, width, 20, this);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-
-		if (pipeline != null && pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent()) {
-			widget.active = false;
-		}
+		widget.active = IrisVideoSettings.isShadowDistanceSliderEnabled();
 
 		return widget;
 	}
