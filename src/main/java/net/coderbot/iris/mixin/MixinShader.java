@@ -1,7 +1,9 @@
 package net.coderbot.iris.mixin;
 
+import net.coderbot.iris.pipeline.newshader.ExtendedShader;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.render.Shader;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -27,5 +29,15 @@ public class MixinShader {
 		}
 
 		return location;
+	}
+
+	@Redirect(method = "loadReferences()V",
+			at = @At(value = "INVOKE", target = "org/apache/logging/log4j/Logger.warn (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", remap = false))
+	private void iris$redirectLogSpam(Logger logger, String message, Object arg1, Object arg2) {
+		if (((Object) this) instanceof ExtendedShader) {
+			return;
+		}
+
+		logger.warn(message, arg1, arg2);
 	}
 }
