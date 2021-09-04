@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin;
 
+import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.EntityColorRenderPhase;
 import net.coderbot.iris.layer.EntityColorVertexConsumerProvider;
@@ -19,6 +20,11 @@ public abstract class MixinLivingEntityRenderer {
 
 	@ModifyVariable(method = "render", at = @At("HEAD"))
 	private VertexConsumerProvider iris$wrapProvider(VertexConsumerProvider provider, LivingEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+		if (!(provider instanceof Groupable)) {
+			// Entity color is not supported in this context, no buffering available.
+			return provider;
+		}
+
 		boolean hurt;
 		if(Iris.isPhysicsModInstalled()) {
 			hurt = entity.hurtTime > 0 && !entity.isDead();
