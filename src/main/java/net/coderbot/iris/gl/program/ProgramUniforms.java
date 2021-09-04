@@ -177,11 +177,19 @@ public class ProgramUniforms {
 				if (provided == null && !name.startsWith("gl_")) {
 					String typeName = getTypeName(type);
 
+					if (isSampler(type)) {
+						// don't print a warning, samplers are managed elsewhere.
+						// TODO: Detect unsupported samplers?
+						continue;
+					}
+
 					if (size == 1) {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
 					} else {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + name + " of size " + size + " and type " + typeName);
 					}
+
+					continue;
 				}
 
 				// TODO: This is an absolutely horrific hack, but is needed until custom uniforms work.
@@ -295,5 +303,13 @@ public class ProgramUniforms {
 		} else {
 			return null;
 		}
+	}
+
+	private static boolean isSampler(int type) {
+		return type == GL20C.GL_SAMPLER_1D
+				|| type == GL20C.GL_SAMPLER_2D
+				|| type == GL20C.GL_SAMPLER_3D
+				|| type == GL20C.GL_SAMPLER_1D_SHADOW
+				|| type == GL20C.GL_SAMPLER_2D_SHADOW;
 	}
 }

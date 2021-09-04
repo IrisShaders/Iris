@@ -13,14 +13,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
-import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.minecraft.block.Blocks;
 import net.minecraft.state.StateManager;
-import net.minecraft.tag.BlockTags;
 import org.apache.logging.log4j.Level;
 
 import net.minecraft.block.Block;
@@ -262,9 +260,9 @@ public class IdMap {
 
 		// If the block doesn't exist, by default the registry will return AIR. That probably isn't what we want.
 		// TODO: Assuming that Registry.BLOCK.getDefaultId() == "minecraft:air" here
-		if (block == Blocks.AIR && !entry.contains("air")) {
-			Iris.logger.warn("Failed to parse the block ID map entry \"" + entry + "\":");
-			Iris.logger.warn("- There is no block with the name " + identifier + "!");
+		if (block == Blocks.AIR && !(identifier.getPath().equals("air") && identifier.getNamespace().equals("minecraft"))) {
+			Iris.logger.debug("Failed to parse the block ID map entry \"" + entry + "\":");
+			Iris.logger.debug("- There is no block with the name " + identifier + "!");
 
 			return;
 		}
