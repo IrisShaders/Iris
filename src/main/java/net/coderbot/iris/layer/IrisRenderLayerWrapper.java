@@ -3,6 +3,7 @@ package net.coderbot.iris.layer;
 import java.util.Objects;
 import java.util.Optional;
 
+import net.coderbot.batchedentityrendering.impl.WrappableRenderLayer;
 import net.coderbot.iris.mixin.renderlayer.RenderLayerAccessor;
 import org.jetbrains.annotations.Nullable;
 

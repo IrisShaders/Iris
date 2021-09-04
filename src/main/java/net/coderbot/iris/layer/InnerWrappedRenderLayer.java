@@ -1,5 +1,6 @@
 package net.coderbot.iris.layer;
 
+import net.coderbot.batchedentityrendering.impl.WrappableRenderLayer;
 import net.coderbot.iris.mixin.renderlayer.RenderLayerAccessor;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
