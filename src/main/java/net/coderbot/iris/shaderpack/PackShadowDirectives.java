@@ -13,6 +13,7 @@ public class PackShadowDirectives {
 	private Float fov;
 	private float distance;
 	private float distanceRenderMul;
+	private boolean explicitRenderDistance;
 	private float intervalSize;
 
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
@@ -49,6 +50,7 @@ public class PackShadowDirectives {
 		// whether or not shadows can possibly be cast into the player's view, instead of just checking
 		// the shadow matrices.
 		this.distanceRenderMul = -1.0f;
+		this.explicitRenderDistance = false;
 
 		// By default, a shadow interval size of 2 meters is used. This means that the shadow camera will be snapped to
 		// a grid where each grid cell is 2 meters by 2 meters by 2 meters, and it will only move either when the sun /
@@ -82,6 +84,10 @@ public class PackShadowDirectives {
 		return distanceRenderMul;
 	}
 
+	public boolean isDistanceRenderMulExplicit() {
+		return explicitRenderDistance;
+	}
+
 	public float getIntervalSize() {
 		return intervalSize;
 	}
@@ -104,8 +110,10 @@ public class PackShadowDirectives {
 		directives.acceptCommentFloatDirective("SHADOWHPL", distance -> this.distance = distance);
 		directives.acceptConstFloatDirective("shadowDistance", distance -> this.distance = distance);
 
-		directives.acceptConstFloatDirective("shadowDistanceRenderMul",
-				distanceRenderMul -> this.distanceRenderMul = distanceRenderMul);
+		directives.acceptConstFloatDirective("shadowDistanceRenderMul", distanceRenderMul -> {
+			this.distanceRenderMul = distanceRenderMul;
+			this.explicitRenderDistance = true;
+		});
 
 		directives.acceptConstFloatDirective("shadowIntervalSize",
 				intervalSize -> this.intervalSize = intervalSize);
