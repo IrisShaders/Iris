@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;
+	private static boolean isRenderTarget;
 
 	private final int[] drawBuffers;
 	private final float viewportScale;
@@ -31,8 +32,10 @@ public class ProgramDirectives {
 		// TODO: Figure out how to infer the DRAWBUFFERS directive when it is missing.
 		if(findbuffersDirective(source.getFragmentSource())) {
 			drawBuffers = findDrawbuffersDirective(source.getFragmentSource(), "RENDERTARGETS").orElse(new int[]{0});
+			isRenderTarget = true;
 		} else {
 			drawBuffers = findDrawbuffersDirective(source.getFragmentSource(), "DRAWBUFFERS").orElse(new int[]{0});
+			isRenderTarget = false;
 		}
 
 		if (properties != null) {
@@ -96,14 +99,24 @@ public class ProgramDirectives {
 		int[] buffers = new int[directiveChars.length];
 		int index = 0;
 
-		for (char buffer : directiveChars) {
-			if(Character.isLetter(buffer)) {
-				buffers[index++] = Character.digit(buffer, 10);
-			} else {
-				continue;
+		if (isRenderTarget == true) {
+			for (char buffer : directiveChars) {
+				if (Character.isDigit(buffer)) {
+					buffers[index] = Character.digit(buffer, 16);
+				} else {
+					index++;
+					continue;
+				}
+			}
+		} else {
+			for (char buffer : directiveChars) {
+				if (Character.isDigit(buffer)) {
+					buffers[index++] = Character.digit(buffer, 16);
+				}
+
+
 			}
 		}
-
 		return buffers;
 	}
 
