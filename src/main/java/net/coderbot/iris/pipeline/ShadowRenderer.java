@@ -17,7 +17,9 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
@@ -92,7 +94,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
 						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise) {
+						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -131,7 +133,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			this.packHasVoxelization = false;
 		}
 
-		ProgramSource[] composite = shadow.getParent().getComposite();
+		ProgramSource[] composite = programSet.getComposite();
 
 		if (composite.length > 0) {
 			String fsh = composite[0].getFragmentSource().orElse("");
