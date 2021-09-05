@@ -132,6 +132,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		if (shadow != null) {
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+		} else {
+			this.packHasVoxelization = false;
 		}
 
 		ProgramSource[] composite = programSet.getComposite();
