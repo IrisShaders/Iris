@@ -7,6 +7,20 @@ plugins {
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
+// To build iris bundled with sodium, just run the task `gradle bundleWithSodium`. Currently requires iris to have been built normally first.
+tasks.register('bundleWithSodium')
+
+bundleWithSodium {
+	finalizedBy build
+	doFirst {
+		project.dependencies {
+			// include sodium jar if bundling with sodium
+			include "me.jellysquid.mods:sodium-fabric:0.2.0+IRIS3+"
+		}
+		archivesBaseName += "+sodium"
+	}
+}
+
 archivesBaseName = project.archives_base_name
 version = "${project.mod_version}+${getVersionMetadata()}"
 group = project.maven_group
