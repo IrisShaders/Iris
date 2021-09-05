@@ -1,11 +1,6 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -17,6 +12,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.shaderpack.texture.CustomTextureSetting;
 
 public class ShaderProperties {
 	private boolean enableClouds = true;
@@ -52,6 +48,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
+	private final Object2ObjectMap<String, List<CustomTextureSetting>> customTextureSettings = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
 	private ShaderProperties() {
@@ -65,6 +62,7 @@ public class ShaderProperties {
 
 			if ("texture.noise".equals(key)) {
 				noiseTexturePath = value;
+				return;
 			}
 
 			if ("clouds".equals(key) && value.equals("off")) {
@@ -158,6 +156,15 @@ public class ShaderProperties {
 				blendDisabled.add(pass);
 			});
 
+			handlePassSamplerDirective("texture.", key, value, passSamplerList -> {
+				String pass = passSamplerList[0];
+				String sampler = passSamplerList[1];
+
+				List<CustomTextureSetting> customTextureSettingList = customTextureSettings.getOrDefault(pass, new ArrayList<>());
+				customTextureSettingList.add(new CustomTextureSetting(sampler, value));
+				customTextureSettings.put(pass, customTextureSettingList);
+			});
+
 			// TODO: Buffer flip, size directives
 			// TODO: Conditional program enabling directives
 		});
@@ -182,6 +189,18 @@ public class ShaderProperties {
 			String pass = key.substring(prefix.length());
 
 			handler.accept(pass);
+		}
+	}
+
+	private static void handlePassSamplerDirective(String prefix, String key, String value, Consumer<String[]> handler) {
+		if (key.startsWith(prefix)) {
+			int endOfPassIndex = key.indexOf(".", prefix.length());
+			String pass = key.substring(prefix.length(), endOfPassIndex);
+			String sampler = key.substring(endOfPassIndex + 1);
+
+			System.out.println("Pass: " + pass + " Sampler: " + sampler + " Value: " + value);
+
+			handler.accept(new String[] {pass, sampler});
 		}
 	}
 
@@ -283,5 +302,9 @@ public class ShaderProperties {
 
 	public Optional<String> getNoiseTexturePath() {
 		return Optional.ofNullable(noiseTexturePath);
+	}
+
+	public Object2ObjectMap<String, List<CustomTextureSetting>> getCustomTextureSettings() {
+		return customTextureSettings;
 	}
 }

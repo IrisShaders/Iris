@@ -1,5 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -7,7 +9,9 @@ import java.util.Set;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.samplers.SamplerTextureOverride;
 import org.jetbrains.annotations.Nullable;
 
 public class ProgramDirectives {
@@ -19,6 +23,7 @@ public class ProgramDirectives {
 	private final AlphaTestOverride alphaTestOverride;
 	private final boolean disableBlend;
 	private final ImmutableSet<Integer> mipmappedBuffers;
+	private final ImmutableSet<SamplerTextureOverride> samplerOverrides;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
@@ -34,10 +39,24 @@ public class ProgramDirectives {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 			disableBlend = properties.getBlendDisabled().contains(source.getName());
+			HashSet<SamplerTextureOverride> samplerOverrides = new HashSet<>();
+			properties.getCustomTextureSettings().get(source.getName()).forEach(customTextureSetting -> {
+				String sampler = customTextureSetting.getSampler();
+				String path = customTextureSetting.getTextureLocation();
+
+				try {
+					CustomTexture texture = Iris.getCurrentPack().get().readTexture(path);
+					samplerOverrides.add(new SamplerTextureOverride(sampler, texture));
+				} catch (IOException e) {
+					Iris.logger.error("Unable to read the custom texture at " + path);
+				}
+			});
+			this.samplerOverrides = ImmutableSet.copyOf(samplerOverrides);
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
 			disableBlend = false;
+			samplerOverrides = null;
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -104,5 +123,10 @@ public class ProgramDirectives {
 
 	public ImmutableSet<Integer> getMipmappedBuffers() {
 		return mipmappedBuffers;
+	}
+
+	@Nullable
+	public ImmutableSet<SamplerTextureOverride> getSamplerOverrides() {
+		return samplerOverrides;
 	}
 }

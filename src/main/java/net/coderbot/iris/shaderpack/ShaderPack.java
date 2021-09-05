@@ -13,10 +13,12 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.samplers.SamplerTextureOverride;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 public class ShaderPack {
+	private final Path root;
 	private final ProgramSet base;
 	@Nullable
 	private final ProgramSet overworld;
@@ -30,6 +32,8 @@ public class ShaderPack {
 	public ShaderPack(Path root) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
+
+		this.root = root;
 
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
@@ -45,11 +49,7 @@ public class ShaderPack {
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
-				// TODO: Make sure the resulting path is within the shaderpack?
-				byte[] content = Files.readAllBytes(root.resolve(path));
-
-				// TODO: Read the blur / clamp data from the shaderpack...
-				return new CustomTexture(content, true, false);
+				return readTexture(path);
 			} catch (IOException e) {
 				Iris.logger.error("Unable to read the custom noise texture at " + path);
 
@@ -84,6 +84,14 @@ public class ShaderPack {
 		}
 
 		return Optional.of(properties);
+	}
+
+	public CustomTexture readTexture(String path) throws IOException {
+		// TODO: Make sure the resulting path is within the shaderpack?
+		byte[] content = Files.readAllBytes(root.resolve(path));
+
+		// TODO: Read the blur / clamp data from the shaderpack...
+		return new CustomTexture(content, true, false);
 	}
 
 	public ProgramSet getProgramSet(DimensionId dimension) {

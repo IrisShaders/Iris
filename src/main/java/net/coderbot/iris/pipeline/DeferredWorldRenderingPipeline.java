@@ -27,9 +27,11 @@ import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.samplers.SamplerTextureOverride;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.texture.CustomTextureSetting;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -505,9 +507,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		builder.bindAttributeLocation(12, "at_tangent");
 
 		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
+		ImmutableSet<SamplerTextureOverride> samplerOverrides = source.getDirectives().getSamplerOverrides();
 
 		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				source.getDirectives().shouldDisableBlend());
+				source.getDirectives().shouldDisableBlend(), samplerOverrides);
 
 		allPasses.add(pass);
 
@@ -520,13 +523,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		private final GlFramebuffer framebufferAfterTranslucents;
 		private final AlphaTestOverride alphaTestOverride;
 		private final boolean disableBlend;
+		private final ImmutableSet<SamplerTextureOverride> samplerOverrides;
 
-		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
+		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend, ImmutableSet<SamplerTextureOverride> samplerOverrides) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
 			this.alphaTestOverride = alphaTestOverride;
 			this.disableBlend = disableBlend;
+			this.samplerOverrides = samplerOverrides;
 		}
 
 		public void use() {
