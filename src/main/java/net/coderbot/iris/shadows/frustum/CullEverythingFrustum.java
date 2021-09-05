@@ -15,6 +15,12 @@ public class CullEverythingFrustum extends Frustum implements SodiumFrustumExt {
 		return false;
 	}
 
+	// For Immersive Portals
+	// We return false here since isVisible is going to return false anyways.
+	public boolean canDetermineInvisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		return false;
+	}
+
 	public boolean isVisible(Box box) {
 		return false;
 	}
