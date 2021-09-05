@@ -21,7 +21,9 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
@@ -99,7 +101,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
 						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise) {
+						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -128,17 +130,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.specular = specular;
 		this.noise = noise;
 
-		/*if (shadow != null) {
-			this.shadowProgram = createProgram(shadow, directives, flipped);
-			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
-			// TODO: Check for image load / store too once supported.
+		if (shadow != null) {
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
 		} else {
-			this.shadowProgram = null;
-		}*/
-		this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+			this.packHasVoxelization = false;
+		}
 
-		ProgramSource[] composite = shadow.getParent().getComposite();
+		ProgramSource[] composite = programSet.getComposite();
 
 		if (composite.length > 0) {
 			String fsh = composite[0].getFragmentSource().orElse("");

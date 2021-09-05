@@ -278,6 +278,12 @@ public class AdvancedShadowCullingFrustum extends Frustum implements SodiumFrust
 		return isVisible(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
+	// For Immersive Portals
+	// TODO: Figure out if IP culling can somehow be compatible with Iris culling.
+	public boolean canDetermineInvisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		return false;
+	}
+
 	private boolean isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		float f = (float)(minX - this.x);
 		float g = (float)(minY - this.y);
