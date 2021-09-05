@@ -130,15 +130,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.specular = specular;
 		this.noise = noise;
 
-		/*if (shadow != null) {
-			this.shadowProgram = createProgram(shadow, directives, flipped);
-			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
-			// TODO: Check for image load / store too once supported.
+		if (shadow != null) {
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
-		} else {
-			this.shadowProgram = null;
-		}*/
-		this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+		}
 
 		ProgramSource[] composite = programSet.getComposite();
 

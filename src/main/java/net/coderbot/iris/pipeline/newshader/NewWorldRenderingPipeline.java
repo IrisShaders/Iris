@@ -193,7 +193,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null),
-					programSet.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise);
+					programSet.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise,
+					programSet);
 			createShadowMapRenderer = () -> {};
 		};
 
