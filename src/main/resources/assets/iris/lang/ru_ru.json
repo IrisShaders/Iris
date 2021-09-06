@@ -18,7 +18,7 @@
   "options.iris.shaderPackSelection.title": "Пакеты шейдеров",
   "options.iris.shaderPackSelection.addedPack": "Добавлен пакет шейдеров \"%s\"",
   "options.iris.shaderPackSelection.addedPacks": "Добавлено %s пакетов шейдеров",
-  "options.iris.shaderPackSelection.failedAdd": "Файлы не явились действующими пакетами шейдеров",
+  "options.iris.shaderPackSelection.failedAdd": "Файлы не являются допустимыми пакетами шейдеров",
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является допустимым пакетом шейдеров",
   "options.iris.shaderPackSelection.copyError": "Не удалось добавить пакет шейдеров \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
