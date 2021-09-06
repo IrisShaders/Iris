@@ -13,7 +13,7 @@
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
   "options.iris.openShaderPackFolder": "Открыть папку с шейдерами...",
-  "options.iris.refreshShaderPacks": "Обновить список шейдеры",
+  "options.iris.refreshShaderPacks": "Обновить список шейдеров",
   "options.iris.shaderPackSelection": "Пакеты шейдеров...",
   "options.iris.shaderPackSelection.title": "Пакеты шейдеров",
   "options.iris.shaderPackSelection.addedPack": "Добавлен шейдерный пакет \"%s\"",
