@@ -2,7 +2,7 @@
   "iris.shaders.reloaded": "Шейдеры перезагружены!",
   "iris.shaders.toggled": "Шейдеры переключены на %s!",
   "iris.keybind.reload": "Перезагрузить шейдеры",
-  "iris.keybind.shaderPackSelection": "Экран выбора шейдеров",
+  "iris.keybind.shaderPackSelection": "Меню выбора шейдеров",
   "iris.keybind.toggleShaders": "Переключить шейдеры",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Не удалось перезагрузить шейдеры! Причина: %s",
