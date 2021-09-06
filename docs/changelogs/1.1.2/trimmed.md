@@ -1,6 +1,4 @@
-# Iris 1.1.2 Preliminary Changelog (Trimmed)
-
-**Note: This is a preliminary changelog for when Iris 1.1.2 is actually released. Iris 1.1.2 is not released yet, and this changelog is a work-in-progress, just as Iris 1.1.2 is still a work-in-progress.**
+# Iris 1.1.2 Changelog (Trimmed)
 
 Iris version 1.1.2 for Minecraft 1.16.5, Minecraft 1.17.1, and 1.18 snapshots (see below) has been released!
 
