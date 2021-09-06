@@ -139,7 +139,7 @@ bundleWithSodium {
 	doFirst {
 		project.dependencies {
 			// include sodium jar if bundling with sodium
-			include "me.jellysquid.mods:sodium-fabric:0.2.0+IRIS4+"
+			include "me.jellysquid.mods:sodium-fabric:0.3.2+IRIS2+"
 		}
 		archivesBaseName = archivesBaseName.replace("iris", "iris-and-sodium")
 	}
