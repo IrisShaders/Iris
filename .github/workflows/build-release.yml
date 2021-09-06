@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: 'IrisShaders/sodium-fabric'
-          ref: '1.16.x/iris'
+          ref: '1.17.x/iris'
           path: 'sodium-fabric'
       - name: Build initial Iris artifacts
         run: ./gradlew publishToMavenLocal
