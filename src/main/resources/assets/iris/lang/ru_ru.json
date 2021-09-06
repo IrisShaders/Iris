@@ -8,7 +8,7 @@
   "iris.shaders.reloaded.failure": "Не удалось перезагрузить шейдеры! Причина: %s",
   "iris.shaders.toggled.failure": "Не удалось переключить шейдеры! Причина: %s",
   "iris.sodium.failure.title": "Ошибка загрузки Iris!",
-  "iris.sodium.failure.reason": "У вас есть Sodium в папке с модами, но Iris включает его. Закройте игру и удалите Sodium из папки модов.",
+  "iris.sodium.failure.reason": "У вас есть Sodium в папке с модами, однако Iris уже содержит его. Пожалуйста, закройте игру и удалите Sodium из папки модов.",
 
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
