@@ -129,6 +129,27 @@ jar {
 	from sourceSets.vendored.output
 }
 
+// To build iris bundled with sodium, just run the task `gradle bundleWithSodium`.
+// Currently requires iris to have been built normally first.
+// You must have a Sodium jar in your mavenLocal repository.
+tasks.register('bundleWithSodium')
+
+bundleWithSodium {
+	finalizedBy build
+	doFirst {
+		project.dependencies {
+			// include sodium jar if bundling with sodium
+			include "me.jellysquid.mods:sodium-fabric:0.2.0+IRIS4+"
+		}
+		archivesBaseName = archivesBaseName.replace("iris", "iris-and-sodium")
+	}
+}
+
+repositories {
+	// for the Sodium dependency we want to bundle
+	mavenLocal()
+}
+
 // configure the maven publication
 publishing {
 	publications {
