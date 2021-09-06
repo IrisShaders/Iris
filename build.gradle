@@ -12,6 +12,7 @@ version = "${project.mod_version}+${getVersionMetadata()}"
 group = project.maven_group
 
 loom {
+	refmapName = "iris-mc1.18-refmap.json"
 	accessWidenerPath = file("src/main/resources/iris.accesswidener")
 }
 
