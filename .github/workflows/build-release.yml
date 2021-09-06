@@ -1,4 +1,4 @@
-name: build-release
+name: Build Release
 
 on: [ workflow_dispatch ]
 
@@ -12,22 +12,41 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 8
+      - name: Cache Iris
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/loom-cache
+            ~/.gradle/wrapper
+            ~/.m2/repository
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - name: Fetch the Sodium fork
         uses: actions/checkout@v2
         with:
           repository: 'IrisShaders/sodium-fabric'
           ref: '1.16.x/iris'
           path: 'sodium-fabric'
+      - name: Cache Sodium
+        uses: actions/cache@v2
+        with:
+          path: |
+            ./sodium-fabric/.gradle/caches
+            ./sodium-fabric/.gradle/loom-cache
+            ./sodium-fabric/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-sodium-${{ hashFiles('./sodium-fabric/**/*.gradle*', './sodium-fabric/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-sodium-
       - name: Build initial Iris artifacts
         run: ./gradlew publishToMavenLocal
       - name: Build initial Sodium artifacts
         run: cd ./sodium-fabric && ./gradlew publishToMavenLocal && cd ..
-      - name: List contents of maven local repository
-        run: ls -lR /home/runner/.m2/repository
       - name: Build combined Iris + Sodium jar
         run: ./gradlew bundleWithSodium
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: build-artifacts
-          path: build/libs
+          path: build/libs/*[0-9].jar
