@@ -1,0 +1,31 @@
+name: build-release
+
+on: [ workflow_dispatch ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Fetch the Sodium fork
+        uses: actions/checkout@v2
+        with:
+          repository: 'IrisShaders/sodium-fabric'
+          ref: '1.16.x/iris'
+          path: 'sodium'
+      - name: Build initial Iris artifacts
+        run: ./gradlew publishToMavenLocal
+      - name: Build initial Sodium artifacts
+        run: cd ./sodium && ./gradlew publishToMavenLocal && cd ..
+      - name: Build combined Iris + Sodium jar
+        run: ./gradlew bundleWithSodium
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: build-artifacts
+          path: build/libs
