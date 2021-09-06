@@ -17,11 +17,11 @@ jobs:
         with:
           repository: 'IrisShaders/sodium-fabric'
           ref: '1.16.x/iris'
-          path: 'sodium'
+          path: 'sodium-fabric'
       - name: Build initial Iris artifacts
         run: ./gradlew publishToMavenLocal
       - name: Build initial Sodium artifacts
-        run: cd ./sodium && ./gradlew publishToMavenLocal && cd ..
+        run: cd ./sodium-fabric && ./gradlew publishToMavenLocal && cd ..
       - name: List contents of maven local repository
         run: ls -lR /home/runner/.m2/repository
       - name: Build combined Iris + Sodium jar
