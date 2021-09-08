@@ -3,22 +3,14 @@ package net.coderbot.iris.mixin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.IsBlockEntityRenderPhase;
-import net.coderbot.iris.layer.IsEntityRenderPhase;
-import net.coderbot.iris.layer.InnerWrappedRenderLayer;
-import net.coderbot.iris.layer.OuterWrappedRenderLayer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.GameOptions;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Final;
@@ -38,10 +30,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Mixin(WorldRenderer.class)
 @Environment(EnvType.CLIENT)
@@ -53,7 +41,6 @@ public class MixinWorldRenderer {
 	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/render/WorldRenderer;renderClouds(Lnet/minecraft/client/util/math/MatrixStack;FDDD)V";
 	private static final String RENDER_WEATHER = "Lnet/minecraft/client/render/WorldRenderer;renderWeather(Lnet/minecraft/client/render/LightmapTextureManager;FDDD)V";
 	private static final String RENDER_WORLD_BORDER = "Lnet/minecraft/client/render/WorldRenderer;renderWorldBorder(Lnet/minecraft/client/render/Camera;)V";
-	private static final String PROFILER_SWAP = "net/minecraft/util/profiler/Profiler.swap (Ljava/lang/String;)V";
 
 	@Unique
 	private boolean skyTextureEnabled;
@@ -61,12 +48,13 @@ public class MixinWorldRenderer {
 	@Unique
 	private WorldRenderingPipeline pipeline;
 
-	@Shadow
-	@Final
-	private BufferBuilderStorage bufferBuilders;
-
 	@Inject(method = RENDER, at = @At("HEAD"))
 	private void iris$beginWorldRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+		if (Iris.isSodiumInvalid()) {
+			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
+					" didn't work. This is a bug! Please report it to the Iris developers.");
+		}
+
 		CapturedRenderingState.INSTANCE.setGbufferModelView(matrices.peek().getModel());
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 
@@ -220,46 +208,6 @@ public class MixinWorldRenderer {
 		pipeline.popProgram(GbufferProgram.WEATHER);
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities", shift = At.Shift.AFTER))
-	private void iris$beginEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		VertexConsumerProvider provider = bufferBuilders.getEntityVertexConsumers();
-
-		if (provider instanceof WrappingVertexConsumerProvider) {
-			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
-				new OuterWrappedRenderLayer("iris:is_entity", layer, IsEntityRenderPhase.INSTANCE));
-		}
-	}
-
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=blockentities", shift = At.Shift.AFTER))
-	private void iris$beginBlockEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		VertexConsumerProvider provider = bufferBuilders.getEntityVertexConsumers();
-
-		if (provider instanceof WrappingVertexConsumerProvider) {
-			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
-					new OuterWrappedRenderLayer("iris:is_block_entity", layer, IsBlockEntityRenderPhase.INSTANCE));
-		}
-	}
-
-	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=destroyProgress"))
-	private void iris$endBlockEntities(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		VertexConsumerProvider provider = bufferBuilders.getEntityVertexConsumers();
-
-		if (provider instanceof WrappingVertexConsumerProvider) {
-			((WrappingVertexConsumerProvider) provider).setWrappingFunction(null);
-		}
-	}
-
-	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
-	/*@Inject(method = "renderEntity", at = @At("HEAD"))
-	private void iris$beginEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-		CapturedRenderingState.INSTANCE.setCurrentEntity(entity);
-	}
-
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;getPos()Lnet/minecraft/util/math/BlockPos;", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$getCurrentBlockEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f, Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3, VertexConsumerProvider.Immediate immediate, Set var39, Iterator var40, BlockEntity blockEntity2){
-		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(blockEntity2);
-	}*/
-
 	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void iris$beginTranslucents(MatrixStack matrices, float tickDelta, long limitTime,
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
@@ -272,22 +220,5 @@ public class MixinWorldRenderer {
 
 		profiler.swap("iris_pre_translucent");
 		pipeline.beginTranslucents();
-	}
-
-	@Redirect(method = RENDER, at = @At(value = "INVOKE", target = "net/minecraft/client/world/ClientWorld.getEntities ()Ljava/lang/Iterable;"))
-	private Iterable<Entity> iris$sortEntityList(ClientWorld world) {
-		// Sort the entity list first in order to allow vanilla's entity batching code to work better.
-		Iterable<Entity> entityIterable = world.getEntities();
-
-		Map<EntityType<?>, List<Entity>> sortedEntities = new HashMap<>();
-
-		List<Entity> entities = new ArrayList<>();
-		entityIterable.forEach(entity -> {
-			sortedEntities.computeIfAbsent(entity.getType(), entityType -> new ArrayList<>(32)).add(entity);
-		});
-
-		sortedEntities.values().forEach(entities::addAll);
-
-		return entities;
 	}
 }

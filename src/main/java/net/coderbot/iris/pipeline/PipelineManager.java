@@ -24,7 +24,12 @@ public class PipelineManager {
 
 	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
 		if (currentDimension != lastDimension) {
-			Iris.logger.info("Reloading shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
+			// TODO: Don't say anything about compiling shaders if shaders are disabled.
+			if (lastDimension == null) {
+				Iris.logger.info("Compiling shaderpack on initial world load (for dimension: " + currentDimension + ")");
+			} else {
+				Iris.logger.info("Recompiling shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
+			}
 
 			lastDimension = currentDimension;
 			destroyPipeline();

@@ -6,8 +6,8 @@ import java.util.*;
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
-import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.Uniform;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
@@ -112,6 +112,7 @@ public class ProgramUniforms {
 		private final Map<String, Uniform> perFrame;
 		private final Map<String, Uniform> dynamic;
 		private final Map<String, UniformType> uniformNames;
+		private final Map<String, UniformType> externalUniformNames;
 		private final List<ValueUpdateNotifier> notifiersToReset;
 
 		protected Builder(String name, int program) {
@@ -124,6 +125,7 @@ public class ProgramUniforms {
 			perFrame = new HashMap<>();
 			dynamic = new HashMap<>();
 			uniformNames = new HashMap<>();
+			externalUniformNames = new HashMap<>();
 			notifiersToReset = new ArrayList<>();
 		}
 
@@ -177,11 +179,37 @@ public class ProgramUniforms {
 				if (provided == null && !name.startsWith("gl_")) {
 					String typeName = getTypeName(type);
 
+					if (isSampler(type)) {
+						// don't print a warning, samplers are managed elsewhere.
+						// TODO: Detect unsupported samplers?
+						continue;
+					}
+
+					UniformType externalProvided = externalUniformNames.get(name);
+
+					if (externalProvided != null) {
+						if (externalProvided != expected) {
+							String expectedName;
+
+							if (expected != null) {
+								expectedName = expected.toString();
+							} else {
+								expectedName = "(unsupported type: " + getTypeName(type) + ")";
+							}
+
+							Iris.logger.error("[" + this.name + "] Wrong uniform type for externally-managed uniform " + name + ": " + externalProvided + " is provided but the program expects " + expectedName + ".");
+						}
+
+						continue;
+					}
+
 					if (size == 1) {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
 					} else {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + name + " of size " + size + " and type " + typeName);
 					}
+
+					continue;
 				}
 
 				// TODO: This is an absolutely horrific hack, but is needed until custom uniforms work.
@@ -217,6 +245,12 @@ public class ProgramUniforms {
 			dynamic.put(locations.get(uniform.getLocation()), uniform);
 			notifiersToReset.add(notifier);
 
+			return this;
+		}
+
+		@Override
+		public UniformHolder externallyManagedUniform(String name, UniformType type) {
+			externalUniformNames.put(name, type);
 			return this;
 		}
 	}
@@ -295,5 +329,13 @@ public class ProgramUniforms {
 		} else {
 			return null;
 		}
+	}
+
+	private static boolean isSampler(int type) {
+		return type == GL20C.GL_SAMPLER_1D
+				|| type == GL20C.GL_SAMPLER_2D
+				|| type == GL20C.GL_SAMPLER_3D
+				|| type == GL20C.GL_SAMPLER_1D_SHADOW
+				|| type == GL20C.GL_SAMPLER_2D_SHADOW;
 	}
 }

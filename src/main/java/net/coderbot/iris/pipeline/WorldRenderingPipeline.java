@@ -5,11 +5,13 @@ import net.coderbot.iris.mixin.WorldRendererAccessor;
 import net.minecraft.client.render.Camera;
 
 import java.util.List;
+import java.util.OptionalInt;
 
 public interface WorldRenderingPipeline {
 	void beginWorldRendering();
 	void renderShadows(WorldRendererAccessor worldRenderer, Camera camera);
 	void addDebugText(List<String> messages);
+	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
 	void beginShadowRender();
 	void endShadowRender();
 	void beginTranslucents();
