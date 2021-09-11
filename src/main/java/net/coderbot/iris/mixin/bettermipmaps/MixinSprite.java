@@ -86,7 +86,7 @@ public class MixinSprite {
 					continue;
 				}
 
-				// Replace the color values of this pixel with the average coolors.
+				// Replace the color values of this pixel with the average colors.
 				image.setPixelColor(x, y, resultColor);
 			}
 		}

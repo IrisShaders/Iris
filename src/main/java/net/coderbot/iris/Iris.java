@@ -38,12 +38,17 @@ import net.fabricmc.loader.api.FabricLoader;
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
+	// The recommended version of Sodium for use with Iris
+	private static final String SODIUM_VERSION = "0.2.0+IRIS4";
 
 	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static boolean internal;
+	private static boolean sodiumInvalid;
+	private static boolean sodiumInstalled;
+	private static boolean physicsModInstalled;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
@@ -58,26 +63,30 @@ public class Iris implements ClientModInitializer {
 	public void onInitializeClient() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
+					sodiumInstalled = true;
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
 					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will just crash.
-					if (!versionString.startsWith("0.2.0+IRIS3")) {
-						throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but 0.2.0+IRIS3 is expected");
+					// the right fork of Sodium, it will show the user a nice warning, and prevent them from playing the
+					// game with a wrong version of Sodium.
+					if (!versionString.startsWith(SODIUM_VERSION)) {
+						sodiumInvalid = true;
 					}
 				}
 		);
 
-		FabricLoader.getInstance().getModContainer("iris").ifPresent(
-				modContainer -> {
-					IRIS_VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
-				}
-		);
+		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
+				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
+
+		IRIS_VERSION = iris.getMetadata().getVersion().getFriendlyString();
+
+		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
+
 		try {
 			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
-			Iris.logger.warn("Failed to create shaderpacks directory!");
-			Iris.logger.catching(Level.WARN, e);
+			logger.warn("Failed to create the shaderpacks directory!");
+			logger.catching(Level.WARN, e);
 		}
 
 		irisConfig = new IrisConfig();
@@ -106,7 +115,7 @@ public class Iris implements ClientModInitializer {
 					}
 
 				} catch (Exception e) {
-					Iris.logger.error("Error while reloading Shaders for Iris!", e);
+					logger.error("Error while reloading Shaders for Iris!", e);
 
 					if (minecraftClient.player != null) {
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
@@ -123,7 +132,7 @@ public class Iris implements ClientModInitializer {
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
 					}
 				} catch (Exception e) {
-					Iris.logger.error("Error while toggling shaders!", e);
+					logger.error("Error while toggling shaders!", e);
 
 					if (minecraftClient.player != null) {
 						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
@@ -144,9 +153,7 @@ public class Iris implements ClientModInitializer {
 		if (!irisConfig.areShadersEnabled()) {
 			logger.info("Shaders are disabled because enableShaders is set to false in iris.properties");
 
-			currentPack = null;
-			currentPackName = "(off)";
-			internal = false;
+			setShadersDisabled();
 
 			return;
 		}
@@ -158,9 +165,7 @@ public class Iris implements ClientModInitializer {
 			if (!externalName.isPresent()) {
 				logger.info("Shaders are disabled because no valid shaderpack is selected");
 
-				currentPack = null;
-				currentPackName = "(off)";
-				internal = false;
+				setShadersDisabled();
 
 				return;
 			}
@@ -190,7 +195,7 @@ public class Iris implements ClientModInitializer {
 		try {
 			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
 		} catch (InvalidPathException e) {
-			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", irisConfig.getShaderPackName());
+			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
 			return false;
 		}
@@ -202,16 +207,16 @@ public class Iris implements ClientModInitializer {
 
 			try {
 				optionalPath = loadExternalZipShaderpack(shaderPackRoot);
-			} catch (FileSystemNotFoundException e) {
-				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+			} catch (FileSystemNotFoundException | NoSuchFileException e) {
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist in your shaderpacks folder!", name);
 
 				return false;
 			} catch (ZipException e) {
-				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", irisConfig.getShaderPackName());
+				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", name);
 
 				return false;
 			} catch (IOException e) {
-				logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\"!", name);
 				logger.catching(Level.ERROR, e);
 
 				return false;
@@ -220,12 +225,12 @@ public class Iris implements ClientModInitializer {
 			if (optionalPath.isPresent()) {
 				shaderPackPath = optionalPath.get();
 			} else {
-				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", name);
 				return false;
 			}
 		} else {
 			if (!Files.exists(shaderPackRoot)) {
-				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", name);
 				return false;
 			}
 
@@ -234,15 +239,15 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (!Files.exists(shaderPackPath)) {
-			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", name);
 			return false;
 		}
 
 		try {
 			currentPack = new ShaderPack(shaderPackPath);
-		} catch (IOException e) {
-			logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
-			logger.error(e);
+		} catch (Exception e) {
+			logger.error("Failed to load the shaderpack \"{}\"!", name);
+			logger.catching(e);
 
 			return false;
 		}
@@ -258,19 +263,22 @@ public class Iris implements ClientModInitializer {
 	private static Optional<Path> loadExternalZipShaderpack(Path shaderpackPath) throws IOException {
 		FileSystem zipSystem = FileSystems.newFileSystem(shaderpackPath, Iris.class.getClassLoader());
 		zipFileSystem = zipSystem;
-		Path root = zipSystem.getRootDirectories().iterator().next();//should only be one root directory for a zip shaderpack
+
+		// Should only be one root directory for a zip shaderpack
+		Path root = zipSystem.getRootDirectories().iterator().next();
 
 		Path potentialShaderDir = zipSystem.getPath("shaders");
-		//if the shaders dir was immediately found return it
-		//otherwise, manually search through each directory path until it ends with "shaders"
+
+		// If the shaders dir was immediately found return it
+		// Otherwise, manually search through each directory path until it ends with "shaders"
 		if (Files.exists(potentialShaderDir)) {
 			return Optional.of(potentialShaderDir);
 		}
 
-		//sometimes shaderpacks have their shaders directory within another folder in the shaderpack
-		//for example Sildurs-Vibrant-Shaders.zip/shaders
-		//while other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
-		//this makes it hard to determine what is the actual shaders dir
+		// Sometimes shaderpacks have their shaders directory within another folder in the shaderpack
+		// For example Sildurs-Vibrant-Shaders.zip/shaders
+		// While other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
+		// This makes it hard to determine what is the actual shaders dir
 		return Files.walk(root)
 				.filter(Files::isDirectory)
 				.filter(path -> path.endsWith("shaders"))
@@ -363,9 +371,9 @@ public class Iris implements ClientModInitializer {
 			try {
 				zipFileSystem.close();
 			} catch (NoSuchFileException e) {
-				Iris.logger.warn("Failed to close the shaderpack zip when reloading because it was deleted, proceeding anyways.");
+				logger.warn("Failed to close the shaderpack zip when reloading because it was deleted, proceeding anyways.");
 			} catch (IOException e) {
-				Iris.logger.error("Failed to close zip file system?", e);
+				logger.error("Failed to close zip file system?", e);
 			}
 		}
 	}
@@ -395,7 +403,7 @@ public class Iris implements ClientModInitializer {
 
 	private static WorldRenderingPipeline createPipeline(DimensionId dimensionId) {
 		if (currentPack == null) {
-			// completely disable shader-based rendering
+			// Completely disables shader-based rendering
 			return new FixedFunctionWorldRenderingPipeline();
 		}
 
@@ -408,7 +416,7 @@ public class Iris implements ClientModInitializer {
 				return new DeferredWorldRenderingPipeline(programs);
 			}
 		} catch (Exception e) {
-			Iris.logger.error("Failed to create shader rendering pipeline, falling back to internal shaders!", e);
+			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
 			currentPackName = "(off) [fallback, check your logs for details]";
 
@@ -453,5 +461,17 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return color + version;
+	}
+
+	public static boolean isSodiumInvalid() {
+		return sodiumInvalid;
+  }
+  
+	public static boolean isSodiumInstalled() {
+		return sodiumInstalled;
+	}
+
+	public static boolean isPhysicsModInstalled() {
+		return physicsModInstalled;
 	}
 }

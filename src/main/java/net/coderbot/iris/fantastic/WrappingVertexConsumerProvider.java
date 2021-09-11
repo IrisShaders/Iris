@@ -5,5 +5,7 @@ import net.minecraft.client.render.RenderLayer;
 import java.util.function.Function;
 
 public interface WrappingVertexConsumerProvider {
-	void setWrappingFunction(Function<RenderLayer, RenderLayer> wrappingFunction);
+	void pushWrappingFunction(Function<RenderLayer, RenderLayer> wrappingFunction);
+	void popWrappingFunction();
+	void assertWrapStackEmpty();
 }
