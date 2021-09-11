@@ -27,6 +27,7 @@ public class StringReader {
 	public StringReader(String string) {
 		this.string = string;
 		this.move();
+		this.skipWhitespace();
 
 		// Initializing these variables to the actual start of the string.
 		this.lastIndex = this.nextIndex;
@@ -44,7 +45,9 @@ public class StringReader {
 		}
 
 		this.nextIndex++;
+	}
 
+	private void skipWhitespace() {
 		while (this.nextIndex < this.string.length() && this.string.charAt(this.nextIndex) == ' ') {
 			this.nextIndex++;
 		}
@@ -62,6 +65,9 @@ public class StringReader {
 	 */
 	public void skip() {
 		this.move();
+		// TODO: Sometimes we need to detect spaces and flag an error, such as in the middle of an identifier
+		//       We shouldn't always skip whitespace
+		this.skipWhitespace();
 	}
 
 	/**
