@@ -1,12 +1,10 @@
 package kroppeb.stareval.parser;
 
-
 import kroppeb.stareval.exception.ParseException;
 import kroppeb.stareval.exception.UnexpectedCharacterException;
 import kroppeb.stareval.exception.UnexpectedEndingException;
 import kroppeb.stareval.element.Expression;
 import net.minecraft.client.util.CharPredicate;
-
 
 class Tokenizer {
 	private Tokenizer() {

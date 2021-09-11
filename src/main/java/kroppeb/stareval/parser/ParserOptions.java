@@ -2,9 +2,6 @@ package kroppeb.stareval.parser;
 
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-
-import java.util.Map;
 
 public final class ParserOptions {
 	private final Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers;
