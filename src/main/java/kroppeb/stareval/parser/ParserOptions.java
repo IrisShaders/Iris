@@ -69,7 +69,7 @@ public final class ParserOptions {
 
 						if (map.containsKey("")) {
 							if (map.size() == 1) {
-								result.put(entry.getCharKey(), new SingleCharOpResolver<>(map.get("")));
+								result.put(entry.getCharKey(), new OpResolver.SingleChar<>(map.get("")));
 							} else {
 								for (Map.Entry<String, T> subEntry : map.entrySet()) {
 									if (!"".equals(subEntry.getKey())) {
@@ -77,7 +77,7 @@ public final class ParserOptions {
 											throw new RuntimeException("Not supported atm");
 										}
 
-										result.put(entry.getCharKey(), new SingleDualCharOpResolver<>(
+										result.put(entry.getCharKey(), new OpResolver.SingleDualChar<>(
 												map.get(""),
 												subEntry.getValue(),
 												subEntry.getKey().charAt(0)
@@ -91,7 +91,7 @@ public final class ParserOptions {
 									throw new RuntimeException("Not supported atm");
 								}
 
-								result.put(entry.getCharKey(), new SingleDualCharOpResolver<>(
+								result.put(entry.getCharKey(), new OpResolver.SingleDualChar<>(
 										map.get(""),
 										subEntry.getValue(),
 										subEntry.getKey().charAt(0)
