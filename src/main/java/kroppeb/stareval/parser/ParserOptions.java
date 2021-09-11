@@ -11,7 +11,6 @@ public final class ParserOptions {
 	private final Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers;
 	private final TokenRules tokenRules;
 
-
 	private ParserOptions(
 			Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers,
 			Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers,
@@ -34,80 +33,42 @@ public final class ParserOptions {
 	}
 
 	public static class Builder {
-		private final Char2ObjectMap<Map<String, UnaryOp>> unaryOpResolvers = new Char2ObjectOpenHashMap<>();
-		private final Char2ObjectMap<Map<String, BinaryOp>> binaryOpResolvers = new Char2ObjectOpenHashMap<>();
+		private final Char2ObjectMap<OpResolver.Builder<UnaryOp>> unaryOpResolvers = new Char2ObjectOpenHashMap<>();
+		private final Char2ObjectMap<OpResolver.Builder<BinaryOp>> binaryOpResolvers = new Char2ObjectOpenHashMap<>();
 		private TokenRules tokenRules = null;
 
 		public void addUnaryOp(String s, UnaryOp op) {
-			Map<String, UnaryOp> mp = this.unaryOpResolvers
-					.computeIfAbsent(s.charAt(0), (c) -> new Object2ObjectOpenHashMap<>());
-			UnaryOp previous = mp.put(s.substring(1), op);
-			assert previous == null;
+			char first = s.charAt(0);
+			String trailing = s.substring(1);
+
+			this.unaryOpResolvers.computeIfAbsent(first, (c) -> new OpResolver.Builder<>()).multiChar(trailing, op);
 		}
 
 		public void addBinaryOp(String s, BinaryOp op) {
-			Map<String, BinaryOp> mp = this.binaryOpResolvers
-					.computeIfAbsent(s.charAt(0), (c) -> new Object2ObjectOpenHashMap<>());
-			BinaryOp previous = mp.put(s.substring(1), op);
-			assert previous == null;
+			char first = s.charAt(0);
+			String trailing = s.substring(1);
+
+			this.binaryOpResolvers.computeIfAbsent(first, (c) -> new OpResolver.Builder<>()).multiChar(trailing, op);
 		}
 
 		public void setParserParts(TokenRules tokenRules) {
 			this.tokenRules = tokenRules;
 		}
 
-		private static <T> Char2ObjectMap<? extends OpResolver<? extends T>> convertOp(
-				Char2ObjectMap<? extends Map<String, T>> ops) {
+		private static <T> Char2ObjectMap<? extends OpResolver<? extends T>> buildOpResolvers(
+				Char2ObjectMap<OpResolver.Builder<T>> ops) {
 			Char2ObjectMap<OpResolver<T>> result = new Char2ObjectOpenHashMap<>();
 
-			ops.char2ObjectEntrySet().forEach(entry -> {
-						Map<String, T> map = entry.getValue();
+			ops.char2ObjectEntrySet().forEach(
+					entry -> result.put(entry.getCharKey(), entry.getValue().build()));
 
-						if (map.size() > 2) {
-							throw new RuntimeException("Not supported atm");
-						}
-
-						if (map.containsKey("")) {
-							if (map.size() == 1) {
-								result.put(entry.getCharKey(), new OpResolver.SingleChar<>(map.get("")));
-							} else {
-								for (Map.Entry<String, T> subEntry : map.entrySet()) {
-									if (!"".equals(subEntry.getKey())) {
-										if (subEntry.getKey().length() != 1) {
-											throw new RuntimeException("Not supported atm");
-										}
-
-										result.put(entry.getCharKey(), new OpResolver.SingleDualChar<>(
-												map.get(""),
-												subEntry.getValue(),
-												subEntry.getKey().charAt(0)
-										));
-									}
-								}
-							}
-						} else {
-							for (Map.Entry<String, T> subEntry : map.entrySet()) {
-								if (subEntry.getKey().length() != 1) {
-									throw new RuntimeException("Not supported atm");
-								}
-
-								result.put(entry.getCharKey(), new OpResolver.SingleDualChar<>(
-										map.get(""),
-										subEntry.getValue(),
-										subEntry.getKey().charAt(0)
-								));
-							}
-						}
-					}
-
-			);
 			return result;
 		}
 
 		public ParserOptions build() {
 			return new ParserOptions(
-					convertOp(this.unaryOpResolvers),
-					convertOp(this.binaryOpResolvers),
+					buildOpResolvers(this.unaryOpResolvers),
+					buildOpResolvers(this.binaryOpResolvers),
 					this.tokenRules == null ? new TokenRules() {} : this.tokenRules);
 		}
 	}
