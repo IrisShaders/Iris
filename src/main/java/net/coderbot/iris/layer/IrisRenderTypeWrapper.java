@@ -8,10 +8,10 @@ import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.Nullable;
 
 public class IrisRenderTypeWrapper extends RenderType implements WrappableRenderType {
-	private final UseProgramRenderState useProgram;
+	private final UseProgramRenderStateShard useProgram;
 	private final RenderType wrapped;
 
-	public IrisRenderTypeWrapper(String name, RenderType wrapped, UseProgramRenderState useProgram) {
+	public IrisRenderTypeWrapper(String name, RenderType wrapped, UseProgramRenderStateShard useProgram) {
 		super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
 			wrapped.affectsCrumbling(), isTranslucent(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
 

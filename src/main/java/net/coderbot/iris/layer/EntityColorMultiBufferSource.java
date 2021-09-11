@@ -8,21 +8,21 @@ import net.minecraft.client.renderer.RenderType;
 
 import java.util.Collections;
 
-public class EntityColorVertexConsumerProvider extends MultiBufferSource.BufferSource implements Groupable {
+public class EntityColorMultiBufferSource extends MultiBufferSource.BufferSource implements Groupable {
 	private final MultiBufferSource wrapped;
-	private final MultiBufferSource.BufferSource wrappedImmediate;
+	private final MultiBufferSource.BufferSource wrappedBufferSource;
 	private final Groupable groupable;
 	private final EntityColorRenderStateShard phase;
 
-	public EntityColorVertexConsumerProvider(MultiBufferSource wrapped, EntityColorRenderStateShard phase) {
+	public EntityColorMultiBufferSource(MultiBufferSource wrapped, EntityColorRenderStateShard phase) {
 		super(new BufferBuilder(0), Collections.emptyMap());
 
 		this.wrapped = wrapped;
 
 		if (wrapped instanceof BufferSource) {
-			this.wrappedImmediate = (BufferSource) wrapped;
+			this.wrappedBufferSource = (BufferSource) wrapped;
 		} else {
-			this.wrappedImmediate = null;
+			this.wrappedBufferSource = null;
 		}
 
 		if (wrapped instanceof Groupable) {
@@ -35,21 +35,21 @@ public class EntityColorVertexConsumerProvider extends MultiBufferSource.BufferS
 	}
 
 	@Override
-	public VertexConsumer getBuffer(RenderType renderLayer) {
-		return wrapped.getBuffer(new InnerWrappedRenderLayer("iris_entity_color", renderLayer, phase));
+	public VertexConsumer getBuffer(RenderType renderType) {
+		return wrapped.getBuffer(new InnerWrappedRenderType("iris_entity_color", renderType, phase));
 	}
 
 	@Override
 	public void endBatch() {
-		if (wrappedImmediate != null) {
-			wrappedImmediate.endBatch();
+		if (wrappedBufferSource != null) {
+			wrappedBufferSource.endBatch();
 		}
 	}
 
 	@Override
-	public void endBatch(RenderType layer) {
-		if (wrappedImmediate != null) {
-			wrappedImmediate.endBatch(layer);
+	public void endBatch(RenderType type) {
+		if (wrappedBufferSource != null) {
+			wrappedBufferSource.endBatch(type);
 		}
 	}
 

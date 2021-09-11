@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BlockBehaviour.BlockStateBase.class)
-public abstract class MixinAbstractBlockState {
+public abstract class MixinBlockStateBehavior {
 	@Shadow
 	public abstract Block getBlock();
 

@@ -3,7 +3,7 @@ package net.coderbot.iris.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
-import net.coderbot.iris.layer.EntityColorVertexConsumerProvider;
+import net.coderbot.iris.layer.EntityColorMultiBufferSource;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.TntMinecartRenderer;
 import net.minecraft.world.level.block.state.BlockState;
@@ -22,7 +22,7 @@ public abstract class MixinTntMinecartEntityRenderer {
 
 		if (drawFlash) {
 			EntityColorRenderStateShard phase = new EntityColorRenderStateShard(false, 1.0F);
-			return new EntityColorVertexConsumerProvider(provider, phase);
+			return new EntityColorMultiBufferSource(provider, phase);
 		} else {
 			return provider;
 		}

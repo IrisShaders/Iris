@@ -29,6 +29,7 @@ public class ShadowFrustum extends Frustum {
 		return true;
 	}
 
+	@Override
 	public boolean isVisible(AABB box) {
 		if (boxCuller.isCulled(box)) {
 			return false;

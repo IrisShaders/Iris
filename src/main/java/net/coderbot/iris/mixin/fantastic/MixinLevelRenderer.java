@@ -2,18 +2,13 @@ package net.coderbot.iris.mixin.fantastic;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
-import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleManager;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.client.renderer.*;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,18 +32,12 @@ public class MixinLevelRenderer {
 	private RenderBuffers renderBuffers;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void iris$resetParticleManagerPhase(PoseStack matrices, float tickDelta, long limitTime,
-												boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-												LightTexture lightmapTextureManager, Matrix4f matrix4f,
-												CallbackInfo callback) {
+	private void iris$resetParticleManagerPhase(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
 		((PhasedParticleManager) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.EVERYTHING);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=entities"))
-	private void iris$renderOpaqueParticles(PoseStack matrices, float tickDelta, long limitTime,
-												boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-												LightTexture lightmapTextureManager, Matrix4f matrix4f,
-												CallbackInfo callback) {
+	private void iris$renderOpaqueParticles(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
 		minecraft.getProfiler().popPush("opaque_particles");
 
 		MultiBufferSource.BufferSource immediate = renderBuffers.bufferSource();
@@ -56,19 +45,9 @@ public class MixinLevelRenderer {
 		((PhasedParticleManager) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
 
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
-		minecraft.particleEngine.render(matrices, immediate, lightmapTextureManager, camera, tickDelta);
+		minecraft.particleEngine.render(poseStack, immediate, lightTexture, camera, f);
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 
 		((PhasedParticleManager) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
-	}
-
-	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void iris$fantastic$beginLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		((ExtendedBufferStorage) renderBuffers).beginLevelRendering();
-	}
-
-	@Inject(method = "renderLevel", at = @At("RETURN"))
-	private void iris$fantastic$endLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		((ExtendedBufferStorage) renderBuffers).endLevelRendering();
 	}
 }

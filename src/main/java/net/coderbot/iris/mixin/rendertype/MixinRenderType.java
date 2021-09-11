@@ -2,7 +2,7 @@ package net.coderbot.iris.mixin.rendertype;
 
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
-import net.coderbot.iris.layer.UseProgramRenderState;
+import net.coderbot.iris.layer.UseProgramRenderStateShard;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -115,7 +115,7 @@ public class MixinRenderType {
 	}
 
 	private static RenderType wrap(String name, RenderType wrapped, GbufferProgram program) {
-		return new IrisRenderTypeWrapper(name, wrapped, new UseProgramRenderState(program));
+		return new IrisRenderTypeWrapper(name, wrapped, new UseProgramRenderStateShard(program));
 	}
 
 	private static RenderType wrapGlint(String glintType, RenderType wrapped) {

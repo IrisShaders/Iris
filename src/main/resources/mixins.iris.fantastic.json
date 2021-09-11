@@ -8,7 +8,7 @@
     "MixinTerrainParticle",
     "MixinFireworkSparkParticle",
     "MixinParticleEngine",
-    "MixinWorldRenderer"
+    "MixinLevelRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

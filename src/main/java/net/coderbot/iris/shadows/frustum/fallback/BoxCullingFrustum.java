@@ -14,7 +14,8 @@ public class BoxCullingFrustum extends Frustum {
 		this.boxCuller = boxCuller;
 	}
 
-	public void setPosition(double cameraX, double cameraY, double cameraZ) {
+	@Override
+	public void prepare(double cameraX, double cameraY, double cameraZ) {
 		boxCuller.setPosition(cameraX, cameraY, cameraZ);
 	}
 
@@ -32,6 +33,7 @@ public class BoxCullingFrustum extends Frustum {
 		return false;
 	}
 
+	@Override
 	public boolean isVisible(AABB box) {
 		return !boxCuller.isCulled(box);
 	}

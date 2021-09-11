@@ -147,11 +147,11 @@ public class MixinMultiBufferSource_WrapperManager {
 
 	@Unique
 	private RenderType iris$wrapWithIsEntity(RenderType base) {
-		return new OuterWrappedRenderType("iris:is_entity", base, IsEntityRenderState.INSTANCE);
+		return new OuterWrappedRenderType("iris:is_entity", base, IsEntityRenderStateShard.INSTANCE);
 	}
 
 	@Unique
 	private RenderType iris$wrapWithIsBlockEntity(RenderType base) {
-		return new OuterWrappedRenderType("iris:is_block_entity", base, IsBlockEntityRenderState.INSTANCE);
+		return new OuterWrappedRenderType("iris:is_block_entity", base, IsBlockEntityRenderStateShard.INSTANCE);
 	}
 }

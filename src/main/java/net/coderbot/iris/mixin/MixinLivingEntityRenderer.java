@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
-import net.coderbot.iris.layer.EntityColorVertexConsumerProvider;
+import net.coderbot.iris.layer.EntityColorMultiBufferSource;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.world.entity.LivingEntity;
@@ -35,7 +35,7 @@ public abstract class MixinLivingEntityRenderer {
 
 		if (hurt || whiteFlash > 0.0) {
 			EntityColorRenderStateShard phase = new EntityColorRenderStateShard(hurt, whiteFlash);
-			return new EntityColorVertexConsumerProvider(provider, phase);
+			return new EntityColorMultiBufferSource(provider, phase);
 		} else {
 			return provider;
 		}
