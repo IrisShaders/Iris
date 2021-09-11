@@ -32,7 +32,7 @@ public final class ParserOptions {
 	public static class Builder {
 		private final Char2ObjectMap<OpResolver.Builder<UnaryOp>> unaryOpResolvers = new Char2ObjectOpenHashMap<>();
 		private final Char2ObjectMap<OpResolver.Builder<BinaryOp>> binaryOpResolvers = new Char2ObjectOpenHashMap<>();
-		private TokenRules tokenRules = null;
+		private TokenRules tokenRules = TokenRules.DEFAULT;
 
 		public void addUnaryOp(String s, UnaryOp op) {
 			char first = s.charAt(0);
@@ -66,7 +66,7 @@ public final class ParserOptions {
 			return new ParserOptions(
 					buildOpResolvers(this.unaryOpResolvers),
 					buildOpResolvers(this.binaryOpResolvers),
-					this.tokenRules == null ? new TokenRules() {} : this.tokenRules);
+					this.tokenRules);
 		}
 	}
 
@@ -74,6 +74,8 @@ public final class ParserOptions {
 	 * Defines a set of rules that allows the tokenizer to identify tokens within a string.
 	 */
 	public interface TokenRules {
+		TokenRules DEFAULT = new TokenRules() {};
+
 		static boolean isNumber(final char c) {
 			return c >= '0' && c <= '9';
 		}
