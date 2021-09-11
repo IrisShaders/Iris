@@ -36,10 +36,6 @@ public class IrisParserOptions {
 		builder.addBinaryOp("<=", LessThanOrEquals);
 		builder.addBinaryOp(">=", MoreThanOrEquals);
 
-		builder.addBinaryOp("≠", NotEquals);
-		builder.addBinaryOp("≤", LessThanOrEquals);
-		builder.addBinaryOp("≥", MoreThanOrEquals);
-
 		builder.addBinaryOp("&&", And);
 		builder.addBinaryOp("||", Or);
 
