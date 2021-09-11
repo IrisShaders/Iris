@@ -3,7 +3,7 @@ package kroppeb.stareval.parser;
 import kroppeb.stareval.exception.UnexpectedCharacterException;
 
 /**
- * A class to facilitate the reading of strings, will completely ignore all spaces.
+ * A class to facilitate the reading of strings.
  */
 public class StringReader {
 	/**
@@ -47,6 +47,9 @@ public class StringReader {
 		this.nextIndex++;
 	}
 
+	/**
+	 * Skips all whitespace characters until a non-whitespace character is encountered.
+	 */
 	public void skipWhitespace() {
 		while (this.nextIndex < this.string.length() && this.string.charAt(this.nextIndex) == ' ') {
 			this.nextIndex++;
@@ -73,7 +76,6 @@ public class StringReader {
 	public char read() {
 		char current = this.peek();
 		this.skipOneCharacter();
-		this.skipWhitespace();
 		return current;
 	}
 
@@ -106,7 +108,6 @@ public class StringReader {
 		}
 
 		this.skipOneCharacter();
-		this.skipWhitespace();
 		return true;
 	}
 

@@ -20,12 +20,20 @@ class Tokenizer {
 		ParserOptions.TokenRules tokenRules = options.getTokenRules();
 
 		while (input.canRead()) {
+			input.skipWhitespace();
+
+			if (!input.canRead()) {
+				break;
+			}
+
 			char c = input.read();
 
 			if (tokenRules.isIdStart(c)) {
 				final String id = readWhile(input, tokenRules::isIdPart);
 				stack.visitId(id);
 			} else if (c == '.' && stack.canReadAccess()) {
+				input.skipWhitespace();
+
 				if (input.canRead()) {
 					char start = input.read();
 
