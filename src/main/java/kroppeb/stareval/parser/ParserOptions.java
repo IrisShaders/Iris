@@ -9,20 +9,20 @@ import java.util.Map;
 public final class ParserOptions {
 	private final Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers;
 	private final Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers;
-	private final ParserParts parserParts;
+	private final TokenRules tokenRules;
 
 
 	private ParserOptions(
 			Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers,
 			Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers,
-			ParserParts parserParts) {
+			TokenRules tokenRules) {
 		this.unaryOpResolvers = unaryOpResolvers;
 		this.binaryOpResolvers = binaryOpResolvers;
-		this.parserParts = parserParts;
+		this.tokenRules = tokenRules;
 	}
 
-	ParserParts getParserParts() {
-		return this.parserParts;
+	TokenRules getParserParts() {
+		return this.tokenRules;
 	}
 
 	OpResolver<? extends UnaryOp> getUnaryOpResolver(char c) {
@@ -36,7 +36,7 @@ public final class ParserOptions {
 	public static class Builder {
 		private final Char2ObjectMap<Map<String, UnaryOp>> unaryOpResolvers = new Char2ObjectOpenHashMap<>();
 		private final Char2ObjectMap<Map<String, BinaryOp>> binaryOpResolvers = new Char2ObjectOpenHashMap<>();
-		private ParserParts parserParts = null;
+		private TokenRules tokenRules = null;
 
 		public void addUnaryOp(String s, UnaryOp op) {
 			Map<String, UnaryOp> mp = this.unaryOpResolvers
@@ -52,8 +52,8 @@ public final class ParserOptions {
 			assert previous == null;
 		}
 
-		public void setParserParts(ParserParts parserParts) {
-			this.parserParts = parserParts;
+		public void setParserParts(TokenRules tokenRules) {
+			this.tokenRules = tokenRules;
 		}
 
 		private static <T> Char2ObjectMap<? extends OpResolver<? extends T>> convertOp(
@@ -108,11 +108,14 @@ public final class ParserOptions {
 			return new ParserOptions(
 					convertOp(this.unaryOpResolvers),
 					convertOp(this.binaryOpResolvers),
-					this.parserParts == null ? new ParserParts() {} : this.parserParts);
+					this.tokenRules == null ? new TokenRules() {} : this.tokenRules);
 		}
 	}
 
-	public interface ParserParts {
+	/**
+	 * Defines a set of rules that allows the tokenizer to identify tokens within a string.
+	 */
+	public interface TokenRules {
 		static boolean isNumber(final char c) {
 			return c >= '0' && c <= '9';
 		}

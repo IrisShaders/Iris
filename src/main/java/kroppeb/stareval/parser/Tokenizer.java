@@ -19,30 +19,30 @@ class Tokenizer {
 	static Expression parseInternal(StringReader input, ParserOptions options) throws ParseException {
 		// parser stack
 		final Parser stack = new Parser();
-		ParserOptions.ParserParts parserParts = options.getParserParts();
+		ParserOptions.TokenRules tokenRules = options.getParserParts();
 
 		while (input.canRead()) {
 			char c = input.read();
 
-			if (parserParts.isIdStart(c)) {
-				final String id = readWhile(input, parserParts::isIdPart);
+			if (tokenRules.isIdStart(c)) {
+				final String id = readWhile(input, tokenRules::isIdPart);
 				stack.visitId(id);
 			} else if (c == '.' && stack.canReadAccess()) {
 				if (input.canRead()) {
 					char start = input.read();
 
-					if (!parserParts.isAccessStart(start)) {
+					if (!tokenRules.isAccessStart(start)) {
 						throw new UnexpectedCharacterException("a valid accessor", start, input.getCurrentIndex());
 					}
 
-					final String access = readWhile(input, parserParts::isAccessPart);
+					final String access = readWhile(input, tokenRules::isAccessPart);
 					stack.visitAccess(access);
 				} else {
 					throw new UnexpectedEndingException("An expression can't end with '.'");
 				}
-			} else if (parserParts.isNumberStart(c)) {
+			} else if (tokenRules.isNumberStart(c)) {
 				// start parsing a number
-				final String numberString = readWhile(input, parserParts::isNumberPart);
+				final String numberString = readWhile(input, tokenRules::isNumberPart);
 				stack.visitNumber(numberString);
 			} else if (c == '(') {
 				stack.visitOpeningParenthesis();
