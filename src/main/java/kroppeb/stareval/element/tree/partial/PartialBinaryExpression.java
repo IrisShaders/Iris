@@ -5,11 +5,11 @@ import kroppeb.stareval.element.tree.BinaryExpression;
 import kroppeb.stareval.element.Expression;
 import kroppeb.stareval.parser.BinaryOp;
 
-public class PartialBinaryExpressionToken extends PartialExpression implements PriorityOperatorElement {
+public class PartialBinaryExpression extends PartialExpression implements PriorityOperatorElement {
 	private final Expression left;
 	private final BinaryOp op;
 
-	public PartialBinaryExpressionToken(Expression left, BinaryOp op) {
+	public PartialBinaryExpression(Expression left, BinaryOp op) {
 		this.left = left;
 		this.op = op;
 	}

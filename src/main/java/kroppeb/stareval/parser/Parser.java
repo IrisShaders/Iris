@@ -12,7 +12,7 @@ import kroppeb.stareval.element.tree.AccessExpression;
 import kroppeb.stareval.element.tree.BinaryExpression;
 import kroppeb.stareval.element.tree.FunctionCall;
 import kroppeb.stareval.element.tree.UnaryExpression;
-import kroppeb.stareval.element.tree.partial.PartialBinaryExpressionToken;
+import kroppeb.stareval.element.tree.partial.PartialBinaryExpression;
 import kroppeb.stareval.element.tree.partial.UnfinishedArgsExpression;
 import kroppeb.stareval.exception.MissingTokenException;
 import kroppeb.stareval.exception.ParseException;
@@ -244,10 +244,10 @@ public class Parser {
 	/**
 	 * Executes following reduce steps:
 	 * <ul>
-	 *     <li>{@link Expression} | {@link BinaryOperatorToken} => {@link PartialBinaryExpressionToken}</li>
+	 *     <li>{@link Expression} | {@link BinaryOperatorToken} => {@link PartialBinaryExpression}</li>
 	 *     <li>{@link UnaryOperatorToken}, {@link Expression} | {@link BinaryOperatorToken} => {@link UnaryExpression} | {@link BinaryOperatorToken}</li>
 	 *     <li>
-	 *         {@link PartialBinaryExpressionToken}, {@link Expression} | {@link BinaryOperatorToken} <br/>
+	 *         {@link PartialBinaryExpression}, {@link Expression} | {@link BinaryOperatorToken} <br/>
 	 *         where the operator on the stack has a higher or equal priority to the one being added, the 3 items on the
 	 *         stack get popped, merged to a {@link BinaryExpression} and placed on the stack.
 	 *         The new token is then pushed again.
@@ -267,7 +267,7 @@ public class Parser {
 		// stack[ {'a', '+'}, 'b'], token = '*' -> stack[{'a', '+'}], left = {'b'}
 		//                                      -> stack[{'a', '+'}, {'b', '*'}]
 
-		this.stack.add(new PartialBinaryExpressionToken(left, binaryOp));
+		this.stack.add(new PartialBinaryExpression(left, binaryOp));
 	}
 
 	void visitUnaryOperator(UnaryOp unaryOp) {
