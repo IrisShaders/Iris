@@ -51,7 +51,7 @@ public class StringReader {
 	 * Skips all whitespace characters until a non-whitespace character is encountered.
 	 */
 	public void skipWhitespace() {
-		while (this.nextIndex < this.string.length() && this.string.charAt(this.nextIndex) == ' ') {
+		while (this.nextIndex < this.string.length() && Character.isWhitespace(this.string.charAt(this.nextIndex))) {
 			this.nextIndex++;
 		}
 	}
