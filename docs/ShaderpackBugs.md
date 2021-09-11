@@ -2,6 +2,12 @@
 
 This file tracks some bugs in shader packs that might appear to be Iris issues, but are just bugs within the shader pack.
 
+## All shader packs
+
+* Vanilla shadows appear in addition to dynamic shadows
+    * Diagnosis: Shader packs force there to be shadows where there is low skylight to prevent light from leaking into caves. [While I would like to make this workaround unnecessary](https://github.com/IrisShaders/Iris/issues/317), it is entirely something implemented in the shaderpack, Iris doesn't really have control over it.
+    * Workaround: no general workaround, each pack implements this differently.
+
 ## SEUS Renewed v1.0.1
 
 * Enchantment glints don't render

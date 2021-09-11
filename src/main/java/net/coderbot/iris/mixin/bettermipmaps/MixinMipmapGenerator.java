@@ -33,6 +33,10 @@ public class MixinMipmapGenerator {
 		}
 	}
 
+	/**
+	 * @author coderbot
+	 * @reason replace the vanilla blending function with our improved function
+	 */
 	@Overwrite
 	private static int alphaBlend(int one, int two, int three, int four, boolean checkAlpha) {
 		// First blend horizontally, then blend vertically.

@@ -7,6 +7,8 @@ import net.minecraft.client.Camera;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
+import java.util.List;
+
 public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
 
@@ -44,8 +46,13 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 	}
 
 	@Override
-	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
 		// No-op
+	}
+
+	@Override
+	public void addDebugText(List<String> messages) {
+		messages.add("[Iris] Shadow Maps: not used by shader pack");
 	}
 
 	public int getDepthTextureId() {

@@ -6,15 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
 
 public class RenderTargets {
 	/**
@@ -99,7 +96,6 @@ public class RenderTargets {
 			return;
 		}
 
-		Iris.logger.info("Resizing render targets to " + newWidth + "x" + newHeight);
 		cachedWidth = newWidth;
 		cachedHeight = newHeight;
 

@@ -29,7 +29,7 @@ public class MixinTextureAtlasSprite {
 	 * black color does not leak over into sampling.
 	 */
 	@Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;generateMipLevels(Lcom/mojang/blaze3d/platform/NativeImage;I)[Lcom/mojang/blaze3d/platform/NativeImage;"))
-	private void fillInTransparentPixelColors(TextureAtlas spriteAtlasTexture, TextureAtlasSprite.Info info, int maxLevel, int atlasWidth, int atlasHeight, int atlasX, int atlasY, NativeImage image, CallbackInfo ci) {
+	private void fillInTransparentPixelColors(TextureAtlas textureAtlas, TextureAtlasSprite.Info info, int i, int j, int k, int l, int m, NativeImage nativeImage, CallbackInfo ci) {
 		if (info.name().getPath().contains("leaves")) {
 			// Don't ruin the textures of leaves on fast graphics, since they're supposed to have black pixels
 			// apparently.
@@ -44,9 +44,9 @@ public class MixinTextureAtlasSprite {
 		float b = 0.0f;
 		float totalAlpha = 0.0f;
 
-		for (int y = 0; y < image.getHeight(); y++) {
-			for (int x = 0; x < image.getWidth(); x++) {
-				int color = image.getPixelRGBA(x, y);
+		for (int y = 0; y < nativeImage.getHeight(); y++) {
+			for (int x = 0; x < nativeImage.getWidth(); x++) {
+				int color = nativeImage.getPixelRGBA(x, y);
 				int alpha = (color >> 24) & 255;
 
 				if (alpha == 0) {
@@ -76,9 +76,9 @@ public class MixinTextureAtlasSprite {
 		// Use an alpha value of zero - this works since we only replace pixels with an alpha value of 0.
 		int resultColor = packLinearToSrgb(r, g, b);
 
-		for (int y = 0; y < image.getHeight(); y++) {
-			for (int x = 0; x < image.getWidth(); x++) {
-				int color = image.getPixelRGBA(x, y);
+		for (int y = 0; y < nativeImage.getHeight(); y++) {
+			for (int x = 0; x < nativeImage.getWidth(); x++) {
+				int color = nativeImage.getPixelRGBA(x, y);
 				int alpha = (color >> 24) & 255;
 
 				// If this pixel has nonzero alpha, don't touch it.
@@ -86,8 +86,8 @@ public class MixinTextureAtlasSprite {
 					continue;
 				}
 
-				// Replace the color values of this pixel with the average coolors.
-				image.setPixelRGBA(x, y, resultColor);
+				// Replace the color values of this pixel with the average colors.
+				nativeImage.setPixelRGBA(x, y, resultColor);
 			}
 		}
 	}

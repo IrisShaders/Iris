@@ -6,6 +6,7 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
@@ -26,6 +27,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
@@ -111,6 +113,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final int waterId;
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
+	private final boolean oldLighting;
+	private final OptionalInt forcedShadowRenderDistanceChunks;
 
 	private final List<GbufferProgram> programStack = new ArrayList<>();
 	private final List<String> programStackLog = new ArrayList<>();
@@ -121,6 +125,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		Objects.requireNonNull(programs);
 
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
+		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
 		this.allPasses = new ArrayList<>();
@@ -129,7 +134,22 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).defaultBlockState(), -1);
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
+		PackShadowDirectives shadowDirectives = programs.getPackDirectives().getShadowDirectives();
+
+		if (shadowDirectives.isDistanceRenderMulExplicit()) {
+			if (shadowDirectives.getDistanceRenderMul() >= 0.0) {
+				// add 15 and then divide by 16 to ensure we're rounding up
+				forcedShadowRenderDistanceChunks =
+						OptionalInt.of(((int) (shadowDirectives.getDistance() * shadowDirectives.getDistanceRenderMul()) + 15) / 16);
+			} else {
+				forcedShadowRenderDistanceChunks = OptionalInt.of(-1);
+			}
+		} else {
+			forcedShadowRenderDistanceChunks = OptionalInt.empty();
+		}
+
 		BlockRenderingSettings.INSTANCE.setIdMap(programs.getPack().getIdMap());
+		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programs.getPackDirectives().getAmbientOcclusionLevel());
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programs.getPackDirectives().shouldUseSeparateAo());
 
@@ -162,7 +182,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
-					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise);
+					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise,
+					programs);
 			createShadowMapRenderer = () -> {};
 		};
 
@@ -423,7 +444,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	@Override
 	public boolean shouldDisableDirectionalShading() {
-		return true;
+		return !oldLighting;
 	}
 
 	@Override
@@ -484,10 +505,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		builder.bindAttributeLocation(12, "at_tangent");
 
 		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
-
-		if (alphaTestOverride != null) {
-			Iris.logger.info("Configured alpha test override for " + source.getName() + ": " + alphaTestOverride);
-		}
 
 		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
 				source.getDirectives().shouldDisableBlend());
@@ -622,7 +639,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
-		com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		renderTargets.resizeIfNeeded(main.width, main.height);
 
 		clearMainBuffers.bind();
@@ -681,24 +698,21 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
-		this.shadowMapRenderer.renderShadows(levelRenderer, playerCamera);
+	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
+		this.shadowMapRenderer.renderShadows(worldRenderer, playerCamera);
 	}
 
 	@Override
 	public void addDebugText(List<String> messages) {
-		if (shadowMapRenderer instanceof ShadowRenderer) {
+		if (shadowMapRenderer != null) {
 			messages.add("");
-			messages.add("[Iris] Shadow Maps: " + ShadowRenderer.OVERALL_DEBUG_STRING);
-			messages.add("[Iris] Shadow Terrain: " + ShadowRenderer.SHADOW_DEBUG_STRING);
-			messages.add("[Iris] Shadow Entities: " + ShadowRenderer.getEntitiesDebugString());
-			messages.add("[Iris] Shadow Block Entities: " + ShadowRenderer.getBlockEntitiesDebugString());
-		} else if (shadowMapRenderer instanceof EmptyShadowMapRenderer) {
-			messages.add("");
-			messages.add("[Iris] Shadow Maps: not used by shader pack");
-		} else {
-			throw new IllegalStateException("Unknown shadow map renderer type!");
+			shadowMapRenderer.addDebugText(messages);
 		}
+	}
+
+	@Override
+	public OptionalInt getForcedShadowRenderDistanceChunksForDisplay() {
+		return forcedShadowRenderDistanceChunks;
 	}
 
 	// TODO: better way to avoid this global state?

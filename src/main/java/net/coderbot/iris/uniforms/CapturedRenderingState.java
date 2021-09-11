@@ -1,9 +1,9 @@
 package net.coderbot.iris.uniforms;
 
 import com.mojang.math.Matrix4f;
+import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
 public class CapturedRenderingState {
@@ -13,8 +13,11 @@ public class CapturedRenderingState {
 	private Matrix4f gbufferProjection;
 	private Vec3 fogColor;
 	private float tickDelta;
-	private BlockEntity currentRenderedBlockEntity;
-	private Entity currentRenderedEntity;
+	private int currentRenderedBlockEntity;
+	private Runnable blockEntityIdListener = null;
+
+	private int currentRenderedEntity = -1;
+	private Runnable entityIdListener = null;
 
 	private CapturedRenderingState() {
 	}
@@ -55,19 +58,35 @@ public class CapturedRenderingState {
 		return tickDelta;
 	}
 
-	public void setCurrentBlockEntity(BlockEntity entity) {
+	public void setCurrentBlockEntity(int entity) {
 		this.currentRenderedBlockEntity = entity;
+
+		if (this.blockEntityIdListener != null) {
+			this.blockEntityIdListener.run();
+		}
 	}
 
-	public BlockEntity getCurrentRenderedBlockEntity() {
+	public int getCurrentRenderedBlockEntity() {
 		return currentRenderedBlockEntity;
 	}
 
-	public void setCurrentEntity(Entity entity) {
+	public void setCurrentEntity(int entity) {
 		this.currentRenderedEntity = entity;
+
+		if (this.entityIdListener != null) {
+			this.entityIdListener.run();
+		}
 	}
 
-	public Entity getCurrentRenderedEntity() {
+	public ValueUpdateNotifier getEntityIdNotifier() {
+		return listener -> this.entityIdListener = listener;
+	}
+
+	public ValueUpdateNotifier getBlockEntityIdNotifier() {
+		return listener -> this.blockEntityIdListener = listener;
+	}
+
+	public int getCurrentRenderedEntity() {
 		return currentRenderedEntity;
 	}
 }

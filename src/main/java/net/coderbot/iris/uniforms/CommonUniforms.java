@@ -5,7 +5,7 @@ import java.util.function.IntSupplier;
 
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.layer.EntityColorRenderState;
+import net.coderbot.iris.layer.EntityColorRenderStateShard;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.texunits.TextureAtlasInterface;
@@ -56,23 +56,25 @@ public final class CommonUniforms {
 		FogUniforms.addFogUniforms(uniforms);
 
 		uniforms.uniform4f("entityColor", () -> {
-			if (EntityColorRenderState.currentHurt) {
+			if (EntityColorRenderStateShard.currentHurt) {
 				return new Vector4f(1.0f, 0.0f, 0.0f, 0.3f);
 			}
 
-			float shade = EntityColorRenderState.currentWhiteFlash;
+			float shade = EntityColorRenderStateShard.currentWhiteFlash;
 
 			if (shade != 0.0f) {
 				return new Vector4f(shade, shade, shade, 0.5f);
 			}
 
 			return new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-		}, EntityColorRenderState.getUpdateNotifier());
+		}, EntityColorRenderStateShard.getUpdateNotifier());
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
 
 	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier){
+		ExternallyManagedUniforms.addExternallyManagedUniforms116(uniforms);
+
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())

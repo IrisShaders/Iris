@@ -76,7 +76,7 @@ public class OuterWrappedRenderType extends RenderType implements WrappableRende
 		return "iris_wrapped:" + this.wrapped.toString();
 	}
 
-	private static boolean isTranslucent(RenderType type) {
-		return ((RenderTypeAccessor) type).isTranslucent();
+	private static boolean isTranslucent(RenderType layer) {
+		return ((RenderTypeAccessor) layer).isTranslucent();
 	}
 }

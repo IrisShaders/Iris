@@ -24,6 +24,9 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" is already in your Shader Packs folder!",
   "options.iris.shaders.disabled": "Shaders: Disabled",
   "options.iris.shaders.enabled": "Shaders: Enabled",
+  "options.iris.shadowDistance": "Max Shadow Distance",
+  "options.iris.shadowDistance.enabled": "Allows you to change the maximum distance for shadows. Terrain and entities beyond this distance will not cast shadows. Lowering the shadow distance can significantly increase performance.",
+  "options.iris.shadowDistance.disabled": "Your current shader pack has already set a render distance for shadows; you cannot change it.",
 
   "pack.iris.select.title": "Select",
   "pack.iris.list.label": "+ Drag and Drop Shader Packs to add"

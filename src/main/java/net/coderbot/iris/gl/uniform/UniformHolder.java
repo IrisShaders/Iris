@@ -38,4 +38,6 @@ public interface UniformHolder {
 	UniformHolder uniformJomlMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<net.coderbot.iris.vendored.joml.Matrix4f> value);
 
 	UniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value);
+
+	UniformHolder externallyManagedUniform(String name, UniformType type);
 }

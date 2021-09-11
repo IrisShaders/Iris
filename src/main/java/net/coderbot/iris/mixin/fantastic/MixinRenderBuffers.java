@@ -1,6 +1,6 @@
 package net.coderbot.iris.mixin.fantastic;
 
-import net.coderbot.iris.fantastic.ExtendedBufferStorage;
+import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;

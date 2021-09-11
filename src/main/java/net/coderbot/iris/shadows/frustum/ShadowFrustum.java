@@ -5,44 +5,24 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
 public class ShadowFrustum extends Frustum {
-	private final double maxDistance;
+	private final BoxCuller boxCuller;
 
-	private double minAllowedX;
-	private double maxAllowedX;
-	private double minAllowedY;
-	private double maxAllowedY;
-	private double minAllowedZ;
-	private double maxAllowedZ;
+	public ShadowFrustum(Matrix4f view, Matrix4f projection, BoxCuller boxCuller) {
+		super(view, projection);
 
-	public ShadowFrustum(Matrix4f matrix4f, Matrix4f matrix4f2, double maxDistance) {
-		super(matrix4f, matrix4f2);
-
-		this.maxDistance = maxDistance;
+		this.boxCuller = boxCuller;
 	}
 
-	public void prepare(double cameraX, double cameraY, double cameraZ) {
+	public void setPosition(double cameraX, double cameraY, double cameraZ) {
 		super.prepare(cameraX, cameraY, cameraZ);
 
-		this.minAllowedX = cameraX - maxDistance;
-		this.maxAllowedX = cameraX + maxDistance;
-		this.minAllowedY = cameraY - maxDistance;
-		this.maxAllowedY = cameraY + maxDistance;
-		this.minAllowedZ = cameraZ - maxDistance;
-		this.maxAllowedZ = cameraZ + maxDistance;
+		boxCuller.setPosition(cameraX, cameraY, cameraZ);
 	}
 
 	// for Sodium
 	// TODO: Better way to do this... Maybe we shouldn't be using a frustum for the box culling in the first place!
 	public boolean preAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		if (maxX < this.minAllowedX || minX > this.maxAllowedX) {
-			return false;
-		}
-
-		if (maxY < this.minAllowedY || minY > this.maxAllowedY) {
-			return false;
-		}
-
-		if (maxZ < this.minAllowedZ || minZ > this.maxAllowedZ) {
+		if (boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ)) {
 			return false;
 		}
 
@@ -50,15 +30,7 @@ public class ShadowFrustum extends Frustum {
 	}
 
 	public boolean isVisible(AABB box) {
-		if (box.maxX < this.minAllowedX || box.minX > this.maxAllowedX) {
-			return false;
-		}
-
-		if (box.maxY < this.minAllowedY || box.minY > this.maxAllowedY) {
-			return false;
-		}
-
-		if (box.maxZ < this.minAllowedZ || box.minZ > this.maxAllowedZ) {
+		if (boxCuller.isCulled(box)) {
 			return false;
 		}
 

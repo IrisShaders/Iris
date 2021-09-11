@@ -4,11 +4,13 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.minecraft.client.Camera;
 import java.util.List;
+import java.util.OptionalInt;
 
 public interface WorldRenderingPipeline {
 	void beginWorldRendering();
 	void renderShadows(LevelRendererAccessor levelRenderer, Camera camera);
 	void addDebugText(List<String> messages);
+	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
 	void beginShadowRender();
 	void endShadowRender();
 	void beginTranslucents();

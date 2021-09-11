@@ -80,10 +80,10 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 		MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
 		String renderType = mappingResolver.mapClassName("intermediary", "net.minecraft.class_1921").replace('.', '/');
 
-		// startDrawing is a member of RenderPhase.
+		// startDrawing is a member of RenderStateShard.
 		String startDrawing = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23516", "()V");
 
-		// endDrawing is a member of RenderPhase.
+		// endDrawing is a member of RenderStateShard.
 		String endDrawing = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23518", "()V");
 
 		// Solid is a member of RenderType.

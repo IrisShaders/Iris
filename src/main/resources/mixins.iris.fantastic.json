@@ -6,13 +6,9 @@
   "client": [
     "MixinBarrierParticle",
     "MixinTerrainParticle",
-    "MixinRenderBuffers",
     "MixinFireworkSparkParticle",
-    "MixinCompositeRenderType",
     "MixinParticleEngine",
-    "MixinLevelRenderer",
-    "CompositeStateAccessor",
-    "RenderStateShardAccessor"
+    "MixinWorldRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

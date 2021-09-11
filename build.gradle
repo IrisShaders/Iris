@@ -32,6 +32,15 @@ dependencies {
 
 	// Required by fabric-lifecycle-events-v1
 	includeFabricApiModule "fabric-api-base"
+
+	// JUnit 5 Jupiter test engine
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+	// Use JUnit 5 Platform for tests
+	useJUnitPlatform()
 }
 
 def includeFabricApiModule(String moduleName) {
@@ -119,6 +128,27 @@ jar {
 
 	// Vendored sources are included in the resulting JAR file.
 	from sourceSets.vendored.output
+}
+
+// To build iris bundled with sodium, just run the task `gradle bundleWithSodium`.
+// Currently requires iris to have been built normally first.
+// You must have a Sodium jar in your mavenLocal repository.
+tasks.register('bundleWithSodium')
+
+bundleWithSodium {
+	finalizedBy build
+	doFirst {
+		project.dependencies {
+			// include sodium jar if bundling with sodium
+			include "me.jellysquid.mods:sodium-fabric:0.2.0+IRIS4+"
+		}
+		archivesBaseName = archivesBaseName.replace("iris", "iris-and-sodium")
+	}
+}
+
+repositories {
+	// for the Sodium dependency we want to bundle
+	mavenLocal()
 }
 
 // configure the maven publication

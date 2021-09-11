@@ -2,7 +2,7 @@ package net.coderbot.iris.mixin.fantastic;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
-import net.coderbot.iris.fantastic.ExtendedBufferStorage;
+import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleManager;
 import net.coderbot.iris.layer.GbufferProgram;

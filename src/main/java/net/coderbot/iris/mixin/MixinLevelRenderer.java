@@ -6,28 +6,16 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.IsBlockEntityRenderState;
-import net.coderbot.iris.layer.IsEntityRenderState;
-import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderBuffers;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,14 +26,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Mixin(LevelRenderer.class)
 @Environment(EnvType.CLIENT)
@@ -64,10 +49,6 @@ public class MixinLevelRenderer {
 
 	@Unique
 	private WorldRenderingPipeline pipeline;
-
-	@Shadow
-	@Final
-	private RenderBuffers renderBuffers;
 
 	@Inject(method = RENDER_LEVEL, at = @At("HEAD"))
 	private void iris$beginWorldRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
@@ -118,7 +99,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Options;renderDistance:I"),
-	          slice = @Slice(from = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V")))
+			slice = @Slice(from = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V")))
 	private int iris$alwaysRenderSky(Options options) {
 		return Math.max(options.renderDistance, 4);
 	}
@@ -132,7 +113,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderSky",
-		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
 	private void iris$renderSky$drawHorizon(PoseStack matrices, float tickDelta, CallbackInfo callback) {
 		RenderSystem.depthMask(false);
 
@@ -145,7 +126,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getSunAngle(F)F"),
-		slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/phys/Vec3;y:D")))
+			slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/phys/Vec3;y:D")))
 	private void iris$renderSky$tiltSun(PoseStack matrices, float tickDelta, CallbackInfo callback) {
 		matrices.mulPose(Vector3f.ZP.rotationDegrees(pipeline.getSunPathRotation()));
 	}
@@ -159,7 +140,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
-	private void iris$endSky(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$endSky(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
 		pipeline.popProgram(GbufferProgram.SKY_TEXTURED);
 	}
 
@@ -229,74 +210,18 @@ public class MixinLevelRenderer {
 		pipeline.popProgram(GbufferProgram.WEATHER);
 	}
 
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities", shift = At.Shift.AFTER))
-	private void iris$beginEntities(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		MultiBufferSource provider = renderBuffers.bufferSource();
-
-		if (provider instanceof WrappingVertexConsumerProvider) {
-			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
-				new OuterWrappedRenderType("iris:is_entity", layer, IsEntityRenderState.INSTANCE));
-		}
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=blockentities", shift = At.Shift.AFTER))
-	private void iris$beginBlockEntities(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		MultiBufferSource provider = renderBuffers.bufferSource();
-
-		if (provider instanceof WrappingVertexConsumerProvider) {
-			((WrappingVertexConsumerProvider) provider).setWrappingFunction(layer ->
-					new OuterWrappedRenderType("iris:is_block_entity", layer, IsBlockEntityRenderState.INSTANCE));
-		}
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=destroyProgress"))
-	private void iris$endBlockEntities(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
-		MultiBufferSource provider = renderBuffers.bufferSource();
-
-		if (provider instanceof WrappingVertexConsumerProvider) {
-			((WrappingVertexConsumerProvider) provider).setWrappingFunction(null);
-		}
-	}
-
-	// TODO: Need to figure out how to properly track these values (https://github.com/IrisShaders/Iris/issues/19)
-	/*@Inject(method = "renderEntity", at = @At("HEAD"))
-	private void iris$beginEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-		CapturedRenderingState.INSTANCE.setCurrentEntity(entity);
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;getPos()Lnet/minecraft/util/math/BlockPos;", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$getCurrentBlockEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f, Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3, VertexConsumerProvider.Immediate immediate, Set var39, Iterator var40, BlockEntity blockEntity2){
-		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(blockEntity2);
-	}*/
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$beginTranslucents(PoseStack matrices, float tickDelta, long limitTime,
+	private void iris$beginTranslucents(PoseStack poseStack, float tickDelta, long limitTime,
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-										LightTexture lightmapTextureManager, Matrix4f matrix4f,
-										CallbackInfo ci, ProfilerFiller profiler, Vec3 vec3d, double d, double e, double f,
+										LightTexture lightTexture, Matrix4f matrix4f,
+										CallbackInfo ci, ProfilerFiller profiler, Vec3 vec3, double d, double e, double f,
 										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
-										MultiBufferSource.BufferSource immediate) {
+										MultiBufferSource.BufferSource bufferSource) {
 		profiler.popPush("iris_entity_draws");
-		immediate.endBatch();
+		bufferSource.endBatch();
 
 		profiler.popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
-	}
-
-	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;entitiesForRendering()Ljava/lang/Iterable;"))
-	private Iterable<Entity> iris$sortEntityList(ClientLevel level) {
-		// Sort the entity list first in order to allow vanilla's entity batching code to work better.
-		Iterable<Entity> entityIterable = level.entitiesForRendering();
-
-		Map<EntityType<?>, List<Entity>> sortedEntities = new HashMap<>();
-
-		List<Entity> entities = new ArrayList<>();
-		entityIterable.forEach(entity -> {
-			sortedEntities.computeIfAbsent(entity.getType(), entityType -> new ArrayList<>(32)).add(entity);
-		});
-
-		sortedEntities.values().forEach(entities::addAll);
-
-		return entities;
 	}
 }

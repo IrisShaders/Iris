@@ -13,12 +13,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
-import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.minecraft.ResourceLocationException;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
@@ -130,7 +128,7 @@ public class IdMap {
 	}
 
 	/**
-	 * Parses an identifier map in OptiFine format
+	 * Parses an ResourceLocation map in OptiFine format
 	 */
 	private static Object2IntMap<ResourceLocation> parseIdMap(Properties properties, String keyPrefix, String fileName) {
 		Object2IntMap<ResourceLocation> idMap = new Object2IntOpenHashMap<>();
@@ -157,16 +155,16 @@ public class IdMap {
 			for (String part : value.split(" ")) {
 				if (part.contains("=")) {
 					// Avoid tons of logspam for now
-					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
+					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
 					continue;
 				}
 
 				try {
-					ResourceLocation identifier = new ResourceLocation(part);
+					ResourceLocation ResourceLocation = new ResourceLocation(part);
 
-					idMap.put(identifier, intId);
-				} catch (ResourceLocationException e) {
-					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
+					idMap.put(ResourceLocation, intId);
+				} catch (Exception e) {
+					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
 			}
@@ -200,8 +198,8 @@ public class IdMap {
 			for (String part : value.split(" ")) {
 				try {
 					addBlockStates(part, idMap, intId);
-				} catch (ResourceLocationException e) {
-					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
+				} catch (Exception e) {
+					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
 			}
@@ -210,7 +208,7 @@ public class IdMap {
 		return Object2IntMaps.unmodifiable(idMap);
 	}
 
-	private static void addBlockStates(String entry, Object2IntMap<BlockState> idMap, int intId) throws ResourceLocationException {
+	private static void addBlockStates(String entry, Object2IntMap<BlockState> idMap, int intId) {
 		String[] splitStates = entry.split(":");
 
 		if (splitStates.length == 0) {
@@ -220,13 +218,13 @@ public class IdMap {
 
 		// Simple cases: no states involved
 		//
-		// The first term MUST be a valid identifier component without an equals sign
-		// The second term, if it does not contain an equals sign, must be a valid identifier component.
+		// The first term MUST be a valid ResourceLocation component without an equals sign
+		// The second term, if it does not contain an equals sign, must be a valid ResourceLocation component.
 		if (splitStates.length == 1 || splitStates.length == 2 && !splitStates[1].contains("=")) {
-			// We parse this as a normal identifier here.
-			ResourceLocation identifier = new ResourceLocation(entry);
+			// We parse this as a normal ResourceLocation here.
+			ResourceLocation ResourceLocation = new ResourceLocation(entry);
 
-			Block block = Registry.BLOCK.get(identifier);
+			Block block = Registry.BLOCK.get(ResourceLocation);
 
 			// If the block doesn't exist, by default the registry will return AIR. That probably isn't what we want.
 			// TODO: Assuming that Registry.BLOCK.getDefaultId() == "minecraft:air" here
@@ -243,26 +241,26 @@ public class IdMap {
 
 		// Complex case: One or more states involved...
 		int statesStart;
-		ResourceLocation identifier;
+		ResourceLocation ResourceLocation;
 
 		if (splitStates[1].contains("=")) {
 			// We have an entry of the form "tall_grass:half=upper"
 			statesStart = 1;
-			identifier = new ResourceLocation(splitStates[0]);
+			ResourceLocation = new ResourceLocation(splitStates[0]);
 		} else {
 			// We have an entry of the form "minecraft:tall_grass:half=upper"
 			statesStart = 2;
-			identifier = new ResourceLocation(splitStates[0], splitStates[1]);
+			ResourceLocation = new ResourceLocation(splitStates[0], splitStates[1]);
 		}
 
 		// Let's look up the block and make sure that it exists.
-		Block block = Registry.BLOCK.get(identifier);
+		Block block = Registry.BLOCK.get(ResourceLocation);
 
 		// If the block doesn't exist, by default the registry will return AIR. That probably isn't what we want.
 		// TODO: Assuming that Registry.BLOCK.getDefaultId() == "minecraft:air" here
-		if (block == Blocks.AIR && !entry.contains("air")) {
-			Iris.logger.warn("Failed to parse the block ID map entry \"" + entry + "\":");
-			Iris.logger.warn("- There is no block with the name " + identifier + "!");
+		if (block == Blocks.AIR && !(ResourceLocation.getPath().equals("air") && ResourceLocation.getNamespace().equals("minecraft"))) {
+			Iris.logger.debug("Failed to parse the block ID map entry \"" + entry + "\":");
+			Iris.logger.debug("- There is no block with the name " + ResourceLocation + "!");
 
 			return;
 		}
@@ -302,7 +300,7 @@ public class IdMap {
 
 			if (property == null) {
 				Iris.logger.warn("Error while parsing the block ID map entry \"" + entry + "\":");
-				Iris.logger.warn("- The block " + identifier + " has no property with the name " + key + ", ignoring!");
+				Iris.logger.warn("- The block " + ResourceLocation + " has no property with the name " + key + ", ignoring!");
 
 				continue;
 			}
@@ -339,7 +337,7 @@ public class IdMap {
 	 */
 	private static Map<ResourceLocation, RenderType> parseRenderTypeMap(Properties properties, String keyPrefix, String fileName) {
 		// TODO: Most of this is copied from parseIdMap, it would be nice to reduce duplication.
-		Map<ResourceLocation, RenderType> typeMap = new HashMap<>();
+		Map<ResourceLocation, RenderType> layerMap = new HashMap<>();
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -350,40 +348,40 @@ public class IdMap {
 				return;
 			}
 
-			RenderType type;
+			RenderType layer;
 
 			// See: https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L556-L576
 			switch (key) {
 				case "solid":
-					type = RenderType.solid();
+					layer = RenderType.solid();
 					break;
 				case "cutout":
-					type = RenderType.cutout();
+					layer = RenderType.cutout();
 					break;
 				case "cutout_mipped":
-					type = RenderType.cutoutMipped();
+					layer = RenderType.cutoutMipped();
 					break;
 				case "translucent":
-					type = RenderType.translucent();
+					layer = RenderType.translucent();
 					break;
 				default:
-					Iris.logger.warn("Failed to parse line in " + fileName + ": invalid render type: " + key);
+					Iris.logger.warn("Failed to parse line in " + fileName + ": invalid render layer type: " + key);
 					return;
 			}
 
 			for (String part : value.split(" ")) {
 				try {
-					ResourceLocation identifier = new ResourceLocation(part);
+					ResourceLocation ResourceLocation = new ResourceLocation(part);
 
-					typeMap.put(identifier, type);
-				} catch (ResourceLocationException e) {
-					Iris.logger.warn("Failed to parse an identifier in " + fileName + " for the key " + key + ":");
+					layerMap.put(ResourceLocation, layer);
+				} catch (Exception e) {
+					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ":");
 					Iris.logger.catching(Level.WARN, e);
 				}
 			}
 		});
 
-		return typeMap;
+		return layerMap;
 	}
 
 	public Map<BlockState, Integer> getBlockProperties() {

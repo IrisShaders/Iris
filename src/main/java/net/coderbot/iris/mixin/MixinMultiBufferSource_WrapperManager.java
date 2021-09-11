@@ -1,11 +1,6 @@
 package net.coderbot.iris.mixin;
 
-import net.coderbot.iris.layer.EntityColorRenderState;
-import net.coderbot.iris.layer.IsBlockEntityRenderState;
-import net.coderbot.iris.layer.IsEntityRenderState;
-import net.coderbot.iris.layer.InnerWrappedRenderType;
-import net.coderbot.iris.layer.OuterWrappedRenderType;
-import net.coderbot.iris.layer.WrappableRenderType;
+import net.coderbot.iris.layer.*;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Final;
@@ -146,7 +141,7 @@ public class MixinMultiBufferSource_WrapperManager {
 
 	@Unique
 	private RenderType iris$wrapWithEntityColor(RenderType base, boolean hurt, boolean whiteFlash) {
-		EntityColorRenderState phase = new EntityColorRenderState(hurt, whiteFlash ? 1.0F : 0.0F);
+		EntityColorRenderStateShard phase = new EntityColorRenderStateShard(hurt, whiteFlash ? 1.0F : 0.0F);
 		return new InnerWrappedRenderType("iris_entity_color", base, phase);
 	}
 

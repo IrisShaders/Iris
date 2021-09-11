@@ -52,7 +52,17 @@ public class MixinMultiBufferSource implements WrappingVertexConsumerProvider {
 	}
 
 	@Override
-	public void setWrappingFunction(Function<RenderType, RenderType> wrappingFunction) {
+	public void pushWrappingFunction(Function<RenderType, RenderType> wrappingFunction) {
 		this.wrappingFunction = wrappingFunction;
+	}
+
+	@Override
+	public void popWrappingFunction() {
+		this.wrappingFunction = null;
+	}
+
+	@Override
+	public void assertWrapStackEmpty() {
+
 	}
 }

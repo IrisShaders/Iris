@@ -1,8 +1,11 @@
 package net.coderbot.iris.fantastic;
 
-import java.util.function.Function;
 import net.minecraft.client.renderer.RenderType;
 
+import java.util.function.Function;
+
 public interface WrappingVertexConsumerProvider {
-	void setWrappingFunction(Function<RenderType, RenderType> wrappingFunction);
+	void pushWrappingFunction(Function<RenderType, RenderType> wrappingFunction);
+	void popWrappingFunction();
+	void assertWrapStackEmpty();
 }
