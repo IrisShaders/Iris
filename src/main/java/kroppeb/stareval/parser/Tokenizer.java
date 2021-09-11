@@ -85,8 +85,8 @@ class Tokenizer {
 				break;
 			}
 
+			// NB: Do not skip whitespace here implicitly.
 			input.skipOneCharacter();
-			input.skipWhitespace();
 		}
 
 		return input.substring();
