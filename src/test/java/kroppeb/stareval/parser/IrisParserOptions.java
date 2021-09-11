@@ -1,6 +1,6 @@
 package kroppeb.stareval.parser;
 
-public class IrisOptions {
+public class IrisParserOptions {
 	static final BinaryOp Multiply = new BinaryOp("multiply", 0);
 	static final BinaryOp Divide = new BinaryOp("divide", 0);
 	static final BinaryOp Remainder = new BinaryOp("remainder", 0);

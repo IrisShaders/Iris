@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class ParserTest {
 	private static Expression parse(String string) throws ParseException {
-		return Parser.parse(string, IrisOptions.options);
+		return Parser.parse(string, IrisParserOptions.options);
 	}
 
 	@ParameterizedTest
