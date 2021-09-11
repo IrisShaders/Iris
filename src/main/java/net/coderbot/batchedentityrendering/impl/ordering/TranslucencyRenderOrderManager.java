@@ -2,7 +2,7 @@ package net.coderbot.batchedentityrendering.impl.ordering;
 
 import net.coderbot.batchedentityrendering.impl.BlendingStateHolder;
 import net.coderbot.batchedentityrendering.impl.TransparencyType;
-import net.coderbot.batchedentityrendering.impl.WrappableRenderLayer;
+import net.coderbot.batchedentityrendering.impl.WrappableRenderType;
 import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
@@ -21,21 +21,21 @@ public class TranslucencyRenderOrderManager implements RenderOrderManager {
         }
     }
 
-    private static TransparencyType getTransparencyType(RenderType layer) {
-        while (layer instanceof WrappableRenderLayer) {
-            layer = ((WrappableRenderLayer) layer).unwrap();
+    private static TransparencyType getTransparencyType(RenderType type) {
+        while (type instanceof WrappableRenderType) {
+            type = ((WrappableRenderType) type).unwrap();
         }
 
-        if (layer instanceof BlendingStateHolder) {
-            return ((BlendingStateHolder) layer).getTransparencyType();
+        if (type instanceof BlendingStateHolder) {
+            return ((BlendingStateHolder) type).getTransparencyType();
         }
 
         // Default to "generally transparent" if we can't figure it out.
         return TransparencyType.GENERAL_TRANSPARENT;
     }
 
-    public void begin(RenderType layer) {
-        layers.get(getTransparencyType(layer)).add(layer);
+    public void begin(RenderType type) {
+        layers.get(getTransparencyType(type)).add(type);
     }
 
     public void startGroup() {

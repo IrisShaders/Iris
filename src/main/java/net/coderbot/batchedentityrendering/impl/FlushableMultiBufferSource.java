@@ -1,6 +1,6 @@
 package net.coderbot.batchedentityrendering.impl;
 
-public interface FlushableVertexConsumerProvider {
+public interface FlushableMultiBufferSource {
 	void flushNonTranslucentContent();
 	void flushTranslucentContent();
 }

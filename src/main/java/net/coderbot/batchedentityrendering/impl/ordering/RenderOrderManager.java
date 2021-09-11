@@ -3,7 +3,7 @@ package net.coderbot.batchedentityrendering.impl.ordering;
 import net.minecraft.client.renderer.RenderType;
 
 public interface RenderOrderManager {
-    void begin(RenderType layer);
+    void begin(RenderType type);
     void startGroup();
     boolean maybeStartGroup();
     void endGroup();

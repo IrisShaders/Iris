@@ -48,7 +48,7 @@ public class MixinFixEntityVertexNormals {
 		// Every time Minecraft checks whether the matrix stack is empty, we tear down our modifications to the state
 		// Once it's done checking, we restore our modifications
 		@At(value = "INVOKE", target = CHECK_POSE_STACK, shift = At.Shift.AFTER),
-		// Right before Minecraft starts rendering VertexConsumerProvider.Immediate buffers again
+		// Right before Minecraft starts rendering MultiBufferSource.BufferSource buffers again
 		@At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Sheets;translucentCullBlockSheet()Lnet/minecraft/client/renderer/RenderType;"),
 		// The last of the immediate buffer drawing happens within translucency rendering
 		// Use a custom slice here instead of the default one to avoid catching the getLines() call

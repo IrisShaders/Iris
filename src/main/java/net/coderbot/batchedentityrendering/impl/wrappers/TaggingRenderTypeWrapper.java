@@ -1,19 +1,18 @@
 package net.coderbot.batchedentityrendering.impl.wrappers;
 
-import net.coderbot.batchedentityrendering.impl.WrappableRenderLayer;
-import net.coderbot.batchedentityrendering.mixin.RenderLayerAccessor;
-import net.coderbot.iris.mixin.rendertype.RenderTypeAccessor;
+import net.coderbot.batchedentityrendering.impl.WrappableRenderType;
+import net.coderbot.batchedentityrendering.mixin.RenderTypeAccessor;
 import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 
-public class TaggingRenderLayerWrapper extends RenderType implements WrappableRenderLayer {
+public class TaggingRenderTypeWrapper extends RenderType implements WrappableRenderType {
     private final int tag;
     private final RenderType wrapped;
 
-    public TaggingRenderLayerWrapper(String name, RenderType wrapped, int tag) {
+    public TaggingRenderTypeWrapper(String name, RenderType wrapped, int tag) {
         super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
                 wrapped.affectsCrumbling(), isTranslucent(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
 
@@ -46,7 +45,7 @@ public class TaggingRenderLayerWrapper extends RenderType implements WrappableRe
             return false;
         }
 
-        TaggingRenderLayerWrapper other = (TaggingRenderLayerWrapper) object;
+        TaggingRenderTypeWrapper other = (TaggingRenderTypeWrapper) object;
 
         return this.tag == other.tag && Objects.equals(this.wrapped, other.wrapped);
     }
@@ -63,7 +62,7 @@ public class TaggingRenderLayerWrapper extends RenderType implements WrappableRe
         return "tagged(" +tag+ "):" + this.wrapped.toString();
     }
 
-    private static boolean isTranslucent(RenderType layer) {
-        return ((RenderTypeAccessor) layer).isTranslucent();
+    private static boolean isTranslucent(RenderType type) {
+        return ((RenderTypeAccessor) type).isTranslucent();
     }
 }

@@ -2,7 +2,7 @@ package net.coderbot.batchedentityrendering.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.batchedentityrendering.impl.Groupable;
-import net.coderbot.batchedentityrendering.impl.wrappers.TaggingRenderLayerWrapper;
+import net.coderbot.batchedentityrendering.impl.wrappers.TaggingRenderTypeWrapper;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.TheEndPortalRenderer;
 import net.minecraft.world.level.block.entity.TheEndPortalBlockEntity;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Vanilla end portal rendering in 1.16 and below is layered, so this is needed. It's not needed in 1.17 though.
  */
 @Mixin(TheEndPortalRenderer.class)
-public class MixinEndPortalBlockEntityRenderer {
+public class MixinTheEndPortalRenderer {
     private static final String RENDER =
             "Lnet/minecraft/client/renderer/blockentity/TheEndPortalRenderer;render(Lnet/minecraft/world/level/block/entity/TheEndPortalBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V";
 
@@ -34,9 +34,9 @@ public class MixinEndPortalBlockEntityRenderer {
 
     // Inject a little bit after HEAD to avoid cancellations.
     @ModifyVariable(method = RENDER, at = @At(value = "INVOKE", target = MATRIXSTACK_GET_MODEL))
-    private MultiBufferSource iris$wrapVertexConsumerProvider(MultiBufferSource vertexConsumers) {
-        if (vertexConsumers instanceof Groupable) {
-            Groupable groupable = (Groupable) vertexConsumers;
+    private MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource) {
+        if (bufferSource instanceof Groupable) {
+            Groupable groupable = (Groupable) bufferSource;
             boolean started = groupable.maybeStartGroup();
 
             if (started) {
@@ -45,10 +45,10 @@ public class MixinEndPortalBlockEntityRenderer {
 
 			index = 0;
 			// NB: Groupable not needed for this implementation of VertexConsumerProvider.
-			return layer -> vertexConsumers.getBuffer(new TaggingRenderLayerWrapper(layer.toString(), layer, index++));
+			return type -> bufferSource.getBuffer(new TaggingRenderTypeWrapper(type.toString(), type, index++));
 		}
 
-		return vertexConsumers;
+		return bufferSource;
     }
 
     @Inject(method = RENDER, at = @At("RETURN"))

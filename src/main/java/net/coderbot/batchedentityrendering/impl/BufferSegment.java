@@ -8,12 +8,12 @@ import java.nio.ByteBuffer;
 public class BufferSegment {
     private final ByteBuffer slice;
     private final BufferBuilder.DrawState parameters;
-    private final RenderType layer;
+    private final RenderType type;
 
-    public BufferSegment(ByteBuffer slice, BufferBuilder.DrawState parameters, RenderType layer) {
+    public BufferSegment(ByteBuffer slice, BufferBuilder.DrawState parameters, RenderType type) {
         this.slice = slice;
         this.parameters = parameters;
-        this.layer = layer;
+        this.type = type;
     }
 
     public ByteBuffer getSlice() {
@@ -24,7 +24,7 @@ public class BufferSegment {
         return parameters;
     }
 
-    public RenderType getRenderLayer() {
-        return layer;
+    public RenderType getRenderType() {
+        return type;
     }
 }

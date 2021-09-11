@@ -3,7 +3,7 @@ package net.coderbot.batchedentityrendering.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
 import net.coderbot.batchedentityrendering.impl.Groupable;
-import net.coderbot.batchedentityrendering.impl.wrappers.TaggingRenderLayerWrapper;
+import net.coderbot.batchedentityrendering.impl.wrappers.TaggingRenderTypeWrapper;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BannerRenderer;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(BannerRenderer.class)
-public class MixinBannerBlockEntityRenderer {
+public class MixinBannerRenderer {
     private static final String RENDER_CANVAS =
             "Lnet/minecraft/client/renderer/blockentity/BannerRenderer;renderPatterns(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/model/geom/ModelPart;Lnet/minecraft/client/resources/model/Material;ZLjava/util/List;Z)V";
 
@@ -33,7 +33,7 @@ public class MixinBannerBlockEntityRenderer {
     private static int index;
 
     @ModifyVariable(method = RENDER_CANVAS, at = @At("HEAD"))
-    private static MultiBufferSource iris$wrapVertexConsumerProvider(MultiBufferSource multiBufferSource) {
+    private static MultiBufferSource iris$wrapBufferSource(MultiBufferSource multiBufferSource) {
         if (multiBufferSource instanceof Groupable) {
             Groupable groupable = (Groupable) multiBufferSource;
             boolean started = groupable.maybeStartGroup();
@@ -43,8 +43,8 @@ public class MixinBannerBlockEntityRenderer {
             }
 
 			index = 0;
-			// NB: Groupable not needed for this implementation of VertexConsumerProvider.
-			return layer -> multiBufferSource.getBuffer(new TaggingRenderLayerWrapper(layer.toString(), layer, index++));
+			// NB: Groupable not needed for this implementation of MultiBufferSource.
+			return type -> multiBufferSource.getBuffer(new TaggingRenderTypeWrapper(type.toString(), type, index++));
         }
 
         return multiBufferSource;

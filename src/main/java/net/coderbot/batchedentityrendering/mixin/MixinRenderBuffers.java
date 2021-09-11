@@ -2,7 +2,7 @@ package net.coderbot.batchedentityrendering.mixin;
 
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
 import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
-import net.coderbot.batchedentityrendering.impl.FullyBufferedVertexConsumerProvider;
+import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingBuffer;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingBufferBuilderStorage;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -17,9 +17,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(RenderBuffers.class)
-public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryTrackingBufferBuilderStorage, DrawCallTrackingBufferBuilderStorage {
+public class MixinRenderBuffers implements ExtendedBufferStorage, MemoryTrackingBufferBuilderStorage, DrawCallTrackingBufferBuilderStorage {
 	@Unique
-	private final FullyBufferedVertexConsumerProvider buffered = new FullyBufferedVertexConsumerProvider();
+	private final FullyBufferedMultiBufferSource buffered = new FullyBufferedMultiBufferSource();
 
 	@Unique
 	private int begins = 0;
@@ -49,9 +49,9 @@ public class MixinBufferBuilderStorage implements ExtendedBufferStorage, MemoryT
 			return;
 		}
 
-		// NB: We can return the same VertexConsumerProvider here as long as the block entity and its breaking animation
+		// NB: We can return the same MultiBufferSource here as long as the block entity and its breaking animation
 		// use different render layers. This seems like a sound assumption to make. This only works with our fully
-		// buffered vertex consumer provider - vanilla's Immediate cannot be used here since it would try to return the
+		// buffered vertex consumer provider - vanilla's bufferSource cannot be used here since it would try to return the
 		// same buffer for the block entity and its breaking animation in many cases.
 		//
 		// If anything goes wrong here, Vanilla *will* catch the "duplicate delegates" error, so

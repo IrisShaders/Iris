@@ -4,9 +4,8 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.coderbot.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.coderbot.batchedentityrendering.impl.ordering.RenderOrderManager;
-import net.coderbot.batchedentityrendering.mixin.RenderLayerAccessor;
-import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
-import net.coderbot.iris.mixin.rendertype.RenderTypeAccessor;
+import net.coderbot.batchedentityrendering.mixin.RenderTypeAccessor;
+import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -21,13 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.BufferSource implements MemoryTrackingBuffer, Groupable, WrappingVertexConsumerProvider {
+public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSource implements MemoryTrackingBuffer, Groupable, WrappingMultiBufferSource {
 	private static final int NUM_BUFFERS = 32;
 
 	private final RenderOrderManager renderOrderManager;
 	private final SegmentedBufferBuilder[] builders;
 	/**
-	 * An LRU cache mapping RenderLayer objects to a relevant buffer.
+	 * An LRU cache mapping RenderType objects to a relevant buffer.
 	 */
 	private final LinkedHashMap<RenderType, Integer> affinities;
 	private int drawCalls;
@@ -38,7 +37,7 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 	private final List<Function<RenderType, RenderType>> wrappingFunctionStack;
 	private Function<RenderType, RenderType> wrappingFunction = null;
 
-	public FullyBufferedVertexConsumerProvider() {
+	public FullyBufferedMultiBufferSource() {
 		super(new BufferBuilder(0), Collections.emptyMap());
 
 		this.renderOrderManager = new GraphTranslucencyRenderOrderManager();
@@ -58,13 +57,13 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 	}
 
 	@Override
-	public VertexConsumer getBuffer(RenderType renderLayer) {
+	public VertexConsumer getBuffer(RenderType renderType) {
 		if (wrappingFunction != null) {
-			renderLayer = wrappingFunction.apply(renderLayer);
+			renderType = wrappingFunction.apply(renderType);
 		}
 
-		renderOrderManager.begin(renderLayer);
-		Integer affinity = affinities.get(renderLayer);
+		renderOrderManager.begin(renderType);
+		Integer affinity = affinities.get(renderType);
 
 		if (affinity == null) {
 			if (affinities.size() < builders.length) {
@@ -76,17 +75,17 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 				Map.Entry<RenderType, Integer> evicted = iterator.next();
 				iterator.remove();
 
-				// The previous layer is no longer associated with this buffer ...
+				// The previous type is no longer associated with this buffer ...
 				affinities.remove(evicted.getKey());
 
-				// ... since our new layer is now associated with it.
+				// ... since our new type is now associated with it.
 				affinity = evicted.getValue();
 			}
 
-			affinities.put(renderLayer, affinity);
+			affinities.put(renderType, affinity);
 		}
 
-		return builders[affinity].getBuffer(renderLayer);
+		return builders[affinity].getBuffer(renderType);
 	}
 
 	@Override
@@ -95,13 +94,13 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 
 		profiler.push("collect");
 
-		Map<RenderType, List<BufferSegment>> layerToSegment = new HashMap<>();
+		Map<RenderType, List<BufferSegment>> typeToSegment = new HashMap<>();
 
 		for (SegmentedBufferBuilder builder : builders) {
 			List<BufferSegment> segments = builder.getSegments();
 
 			for (BufferSegment segment : segments) {
-				layerToSegment.computeIfAbsent(segment.getRenderLayer(), (layer) -> new ArrayList<>()).add(segment);
+				typeToSegment.computeIfAbsent(segment.getRenderType(), (type) -> new ArrayList<>()).add(segment);
 			}
 		}
 
@@ -111,17 +110,17 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 
 		profiler.popPush("draw buffers");
 
-		for (RenderType layer : renderOrder) {
-			layer.setupRenderState();
+		for (RenderType type : renderOrder) {
+			type.setupRenderState();
 
 			renderTypes += 1;
 
-			for (BufferSegment segment : layerToSegment.getOrDefault(layer, Collections.emptyList())) {
+			for (BufferSegment segment : typeToSegment.getOrDefault(type, Collections.emptyList())) {
 				segmentRenderer.drawInner(segment);
 				drawCalls += 1;
 			}
 
-			layer.clearRenderState();
+			type.clearRenderState();
 		}
 
 		profiler.popPush("reset");
@@ -132,8 +131,8 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 		profiler.pop();
 	}
 
-	private static boolean isTranslucent(RenderType layer) {
-		return ((RenderTypeAccessor) layer).isTranslucent();
+	private static boolean isTranslucent(RenderType type) {
+		return ((RenderTypeAccessor) type).isTranslucent();
 	}
 
 	public int getDrawCalls() {
@@ -150,7 +149,7 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 	}
 
 	@Override
-	public void endBatch(RenderType layer) {
+	public void endBatch(RenderType type) {
 		// Disable explicit flushing
 	}
 
@@ -224,17 +223,17 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 	 * A wrapper that prevents callers from explicitly flushing anything.
 	 */
 	private static class UnflushableWrapper extends MultiBufferSource.BufferSource implements Groupable {
-		private final FullyBufferedVertexConsumerProvider wrapped;
+		private final FullyBufferedMultiBufferSource wrapped;
 
-		UnflushableWrapper(FullyBufferedVertexConsumerProvider wrapped) {
+		UnflushableWrapper(FullyBufferedMultiBufferSource wrapped) {
 			super(new BufferBuilder(0), Collections.emptyMap());
 
 			this.wrapped = wrapped;
 		}
 
 		@Override
-		public VertexConsumer getBuffer(RenderType renderLayer) {
-			return wrapped.getBuffer(renderLayer);
+		public VertexConsumer getBuffer(RenderType renderType) {
+			return wrapped.getBuffer(renderType);
 		}
 
 		@Override
@@ -243,7 +242,7 @@ public class FullyBufferedVertexConsumerProvider extends MultiBufferSource.Buffe
 		}
 
 		@Override
-		public void endBatch(RenderType layer) {
+		public void endBatch(RenderType type) {
 			// Disable explicit flushing
 		}
 

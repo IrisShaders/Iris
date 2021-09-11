@@ -12,17 +12,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(targets = "net/minecraft/client/renderer/RenderType$CompositeRenderType")
-public abstract class MixinMultiPhaseRenderLayer extends RenderType implements BlendingStateHolder {
+public abstract class MixinCompositeRenderType extends RenderType implements BlendingStateHolder {
 	@Unique
 	private TransparencyType transparencyType;
 
-	private MixinMultiPhaseRenderLayer(String name, VertexFormat vertexFormat, int drawMode, int expectedBufferSize, boolean hasCrumbling, boolean translucent, Runnable startAction, Runnable endAction) {
+	private MixinCompositeRenderType(String name, VertexFormat vertexFormat, int drawMode, int expectedBufferSize, boolean hasCrumbling, boolean translucent, Runnable startAction, Runnable endAction) {
 		super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
 	}
 
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void batchedentityrendering$onMultiPhaseInit(String string, VertexFormat vertexFormat, int i, int j, boolean bl, boolean bl2, CompositeState compositeState, CallbackInfo ci) {
-		RenderStateShard.TransparencyStateShard transparency = ((MultiPhaseParametersAccessor) (Object) compositeState).getTransparency();
+		RenderStateShard.TransparencyStateShard transparency = ((CompositeStateAccessor) (Object) compositeState).getTransparency();
 
 		if ("water_mask".equals(name)) {
 			transparencyType = TransparencyType.WATER_MASK;

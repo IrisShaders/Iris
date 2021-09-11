@@ -16,11 +16,11 @@ import java.util.Map;
 /**
  * Captures and tracks the current block being rendered.
  *
- * Uses a priority of 1001 so that we apply after Carpet's mixins to WorldRenderer, avoiding a conflict:
+ * Uses a priority of 1001 so that we apply after Carpet's mixins to LevelRenderer (WorldRenderer), avoiding a conflict:
  * https://github.com/gnembon/fabric-carpet/blob/776f798aecb792a5881ccae8784888156207a047/src/main/java/carpet/mixins/WorldRenderer_pausedShakeMixin.java#L23
  */
 @Mixin(value = LevelRenderer.class, priority = 1001)
-public class MixinWorldRenderer_EntityListSorting {
+public class MixinLevelRenderer_EntityListSorting {
     @Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;entitiesForRendering()Ljava/lang/Iterable;"))
     private Iterable<Entity> batchedentityrendering$sortEntityList(ClientLevel clientLevel) {
         // Sort the entity list first in order to allow vanilla's entity batching code to work better.

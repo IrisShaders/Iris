@@ -6,7 +6,7 @@ import net.minecraft.client.Camera;
 import java.util.List;
 
 public interface ShadowMapRenderer {
-	void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera);
+	void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera);
 	void addDebugText(List<String> messages);
 	int getDepthTextureId();
 	int getDepthTextureNoTranslucentsId();

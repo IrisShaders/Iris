@@ -40,12 +40,12 @@ public class MixinLevelRenderer {
 	private void iris$renderOpaqueParticles(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
 		minecraft.getProfiler().popPush("opaque_particles");
 
-		MultiBufferSource.BufferSource immediate = renderBuffers.bufferSource();
+		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
 
 		((PhasedParticleManager) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
 
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
-		minecraft.particleEngine.render(poseStack, immediate, lightTexture, camera, f);
+		minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 
 		((PhasedParticleManager) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);

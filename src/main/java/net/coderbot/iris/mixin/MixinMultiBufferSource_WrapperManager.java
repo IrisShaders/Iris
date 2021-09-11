@@ -88,9 +88,9 @@ public class MixinMultiBufferSource_WrapperManager {
 	private void iris$onFullFlush(CallbackInfo callback) {
 		// Ensure that all corresponding buffers are filled in now.
 		// This avoids us mutating layerBuffers while iterating through it.
-		Set<RenderType> bufferedLayers = new HashSet<>(fixedBuffers.keySet());
+		Set<RenderType> bufferedTypes = new HashSet<>(fixedBuffers.keySet());
 
-		for (RenderType buffered : bufferedLayers) {
+		for (RenderType buffered : bufferedTypes) {
 			ensureBuffersPresent(buffered);
 		}
 	}

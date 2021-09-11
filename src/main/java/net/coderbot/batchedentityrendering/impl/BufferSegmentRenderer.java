@@ -13,16 +13,16 @@ public class BufferSegmentRenderer {
     }
 
     /**
-     * Sets up the render layer, draws the buffer, and then tears down the render layer.
+     * Sets up the render type, draws the buffer, and then tears down the render type.
      */
     public void draw(BufferSegment segment) {
-        segment.getRenderLayer().setupRenderState();
+        segment.getRenderType().setupRenderState();
         drawInner(segment);
-        segment.getRenderLayer().clearRenderState();
+        segment.getRenderType().clearRenderState();
     }
 
     /**
-     * Like draw(), but it doesn't setup / tear down the render layer.
+     * Like draw(), but it doesn't setup / tear down the render type.
      */
     public void drawInner(BufferSegment segment) {
         fakeBufferBuilderExt.setupBufferSlice(segment.getSlice(), segment.getParameters());

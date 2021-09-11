@@ -46,7 +46,7 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 	}
 
 	@Override
-	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
+	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		// No-op
 	}
 

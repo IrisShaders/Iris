@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
  * with different entities.
  */
 @Mixin(value = LevelRenderer.class)
-public class MixinWorldRenderer {
+public class MixinLevelRenderer {
 	private static final String RENDER_ENTITY =
 			"Lnet/minecraft/client/renderer/LevelRenderer;renderEntity(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V";
 

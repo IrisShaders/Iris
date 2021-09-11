@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Environment(EnvType.CLIENT)
 @Mixin(RenderType.class)
-public interface RenderLayerAccessor {
+public interface RenderTypeAccessor {
 	@Accessor("sortOnUpload")
 	boolean isTranslucent();
 }

@@ -2,7 +2,7 @@ package net.coderbot.iris.mixin.entity_render_context;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
+import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.layer.EntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -37,7 +37,7 @@ public class MixinEntityRenderDispatcher {
 	private void iris$beginEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 										PoseStack matrices, MultiBufferSource vertexConsumers, int light,
 										CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingVertexConsumerProvider)) {
+		if (!(vertexConsumers instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
@@ -52,7 +52,7 @@ public class MixinEntityRenderDispatcher {
 		int intId = idMap.getEntityIdMap().getOrDefault(entityId, -1);
 		RenderStateShard phase = EntityRenderStateShard.forId(intId);
 
-		((WrappingVertexConsumerProvider) vertexConsumers).pushWrappingFunction(layer ->
+		((WrappingMultiBufferSource) vertexConsumers).pushWrappingFunction(layer ->
 				new OuterWrappedRenderType("iris:is_entity", layer, phase));
 	}
 
@@ -62,18 +62,18 @@ public class MixinEntityRenderDispatcher {
 	private void iris$endEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									  PoseStack matrices, MultiBufferSource vertexConsumers, int light,
 									  CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingVertexConsumerProvider)) {
+		if (!(vertexConsumers instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
-		((WrappingVertexConsumerProvider) vertexConsumers).popWrappingFunction();
+		((WrappingMultiBufferSource) vertexConsumers).popWrappingFunction();
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = CRASHREPORT_CREATE))
 	private void iris$crashedEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									      PoseStack matrices, MultiBufferSource vertexConsumers, int light,
 									      CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingVertexConsumerProvider)) {
+		if (!(vertexConsumers instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
@@ -85,7 +85,7 @@ public class MixinEntityRenderDispatcher {
 			// This could fail if we crash before MatrixStack#push, but this is mostly
 			// a best-effort thing, it doesn't have to work perfectly. NEC will cause
 			// weird chaos no matter what we do.
-			((WrappingVertexConsumerProvider) vertexConsumers).popWrappingFunction();
+			((WrappingMultiBufferSource) vertexConsumers).popWrappingFunction();
 		} catch (Exception e) {
 			// oh well, we're gonna crash anyways.
 		}

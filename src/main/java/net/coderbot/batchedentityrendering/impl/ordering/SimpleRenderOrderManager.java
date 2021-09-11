@@ -11,8 +11,8 @@ public class SimpleRenderOrderManager implements RenderOrderManager {
         layers = new LinkedHashSet<>();
     }
 
-    public void begin(RenderType layer) {
-        layers.add(layer);
+    public void begin(RenderType type) {
+        layers.add(type);
     }
 
     public void startGroup() {

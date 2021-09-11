@@ -5,7 +5,7 @@ import java.util.function.Function;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
+import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.layer.InnerWrappedRenderType;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.mixin.rendertype.RenderStateShardAccessor;
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MultiBufferSource.BufferSource.class)
-public class MixinMultiBufferSource implements WrappingVertexConsumerProvider {
+public class MixinMultiBufferSource implements WrappingMultiBufferSource {
 	@Unique
 	private final Set<String> unwrapped = new ObjectOpenHashSet<>();
 
