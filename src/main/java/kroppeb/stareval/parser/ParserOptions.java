@@ -20,7 +20,7 @@ public final class ParserOptions {
 		this.tokenRules = tokenRules;
 	}
 
-	TokenRules getParserParts() {
+	TokenRules getTokenRules() {
 		return this.tokenRules;
 	}
 
@@ -51,7 +51,7 @@ public final class ParserOptions {
 			this.binaryOpResolvers.computeIfAbsent(first, (c) -> new OpResolver.Builder<>()).multiChar(trailing, op);
 		}
 
-		public void setParserParts(TokenRules tokenRules) {
+		public void setTokenRules(TokenRules tokenRules) {
 			this.tokenRules = tokenRules;
 		}
 

@@ -19,7 +19,7 @@ class Tokenizer {
 	static Expression parseInternal(StringReader input, ParserOptions options) throws ParseException {
 		// parser stack
 		final Parser stack = new Parser();
-		ParserOptions.TokenRules tokenRules = options.getParserParts();
+		ParserOptions.TokenRules tokenRules = options.getTokenRules();
 
 		while (input.canRead()) {
 			char c = input.read();
