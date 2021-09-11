@@ -8,7 +8,7 @@
     "MixinBufferBuilder",
     "MixinBufferBuilder_SegmentRendering",
     "MixinRenderBuffers",
-    "MixinDebugHud",
+    "MixinDebugScreenOverlay",
     "MixinTheEndPortalRenderer",
     "MixinMultiBufferSourceChild",
     "MixinCompositeRenderType",

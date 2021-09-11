@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  * because they implement their own lighting effects, which visually clash with vanilla's directional shading lighting.
  */
 @Mixin(ClientLevel.class)
-public class MixinClientWorld {
+public class MixinClientLevel {
 	@ModifyVariable(method = "getShade", at = @At("HEAD"))
 	private boolean iris$maybeDisableDirectionalShading(boolean shaded) {
 		if (BlockRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
