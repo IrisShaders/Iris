@@ -13,7 +13,8 @@ public class ShadowFrustum extends Frustum {
 		this.boxCuller = boxCuller;
 	}
 
-	public void setPosition(double cameraX, double cameraY, double cameraZ) {
+	@Override
+	public void prepare(double cameraX, double cameraY, double cameraZ) {
 		super.prepare(cameraX, cameraY, cameraZ);
 
 		boxCuller.setPosition(cameraX, cameraY, cameraZ);
