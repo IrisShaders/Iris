@@ -18,6 +18,7 @@ public class ProgramDirectives {
 	@Nullable
 	private final AlphaTestOverride alphaTestOverride;
 	private final boolean disableBlend;
+	private final int[] blendModeOverride;
 	private final ImmutableSet<Integer> mipmappedBuffers;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
@@ -34,10 +35,12 @@ public class ProgramDirectives {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 			disableBlend = properties.getBlendDisabled().contains(source.getName());
+			blendModeOverride = properties.getBlendModeOverrides().get(source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
 			disableBlend = false;
+			blendModeOverride = null;
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -100,6 +103,10 @@ public class ProgramDirectives {
 
 	public boolean shouldDisableBlend() {
 		return disableBlend;
+	}
+
+	public int[] getBlendModeOverride() {
+		return blendModeOverride;
 	}
 
 	public ImmutableSet<Integer> getMipmappedBuffers() {

@@ -507,7 +507,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
 
 		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				source.getDirectives().shouldDisableBlend());
+				source.getDirectives().shouldDisableBlend(), source.getDirectives().getBlendModeOverride());
 
 		allPasses.add(pass);
 
@@ -520,13 +520,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		private final GlFramebuffer framebufferAfterTranslucents;
 		private final AlphaTestOverride alphaTestOverride;
 		private final boolean disableBlend;
+		private final int[] blendModeOverride;
 
-		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
+		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend, int[] blendModeOverride) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
 			this.alphaTestOverride = alphaTestOverride;
 			this.disableBlend = disableBlend;
+			this.blendModeOverride = blendModeOverride;
 		}
 
 		public void use() {
@@ -544,7 +546,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				alphaTestOverride.setup();
 			}
 
-			if (disableBlend) {
+			if (blendModeOverride != null) {
+				GlStateManager._blendFuncSeparate(blendModeOverride[0], blendModeOverride[1], blendModeOverride[2], blendModeOverride[3]);
+			} else if (disableBlend) {
 				GlStateManager._disableBlend();
 			}
 		}

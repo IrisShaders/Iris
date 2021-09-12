@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -17,6 +16,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import org.lwjgl.opengl.GL11C;
 
 public class ShaderProperties {
 	private boolean enableClouds = true;
@@ -52,6 +52,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
+	private final Object2ObjectMap<String, int[]> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
 	private ShaderProperties() {
@@ -149,13 +150,26 @@ public class ShaderProperties {
 					return;
 				}
 
-				if (!"off".equals(value)) {
-					// TODO: Support custom blending modes
-					Iris.logger.warn("Custom blending mode directives are not supported, ignoring blend directive for " + key);
+				if ("off".equals(value)) {
+					blendDisabled.add(pass);
 					return;
 				}
 
-				blendDisabled.add(pass);
+				String[] modeArray = value.split(" ");
+				int[] modes = new int[4];
+
+				int i = 0;
+				for (String modeName : modeArray) {
+					try {
+						modes[i] = (int) GL11C.class.getDeclaredField("GL_" + modeName).get(null);
+					} catch (IllegalAccessException e) {
+						Iris.logger.error("Unable to get GL constant " + modeName, e);
+					} catch (NoSuchFieldException e) {
+						Iris.logger.error("Invalid GL constant " + modeName, e);
+					}
+					i++;
+				}
+				blendModeOverrides.put(pass, modes);
 			});
 
 			// TODO: Buffer flip, size directives
@@ -279,6 +293,10 @@ public class ShaderProperties {
 
 	public ObjectSet<String> getBlendDisabled() {
 		return blendDisabled;
+	}
+
+	public Object2ObjectMap<String, int[]> getBlendModeOverrides() {
+		return blendModeOverrides;
 	}
 
 	public Optional<String> getNoiseTexturePath() {
