@@ -34,8 +34,8 @@ public class MixinBlockEntityRenderDispatcher {
 	// 2. if someone cancels this method hopefully it gets cancelled before this point
 	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED))
 	private void iris$beforeRender(BlockEntity blockEntity, float tickDelta, PoseStack poseStack,
-								   MultiBufferSource vertexConsumers, CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingMultiBufferSource)) {
+								   MultiBufferSource bufferSource, CallbackInfo ci) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
@@ -53,14 +53,14 @@ public class MixinBlockEntityRenderDispatcher {
 		int intId = idMap.getBlockProperties().getOrDefault(blockEntity.getBlockState(), -1);
 		RenderStateShard stateShard = BlockEntityRenderStateShard.forId(intId);
 
-		((WrappingMultiBufferSource) vertexConsumers).pushWrappingFunction(type ->
+		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->
 				new OuterWrappedRenderType("iris:is_block_entity", type, stateShard));
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))
 	private void iris$afterRender(BlockEntity blockEntity, float tickDelta, PoseStack matrix,
-								  MultiBufferSource vertexConsumers, CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingMultiBufferSource)) {
+								  MultiBufferSource bufferSource, CallbackInfo ci) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
@@ -73,6 +73,6 @@ public class MixinBlockEntityRenderDispatcher {
 		// after my inject, but I placed my inject there in the hopes that it would
 		// not be likely to be affected by a cancel. I hope that the universe doesn't
 		// conspire against me and cause that to break.
-		((WrappingMultiBufferSource) vertexConsumers).popWrappingFunction();
+		((WrappingMultiBufferSource) bufferSource).popWrappingFunction();
 	}
 }

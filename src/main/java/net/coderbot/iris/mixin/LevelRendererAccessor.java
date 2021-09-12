@@ -25,7 +25,7 @@ public interface LevelRendererAccessor {
 	void invokeSetupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator);
 
 	@Invoker("renderEntity")
-	void invokeRenderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers);
+	void invokeRenderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, PoseStack matrices, MultiBufferSource bufferSource);
 
 	@Accessor("level")
 	ClientLevel getLevel();

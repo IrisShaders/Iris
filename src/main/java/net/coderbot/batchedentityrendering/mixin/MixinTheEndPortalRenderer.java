@@ -53,7 +53,7 @@ public class MixinTheEndPortalRenderer {
 
     @Inject(method = RENDER, at = @At("RETURN"))
     private void iris$endRenderingPortal(TheEndPortalBlockEntity entity, float tickDelta, PoseStack matrices,
-										 MultiBufferSource vertexConsumers, int light, int overlay,
+										 MultiBufferSource bufferSource, int light, int overlay,
 										 CallbackInfo ci) {
 		if (groupableToEnd != null) {
 			groupableToEnd.endGroup();

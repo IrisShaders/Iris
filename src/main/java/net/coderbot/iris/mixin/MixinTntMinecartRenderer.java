@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(TntMinecartRenderer.class)
 public abstract class MixinTntMinecartRenderer {
 	@ModifyVariable(method = "renderWhiteSolidBlock", at = @At("HEAD"))
-	private static MultiBufferSource iris$wrapProvider(MultiBufferSource provider, BlockState blockState, PoseStack matrices, MultiBufferSource vertexConsumers, int light, boolean drawFlash) {
+	private static MultiBufferSource iris$wrapProvider(MultiBufferSource provider, BlockState blockState, PoseStack matrices, MultiBufferSource bufferSource, int light, boolean drawFlash) {
 		if (drawFlash) {
 			EntityColorRenderStateShard phase = new EntityColorRenderStateShard(false, 1.0F);
 			return type -> provider.getBuffer(new InnerWrappedRenderType("iris_entity_color", type, phase));
