@@ -9,6 +9,8 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
@@ -27,11 +29,11 @@ import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
-import net.coderbot.iris.samplers.SamplerTextureOverride;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shaderpack.texture.CustomTextureSetting;
+import net.coderbot.iris.shaderpack.texture.CustomTextureData;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -102,6 +104,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
 	private final AbstractTexture noise;
+	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 
@@ -162,9 +165,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
 		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
 
-		noise = programs.getPack().getCustomNoiseTexture().flatMap(texture -> {
+		noise = programs.getPack().getCustomNoiseTexture().flatMap(textureData -> {
 			try {
-				AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture(texture);
+				// TODO: Support CustomTextureData types other than PngData
+				AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
 
 				return Optional.of(customNoiseTexture);
 			} catch (IOException e) {
@@ -175,6 +179,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			final int noiseTextureResolution = programs.getPackDirectives().getNoiseTextureResolution();
 
 			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
+		});
+
+		programs.getPack().getShaderProperties().getCustomTextureData().forEach((textureStage, customTexturePropertiesMap) -> {
+			Object2ObjectMap<String, CustomTextureData> customTextureData = customTextureDataMap.getOrDefault(textureStage, new Object2ObjectOpenHashMap<>());
+			customTexturePropertiesMap.forEach((samplerName, path) -> {
+				try {
+					CustomTextureData textureData = programs.getPack().readTexture(path);
+					customTextureData.put(samplerName, textureData);
+				} catch (IOException | UnsupportedOperationException e) {
+					Iris.logger.error("Unable to read the custom texture at " + path, e);
+				}
+			});
+
+			customTextureDataMap.put(textureStage, customTextureData);
 		});
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
@@ -507,10 +525,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		builder.bindAttributeLocation(12, "at_tangent");
 
 		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
-		ImmutableSet<SamplerTextureOverride> samplerOverrides = source.getDirectives().getSamplerOverrides();
 
 		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				source.getDirectives().shouldDisableBlend(), samplerOverrides);
+				source.getDirectives().shouldDisableBlend());
 
 		allPasses.add(pass);
 
@@ -523,15 +540,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		private final GlFramebuffer framebufferAfterTranslucents;
 		private final AlphaTestOverride alphaTestOverride;
 		private final boolean disableBlend;
-		private final ImmutableSet<SamplerTextureOverride> samplerOverrides;
 
-		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend, ImmutableSet<SamplerTextureOverride> samplerOverrides) {
+		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
 			this.alphaTestOverride = alphaTestOverride;
 			this.disableBlend = disableBlend;
-			this.samplerOverrides = samplerOverrides;
 		}
 
 		public void use() {

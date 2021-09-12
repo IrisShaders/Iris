@@ -1,17 +1,17 @@
 package net.coderbot.iris.shaderpack;
 
-import java.io.IOException;
-import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import net.coderbot.iris.samplers.SamplerTextureOverride;
+import net.coderbot.iris.shaderpack.texture.CustomTextureData;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import org.jetbrains.annotations.Nullable;
 
 public class ProgramDirectives {
@@ -23,7 +23,7 @@ public class ProgramDirectives {
 	private final AlphaTestOverride alphaTestOverride;
 	private final boolean disableBlend;
 	private final ImmutableSet<Integer> mipmappedBuffers;
-	private final ImmutableSet<SamplerTextureOverride> samplerOverrides;
+//	private final ImmutableMap<String, CustomTextureData> customTextureDataMap;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
@@ -39,24 +39,24 @@ public class ProgramDirectives {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 			disableBlend = properties.getBlendDisabled().contains(source.getName());
-			HashSet<SamplerTextureOverride> samplerOverrides = new HashSet<>();
-			properties.getCustomTextureSettings().get(source.getName()).forEach(customTextureSetting -> {
-				String sampler = customTextureSetting.getSampler();
-				String path = customTextureSetting.getTextureLocation();
-
-				try {
-					CustomTexture texture = Iris.getCurrentPack().get().readTexture(path);
-					samplerOverrides.add(new SamplerTextureOverride(sampler, texture));
-				} catch (IOException e) {
-					Iris.logger.error("Unable to read the custom texture at " + path);
-				}
-			});
-			this.samplerOverrides = ImmutableSet.copyOf(samplerOverrides);
+//			TextureStage textureStage = null;
+//			if (source.getName().contains("gbuffers") || source.getName().contains("shadow")) {
+//				textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+//			} else if (source.getName().contains("composite") || source.getName().contains("final")) {
+//				textureStage = TextureStage.COMPOSITE_AND_FINAL;
+//			} else if (source.getName().contains("deferred")) {
+//				textureStage = TextureStage.DEFERRED;
+//			}
+//			if (textureStage != null) {
+//				this.customTextureDataMap = ImmutableMap.copyOf(properties.getCustomTextureData().get(textureStage));
+//			} else {
+//				this.customTextureDataMap = null;
+//			}
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
 			disableBlend = false;
-			samplerOverrides = null;
+//			customTextureDataMap = null;
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -125,8 +125,8 @@ public class ProgramDirectives {
 		return mipmappedBuffers;
 	}
 
-	@Nullable
-	public ImmutableSet<SamplerTextureOverride> getSamplerOverrides() {
-		return samplerOverrides;
-	}
+//	@Nullable
+//	public ImmutableMap<String, CustomTextureData> getCustomTextureData() {
+//		return customTextureDataMap;
+//	}
 }

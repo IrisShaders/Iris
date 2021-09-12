@@ -1,8 +1,5 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.*;
-import java.util.function.Consumer;
-
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -12,7 +9,15 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import net.coderbot.iris.shaderpack.texture.CustomTextureSetting;
+import net.coderbot.iris.shaderpack.texture.CustomTextureData;
+import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.function.Consumer;
 
 public class ShaderProperties {
 	private boolean enableClouds = true;
@@ -48,13 +53,14 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
-	private final Object2ObjectMap<String, List<CustomTextureSetting>> customTextureSettings = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
 	private ShaderProperties() {
 		// empty
 	}
 
+	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
 	public ShaderProperties(Properties properties) {
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -156,13 +162,21 @@ public class ShaderProperties {
 				blendDisabled.add(pass);
 			});
 
-			handlePassSamplerDirective("texture.", key, value, passSamplerList -> {
-				String pass = passSamplerList[0];
-				String sampler = passSamplerList[1];
+			handleStageSamplerDirective("texture.", key, value, stageSamplerList -> {
+				String stageName = stageSamplerList[0];
+				String samplerName = stageSamplerList[1];
 
-				List<CustomTextureSetting> customTextureSettingList = customTextureSettings.getOrDefault(pass, new ArrayList<>());
-				customTextureSettingList.add(new CustomTextureSetting(sampler, value));
-				customTextureSettings.put(pass, customTextureSettingList);
+				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
+				if (!optionalTextureStage.isPresent()) {
+					Iris.logger.warn("Unknown texture stage " + "\"" + stageName + "\"," + " ignoring custom texture directive for " + key);
+					return;
+				}
+				TextureStage stage = optionalTextureStage.get();
+
+				Object2ObjectMap<String, String> customTexturePropertyMap = customTextureDataMap.getOrDefault(stage, new Object2ObjectOpenHashMap<>());
+				customTexturePropertyMap.put(samplerName, value);
+
+				customTextureDataMap.put(stage, customTexturePropertyMap);
 			});
 
 			// TODO: Buffer flip, size directives
@@ -192,15 +206,15 @@ public class ShaderProperties {
 		}
 	}
 
-	private static void handlePassSamplerDirective(String prefix, String key, String value, Consumer<String[]> handler) {
+	private static void handleStageSamplerDirective(String prefix, String key, String value, Consumer<String[]> handler) {
 		if (key.startsWith(prefix)) {
 			int endOfPassIndex = key.indexOf(".", prefix.length());
-			String pass = key.substring(prefix.length(), endOfPassIndex);
+			String stage = key.substring(prefix.length(), endOfPassIndex);
 			String sampler = key.substring(endOfPassIndex + 1);
 
-			System.out.println("Pass: " + pass + " Sampler: " + sampler + " Value: " + value);
+			System.out.println("Processing stage sampler directive: " + "Stage: " + stage + " Sampler: " + sampler + " Value: " + value);
 
-			handler.accept(new String[] {pass, sampler});
+			handler.accept(new String[] {stage, sampler});
 		}
 	}
 
@@ -304,7 +318,7 @@ public class ShaderProperties {
 		return Optional.ofNullable(noiseTexturePath);
 	}
 
-	public Object2ObjectMap<String, List<CustomTextureSetting>> getCustomTextureSettings() {
-		return customTextureSettings;
+	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextureData() {
+		return customTextureDataMap;
 	}
 }
