@@ -78,7 +78,7 @@ public class ProgramDirectives {
 
 	private static boolean findbuffersDirective(Optional<String> stageSource) {
 		stageSource
-				.flatMap(fragment -> CommentDirectiveParser.findDirectiveAndType(fragment, null, true))
+				.flatMap(fragment -> CommentDirectiveParser.findDirectiveAndType(fragment, "", true))
 				.map(String::toString);
 		String mappedStageSource = stageSource.orElse("");
 
@@ -105,7 +105,6 @@ public class ProgramDirectives {
 					buffers[index] = Character.digit(buffer, 16);
 				} else {
 					index++;
-					continue;
 				}
 			}
 		} else {
