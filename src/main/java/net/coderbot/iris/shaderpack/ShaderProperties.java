@@ -166,6 +166,8 @@ public class ShaderProperties {
 				String stageName = stageSamplerList[0];
 				String samplerName = stageSamplerList[1];
 
+				System.out.println("Processing custom texture property: " + "Stage: " + stageName + " Sampler: " + samplerName + " Path: " + value);
+
 				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
 				if (!optionalTextureStage.isPresent()) {
 					Iris.logger.warn("Unknown texture stage " + "\"" + stageName + "\"," + " ignoring custom texture directive for " + key);
@@ -211,8 +213,6 @@ public class ShaderProperties {
 			int endOfPassIndex = key.indexOf(".", prefix.length());
 			String stage = key.substring(prefix.length(), endOfPassIndex);
 			String sampler = key.substring(endOfPassIndex + 1);
-
-			System.out.println("Processing stage sampler directive: " + "Stage: " + stage + " Sampler: " + sampler + " Value: " + value);
 
 			handler.accept(new String[] {stage, sampler});
 		}

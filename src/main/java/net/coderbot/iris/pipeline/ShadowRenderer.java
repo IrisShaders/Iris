@@ -1,5 +1,7 @@
 package net.coderbot.iris.pipeline;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.shaders.ProgramManager;
@@ -14,6 +16,7 @@ import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.layer.GbufferProgram;
@@ -88,6 +91,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture noise;
 
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
+	private final Object2IntMap<String> customTextureIds;
 
 	public static boolean ACTIVE = false;
 	private final String debugStringOverall;
@@ -99,7 +103,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-                          AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
+                          AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet,
+													Object2IntMap<String> customTextureIds) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -128,6 +133,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.normals = normals;
 		this.specular = specular;
 		this.noise = noise;
+		this.customTextureIds = customTextureIds;
 
 		if (shadow != null) {
 			this.shadowProgram = createProgram(shadow, directives, flipped);
@@ -256,11 +262,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds);
+
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
-		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
-		IrisSamplers.addLevelSamplers(builder, normals, specular);
-		IrisSamplers.addNoiseSampler(builder, noise);
-		IrisSamplers.addShadowSamplers(builder, this);
+		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, gbufferRenderTargets, false);
+		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular);
+		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noise);
+		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, this);
 
 		return builder.build();
 	}

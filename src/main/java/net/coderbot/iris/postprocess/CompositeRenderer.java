@@ -1,20 +1,18 @@
 package net.coderbot.iris.postprocess;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Supplier;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.rendertarget.*;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
@@ -29,6 +27,10 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
+
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
 
@@ -36,15 +38,18 @@ public class CompositeRenderer {
 	private final AbstractTexture noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
+	private final Object2IntMap<String> customTextureIds;
 
 	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, RenderTargets renderTargets,
 							 AbstractTexture noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
-							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
+							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier,
+							 Object2IntMap<String> customTextureIds) {
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.renderTargets = renderTargets;
+		this.customTextureIds = customTextureIds;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -191,13 +196,15 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
-		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
-		IrisSamplers.addNoiseSampler(builder, noiseTexture);
-		IrisSamplers.addCompositeSamplers(builder, renderTargets);
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds);
 
-		if (IrisSamplers.hasShadowSamplers(builder)) {
-			IrisSamplers.addShadowSamplers(builder, shadowMapRendererSupplier.get());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
+		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
+
+		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRendererSupplier.get());
 		}
 
 		// TODO: Don't duplicate this with FinalPassRenderer

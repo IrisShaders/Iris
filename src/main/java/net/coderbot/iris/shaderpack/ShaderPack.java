@@ -91,7 +91,7 @@ public class ShaderPack {
 
 	public CustomTextureData readTexture(String path) throws IOException, UnsupportedOperationException {
 		CustomTextureData customTextureData;
-		if (ResourceLocation.isValidResourceLocation(path)) {
+		if (path.contains(":") && ResourceLocation.isValidResourceLocation(path)) {
 //			Identifier textureIdentifier = new Identifier(path);
 //			byte[] content = IOUtils.toByteArray(MinecraftClient.getInstance().getResourceManager().getResource(textureIdentifier).getInputStream());
 //			customTextureData = new CustomTextureData.ResourceData(new TextureFilteringData(true, false), textureIdentifier.getNamespace(), textureIdentifier.getPath());
@@ -99,9 +99,9 @@ public class ShaderPack {
 		} else {
 			// TODO: Make sure the resulting path is within the shaderpack?
 			byte[] content = Files.readAllBytes(root.resolve(path));
+			// TODO: Read the blur / clamp data from the shaderpack...
 			customTextureData = new CustomTextureData.PngData(new TextureFilteringData(true, false), content);
 		}
-		// TODO: Read the blur / clamp data from the shaderpack...
 		return customTextureData;
 	}
 

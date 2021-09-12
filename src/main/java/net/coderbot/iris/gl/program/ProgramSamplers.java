@@ -3,6 +3,7 @@ package net.coderbot.iris.gl.program;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
@@ -40,6 +41,10 @@ public class ProgramSamplers {
 
 	public static Builder builder(int program, Set<Integer> reservedTextureUnits) {
 		return new Builder(program, reservedTextureUnits);
+	}
+
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds) {
+		return new CustomTextureSamplerInterceptor(samplerHolder, customTextureIds);
 	}
 
 	public static final class Builder implements SamplerHolder {
@@ -165,6 +170,50 @@ public class ProgramSamplers {
 
 		public ProgramSamplers build() {
 			return new ProgramSamplers(samplers.build(), calls);
+		}
+	}
+
+	public static final class CustomTextureSamplerInterceptor implements SamplerHolder {
+		private final SamplerHolder samplerHolder;
+		private final Object2IntMap<String> customTextureIds;
+
+		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds) {
+			this.samplerHolder = samplerHolder;
+			this.customTextureIds = customTextureIds;
+		}
+
+		@Override
+		public void addExternalSampler(int textureUnit, String... names) {
+			samplerHolder.addExternalSampler(textureUnit, names);
+		}
+
+		@Override
+		public boolean hasSampler(String name) {
+			return samplerHolder.hasSampler(name);
+		}
+
+		@Override
+		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+			for (String name : names) {
+				if (customTextureIds.containsKey(name)) {
+					sampler = () -> customTextureIds.getInt(name);
+					break;
+				}
+			}
+
+			return samplerHolder.addDefaultSampler(sampler, postBind, names);
+		}
+
+		@Override
+		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
+			for (String name : names) {
+				if (customTextureIds.containsKey(name)) {
+					sampler = () -> customTextureIds.getInt(name);
+					break;
+				}
+			}
+
+			return samplerHolder.addDynamicSampler(sampler, postBind, names);
 		}
 	}
 }
