@@ -1,7 +1,7 @@
 package net.coderbot.batchedentityrendering.mixin;
 
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
-import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
+import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ public abstract class MixinDebugScreenOverlay {
     private void batchedentityrendering$appendStats(CallbackInfoReturnable<List<String>> cir) {
         List<String> messages = cir.getReturnValue();
 
-		DrawCallTrackingBufferBuilderStorage drawTracker = (DrawCallTrackingBufferBuilderStorage) Minecraft.getInstance().renderBuffers();
+		DrawCallTrackingRenderBuffers drawTracker = (DrawCallTrackingRenderBuffers) Minecraft.getInstance().renderBuffers();
 
         // blank line separator
         messages.add("");

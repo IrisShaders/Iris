@@ -1,10 +1,10 @@
 package net.coderbot.batchedentityrendering.mixin;
 
-import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
-import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
+import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
+import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingBuffer;
-import net.coderbot.batchedentityrendering.impl.MemoryTrackingBufferBuilderStorage;
+import net.coderbot.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(RenderBuffers.class)
-public class MixinRenderBuffers implements ExtendedBufferStorage, MemoryTrackingBufferBuilderStorage, DrawCallTrackingBufferBuilderStorage {
+public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRenderBuffers, DrawCallTrackingRenderBuffers {
 	@Unique
 	private final FullyBufferedMultiBufferSource buffered = new FullyBufferedMultiBufferSource();
 

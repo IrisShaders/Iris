@@ -1,6 +1,6 @@
 package net.coderbot.batchedentityrendering.impl;
 
-public interface ExtendedBufferStorage {
+public interface RenderBuffersExt {
 	void beginLevelRendering();
 	void endLevelRendering();
 }

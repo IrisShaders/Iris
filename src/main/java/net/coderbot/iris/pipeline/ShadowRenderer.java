@@ -9,8 +9,8 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
-import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
-import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
+import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
+import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -80,7 +80,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final float sunPathRotation;
 
 	private final RenderBuffers buffers;
-	private final ExtendedBufferStorage extendedBufferStorage;
+	private final RenderBuffersExt renderBuffersExt;
 
 	private final RenderTargets gbufferRenderTargets;
 	private final AbstractTexture normals;
@@ -162,10 +162,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		this.buffers = new RenderBuffers();
 
-		if (this.buffers instanceof ExtendedBufferStorage) {
-			this.extendedBufferStorage = (ExtendedBufferStorage) buffers;
+		if (this.buffers instanceof RenderBuffersExt) {
+			this.renderBuffersExt = (RenderBuffersExt) buffers;
 		} else {
-			this.extendedBufferStorage = null;
+			this.renderBuffersExt = null;
 		}
 
 		configureSamplingSettings(shadowDirectives);
@@ -482,12 +482,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		//
 		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
 		// rendering.
-		if (extendedBufferStorage != null) {
-			extendedBufferStorage.beginLevelRendering();
+		if (renderBuffersExt != null) {
+			renderBuffersExt.beginLevelRendering();
 		}
 
-		if (buffers instanceof DrawCallTrackingBufferBuilderStorage) {
-			((DrawCallTrackingBufferBuilderStorage) buffers).resetDrawCounts();
+		if (buffers instanceof DrawCallTrackingRenderBuffers) {
+			((DrawCallTrackingRenderBuffers) buffers).resetDrawCounts();
 		}
 
 		MultiBufferSource.BufferSource provider = buffers.bufferSource();
@@ -568,8 +568,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// NB: If we want to render anything after translucent terrain, we need to uncomment this line!
 		// setupShadowProgram();
 
-		if (extendedBufferStorage != null) {
-			extendedBufferStorage.endLevelRendering();
+		if (renderBuffersExt != null) {
+			renderBuffersExt.endLevelRendering();
 		}
 
 		debugStringTerrain = ((LevelRenderer) levelRenderer).getChunkStatistics();
@@ -612,8 +612,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[Iris] Shadow Block Entities: " + getBlockEntitiesDebugString());
 
-		if (buffers instanceof DrawCallTrackingBufferBuilderStorage) {
-			DrawCallTrackingBufferBuilderStorage drawCallTracker = (DrawCallTrackingBufferBuilderStorage) buffers;
+		if (buffers instanceof DrawCallTrackingRenderBuffers) {
+			DrawCallTrackingRenderBuffers drawCallTracker = (DrawCallTrackingRenderBuffers) buffers;
 			messages.add("[Iris] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
 		}
 	}

@@ -1,6 +1,6 @@
 package net.coderbot.iris.mixin.fantastic;
 
-import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
+import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -15,7 +15,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import java.util.SortedMap;
 
 @Mixin(RenderBuffers.class)
-public class MixinRenderBuffers implements ExtendedBufferStorage {
+public class MixinRenderBuffers implements RenderBuffersExt {
 	@Shadow
 	@Final
 	private SortedMap<RenderType, BufferBuilder> fixedBuffers;
