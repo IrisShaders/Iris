@@ -59,6 +59,7 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 					throw new RuntimeException("Odd MixinMerged annotation with values: " + annotation.values);
 				}
 
+				// WorldRenderer is the Yarn name for LevelRenderer
 				if (!"net.diebuddies.mixins.MixinWorldRenderer".equals(annotation.values.get(1))) {
 					continue;
 				}

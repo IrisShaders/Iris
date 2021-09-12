@@ -5,5 +5,5 @@ import org.spongepowered.asm.mixin.Mixin;
 
 // Run after the PhysicsMod injection
 @Mixin(value = LevelRenderer.class, priority = 1001)
-public class MixinWorldRenderer {
+public class MixinLevelRenderer {
 }
