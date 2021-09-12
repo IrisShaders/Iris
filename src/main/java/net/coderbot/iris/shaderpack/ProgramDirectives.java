@@ -82,10 +82,7 @@ public class ProgramDirectives {
 				.map(String::toString);
 		String mappedStageSource = stageSource.orElse("");
 
-		if(mappedStageSource.contains("RENDERTARGETS")) {
-			return true;
-		}
-		return false;
+		return mappedStageSource.contains("RENDERTARGETS");
 	}
 
 	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource, String needle) {
@@ -99,7 +96,7 @@ public class ProgramDirectives {
 		int[] buffers = new int[directiveChars.length];
 		int index = 0;
 
-		if (isRenderTarget == true) {
+		if (isRenderTarget) {
 			for (char buffer : directiveChars) {
 				if (Character.isDigit(buffer)) {
 					buffers[index] = Character.digit(buffer, 16);
