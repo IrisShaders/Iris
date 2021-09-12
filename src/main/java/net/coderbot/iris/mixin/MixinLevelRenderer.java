@@ -8,7 +8,7 @@ import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.pipeline.LevelRenderingPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -46,7 +46,7 @@ public class MixinLevelRenderer {
 	private boolean skyTextureEnabled;
 
 	@Unique
-	private LevelRenderingPipeline pipeline;
+	private WorldRenderingPipeline pipeline;
 
 	@Inject(method = RENDER_LEVEL, at = @At("HEAD"))
 	private void iris$beginLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {

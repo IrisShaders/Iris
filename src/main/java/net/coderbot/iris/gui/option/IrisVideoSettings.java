@@ -1,7 +1,7 @@
 package net.coderbot.iris.gui.option;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.LevelRenderingPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ProgressOption;
 import net.minecraft.network.chat.Component;
@@ -17,7 +17,7 @@ public class IrisVideoSettings {
 	private static final Component ENABLED_TOOLTIP = new TranslatableComponent("options.iris.shadowDistance.enabled");
 
 	public static int getOverriddenShadowDistance(int base) {
-		LevelRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		if (pipeline != null) {
 			return pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(base);
@@ -27,7 +27,7 @@ public class IrisVideoSettings {
 	}
 
 	public static boolean isShadowDistanceSliderEnabled() {
-		LevelRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		return pipeline == null || !pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent();
 	}
@@ -46,7 +46,7 @@ public class IrisVideoSettings {
 	}, (gameOptions, option) -> {
 		int d = (int) option.get(gameOptions);
 
-		LevelRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		Component tooltip;
 

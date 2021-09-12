@@ -6,7 +6,7 @@ import net.minecraft.client.Camera;
 import java.util.List;
 import java.util.OptionalInt;
 
-public interface LevelRenderingPipeline {
+public interface WorldRenderingPipeline {
 	void beginLevelRendering();
 	void renderShadows(LevelRendererAccessor levelRenderer, Camera camera);
 	void addDebugText(List<String> messages);

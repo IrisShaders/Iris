@@ -71,7 +71,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	public static Matrix4f MODELVIEW;
 	public static Matrix4f ORTHO;
 
-	private final LevelRenderingPipeline pipeline;
+	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
 
 	private final Program shadowProgram;
@@ -97,7 +97,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 
-	public ShadowRenderer(LevelRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
+	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
                           AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
 		this.pipeline = pipeline;
@@ -255,7 +255,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredLevelRenderingPipeline) pipeline).getUpdateNotifier());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
 		IrisSamplers.addLevelSamplers(builder, normals, specular);
 		IrisSamplers.addNoiseSampler(builder, noise);

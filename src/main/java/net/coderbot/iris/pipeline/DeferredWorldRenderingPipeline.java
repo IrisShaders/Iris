@@ -50,7 +50,7 @@ import org.lwjgl.opengl.GL30C;
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
-public class DeferredLevelRenderingPipeline implements LevelRenderingPipeline {
+public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final RenderTargets renderTargets;
 
 	private final List<Pass> allPasses;
@@ -121,7 +121,7 @@ public class DeferredLevelRenderingPipeline implements LevelRenderingPipeline {
 
 	private static final ResourceLocation WATER_IDENTIFIER = new ResourceLocation("minecraft", "water");
 
-	public DeferredLevelRenderingPipeline(ProgramSet programs) {
+	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();

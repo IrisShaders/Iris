@@ -12,16 +12,16 @@ import java.util.function.Function;
 
 public class PipelineManager {
 	private static PipelineManager instance;
-	private final Function<DimensionId, LevelRenderingPipeline> pipelineFactory;
-	private LevelRenderingPipeline pipeline;
+	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
+	private WorldRenderingPipeline pipeline;
 	private boolean sodiumShaderReloadNeeded;
 	private DimensionId lastDimension;
 
-	public PipelineManager(Function<DimensionId, LevelRenderingPipeline> pipelineFactory) {
+	public PipelineManager(Function<DimensionId, WorldRenderingPipeline> pipelineFactory) {
 		this.pipelineFactory = pipelineFactory;
 	}
 
-	public LevelRenderingPipeline preparePipeline(DimensionId currentDimension) {
+	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
 		if (currentDimension != lastDimension) {
 			// TODO: Don't say anything about compiling shaders if shaders are disabled.
 			if (lastDimension == null) {
@@ -57,7 +57,7 @@ public class PipelineManager {
 		return pipeline;
 	}
 
-	public LevelRenderingPipeline getPipeline() {
+	public WorldRenderingPipeline getPipeline() {
 		return pipeline;
 	}
 

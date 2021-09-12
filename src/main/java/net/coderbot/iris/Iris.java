@@ -398,26 +398,26 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	private static LevelRenderingPipeline createPipeline(DimensionId dimensionId) {
+	private static WorldRenderingPipeline createPipeline(DimensionId dimensionId) {
 		if (currentPack == null) {
 			// Completely disables shader-based rendering
-			return new FixedFunctionLevelRenderingPipeline();
+			return new FixedFunctionWorldRenderingPipeline();
 		}
 
 		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
 		try {
 			if (internal) {
-				return new InternalLevelRenderingPipeline(programs);
+				return new InternalWorldRenderingPipeline(programs);
 			} else {
-				return new DeferredLevelRenderingPipeline(programs);
+				return new DeferredWorldRenderingPipeline(programs);
 			}
 		} catch (Exception e) {
 			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
 			currentPackName = "(off) [fallback, check your logs for details]";
 
-			return new FixedFunctionLevelRenderingPipeline();
+			return new FixedFunctionWorldRenderingPipeline();
 		}
 	}
 

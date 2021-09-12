@@ -1,7 +1,7 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.LevelRenderingPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 
 public class GbufferPrograms {
 	private static boolean entities;
@@ -67,7 +67,7 @@ public class GbufferPrograms {
 	public static void push(GbufferProgram program) {
 		program = refine(program);
 
-		LevelRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		if (pipeline != null) {
 			pipeline.pushProgram(program);
@@ -77,7 +77,7 @@ public class GbufferPrograms {
 	public static void pop(GbufferProgram program) {
 		program = refine(program);
 
-		LevelRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		if (pipeline != null) {
 			pipeline.popProgram(program);

@@ -204,8 +204,8 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		LevelRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredLevelRenderingPipeline) pipeline).getUpdateNotifier());
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
 		SamplerUniforms.addCommonSamplerUniforms(uniforms);
 		SamplerUniforms.addLevelSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);

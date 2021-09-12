@@ -9,8 +9,8 @@ import net.minecraft.client.Minecraft;
 import java.util.List;
 import java.util.OptionalInt;
 
-public class FixedFunctionLevelRenderingPipeline implements LevelRenderingPipeline {
-	public FixedFunctionLevelRenderingPipeline() {
+public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
+	public FixedFunctionWorldRenderingPipeline() {
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(false);
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(1.0f);
