@@ -40,7 +40,7 @@ public class MixinGui {
 			return;
 		}
 
-		Font textRenderer = Minecraft.getInstance().font;
+		Font font = Minecraft.getInstance().font;
 
 		List<String> warningLines = new ArrayList<>();
 		warningLines.add("[Iris] Sodium isn't installed; you will have poor performance.");
@@ -50,11 +50,11 @@ public class MixinGui {
 			String string = warningLines.get(i);
 
 			final int lineHeight = 9;
-			final int lineWidth = textRenderer.width(string);
+			final int lineWidth = font.width(string);
 			final int y = 2 + lineHeight * i;
 
 			GuiComponent.fill(matrices, 1, y - 1, 2 + lineWidth + 1, y + lineHeight - 1, 0x9050504E);
-			textRenderer.draw(matrices, string, 2.0F, y, 0xFFFF55);
+			font.draw(matrices, string, 2.0F, y, 0xFFFF55);
 		}
 	}
 }

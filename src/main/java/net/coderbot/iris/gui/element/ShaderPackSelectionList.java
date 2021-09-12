@@ -133,14 +133,14 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		@Override
 		public void render(PoseStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-			Font textRenderer = Minecraft.getInstance().font;
+			Font font = Minecraft.getInstance().font;
 			int color = 0xFFFFFF;
 			String name = packName;
 
 			boolean shadersEnabled = list.getEnableShadersButton().enabled;
 
-			if (textRenderer.width(new TextComponent(name).withStyle(ChatFormatting.BOLD)) > this.list.getRowWidth() - 3) {
-				name = textRenderer.plainSubstrByWidth(name, this.list.getRowWidth() - 8) + "...";
+			if (font.width(new TextComponent(name).withStyle(ChatFormatting.BOLD)) > this.list.getRowWidth() - 3) {
+				name = font.plainSubstrByWidth(name, this.list.getRowWidth() - 8) + "...";
 			}
 
 			MutableComponent text = new TextComponent(name);
@@ -157,7 +157,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 				color = 0xA2A2A2;
 			}
 
-			drawCenteredString(matrices, textRenderer, text, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, color);
+			drawCenteredString(matrices, font, text, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, color);
 		}
 
 		@Override
