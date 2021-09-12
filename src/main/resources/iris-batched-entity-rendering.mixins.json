@@ -10,7 +10,7 @@
     "MixinRenderBuffers",
     "MixinDebugScreenOverlay",
     "MixinTheEndPortalRenderer",
-    "MixinMultiBufferSourceChild",
+    "MixinBufferSource",
     "MixinCompositeRenderType",
     "MixinLevelRenderer",
     "MixinLevelRenderer_EntityListSorting",

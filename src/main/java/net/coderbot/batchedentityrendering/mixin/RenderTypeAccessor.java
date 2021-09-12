@@ -10,5 +10,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(RenderType.class)
 public interface RenderTypeAccessor {
 	@Accessor("sortOnUpload")
-	boolean isTranslucent();
+	boolean shouldSortOnUpload();
 }

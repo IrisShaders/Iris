@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.Map;
 
 @Mixin(MultiBufferSource.BufferSource.class)
-public class MixinMultiBufferSourceChild implements MemoryTrackingBuffer {
+public class MixinBufferSource implements MemoryTrackingBuffer {
 	@Shadow
 	@Final
 	protected BufferBuilder builder;

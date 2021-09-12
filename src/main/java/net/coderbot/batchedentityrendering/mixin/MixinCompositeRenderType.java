@@ -21,7 +21,7 @@ public abstract class MixinCompositeRenderType extends RenderType implements Ble
 	}
 
 	@Inject(method = "<init>", at = @At("RETURN"))
-	private void batchedentityrendering$onMultiPhaseInit(String string, VertexFormat vertexFormat, int i, int j, boolean bl, boolean bl2, CompositeState compositeState, CallbackInfo ci) {
+	private void batchedentityrendering$onCompositeInit(String string, VertexFormat vertexFormat, int i, int j, boolean bl, boolean bl2, CompositeState compositeState, CallbackInfo ci) {
 		RenderStateShard.TransparencyStateShard transparency = ((CompositeStateAccessor) (Object) compositeState).getTransparency();
 
 		if ("water_mask".equals(name)) {

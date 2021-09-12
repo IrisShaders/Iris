@@ -30,7 +30,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
     public VertexConsumer getBuffer(RenderType renderType) {
         if (!Objects.equals(currentType, renderType)) {
             if (currentType != null) {
-                if (isTranslucent(currentType)) {
+                if (shouldSortOnUpload(currentType)) {
                     buffer.sortQuads(0, 0, 0);
                 }
 
@@ -61,7 +61,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
 
         usedTypes.add(currentType);
 
-        if (isTranslucent(currentType)) {
+        if (shouldSortOnUpload(currentType)) {
             buffer.sortQuads(0, 0, 0);
         }
 
@@ -84,8 +84,8 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         return segments;
     }
 
-    private static boolean isTranslucent(RenderType type) {
-        return ((RenderTypeAccessor) type).isTranslucent();
+    private static boolean shouldSortOnUpload(RenderType type) {
+        return ((RenderTypeAccessor) type).shouldSortOnUpload();
     }
 
     @Override

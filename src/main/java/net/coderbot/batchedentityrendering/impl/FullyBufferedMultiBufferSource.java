@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.coderbot.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.coderbot.batchedentityrendering.impl.ordering.RenderOrderManager;
-import net.coderbot.batchedentityrendering.mixin.RenderTypeAccessor;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -129,10 +128,6 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		affinities.clear();
 
 		profiler.pop();
-	}
-
-	private static boolean isTranslucent(RenderType type) {
-		return ((RenderTypeAccessor) type).isTranslucent();
 	}
 
 	public int getDrawCalls() {

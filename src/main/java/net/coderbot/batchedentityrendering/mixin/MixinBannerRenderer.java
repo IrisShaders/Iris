@@ -21,7 +21,7 @@ import java.util.List;
 
 @Mixin(BannerRenderer.class)
 public class MixinBannerRenderer {
-    private static final String RENDER_CANVAS =
+    private static final String RENDER_PATTERNS =
             "Lnet/minecraft/client/renderer/blockentity/BannerRenderer;renderPatterns(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/model/geom/ModelPart;Lnet/minecraft/client/resources/model/Material;ZLjava/util/List;Z)V";
 
     /**
@@ -32,7 +32,7 @@ public class MixinBannerRenderer {
     private static Groupable groupableToEnd;
     private static int index;
 
-    @ModifyVariable(method = RENDER_CANVAS, at = @At("HEAD"))
+    @ModifyVariable(method = RENDER_PATTERNS, at = @At("HEAD"))
     private static MultiBufferSource iris$wrapBufferSource(MultiBufferSource multiBufferSource) {
         if (multiBufferSource instanceof Groupable) {
             Groupable groupable = (Groupable) multiBufferSource;
@@ -50,7 +50,7 @@ public class MixinBannerRenderer {
         return multiBufferSource;
     }
 
-    @Inject(method = RENDER_CANVAS, at = @At("RETURN"))
+    @Inject(method = RENDER_PATTERNS, at = @At("RETURN"))
     private static void iris$endRenderingCanvas(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, ModelPart modelPart, Material material, boolean bl, List<Pair<BannerPattern, DyeColor>> list, boolean bl2, CallbackInfo ci) {
         if (groupableToEnd != null) {
             groupableToEnd.endGroup();

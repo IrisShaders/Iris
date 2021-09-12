@@ -21,7 +21,7 @@ public class MixinTheEndPortalRenderer {
     private static final String RENDER =
             "Lnet/minecraft/client/renderer/blockentity/TheEndPortalRenderer;render(Lnet/minecraft/world/level/block/entity/TheEndPortalBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V";
 
-    private static final String MATRIXSTACK_GET_MODEL
+    private static final String POSESTACK_POSE
 			= "Lcom/mojang/blaze3d/vertex/PoseStack$Pose;pose()Lcom/mojang/math/Matrix4f;";
 
     /**
@@ -33,7 +33,7 @@ public class MixinTheEndPortalRenderer {
     private static int index;
 
     // Inject a little bit after HEAD to avoid cancellations.
-    @ModifyVariable(method = RENDER, at = @At(value = "INVOKE", target = MATRIXSTACK_GET_MODEL))
+    @ModifyVariable(method = RENDER, at = @At(value = "INVOKE", target = POSESTACK_POSE))
     private MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource) {
         if (bufferSource instanceof Groupable) {
             Groupable groupable = (Groupable) bufferSource;

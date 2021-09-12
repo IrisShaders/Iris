@@ -14,7 +14,7 @@ public class TaggingRenderTypeWrapper extends RenderType implements WrappableRen
 
     public TaggingRenderTypeWrapper(String name, RenderType wrapped, int tag) {
         super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
-                wrapped.affectsCrumbling(), isTranslucent(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
+                wrapped.affectsCrumbling(), shouldSortOnUpload(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
 
         this.tag = tag;
         this.wrapped = wrapped;
@@ -62,7 +62,7 @@ public class TaggingRenderTypeWrapper extends RenderType implements WrappableRen
         return "tagged(" +tag+ "):" + this.wrapped.toString();
     }
 
-    private static boolean isTranslucent(RenderType type) {
-        return ((RenderTypeAccessor) type).isTranslucent();
+    private static boolean shouldSortOnUpload(RenderType type) {
+        return ((RenderTypeAccessor) type).shouldSortOnUpload();
     }
 }
