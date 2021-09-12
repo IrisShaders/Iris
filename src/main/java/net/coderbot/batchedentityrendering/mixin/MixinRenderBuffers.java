@@ -28,23 +28,23 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 	private int maxBegins = 0;
 
 	@Unique
-	private final OutlineBufferSource outlineVertexConsumers = new OutlineBufferSource(buffered);
+	private final OutlineBufferSource outlineBufferSource = new OutlineBufferSource(buffered);
 
 	@Shadow
 	@Final
 	private MultiBufferSource.BufferSource bufferSource;
 
 	@Inject(method = "bufferSource", at = @At("HEAD"), cancellable = true)
-	private void batchedentityrendering$replaceEntityVertexConsumers(CallbackInfoReturnable<MultiBufferSource.BufferSource> provider) {
+	private void batchedentityrendering$replaceBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
 		if (begins == 0) {
 			return;
 		}
 
-		provider.setReturnValue(buffered);
+		cir.setReturnValue(buffered);
 	}
 
 	@Inject(method = "crumblingBufferSource", at = @At("HEAD"), cancellable = true)
-	private void batchedentityrendering$replaceEffectVertexConsumers(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
+	private void batchedentityrendering$replaceCrumblingBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
 		if (begins == 0) {
 			return;
 		}
@@ -62,12 +62,12 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 	}
 
 	@Inject(method = "outlineBufferSource", at = @At("HEAD"), cancellable = true)
-	private void batchedentityrendering$replaceOutlineVertexConsumers(CallbackInfoReturnable<OutlineBufferSource> provider) {
+	private void batchedentityrendering$replaceOutlineBufferSource(CallbackInfoReturnable<OutlineBufferSource> provider) {
 		if (begins == 0) {
 			return;
 		}
 
-		provider.setReturnValue(outlineVertexConsumers);
+		provider.setReturnValue(outlineBufferSource);
 	}
 
 	@Override
