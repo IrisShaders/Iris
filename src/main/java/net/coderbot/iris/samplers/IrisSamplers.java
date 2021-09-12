@@ -108,7 +108,7 @@ public class IrisSamplers {
 		return usesShadows;
 	}
 
-	public static void addWorldSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
+	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
 		samplers.addDynamicSampler(normals::getId, "normals");

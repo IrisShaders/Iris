@@ -50,7 +50,7 @@ import org.lwjgl.opengl.GL30C;
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
-public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
+public class DeferredLevelRenderingPipeline implements LevelRenderingPipeline {
 	private final RenderTargets renderTargets;
 
 	private final List<Pass> allPasses;
@@ -121,7 +121,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private static final ResourceLocation WATER_IDENTIFIER = new ResourceLocation("minecraft", "water");
 
-	public DeferredWorldRenderingPipeline(ProgramSet programs) {
+	public DeferredLevelRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
@@ -215,7 +215,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 			IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
-			IrisSamplers.addWorldSamplers(builder, normals, specular);
+			IrisSamplers.addLevelSamplers(builder, normals, specular);
 			IrisSamplers.addWorldDepthSamplers(builder, renderTargets);
 			IrisSamplers.addNoiseSampler(builder, noise);
 
@@ -231,7 +231,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 			IrisSamplers.addRenderTargetSamplers(builder, () -> flippedBeforeTerrain, renderTargets, false);
-			IrisSamplers.addWorldSamplers(builder, normals, specular);
+			IrisSamplers.addLevelSamplers(builder, normals, specular);
 			IrisSamplers.addNoiseSampler(builder, noise);
 
 			// Only initialize these samplers if the shadow map renderer exists.
@@ -486,7 +486,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
-		IrisSamplers.addWorldSamplers(builder, normals, specular);
+		IrisSamplers.addLevelSamplers(builder, normals, specular);
 		IrisSamplers.addWorldDepthSamplers(builder, renderTargets);
 		IrisSamplers.addNoiseSampler(builder, noise);
 
@@ -719,7 +719,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private boolean isRenderingWorld = false;
 
 	@Override
-	public void beginWorldRendering() {
+	public void beginLevelRendering() {
 		isRenderingWorld = true;
 		isBeforeTranslucent = true;
 
@@ -745,7 +745,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public void finalizeWorldRendering() {
+	public void finalizeLevelRendering() {
 		checkWorld();
 
 		if (!isRenderingWorld) {

@@ -9,15 +9,15 @@ import net.minecraft.client.Minecraft;
 import java.util.List;
 import java.util.OptionalInt;
 
-public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
-	public FixedFunctionWorldRenderingPipeline() {
+public class FixedFunctionLevelRenderingPipeline implements LevelRenderingPipeline {
+	public FixedFunctionLevelRenderingPipeline() {
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(false);
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(1.0f);
 	}
 
 	@Override
-	public void beginWorldRendering() {
+	public void beginLevelRendering() {
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 		GlStateManager._glUseProgram(0);
@@ -64,7 +64,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void finalizeWorldRendering() {
+	public void finalizeLevelRendering() {
 		// stub: nothing to do here
 	}
 

@@ -37,7 +37,7 @@ public class MixinLevelRenderer {
 	private Groupable groupable;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void batchedentityrendering$beginWorldRender(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+	private void batchedentityrendering$beginLevelRender(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
 		if (renderBuffers instanceof DrawCallTrackingBufferBuilderStorage) {
 			((DrawCallTrackingBufferBuilderStorage) renderBuffers).resetDrawCounts();
 		}
@@ -71,7 +71,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At("RETURN"))
-	private void batchedentityrendering$endWorldRender(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+	private void batchedentityrendering$endLevelRender(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
 		((ExtendedBufferStorage) renderBuffers).endLevelRendering();
 		groupable = null;
 	}

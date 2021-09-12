@@ -2,8 +2,8 @@ package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.shaderpack.ProgramSet;
 
-public class InternalWorldRenderingPipeline extends DeferredWorldRenderingPipeline {
-	public InternalWorldRenderingPipeline(ProgramSet programs) {
+public class InternalLevelRenderingPipeline extends DeferredLevelRenderingPipeline {
+	public InternalLevelRenderingPipeline(ProgramSet programs) {
 		super(programs);
 	}
 

@@ -6,7 +6,6 @@ import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3d;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
@@ -25,7 +24,6 @@ import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
@@ -73,7 +71,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	public static Matrix4f MODELVIEW;
 	public static Matrix4f ORTHO;
 
-	private final WorldRenderingPipeline pipeline;
+	private final LevelRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
 
 	private final Program shadowProgram;
@@ -99,9 +97,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 
-	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
-						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
+	public ShadowRenderer(LevelRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
+                          Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
+                          AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -257,9 +255,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredLevelRenderingPipeline) pipeline).getUpdateNotifier());
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
-		IrisSamplers.addWorldSamplers(builder, normals, specular);
+		IrisSamplers.addLevelSamplers(builder, normals, specular);
 		IrisSamplers.addNoiseSampler(builder, noise);
 		IrisSamplers.addShadowSamplers(builder, this);
 

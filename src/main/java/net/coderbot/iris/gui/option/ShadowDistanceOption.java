@@ -1,7 +1,5 @@
 package net.coderbot.iris.gui.option;
 
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Options;
 import net.minecraft.client.ProgressOption;
 import net.minecraft.client.gui.components.AbstractWidget;

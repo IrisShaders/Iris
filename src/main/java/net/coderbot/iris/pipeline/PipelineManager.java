@@ -5,7 +5,6 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL20C;
 
@@ -13,16 +12,16 @@ import java.util.function.Function;
 
 public class PipelineManager {
 	private static PipelineManager instance;
-	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
-	private WorldRenderingPipeline pipeline;
+	private final Function<DimensionId, LevelRenderingPipeline> pipelineFactory;
+	private LevelRenderingPipeline pipeline;
 	private boolean sodiumShaderReloadNeeded;
 	private DimensionId lastDimension;
 
-	public PipelineManager(Function<DimensionId, WorldRenderingPipeline> pipelineFactory) {
+	public PipelineManager(Function<DimensionId, LevelRenderingPipeline> pipelineFactory) {
 		this.pipelineFactory = pipelineFactory;
 	}
 
-	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
+	public LevelRenderingPipeline preparePipeline(DimensionId currentDimension) {
 		if (currentDimension != lastDimension) {
 			// TODO: Don't say anything about compiling shaders if shaders are disabled.
 			if (lastDimension == null) {
@@ -58,7 +57,7 @@ public class PipelineManager {
 		return pipeline;
 	}
 
-	public WorldRenderingPipeline getPipeline() {
+	public LevelRenderingPipeline getPipeline() {
 		return pipeline;
 	}
 

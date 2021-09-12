@@ -6,8 +6,8 @@ import net.minecraft.client.Camera;
 import java.util.List;
 import java.util.OptionalInt;
 
-public interface WorldRenderingPipeline {
-	void beginWorldRendering();
+public interface LevelRenderingPipeline {
+	void beginLevelRendering();
 	void renderShadows(LevelRendererAccessor levelRenderer, Camera camera);
 	void addDebugText(List<String> messages);
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
@@ -16,7 +16,7 @@ public interface WorldRenderingPipeline {
 	void beginTranslucents();
 	void pushProgram(GbufferProgram program);
 	void popProgram(GbufferProgram program);
-	void finalizeWorldRendering();
+	void finalizeLevelRendering();
 	void destroy();
 
 	SodiumTerrainPipeline getSodiumTerrainPipeline();
