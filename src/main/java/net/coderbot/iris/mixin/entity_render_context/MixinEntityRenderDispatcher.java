@@ -24,10 +24,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(EntityRenderDispatcher.class)
 public class MixinEntityRenderDispatcher {
-	private static final String RENDER =
-			"render(Lnet/minecraft/entity/Entity;DDDFFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V";
-	private static final String MATRIXSTACK_PUSH = "net/minecraft/client/util/math/MatrixStack.push ()V";
-	private static final String MATRIXSTACK_POP = "net/minecraft/client/util/math/MatrixStack.pop ()V";
 	private static final String CRASHREPORT_CREATE =
 			"Lnet/minecraft/world/entity/Entity;fillCrashReportCategory(Lnet/minecraft/CrashReportCategory;)V";
 
