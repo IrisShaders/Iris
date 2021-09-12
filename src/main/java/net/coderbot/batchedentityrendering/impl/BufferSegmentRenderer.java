@@ -25,7 +25,7 @@ public class BufferSegmentRenderer {
      * Like draw(), but it doesn't setup / tear down the render type.
      */
     public void drawInner(BufferSegment segment) {
-        fakeBufferBuilderExt.setupBufferSlice(segment.getSlice(), segment.getParameters());
+        fakeBufferBuilderExt.setupBufferSlice(segment.getSlice(), segment.getDrawState());
         BufferUploader.end(fakeBufferBuilder);
         fakeBufferBuilderExt.teardownBufferSlice();
     }

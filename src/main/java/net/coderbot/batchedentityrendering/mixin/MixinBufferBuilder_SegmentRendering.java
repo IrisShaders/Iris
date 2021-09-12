@@ -36,19 +36,19 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
     private int totalUploadedBytes;
 
     @Override
-    public void setupBufferSlice(ByteBuffer buffer, BufferBuilder.DrawState parameters) {
+    public void setupBufferSlice(ByteBuffer buffer, BufferBuilder.DrawState drawState) {
         // add the buffer slice
         this.buffer = buffer;
 
         // add our singular parameter
         this.vertexCounts.clear();
-        this.vertexCounts.add(parameters);
+        this.vertexCounts.add(drawState);
 
         // should be zero, just making sure
         this.lastRenderedCountIndex = 0;
 
         // configure the build start (to avoid a warning message) and element offset (probably not important)
-        this.totalRenderedBytes = parameters.vertexCount() * parameters.format().getVertexSize();
+        this.totalRenderedBytes = drawState.vertexCount() * drawState.format().getVertexSize();
         this.nextElementByte = this.totalRenderedBytes;
 
         // should be zero, just making sure

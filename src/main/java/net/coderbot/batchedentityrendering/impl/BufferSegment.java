@@ -7,12 +7,12 @@ import java.nio.ByteBuffer;
 
 public class BufferSegment {
     private final ByteBuffer slice;
-    private final BufferBuilder.DrawState parameters;
+    private final BufferBuilder.DrawState drawState;
     private final RenderType type;
 
-    public BufferSegment(ByteBuffer slice, BufferBuilder.DrawState parameters, RenderType type) {
+    public BufferSegment(ByteBuffer slice, BufferBuilder.DrawState drawState, RenderType type) {
         this.slice = slice;
-        this.parameters = parameters;
+        this.drawState = drawState;
         this.type = type;
     }
 
@@ -20,8 +20,8 @@ public class BufferSegment {
         return slice;
     }
 
-    public BufferBuilder.DrawState getParameters() {
-        return parameters;
+    public BufferBuilder.DrawState getDrawState() {
+        return drawState;
     }
 
     public RenderType getRenderType() {

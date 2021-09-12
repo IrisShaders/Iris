@@ -73,10 +73,10 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         for (RenderType type : usedTypes) {
             Pair<BufferBuilder.DrawState, ByteBuffer> pair = buffer.popNextBuffer();
 
-            BufferBuilder.DrawState parameters = pair.getFirst();
+            BufferBuilder.DrawState drawState = pair.getFirst();
             ByteBuffer slice = pair.getSecond();
 
-            segments.add(new BufferSegment(slice, parameters, type));
+            segments.add(new BufferSegment(slice, drawState, type));
         }
 
         usedTypes.clear();
