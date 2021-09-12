@@ -10,5 +10,5 @@ import net.minecraft.client.renderer.RenderType;
 @Mixin(RenderType.class)
 public interface RenderTypeAccessor {
 	@Accessor("sortOnUpload")
-	boolean isTranslucent();
+	boolean shouldSortOnUpload();
 }

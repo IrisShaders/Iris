@@ -13,7 +13,7 @@ public class IrisRenderTypeWrapper extends RenderType implements WrappableRender
 
 	public IrisRenderTypeWrapper(String name, RenderType wrapped, UseProgramRenderStateShard useProgram) {
 		super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
-			wrapped.affectsCrumbling(), isTranslucent(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
+			wrapped.affectsCrumbling(), shouldSortOnUpload(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
 
 		this.useProgram = useProgram;
 		this.wrapped = wrapped;
@@ -75,7 +75,7 @@ public class IrisRenderTypeWrapper extends RenderType implements WrappableRender
 		return "iris:" + this.wrapped.toString();
 	}
 
-	private static boolean isTranslucent(RenderType type) {
-		return ((RenderTypeAccessor) type).isTranslucent();
+	private static boolean shouldSortOnUpload(RenderType type) {
+		return ((RenderTypeAccessor) type).shouldSortOnUpload();
 	}
 }
