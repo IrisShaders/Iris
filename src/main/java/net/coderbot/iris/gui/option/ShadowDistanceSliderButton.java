@@ -4,8 +4,8 @@ import net.minecraft.client.Options;
 import net.minecraft.client.ProgressOption;
 import net.minecraft.client.gui.components.SliderButton;
 
-public class ShadowDistanceSliderWidget extends SliderButton {
-	public ShadowDistanceSliderWidget(Options gameOptions, int x, int y, int width, int height, ProgressOption option) {
+public class ShadowDistanceSliderButton extends SliderButton {
+	public ShadowDistanceSliderButton(Options gameOptions, int x, int y, int width, int height, ProgressOption option) {
 		super(gameOptions, x, y, width, height, option);
 	}
 

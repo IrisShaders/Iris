@@ -1,7 +1,7 @@
 package net.coderbot.iris.gui.screen;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gui.element.ShaderPackListWidget;
+import net.coderbot.iris.gui.element.ShaderPackSelectionList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.gui.components.Button;
@@ -9,13 +9,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
-import org.apache.commons.io.FileUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +22,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	private final Screen parent;
 
-	private ShaderPackListWidget shaderPackList;
+	private ShaderPackSelectionList shaderPackList;
 
 	private Component addedPackDialog = null;
 	private int addedPackDialogTimer = 0;
@@ -65,7 +63,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		int topCenter = this.width / 2 - 76;
 		boolean inWorld = this.minecraft.level != null;
 
-		this.shaderPackList = new ShaderPackListWidget(this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
+		this.shaderPackList = new ShaderPackSelectionList(this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
 
 		if (inWorld) {
 			this.shaderPackList.setRenderBackground(false);
@@ -229,13 +227,13 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void applyChanges() {
-		ShaderPackListWidget.BaseEntry base = this.shaderPackList.getSelected();
+		ShaderPackSelectionList.BaseEntry base = this.shaderPackList.getSelected();
 
-		if (!(base instanceof ShaderPackListWidget.ShaderPackEntry)) {
+		if (!(base instanceof ShaderPackSelectionList.ShaderPackEntry)) {
 			return;
 		}
 
-		ShaderPackListWidget.ShaderPackEntry entry = (ShaderPackListWidget.ShaderPackEntry)base;
+		ShaderPackSelectionList.ShaderPackEntry entry = (ShaderPackSelectionList.ShaderPackEntry)base;
 		String name = entry.getPackName();
 		Iris.getIrisConfig().setShaderPackName(name);
 		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().enabled);

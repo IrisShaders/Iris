@@ -17,7 +17,7 @@ public class ShadowDistanceOption extends ProgressOption {
 
 	@Override
 	public AbstractWidget createButton(Options options, int x, int y, int width) {
-		AbstractWidget widget = new ShadowDistanceSliderWidget(options, x, y, width, 20, this);
+		AbstractWidget widget = new ShadowDistanceSliderButton(options, x, y, width, 20, this);
 
 		widget.active = IrisVideoSettings.isShadowDistanceSliderEnabled();
 

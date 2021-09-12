@@ -18,7 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackListWidget.BaseEntry> {
+public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
 	public static final List<String> BUILTIN_PACKS = ImmutableList.of();
 
 	private static final Component PACK_LIST_LABEL = new TranslatableComponent("pack.iris.list.label").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
@@ -27,7 +27,7 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 	private final EnableShadersButtonEntry enableShadersButton = new EnableShadersButtonEntry(Iris.getIrisConfig().areShadersEnabled());
 
-	public ShaderPackListWidget(Minecraft client, int width, int height, int top, int bottom, int left, int right) {
+	public ShaderPackSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
 
 		refresh();
@@ -114,10 +114,10 @@ public class ShaderPackListWidget extends IrisScreenEntryListWidget<ShaderPackLi
 
 	public static class ShaderPackEntry extends BaseEntry {
 		private final String packName;
-		private final ShaderPackListWidget list;
+		private final ShaderPackSelectionList list;
 		private final int index;
 
-		public ShaderPackEntry(int index, ShaderPackListWidget list, String packName) {
+		public ShaderPackEntry(int index, ShaderPackSelectionList list, String packName) {
 			this.packName = packName;
 			this.list = list;
 			this.index = index;
