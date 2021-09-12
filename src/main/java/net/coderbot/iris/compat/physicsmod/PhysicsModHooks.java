@@ -5,11 +5,11 @@ import net.coderbot.iris.layer.GbufferPrograms;
 import net.minecraft.client.renderer.RenderType;
 
 public class PhysicsModHooks {
-	public static void redirectEndDrawing(RenderType type) {
+	public static void redirectClearRenderState(RenderType type) {
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
 	}
 
-	public static void redirectStartDrawing(RenderType type) {
+	public static void redirectSetupRenderState(RenderType type) {
 		if (type == getTargetRenderType()) {
 			GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 		}
