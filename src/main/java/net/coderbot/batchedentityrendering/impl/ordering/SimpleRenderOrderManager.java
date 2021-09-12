@@ -5,14 +5,14 @@ import net.minecraft.client.renderer.RenderType;
 import java.util.LinkedHashSet;
 
 public class SimpleRenderOrderManager implements RenderOrderManager {
-    private final LinkedHashSet<RenderType> layers;
+    private final LinkedHashSet<RenderType> renderTypes;
 
     public SimpleRenderOrderManager() {
-        layers = new LinkedHashSet<>();
+        renderTypes = new LinkedHashSet<>();
     }
 
     public void begin(RenderType type) {
-        layers.add(type);
+        renderTypes.add(type);
     }
 
     public void startGroup() {
@@ -30,10 +30,10 @@ public class SimpleRenderOrderManager implements RenderOrderManager {
 
     @Override
     public void reset() {
-        layers.clear();
+        renderTypes.clear();
     }
 
     public Iterable<RenderType> getRenderOrder() {
-        return layers;
+        return renderTypes;
     }
 }
