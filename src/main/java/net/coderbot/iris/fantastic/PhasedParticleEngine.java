@@ -1,5 +1,5 @@
 package net.coderbot.iris.fantastic;
 
-public interface PhasedParticleManager {
+public interface PhasedParticleEngine {
 	void setParticleRenderingPhase(ParticleRenderingPhase phase);
 }

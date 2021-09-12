@@ -3,7 +3,7 @@ package net.coderbot.iris.mixin.fantastic;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
-import net.coderbot.iris.fantastic.PhasedParticleManager;
+import net.coderbot.iris.fantastic.PhasedParticleEngine;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.minecraft.client.Camera;
@@ -33,7 +33,7 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
 	private void iris$resetParticleManagerPhase(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
-		((PhasedParticleManager) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.EVERYTHING);
+		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.EVERYTHING);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=entities"))
@@ -42,12 +42,12 @@ public class MixinLevelRenderer {
 
 		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
 
-		((PhasedParticleManager) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
+		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
 
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
 		minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 
-		((PhasedParticleManager) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
+		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
 	}
 }

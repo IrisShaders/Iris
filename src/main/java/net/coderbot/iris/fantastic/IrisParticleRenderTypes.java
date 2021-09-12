@@ -8,8 +8,8 @@ import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 
-public class IrisParticleTextureSheets {
-	public static final ParticleRenderType OPAQUE_TERRAIN_SHEET = new ParticleRenderType() {
+public class IrisParticleRenderTypes {
+	public static final ParticleRenderType OPAQUE_TERRAIN = new ParticleRenderType() {
 		public void begin(BufferBuilder bufferBuilder, TextureManager textureManager) {
 			RenderSystem.disableBlend();
 			RenderSystem.depthMask(true);

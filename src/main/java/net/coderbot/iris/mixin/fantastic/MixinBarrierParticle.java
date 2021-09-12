@@ -1,6 +1,6 @@
 package net.coderbot.iris.mixin.fantastic;
 
-import net.coderbot.iris.fantastic.IrisParticleTextureSheets;
+import net.coderbot.iris.fantastic.IrisParticleRenderTypes;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.BarrierParticle;
 import net.minecraft.client.particle.ParticleRenderType;
@@ -34,9 +34,9 @@ public class MixinBarrierParticle {
 	}
 
 	@Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
-	private void iris$overrideParticleSheet(CallbackInfoReturnable<ParticleRenderType> cir) {
+	private void iris$overrideParticleRenderType(CallbackInfoReturnable<ParticleRenderType> cir) {
 		if (isOpaque) {
-			cir.setReturnValue(IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET);
+			cir.setReturnValue(IrisParticleRenderTypes.OPAQUE_TERRAIN);
 		}
 	}
 }
