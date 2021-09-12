@@ -98,6 +98,11 @@ public class ShaderPack {
 			throw new UnsupportedOperationException("Identifier-based custom textures are not yet supported");
 		} else {
 			// TODO: Make sure the resulting path is within the shaderpack?
+			if (path.startsWith("/")) {
+				// NB: This does not guarantee the resulting path is in the shaderpack as a double slash could be used,
+				// this just fixes shaderpacks like Continuum 2.0.4 that use a leading slash in texture paths
+				path = path.substring(1);
+			}
 			byte[] content = Files.readAllBytes(root.resolve(path));
 			// TODO: Read the blur / clamp data from the shaderpack...
 			customTextureData = new CustomTextureData.PngData(new TextureFilteringData(true, false), content);
