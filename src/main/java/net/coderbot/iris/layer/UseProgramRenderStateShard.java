@@ -4,7 +4,7 @@ import java.util.Objects;
 import net.minecraft.client.renderer.RenderStateShard;
 
 public class UseProgramRenderStateShard extends RenderStateShard {
-	private GbufferProgram program;
+	private final GbufferProgram program;
 
 	public UseProgramRenderStateShard(GbufferProgram program) {
 		super("iris:use_program", () -> GbufferPrograms.push(program), () -> GbufferPrograms.pop(program));
