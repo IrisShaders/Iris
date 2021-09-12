@@ -78,7 +78,7 @@ public class ProgramDirectives {
 
 	private static boolean findbuffersDirective(Optional<String> stageSource) {
 		stageSource
-				.flatMap(fragment -> CommentDirectiveParser.findDirectiveType(fragment))
+				.flatMap(fragment -> CommentDirectiveParser.findDirectiveAndType(fragment, null, true))
 				.map(String::toString);
 		String mappedStageSource = stageSource.orElse("");
 
@@ -90,7 +90,7 @@ public class ProgramDirectives {
 
 	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource, String needle) {
 		return stageSource
-				.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, needle))
+				.flatMap(fragment -> CommentDirectiveParser.findDirectiveAndType(fragment, needle, false))
 				.map(String::toCharArray)
 				.map(ProgramDirectives::parseNumbers);
 	}
