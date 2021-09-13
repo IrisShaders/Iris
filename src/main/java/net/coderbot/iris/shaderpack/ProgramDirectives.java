@@ -1,18 +1,14 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import net.coderbot.iris.shaderpack.texture.CustomTextureData;
-import net.coderbot.iris.shaderpack.texture.TextureStage;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;
@@ -23,7 +19,6 @@ public class ProgramDirectives {
 	private final AlphaTestOverride alphaTestOverride;
 	private final boolean disableBlend;
 	private final ImmutableSet<Integer> mipmappedBuffers;
-//	private final ImmutableMap<String, CustomTextureData> customTextureDataMap;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
@@ -39,24 +34,10 @@ public class ProgramDirectives {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 			disableBlend = properties.getBlendDisabled().contains(source.getName());
-//			TextureStage textureStage = null;
-//			if (source.getName().contains("gbuffers") || source.getName().contains("shadow")) {
-//				textureStage = TextureStage.GBUFFERS_AND_SHADOW;
-//			} else if (source.getName().contains("composite") || source.getName().contains("final")) {
-//				textureStage = TextureStage.COMPOSITE_AND_FINAL;
-//			} else if (source.getName().contains("deferred")) {
-//				textureStage = TextureStage.DEFERRED;
-//			}
-//			if (textureStage != null) {
-//				this.customTextureDataMap = ImmutableMap.copyOf(properties.getCustomTextureData().get(textureStage));
-//			} else {
-//				this.customTextureDataMap = null;
-//			}
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
 			disableBlend = false;
-//			customTextureDataMap = null;
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -124,9 +105,4 @@ public class ProgramDirectives {
 	public ImmutableSet<Integer> getMipmappedBuffers() {
 		return mipmappedBuffers;
 	}
-
-//	@Nullable
-//	public ImmutableMap<String, CustomTextureData> getCustomTextureData() {
-//		return customTextureDataMap;
-//	}
 }
