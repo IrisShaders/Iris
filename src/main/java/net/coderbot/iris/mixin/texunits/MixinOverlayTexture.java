@@ -5,11 +5,9 @@ import org.lwjgl.opengl.GL15;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-
-import net.minecraft.client.render.OverlayTexture;
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 
 @Mixin(OverlayTexture.class)
 @Environment(EnvType.CLIENT)

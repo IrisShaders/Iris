@@ -6,13 +6,12 @@ import java.util.function.IntSupplier;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 
 public final class IdMapUniforms {
 
@@ -24,9 +23,9 @@ public final class IdMapUniforms {
 
 		uniforms
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
-				new HeldItemSupplier(Hand.MAIN_HAND, idMap.getItemIdMap()))
+				new HeldItemSupplier(InteractionHand.MAIN_HAND, idMap.getItemIdMap()))
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2",
-				new HeldItemSupplier(Hand.OFF_HAND, idMap.getItemIdMap()));
+				new HeldItemSupplier(InteractionHand.OFF_HAND, idMap.getItemIdMap()));
 
 		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
 				CapturedRenderingState.INSTANCE.getEntityIdNotifier());
@@ -40,23 +39,23 @@ public final class IdMapUniforms {
 	 * to an integer.
 	 */
 	private static class HeldItemSupplier implements IntSupplier {
-		private final Hand hand;
-		private final Map<Identifier, Integer> itemIdMap;
+		private final InteractionHand hand;
+		private final Map<ResourceLocation, Integer> itemIdMap;
 
-		HeldItemSupplier(Hand hand, Map<Identifier, Integer> itemIdMap) {
+		HeldItemSupplier(InteractionHand hand, Map<ResourceLocation, Integer> itemIdMap) {
 			this.hand = hand;
 			this.itemIdMap = itemIdMap;
 		}
 
 		@Override
 		public int getAsInt() {
-			if (MinecraftClient.getInstance().player == null) {
+			if (Minecraft.getInstance().player == null) {
 				// Not valid when the player doesn't exist
 				return -1;
 			}
 
-			ItemStack heldStack = MinecraftClient.getInstance().player.getStackInHand(hand);
-			Identifier heldItemId = Registry.ITEM.getId(heldStack.getItem());
+			ItemStack heldStack = Minecraft.getInstance().player.getItemInHand(hand);
+			ResourceLocation heldItemId = Registry.ITEM.getKey(heldStack.getItem());
 
 			return itemIdMap.getOrDefault(heldItemId, -1);
 		}

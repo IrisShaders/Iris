@@ -1,12 +1,12 @@
 package net.coderbot.iris.shadows;
 
-import net.coderbot.iris.mixin.WorldRendererAccessor;
-import net.minecraft.client.render.Camera;
+import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.minecraft.client.Camera;
 
 import java.util.List;
 
 public interface ShadowMapRenderer {
-	void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera);
+	void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera);
 	void addDebugText(List<String> messages);
 	int getDepthTextureId();
 	int getDepthTextureNoTranslucentsId();

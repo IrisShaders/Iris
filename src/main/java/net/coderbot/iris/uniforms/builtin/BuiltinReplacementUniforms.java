@@ -1,11 +1,9 @@
 package net.coderbot.iris.uniforms.builtin;
 
+import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-
-import net.minecraft.util.math.Matrix4f;
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
@@ -16,9 +14,9 @@ public class BuiltinReplacementUniforms {
 	static {
 		// This mimics the transformations done in LightmapTextureManager to the GL_TEXTURE matrix.
 		lightmapTextureMatrix = new Matrix4f();
-		lightmapTextureMatrix.loadIdentity();
+		lightmapTextureMatrix.setIdentity();
 		lightmapTextureMatrix.multiply(0.00390625f);
-		lightmapTextureMatrix.multiply(Matrix4f.translate(8.0f, 8.0f, 8.0f));
+		lightmapTextureMatrix.multiply(Matrix4f.createTranslateMatrix(8.0f, 8.0f, 8.0f));
 	}
 
 	public static void addBuiltinReplacementUniforms(UniformHolder uniforms) {

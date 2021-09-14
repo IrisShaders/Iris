@@ -77,7 +77,7 @@ public class SamplerUniforms {
 		return false;
 	}
 
-	public static void addWorldSamplerUniforms(UniformHolder uniforms) {
+	public static void addLevelSamplerUniforms(UniformHolder uniforms) {
 		uniforms
 			.uniform1i(ONCE, "tex", TextureUnit.TERRAIN::getSamplerId)
 			.uniform1i(ONCE, "texture", TextureUnit.TERRAIN::getSamplerId)

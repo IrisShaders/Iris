@@ -6,8 +6,8 @@ import java.util.Objects;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 
 public final class WorldTimeUniforms {
 	private WorldTimeUniforms() {
@@ -26,22 +26,22 @@ public final class WorldTimeUniforms {
 	}
 
 	private static int getWorldDayTime() {
-		long timeOfDay = getWorld().getTimeOfDay();
+		long timeOfDay = getWorld().getDayTime();
 
-		long dayTime = ((DimensionTypeAccessor) getWorld().getDimension()).getFixedTime()
+		long dayTime = ((DimensionTypeAccessor) getWorld().dimensionType()).getFixedTime()
 																		  .orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}
 
 	private static int getWorldDay() {
-		long timeOfDay = getWorld().getTimeOfDay();
+		long timeOfDay = getWorld().getDayTime();
 		long day = timeOfDay / 24000L;
 
 		return (int) day;
 	}
 
-	private static ClientWorld getWorld() {
-		return Objects.requireNonNull(MinecraftClient.getInstance().world);
+	private static ClientLevel getWorld() {
+		return Objects.requireNonNull(Minecraft.getInstance().level);
 	}
 }

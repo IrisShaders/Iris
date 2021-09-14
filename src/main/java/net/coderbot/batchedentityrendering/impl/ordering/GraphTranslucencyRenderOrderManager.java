@@ -9,8 +9,8 @@ import de.odysseus.ithaka.digraph.util.fas.FeedbackArcSetProvider;
 import de.odysseus.ithaka.digraph.util.fas.SimpleFeedbackArcSetProvider;
 import net.coderbot.batchedentityrendering.impl.BlendingStateHolder;
 import net.coderbot.batchedentityrendering.impl.TransparencyType;
-import net.coderbot.batchedentityrendering.impl.WrappableRenderLayer;
-import net.minecraft.client.render.RenderLayer;
+import net.coderbot.batchedentityrendering.impl.WrappableRenderType;
+import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -18,49 +18,49 @@ import java.util.List;
 
 public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
     private final FeedbackArcSetProvider feedbackArcSetProvider;
-    private final EnumMap<TransparencyType, Digraph<RenderLayer>> layers;
+    private final EnumMap<TransparencyType, Digraph<RenderType>> types;
 
     private boolean inGroup = false;
-    private final EnumMap<TransparencyType, RenderLayer> currentLayers;
+    private final EnumMap<TransparencyType, RenderType> currentTypes;
 
     public GraphTranslucencyRenderOrderManager() {
         feedbackArcSetProvider = new SimpleFeedbackArcSetProvider();
-        layers = new EnumMap<>(TransparencyType.class);
-        currentLayers = new EnumMap<>(TransparencyType.class);
+        types = new EnumMap<>(TransparencyType.class);
+        currentTypes = new EnumMap<>(TransparencyType.class);
 
         for (TransparencyType type : TransparencyType.values()) {
-            layers.put(type, new MapDigraph<>());
+            types.put(type, new MapDigraph<>());
         }
     }
 
-    private static TransparencyType getTransparencyType(RenderLayer layer) {
-        while (layer instanceof WrappableRenderLayer) {
-            layer = ((WrappableRenderLayer) layer).unwrap();
+    private static TransparencyType getTransparencyType(RenderType type) {
+        while (type instanceof WrappableRenderType) {
+            type = ((WrappableRenderType) type).unwrap();
         }
 
-        if (layer instanceof BlendingStateHolder) {
-            return ((BlendingStateHolder) layer).getTransparencyType();
+        if (type instanceof BlendingStateHolder) {
+            return ((BlendingStateHolder) type).getTransparencyType();
         }
 
         // Default to "generally transparent" if we can't figure it out.
         return TransparencyType.GENERAL_TRANSPARENT;
     }
 
-    public void begin(RenderLayer layer) {
-        TransparencyType type = getTransparencyType(layer);
-        Digraph<RenderLayer> graph = layers.get(type);
-        graph.add(layer);
+    public void begin(RenderType renderType) {
+        TransparencyType transparencyType = getTransparencyType(renderType);
+        Digraph<RenderType> graph = types.get(transparencyType);
+        graph.add(renderType);
 
         if (inGroup) {
-            RenderLayer previous = currentLayers.put(type, layer);
+			RenderType previous = currentTypes.put(transparencyType, renderType);
 
             if (previous == null) {
                 return;
             }
 
-            int weight = graph.get(previous, layer).orElse(0);
+            int weight = graph.get(previous, renderType).orElse(0);
             weight += 1;
-            graph.put(previous, layer, weight);
+            graph.put(previous, renderType, weight);
         }
     }
 
@@ -69,7 +69,7 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
             throw new IllegalStateException("Already in a group");
         }
 
-        currentLayers.clear();
+        currentTypes.clear();
         inGroup = true;
     }
 
@@ -78,7 +78,7 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
             return false;
         }
 
-        currentLayers.clear();
+        currentTypes.clear();
         inGroup = true;
         return true;
     }
@@ -88,35 +88,35 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
             throw new IllegalStateException("Not in a group");
         }
 
-        currentLayers.clear();
+        currentTypes.clear();
         inGroup = false;
     }
 
     @Override
     public void reset() {
         // TODO: Is reallocation efficient?
-        layers.clear();
+        types.clear();
 
         for (TransparencyType type : TransparencyType.values()) {
-            layers.put(type, new MapDigraph<>());
+            types.put(type, new MapDigraph<>());
         }
     }
 
-    public Iterable<RenderLayer> getRenderOrder() {
+    public Iterable<RenderType> getRenderOrder() {
         int layerCount = 0;
 
-        for (Digraph<RenderLayer> graph : layers.values()) {
+        for (Digraph<RenderType> graph : types.values()) {
             layerCount += graph.getVertexCount();
         }
 
-        List<RenderLayer> allLayers = new ArrayList<>(layerCount);
+        List<RenderType> allLayers = new ArrayList<>(layerCount);
 
-        for (Digraph<RenderLayer> graph : layers.values()) {
+        for (Digraph<RenderType> graph : types.values()) {
             // TODO: Make sure that FAS can't become a bottleneck!
             // Running NP-hard algorithms in a real time rendering loop might not be an amazing idea.
             // This shouldn't be necessary in sane scenes, though, and if there aren't cycles,
             // then this *should* be relatively inexpensive, since it'll bail out and return an empty set.
-            FeedbackArcSet<RenderLayer> arcSet =
+            FeedbackArcSet<RenderType> arcSet =
                     feedbackArcSetProvider.getFeedbackArcSet(graph, graph, FeedbackArcSetPolicy.MIN_WEIGHT);
 
             if (arcSet.getEdgeCount() > 0) {
@@ -125,8 +125,8 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 
                 // Our feedback arc set algorithm finds some dependency links that can be removed hopefully
                 // without disrupting the overall order too much. Hopefully it isn't too slow!
-                for (RenderLayer source : arcSet.vertices()) {
-                    for (RenderLayer target : arcSet.targets(source)) {
+                for (RenderType source : arcSet.vertices()) {
+                    for (RenderType target : arcSet.targets(source)) {
                         graph.remove(source, target);
                     }
                 }
