@@ -27,7 +27,6 @@
     "entity_render_context.MixinBlockEntityRenderDispatcher",
     "entity_render_context.MixinEntityRenderDispatcher",
     "fabulous.MixinDisableFabulousGraphics",
-    "fabulous.MixinOption",
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",
     "math.MixinMatrix4f",
