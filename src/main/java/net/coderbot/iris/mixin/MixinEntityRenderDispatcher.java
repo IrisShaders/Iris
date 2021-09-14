@@ -20,7 +20,7 @@ public class MixinEntityRenderDispatcher {
 		"Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;renderShadow(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/entity/Entity;FFLnet/minecraft/world/level/LevelReader;F)V";
 
 	@Inject(method = RENDER_SHADOW, at = @At("HEAD"), cancellable = true)
-	private static void iris$maybeSuppressEntityShadow(PoseStack matrices, MultiBufferSource bufferSource,
+	private static void iris$maybeSuppressEntityShadow(PoseStack poseStack, MultiBufferSource bufferSource,
 													   Entity entity, float opacity, float tickDelta, LevelReader level,
 													   float radius, CallbackInfo ci) {
 		if (Iris.getPipelineManager().getPipeline().shouldDisableVanillaEntityShadows()) {

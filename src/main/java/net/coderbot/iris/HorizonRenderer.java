@@ -125,7 +125,7 @@ public class HorizonRenderer {
 		return Minecraft.getInstance().options.renderDistance * 16;
 	}
 
-	public void renderHorizon(PoseStack matrices) {
+	public void renderHorizon(PoseStack poseStack) {
 		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
 		// Build the horizon quads into a buffer
@@ -136,7 +136,7 @@ public class HorizonRenderer {
 		// Render the horizon buffer
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
-		RenderSystem.multMatrix(matrices.last().pose());
+		RenderSystem.multMatrix(poseStack.last().pose());
 		BufferUploader.end(buffer);
 		RenderSystem.popMatrix();
 	}

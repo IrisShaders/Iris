@@ -31,7 +31,7 @@ public class MixinEntityRenderDispatcher {
 	// cancellation in an inject.
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
 	private void iris$beginEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
-										PoseStack matrices, MultiBufferSource bufferSource, int light,
+										PoseStack poseStack, MultiBufferSource bufferSource, int light,
 										CallbackInfo ci) {
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
@@ -56,7 +56,7 @@ public class MixinEntityRenderDispatcher {
 	// with vanilla's MatrixStack management functions.
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;popPose()V"))
 	private void iris$endEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
-									  PoseStack matrices, MultiBufferSource bufferSource, int light,
+									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
@@ -67,7 +67,7 @@ public class MixinEntityRenderDispatcher {
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = CRASHREPORT_CREATE))
 	private void iris$crashedEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
-									      PoseStack matrices, MultiBufferSource bufferSource, int light,
+									      PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									      CallbackInfo ci) {
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;

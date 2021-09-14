@@ -70,18 +70,18 @@ public class MixinFixEntityVertexNormals {
 				"Lnet/minecraft/client/render/WorldRenderer;transparencyShader:Lnet/minecraft/client/gl/ShaderEffect;")
 		)
 	})
-	private void iris$setupGlMatrix(PoseStack matrices, float tickDelta, long limitTime,
+	private void iris$setupGlMatrix(PoseStack poseStack, float tickDelta, long limitTime,
 									boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-									LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
+									LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
 		// Don't bake the camera rotation / position into the vertices and vertex normals
-		matrices.pushPose();
+		poseStack.pushPose();
 
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
-		RenderSystem.multMatrix(matrices.last().pose());
+		RenderSystem.multMatrix(poseStack.last().pose());
 
-		matrices.last().pose().setIdentity();
-		matrices.last().normal().setIdentity();
+		poseStack.last().pose().setIdentity();
+		poseStack.last().normal().setIdentity();
 	}
 
 	@Inject(method = RENDER_LEVEL, at = {
@@ -100,11 +100,11 @@ public class MixinFixEntityVertexNormals {
 		to = @At(value = "INVOKE", target =
 			"Lnet/minecraft/client/renderer/LevelRenderer;renderDebug(Lnet/minecraft/client/Camera;)V")
 	))
-	private void iris$teardownGlMatrix(PoseStack matrices, float tickDelta, long limitTime,
+	private void iris$teardownGlMatrix(PoseStack poseStack, float tickDelta, long limitTime,
 									   boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-									   LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
+									   LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
 		// Pop our modified normal matrix from the stack
-		matrices.popPose();
+		poseStack.popPose();
 
 		// Pop the matrix from the GL stack
 		RenderSystem.popMatrix();
