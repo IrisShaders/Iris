@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Applying these effects to the projection matrix causes severe issues with most shaderpacks. As it turns out, OptiFine
  * applies these effects to the modelview matrix. As such, we must do the same to properly run shaderpacks.
  *
- * This mixin make use of the matrix stack in order to make these changes without more invasive changes.
+ * This mixin makes use of the matrix stack in order to make these changes without more invasive changes.
  */
 @Mixin(GameRenderer.class)
 public class MixinModelViewBobbing {
@@ -25,7 +25,9 @@ public class MixinModelViewBobbing {
 	@Unique
 	private Matrix3f bobbingEffectsNormal;
 
-	@ModifyArg(method = "renderLevel", index = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"))
+	@ModifyArg(method = "renderLevel", index = 0,
+			at = @At(value = "INVOKE",
+					target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"))
 	private PoseStack iris$separateViewBobbing(PoseStack stack) {
 		stack.pushPose();
 		stack.last().pose().setIdentity();
@@ -34,7 +36,11 @@ public class MixinModelViewBobbing {
 		return stack;
 	}
 
-	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;last()Lcom/mojang/blaze3d/vertex/PoseStack$Pose;"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V")))
+	@Redirect(method = "renderLevel",
+			at = @At(value = "INVOKE",
+					target = "Lcom/mojang/blaze3d/vertex/PoseStack;last()Lcom/mojang/blaze3d/vertex/PoseStack$Pose;"),
+			slice = @Slice(from = @At(value = "INVOKE",
+					       target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V")))
 	private PoseStack.Pose iris$saveBobbing(PoseStack stack) {
 		bobbingEffectsModel = stack.last().pose().copy();
 		bobbingEffectsNormal = stack.last().normal().copy();
@@ -44,7 +50,9 @@ public class MixinModelViewBobbing {
 		return stack.last();
 	}
 
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lcom/mojang/math/Matrix4f;)V"))
+	@Inject(method = "renderLevel",
+			at = @At(value = "INVOKE",
+					target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lcom/mojang/math/Matrix4f;)V"))
 	private void iris$applyBobbingToModelView(float tickDelta, long limitTime, PoseStack matrix, CallbackInfo ci) {
 		matrix.last().pose().multiply(bobbingEffectsModel);
 		matrix.last().normal().mul(bobbingEffectsNormal);
