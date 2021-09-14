@@ -14,19 +14,19 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(TntMinecartRenderer.class)
 public abstract class MixinTntMinecartRenderer {
 	@ModifyVariable(method = "renderWhiteSolidBlock", at = @At("HEAD"))
-	private static MultiBufferSource iris$wrapProvider(MultiBufferSource provider, BlockState blockState,
-													   PoseStack poseStack, MultiBufferSource bufferSource, int light,
+	private static MultiBufferSource iris$wrapProvider(MultiBufferSource bufferSource, BlockState blockState,
+													   PoseStack poseStack, MultiBufferSource bufferSourceArg, int light,
 													   boolean drawFlash) {
-		if (!(provider instanceof Groupable)) {
+		if (!(bufferSource instanceof Groupable)) {
 			// Entity color is not supported in this context, no buffering available.
-			return provider;
+			return bufferSource;
 		}
 
 		if (drawFlash) {
 			EntityColorRenderStateShard phase = new EntityColorRenderStateShard(false, 1.0F);
-			return new EntityColorMultiBufferSource(provider, phase);
+			return new EntityColorMultiBufferSource(bufferSource, phase);
 		} else {
-			return provider;
+			return bufferSource;
 		}
 	}
 }
