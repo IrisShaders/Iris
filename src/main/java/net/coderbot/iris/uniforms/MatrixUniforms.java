@@ -2,6 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
+import com.mojang.math.Matrix4f;
 import java.nio.FloatBuffer;
 import java.util.function.Supplier;
 
@@ -10,7 +11,6 @@ import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shadow.ShadowMatrices;
-import net.minecraft.util.math.Matrix4f;
 
 public final class MatrixUniforms {
 	private MatrixUniforms() {
@@ -22,7 +22,7 @@ public final class MatrixUniforms {
 		// We need to audit Mojang's linear algebra.
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
 		addShadowMatrix(uniforms, "ModelView", () ->
-				ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).peek().getModel().copy());
+				ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose().copy());
 		addShadowArrayMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance()));
 	}
 
@@ -59,7 +59,7 @@ public final class MatrixUniforms {
 
 			FloatBuffer buffer = FloatBuffer.allocate(16);
 
-			copy.writeColumnMajor(buffer);
+			copy.store(buffer);
 			buffer.rewind();
 
 			net.coderbot.iris.vendored.joml.Matrix4f matrix4f = new net.coderbot.iris.vendored.joml.Matrix4f(buffer);

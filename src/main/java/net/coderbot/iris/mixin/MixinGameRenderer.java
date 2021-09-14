@@ -1,7 +1,8 @@
 package net.coderbot.iris.mixin;
 
-import com.mojang.blaze3d.platform.GlDebugInfo;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.GbufferPrograms;
@@ -11,21 +12,18 @@ import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BufferBuilderStorage;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.client.render.Shader;
-import net.minecraft.util.math.Matrix4f;
 import org.lwjgl.opengl.GL20;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.render.GameRenderer;
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.function.Function;
@@ -34,16 +32,16 @@ import java.util.function.Function;
 @Environment(EnvType.CLIENT)
 public class MixinGameRenderer {
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void iris$logSystem(MinecraftClient client, ResourceManager resourceManager, BufferBuilderStorage bufferBuilderStorage, CallbackInfo ci) {
+	private void iris$logSystem(Minecraft client, ResourceManager resourceManager, RenderBuffers bufferBuilderStorage, CallbackInfo ci) {
 		Iris.logger.info("Hardware information:");
-		Iris.logger.info("CPU: " + GlDebugInfo.getCpuInfo());
-		Iris.logger.info("GPU: " + GlDebugInfo.getRenderer() + " (Supports OpenGL " + GlDebugInfo.getVersion() + ")");
+		Iris.logger.info("CPU: " + GlUtil.getCpuInfo());
+		Iris.logger.info("GPU: " + GlUtil.getRenderer() + " (Supports OpenGL " + GlUtil.getOpenGLVersion() + ")");
 		Iris.logger.info("OS: " + System.getProperty("os.name"));
 	}
 
 	// TODO: This probably won't be compatible with mods that directly mess with the GL projection matrix.
 	// https://github.com/jellysquid3/sodium-fabric/blob/1df506fd39dac56bb410725c245e6e51208ec732/src/main/java/me/jellysquid/mods/sodium/client/render/chunk/shader/ChunkProgram.java#L56
-	@Inject(method = "loadProjectionMatrix(Lnet/minecraft/util/math/Matrix4f;)V", at = @At("HEAD"))
+	@Inject(method = "resetProjectionMatrix", at = @At("HEAD"))
 	private void iris$captureProjectionMatrix(Matrix4f projectionMatrix, CallbackInfo callback) {
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projectionMatrix);
 	}
@@ -54,8 +52,8 @@ public class MixinGameRenderer {
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 	}
 
-	@Inject(method = "getPositionShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overridePositionShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getPositionShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overridePositionShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isPhase(WorldRenderingPhase.SKY)) {
 			override(CoreWorldRenderingPipeline::getSkyBasic, cir);
 		} else if (ShadowRenderer.ACTIVE) {
@@ -65,8 +63,8 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getPositionColorShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overridePositionColorShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getPositionColorShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overridePositionColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isPhase(WorldRenderingPhase.SKY)) {
 			override(CoreWorldRenderingPipeline::getSkyBasicColor, cir);
 		} else if (ShadowRenderer.ACTIVE) {
@@ -78,8 +76,8 @@ public class MixinGameRenderer {
 
 	// TODO: getPositionColorTexShader
 
-	@Inject(method = "getPositionTexShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overridePositionTexShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getPositionTexShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overridePositionTexShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isPhase(WorldRenderingPhase.SKY)) {
 			override(CoreWorldRenderingPipeline::getSkyTextured, cir);
 		} else if (ShadowRenderer.ACTIVE) {
@@ -89,8 +87,8 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getPositionTexColorShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overridePositionTexColorShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getPositionTexColorShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overridePositionTexColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isPhase(WorldRenderingPhase.SKY)) {
 			override(CoreWorldRenderingPipeline::getSkyTexturedColor, cir);
 		} else if (ShadowRenderer.ACTIVE) {
@@ -103,9 +101,9 @@ public class MixinGameRenderer {
 	// TODO: getBlockShader, getNewEntityShader
 
 	@Inject(method = {
-			"getParticleShader()Lnet/minecraft/client/render/Shader;"
+			"getParticleShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideParticleShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideParticleShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if(isPhase(WorldRenderingPhase.WEATHER)) {
 			override(CoreWorldRenderingPipeline::getWeather, cir);
 		} else if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
@@ -116,16 +114,16 @@ public class MixinGameRenderer {
 
 	// TODO: getPositionColorLightmapShader, getPositionColorTexLightmapShader
 
-	@Inject(method = "getPositionTexColorNormalShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overridePositionTexColorNormalShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getPositionTexColorNormalShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overridePositionTexColorNormalShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		override(CoreWorldRenderingPipeline::getClouds, cir);
 		// TODO: shadows
 	}
 
 	// TODO: getPositionTexLightmapColorShader
 
-	@Inject(method = "getRenderTypeSolidShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideSolidShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getRendertypeSolidShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideSolidShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
@@ -134,8 +132,8 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getRenderTypeCutoutMippedShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideCutoutMippedShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getRendertypeCutoutMippedShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideCutoutMippedShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
@@ -144,8 +142,8 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getRenderTypeCutoutShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideCutoutShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getRendertypeCutoutShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
 		} else {
@@ -153,8 +151,8 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getRenderTypeTranslucentShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideTranslucentShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getRendertypeTranslucentShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
@@ -165,8 +163,8 @@ public class MixinGameRenderer {
 
 	// getRenderTypeTranslucentMovingBlockShader, getRenderTypeTranslucentNoCrumblingShader
 
-	@Inject(method = "getRenderTypeTripwireShader()Lnet/minecraft/client/render/Shader;", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideTripwireShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getRendertypeTripwireShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideTripwireShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
@@ -176,17 +174,17 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
-			"getRenderTypeEntityCutoutShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEntityCutoutNoNullShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEntityCutoutNoNullZOffsetShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEntitySmoothCutoutShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEntityTranslucentShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEntityTranslucentCullShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeItemEntityTranslucentCullShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeArmorCutoutNoCullShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEnergySwirlShader()Lnet/minecraft/client/render/Shader;"
+			"getRendertypeEntityCutoutShader",
+			"getRendertypeEntityCutoutNoCullShader",
+			"getRendertypeEntityCutoutNoCullZOffsetShader",
+			"getRendertypeEntitySmoothCutoutShader",
+			"getRendertypeEntityTranslucentShader",
+			"getRendertypeEntityTranslucentCullShader",
+			"getRendertypeItemEntityTranslucentCullShader",
+			"getRendertypeArmorCutoutNoCullShader",
+			"getRendertypeEnergySwirlShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
@@ -198,27 +196,27 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
-			"getRenderTypeGlintShader",
-			"getRenderTypeGlintDirectShader",
-			"getRenderTypeGlintTranslucentShader",
-			"getRenderTypeArmorGlintShader",
-			"getRenderTypeEntityGlintDirectShader",
-			"getRenderTypeEntityGlintShader",
-			"getRenderTypeArmorEntityGlintShader"
+			"getRendertypeGlintShader",
+			"getRendertypeGlintDirectShader",
+			"getRendertypeGlintTranslucentShader",
+			"getRendertypeArmorGlintShader",
+			"getRendertypeEntityGlintDirectShader",
+			"getRendertypeEntityGlintShader",
+			"getRendertypeArmorEntityGlintShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideGlintShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideGlintShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if(isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getGlint, cir);
 		}
 	}
 
 	@Inject(method = {
-			"getRenderTypeEntitySolidShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeWaterMaskShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEntityNoOutlineShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeEntityShadowShader()Lnet/minecraft/client/render/Shader;"
+			"getRendertypeEntitySolidShader",
+			"getRendertypeWaterMaskShader",
+			"getRendertypeEntityNoOutlineShader",
+			"getRendertypeEntityShadowShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideEntitySolidShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideEntitySolidShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
@@ -229,8 +227,8 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getRenderTypeBeaconBeamShader", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideBeaconBeamShader(CallbackInfoReturnable<Shader> cir) {
+	@Inject(method = "getRendertypeBeaconBeamShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideBeaconBeamShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getShadowBeaconBeam, cir);
 		} else {
@@ -244,9 +242,9 @@ public class MixinGameRenderer {
 	// NOTE: getRenderTypeOutlineShader should not be overriden.
 
 	@Inject(method = {
-			"getRenderTypeEyesShader()Lnet/minecraft/client/render/Shader;"
+			"getRendertypeEyesShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideEntityEyesShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideEntityEyesShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
@@ -258,9 +256,9 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
-			"getRenderTypeLeashShader()Lnet/minecraft/client/render/Shader;"
+			"getRendertypeLeashShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideLeashShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideLeashShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			// override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
@@ -271,9 +269,9 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
-			"getRenderTypeLightningShader()Lnet/minecraft/client/render/Shader;"
+			"getRendertypeLightningShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideLightningShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideLightningShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			// override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
@@ -284,40 +282,40 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
-			"getRenderTypeCrumblingShader()Lnet/minecraft/client/render/Shader;"
+			"getRendertypeCrumblingShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideCrumblingShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideCrumblingShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getCrumbling, cir);
 		}
 	}
 
 	@Inject(method = {
-			"getRenderTypeTextShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeTextIntensityShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeTextSeeThroughShader()Lnet/minecraft/client/render/Shader;",
-			"getRenderTypeTextIntensitySeeThroughShader()Lnet/minecraft/client/render/Shader;"
+			"getRendertypeTextShader",
+			"getRendertypeTextIntensityShader",
+			"getRendertypeTextSeeThroughShader",
+			"getRendertypeTextIntensitySeeThroughShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideTextShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideTextShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getText, cir);
 		}
 	}
 
 	@Inject(method = {
-			"getRenderTypeEndGatewayShader",
-			"getRenderTypeEndPortalShader"
+			"getRendertypeEndGatewayShader",
+			"getRendertypeEndPortalShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideEndPortalShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideEndPortalShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if(!ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		}
 	}
 
 	@Inject(method = {
-			"getRenderTypeLinesShader()Lnet/minecraft/client/render/Shader;"
+			"getRendertypeLinesShader"
 	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideLinesShader(CallbackInfoReturnable<Shader> cir) {
+	private static void iris$overrideLinesShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getShadowLines, cir);
 		} else if (isRenderingWorld()) {
@@ -345,11 +343,11 @@ public class MixinGameRenderer {
 		}
 	}
 
-	private static void override(Function<CoreWorldRenderingPipeline, Shader> getter, CallbackInfoReturnable<Shader> cir) {
+	private static void override(Function<CoreWorldRenderingPipeline, ShaderInstance> getter, CallbackInfoReturnable<ShaderInstance> cir) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			Shader override = getter.apply(((CoreWorldRenderingPipeline) pipeline));
+			ShaderInstance override = getter.apply(((CoreWorldRenderingPipeline) pipeline));
 
 			if (override != null) {
 				cir.setReturnValue(override);

@@ -1,10 +1,10 @@
 package net.coderbot.batchedentityrendering.impl;
 
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.RenderType;
 
 public class RenderLayerUtil {
-    public static boolean isTriangleStripDrawMode(RenderLayer renderLayer) {
-        return renderLayer.getDrawMode() == VertexFormat.DrawMode.TRIANGLE_STRIP;
+    public static boolean isTriangleStripDrawMode(RenderType renderLayer) {
+        return renderLayer.mode() == VertexFormat.Mode.TRIANGLE_STRIP;
     }
 }

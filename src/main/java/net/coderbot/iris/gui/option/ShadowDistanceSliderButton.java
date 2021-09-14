@@ -1,14 +1,13 @@
 package net.coderbot.iris.gui.option;
 
-import net.minecraft.client.gui.widget.DoubleOptionSliderWidget;
-import net.minecraft.client.option.DoubleOption;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.text.OrderedText;
-
 import java.util.List;
+import net.minecraft.client.Options;
+import net.minecraft.client.ProgressOption;
+import net.minecraft.client.gui.components.SliderButton;
+import net.minecraft.util.FormattedCharSequence;
 
-public class ShadowDistanceSliderWidget extends DoubleOptionSliderWidget {
-	public ShadowDistanceSliderWidget(GameOptions gameOptions, int x, int y, int width, int height, DoubleOption option, List<OrderedText> orderedTooltip) {
+public class ShadowDistanceSliderButton extends SliderButton {
+	public ShadowDistanceSliderButton(Options gameOptions, int x, int y, int width, int height, ProgressOption option, List<FormattedCharSequence> orderedTooltip) {
 		super(gameOptions, x, y, width, height, option, orderedTooltip);
 	}
 

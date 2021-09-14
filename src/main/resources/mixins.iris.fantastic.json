@@ -7,8 +7,8 @@
     "MixinBlockDustParticle",
     "MixinFireworkSparkParticle",
     "MixinItemBillboardParticle",
-    "MixinParticleManager",
-    "MixinWorldRenderer"
+    "MixinParticleEngine",
+    "MixinLevelRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

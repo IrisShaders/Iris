@@ -1,4 +1,4 @@
 accessWidener	v1	named
-accessible  class   net/minecraft/client/render/RenderPhase$Transparency
-accessible  class   net/minecraft/client/render/RenderLayer$MultiPhaseParameters
-accessible  class   net/minecraft/client/render/WorldRenderer$ChunkInfo
+accessible class net/minecraft/client/renderer/RenderStateShard$TransparencyStateShard
+accessible class net/minecraft/client/renderer/RenderType$CompositeState
+accessible class net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo

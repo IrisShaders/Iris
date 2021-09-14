@@ -66,13 +66,13 @@ public class MixinRenderType {
 
 	@Shadow @Final @Mutable private static RenderType TRANSLUCENT_NO_CRUMBLING;
 
-	@Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;setAlphaState(Lnet/minecraft/client/renderer/RenderStateShard$AlphaStateShard;)Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;"))
+	/*@Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;setAlphaState(Lnet/minecraft/client/renderer/RenderStateShard$AlphaStateShard;)Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;"))
 	private static RenderType.CompositeState.CompositeStateBuilder iris$tweakCutoutAlpha(RenderType.CompositeState.CompositeStateBuilder builder, RenderStateShard.AlphaStateShard alpha) {
 		// OptiFine makes CUTOUT and CUTOUT_MIPPED use an alpha test of 0.1 instead of 0.5.
 		//
 		// We must replicate this behavior or else there will be issues.
 		return builder.setAlphaState(new RenderStateShard.AlphaStateShard(0.1F));
-	}
+	}*/
 
 	static {
 		SOLID = wrap("iris:terrain_solid", SOLID, GbufferProgram.TERRAIN);
@@ -167,7 +167,7 @@ public class MixinRenderType {
 	@Inject(at = @At("RETURN"), method = {
 		"dragonExplosionAlpha",
 	}, cancellable = true)
-	private static void iris$wrapEntityAlpha(ResourceLocation texture, float alpha, CallbackInfoReturnable<RenderType> cir) {
+	private static void iris$wrapEntityAlpha(ResourceLocation resourceLocation, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
@@ -202,9 +202,9 @@ public class MixinRenderType {
 	}
 
 	@Inject(at = @At("RETURN"), method = {
-		"outline(Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/RenderStateShard$CullStateShard;)Lnet/minecraft/client/renderer/RenderType;",
+		"outline(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/RenderType;",
 	}, cancellable = true)
-	private static void iris$wrapGlowingOutline(ResourceLocation texture, RenderStateShard.CullStateShard cull, CallbackInfoReturnable<RenderType> cir) {
+	private static void iris$wrapGlowingOutline(ResourceLocation resourceLocation, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
 		// Note that instead of using GbufferProgram.ENTITIES_GLOWING here, we're using GbufferProgram.NONE. This is
@@ -234,7 +234,7 @@ public class MixinRenderType {
 	@Inject(at = @At("RETURN"), method = {
 		"endPortal"
 	}, cancellable = true)
-	private static void iris$wrapEndPortalRenderType(int type, CallbackInfoReturnable<RenderType> cir) {
+	private static void iris$wrapEndPortalRenderType(CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.BLOCK_ENTITIES));

@@ -1,27 +1,26 @@
 package net.coderbot.iris.mixin.shadows;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.coderbot.iris.shadows.CullingDataCache;
-import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(WorldRenderer.class)
-public class MixinWorldRenderer implements CullingDataCache {
+@Mixin(LevelRenderer.class)
+public class MixinLevelRenderer implements CullingDataCache {
 	@Shadow
 	@Final
 	@Mutable
-	private ObjectArrayList visibleChunks;
+	private ObjectArrayList renderChunks;
 
 	@Unique
-	private ObjectArrayList savedVisibleChunks = new ObjectArrayList(69696);
+	private ObjectArrayList savedRenderChunks = new ObjectArrayList(69696);
 
 	@Shadow
-	private boolean needsTerrainUpdate;
+	private boolean needsUpdate;
 
 	@Unique
 	private boolean savedNeedsTerrainUpdate;
@@ -36,10 +35,10 @@ public class MixinWorldRenderer implements CullingDataCache {
 	private double lastCameraZ;
 
 	@Shadow
-	private double lastCameraPitch;
+	private double prevCamRotX;
 
 	@Shadow
-	private double lastCameraYaw;
+	private double prevCamRotY;
 
 	@Unique
 	private double savedLastCameraX;
@@ -68,14 +67,14 @@ public class MixinWorldRenderer implements CullingDataCache {
 
 	@Unique
 	private void swap() {
-		ObjectArrayList tmpList = visibleChunks;
-		visibleChunks = savedVisibleChunks;
-		savedVisibleChunks = tmpList;
+		ObjectArrayList tmpList = renderChunks;
+		renderChunks = savedRenderChunks;
+		savedRenderChunks = tmpList;
 
 		// TODO: If the normal chunks need a terrain update, these chunks probably do too...
 		// We probably should copy it over
-		boolean tmpBool = needsTerrainUpdate;
-		needsTerrainUpdate = savedNeedsTerrainUpdate;
+		boolean tmpBool = needsUpdate;
+		needsUpdate = savedNeedsTerrainUpdate;
 		savedNeedsTerrainUpdate = tmpBool;
 
 		double tmp;
@@ -92,12 +91,12 @@ public class MixinWorldRenderer implements CullingDataCache {
 		lastCameraZ = savedLastCameraZ;
 		savedLastCameraZ = tmp;
 
-		tmp = lastCameraPitch;
-		lastCameraPitch = savedLastCameraPitch;
+		tmp = prevCamRotX;
+		prevCamRotX = savedLastCameraPitch;
 		savedLastCameraPitch = tmp;
 
-		tmp = lastCameraYaw;
-		lastCameraYaw = savedLastCameraYaw;
+		tmp = prevCamRotY;
+		prevCamRotY = savedLastCameraYaw;
 		savedLastCameraYaw = tmp;
 	}
 }

@@ -7,20 +7,19 @@ import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GlUniform;
-import net.minecraft.client.render.Shader;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.resource.ResourceFactory;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
-
+import com.mojang.blaze3d.shaders.Uniform;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
-public class ExtendedShader extends Shader implements SamplerHolder {
+public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 	NewWorldRenderingPipeline parent;
 	ProgramUniforms uniforms;
 	GlFramebuffer writingToBeforeTranslucent;
@@ -28,10 +27,10 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 	GlFramebuffer baseline;
 	HashMap<String, IntSupplier> dynamicSamplers;
 
-	public ExtendedShader(ResourceFactory resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
+	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
-		int programId = this.getProgramRef();
+		int programId = this.getId();
 
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
 		uniformCreator.accept(uniformBuilder);
@@ -45,18 +44,18 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 	}
 
 	@Override
-	public void unbind() {
+	public void clear() {
 		ProgramUniforms.clearActiveUniforms();
-		super.unbind();
+		super.clear();
 
-		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
 	@Override
-	public void bind() {
+	public void apply() {
 		dynamicSamplers.forEach((name, supplier) -> this.addIrisSampler(name, supplier.getAsInt()));
 
-		super.bind();
+		super.apply();
 		uniforms.update();
 
 		if (parent.isBeforeTranslucent) {
@@ -67,7 +66,7 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 	}
 
 	public void addIrisSampler(String name, int id) {
-		super.addSampler(name, id);
+		super.setSampler(name, id);
 	}
 
 	public void addIrisSampler(String name, IntSupplier supplier) {
@@ -75,14 +74,14 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 	}
 
 	@Override
-	public void addSampler(String name, Object sampler) {
+	public void setSampler(String name, Object sampler) {
 		// Translate vanilla sampler names to Iris / ShadersMod sampler names
 		if (name.equals("Sampler0")) {
 			name = "gtexture";
 
 			// "tex" and "texture" are also valid sampler names.
-			super.addSampler("texture", sampler);
-			super.addSampler("tex", sampler);
+			super.setSampler("texture", sampler);
+			super.setSampler("tex", sampler);
 		} else if (name.equals("Sampler2")) {
 			name = "lightmap";
 		} else if (name.startsWith("Sampler")) {
@@ -96,12 +95,12 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 
 		// TODO: Expose Sampler1 (the mob overlay flash)
 
-		super.addSampler(name, sampler);
+		super.setSampler(name, sampler);
 	}
 
 	@Nullable
 	@Override
-	public GlUniform getUniform(String name) {
+	public Uniform getUniform(String name) {
 		// Prefix all uniforms with Iris to help avoid conflicts with existing names within the shader.
 		return super.getUniform("iris_" + name);
 	}
@@ -114,7 +113,7 @@ public class ExtendedShader extends Shader implements SamplerHolder {
 
 	@Override
 	public boolean hasSampler(String name) {
-		return GL20C.glGetUniformLocation(this.getProgramRef(), name) != -1;
+		return GL20C.glGetUniformLocation(this.getId(), name) != -1;
 	}
 
 	@Override

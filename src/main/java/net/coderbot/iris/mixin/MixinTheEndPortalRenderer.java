@@ -31,7 +31,7 @@ public class MixinTheEndPortalRenderer {
 
 	// getHeight
 	@Shadow
-	protected float getOffset() {
+	protected float getOffsetUp() {
 		return 0.75F;
 	}
 
@@ -53,7 +53,7 @@ public class MixinTheEndPortalRenderer {
 		// animation with a period of 100 seconds.
 		// note that texture coordinates are wrapping, not clamping.
 		float progress = (SystemTimeUniforms.TIMER.getFrameTimeCounter() * 0.01f) % 1f;
-		float height = getOffset();
+		float height = getOffsetUp();
 
 		quad(entity, vertexConsumer, pose, normal, Direction.UP, progress, overlay, light,
 				0.0f, height, 1.0f,

@@ -1,11 +1,11 @@
 package net.coderbot.iris.shadows.frustum.fallback;
 
+import com.mojang.math.Matrix4f;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegionVisibility;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.coderbot.iris.shadows.frustum.SodiumFrustumExt;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Matrix4f;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.world.phys.AABB;
 
 public class BoxCullingFrustum extends Frustum implements SodiumFrustumExt {
 	private final BoxCuller boxCuller;
@@ -16,7 +16,7 @@ public class BoxCullingFrustum extends Frustum implements SodiumFrustumExt {
 		this.boxCuller = boxCuller;
 	}
 
-	public void setPosition(double cameraX, double cameraY, double cameraZ) {
+	public void prepare(double cameraX, double cameraY, double cameraZ) {
 		boxCuller.setPosition(cameraX, cameraY, cameraZ);
 	}
 
@@ -34,7 +34,7 @@ public class BoxCullingFrustum extends Frustum implements SodiumFrustumExt {
 		return false;
 	}
 
-	public boolean isVisible(Box box) {
+	public boolean isVisible(AABB box) {
 		return !boxCuller.isCulled(box);
 	}
 

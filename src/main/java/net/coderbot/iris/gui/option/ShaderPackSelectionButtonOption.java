@@ -1,29 +1,29 @@
 package net.coderbot.iris.gui.option;
 
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.option.Option;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Option;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TranslatableComponent;
 
 public class ShaderPackSelectionButtonOption extends Option {
 	private final Screen parent;
-	private final MinecraftClient client;
+	private final Minecraft client;
 
-	public ShaderPackSelectionButtonOption(Screen parent, MinecraftClient client) {
+	public ShaderPackSelectionButtonOption(Screen parent, Minecraft client) {
 		super("options.iris.shaderPackSelection");
 		this.parent = parent;
 		this.client = client;
 	}
 
 	@Override
-	public ClickableWidget createButton(GameOptions options, int x, int y, int width) {
-		return new ButtonWidget(
+	public AbstractWidget createButton(Options options, int x, int y, int width) {
+		return new Button(
 				x, y, width, 20,
-				new TranslatableText("options.iris.shaderPackSelection"),
+				new TranslatableComponent("options.iris.shaderPackSelection"),
 				button -> client.setScreen(new ShaderPackScreen(parent))
 		);
 	}

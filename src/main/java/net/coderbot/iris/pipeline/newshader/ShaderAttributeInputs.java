@@ -1,7 +1,7 @@
 package net.coderbot.iris.pipeline.newshader;
 
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 
 public class ShaderAttributeInputs {
 	private boolean color;
@@ -12,11 +12,11 @@ public class ShaderAttributeInputs {
 	private boolean newLines;
 
 	public ShaderAttributeInputs(VertexFormat format) {
-		if (format == VertexFormats.LINES) {
+		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL) {
 			newLines = true;
 		}
 
-		format.getShaderAttributes().forEach(name -> {
+		format.getElementAttributeNames().forEach(name -> {
 			if ("Color".equals(name)) {
 				color = true;
 			}

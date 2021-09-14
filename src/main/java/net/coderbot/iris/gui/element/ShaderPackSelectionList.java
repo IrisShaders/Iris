@@ -124,7 +124,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 
 		public boolean isSelected() {
-			return list.getSelectedOrNull() == this;
+			return list.getSelected() == this;
 		}
 
 		public String getPackName() {
@@ -133,8 +133,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		// Appears to be some accessibility thing
 		@Override
-		public Text getNarration() {
-			return new TranslatableText("narrator.select", packName);
+		public Component getNarration() {
+			return new TranslatableComponent("narrator.select", packName);
 		}
 
 		@Override
@@ -187,7 +187,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		// Appears to be some accessibility thing
 		@Override
-		public Text getNarration() {
+		public Component getNarration() {
 			return label;
 		}
 
@@ -217,8 +217,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		// Appears to be some accessibility thing
 		@Override
-		public Text getNarration() {
-			return new TranslatableText("narration.button", this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
+		public Component getNarration() {
+			return new TranslatableComponent("narration.button", this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
 		}
 
 		@Override

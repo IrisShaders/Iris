@@ -12,14 +12,12 @@ import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.render.Shader;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.resource.metadata.ResourceMetadataReader;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
-
+import com.mojang.blaze3d.vertex.VertexFormat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -98,7 +96,7 @@ public class NewShaderTests {
 				"    ]\n" +
 				"}";
 
-		ResourceFactory shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
+		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
 
 		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
@@ -114,7 +112,7 @@ public class NewShaderTests {
 		}, parent);
 	}
 
-	private static class IrisProgramResourceFactory implements ResourceFactory {
+	private static class IrisProgramResourceFactory implements ResourceProvider {
 		private final String json;
 		private final String vertex;
 		private final String fragment;
@@ -126,7 +124,7 @@ public class NewShaderTests {
 		}
 
 		@Override
-		public Resource getResource(Identifier id) throws IOException {
+		public Resource getResource(ResourceLocation id) throws IOException {
 			final String path = id.getPath();
 
 			if (path.endsWith("json")) {
@@ -142,16 +140,16 @@ public class NewShaderTests {
 	}
 
 	private static class StringResource implements Resource {
-		private final Identifier id;
+		private final ResourceLocation id;
 		private final String content;
 
-		private StringResource(Identifier id, String content) {
+		private StringResource(ResourceLocation id, String content) {
 			this.id = id;
 			this.content = content;
 		}
 
 		@Override
-		public Identifier getId() {
+		public ResourceLocation getLocation() {
 			return id;
 		}
 
@@ -166,12 +164,12 @@ public class NewShaderTests {
 		}
 
 		@Override
-		public <T> @Nullable T getMetadata(ResourceMetadataReader<T> metaReader) {
+		public <T> @Nullable T getMetadata(MetadataSectionSerializer<T> metaReader) {
 			return null;
 		}
 
 		@Override
-		public String getResourcePackName() {
+		public String getSourceName() {
 			return "<iris shaderpack shaders>";
 		}
 
