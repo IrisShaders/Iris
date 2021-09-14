@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MultiBufferSource.BufferSource.class)
-public class MixinMultiBufferSourceChild {
+public class MixinBufferSource_WrapperChecking {
 	@Unique
 	private final Set<String> unwrapped = new ObjectOpenHashSet<>();
 

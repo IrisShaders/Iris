@@ -17,7 +17,7 @@
     "MixinLevelRenderer",
     "MixinLivingEntityRenderer",
     "MixinModelViewBobbing",
-    "MixinMultiBufferSourceChild",
+    "MixinBufferSource_WrapperChecking",
     "MixinParticleEngine",
     "MixinTextureAtlas",
     "MixinTheEndPortalRenderer",
