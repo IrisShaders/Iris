@@ -34,7 +34,7 @@ public class BoxCullingFrustum extends Frustum {
 	}
 
 	@Override
-	public boolean isVisible(AABB box) {
-		return !boxCuller.isCulled(box);
+	public boolean isVisible(AABB aabb) {
+		return !boxCuller.isCulled(aabb);
 	}
 }

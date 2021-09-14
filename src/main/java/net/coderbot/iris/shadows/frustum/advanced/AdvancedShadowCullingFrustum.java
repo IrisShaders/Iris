@@ -260,12 +260,12 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	}
 
 	@Override
-	public boolean isVisible(AABB box) {
-		if (boxCuller != null && boxCuller.isCulled(box)) {
+	public boolean isVisible(AABB aabb) {
+		if (boxCuller != null && boxCuller.isCulled(aabb)) {
 			return false;
 		}
 
-		return this.isVisible(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ);
 	}
 
 	// For Sodium

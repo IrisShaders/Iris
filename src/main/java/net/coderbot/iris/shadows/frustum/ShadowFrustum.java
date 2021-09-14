@@ -31,11 +31,11 @@ public class ShadowFrustum extends Frustum {
 	}
 
 	@Override
-	public boolean isVisible(AABB box) {
-		if (boxCuller.isCulled(box)) {
+	public boolean isVisible(AABB aabb) {
+		if (boxCuller.isCulled(aabb)) {
 			return false;
 		}
 
-		return super.isVisible(box);
+		return super.isVisible(aabb);
 	}
 }

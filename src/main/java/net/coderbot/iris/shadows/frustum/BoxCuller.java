@@ -25,9 +25,9 @@ public class BoxCuller {
 		this.maxAllowedZ = cameraZ + maxDistance;
 	}
 
-	public boolean isCulled(AABB box) {
-		return isCulled((float) box.minX, (float) box.minY, (float) box.minZ,
-				(float) box.maxX, (float) box.maxY, (float) box.maxZ);
+	public boolean isCulled(AABB aabb) {
+		return isCulled((float) aabb.minX, (float) aabb.minY, (float) aabb.minZ,
+				(float) aabb.maxX, (float) aabb.maxY, (float) aabb.maxZ);
 	}
 
 	public boolean isCulled(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {

@@ -21,7 +21,7 @@ public class CullEverythingFrustum extends Frustum {
 	}
 
 	@Override
-	public boolean isVisible(AABB box) {
+	public boolean isVisible(AABB aabb) {
 		return false;
 	}
 }
