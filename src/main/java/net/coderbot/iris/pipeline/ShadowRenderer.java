@@ -113,7 +113,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		if (shadowDirectives.getFov() != null) {
 			// TODO: Support FOV in the shadow map for legacy shaders
-			Iris.logger.warn("The shaderpack specifies a shadow FOV of " + shadowDirectives.getFov() + ", but Iris does not currently support perspective projections in the shadow pass.");
+			Iris.logger.warn("The shaderpack specifies a shadow FOV of " + shadowDirectives.getFov()
+					+ ", but Iris does not currently support perspective projections in the shadow pass.");
 		}
 
 		// TODO: Support more than two shadowcolor render targets
