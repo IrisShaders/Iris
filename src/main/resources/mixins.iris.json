@@ -22,7 +22,7 @@
     "MixinTextureAtlas",
     "MixinTheEndPortalRenderer",
     "MixinTitleScreen",
-    "MixinTntMinecartEntityRenderer",
+    "MixinTntMinecartRenderer",
     "MixinTweakFarPlane",
     "entity_render_context.MixinBlockEntityRenderDispatcher",
     "entity_render_context.MixinEntityRenderDispatcher",
