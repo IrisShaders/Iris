@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(StationaryItemParticle.class)
-public class MixinItemBillboardParticle {
+public class MixinStationaryItemParticle {
 	@Unique
 	private boolean isOpaque;
 

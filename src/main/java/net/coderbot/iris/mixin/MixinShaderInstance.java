@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ShaderInstance.class)
-public class MixinShader {
+public class MixinShaderInstance {
 	@Redirect(method = {"apply", "updateLocations"}, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/shaders/Uniform;glGetUniformLocation(ILjava/lang/CharSequence;)I"))
 	private int iris$redirectGetUniformLocation(int programId, CharSequence name) {
 		int location = Uniform.glGetUniformLocation(programId, name);

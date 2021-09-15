@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Mixin(Program.class)
-public class MixinGlShader {
+public class MixinProgram {
 	@Redirect(method = "compileShaderInternal", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/preprocessor/GlslPreprocessor;process(Ljava/lang/String;)Ljava/util/List;"))
 	private static List<String> iris$allowSkippingMojImportDirectives(GlslPreprocessor includeHandler, String shaderSource) {
 		// Mojang's code for handling #moj_import directives uses regexes that can cause StackOverflowErrors.
