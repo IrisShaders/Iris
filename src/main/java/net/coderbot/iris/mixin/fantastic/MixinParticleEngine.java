@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin.fantastic;
 
 import com.google.common.collect.ImmutableList;
-import net.coderbot.iris.fantastic.IrisParticleRenderTypes;
+import net.coderbot.iris.fantastic.IrisParticleTextureSheets;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleEngine;
 import net.minecraft.client.particle.ParticleEngine;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Extends the ParticleEngine class to allow multiple phases of particle rendering.
+ * Extends the ParticleManager class to allow multiple phases of particle rendering.
  *
  * This is used to enable the rendering of known-opaque particles much earlier than other particles, most notably before
  * translucent content. Normally, particles behind translucent blocks are not visible on Fancy graphics, and a user must
@@ -50,15 +50,15 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 	@Final
 	private static List<ParticleRenderType> RENDER_ORDER;
 
-	private static final List<ParticleRenderType> OPAQUE_PARTICLE_RENDER_TYPES;
+	private static final List<ParticleRenderType> OPAQUE_PARTICLE_TEXTURE_SHEETS;
 
 	static {
-		OPAQUE_PARTICLE_RENDER_TYPES = ImmutableList.of(
-			IrisParticleRenderTypes.OPAQUE_TERRAIN,
-			ParticleRenderType.PARTICLE_SHEET_OPAQUE,
-			ParticleRenderType.PARTICLE_SHEET_LIT,
-			ParticleRenderType.CUSTOM,
-			ParticleRenderType.NO_RENDER
+		OPAQUE_PARTICLE_TEXTURE_SHEETS = ImmutableList.of(
+				IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET,
+				ParticleRenderType.PARTICLE_SHEET_OPAQUE,
+				ParticleRenderType.PARTICLE_SHEET_LIT,
+				ParticleRenderType.CUSTOM,
+				ParticleRenderType.NO_RENDER
 		);
 	}
 
@@ -71,12 +71,12 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 			List<ParticleRenderType> toRender = new ArrayList<>(RENDER_ORDER);
 
 			// Remove all known opaque particle texture sheets.
-			toRender.removeAll(OPAQUE_PARTICLE_RENDER_TYPES);
+			toRender.removeAll(OPAQUE_PARTICLE_TEXTURE_SHEETS);
 
 			return toRender;
 		} else if (phase == ParticleRenderingPhase.OPAQUE) {
 			// Render only opaque particle sheets
-			return OPAQUE_PARTICLE_RENDER_TYPES;
+			return OPAQUE_PARTICLE_TEXTURE_SHEETS;
 		} else {
 			// Don't override particle rendering
 			return RENDER_ORDER;
