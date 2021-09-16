@@ -379,10 +379,10 @@ public class Iris implements ClientModInitializer {
 	public static DimensionId lastDimension = DimensionId.OVERWORLD;
 
 	public static DimensionId getCurrentDimension() {
-		ClientLevel world = Minecraft.getInstance().level;
+		ClientLevel level = Minecraft.getInstance().level;
 
-		if (world != null) {
-			ResourceKey<net.minecraft.world.level.Level> worldRegistryKey = world.dimension();
+		if (level != null) {
+			ResourceKey<net.minecraft.world.level.Level> worldRegistryKey = level.dimension();
 
 			if (worldRegistryKey.equals(net.minecraft.world.level.Level.END)) {
 				return DimensionId.END;
@@ -393,7 +393,7 @@ public class Iris implements ClientModInitializer {
 			}
 		} else {
 			// This prevents us from reloading the shaderpack unless we need to. Otherwise, if the player is in the
-			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the world
+			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the level
 			// because the code thinks that the dimension changed.
 			return lastDimension;
 		}

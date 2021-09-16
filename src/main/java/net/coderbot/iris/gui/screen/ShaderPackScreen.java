@@ -38,24 +38,24 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
-	public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
+	public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
 		if (this.minecraft.level == null) {
-			this.renderBackground(matrices);
+			this.renderBackground(poseStack);
 		} else {
-			this.fillGradient(matrices, 0, 0, width, height, 0x4F232323, 0x4F232323);
+			this.fillGradient(poseStack, 0, 0, width, height, 0x4F232323, 0x4F232323);
 		}
 
-		this.shaderPackList.render(matrices, mouseX, mouseY, delta);
+		this.shaderPackList.render(poseStack, mouseX, mouseY, delta);
 
-		drawCenteredString(matrices, this.font, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
+		drawCenteredString(poseStack, this.font, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
 
 		if (addedPackDialog != null && addedPackDialogTimer > 0) {
-			drawCenteredString(matrices, this.font, addedPackDialog, (int)(this.width * 0.5), 21, 0xFFFFFF);
+			drawCenteredString(poseStack, this.font, addedPackDialog, (int)(this.width * 0.5), 21, 0xFFFFFF);
 		} else {
-			drawCenteredString(matrices, this.font, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
+			drawCenteredString(poseStack, this.font, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
 		}
 
-		super.render(matrices, mouseX, mouseY, delta);
+		super.render(poseStack, mouseX, mouseY, delta);
 	}
 
 	@Override
