@@ -19,7 +19,7 @@ public abstract class MixinLivingEntityRenderer {
 	abstract float getWhiteOverlayProgress(LivingEntity entity, float tickDelta);
 
 	@ModifyVariable(method = "render", at = @At("HEAD"))
-	private MultiBufferSource iris$wrapProvider(MultiBufferSource bufferSource, LivingEntity entity, float yaw,
+	private MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource, LivingEntity entity, float yaw,
 												float tickDelta, PoseStack pose, MultiBufferSource bufferSourceArg,
 												int light) {
 		if (!(bufferSource instanceof Groupable)) {

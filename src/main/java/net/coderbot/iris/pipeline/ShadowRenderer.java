@@ -494,7 +494,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			((DrawCallTrackingRenderBuffers) buffers).resetDrawCounts();
 		}
 
-		MultiBufferSource.BufferSource provider = buffers.bufferSource();
+		MultiBufferSource.BufferSource bufferSource = buffers.bufferSource();
 		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
 
 		int shadowEntities = 0;
@@ -520,7 +520,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		worldRenderer.getLevel().getProfiler().popPush("build geometry");
 
 		for (Entity entity : renderedEntities) {
-			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
+			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
 			shadowEntities++;
 		}
 
@@ -534,7 +534,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			modelView.pushPose();
 			BlockPos pos = entity.getBlockPos();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, provider);
+			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, bufferSource);
 			modelView.popPose();
 
 			shadowBlockEntities++;
@@ -548,7 +548,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
 		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
 		// shadow...
-		provider.endBatch();
+		bufferSource.endBatch();
 
 		worldRenderer.getLevel().getProfiler().popPush("translucent depth copy");
 

@@ -114,7 +114,7 @@ public final class CommonUniforms {
 			MobEffectInstance blindness = ((LivingEntity) cameraEntity).getEffect(MobEffects.BLINDNESS);
 
 			if (blindness != null) {
-				// Guessing that this is what OF uses, based on how vanilla calculates the fog value in BackgroundRenderer
+				// Guessing that this is what OF uses, based on how vanilla calculates the fog value in FogRenderer
 				// TODO: Add this to ShaderDoc
 				return Math.min(1.0F, blindness.getDuration() / 20.0F);
 			}
@@ -168,7 +168,7 @@ public final class CommonUniforms {
 		// Conduit power gives the player a sort-of night vision effect when underwater.
 		// This lets existing shaderpacks be compatible with conduit power automatically.
 		//
-		// Yes, this should be the player entity, to match LightmapTextureManager.
+		// Yes, this should be the player entity, to match LightTexture.
 		if (client.player != null && client.player.hasEffect(MobEffects.CONDUIT_POWER)) {
 			float underwaterVisibility = client.player.getWaterVision();
 

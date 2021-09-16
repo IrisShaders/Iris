@@ -59,7 +59,7 @@ public class MixinLevelRenderer {
 	private WorldRenderingPipeline pipeline;
 
 	@Inject(method = RENDER, at = @At("HEAD"))
-	private void iris$beginLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$beginLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid()) {
 			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
 					" didn't work. This is a bug! Please report it to the Iris developers.");
@@ -80,7 +80,7 @@ public class MixinLevelRenderer {
 	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
 	// render their waypoint beams.
 	@Inject(method = RENDER, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
-	private void iris$endLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$endLevelRender(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeLevelRendering();
 		pipeline.setPhase(WorldRenderingPhase.NOT_RENDERING_WORLD);
@@ -88,23 +88,23 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;setupRender(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZIZ)V", shift = At.Shift.AFTER))
-	private void iris$renderTerrainShadows(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$renderTerrainShadows(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.renderShadows((LevelRendererAccessor) this, camera);
 	}
 
 	// TODO(21w10a): Deal with render hooks
 	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR))
-	private void iris$beforeClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$beforeClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, lightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.CLEAR);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER))
-	private void iris$afterClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$afterClear(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, lightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.CLEAR);
 	}*/
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V", args = "ldc=sky"))
-	private void iris$beginSky(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$beginSky(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.SKY);
 	}
 
@@ -147,18 +147,18 @@ public class MixinLevelRenderer {
 
 	// TODO(21w10a): Deal with render hooks
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
-	private void iris$endSky(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$endSky(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		// After the sky has rendered, there isn't a clear phase.
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}
 
 	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS))
-	private void iris$beginClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$beginClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, lightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.CLOUDS);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))
-	private void iris$endClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$endClouds(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, lightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.CLOUDS);
 	}*/
 
@@ -196,34 +196,34 @@ public class MixinLevelRenderer {
 
 	// TODO(21w10a): Deal with render hooks
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER))
-	private void iris$beginWeather(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$beginWeather(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.WEATHER);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
-	private void iris$endWeather(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$endWeather(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}
 
 	/*@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER))
-	private void iris$beginWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$beginWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, lightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WORLD_BORDER, shift = At.Shift.AFTER))
-	private void iris$endWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo callback) {
+	private void iris$endWorldBorder(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, lightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}*/
 
 	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void iris$beginTranslucents(PoseStack matrices, float tickDelta, long limitTime,
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-										LightTexture lightmapTextureManager, Matrix4f matrix4f,
+										LightTexture lightTexture, Matrix4f matrix4f,
 										CallbackInfo ci, ProfilerFiller profiler, Vec3 vec3d, double d, double e, double f,
 										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
-										MultiBufferSource.BufferSource immediate) {
+										MultiBufferSource.BufferSource bufferSource) {
 		profiler.popPush("iris_entity_draws");
-		immediate.endBatch();
+		bufferSource.endBatch();
 
 		profiler.popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();

@@ -12,7 +12,7 @@ public class BuiltinReplacementUniforms {
 	private static final Matrix4f lightmapTextureMatrix;
 
 	static {
-		// This mimics the transformations done in LightmapTextureManager to the GL_TEXTURE matrix.
+		// This mimics the transformations done in LightTexture to the GL_TEXTURE matrix.
 		lightmapTextureMatrix = new Matrix4f();
 		lightmapTextureMatrix.setIdentity();
 		lightmapTextureMatrix.multiply(0.00390625f);
