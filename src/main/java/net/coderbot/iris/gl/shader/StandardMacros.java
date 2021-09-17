@@ -26,9 +26,9 @@ public class StandardMacros {
 	 */
 	public static String getMcVersion() {
 		String version = SharedConstants.getCurrentVersion().getReleaseTarget();
-			// release target so snapshots are set to the higher version
-			//
-			// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
+		// release target so snapshots are set to the higher version
+		//
+		// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
 
 		if (version == null) {
 			throw new IllegalStateException("Could not get the current minecraft version!");
