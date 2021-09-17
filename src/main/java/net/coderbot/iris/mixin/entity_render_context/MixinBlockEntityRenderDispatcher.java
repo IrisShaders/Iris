@@ -22,17 +22,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(BlockEntityRenderDispatcher.class)
 public class MixinBlockEntityRenderDispatcher {
-	private static final String RENDER =
-			"render(Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
-
-	private static final String RUN_REPORTED =
+	private static final String TRY_RENDER =
 			"Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;tryRender(Lnet/minecraft/world/level/block/entity/BlockEntity;Ljava/lang/Runnable;)V";
 
 	// I inject here in the method so that:
 	//
 	// 1. we can know that some checks we need have already been done
 	// 2. if someone cancels this method hopefully it gets cancelled before this point
-	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED))
+	@Inject(method = "render", at = @At(value = "INVOKE", target = TRY_RENDER))
 	private void iris$beforeRender(BlockEntity blockEntity, float tickDelta, PoseStack poseStack,
 								   MultiBufferSource bufferSource, CallbackInfo ci) {
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
@@ -57,7 +54,7 @@ public class MixinBlockEntityRenderDispatcher {
 				new OuterWrappedRenderType("iris:is_block_entity", type, stateShard));
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))
+	@Inject(method = "render", at = @At(value = "INVOKE", target = TRY_RENDER, shift = At.Shift.AFTER))
 	private void iris$afterRender(BlockEntity blockEntity, float tickDelta, PoseStack matrix,
 								  MultiBufferSource bufferSource, CallbackInfo ci) {
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {

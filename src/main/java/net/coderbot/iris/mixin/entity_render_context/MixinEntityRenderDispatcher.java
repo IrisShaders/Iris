@@ -24,8 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(EntityRenderDispatcher.class)
 public class MixinEntityRenderDispatcher {
-	private static final String CRASHREPORT_CREATE =
-			"Lnet/minecraft/world/entity/Entity;fillCrashReportCategory(Lnet/minecraft/CrashReportCategory;)V";
+	private static final String CRASHREPORT_FOR_THROWABLE =
+			"net/minecraft/CrashReport.forThrowable (Ljava/lang/Throwable;Ljava/lang/String;)Lnet/minecraft/CrashReport;";
 
 	// Inject after MatrixStack#push to increase the chances that we won't be caught out by a poorly-positioned
 	// cancellation in an inject.
@@ -65,7 +65,7 @@ public class MixinEntityRenderDispatcher {
 		((WrappingMultiBufferSource) bufferSource).popWrappingFunction();
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = CRASHREPORT_CREATE))
+	@Inject(method = "render", at = @At(value = "INVOKE", target = CRASHREPORT_FOR_THROWABLE))
 	private void iris$crashedEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									      PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									      CallbackInfo ci) {
