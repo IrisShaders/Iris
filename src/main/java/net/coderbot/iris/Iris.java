@@ -31,8 +31,6 @@ import net.minecraft.util.Formatting;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
 @Environment(EnvType.CLIENT)
@@ -101,51 +99,6 @@ public class Iris implements ClientModInitializer {
 
 
 		loadShaderpack();
-
-		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
-		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.toggleShaders", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
-		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.shaderPackSelection", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
-
-		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			if (reloadKeybind.wasPressed()) {
-				try {
-					reload();
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
-					}
-
-				} catch (Exception e) {
-					logger.error("Error while reloading Shaders for Iris!", e);
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
-					}
-				}
-			} else if (toggleShadersKeybind.wasPressed()) {
-				IrisConfig config = getIrisConfig();
-				try {
-					config.setShadersEnabled(!config.areShadersEnabled());
-					config.save();
-
-					reload();
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
-					}
-				} catch (Exception e) {
-					logger.error("Error while toggling shaders!", e);
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
-					}
-
-					setShadersDisabled();
-					currentPackName = "(off) [fallback, check your logs for errors]";
-				}
-			} else if (shaderpackScreenKeybind.wasPressed()) {
-				minecraftClient.setScreen(new ShaderPackScreen(null));
-			}
-		});
 
 		pipelineManager = new PipelineManager(Iris::createPipeline);
 	}

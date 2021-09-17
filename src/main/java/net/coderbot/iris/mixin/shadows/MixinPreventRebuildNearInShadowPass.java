@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -22,23 +23,33 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * setup.
  */
 @Mixin(WorldRenderer.class)
-public class MixinPreventRebuildNearInShadowPass {
+public abstract class MixinPreventRebuildNearInShadowPass {
 	@Shadow
 	@Final
-	private ObjectArrayList<WorldRenderer.ChunkInfo> visibleChunks;
+	private ObjectArrayList<WorldRenderer.ChunkInfo> field_34807;
+
+	@Shadow
+	protected abstract void method_38551(Frustum frustum);
 
 	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V";
 
-	@Inject(method = "setupTerrain", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=rebuildNear"), cancellable = true)
-	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo callback) {
+	@Inject(method = "setupTerrain", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/atomic/AtomicReference;get()Ljava/lang/Object;"), cancellable = true)
+	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean bl, CallbackInfo ci) {
 		if (ShadowRenderer.ACTIVE) {
-			for (WorldRenderer.ChunkInfo chunk : this.visibleChunks) {
+			for (WorldRenderer.ChunkInfo chunk : this.field_34807) {
 				for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getData().getBlockEntities()) {
 					ShadowRenderer.visibleBlockEntities.add(entity);
 				}
 			}
 			MinecraftClient.getInstance().getProfiler().pop();
-			callback.cancel();
+			ci.cancel();
+		}
+	}
+
+	@Redirect(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;method_38551(Lnet/minecraft/client/render/Frustum;)V"))
+	private void dontupdatefrustum(WorldRenderer worldRenderer, Frustum frustum) {
+		if (!ShadowRenderer.ACTIVE) {
+			this.method_38551(frustum);
 		}
 	}
 }

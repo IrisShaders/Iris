@@ -19,21 +19,15 @@ public interface WorldRendererAccessor {
 	@Invoker("renderLayer")
 	void invokeRenderLayer(RenderLayer terrainLayer, MatrixStack modelView, double cameraX, double cameraY, double cameraZ, Matrix4f projection);
 
-	@Accessor("visibleChunks")
+	@Accessor("field_34807")
 	ObjectArrayList<WorldRenderer.ChunkInfo> getVisibleChunks();
 
 	@Invoker("setupTerrain")
-	void invokeSetupTerrain(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator);
+	void invokeSetupTerrain(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator);
 
 	@Invoker("renderEntity")
 	void invokeRenderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers);
 
 	@Accessor("world")
 	ClientWorld getWorld();
-
-	@Accessor("frame")
-	int getFrame();
-
-	@Accessor("frame")
-	void setFrame(int frame);
 }

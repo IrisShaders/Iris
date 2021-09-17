@@ -15,13 +15,13 @@ public class MixinWorldRenderer implements CullingDataCache {
 	@Shadow
 	@Final
 	@Mutable
-	private ObjectArrayList visibleChunks;
+	private ObjectArrayList field_34807;
 
 	@Unique
 	private ObjectArrayList savedVisibleChunks = new ObjectArrayList(69696);
 
 	@Shadow
-	private boolean needsTerrainUpdate;
+	private boolean field_34810;
 
 	@Unique
 	private boolean savedNeedsTerrainUpdate;
@@ -68,14 +68,14 @@ public class MixinWorldRenderer implements CullingDataCache {
 
 	@Unique
 	private void swap() {
-		ObjectArrayList tmpList = visibleChunks;
-		visibleChunks = savedVisibleChunks;
+		ObjectArrayList tmpList = field_34807;
+		field_34807 = savedVisibleChunks;
 		savedVisibleChunks = tmpList;
 
 		// TODO: If the normal chunks need a terrain update, these chunks probably do too...
 		// We probably should copy it over
-		boolean tmpBool = needsTerrainUpdate;
-		needsTerrainUpdate = savedNeedsTerrainUpdate;
+		boolean tmpBool = field_34810;
+		field_34810 = savedNeedsTerrainUpdate;
 		savedNeedsTerrainUpdate = tmpBool;
 
 		double tmp;
