@@ -23,25 +23,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * setup.
  */
 @Mixin(LevelRenderer.class)
-public class MixinPreventRebuildNearInShadowPass {
+public abstract class MixinPreventRebuildNearInShadowPass {
 	@Shadow
 	@Final
-	private ObjectArrayList<LevelRenderer.RenderChunkInfo> renderChunks;
+	private ObjectArrayList<LevelRenderer.RenderChunkInfo> renderChunksInFrustum;
 
 	@Shadow
 	protected abstract void applyFrustum(Frustum frustum);
 
-	@Inject(method = "setupRender", at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V", args = "ldc=rebuildNear"), cancellable = true)
-	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo callback) {
+	@Inject(method = "setupRender", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/atomic/AtomicReference;get()Ljava/lang/Object;"), cancellable = true)
+	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean bl, boolean bl2, CallbackInfo ci) {
 		if (ShadowRenderer.ACTIVE) {
-			for (LevelRenderer.RenderChunkInfo chunk : this.renderChunks) {
+			for (LevelRenderer.RenderChunkInfo chunk : this.renderChunksInFrustum) {
 				for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getCompiledChunk().getRenderableBlockEntities()) {
 					ShadowRenderer.visibleBlockEntities.add(entity);
 				}
 			}
 			Minecraft.getInstance().getProfiler().pop();
 			this.applyFrustum(frustum);
-			callback.cancel();
+			ci.cancel();
 		}
 	}
 }

@@ -23,17 +23,11 @@ public interface LevelRendererAccessor {
 	void invokeRenderChunkLayer(RenderType terrainLayer, PoseStack modelView, double cameraX, double cameraY, double cameraZ, Matrix4f matrix4f);
 
 	@Invoker("setupRender")
-	void invokeSetupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator);
+	void invokeSetupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator);
 
 	@Invoker("renderEntity")
 	void invokeRenderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, PoseStack poseStack, MultiBufferSource bufferSource);
 
 	@Accessor("level")
 	ClientLevel getLevel();
-
-	@Accessor("frameId")
-	int getFrameId();
-
-	@Accessor("frameId")
-	void setFrameId(int frame);
 }
