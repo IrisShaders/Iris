@@ -42,11 +42,12 @@ public abstract class MixinPreventRebuildNearInShadowPass {
 				}
 			}
 			MinecraftClient.getInstance().getProfiler().pop();
+			this.method_38551(frustum);
 			ci.cancel();
 		}
 	}
 
-	@Redirect(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;method_38551(Lnet/minecraft/client/render/Frustum;)V"))
+	//@Redirect(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;method_38551(Lnet/minecraft/client/render/Frustum;)V"))
 	private void dontupdatefrustum(WorldRenderer worldRenderer, Frustum frustum) {
 		if (!ShadowRenderer.ACTIVE) {
 			this.method_38551(frustum);
