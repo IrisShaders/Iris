@@ -12,10 +12,4 @@ import net.fabricmc.api.Environment;
 public interface RenderStateShardAccessor {
 	@Accessor("name")
 	String getName();
-
-	// TODO(1.17): translucent transparency accessor
-	/*@Accessor("TRANSLUCENT_TRANSPARENCY")
-	static RenderPhase.Transparency getTranslucentTransparency() {
-		return null;
-	}*/
 }
