@@ -1,9 +1,9 @@
 package net.coderbot.iris.mixin;
 
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Matrix3f;
-import net.minecraft.util.math.Matrix4f;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Applying these effects to the projection matrix causes severe issues with most shaderpacks. As it turns out, OptiFine
  * applies these effects to the modelview matrix. As such, we must do the same to properly run shaderpacks.
  *
- * This mixin make use of the matrix stack in order to make these changes without more invasive changes.
+ * This mixin makes use of the matrix stack in order to make these changes without more invasive changes.
  */
 @Mixin(GameRenderer.class)
 public class MixinModelViewBobbing {
@@ -25,29 +25,37 @@ public class MixinModelViewBobbing {
 	@Unique
 	private Matrix3f bobbingEffectsNormal;
 
-	@ModifyArg(method = "renderWorld", index = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobViewWhenHurt(Lnet/minecraft/client/util/math/MatrixStack;F)V"))
-	private MatrixStack iris$separateViewBobbing(MatrixStack stack) {
-		stack.push();
-		stack.peek().getModel().loadIdentity();
-		stack.peek().getNormal().loadIdentity();
+	@ModifyArg(method = "renderLevel", index = 0,
+			at = @At(value = "INVOKE",
+					target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"))
+	private PoseStack iris$separateViewBobbing(PoseStack stack) {
+		stack.pushPose();
+		stack.last().pose().setIdentity();
+		stack.last().normal().setIdentity();
 
 		return stack;
 	}
 
-	@Redirect(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;peek()Lnet/minecraft/client/util/math/MatrixStack$Entry;"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobViewWhenHurt(Lnet/minecraft/client/util/math/MatrixStack;F)V")))
-	private MatrixStack.Entry iris$saveBobbing(MatrixStack stack) {
-		bobbingEffectsModel = stack.peek().getModel().copy();
-		bobbingEffectsNormal = stack.peek().getNormal().copy();
+	@Redirect(method = "renderLevel",
+			at = @At(value = "INVOKE",
+					target = "Lcom/mojang/blaze3d/vertex/PoseStack;last()Lcom/mojang/blaze3d/vertex/PoseStack$Pose;"),
+			slice = @Slice(from = @At(value = "INVOKE",
+					       target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V")))
+	private PoseStack.Pose iris$saveBobbing(PoseStack stack) {
+		bobbingEffectsModel = stack.last().pose().copy();
+		bobbingEffectsNormal = stack.last().normal().copy();
 
-		stack.pop();
+		stack.popPose();
 
-		return stack.peek();
+		return stack.last();
 	}
 
-	@Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;loadProjectionMatrix(Lnet/minecraft/util/math/Matrix4f;)V"))
-	private void iris$applyBobbingToModelView(float tickDelta, long limitTime, MatrixStack matrix, CallbackInfo ci) {
-		matrix.peek().getModel().multiply(bobbingEffectsModel);
-		matrix.peek().getNormal().multiply(bobbingEffectsNormal);
+	@Inject(method = "renderLevel",
+			at = @At(value = "INVOKE",
+					target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lcom/mojang/math/Matrix4f;)V"))
+	private void iris$applyBobbingToModelView(float tickDelta, long limitTime, PoseStack matrix, CallbackInfo ci) {
+		matrix.last().pose().multiply(bobbingEffectsModel);
+		matrix.last().normal().mul(bobbingEffectsNormal);
 
 		bobbingEffectsModel = null;
 		bobbingEffectsNormal = null;

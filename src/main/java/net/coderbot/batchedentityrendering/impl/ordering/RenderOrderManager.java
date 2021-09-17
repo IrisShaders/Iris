@@ -1,12 +1,12 @@
 package net.coderbot.batchedentityrendering.impl.ordering;
 
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.renderer.RenderType;
 
 public interface RenderOrderManager {
-    void begin(RenderLayer layer);
+    void begin(RenderType type);
     void startGroup();
     boolean maybeStartGroup();
     void endGroup();
     void reset();
-    Iterable<RenderLayer> getRenderOrder();
+    Iterable<RenderType> getRenderOrder();
 }

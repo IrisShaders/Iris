@@ -1,22 +1,21 @@
 package net.coderbot.batchedentityrendering.impl;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Pair;
-import net.coderbot.batchedentityrendering.mixin.RenderLayerAccessor;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-
+import net.coderbot.batchedentityrendering.mixin.RenderTypeAccessor;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class SegmentedBufferBuilder implements VertexConsumerProvider, MemoryTrackingBuffer {
+public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTrackingBuffer {
     private final BufferBuilder buffer;
-    private final List<RenderLayer> usedLayers;
-    private RenderLayer currentLayer;
+    private final List<RenderType> usedLayers;
+    private RenderType currentLayer;
 
     public SegmentedBufferBuilder() {
         // 2 MB initial allocation
@@ -27,18 +26,18 @@ public class SegmentedBufferBuilder implements VertexConsumerProvider, MemoryTra
     }
 
     @Override
-    public VertexConsumer getBuffer(RenderLayer renderLayer) {
+    public VertexConsumer getBuffer(RenderType renderLayer) {
         if (!Objects.equals(currentLayer, renderLayer)) {
             if (currentLayer != null) {
                 if (isTranslucent(currentLayer)) {
-                    buffer.setCameraPosition(0, 0, 0);
+                    buffer.setQuadSortOrigin(0, 0, 0);
                 }
 
                 buffer.end();
                 usedLayers.add(currentLayer);
             }
 
-            buffer.begin(renderLayer.getDrawMode(), renderLayer.getVertexFormat());
+            buffer.begin(renderLayer.mode(), renderLayer.format());
 
             currentLayer = renderLayer;
         }
@@ -62,7 +61,7 @@ public class SegmentedBufferBuilder implements VertexConsumerProvider, MemoryTra
         usedLayers.add(currentLayer);
 
         if (isTranslucent(currentLayer)) {
-            buffer.setCameraPosition(0, 0, 0);
+            buffer.setQuadSortOrigin(0, 0, 0);
         }
 
         buffer.end();
@@ -70,10 +69,10 @@ public class SegmentedBufferBuilder implements VertexConsumerProvider, MemoryTra
 
         List<BufferSegment> segments = new ArrayList<>(usedLayers.size());
 
-        for (RenderLayer layer : usedLayers) {
-            Pair<BufferBuilder.DrawArrayParameters, ByteBuffer> pair = buffer.popData();
+        for (RenderType layer : usedLayers) {
+            Pair<BufferBuilder.DrawState, ByteBuffer> pair = buffer.popNextBuffer();
 
-            BufferBuilder.DrawArrayParameters parameters = pair.getFirst();
+            BufferBuilder.DrawState parameters = pair.getFirst();
             ByteBuffer slice = pair.getSecond();
 
             segments.add(new BufferSegment(slice, parameters, layer));
@@ -84,8 +83,8 @@ public class SegmentedBufferBuilder implements VertexConsumerProvider, MemoryTra
         return segments;
     }
 
-    private static boolean isTranslucent(RenderLayer layer) {
-        return ((RenderLayerAccessor) layer).isTranslucent();
+    private static boolean isTranslucent(RenderType layer) {
+        return ((RenderTypeAccessor) layer).shouldSortOnUpload();
     }
 
     @Override

@@ -2,8 +2,8 @@ package net.coderbot.batchedentityrendering.impl.ordering;
 
 import net.coderbot.batchedentityrendering.impl.BlendingStateHolder;
 import net.coderbot.batchedentityrendering.impl.TransparencyType;
-import net.coderbot.batchedentityrendering.impl.WrappableRenderLayer;
-import net.minecraft.client.render.RenderLayer;
+import net.coderbot.batchedentityrendering.impl.WrappableRenderType;
+import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -11,31 +11,31 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 public class TranslucencyRenderOrderManager implements RenderOrderManager {
-    private final EnumMap<TransparencyType, LinkedHashSet<RenderLayer>> layers;
+    private final EnumMap<TransparencyType, LinkedHashSet<RenderType>> renderTypes;
 
     public TranslucencyRenderOrderManager() {
-        layers = new EnumMap<>(TransparencyType.class);
+        renderTypes = new EnumMap<>(TransparencyType.class);
 
         for (TransparencyType type : TransparencyType.values()) {
-            layers.put(type, new LinkedHashSet<>());
+            renderTypes.put(type, new LinkedHashSet<>());
         }
     }
 
-    private static TransparencyType getTransparencyType(RenderLayer layer) {
-        while (layer instanceof WrappableRenderLayer) {
-            layer = ((WrappableRenderLayer) layer).unwrap();
+    private static TransparencyType getTransparencyType(RenderType type) {
+        while (type instanceof WrappableRenderType) {
+            type = ((WrappableRenderType) type).unwrap();
         }
 
-        if (layer instanceof BlendingStateHolder) {
-            return ((BlendingStateHolder) layer).getTransparencyType();
+        if (type instanceof BlendingStateHolder) {
+            return ((BlendingStateHolder) type).getTransparencyType();
         }
 
         // Default to "generally transparent" if we can't figure it out.
         return TransparencyType.GENERAL_TRANSPARENT;
     }
 
-    public void begin(RenderLayer layer) {
-        layers.get(getTransparencyType(layer)).add(layer);
+    public void begin(RenderType type) {
+        renderTypes.get(getTransparencyType(type)).add(type);
     }
 
     public void startGroup() {
@@ -53,24 +53,24 @@ public class TranslucencyRenderOrderManager implements RenderOrderManager {
 
     @Override
     public void reset() {
-        layers.forEach((type, set) -> {
+        renderTypes.forEach((type, set) -> {
             set.clear();
         });
     }
 
-    public Iterable<RenderLayer> getRenderOrder() {
+    public Iterable<RenderType> getRenderOrder() {
         int layerCount = 0;
 
-        for (LinkedHashSet<RenderLayer> set : layers.values()) {
+        for (LinkedHashSet<RenderType> set : renderTypes.values()) {
             layerCount += set.size();
         }
 
-        List<RenderLayer> allLayers = new ArrayList<>(layerCount);
+        List<RenderType> allRenderTypes = new ArrayList<>(layerCount);
 
-        for (LinkedHashSet<RenderLayer> set : layers.values()) {
-            allLayers.addAll(set);
+        for (LinkedHashSet<RenderType> set : renderTypes.values()) {
+            allRenderTypes.addAll(set);
         }
 
-        return allLayers;
+        return allRenderTypes;
     }
 }

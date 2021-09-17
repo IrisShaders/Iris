@@ -1,8 +1,8 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.gl.GlShader;
-import net.minecraft.client.gl.GlUniform;
+import com.mojang.blaze3d.shaders.Shader;
+import com.mojang.blaze3d.shaders.Uniform;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,14 +17,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * This makes line rendering work properly in the shadow pass, or if a shader pack uses
  * a custom viewport size.
  */
-@Mixin(GlUniform.class)
+@Mixin(Uniform.class)
 public class MixinGlUniform {
 	@Shadow
 	@Final
 	private String name;
 
 	@Shadow
-	private boolean stateDirty;
+	private boolean dirty;
 
 	@Shadow
 	public final void set(float x, float y) {
@@ -34,8 +34,8 @@ public class MixinGlUniform {
 	@Unique
 	private boolean isScreenSize;
 
-	@Inject(method = "<init>(Ljava/lang/String;IILnet/minecraft/client/gl/GlShader;)V", at = @At("RETURN"))
-	private void iris$onInit(String name, int dataType, int count, GlShader program, CallbackInfo ci) {
+	@Inject(method = "<init>", at = @At("RETURN"))
+	private void iris$onInit(String name, int dataType, int count, Shader program, CallbackInfo ci) {
 		isScreenSize = "ScreenSize".equals(name) || "iris_ScreenSize".equals(name);
 	}
 
@@ -43,18 +43,18 @@ public class MixinGlUniform {
 	public void iris$upload(CallbackInfo ci) {
 		if (isScreenSize) {
 			// Make sure that this uniform is always re-uploaded.
-			stateDirty = true;
+			dirty = true;
 		}
 	}
 
-	@Inject(method = "uploadFloats()V", at = @At("HEAD"))
-	private void iris$uploadFloats(CallbackInfo ci) {
+	@Inject(method = "uploadAsFloat", at = @At("HEAD"))
+	private void iris$uploadAsFloat(CallbackInfo ci) {
 		if (isScreenSize) {
-			set(GlStateManager.Viewport.getWidth(), GlStateManager.Viewport.getHeight());
+			set(GlStateManager.Viewport.width(), GlStateManager.Viewport.height());
 
 			// Vanilla has already cleared the dirty flag by this point, but we've just reactivated it.
 			// So let's clear it again.
-			stateDirty = false;
+			dirty = false;
 		}
 	}
 }

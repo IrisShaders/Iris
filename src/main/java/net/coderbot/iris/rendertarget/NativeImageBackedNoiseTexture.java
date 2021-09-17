@@ -1,12 +1,11 @@
 package net.coderbot.iris.rendertarget;
 
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-
+import com.mojang.blaze3d.platform.NativeImage;
 import java.util.Objects;
 import java.util.Random;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 
-public class NativeImageBackedNoiseTexture extends NativeImageBackedTexture {
+public class NativeImageBackedNoiseTexture extends DynamicTexture {
 	public NativeImageBackedNoiseTexture(int size) {
 		super(create(size));
 	}
@@ -19,7 +18,7 @@ public class NativeImageBackedNoiseTexture extends NativeImageBackedTexture {
 			for (int y = 0; y < size; y++) {
 				int color = random.nextInt() | (255 << 24);
 
-				image.setColor(x, y, color);
+				image.setPixelRGBA(x, y, color);
 			}
 		}
 
@@ -28,9 +27,9 @@ public class NativeImageBackedNoiseTexture extends NativeImageBackedTexture {
 
 	@Override
 	public void upload() {
-		NativeImage image = Objects.requireNonNull(getImage());
+		NativeImage image = Objects.requireNonNull(getPixels());
 
-		bindTexture();
+		bind();
 		image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), true, false, false, false);
 	}
 }

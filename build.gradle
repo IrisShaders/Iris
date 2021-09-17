@@ -21,12 +21,13 @@ loom {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// JUnit 5 Jupiter test engine
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
 
 test {

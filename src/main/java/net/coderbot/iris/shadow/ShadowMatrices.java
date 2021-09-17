@@ -1,8 +1,7 @@
 package net.coderbot.iris.shadow;
 
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Vec3f;
-
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import java.nio.FloatBuffer;
 
 public class ShadowMatrices {
@@ -33,11 +32,11 @@ public class ShadowMatrices {
 			skyAngle = shadowAngle - 0.25f;
 		}
 
-		target.loadIdentity();
-		target.multiply(Matrix4f.translate(0.0f, 0.0f, -100.0f));
-		target.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(90.0F));
-		target.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(skyAngle * -360.0f));
-		target.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(sunPathRotation));
+		target.setIdentity();
+		target.multiply(Matrix4f.createTranslateMatrix(0.0f, 0.0f, -100.0f));
+		target.multiply(Vector3f.XP.rotationDegrees(90.0F));
+		target.multiply(Vector3f.ZP.rotationDegrees(skyAngle * -360.0f));
+		target.multiply(Vector3f.XP.rotationDegrees(sunPathRotation));
 	}
 
 	public static void snapModelViewToGrid(Matrix4f target, float shadowIntervalSize, double cameraX, double cameraY, double cameraZ) {
@@ -62,7 +61,7 @@ public class ShadowMatrices {
 		offsetY -= halfIntervalSize;
 		offsetZ -= halfIntervalSize;
 
-		target.multiply(Matrix4f.translate(offsetX, offsetY, offsetZ));
+		target.multiply(Matrix4f.createTranslateMatrix(offsetX, offsetY, offsetZ));
 	}
 
 	public static void createModelViewMatrix(Matrix4f target, float shadowAngle, float shadowIntervalSize,
@@ -132,7 +131,7 @@ public class ShadowMatrices {
 		private static float[] toFloatArray(Matrix4f matrix4f) {
 			FloatBuffer buffer = FloatBuffer.allocate(16);
 
-			matrix4f.writeColumnMajor(buffer);
+			matrix4f.store(buffer);
 
 			return buffer.array();
 		}

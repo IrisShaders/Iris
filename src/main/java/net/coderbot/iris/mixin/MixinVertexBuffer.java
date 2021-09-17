@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin;
 
+import com.mojang.blaze3d.vertex.VertexBuffer;
 import net.coderbot.iris.fantastic.VertexBufferHelper;
-import net.minecraft.client.gl.VertexBuffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;

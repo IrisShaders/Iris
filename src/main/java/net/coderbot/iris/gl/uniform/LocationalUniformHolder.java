@@ -1,16 +1,15 @@
 package net.coderbot.iris.gl.uniform;
 
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import java.util.OptionalInt;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
-
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.math.Vector4f;
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 public interface LocationalUniformHolder extends UniformHolder {
 	LocationalUniformHolder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform);
@@ -53,21 +52,21 @@ public interface LocationalUniformHolder extends UniformHolder {
 	}
 
 	@Override
-	default LocationalUniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
+	default LocationalUniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2> value) {
 		location(name, UniformType.VEC2).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value)));
 
 		return this;
 	}
 
 	@Override
-	default LocationalUniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2f> value) {
+	default LocationalUniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2> value) {
 		location(name, UniformType.VEC2I).ifPresent(id -> addUniform(updateFrequency, new Vector2IntegerUniform(id, value)));
 
 		return this;
 	}
 
 	@Override
-	default LocationalUniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3f> value) {
+	default LocationalUniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value) {
 		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, new Vector3Uniform(id, value)));
 
 		return this;
@@ -81,7 +80,7 @@ public interface LocationalUniformHolder extends UniformHolder {
 	}
 
 	@Override
-	default LocationalUniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3d> value) {
+	default LocationalUniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3> value) {
 		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.converted(id, value)));
 
 		return this;

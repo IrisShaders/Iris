@@ -9,7 +9,7 @@
     "MixinVertexFormat",
     "block_rendering.MixinBufferBuilder_SeparateAo",
     "block_rendering.MixinChunkRebuildTask",
-    "block_rendering.MixinClientWorld"
+    "block_rendering.MixinClientLevel"
   ],
   "injectors": {
     "defaultRequire": 1

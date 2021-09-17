@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import org.lwjgl.opengl.*;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 public class StandardMacros {
 
@@ -25,10 +25,10 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L696-L699">Optifine Doc</a>
 	 */
 	public static String getMcVersion() {
-		String version = SharedConstants.getGameVersion().getReleaseTarget();
-			// release target so snapshots are set to the higher version
-			//
-			// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
+		String version = SharedConstants.getCurrentVersion().getReleaseTarget();
+		// release target so snapshots are set to the higher version
+		//
+		// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
 
 		if (version == null) {
 			throw new IllegalStateException("Could not get the current minecraft version!");
@@ -67,7 +67,7 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714">Optifine Doc</a>
 	 */
 	public static String getOsString() {
-		switch (Util.getOperatingSystem()) {
+		switch (Util.getPlatform()) {
 			case OSX:
 				return "MC_OS_MAC";
 			case LINUX:

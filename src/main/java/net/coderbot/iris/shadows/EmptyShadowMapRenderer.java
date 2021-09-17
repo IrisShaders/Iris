@@ -2,8 +2,8 @@ package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.mixin.WorldRendererAccessor;
-import net.minecraft.client.render.Camera;
+import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.minecraft.client.Camera;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -46,7 +46,7 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 	}
 
 	@Override
-	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
+	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		// No-op
 	}
 

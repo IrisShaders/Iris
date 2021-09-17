@@ -36,7 +36,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	}
 
 	private final int program;
-	private ProgramSamplers.Builder samplers;
+	private final ProgramSamplers.Builder samplers;
 
 	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
 		super(name, program);
