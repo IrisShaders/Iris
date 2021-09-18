@@ -141,7 +141,7 @@ public final class CommonUniforms {
 		return client.level.getRainLevel(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
-	private static Vec2 getEyeBrightness() {
+	static Vec2 getEyeBrightness() {
 		if (client.cameraEntity == null || client.level == null) {
 			return Vec2.ZERO;
 		}

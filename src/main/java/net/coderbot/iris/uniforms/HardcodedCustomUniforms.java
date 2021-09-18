@@ -20,6 +20,7 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "shadowFade", HardcodedCustomUniforms::getShadowFade);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "rainStrengthS", rainStrengthS(updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "blindFactor", HardcodedCustomUniforms::getBlindFactor);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "caveFactor", caveFactor(updateNotifier));
 	}
 
 	private static float getTimeAngle() {
@@ -48,6 +49,18 @@ public class HardcodedCustomUniforms {
 
 	private static SmoothedFloat rainStrengthS(FrameUpdateNotifier updateNotifier) {
 		return new SmoothedFloat(15, CommonUniforms::getRainStrength, updateNotifier);
+	}
+
+	private static SmoothedFloat caveFactor(FrameUpdateNotifier updateNotifier) {
+		return new SmoothedFloat(12, HardcodedCustomUniforms::getCaveFactor, updateNotifier);
+	}
+
+	private static float getCaveFactor() {
+		if (Minecraft.getInstance().player.getEyeY() < 50.0) {
+			return CommonUniforms.getEyeBrightness().y / 240F;
+		} else {
+			return 1.0F;
+		}
 	}
 
 	private static float getBlindFactor() {
