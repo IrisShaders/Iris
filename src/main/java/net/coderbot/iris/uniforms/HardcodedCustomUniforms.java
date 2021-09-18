@@ -59,7 +59,7 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static SmoothedFloat isEyeInCave(FrameUpdateNotifier updateNotifier) {
-		return new SmoothedFloat(12, HardcodedCustomUniforms::getCaveStatus, updateNotifier);
+		return new SmoothedFloat(6, HardcodedCustomUniforms::getCaveStatus, updateNotifier);
 	}
 
 	private static float getCaveStatus() {
