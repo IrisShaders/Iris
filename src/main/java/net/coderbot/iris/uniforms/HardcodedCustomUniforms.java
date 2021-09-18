@@ -7,12 +7,15 @@ import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 
-// These expressions are copied directly from BSL
+// These expressions are copied directly from BSL and Complementary.
 //
 // TODO: Remove once custom uniforms are actually supported, this is just a temporary thing to get BSL & Complementary
 // mostly working under Iris.
 public class HardcodedCustomUniforms {
+	private static Minecraft client = Minecraft.getInstance();
+
 	public static void addHardcodedCustomUniforms(UniformHolder holder, FrameUpdateNotifier updateNotifier) {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "timeAngle", HardcodedCustomUniforms::getTimeAngle);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "timeBrightness", HardcodedCustomUniforms::getTimeBrightness);
@@ -20,7 +23,11 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "shadowFade", HardcodedCustomUniforms::getShadowFade);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "rainStrengthS", rainStrengthS(updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "blindFactor", HardcodedCustomUniforms::getBlindFactor);
+		// The following uniforms are Complementary specific.
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "caveFactor", caveFactor(updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isDry", precipitationComparison(updateNotifier, 0));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isRainy", precipitationComparison(updateNotifier, 1));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isSnowy", precipitationComparison(updateNotifier, 2));
 	}
 
 	private static float getTimeAngle() {
@@ -56,10 +63,32 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getCaveFactor() {
-		if (Minecraft.getInstance().player.getEyeY() < 50.0) {
+		if (client.player.getEyeY() < 50.0) {
 			return CommonUniforms.getEyeBrightness().y / 240F;
 		} else {
 			return 1.0F;
+		}
+	}
+
+	private static SmoothedFloat precipitationComparison(FrameUpdateNotifier updateNotifier, float expectedPrecipitation) {
+		float comparison;
+		if (getRawPrecipitation() == expectedPrecipitation) {
+			comparison = 1;
+		} else {
+			comparison = 0;
+		}
+		return new SmoothedFloat(20, () -> comparison, updateNotifier);
+	}
+
+	private static float getRawPrecipitation() {
+		Biome.Precipitation precipitation = client.level.getBiome(client.player.blockPosition()).getPrecipitation();
+		switch (precipitation.getName()) {
+			case "rain":
+				return 1;
+			case "snow":
+				return 2;
+			default:
+				return 0;
 		}
 	}
 
