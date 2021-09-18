@@ -24,7 +24,7 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "rainStrengthS", rainStrengthS(updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "blindFactor", HardcodedCustomUniforms::getBlindFactor);
 		// The following uniforms are Complementary specific.
-		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "caveFactor", caveFactor(updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isEyeInCave", isEyeInCave(updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isDry", precipitationComparison(updateNotifier, 0));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isRainy", precipitationComparison(updateNotifier, 1));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isSnowy", precipitationComparison(updateNotifier, 2));
@@ -58,11 +58,11 @@ public class HardcodedCustomUniforms {
 		return new SmoothedFloat(15, CommonUniforms::getRainStrength, updateNotifier);
 	}
 
-	private static SmoothedFloat caveFactor(FrameUpdateNotifier updateNotifier) {
-		return new SmoothedFloat(12, HardcodedCustomUniforms::getCaveFactor, updateNotifier);
+	private static SmoothedFloat isEyeInCave(FrameUpdateNotifier updateNotifier) {
+		return new SmoothedFloat(12, HardcodedCustomUniforms::getCaveStatus, updateNotifier);
 	}
 
-	private static float getCaveFactor() {
+	private static float getCaveStatus() {
 		if (client.player.getEyeY() < 50.0) {
 			return 1.0F - (CommonUniforms.getEyeBrightness().y / 240F);
 		} else {
