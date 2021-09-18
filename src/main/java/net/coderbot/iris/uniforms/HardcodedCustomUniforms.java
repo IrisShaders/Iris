@@ -25,9 +25,9 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "blindFactor", HardcodedCustomUniforms::getBlindFactor);
 		// The following uniforms are Complementary specific.
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isEyeInCave", isEyeInCave(updateNotifier));
-		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isDry", precipitationComparison(updateNotifier, 0));
-		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isRainy", precipitationComparison(updateNotifier, 1));
-		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isSnowy", precipitationComparison(updateNotifier, 2));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isDry", new SmoothedFloat(20, () -> getRawPrecipitation() == 0 ? 1 : 0, updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isRainy", new SmoothedFloat(20, () -> getRawPrecipitation() == 1 ? 1 : 0, updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isSnowy", new SmoothedFloat(20, () -> getRawPrecipitation() == 2 ? 1 : 0, updateNotifier));
 	}
 
 	private static float getTimeAngle() {
@@ -68,16 +68,6 @@ public class HardcodedCustomUniforms {
 		} else {
 			return 0.0F;
 		}
-	}
-
-	private static SmoothedFloat precipitationComparison(FrameUpdateNotifier updateNotifier, float expectedPrecipitation) {
-		float comparison;
-		if (getRawPrecipitation() == expectedPrecipitation) {
-			comparison = 1;
-		} else {
-			comparison = 0;
-		}
-		return new SmoothedFloat(20, () -> comparison, updateNotifier);
 	}
 
 	private static float getRawPrecipitation() {
