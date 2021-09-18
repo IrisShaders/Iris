@@ -64,9 +64,9 @@ public class HardcodedCustomUniforms {
 
 	private static float getCaveFactor() {
 		if (client.player.getEyeY() < 50.0) {
-			return CommonUniforms.getEyeBrightness().y / 240F;
+			return 1.0F - (CommonUniforms.getEyeBrightness().y / 240F);
 		} else {
-			return 1.0F;
+			return 0.0F;
 		}
 	}
 
