@@ -45,7 +45,7 @@
     "texunits.MixinLightTexture",
     "texunits.MixinOverlayTexture",
     "texunits.MixinDefaultVertexFormat",
-    "statelisteners.CapabilityTrackerAccessor",
+    "statelisteners.BooleanStateAccessor",
     "statelisteners.GlStateManagerAccessor",
     "statelisteners.MixinGlStateManager",
     "DimensionTypeAccessor"

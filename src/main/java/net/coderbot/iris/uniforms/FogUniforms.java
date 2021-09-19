@@ -21,7 +21,7 @@ public class FogUniforms {
 		/*uniforms.uniform1f("fogDensity", () -> {
 			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
 
-			if (!((CapabilityTrackerAccessor) fog.capState).getState()) {
+			if (!((BooleanStateAccessor) fog.enable).getState()) {
 				return 0.0f;
 			}
 
