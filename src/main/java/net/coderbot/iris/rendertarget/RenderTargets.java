@@ -10,8 +10,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL20C;
 
 public class RenderTargets {
@@ -31,8 +30,8 @@ public class RenderTargets {
 
 	private boolean destroyed = false;
 
-	public RenderTargets(Framebuffer reference, PackRenderTargetDirectives directives) {
-		this(reference.textureWidth, reference.textureHeight, directives.getRenderTargetSettings());
+	public RenderTargets(com.mojang.blaze3d.pipeline.RenderTarget reference, PackRenderTargetDirectives directives) {
+		this(reference.width, reference.height, directives.getRenderTargetSettings());
 	}
 
 	public RenderTargets(int width, int height, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
@@ -65,7 +64,7 @@ public class RenderTargets {
 		RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT, false);
 
 		// Make sure to rebind the vanilla framebuffer.
-		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
 	public void destroy() {
@@ -75,7 +74,7 @@ public class RenderTargets {
 			owned.destroy();
 		}
 
-		for (RenderTarget target : targets) {
+		for (net.coderbot.iris.rendertarget.RenderTarget target : targets) {
 			target.destroy();
 		}
 
@@ -83,7 +82,7 @@ public class RenderTargets {
 		noTranslucents.destroy();
 	}
 
-	public RenderTarget get(int index) {
+	public net.coderbot.iris.rendertarget.RenderTarget get(int index) {
 		if (destroyed) {
 			throw new IllegalStateException("Tried to use destroyed RenderTargets");
 		}
@@ -116,7 +115,7 @@ public class RenderTargets {
 		cachedWidth = newWidth;
 		cachedHeight = newHeight;
 
-		for (RenderTarget target : targets) {
+		for (net.coderbot.iris.rendertarget.RenderTarget target : targets) {
 			target.resize(newWidth, newHeight);
 		}
 
@@ -173,7 +172,7 @@ public class RenderTargets {
 		ownedFramebuffers.add(framebuffer);
 
 		for (int i = 0; i < stageWritesToAlt.length; i++) {
-			RenderTarget target = this.get(i);
+			net.coderbot.iris.rendertarget.RenderTarget target = this.get(i);
 
 			int textureId = stageWritesToAlt[i] ? target.getAltTexture() : target.getMainTexture();
 

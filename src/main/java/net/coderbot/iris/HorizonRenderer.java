@@ -1,10 +1,14 @@
 package net.coderbot.iris;
 
-import net.minecraft.client.gl.VertexBuffer;
-import net.minecraft.client.render.*;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.Matrix4f;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ShaderInstance;
 
 /**
  * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
@@ -43,10 +47,10 @@ public class HorizonRenderer {
 	public HorizonRenderer() {
 		buffer = new VertexBuffer();
 
-		BufferBuilder builder = Tessellator.getInstance().getBuffer();
+		BufferBuilder builder = Tesselator.getInstance().getBuilder();
 
 		// Build the horizon quads into a buffer
-		builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
+		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 		buildHorizon(builder);
 		builder.end();
 
@@ -55,13 +59,13 @@ public class HorizonRenderer {
 
 	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {
 		consumer.vertex(x1, BOTTOM, z1);
-		consumer.next();
+		consumer.endVertex();
 		consumer.vertex(x1, TOP, z1);
-		consumer.next();
+		consumer.endVertex();
 		consumer.vertex(x2, TOP, z2);
-		consumer.next();
+		consumer.endVertex();
 		consumer.vertex(x2, BOTTOM, z2);
-		consumer.next();
+		consumer.endVertex();
 	}
 
 	private void buildHalf(VertexConsumer consumer, double adjacent, double opposite, boolean invert) {
@@ -103,13 +107,13 @@ public class HorizonRenderer {
 		for(int x = -radius; x <= radius; x += 64) {
 			for(int z = -radius; z <= radius; z += 64) {
 				consumer.vertex(x + 64, BOTTOM, z);
-				consumer.next();
+				consumer.endVertex();
 				consumer.vertex(x, BOTTOM, z);
-				consumer.next();
+				consumer.endVertex();
 				consumer.vertex(x, BOTTOM, z + 64);
-				consumer.next();
+				consumer.endVertex();
 				consumer.vertex(x + 64, BOTTOM, z + 64);
-				consumer.next();
+				consumer.endVertex();
 			}
 		}
 	}
@@ -130,15 +134,15 @@ public class HorizonRenderer {
 	}
 
 	private int getRenderDistanceInBlocks() {
-		return MinecraftClient.getInstance().options.viewDistance * 16;
+		return Minecraft.getInstance().options.renderDistance * 16;
 	}
 
 	public void close() {
 		buffer.close();
 	}
 
-	public void renderHorizon(Matrix4f modelView, Matrix4f projection, Shader shader) {
+	public void renderHorizon(Matrix4f modelView, Matrix4f projection, ShaderInstance shader) {
 		// Despite the name, this actually dispatches the draw call using the specified shader.
-		buffer.setShader(modelView, projection, shader);
+		buffer.drawWithShader(modelView, projection, shader);
 	}
 }

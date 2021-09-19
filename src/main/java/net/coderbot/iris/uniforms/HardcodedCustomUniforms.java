@@ -5,8 +5,8 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.Level;
 
 // These expressions are copied directly from BSL
 //
@@ -27,24 +27,23 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static int getWorldDayTime() {
-		World world     = MinecraftClient.getInstance().world;
-		long  timeOfDay = world.getTimeOfDay();
-		long dayTime = ((DimensionTypeAccessor) world.getDimension()).getFixedTime()
-																	 .orElse(timeOfDay % 24000L);
+		Level level = Minecraft.getInstance().level;
+		long  timeOfDay = level.getDayTime();
+		long dayTime = ((DimensionTypeAccessor) level.dimensionType()).getFixedTime().orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}
 
 	private static float getTimeBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * 2.0),0.0);
+		return (float) java.lang.Math.max(java.lang.Math.sin(getTimeAngle() * java.lang.Math.PI * 2.0),0.0);
 	}
 
 	private static float getMoonBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * (-2.0)),0.0);
+		return (float) java.lang.Math.max(java.lang.Math.sin(getTimeAngle() * java.lang.Math.PI * (-2.0)),0.0);
 	}
 
 	private static float getShadowFade() {
-		return (float) Math.clamp(0.0, 1.0, 1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.23) * 100.0);
+		return (float) Math.clamp(0.0, 1.0, 1.0 - (java.lang.Math.abs(java.lang.Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.23) * 100.0);
 	}
 
 	private static SmoothedFloat rainStrengthS(FrameUpdateNotifier updateNotifier) {
@@ -57,6 +56,6 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float frac(float value) {
-		return Math.abs(value % 1);
+		return java.lang.Math.abs(value % 1);
 	}
 }

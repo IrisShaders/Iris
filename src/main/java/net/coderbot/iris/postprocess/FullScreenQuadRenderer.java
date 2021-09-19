@@ -1,9 +1,12 @@
 package net.coderbot.iris.postprocess;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.fantastic.VertexBufferHelper;
-import net.minecraft.client.gl.VertexBuffer;
-import net.minecraft.client.render.*;
 import org.lwjgl.opengl.GL11;
 
 import org.lwjgl.opengl.GL20C;
@@ -19,12 +22,12 @@ public class FullScreenQuadRenderer {
 	private FullScreenQuadRenderer() {
 		// 1 quad * vertex size in bytes * 6 vertices per quad (2 triangles) = initial allocation
 		// TODO: We don't do a full initial allocation?
-		BufferBuilder bufferBuilder = new BufferBuilder(VertexFormats.POSITION_TEXTURE.getVertexSize());
-		bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-		bufferBuilder.vertex(-1.0F, -1.0F, 0.0F).texture(0.0F, 0.0F).next();
-		bufferBuilder.vertex(1.0F, -1.0F, 0.0F).texture(1.0F, 0.0F).next();
-		bufferBuilder.vertex(1.0F, 1.0F, 0.0F).texture(1.0F, 1.0F).next();
-		bufferBuilder.vertex(-1.0F, 1.0F, 0.0F).texture(0.0F, 1.0F).next();
+		BufferBuilder bufferBuilder = new BufferBuilder(DefaultVertexFormat.POSITION_TEX.getVertexSize());
+		bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+		bufferBuilder.vertex(-1.0F, -1.0F, 0.0F).uv(0.0F, 0.0F).endVertex();
+		bufferBuilder.vertex(1.0F, -1.0F, 0.0F).uv(1.0F, 0.0F).endVertex();
+		bufferBuilder.vertex(1.0F, 1.0F, 0.0F).uv(1.0F, 1.0F).endVertex();
+		bufferBuilder.vertex(-1.0F, 1.0F, 0.0F).uv(0.0F, 1.0F).endVertex();
 		bufferBuilder.end();
 
 		quad = new VertexBuffer();
@@ -44,16 +47,16 @@ public class FullScreenQuadRenderer {
 	public void begin() {
 		((VertexBufferHelper) quad).saveBinding();
 		RenderSystem.disableDepthTest();
-		BufferRenderer.unbindAll();
+		BufferUploader.reset();
 	}
 
 	public void renderQuad() {
-		quad.drawVertices();
+		quad.drawChunkLayer();
 	}
 
 	public void end() {
 		RenderSystem.enableDepthTest();
-		quad.getElementFormat().endDrawing();
+		quad.getFormat().clearBufferState();
 		VertexBuffer.unbind();
 		VertexBuffer.unbindVertexArray();
 		((VertexBufferHelper) quad).restoreBinding();

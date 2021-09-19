@@ -1,7 +1,7 @@
 package net.coderbot.batchedentityrendering.impl;
 
 public class BatchingDebugMessageHelper {
-	public static String getDebugMessage(DrawCallTrackingBufferBuilderStorage drawTracker) {
+	public static String getDebugMessage(DrawCallTrackingRenderBuffers drawTracker) {
 		int drawCalls = drawTracker.getDrawCalls();
 		int renderTypes = drawTracker.getRenderTypes();
 

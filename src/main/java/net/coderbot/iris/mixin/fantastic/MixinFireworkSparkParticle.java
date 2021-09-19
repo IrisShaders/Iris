@@ -1,19 +1,19 @@
 package net.coderbot.iris.mixin.fantastic;
 
-import net.minecraft.client.particle.AnimatedParticle;
-import net.minecraft.client.particle.ParticleTextureSheet;
-import net.minecraft.client.particle.SpriteProvider;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.particle.SimpleAnimatedParticle;
+import net.minecraft.client.particle.SpriteSet;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(targets = "net.minecraft.client.particle.FireworksSparkParticle$Explosion")
-public class MixinFireworkSparkParticle extends AnimatedParticle {
-	private MixinFireworkSparkParticle(ClientWorld world, double x, double y, double z, SpriteProvider spriteProvider, float upwardsAcceleration) {
-		super(world, x, y, z, spriteProvider, upwardsAcceleration);
+@Mixin(targets = "net.minecraft.client.particle.FireworkParticles$SparkParticle")
+public class MixinFireworkSparkParticle extends SimpleAnimatedParticle {
+	private MixinFireworkSparkParticle(ClientLevel level, double x, double y, double z, SpriteSet spriteProvider, float upwardsAcceleration) {
+		super(level, x, y, z, spriteProvider, upwardsAcceleration);
 	}
 
 	@Override
-	public ParticleTextureSheet getType() {
-		return ParticleTextureSheet.PARTICLE_SHEET_OPAQUE;
+	public ParticleRenderType getRenderType() {
+		return ParticleRenderType.PARTICLE_SHEET_OPAQUE;
 	}
 }

@@ -1,17 +1,17 @@
 package net.coderbot.iris.rendertarget;
 
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 
-public class NativeImageBackedSingleColorTexture extends NativeImageBackedTexture {
+public class NativeImageBackedSingleColorTexture extends DynamicTexture {
 	public NativeImageBackedSingleColorTexture(int red, int green, int blue, int alpha) {
-		super(create(NativeImage.getAbgrColor(alpha, blue, green, red)));
+		super(create(NativeImage.combine(alpha, blue, green, red)));
 	}
 
 	private static NativeImage create(int color) {
-		NativeImage image = new NativeImage(NativeImage.Format.ABGR, 1, 1, false);
+		NativeImage image = new NativeImage(NativeImage.Format.RGBA, 1, 1, false);
 
-		image.setPixelColor(0, 0, color);
+		image.setPixelRGBA(0, 0, color);
 
 		return image;
 	}

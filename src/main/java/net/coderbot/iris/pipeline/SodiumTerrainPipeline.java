@@ -207,7 +207,7 @@ public class SodiumTerrainPipeline {
 
 		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier, FogMode.LINEAR);
 		SamplerUniforms.addCommonSamplerUniforms(uniforms);
-		SamplerUniforms.addWorldSamplerUniforms(uniforms);
+		SamplerUniforms.addLevelSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 

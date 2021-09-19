@@ -5,7 +5,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL20C;
 
 import java.util.HashMap;
@@ -34,7 +34,7 @@ public class PipelineManager {
 			sodiumShaderReloadNeeded = true;
 
 			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
-				MinecraftClient.getInstance().worldRenderer.reload();
+				Minecraft.getInstance().levelRenderer.allChanged();
 				BlockRenderingSettings.INSTANCE.clearReloadRequired();
 			}
 		} else {

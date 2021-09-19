@@ -3,10 +3,9 @@ package net.coderbot.iris.pipeline;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.mixin.WorldRendererAccessor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-
+import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import java.util.List;
 import java.util.OptionalInt;
 
@@ -18,14 +17,14 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void beginWorldRendering() {
+	public void beginLevelRendering() {
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
-		MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 		GlStateManager._glUseProgram(0);
 	}
 
 	@Override
-	public void renderShadows(WorldRendererAccessor worldRenderer, Camera camera) {
+	public void renderShadows(LevelRendererAccessor worldRenderer, Camera camera) {
 		// stub: nothing to do here
 	}
 
@@ -65,7 +64,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void finalizeWorldRendering() {
+	public void finalizeLevelRendering() {
 		// stub: nothing to do here
 	}
 

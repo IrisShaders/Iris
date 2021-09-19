@@ -1,8 +1,8 @@
 package net.coderbot.iris.vertices;
 
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import org.lwjgl.opengl.GL11C;
 
 public class ExtendedBufferBuilder extends BufferBuilder {
@@ -15,15 +15,15 @@ public class ExtendedBufferBuilder extends BufferBuilder {
 	}
 
 	@Override
-	public void begin(VertexFormat.DrawMode drawMode, VertexFormat format) {
+	public void begin(VertexFormat.Mode drawMode, VertexFormat format) {
 		this.originalFormat = format;
 		this.vertexCount = 0;
 
-		if (drawMode != VertexFormat.DrawMode.QUADS) {
+		if (drawMode != VertexFormat.Mode.QUADS) {
 			throw new IllegalArgumentException("Unexpected draw mode: " + drawMode);
 		}
 
-		if (this.originalFormat == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL) {
+		if (this.originalFormat == DefaultVertexFormat.BLOCK) {
 			this.extendedFormat = IrisVertexFormats.TERRAIN;
 		} else {
 			throw new IllegalArgumentException("Couldn't extend vertex format: " + this.originalFormat);
@@ -33,8 +33,8 @@ public class ExtendedBufferBuilder extends BufferBuilder {
 	}
 
 	@Override
-	public void reset() {
-		super.reset();
+	public void discard() {
+		super.discard();
 
 		this.originalFormat = null;
 		this.extendedFormat = null;
@@ -42,7 +42,7 @@ public class ExtendedBufferBuilder extends BufferBuilder {
 	}
 
 	@Override
-	public void next() {
+	public void endVertex() {
 		this.putShort(0, (short) -1);
 		this.putShort(2, (short) -1);
 		this.putShort(4, (short) -1);
@@ -57,7 +57,7 @@ public class ExtendedBufferBuilder extends BufferBuilder {
 		this.putFloat(12, 1F);
 		this.nextElement();
 
-		super.next();
+		super.endVertex();
 
 		vertexCount += 1;
 

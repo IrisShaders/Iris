@@ -1,18 +1,18 @@
 package net.coderbot.batchedentityrendering.impl.ordering;
 
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.renderer.RenderType;
 
 import java.util.LinkedHashSet;
 
 public class SimpleRenderOrderManager implements RenderOrderManager {
-    private final LinkedHashSet<RenderLayer> layers;
+    private final LinkedHashSet<RenderType> renderTypes;
 
     public SimpleRenderOrderManager() {
-        layers = new LinkedHashSet<>();
+        renderTypes = new LinkedHashSet<>();
     }
 
-    public void begin(RenderLayer layer) {
-        layers.add(layer);
+    public void begin(RenderType type) {
+        renderTypes.add(type);
     }
 
     public void startGroup() {
@@ -30,10 +30,10 @@ public class SimpleRenderOrderManager implements RenderOrderManager {
 
     @Override
     public void reset() {
-        layers.clear();
+        renderTypes.clear();
     }
 
-    public Iterable<RenderLayer> getRenderOrder() {
-        return layers;
+    public Iterable<RenderType> getRenderOrder() {
+        return renderTypes;
     }
 }

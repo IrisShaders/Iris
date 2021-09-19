@@ -1,8 +1,11 @@
 package net.coderbot.iris.pipeline.newshader;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -10,7 +13,7 @@ import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -31,15 +34,12 @@ import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.Shader;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
@@ -62,42 +62,42 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private final RenderTargets renderTargets;
 
-	private final Shader basic;
-	private final Shader basicColor;
-	private final Shader textured;
-	private final Shader texturedColor;
-	private final Shader skyBasic;
-	private final Shader skyBasicColor;
-	private final Shader skyTextured;
-	private final Shader skyTexturedColor;
-	private final Shader clouds;
-	private final Shader shadowTerrainCutout;
+	private final ShaderInstance basic;
+	private final ShaderInstance basicColor;
+	private final ShaderInstance textured;
+	private final ShaderInstance texturedColor;
+	private final ShaderInstance skyBasic;
+	private final ShaderInstance skyBasicColor;
+	private final ShaderInstance skyTextured;
+	private final ShaderInstance skyTexturedColor;
+	private final ShaderInstance clouds;
+	private final ShaderInstance shadowTerrainCutout;
 
-	private final Shader terrainSolid;
-	private final Shader terrainCutout;
-	private final Shader terrainCutoutMipped;
+	private final ShaderInstance terrainSolid;
+	private final ShaderInstance terrainCutout;
+	private final ShaderInstance terrainCutoutMipped;
 
-	private final Shader entitiesSolid;
-	private final Shader entitiesCutout;
-	private final Shader entitiesEyes;
-	private final Shader shadowEntitiesCutout;
-	private final Shader shadowBeaconBeam;
-	private final Shader lightning;
-	private final Shader leash;
-	private final Shader particles;
-	private final Shader weather;
-	private final Shader crumbling;
-	private final Shader text;
-	private final Shader block;
-	private final Shader beacon;
-	private final Shader glint;
-	private final Shader lines;
-	private final Shader shadowLines;
+	private final ShaderInstance entitiesSolid;
+	private final ShaderInstance entitiesCutout;
+	private final ShaderInstance entitiesEyes;
+	private final ShaderInstance shadowEntitiesCutout;
+	private final ShaderInstance shadowBeaconBeam;
+	private final ShaderInstance lightning;
+	private final ShaderInstance leash;
+	private final ShaderInstance particles;
+	private final ShaderInstance weather;
+	private final ShaderInstance crumbling;
+	private final ShaderInstance text;
+	private final ShaderInstance block;
+	private final ShaderInstance beacon;
+	private final ShaderInstance glint;
+	private final ShaderInstance lines;
+	private final ShaderInstance shadowLines;
 
-	private final Shader terrainTranslucent;
+	private final ShaderInstance terrainTranslucent;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 
-	private final Set<Shader> loadedShaders;
+	private final Set<ShaderInstance> loadedShaders;
 
 	private final GlFramebuffer clearAltBuffers;
 	private final GlFramebuffer clearMainBuffers;
@@ -146,8 +146,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
-		this.renderTargets = new RenderTargets(MinecraftClient.getInstance().getFramebuffer(), programSet.getPackDirectives().getRenderTargetDirectives());
-		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new Identifier("minecraft", "water"), -1);
+		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programSet.getPackDirectives().getRenderTargetDirectives());
+		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new ResourceLocation("minecraft", "water"), -1);
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programSet.getPackDirectives().getShadowDirectives();
@@ -226,7 +226,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 			IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
-			IrisSamplers.addWorldSamplers(builder, normals, specular);
+			IrisSamplers.addLevelSamplers(builder, normals, specular);
 			IrisSamplers.addWorldDepthSamplers(builder, renderTargets);
 			IrisSamplers.addNoiseSampler(builder, noise);
 
@@ -242,7 +242,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 			IrisSamplers.addRenderTargetSamplers(builder, () -> flippedBeforeTerrain, renderTargets, false);
-			IrisSamplers.addWorldSamplers(builder, normals, specular);
+			IrisSamplers.addLevelSamplers(builder, normals, specular);
 			IrisSamplers.addNoiseSampler(builder, noise);
 
 			// Only initialize these samplers if the shadow map renderer exists.
@@ -285,31 +285,31 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// TODO: Resolve hasColorAttrib based on the vertex format
 		try {
-			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, VertexFormats.POSITION, FogMode.LINEAR);
-			this.basicColor = createShader("gbuffers_basic_color", basicSource, nonZeroAlpha, VertexFormats.POSITION_COLOR, FogMode.OFF);
-			this.textured = createShader("gbuffers_textured", texturedSource, nonZeroAlpha, VertexFormats.POSITION_TEXTURE, FogMode.OFF);
-			this.texturedColor = createShader("gbuffers_textured_color", texturedSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR, FogMode.OFF);
-			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, VertexFormats.POSITION, FogMode.LINEAR);
-			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, nonZeroAlpha, VertexFormats.POSITION_COLOR, FogMode.OFF);
-			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE, FogMode.OFF);
-			this.skyTexturedColor = createShader("gbuffers_sky_textured_tex_color", skyTexturedSource, AlphaTest.ALWAYS, VertexFormats.POSITION_TEXTURE_COLOR, FogMode.OFF);
-			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL, FogMode.LINEAR);
+			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.LINEAR);
+			this.basicColor = createShader("gbuffers_basic_color", basicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
+			this.textured = createShader("gbuffers_textured", texturedSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.OFF);
+			this.texturedColor = createShader("gbuffers_textured_color", texturedSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF);
+			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.LINEAR);
+			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
+			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_TEX, FogMode.OFF);
+			this.skyTexturedColor = createShader("gbuffers_sky_textured_tex_color", skyTexturedSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF);
+			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL, FogMode.LINEAR);
 			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
 			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
 			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
-			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, FogMode.LINEAR);
-			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, FogMode.LINEAR);
-			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, FogMode.LINEAR);
-			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR, FogMode.LINEAR);
-			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_LIGHT, FogMode.LINEAR);
-			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, FogMode.LINEAR);
-			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, FogMode.LINEAR);
-			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, FogMode.OFF);
-			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT, FogMode.LINEAR);
-			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, FogMode.LINEAR);
-			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, FogMode.LINEAR);
-			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, VertexFormats.POSITION_TEXTURE, FogMode.LINEAR);
-			this.lines = createShader("gbuffers_lines", programSet.getGbuffersBasic(), AlphaTest.ALWAYS, VertexFormats.LINES, FogMode.LINEAR);
+			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
+			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
+			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
+			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR, FogMode.LINEAR);
+			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.LINEAR);
+			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
+			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
+			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, terrainCutoutAlpha, DefaultVertexFormat.BLOCK, FogMode.OFF);
+			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.LINEAR);
+			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
+			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK, FogMode.LINEAR);
+			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.LINEAR);
+			this.lines = createShader("gbuffers_lines", programSet.getGbuffersBasic(), AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL, FogMode.LINEAR);
 
 			if (translucentSource != terrainSource) {
 				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
@@ -344,9 +344,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			try {
 				// TODO: Shadow programs should have access to different samplers.
 				this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN);
-				this.shadowEntitiesCutout = createShadowShader("shadow_entities_cutout", shadowSource, terrainCutoutAlpha, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL);
-				this.shadowBeaconBeam = createShadowShader("shadow_beacon_beam", shadowSource, AlphaTest.ALWAYS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
-				this.shadowLines = createShadowShader("shadow_lines", shadowSource, AlphaTest.ALWAYS, VertexFormats.LINES);
+				this.shadowEntitiesCutout = createShadowShader("shadow_entities_cutout", shadowSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY);
+				this.shadowBeaconBeam = createShadowShader("shadow_beacon_beam", shadowSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK);
+				this.shadowLines = createShadowShader("shadow_lines", shadowSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL);
 			}  catch (RuntimeException e) {
 				destroyShaders();
 
@@ -361,7 +361,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Nullable
-	private Shader createShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
+	private ShaderInstance createShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
 		if (!source.isPresent()) {
 			return null;
 		}
@@ -369,7 +369,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return createShader(name, source.get(), fallbackAlpha, vertexFormat, fogMode);
 	}
 
-	private Shader createShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
+	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
@@ -390,8 +390,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IrisSamplers.addRenderTargetSamplers(extendedShader, flipped, renderTargets, false);
 
 		// TODO: IrisSamplers.addWorldSamplers(builder, normals, specular);
-		extendedShader.addDynamicSampler(normals::getGlId, "normals");
-		extendedShader.addDynamicSampler(specular::getGlId, "specular");
+		extendedShader.addDynamicSampler(normals::getId, "normals");
+		extendedShader.addDynamicSampler(specular::getId, "specular");
 
 		IrisSamplers.addWorldDepthSamplers(extendedShader, renderTargets);
 		IrisSamplers.addNoiseSampler(extendedShader, noise);
@@ -404,7 +404,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return extendedShader;
 	}
 
-	private Shader createShadowShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
+	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
 		if (!source.isPresent()) {
 			return null;
 		}
@@ -412,7 +412,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return createShadowShader(name, source.get(), fallbackAlpha, vertexFormat);
 	}
 
-	private Shader createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
+	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
 		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
 
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.LINEAR);
@@ -422,15 +422,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// TODO: waterShadowEnabled?
 		// TODO: Audit these render targets...
 
-		extendedShader.addIrisSampler("normals", this.normals.getGlId());
-		extendedShader.addIrisSampler("specular", this.specular.getGlId());
+		extendedShader.addIrisSampler("normals", this.normals.getId());
+		extendedShader.addIrisSampler("specular", this.specular.getId());
 		extendedShader.addIrisSampler("shadow", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("watershadow", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("shadowtex0", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("shadowtex1", this.shadowMapRenderer.getDepthTextureNoTranslucentsId());
 		extendedShader.addIrisSampler("depthtex0", this.renderTargets.getDepthTexture().getTextureId());
 		extendedShader.addIrisSampler("depthtex1", this.renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		extendedShader.addIrisSampler("noisetex", this.noise.getGlId());
+		extendedShader.addIrisSampler("noisetex", this.noise.getId());
 		extendedShader.addIrisSampler("shadowcolor", this.shadowMapRenderer.getColorTexture0Id());
 		extendedShader.addIrisSampler("shadowcolor0", this.shadowMapRenderer.getColorTexture0Id());
 		extendedShader.addIrisSampler("shadowcolor1", this.shadowMapRenderer.getColorTexture1Id());
@@ -473,37 +473,37 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public void beginWorldRendering() {
+	public void beginLevelRendering() {
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		// NB: execute this before resizing / clearing so that the center depth sample is retrieved properly.
 		updateNotifier.onNewFrame();
 
-		Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-		renderTargets.resizeIfNeeded(main.textureWidth, main.textureHeight);
+		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+		renderTargets.resizeIfNeeded(main.width, main.height);
 
 		clearMainBuffers.bind();
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
 
 		clearAltBuffers.bind();
 		// Not clearing the depth buffer since there's only one of those and it was already cleared
 		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, MinecraftClient.IS_SYSTEM_MAC);
+		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
 
 		// Make sure to switch back to the main framebuffer. If we forget to do this then our alt buffers might be
 		// cleared to the fog color, which absolutely is not what we want!
 		//
 		// If we forget to do this, then weird lines appear at the top of the screen and the right of the screen
 		// on Sildur's Vibrant Shaders.
-		main.beginWrite(true);
+		main.bindWrite(true);
 
 		isBeforeTranslucent = true;
 	}
 
 	@Override
-	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
+	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
 		this.shadowMapRenderer.renderShadows(worldRenderer, playerCamera);
 	}
 
@@ -556,8 +556,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		RenderSystem.enableBlend();
 
-		MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().enable();
-		MinecraftClient.getInstance().gameRenderer.getOverlayTexture().setupOverlayColor();
+		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
+		Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
 
 		// Reset shader or whatever...
 		RenderSystem.setShader(GameRenderer::getPositionShader);
@@ -574,7 +574,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public void finalizeWorldRendering() {
+	public void finalizeLevelRendering() {
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 	}
@@ -595,159 +595,159 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public Shader getBasic() {
+	public ShaderInstance getBasic() {
 		return basic;
 	}
 
 	@Override
-	public Shader getBasicColor() {
+	public ShaderInstance getBasicColor() {
 		return basicColor;
 	}
 
 	@Override
-	public Shader getTextured() {
+	public ShaderInstance getTextured() {
 		return textured;
 	}
 
 	@Override
-	public Shader getTexturedColor() {
+	public ShaderInstance getTexturedColor() {
 		return texturedColor;
 	}
 
 	@Override
-	public Shader getSkyBasic() {
+	public ShaderInstance getSkyBasic() {
 		return skyBasic;
 	}
 
 	@Override
-	public Shader getSkyBasicColor() {
+	public ShaderInstance getSkyBasicColor() {
 		return skyBasicColor;
 	}
 
 	@Override
-	public Shader getSkyTextured() {
+	public ShaderInstance getSkyTextured() {
 		return skyTextured;
 	}
 
 	@Override
-	public Shader getSkyTexturedColor() {
+	public ShaderInstance getSkyTexturedColor() {
 		return skyTexturedColor;
 	}
 
 	@Override
-	public Shader getClouds() {
+	public ShaderInstance getClouds() {
 		return clouds;
 	}
 
 	@Override
-	public Shader getTerrain() {
+	public ShaderInstance getTerrain() {
 		return terrainSolid;
 	}
 
 	@Override
-	public Shader getTerrainCutout() {
+	public ShaderInstance getTerrainCutout() {
 		return terrainCutout;
 	}
 
 	@Override
-	public Shader getTerrainCutoutMipped() {
+	public ShaderInstance getTerrainCutoutMipped() {
 		return terrainCutoutMipped;
 	}
 
 	@Override
-	public Shader getEntitiesCutout() {
+	public ShaderInstance getEntitiesCutout() {
 		return entitiesCutout;
 	}
 
 	@Override
-	public Shader getEntitiesEyes() {
+	public ShaderInstance getEntitiesEyes() {
 		return entitiesEyes;
 	}
 
 	@Override
-	public Shader getLeash() {
+	public ShaderInstance getLeash() {
 		return leash;
 	}
 
 	@Override
-	public Shader getLightning() {
+	public ShaderInstance getLightning() {
 		return lightning;
 	}
 
 	@Override
-	public Shader getParticles() {
+	public ShaderInstance getParticles() {
 		return particles;
 	}
 
 	@Override
-	public Shader getWeather() {
+	public ShaderInstance getWeather() {
 		return weather;
 	}
 
 	@Override
-	public Shader getCrumbling() {
+	public ShaderInstance getCrumbling() {
 		return crumbling;
 	}
 
 	@Override
-	public Shader getText() {
+	public ShaderInstance getText() {
 		return text;
 	}
 
 	@Override
-	public Shader getBlock() {
+	public ShaderInstance getBlock() {
 		return block;
 	}
 
 	@Override
-	public Shader getBeacon() {
+	public ShaderInstance getBeacon() {
 		return beacon;
 	}
 
 	@Override
-	public Shader getEntitiesSolid() {
+	public ShaderInstance getEntitiesSolid() {
 		return entitiesSolid;
 	}
 
 	@Override
-	public Shader getShadowTerrainCutout() {
+	public ShaderInstance getShadowTerrainCutout() {
 		return shadowTerrainCutout;
 	}
 
 	@Override
-	public Shader getShadowEntitiesCutout() {
+	public ShaderInstance getShadowEntitiesCutout() {
 		return shadowEntitiesCutout;
 	}
 
 	@Override
-	public Shader getShadowBeaconBeam() {
+	public ShaderInstance getShadowBeaconBeam() {
 		return shadowEntitiesCutout;
 	}
 
 	@Override
-	public Shader getTranslucent() {
+	public ShaderInstance getTranslucent() {
 		return terrainTranslucent;
 	}
 
 	@Override
-	public Shader getGlint() {
+	public ShaderInstance getGlint() {
 		return glint;
 	}
 
 	@Override
-	public Shader getLines() {
+	public ShaderInstance getLines() {
 		return lines;
 	}
 
 	@Override
-	public Shader getShadowLines() {
+	public ShaderInstance getShadowLines() {
 		return shadowLines;
 	}
 
 	private void destroyShaders() {
 		// NB: If you forget this, shader reloads won't work!
 		loadedShaders.forEach(shader -> {
-			shader.unbind();
+			shader.clear();
 			shader.close();
 		});
 	}
@@ -789,7 +789,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
 		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
 
-		MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
 		shadowMapRenderer.destroy();
 		renderTargets.destroy();
