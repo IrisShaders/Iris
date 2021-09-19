@@ -37,7 +37,7 @@
     "shadows.MixinBeaconRenderer",
     "shadows.MixinLevelRenderer",
     "shadows.MixinPreventRebuildNearInShadowPass",
-    "statelisteners.CapabilityTrackerAccessor",
+    "statelisteners.BooleanStateAccessor",
     "statelisteners.GlStateManagerAccessor",
     "statelisteners.MixinGlStateManager",
     "texunits.MixinBufferVertexConsumer",
