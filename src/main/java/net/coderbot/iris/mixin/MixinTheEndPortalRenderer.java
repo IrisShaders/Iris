@@ -35,6 +35,10 @@ public class MixinTheEndPortalRenderer {
 		return 0.75F;
 	}
 
+	@Shadow protected float getOffsetDown() {
+		return 0.375F;
+	}
+
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
 	public void iris$onRender(TheEndPortalBlockEntity entity, float tickDelta, PoseStack poseStack, MultiBufferSource multiBufferSource, int light, int overlay, CallbackInfo ci) {
 		if (!Iris.getCurrentPack().isPresent()) {
@@ -53,43 +57,44 @@ public class MixinTheEndPortalRenderer {
 		// animation with a period of 100 seconds.
 		// note that texture coordinates are wrapping, not clamping.
 		float progress = (SystemTimeUniforms.TIMER.getFrameTimeCounter() * 0.01f) % 1f;
-		float height = getOffsetUp();
+		float topHeight = getOffsetUp();
+		float bottomHeight = getOffsetDown();
 
 		quad(entity, vertexConsumer, pose, normal, Direction.UP, progress, overlay, light,
-				0.0f, height, 1.0f,
-				1.0f, height, 1.0f,
-				1.0f, height, 0.0f,
-				0.0f, height, 0.0f);
+				0.0f, topHeight, 1.0f,
+				1.0f, topHeight, 1.0f,
+				1.0f, topHeight, 0.0f,
+				0.0f, topHeight, 0.0f);
 
 		quad(entity, vertexConsumer, pose, normal, Direction.DOWN, progress, overlay, light,
-				0.0f, 0.0f, 1.0f,
-				0.0f, 0.0f, 0.0f,
-				1.0f, 0.0f, 0.0f,
-				1.0f, 0.0f, 1.0f);
+				0.0f, bottomHeight, 1.0f,
+				0.0f, bottomHeight, 0.0f,
+				1.0f, bottomHeight, 0.0f,
+				1.0f, bottomHeight, 1.0f);
 
 		quad(entity, vertexConsumer, pose, normal, Direction.NORTH, progress, overlay, light,
-				0.0f, height, 0.0f,
-				1.0f, height, 0.0f,
-				1.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, 0.0f);
+				0.0f, topHeight, 0.0f,
+				1.0f, topHeight, 0.0f,
+				1.0f, bottomHeight, 0.0f,
+				0.0f, bottomHeight, 0.0f);
 
 		quad(entity, vertexConsumer, pose, normal, Direction.WEST, progress, overlay, light,
-				0.0f, height, 1.0f,
-				0.0f, height, 0.0f,
-				0.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, 1.0f);
+				0.0f, topHeight, 1.0f,
+				0.0f, topHeight, 0.0f,
+				0.0f, bottomHeight, 0.0f,
+				0.0f, bottomHeight, 1.0f);
 
 		quad(entity, vertexConsumer, pose, normal, Direction.SOUTH, progress, overlay, light,
-				0.0f, height, 1.0f,
-				0.0f, 0.0f, 1.0f,
-				1.0f, 0.0f, 1.0f,
-				1.0f, height, 1.0f);
+				0.0f, topHeight, 1.0f,
+				0.0f, bottomHeight, 1.0f,
+				1.0f, bottomHeight, 1.0f,
+				1.0f, topHeight, 1.0f);
 
 		quad(entity, vertexConsumer, pose, normal, Direction.EAST, progress, overlay, light,
-				1.0f, height, 1.0f,
-				1.0f, 0.0f, 1.0f,
-				1.0f, 0.0f, 0.0f,
-				1.0f, height, 0.0f);
+				1.0f, topHeight, 1.0f,
+				1.0f, bottomHeight, 1.0f,
+				1.0f, bottomHeight, 0.0f,
+				1.0f, topHeight, 0.0f);
 	}
 
 	@Unique
