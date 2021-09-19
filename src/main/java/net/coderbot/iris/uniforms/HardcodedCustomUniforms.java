@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.gl.uniform.FloatSupplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
@@ -58,8 +59,12 @@ public class HardcodedCustomUniforms {
 		return new SmoothedFloat(15, CommonUniforms::getRainStrength, updateNotifier);
 	}
 
-	private static SmoothedFloat isEyeInCave(FrameUpdateNotifier updateNotifier) {
-		return new SmoothedFloat(6, HardcodedCustomUniforms::getCaveStatus, updateNotifier);
+	private static FloatSupplier isEyeInCave(FrameUpdateNotifier updateNotifier) {
+		if (CommonUniforms.isEyeInWater() == 0) {
+			return new SmoothedFloat(6, HardcodedCustomUniforms::getCaveStatus, updateNotifier);
+		} else {
+			return () -> 0.0F;
+		}
 	}
 
 	private static float getCaveStatus() {
