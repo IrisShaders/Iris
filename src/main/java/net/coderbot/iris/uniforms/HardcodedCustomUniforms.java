@@ -60,11 +60,7 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static FloatSupplier isEyeInCave(FrameUpdateNotifier updateNotifier) {
-		if (CommonUniforms.isEyeInWater() == 0) {
-			return new SmoothedFloat(6, HardcodedCustomUniforms::getCaveStatus, updateNotifier);
-		} else {
-			return () -> 0.0F;
-		}
+		return new EyeInCaveSmoothedFloat(6, HardcodedCustomUniforms::getCaveStatus, updateNotifier);
 	}
 
 	private static float getCaveStatus() {
@@ -94,5 +90,56 @@ public class HardcodedCustomUniforms {
 
 	private static float frac(float value) {
 		return java.lang.Math.abs(value % 1);
+	}
+
+	private static class EyeInCaveSmoothedFloat extends SmoothedFloat implements FloatSupplier {
+
+		/**
+		 * Creates a smoothed float for the isEyeInCave uniform, to change to 0.0 when in water.
+		 *
+		 * @param halfLife       the half life in the exponential decay, in deciseconds (1/10th of a second) / 2 ticks.
+		 *                       For example, a half life of value of 2.0 is 4 ticks or 0.2 seconds
+		 * @param unsmoothed     the input sequence of unsmoothed values to be smoothed. {@code unsmoothed.getAsFloat()} will be
+		 *                       called exactly once for every time {@code smoothed.getAsFloat()} is called.
+		 * @param updateNotifier
+		 */
+		public EyeInCaveSmoothedFloat(float halfLife, FloatSupplier unsmoothed, FrameUpdateNotifier updateNotifier) {
+			super(halfLife, unsmoothed, updateNotifier);
+		}
+
+		@Override
+		protected void update() {
+			if (!hasInitialValue) {
+				// There is no smoothing on the first value.
+				// This is not an optimal approach to choosing the initial value:
+				// https://en.wikipedia.org/wiki/Exponential_smoothing#Choosing_the_initial_smoothed_value
+				//
+				// However, it works well enough for now.
+				accumulator = unsmoothed.getAsFloat();
+				hasInitialValue = true;
+
+				return;
+			}
+
+			// Implements the basic variant of exponential smoothing
+			// https://en.wikipedia.org/wiki/Exponential_smoothing#Basic_(simple)_exponential_smoothing_(Holt_linear)
+
+			// xₜ
+			float newValue = unsmoothed.getAsFloat();
+
+			// 𝚫t
+			float lastFrameTime = SystemTimeUniforms.TIMER.getLastFrameTime();
+
+			// Compute the smoothing factor based on our
+			// α = 1 - e^(-𝚫t/τ) = 1 - e^(-k𝚫t)
+			float smoothingFactor = 1.0f - exponentialDecayFactor(this.decayConstant, lastFrameTime);
+
+			// sₜ = αxₜ + (1 - α)sₜ₋₁
+			if (CommonUniforms.isEyeInWater() != 0) {
+				accumulator = 0.0F;
+			} else {
+				accumulator = lerp(accumulator, newValue, smoothingFactor);
+			}
+		}
 	}
 }

@@ -15,28 +15,28 @@ public class SmoothedFloat implements FloatSupplier {
 	/**
 	 * Natural logarithm of 2, ie. {@code ln(2)}
 	 */
-	private static final double LN_OF_2 = Math.log(2.0);
+	protected static final double LN_OF_2 = Math.log(2.0);
 
 	/**
 	 * The decay constant, k (as used in e^(-kt))
 	 */
-	private final float decayConstant;
+	protected final float decayConstant;
 
 	/**
 	 * The input sequence of unsmoothed values
 	 */
-	private final FloatSupplier unsmoothed;
+	protected final FloatSupplier unsmoothed;
 
 	/**
 	 * An accumulator for smoothed values.
 	 */
-	private float accumulator;
+	protected float accumulator;
 
 	/**
 	 * Tracks whether an initial value has already been generated, because otherwise there will be nothing to smooth
 	 * with.
 	 */
-	private boolean hasInitialValue;
+	protected boolean hasInitialValue;
 
 	/**
 	 * Creates a new SmoothedFloat with a given half life.
@@ -66,7 +66,7 @@ public class SmoothedFloat implements FloatSupplier {
 	/**
 	 * Takes one value from the unsmoothed value sequence, and smooths it into our accumulator
 	 */
-	private void update() {
+	protected void update() {
 		if (!hasInitialValue) {
 			// There is no smoothing on the first value.
 			// This is not an optimal approach to choosing the initial value:
@@ -114,7 +114,7 @@ public class SmoothedFloat implements FloatSupplier {
 	 * @param k the decay constant, derived from the half life
 	 * @param t the time that has passed since the decay started
 	 */
-	private static float exponentialDecayFactor(float k, float t) {
+	protected static float exponentialDecayFactor(float k, float t) {
 		// https://en.wikipedia.org/wiki/Exponential_decay
 		// e^(-kt)
 		return (float) Math.exp(-k * t);
@@ -127,7 +127,7 @@ public class SmoothedFloat implements FloatSupplier {
 	 * @param v1 the ending value (t = 1)
 	 * @param t  the time/progress value - should be in the range of 0.0 to 1.0
 	 */
-	private static float lerp(float v0, float v1, float t) {
+	protected static float lerp(float v0, float v1, float t) {
 		// https://en.wikipedia.org/wiki/Linear_interpolation
 		return (1 - t) * v0 + t * v1;
 	}
