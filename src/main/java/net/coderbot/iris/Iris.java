@@ -14,6 +14,8 @@ import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
@@ -94,8 +96,52 @@ public class Iris implements ClientModInitializer {
 			logger.catching(Level.ERROR, e);
 		}
 
-
 		loadShaderpack();
+
+		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
+		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
+		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
+
+		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
+			if (reloadKeybind.consumeClick()) {
+				try {
+					reload();
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded"), false);
+					}
+
+				} catch (Exception e) {
+					logger.error("Error while reloading Shaders for Iris!", e);
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
+					}
+				}
+			} else if (toggleShadersKeybind.consumeClick()) {
+				IrisConfig config = getIrisConfig();
+				try {
+					config.setShadersEnabled(!config.areShadersEnabled());
+					config.save();
+
+					reload();
+					if (minecraftClient.player != null) {
+						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
+					}
+				} catch (Exception e) {
+					logger.error("Error while toggling shaders!", e);
+
+					if (minecraftClient.player != null) {
+						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
+					}
+
+					setShadersDisabled();
+					currentPackName = "(off) [fallback, check your logs for errors]";
+				}
+			} else if (shaderpackScreenKeybind.consumeClick()) {
+				minecraftClient.setScreen(new ShaderPackScreen(null));
+			}
+		});
 
 		pipelineManager = new PipelineManager(Iris::createPipeline);
 	}
