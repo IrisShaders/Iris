@@ -8,6 +8,7 @@ import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL20C;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 public class PipelineManager {
@@ -15,22 +16,22 @@ public class PipelineManager {
 	private final Function<Integer, WorldRenderingPipeline> pipelineFactory;
 	private WorldRenderingPipeline pipeline;
 	private boolean sodiumShaderReloadNeeded;
-	private int lastDimension;
+	private Optional<Integer> lastDimension;
 
 	public PipelineManager(Function<Integer, WorldRenderingPipeline> pipelineFactory) {
 		this.pipelineFactory = pipelineFactory;
 	}
 
 	public WorldRenderingPipeline preparePipeline(int currentDimension) {
-		if (currentDimension != lastDimension) {
+		if (currentDimension != lastDimension.get()) {
 			// TODO: Don't say anything about compiling shaders if shaders are disabled.
-			if (lastDimension == null) {
+			if (!lastDimension.isPresent()) {
 				Iris.logger.info("Compiling shaderpack on initial world load (for dimension: " + currentDimension + ")");
 			} else {
 				Iris.logger.info("Recompiling shaderpack on dimension change (" + lastDimension + " -> " + currentDimension + ")");
 			}
 
-			lastDimension = currentDimension;
+			lastDimension = Optional.of(currentDimension);
 			destroyPipeline();
 		}
 
@@ -39,7 +40,7 @@ public class PipelineManager {
 			SystemTimeUniforms.COUNTER.reset();
 			SystemTimeUniforms.TIMER.reset();
 
-			pipeline = pipelineFactory.apply(lastDimension);
+			pipeline = pipelineFactory.apply(lastDimension.get());
 			sodiumShaderReloadNeeded = true;
 
 			// If Sodium is loaded, we need to reload the world renderer to properly recreate the ChunkRenderBackend

@@ -44,7 +44,7 @@ public class IdMap {
 	/**
 	 * Maps a given dimension ID to an integer ID
 	 */
-	private Object2IntMap<Identifier> dimensionIdMap;
+	private Object2IntMap<ResourceLocation> dimensionIdMap;
 
 	/**
 	 * Maps block states to block ids defined in block.properties
@@ -140,7 +140,7 @@ public class IdMap {
 		return parseIdMap(properties, "entity.", "entity.properties");
 	}
 
-	private static Object2IntMap<Identifier> parseDimensionIdMap(Properties properties) {
+	private static Object2IntMap<ResourceLocation> parseDimensionIdMap(Properties properties) {
 		return parseIdMap(properties, "dimension.", "dimension.properties");
 	}
 
@@ -413,7 +413,7 @@ public class IdMap {
 		return entityIdMap;
 	}
 
-	public Map<Identifier, Integer> getDimensionIdMap() {
+	public Map<ResourceLocation, Integer> getDimensionIdMap() {
 		return dimensionIdMap;
 	}
 
