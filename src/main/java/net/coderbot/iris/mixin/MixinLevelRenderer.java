@@ -11,10 +11,7 @@ import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.phys.Vec3;
@@ -37,6 +34,9 @@ public class MixinLevelRenderer {
 	@Shadow
 	@Final
 	private Minecraft minecraft;
+	@Shadow
+	@Final
+	private RenderBuffers renderBuffers;
 	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V";
 	private static final String RENDER = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
@@ -216,16 +216,12 @@ public class MixinLevelRenderer {
 	}*/
 
 	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$beginTranslucents(PoseStack poseStack, float tickDelta, long limitTime,
-										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-										LightTexture lightTexture, Matrix4f matrix4f,
-										CallbackInfo ci, ProfilerFiller profiler, Vec3 vec3d, double d, double e, double f,
-										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
-										MultiBufferSource.BufferSource bufferSource) {
-		profiler.popPush("iris_entity_draws");
-		bufferSource.endBatch();
+	private void iris$beginTranslucents(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+		// TODO: is there a way to do this in 1.18 without using static variables?
+		Minecraft.getInstance().getProfiler().popPush("iris_entity_draws");
+		this.renderBuffers.bufferSource().endBatch();
 
-		profiler.popPush("iris_pre_translucent");
+		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
 }

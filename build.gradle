@@ -15,7 +15,7 @@ loom {
 	mixin {
 		useLegacyMixinAp = true
 	}
-	refmapName = "iris-mc1.18-refmap.json"
+	mixin.defaultRefmapName = "iris-mc1.18-refmap.json"
 	accessWidenerPath = file("src/main/resources/iris.accesswidener")
 }
 
