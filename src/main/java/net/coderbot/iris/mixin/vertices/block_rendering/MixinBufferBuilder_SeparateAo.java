@@ -1,13 +1,12 @@
 package net.coderbot.iris.mixin.vertices.block_rendering;
 
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.FixedColorVertexConsumer;
-import net.minecraft.client.render.model.BakedQuad;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.Arrays;
 
 /**
@@ -22,7 +21,7 @@ import java.util.Arrays;
  * behavior, though conditionally controlled by the current shader pack of course.
  */
 @Mixin(BufferBuilder.class)
-public abstract class MixinBufferBuilder_SeparateAo extends FixedColorVertexConsumer {
+public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsumer {
 	@Unique
 	private float[] brightnesses;
 
@@ -30,7 +29,7 @@ public abstract class MixinBufferBuilder_SeparateAo extends FixedColorVertexCons
 	private int brightnessIndex;
 
 	@Override
-	public void quad(MatrixStack.Entry matrixEntry, BakedQuad quad, float[] brightnesses, float red, float green,
+	public void putBulkData(PoseStack.Pose matrixEntry, BakedQuad quad, float[] brightnesses, float red, float green,
 					 float blue, int[] lights, int overlay, boolean useQuadColorData) {
 		if (BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			this.brightnesses = brightnesses;
@@ -40,7 +39,7 @@ public abstract class MixinBufferBuilder_SeparateAo extends FixedColorVertexCons
 			Arrays.fill(brightnesses, 1.0f);
 		}
 
-		super.quad(matrixEntry, quad, brightnesses, red, green, blue, lights, overlay, useQuadColorData);
+		super.putBulkData(matrixEntry, quad, brightnesses, red, green, blue, lights, overlay, useQuadColorData);
 	}
 
 	@Override

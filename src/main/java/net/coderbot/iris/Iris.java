@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.*;
@@ -13,21 +14,17 @@ import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.RegistryKey;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
-
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -39,19 +36,24 @@ import net.fabricmc.loader.api.FabricLoader;
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
+	// The recommended version of Sodium for use with Iris
+	private static final String SODIUM_VERSION = "0.2.0+IRIS4";
 
 	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static boolean internal;
+	private static boolean sodiumInvalid;
+	private static boolean sodiumInstalled;
+	private static boolean physicsModInstalled;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
 	private static FileSystem zipFileSystem;
-	private static KeyBinding reloadKeybind;
-	private static KeyBinding toggleShadersKeybind;
-	private static KeyBinding shaderpackScreenKeybind;
+	private static KeyMapping reloadKeybind;
+	private static KeyMapping toggleShadersKeybind;
+	private static KeyMapping shaderpackScreenKeybind;
 
 	private static String IRIS_VERSION;
 
@@ -59,21 +61,25 @@ public class Iris implements ClientModInitializer {
 	public void onInitializeClient() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
+					sodiumInstalled = true;
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
 					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will just crash.
-					if (!versionString.startsWith("0.2.0+IRIS3")) {
-						throw new IllegalStateException("You do not have a compatible version of Sodium installed! You have " + versionString + " but 0.2.0+IRIS3 is expected");
+					// the right fork of Sodium, it will show the user a nice warning, and prevent them from playing the
+					// game with a wrong version of Sodium.
+					if (!versionString.startsWith(SODIUM_VERSION)) {
+						sodiumInvalid = true;
 					}
 				}
 		);
 
-		FabricLoader.getInstance().getModContainer("iris").ifPresent(
-				modContainer -> {
-					IRIS_VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
-				}
-		);
+		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
+				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
+
+		IRIS_VERSION = iris.getMetadata().getVersion().getFriendlyString();
+
+		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
+
 		try {
 			Files.createDirectories(SHADERPACKS_DIRECTORY);
 		} catch (IOException e) {
@@ -93,27 +99,27 @@ public class Iris implements ClientModInitializer {
 
 		loadShaderpack();
 
-		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
-		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.toggleShaders", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
-		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding("iris.keybind.shaderPackSelection", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
+		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
+		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
+		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			if (reloadKeybind.wasPressed()) {
+			if (reloadKeybind.consumeClick()) {
 				try {
 					reload();
 
 					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded"), false);
+						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded"), false);
 					}
 
 				} catch (Exception e) {
 					logger.error("Error while reloading Shaders for Iris!", e);
 
 					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
+						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
 					}
 				}
-			} else if (toggleShadersKeybind.wasPressed()) {
+			} else if (toggleShadersKeybind.consumeClick()) {
 				IrisConfig config = getIrisConfig();
 				try {
 					config.setShadersEnabled(!config.areShadersEnabled());
@@ -121,20 +127,20 @@ public class Iris implements ClientModInitializer {
 
 					reload();
 					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
+						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
 					}
 				} catch (Exception e) {
 					logger.error("Error while toggling shaders!", e);
 
 					if (minecraftClient.player != null) {
-						minecraftClient.player.sendMessage(new TranslatableText("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).formatted(Formatting.RED), false);
+						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
 					}
 
 					setShadersDisabled();
 					currentPackName = "(off) [fallback, check your logs for errors]";
 				}
-			} else if (shaderpackScreenKeybind.wasPressed()) {
-				minecraftClient.openScreen(new ShaderPackScreen(null));
+			} else if (shaderpackScreenKeybind.consumeClick()) {
+				minecraftClient.setScreen(new ShaderPackScreen(null));
 			}
 		});
 
@@ -187,7 +193,7 @@ public class Iris implements ClientModInitializer {
 		try {
 			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
 		} catch (InvalidPathException e) {
-			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", irisConfig.getShaderPackName());
+			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
 			return false;
 		}
@@ -199,16 +205,16 @@ public class Iris implements ClientModInitializer {
 
 			try {
 				optionalPath = loadExternalZipShaderpack(shaderPackRoot);
-			} catch (FileSystemNotFoundException e) {
-				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+			} catch (FileSystemNotFoundException | NoSuchFileException e) {
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist in your shaderpacks folder!", name);
 
 				return false;
 			} catch (ZipException e) {
-				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", irisConfig.getShaderPackName());
+				logger.error("The shaderpack \"{}\" appears to be corrupted, please try downloading it again!", name);
 
 				return false;
 			} catch (IOException e) {
-				logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\"!", name);
 				logger.catching(Level.ERROR, e);
 
 				return false;
@@ -217,12 +223,12 @@ public class Iris implements ClientModInitializer {
 			if (optionalPath.isPresent()) {
 				shaderPackPath = optionalPath.get();
 			} else {
-				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+				logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", name);
 				return false;
 			}
 		} else {
 			if (!Files.exists(shaderPackRoot)) {
-				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", irisConfig.getShaderPackName());
+				logger.error("Failed to load the shaderpack \"{}\" because it does not exist!", name);
 				return false;
 			}
 
@@ -231,15 +237,15 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (!Files.exists(shaderPackPath)) {
-			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", irisConfig.getShaderPackName());
+			logger.error("Could not load the shaderpack \"{}\" because it appears to lack a \"shaders\" directory", name);
 			return false;
 		}
 
 		try {
 			currentPack = new ShaderPack(shaderPackPath);
-		} catch (IOException e) {
-			logger.error("Failed to load the shaderpack \"{}\"!", irisConfig.getShaderPackName());
-			logger.error(e);
+		} catch (Exception e) {
+			logger.error("Failed to load the shaderpack \"{}\"!", name);
+			logger.catching(e);
 
 			return false;
 		}
@@ -373,17 +379,17 @@ public class Iris implements ClientModInitializer {
 	public static int lastDimension = 0;
 
 	public static int getCurrentDimension() {
-		ClientWorld world = MinecraftClient.getInstance().world;
+		ClientLevel level = Minecraft.getInstance().level;
 
-		if (world != null) {
-			RegistryKey<World> worldRegistryKey = world.getRegistryKey();
+		if (level != null) {
+			ResourceKey<net.minecraft.world.level.Level> levelRegistryKey = level.dimension();
 
-			Identifier dimensionId = worldRegistryKey.getValue();
+			ResourceLocation dimensionId = levelRegistryKey.location();
 
 			return getCurrentPack().get().getIdMap().getDimensionIdMap().getOrDefault(dimensionId, 0);
 		} else {
 			// This prevents us from reloading the shaderpack unless we need to. Otherwise, if the player is in the
-			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the world
+			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the level
 			// because the code thinks that the dimension changed.
 			return lastDimension;
 		}
@@ -437,17 +443,29 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static String getFormattedVersion() {
-		Formatting color;
+		ChatFormatting color;
 		String version = getVersion();
 
 		if (version.endsWith("-dirty") || version.contains("unknown")) {
-			color = Formatting.RED;
+			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
-			color = Formatting.LIGHT_PURPLE;
+			color = ChatFormatting.LIGHT_PURPLE;
 		} else {
-			color = Formatting.GREEN;
+			color = ChatFormatting.GREEN;
 		}
 
 		return color + version;
+	}
+
+	public static boolean isSodiumInvalid() {
+		return sodiumInvalid;
+  }
+
+	public static boolean isSodiumInstalled() {
+		return sodiumInstalled;
+	}
+
+	public static boolean isPhysicsModInstalled() {
+		return physicsModInstalled;
 	}
 }

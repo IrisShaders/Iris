@@ -1,12 +1,10 @@
 package net.coderbot.iris.gl.uniform;
 
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import java.util.function.Supplier;
-
+import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL21;
-
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.util.math.Vec3d;
 
 public class Vector3Uniform extends Uniform {
 	private final Vector3f cachedValue;
@@ -19,11 +17,11 @@ public class Vector3Uniform extends Uniform {
 		this.value = value;
 	}
 
-	static Vector3Uniform converted(int location, Supplier<Vec3d> value) {
+	static Vector3Uniform converted(int location, Supplier<Vec3> value) {
 		Vector3f held = new Vector3f();
 
 		return new Vector3Uniform(location, () -> {
-			Vec3d updated = value.get();
+			Vec3 updated = value.get();
 
 			held.set((float) updated.x, (float) updated.y, (float) updated.z);
 
@@ -37,7 +35,7 @@ public class Vector3Uniform extends Uniform {
 		return new Vector3Uniform(location, () -> {
 			Vector4f updated = value.get();
 
-			held.set(updated.getX(), updated.getY(), updated.getZ());
+			held.set(updated.x(), updated.y(), updated.z());
 
 			return held;
 		});
@@ -48,8 +46,8 @@ public class Vector3Uniform extends Uniform {
 		Vector3f newValue = value.get();
 
 		if (!newValue.equals(cachedValue)) {
-			cachedValue.set(newValue.getX(), newValue.getY(), newValue.getZ());
-			GL21.glUniform3f(location, cachedValue.getX(), cachedValue.getY(), cachedValue.getZ());
+			cachedValue.set(newValue.x(), newValue.y(), newValue.z());
+			GL21.glUniform3f(location, cachedValue.x(), cachedValue.y(), cachedValue.z());
 		}
 	}
 }

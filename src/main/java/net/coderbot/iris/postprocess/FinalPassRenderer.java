@@ -21,9 +21,8 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -116,13 +115,13 @@ public class FinalPassRenderer {
 		RenderSystem.disableBlend();
 		RenderSystem.disableAlphaTest();
 
-		final Framebuffer main = MinecraftClient.getInstance().getFramebuffer();
-		final int baseWidth = main.textureWidth;
-		final int baseHeight = main.textureHeight;
+		final com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+		final int baseWidth = main.width;
+		final int baseHeight = main.height;
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 
-		main.beginWrite(true);
+		main.bindWrite(true);
 
 		if (this.finalPass != null) {
 			if (!finalPass.mipmappedBuffers.isEmpty()) {
@@ -171,8 +170,8 @@ public class FinalPassRenderer {
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
-		main.beginWrite(true);
-		GlStateManager.useProgram(0);
+		main.bindWrite(true);
+		GlStateManager._glUseProgram(0);
 
 		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {
 			// Unbind all textures that we may have used.

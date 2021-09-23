@@ -12,13 +12,13 @@ public class AlphaTestOverride {
 	}
 
 	public void setup() {
-		GlStateManager.enableAlphaTest();
-		GlStateManager.alphaFunc(function.getGlId(), reference);
+		GlStateManager._enableAlphaTest();
+		GlStateManager._alphaFunc(function.getGlId(), reference);
 	}
 
 	public static void teardown() {
-		GlStateManager.disableAlphaTest();
-		GlStateManager.alphaFunc(AlphaTestFunction.GREATER.getGlId(), 0.1F);
+		GlStateManager._disableAlphaTest();
+		GlStateManager._alphaFunc(AlphaTestFunction.GREATER.getGlId(), 0.1F);
 	}
 
 	@Override
@@ -33,7 +33,7 @@ public class AlphaTestOverride {
 
 		@Override
 		public void setup() {
-			GlStateManager.disableAlphaTest();
+			GlStateManager._disableAlphaTest();
 		}
 
 		@Override

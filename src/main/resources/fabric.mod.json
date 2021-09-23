@@ -21,11 +21,15 @@
   "entrypoints": {
     "client": [
       "net.coderbot.iris.Iris"
+    ],
+    "modmenu": [
+      "net.coderbot.iris.compat.modmenu.ModMenuIntegration"
     ]
   },
 
   "mixins": [
     "mixins.iris.json",
+    "iris-batched-entity-rendering.mixins.json",
     "mixins.iris.yeetphysicsmod.json",
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",
@@ -45,7 +49,11 @@
   },
 
   "breaks": {
+    "iris-explorer": "*",
+    "batchedentityrendering": "*",
     "canvas": "*",
-    "optifabric": "*"
+    "optifabric": "*",
+    "imm_ptl_core": "*",
+    "immersive_portals": "*"
   }
 }

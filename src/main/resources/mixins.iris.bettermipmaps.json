@@ -4,8 +4,8 @@
   "package": "net.coderbot.iris.mixin.bettermipmaps",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinMipmapHelper",
-    "MixinSprite"
+    "MixinMipmapGenerator",
+    "MixinTextureAtlasSprite"
   ],
   "injectors": {
     "defaultRequire": 1

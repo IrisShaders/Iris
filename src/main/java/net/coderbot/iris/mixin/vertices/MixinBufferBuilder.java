@@ -5,7 +5,6 @@ import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.coderbot.iris.vertices.QuadView;
-import net.minecraft.client.render.*;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -13,7 +12,11 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferVertexConsumer;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import java.nio.ByteBuffer;
 
 /**
@@ -43,10 +46,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private short currentRenderType;
 
 	@Shadow
-	private boolean field_21594;
+	private boolean fastFormat;
 
 	@Shadow
-	private boolean field_21595;
+	private boolean fullFormat;
 
 	@Shadow
 	private ByteBuffer buffer;
@@ -55,18 +58,18 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private VertexFormat format;
 
 	@Shadow
-	private int elementOffset;
+	private int nextElementByte;
 
 	@Shadow
 	private @Nullable VertexFormatElement currentElement;
 
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
-		extending = format == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL || format == IrisVertexFormats.TERRAIN;
+		extending = format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN;
 		vertexCount = 0;
 
 		if (extending) {
-			normalOffset = format.getElements().indexOf(VertexFormats.NORMAL_ELEMENT);
+			normalOffset = format.getElements().indexOf(DefaultVertexFormat.ELEMENT_NORMAL);
 		}
 	}
 
@@ -78,23 +81,23 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		}
 	}
 
-	@Inject(method = "reset()V", at = @At("HEAD"))
+	@Inject(method = "discard", at = @At("HEAD"))
 	private void iris$onReset(CallbackInfo ci) {
 		extending = false;
 		vertexCount = 0;
 	}
 
-	@Inject(method = "method_23918(Lnet/minecraft/client/render/VertexFormat;)V", at = @At("RETURN"))
+	@Inject(method = "switchFormat", at = @At("RETURN"))
 	private void iris$preventHardcodedVertexWriting(VertexFormat format, CallbackInfo ci) {
 		if (!extending) {
 			return;
 		}
 
-		field_21594 = false;
-		field_21595 = false;
+		fastFormat = false;
+		fullFormat = false;
 	}
 
-	@Inject(method = "next()V", at = @At("HEAD"))
+	@Inject(method = "endVertex", at = @At("HEAD"))
 	private void iris$beforeNext(CallbackInfo ci) {
 		if (!extending) {
 			return;
@@ -128,14 +131,14 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 		int stride = this.format.getVertexSize();
 
-		quad.setup(this.buffer, this.elementOffset, stride);
+		quad.setup(this.buffer, this.nextElementByte, stride);
 		NormalHelper.computeFaceNormal(this.normal, quad);
 		int packedNormal = NormalHelper.packNormal(this.normal, 0);
 
-		buffer.putInt(this.elementOffset - 4 - extendedDataLength, packedNormal);
-		buffer.putInt(this.elementOffset - 4 - extendedDataLength - stride, packedNormal);
-		buffer.putInt(this.elementOffset - 4 - extendedDataLength - stride * 2, packedNormal);
-		buffer.putInt(this.elementOffset - 4 - extendedDataLength - stride * 3, packedNormal);
+		buffer.putInt(this.nextElementByte - 4 - extendedDataLength, packedNormal);
+		buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride, packedNormal);
+		buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride * 2, packedNormal);
+		buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride * 3, packedNormal);
 
 		computeTangents();
 
@@ -151,8 +154,8 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		midV *= 0.25;
 
 		for (int vertex = 0; vertex < 4; vertex++) {
-			buffer.putFloat(this.elementOffset - 24 - stride * vertex, midU);
-			buffer.putFloat(this.elementOffset - 20 - stride * vertex, midV);
+			buffer.putFloat(this.nextElementByte - 24 - stride * vertex, midU);
+			buffer.putFloat(this.nextElementByte - 20 - stride * vertex, midV);
 		}
 	}
 
@@ -239,7 +242,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		float pbitangenty = -(tangentx * normal.z - tangentz * normal.x);
 		float pbitangentz =   tangentx * normal.x - tangenty * normal.y;
 
-		float dot = bitangentx * pbitangentx + bitangenty + pbitangenty + bitangentz * pbitangentz;
+		float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
 		float tangentW;
 
 		if (dot < 0) {
@@ -259,10 +262,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		buffer.putInt(this.elementOffset - 16 - stride * 3, tangent);*/
 
 		for (int vertex = 0; vertex < 4; vertex++) {
-			buffer.putFloat(this.elementOffset - 16 - stride * vertex, tangentx);
-			buffer.putFloat(this.elementOffset - 12 - stride * vertex, tangenty);
-			buffer.putFloat(this.elementOffset - 8 - stride * vertex, tangentz);
-			buffer.putFloat(this.elementOffset - 4 - stride * vertex, 1.0F);
+			buffer.putFloat(this.nextElementByte - 16 - stride * vertex, tangentx);
+			buffer.putFloat(this.nextElementByte - 12 - stride * vertex, tangenty);
+			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, tangentz);
+			buffer.putFloat(this.nextElementByte - 4 - stride * vertex, 1.0F);
 		}
 	}
 

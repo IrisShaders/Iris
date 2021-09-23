@@ -1,0 +1,28 @@
+{
+  "iris.shaders.reloaded": "Przeładowano Shadery!",
+  "iris.shaders.toggled": "Przełączono Shadery na %s!",
+  "iris.keybind.reload": "Przeładuj Shadery",
+  "iris.keybind.shaderPackSelection": "Ekran wyboru z Shaderami",
+  "iris.keybind.toggleShaders": "Przełącz Shadery",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "Nie udało się przeładować Shaderów! Powód: %s",
+  "iris.shaders.toggled.failure": "Nie udało się przełączyć Shaderów! Powód: %s",
+
+  "options.iris.apply": "Zastosuj",
+  "options.iris.refresh": "Odśwież",
+  "options.iris.openShaderPackFolder": "Otwórz folder z Shaderami...",
+  "options.iris.refreshShaderPacks": "Odśwież listę z Shaderami",
+  "options.iris.shaderPackSelection": "Shader Packi...",
+  "options.iris.shaderPackSelection.title": "Shader Packi",
+  "options.iris.shaderPackSelection.addedPack": "Dodano Shader Packa \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Dodano %s Shader Packi",
+  "options.iris.shaderPackSelection.failedAdd": "Pliki nie są poprawnymi Shader Packami",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" nie jest poprawnym Shader Packiem",
+  "options.iris.shaderPackSelection.copyError": "Nie można dodać Shader Packa \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" jest już w twoim folderze z Shaderami!",
+  "options.iris.shaders.disabled": "Shadery: Wyłączone",
+  "options.iris.shaders.enabled": "Shadery: Włączone",
+
+  "pack.iris.select.title": "Wybierz",
+  "pack.iris.list.label": "+ Przeciągnij i upuść Shader Packi, aby dodać"
+}

@@ -20,7 +20,7 @@ public class NoiseTexture extends GlResource {
 
 	public NoiseTexture(int width, int height) {
 		super(GL11C.glGenTextures());
-		GlStateManager.bindTexture(getGlId());
+		GlStateManager._bindTexture(getGlId());
 
 		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
 		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
@@ -33,24 +33,24 @@ public class NoiseTexture extends GlResource {
 		GL11C.glTexParameterf(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
 		resize(width, height);
 
-		GlStateManager.bindTexture(0);
+		GlStateManager._bindTexture(0);
 	}
 
 	void resize(int width, int height) {
 		this.width = width;
 		this.height = height;
 
-		GlStateManager.bindTexture(getGlId());
+		GlStateManager._bindTexture(getGlId());
 
 		ByteBuffer pixels = generateNoise();
 
 		TextureUploadHelper.resetTextureUploadState();
 
 		// Since we're using tightly-packed RGB data, we must use an alignment of 1 byte instead of the usual 4 bytes.
-		GlStateManager.pixelStore(GL20C.GL_UNPACK_ALIGNMENT, 1);
+		GlStateManager._pixelStore(GL20C.GL_UNPACK_ALIGNMENT, 1);
 		GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGB, width, height, 0, GL11C.GL_RGB, GL11C.GL_UNSIGNED_BYTE, pixels);
 
-		GlStateManager.bindTexture(0);
+		GlStateManager._bindTexture(0);
 	}
 
 	private ByteBuffer generateNoise() {

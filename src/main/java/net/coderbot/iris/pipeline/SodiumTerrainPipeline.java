@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.function.IntFunction;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
@@ -15,7 +16,6 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -129,7 +129,7 @@ public class SodiumTerrainPipeline {
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			System.out.println("Final patched vertex source:");
 			System.out.println(transformations);
 		}
@@ -157,7 +157,7 @@ public class SodiumTerrainPipeline {
 		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
 				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			System.out.println("Final patched fragment source:");
 			System.out.println(transformations);
 		}
@@ -207,7 +207,7 @@ public class SodiumTerrainPipeline {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
 		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
 		SamplerUniforms.addCommonSamplerUniforms(uniforms);
-		SamplerUniforms.addWorldSamplerUniforms(uniforms);
+		SamplerUniforms.addLevelSamplerUniforms(uniforms);
 		SamplerUniforms.addDepthSamplerUniforms(uniforms);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 

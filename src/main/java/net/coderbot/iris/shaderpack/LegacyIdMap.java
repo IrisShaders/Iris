@@ -1,10 +1,9 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class LegacyIdMap {
 
@@ -85,9 +84,9 @@ public class LegacyIdMap {
 		addDimension(dimensionIdMap, 1, new Identifier("the_end"));
 	}
 
-	private static void addBlock(Object2IntMap<BlockState> blockIdMap, int id, Block... blocks) {
+	private static void add(Object2IntMap<BlockState> blockIdMap, int id, Block... blocks) {
 		for (Block block : blocks) {
-			block.getStateManager().getStates().forEach(state -> blockIdMap.put(state, id));
+			block.getStateDefinition().getPossibleStates().forEach(state -> blockIdMap.put(state, id));
 		}
 	}
 

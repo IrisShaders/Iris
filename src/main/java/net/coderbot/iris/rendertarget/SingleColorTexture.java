@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 public class SingleColorTexture extends GlResource {
 	public SingleColorTexture(int red, int green, int blue, int alpha) {
 		super(GL11C.glGenTextures());
-		GlStateManager.bindTexture(getGlId());
+		GlStateManager._bindTexture(getGlId());
 
 		ByteBuffer pixel = BufferUtils.createByteBuffer(4);
 		pixel.put((byte) red);
@@ -29,7 +29,7 @@ public class SingleColorTexture extends GlResource {
 		TextureUploadHelper.resetTextureUploadState();
 		GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGBA, 1, 1, 0, GL11C.GL_RGBA, GL11C.GL_UNSIGNED_BYTE, pixel);
 
-		GlStateManager.bindTexture(0);
+		GlStateManager._bindTexture(0);
 	}
 
 	public int getTextureId() {

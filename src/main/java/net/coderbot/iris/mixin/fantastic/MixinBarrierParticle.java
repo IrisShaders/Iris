@@ -1,13 +1,13 @@
 package net.coderbot.iris.mixin.fantastic;
 
-import net.coderbot.iris.fantastic.IrisParticleTextureSheets;
+import net.coderbot.iris.fantastic.IrisParticleRenderTypes;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.BarrierParticle;
-import net.minecraft.client.particle.ParticleTextureSheet;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderLayers;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemConvertible;
+import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.level.ItemLike;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,23 +20,23 @@ public class MixinBarrierParticle {
 	@Unique
 	private boolean isOpaque;
 
-	@Inject(method = "<init>(Lnet/minecraft/client/world/ClientWorld;DDDLnet/minecraft/item/ItemConvertible;)V", at = @At("RETURN"))
-	private void iris$resolveTranslucency(ClientWorld world, double x, double y, double z, ItemConvertible itemConvertible, CallbackInfo ci) {
+	@Inject(method = "<init>", at = @At("RETURN"))
+	private void iris$resolveTranslucency(ClientLevel level, double x, double y, double z, ItemLike itemConvertible, CallbackInfo ci) {
 		if (itemConvertible instanceof BlockItem) {
 			BlockItem blockItem = (BlockItem) itemConvertible;
 
-			RenderLayer layer = RenderLayers.getBlockLayer(blockItem.getBlock().getDefaultState());
+			RenderType type = ItemBlockRenderTypes.getChunkRenderType(blockItem.getBlock().defaultBlockState());
 
-			if (layer == RenderLayer.getSolid() || layer == RenderLayer.getCutout() || layer == RenderLayer.getCutoutMipped()) {
+			if (type == RenderType.solid() || type == RenderType.cutout() || type == RenderType.cutoutMipped()) {
 				isOpaque = true;
 			}
 		}
 	}
 
-	@Inject(method = "getType()Lnet/minecraft/client/particle/ParticleTextureSheet;", at = @At("HEAD"), cancellable = true)
-	private void iris$overrideParticleSheet(CallbackInfoReturnable<ParticleTextureSheet> cir) {
+	@Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
+	private void iris$overrideParticleRenderType(CallbackInfoReturnable<ParticleRenderType> cir) {
 		if (isOpaque) {
-			cir.setReturnValue(IrisParticleTextureSheets.OPAQUE_TERRAIN_SHEET);
+			cir.setReturnValue(IrisParticleRenderTypes.OPAQUE_TERRAIN);
 		}
 	}
 }
