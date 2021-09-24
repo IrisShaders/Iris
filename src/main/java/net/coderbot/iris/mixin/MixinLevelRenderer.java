@@ -213,12 +213,7 @@ public class MixinLevelRenderer {
 	private void iris$beginTranslucents(PoseStack poseStack, float tickDelta, long limitTime,
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 										LightTexture lightTexture, Matrix4f projection,
-										CallbackInfo ci, ProfilerFiller profiler, Vec3 vec3, double d, double e, double f,
-										Matrix4f matrix4f, boolean bl, Frustum frustum2, boolean bl3,
-										MultiBufferSource.BufferSource bufferSource) {
-		profiler.popPush("iris_entity_draws");
-		bufferSource.endBatch();
-
+										CallbackInfo ci, ProfilerFiller profiler) {
 		profiler.popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
