@@ -5,8 +5,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL20C;
 
 import java.util.function.Function;
@@ -50,7 +49,7 @@ public class PipelineManager {
 			//
 			// TODO: Don't trigger a reload if this is the first time the world is being rendered
 			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
-				MinecraftClient.getInstance().worldRenderer.reload();
+				Minecraft.getInstance().levelRenderer.allChanged();
 				BlockRenderingSettings.INSTANCE.clearReloadRequired();
 			}
 		}
@@ -95,14 +94,14 @@ public class PipelineManager {
 		//
 		// Without this code, there will be weird issues when reloading certain shaderpacks.
 		for (int i = 0; i < 16; i++) {
-			GlStateManager.activeTexture(GL20C.GL_TEXTURE0 + i);
-			GlStateManager.bindTexture(0);
+			GlStateManager._activeTexture(GL20C.GL_TEXTURE0 + i);
+			GlStateManager._bindTexture(0);
 		}
 
 		// Set the active texture unit to unit 0
 		//
 		// This seems to be what most code expects. It's a sane default in any case.
-		GlStateManager.activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
 		// Destroy the old world rendering pipeline
 		//

@@ -1,8 +1,8 @@
 package net.coderbot.iris.shadows.frustum.fallback;
 
-import net.minecraft.client.render.Frustum;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Matrix4f;
+import com.mojang.math.Matrix4f;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.world.phys.AABB;
 
 public class NonCullingFrustum extends Frustum {
 	public NonCullingFrustum() {
@@ -22,7 +22,8 @@ public class NonCullingFrustum extends Frustum {
 		return false;
 	}
 
-	public boolean isVisible(Box box) {
+	@Override
+	public boolean isVisible(AABB aabb) {
 		return true;
 	}
 }

@@ -1,7 +1,7 @@
 package net.coderbot.batchedentityrendering.impl;
 
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 
 public class BufferSegmentRenderer {
     private final BufferBuilder fakeBufferBuilder;
@@ -13,20 +13,20 @@ public class BufferSegmentRenderer {
     }
 
     /**
-     * Sets up the render layer, draws the buffer, and then tears down the render layer.
+     * Sets up the render type, draws the buffer, and then tears down the render type.
      */
     public void draw(BufferSegment segment) {
-        segment.getRenderLayer().startDrawing();
+        segment.getRenderType().setupRenderState();
         drawInner(segment);
-        segment.getRenderLayer().endDrawing();
+        segment.getRenderType().clearRenderState();
     }
 
     /**
-     * Like draw(), but it doesn't setup / tear down the render layer.
+     * Like draw(), but it doesn't setup / tear down the render type.
      */
     public void drawInner(BufferSegment segment) {
-        fakeBufferBuilderExt.setupBufferSlice(segment.getSlice(), segment.getParameters());
-        BufferRenderer.draw(fakeBufferBuilder);
+        fakeBufferBuilderExt.setupBufferSlice(segment.getSlice(), segment.getDrawState());
+        BufferUploader.end(fakeBufferBuilder);
         fakeBufferBuilderExt.teardownBufferSlice();
     }
 }

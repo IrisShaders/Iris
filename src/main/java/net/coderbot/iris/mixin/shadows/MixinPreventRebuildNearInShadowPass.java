@@ -1,10 +1,10 @@
 package net.coderbot.iris.mixin.shadows;
 
 import net.coderbot.iris.pipeline.ShadowRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.culling.Frustum;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,14 +17,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * This patch is not relevant with Sodium installed since Sodium has a completely different build path for terrain
  * setup.
  */
-@Mixin(WorldRenderer.class)
+@Mixin(LevelRenderer.class)
 public class MixinPreventRebuildNearInShadowPass {
-	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V";
+	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V";
 
-	@Inject(method = "setupTerrain", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=rebuildNear"), cancellable = true)
+	@Inject(method = "setupRender", at = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=rebuildNear"), cancellable = true)
 	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo callback) {
 		if (ShadowRenderer.ACTIVE) {
-			MinecraftClient.getInstance().getProfiler().pop();
+			Minecraft.getInstance().getProfiler().pop();
 			callback.cancel();
 		}
 	}

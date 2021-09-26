@@ -5,7 +5,7 @@
   "package": "net.coderbot.iris.compat.physicsmod.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinWorldRenderer"
+    "MixinLevelRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

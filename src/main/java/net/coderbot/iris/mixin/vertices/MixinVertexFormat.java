@@ -1,8 +1,8 @@
 package net.coderbot.iris.mixin.vertices;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.vertices.IrisVertexFormats;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,19 +14,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(VertexFormat.class)
 public class MixinVertexFormat {
-	@Inject(method = "startDrawing(J)V", at = @At("HEAD"), cancellable = true)
-	private void iris$onStartDrawing(long pointer, CallbackInfo ci) {
-		if ((Object) this == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL) {
-			IrisVertexFormats.TERRAIN.startDrawing(pointer);
+	@Inject(method = "setupBufferState", at = @At("HEAD"), cancellable = true)
+	private void iris$onSetupBufferState(long pointer, CallbackInfo ci) {
+		if ((Object) this == DefaultVertexFormat.BLOCK) {
+			IrisVertexFormats.TERRAIN.setupBufferState(pointer);
 
 			ci.cancel();
 		}
 	}
 
-	@Inject(method = "endDrawing()V", at = @At("HEAD"), cancellable = true)
-	private void iris$onEndDrawing(CallbackInfo ci) {
-		if ((Object) this == VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL) {
-			IrisVertexFormats.TERRAIN.endDrawing();
+	@Inject(method = "clearBufferState", at = @At("HEAD"), cancellable = true)
+	private void iris$onClearBufferState(CallbackInfo ci) {
+		if ((Object) this == DefaultVertexFormat.BLOCK) {
+			IrisVertexFormats.TERRAIN.clearBufferState();
 
 			ci.cancel();
 		}

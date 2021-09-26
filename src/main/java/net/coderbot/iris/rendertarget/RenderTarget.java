@@ -33,15 +33,15 @@ public class RenderTarget {
 		this.mainTexture = textures[0];
 		this.altTexture = textures[1];
 
-		GlStateManager.bindTexture(mainTexture);
+		GlStateManager._bindTexture(mainTexture);
 		setupCurrentlyBoundTexture(builder.width, builder.height);
 
-		GlStateManager.bindTexture(altTexture);
+		GlStateManager._bindTexture(altTexture);
 		setupCurrentlyBoundTexture(builder.width, builder.height);
 
 		// Clean up after ourselves
 		// This is strictly defensive to ensure that other buggy code doesn't tamper with our textures
-		GlStateManager.bindTexture(0);
+		GlStateManager._bindTexture(0);
 	}
 
 	private void setupCurrentlyBoundTexture(int width, int height) {
@@ -61,10 +61,10 @@ public class RenderTarget {
 	void resize(int width, int height) {
 		requireValid();
 
-		GlStateManager.bindTexture(mainTexture);
+		GlStateManager._bindTexture(mainTexture);
 		resizeCurrentlyBoundTexture(width, height);
 
-		GlStateManager.bindTexture(altTexture);
+		GlStateManager._bindTexture(altTexture);
 		resizeCurrentlyBoundTexture(width, height);
 	}
 

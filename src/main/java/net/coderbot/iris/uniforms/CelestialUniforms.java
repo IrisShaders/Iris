@@ -2,15 +2,14 @@ package net.coderbot.iris.uniforms;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import java.util.Objects;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.Matrix4f;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 
 /**
  * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#celestial-bodies">Uniforms: Celestial bodies</a>
@@ -73,13 +72,13 @@ public final class CelestialUniforms {
 
 		// TODO: Deduplicate / remove this function.
 		Matrix4f celestial = new Matrix4f();
-		celestial.loadIdentity();
+		celestial.setIdentity();
 
 		// This is the same transformation applied by renderSky, however, it's been moved to here.
 		// This is because we need the result of it before it's actually performed in vanilla.
-		celestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
-		celestial.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(sunPathRotation));
-		celestial.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
+		celestial.multiply(Vector3f.YP.rotationDegrees(-90.0F));
+		celestial.multiply(Vector3f.ZP.rotationDegrees(sunPathRotation));
+		celestial.multiply(Vector3f.XP.rotationDegrees(getSkyAngle() * 360.0F));
 
 		position.transform(celestial);
 
@@ -93,9 +92,9 @@ public final class CelestialUniforms {
 
 		// This is the same transformation applied by renderSky, however, it's been moved to here.
 		// This is because we need the result of it before it's actually performed in vanilla.
-		celestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
-		celestial.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(sunPathRotation));
-		celestial.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(getSkyAngle() * 360.0F));
+		celestial.multiply(Vector3f.YP.rotationDegrees(-90.0F));
+		celestial.multiply(Vector3f.ZP.rotationDegrees(sunPathRotation));
+		celestial.multiply(Vector3f.XP.rotationDegrees(getSkyAngle() * 360.0F));
 
 		position.transform(celestial);
 
@@ -110,7 +109,7 @@ public final class CelestialUniforms {
 
 		// Apply the fixed -90.0F degrees rotation to mirror the same transformation in renderSky.
 		// But, notably, skip the rotation by the skyAngle.
-		preCelestial.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-90.0F));
+		preCelestial.multiply(Vector3f.YP.rotationDegrees(-90.0F));
 
 		// Use this matrix to transform the vector.
 		upVector.transform(preCelestial);
@@ -125,11 +124,11 @@ public final class CelestialUniforms {
 		return getSunAngle() <= 0.5;
 	}
 
-	private static ClientWorld getWorld() {
-		return Objects.requireNonNull(MinecraftClient.getInstance().world);
+	private static ClientLevel getWorld() {
+		return Objects.requireNonNull(Minecraft.getInstance().level);
 	}
 
 	private static float getSkyAngle() {
-		return getWorld().getSkyAngle(CapturedRenderingState.INSTANCE.getTickDelta());
+		return getWorld().getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 }

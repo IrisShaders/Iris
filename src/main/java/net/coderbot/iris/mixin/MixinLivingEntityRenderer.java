@@ -1,13 +1,13 @@
 package net.coderbot.iris.mixin;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.layer.EntityColorRenderPhase;
-import net.coderbot.iris.layer.EntityColorVertexConsumerProvider;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
+import net.coderbot.iris.layer.EntityColorRenderStateShard;
+import net.coderbot.iris.layer.EntityColorMultiBufferSource;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,28 +16,30 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(LivingEntityRenderer.class)
 public abstract class MixinLivingEntityRenderer {
 	@Shadow
-	abstract float getAnimationCounter(LivingEntity entity, float tickDelta);
+	abstract float getWhiteOverlayProgress(LivingEntity entity, float tickDelta);
 
 	@ModifyVariable(method = "render", at = @At("HEAD"))
-	private VertexConsumerProvider iris$wrapProvider(VertexConsumerProvider provider, LivingEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		if (!(provider instanceof Groupable)) {
+	private MultiBufferSource iris$wrapProvider(MultiBufferSource bufferSource, LivingEntity entity, float yaw,
+												float tickDelta, PoseStack pose, MultiBufferSource bufferSourceArg,
+												int light) {
+		if (!(bufferSource instanceof Groupable)) {
 			// Entity color is not supported in this context, no buffering available.
-			return provider;
+			return bufferSource;
 		}
 
 		boolean hurt;
 		if(Iris.isPhysicsModInstalled()) {
-			hurt = entity.hurtTime > 0 && !entity.isDead();
+			hurt = entity.hurtTime > 0 && !entity.isDeadOrDying();
 		} else {
 			hurt = entity.hurtTime > 0 || entity.deathTime > 0;
 		}
-		float whiteFlash = getAnimationCounter(entity, tickDelta);
+		float whiteFlash = getWhiteOverlayProgress(entity, tickDelta);
 
 		if (hurt || whiteFlash > 0.0) {
-			EntityColorRenderPhase phase = new EntityColorRenderPhase(hurt, whiteFlash);
-			return new EntityColorVertexConsumerProvider(provider, phase);
+			EntityColorRenderStateShard phase = new EntityColorRenderStateShard(hurt, whiteFlash);
+			return new EntityColorMultiBufferSource(bufferSource, phase);
 		} else {
-			return provider;
+			return bufferSource;
 		}
 	}
 }

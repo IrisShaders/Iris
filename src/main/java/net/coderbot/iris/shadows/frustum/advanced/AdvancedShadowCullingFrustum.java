@@ -1,11 +1,11 @@
 package net.coderbot.iris.shadows.frustum.advanced;
 
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Matrix4f;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.world.phys.AABB;
 
 public class AdvancedShadowCullingFrustum extends Frustum {
 	// conservative estimate for the maximum number of clipping planes:
@@ -136,23 +136,23 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	}
 
 	private Vector3f truncate(Vector4f base) {
-		return new Vector3f(base.getX(), base.getY(), base.getZ());
+		return new Vector3f(base.x(), base.y(), base.z());
 	}
 
 	private Vector4f extend(Vector3f base, float w) {
-		return new Vector4f(base.getX(), base.getY(), base.getZ(), w);
+		return new Vector4f(base.x(), base.y(), base.z(), w);
 	}
 
 	private float lengthSquared(Vector3f v) {
-		float x = v.getX();
-		float y = v.getY();
-		float z = v.getZ();
+		float x = v.x();
+		float y = v.y();
+		float z = v.z();
 
 		return x * x + y * y + z * z;
 	}
 
 	private Vector3f cross(Vector3f first, Vector3f second) {
-		Vector3f result = new Vector3f(first.getX(), first.getY(), first.getZ());
+		Vector3f result = new Vector3f(first.x(), first.y(), first.z());
 		result.cross(second);
 
 		return result;
@@ -199,13 +199,13 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 			Vector3f ixb = cross(intersection, backPlaneNormal);
 			Vector3f fxi = cross(frontPlaneNormal, intersection);
 
-			ixb.scale(-frontPlane4.getW());
-			fxi.scale(-backPlane4.getW());
+			ixb.mul(-frontPlane4.w());
+			fxi.mul(-backPlane4.w());
 
 			ixb.add(fxi);
 
 			point = ixb;
-			point.scale(1.0F / lengthSquared(intersection));
+			point.mul(1.0F / lengthSquared(intersection));
 		}
 
 		// Now that we have a point and a normal vector, we can make a plane.
@@ -249,7 +249,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 
 	// Note: These functions are copied & modified from the vanilla Frustum class.
 	@Override
-	public void setPosition(double cameraX, double cameraY, double cameraZ) {
+	public void prepare(double cameraX, double cameraY, double cameraZ) {
 		if (this.boxCuller != null) {
 			boxCuller.setPosition(cameraX, cameraY, cameraZ);
 		}
@@ -259,12 +259,13 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		this.z = cameraZ;
 	}
 
-	public boolean isVisible(Box box) {
-		if (boxCuller != null && boxCuller.isCulled(box)) {
+	@Override
+	public boolean isVisible(AABB aabb) {
+		if (boxCuller != null && boxCuller.isCulled(aabb)) {
 			return false;
 		}
 
-		return this.isVisible(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ);
 	}
 
 	// For Sodium
@@ -301,14 +302,14 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 			// this avoids false negative - a single point being inside causes the box to pass
 			// this plane test
 
-			if (       !(plane.dotProduct(new Vector4f(x1, y1, z1, 1.0F)) > 0.0F)
-					&& !(plane.dotProduct(new Vector4f(x2, y1, z1, 1.0F)) > 0.0F)
-					&& !(plane.dotProduct(new Vector4f(x1, y2, z1, 1.0F)) > 0.0F)
-					&& !(plane.dotProduct(new Vector4f(x2, y2, z1, 1.0F)) > 0.0F)
-					&& !(plane.dotProduct(new Vector4f(x1, y1, z2, 1.0F)) > 0.0F)
-					&& !(plane.dotProduct(new Vector4f(x2, y1, z2, 1.0F)) > 0.0F)
-					&& !(plane.dotProduct(new Vector4f(x1, y2, z2, 1.0F)) > 0.0F)
-					&& !(plane.dotProduct(new Vector4f(x2, y2, z2, 1.0F)) > 0.0F)) {
+			if (       !(plane.dot(new Vector4f(x1, y1, z1, 1.0F)) > 0.0F)
+					&& !(plane.dot(new Vector4f(x2, y1, z1, 1.0F)) > 0.0F)
+					&& !(plane.dot(new Vector4f(x1, y2, z1, 1.0F)) > 0.0F)
+					&& !(plane.dot(new Vector4f(x2, y2, z1, 1.0F)) > 0.0F)
+					&& !(plane.dot(new Vector4f(x1, y1, z2, 1.0F)) > 0.0F)
+					&& !(plane.dot(new Vector4f(x2, y1, z2, 1.0F)) > 0.0F)
+					&& !(plane.dot(new Vector4f(x1, y2, z2, 1.0F)) > 0.0F)
+					&& !(plane.dot(new Vector4f(x2, y2, z2, 1.0F)) > 0.0F)) {
 				return false;
 			}
 		}

@@ -2,24 +2,28 @@ package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
-import net.coderbot.batchedentityrendering.impl.DrawCallTrackingBufferBuilderStorage;
-import net.coderbot.batchedentityrendering.impl.ExtendedBufferStorage;
+import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
+import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.mixin.WorldRendererAccessor;
+import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
@@ -31,21 +35,22 @@ import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GlProgramManager;
-import net.minecraft.client.render.*;
-import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
@@ -74,8 +79,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final boolean packHasIndirectSunBounceGi;
 	private final float sunPathRotation;
 
-	private final BufferBuilderStorage buffers;
-	private final ExtendedBufferStorage extendedBufferStorage;
+	private final RenderBuffers buffers;
+	private final RenderBuffersExt renderBuffersExt;
 
 	private final RenderTargets gbufferRenderTargets;
 	private final AbstractTexture normals;
@@ -93,8 +98,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private int renderedShadowBlockEntities = 0;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
-						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
+                          Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
+                          AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -108,7 +113,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		if (shadowDirectives.getFov() != null) {
 			// TODO: Support FOV in the shadow map for legacy shaders
-			Iris.logger.warn("The shaderpack specifies a shadow FOV of " + shadowDirectives.getFov() + ", but Iris does not currently support perspective projections in the shadow pass.");
+			Iris.logger.warn("The shaderpack specifies a shadow FOV of " + shadowDirectives.getFov()
+					+ ", but Iris does not currently support perspective projections in the shadow pass.");
 		}
 
 		// TODO: Support more than two shadowcolor render targets
@@ -155,12 +161,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		this.sunPathRotation = directives.getSunPathRotation();
 
-		this.buffers = new BufferBuilderStorage();
+		this.buffers = new RenderBuffers();
 
-		if (this.buffers instanceof ExtendedBufferStorage) {
-			this.extendedBufferStorage = (ExtendedBufferStorage) buffers;
+		if (this.buffers instanceof RenderBuffersExt) {
+			this.renderBuffersExt = (RenderBuffersExt) buffers;
 		} else {
-			this.extendedBufferStorage = null;
+			this.renderBuffersExt = null;
 		}
 
 		configureSamplingSettings(shadowDirectives);
@@ -252,7 +258,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
-		IrisSamplers.addWorldSamplers(builder, normals, specular);
+		IrisSamplers.addLevelSamplers(builder, normals, specular);
 		IrisSamplers.addNoiseSampler(builder, noise);
 		IrisSamplers.addShadowSamplers(builder, this);
 
@@ -279,17 +285,17 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 	}
 
-	public static MatrixStack createShadowModelView(float sunPathRotation, float intervalSize) {
+	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
 		// Determine the camera position
-		Vec3d cameraPos = CameraUniforms.getCameraPosition();
+		Vec3 cameraPos = CameraUniforms.getCameraPosition();
 
-		double cameraX = cameraPos.getX();
-		double cameraY = cameraPos.getY();
-		double cameraZ = cameraPos.getZ();
+		double cameraX = cameraPos.get(Direction.Axis.X);
+		double cameraY = cameraPos.get(Direction.Axis.Y);
+		double cameraZ = cameraPos.get(Direction.Axis.Z);
 
 		// Set up our modelview matrix stack
-		MatrixStack modelView = new MatrixStack();
-		ShadowMatrices.createModelViewMatrix(modelView.peek().getModel(), getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
+		PoseStack modelView = new PoseStack();
+		ShadowMatrices.createModelViewMatrix(modelView.last().pose(), getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
 
 		return modelView;
 	}
@@ -307,8 +313,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 				reason = "(indirect sunlight GI detected)";
 			}
 
-			if (distance <= 0 || distance > MinecraftClient.getInstance().options.viewDistance * 16) {
-				debugStringShadowDistance = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
+			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
+				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
 						+ " blocks (capped by normal render distance)";
 				debugStringShadowCulling = "disabled " + reason;
 				return new NonCullingFrustum();
@@ -329,8 +335,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 				setter = "(set by user)";
 			}
 
-			if (distance >= MinecraftClient.getInstance().options.viewDistance * 16) {
-				debugStringShadowDistance = "render distance = " + MinecraftClient.getInstance().options.viewDistance * 16
+			if (distance >= Minecraft.getInstance().options.renderDistance * 16) {
+				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
 						+ " blocks (capped by normal render distance)";
 				boxCuller = null;
 			} else {
@@ -349,7 +355,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
 			Vector3f shadowLightVectorFromOrigin =
-					new Vector3f(shadowLightPosition.getX(), shadowLightPosition.getY(), shadowLightPosition.getZ());
+					new Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
 
 			shadowLightVectorFromOrigin.normalize();
 
@@ -359,64 +365,64 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	@Override
-	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
-		MinecraftClient client = MinecraftClient.getInstance();
+	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		Minecraft client = Minecraft.getInstance();
 
-		worldRenderer.getWorld().getProfiler().swap("shadows");
+		levelRenderer.getLevel().getProfiler().popPush("shadows");
 		ACTIVE = true;
 
 		// Create our camera
-		MatrixStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
-		MODELVIEW = modelView.peek().getModel().copy();
+		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
+		MODELVIEW = modelView.last().pose().copy();
 		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
 
 		ORTHO = new Matrix4f();
 		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
 
-		worldRenderer.getWorld().getProfiler().push("terrain_setup");
+		levelRenderer.getLevel().getProfiler().push("terrain_setup");
 
-		if (worldRenderer instanceof CullingDataCache) {
-			((CullingDataCache) worldRenderer).saveState();
+		if (levelRenderer instanceof CullingDataCache) {
+			((CullingDataCache) levelRenderer).saveState();
 		}
 
-		worldRenderer.getWorld().getProfiler().push("initialize frustum");
+		levelRenderer.getLevel().getProfiler().push("initialize frustum");
 
 		Frustum frustum = createShadowFrustum();
 
 		// Determine the player camera position
-		Vec3d cameraPos = CameraUniforms.getCameraPosition();
+		Vec3 cameraPos = CameraUniforms.getCameraPosition();
 
-		double cameraX = cameraPos.getX();
-		double cameraY = cameraPos.getY();
-		double cameraZ = cameraPos.getZ();
+		double cameraX = cameraPos.x();
+		double cameraY = cameraPos.y();
+		double cameraZ = cameraPos.z();
 
 		// Center the frustum on the player camera position
-		frustum.setPosition(cameraX, cameraY, cameraZ);
+		frustum.prepare(cameraX, cameraY, cameraZ);
 
-		worldRenderer.getWorld().getProfiler().pop();
+		levelRenderer.getLevel().getProfiler().pop();
 
 		// Disable chunk occlusion culling - it's a bit complex to get this properly working with shadow rendering
 		// as-is, however in the future it will be good to work on restoring it for a nice performance boost.
 		//
 		// TODO: Get chunk occlusion working with shadows
-		boolean wasChunkCullingEnabled = client.chunkCullingEnabled;
-		client.chunkCullingEnabled = false;
+		boolean wasChunkCullingEnabled = client.smartCull;
+		client.smartCull = false;
 
 		// Always schedule a terrain update
 		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
-		((WorldRenderer) worldRenderer).scheduleTerrainUpdate();
+		((LevelRenderer) levelRenderer).needsUpdate();
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
-		worldRenderer.invokeSetupTerrain(playerCamera, frustum, false, worldRenderer.getFrame(), false);
+		levelRenderer.invokeSetupRender(playerCamera, frustum, false, levelRenderer.getFrameId(), false);
 
 		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
 		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
 		// chunks during traversal, and break rendering in concerning ways.
-		worldRenderer.setFrame(worldRenderer.getFrame() + 1);
+		levelRenderer.setFrameId(levelRenderer.getFrameId() + 1);
 
-		client.chunkCullingEnabled = wasChunkCullingEnabled;
+		client.smartCull = wasChunkCullingEnabled;
 
-		worldRenderer.getWorld().getProfiler().swap("terrain");
+		levelRenderer.getLevel().getProfiler().popPush("terrain");
 
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
@@ -452,9 +458,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.disableCull();
 
 		// Render all opaque terrain
-		worldRenderer.invokeRenderLayer(RenderLayer.getSolid(), modelView, cameraX, cameraY, cameraZ);
-		worldRenderer.invokeRenderLayer(RenderLayer.getCutout(), modelView, cameraX, cameraY, cameraZ);
-		worldRenderer.invokeRenderLayer(RenderLayer.getCutoutMipped(), modelView, cameraX, cameraY, cameraZ);
+		levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ);
+		levelRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ);
+		levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ);
 
 		// Reset our shader program in case Sodium overrode it.
 		//
@@ -462,7 +468,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// without shaders, which doesn't integrate with their shadow distortion code.
 		setupShadowProgram();
 
-		worldRenderer.getWorld().getProfiler().swap("entities");
+		levelRenderer.getLevel().getProfiler().popPush("entities");
 
 		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
 		// it is set to a fixed value.
@@ -477,25 +483,25 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		//
 		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
 		// rendering.
-		if (extendedBufferStorage != null) {
-			extendedBufferStorage.beginWorldRendering();
+		if (renderBuffersExt != null) {
+			renderBuffersExt.beginLevelRendering();
 		}
 
-		if (buffers instanceof DrawCallTrackingBufferBuilderStorage) {
-			((DrawCallTrackingBufferBuilderStorage) buffers).resetDrawCounts();
+		if (buffers instanceof DrawCallTrackingRenderBuffers) {
+			((DrawCallTrackingRenderBuffers) buffers).resetDrawCounts();
 		}
 
-		VertexConsumerProvider.Immediate provider = buffers.getEntityVertexConsumers();
-		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
+		MultiBufferSource.BufferSource bufferSource = buffers.bufferSource();
+		EntityRenderDispatcher dispatcher = levelRenderer.getEntityRenderDispatcher();
 
 		int shadowEntities = 0;
 
-		worldRenderer.getWorld().getProfiler().push("cull");
+		levelRenderer.getLevel().getProfiler().push("cull");
 
 		List<Entity> renderedEntities = new ArrayList<>(32);
 
 		// TODO: I'm sure that this can be improved / optimized.
-		for (Entity entity : getWorld().getEntities()) {
+		for (Entity entity : getLevel().entitiesForRendering()) {
 			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ) || entity.isSpectator()) {
 				continue;
 			}
@@ -503,31 +509,31 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			renderedEntities.add(entity);
 		}
 
-		worldRenderer.getWorld().getProfiler().swap("sort");
+		levelRenderer.getLevel().getProfiler().popPush("sort");
 
 		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
 		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
 
-		worldRenderer.getWorld().getProfiler().swap("build geometry");
+		levelRenderer.getLevel().getProfiler().popPush("build geometry");
 
 		for (Entity entity : renderedEntities) {
-			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, provider);
+			levelRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
 			shadowEntities++;
 		}
 
-		worldRenderer.getWorld().getProfiler().pop();
+		levelRenderer.getLevel().getProfiler().pop();
 
-		worldRenderer.getWorld().getProfiler().swap("build blockentities");
+		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
 
 		int shadowBlockEntities = 0;
 
 		// TODO: Use visibleChunks to cull block entities
-		for (BlockEntity entity : getWorld().blockEntities) {
-			modelView.push();
-			BlockPos pos = entity.getPos();
+		for (BlockEntity entity : getLevel().blockEntityList) {
+			modelView.pushPose();
+			BlockPos pos = entity.getBlockPos();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			BlockEntityRenderDispatcher.INSTANCE.render(entity, tickDelta, modelView, provider);
-			modelView.pop();
+			BlockEntityRenderDispatcher.instance.render(entity, tickDelta, modelView, bufferSource);
+			modelView.popPose();
 
 			shadowBlockEntities++;
 		}
@@ -535,14 +541,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		renderedShadowEntities = shadowEntities;
 		renderedShadowBlockEntities = shadowBlockEntities;
 
-		worldRenderer.getWorld().getProfiler().swap("draw entities");
+		levelRenderer.getLevel().getProfiler().popPush("draw entities");
 
 		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
 		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
 		// shadow...
-		provider.draw();
+		bufferSource.endBatch();
 
-		worldRenderer.getWorld().getProfiler().swap("translucent depth copy");
+		levelRenderer.getLevel().getProfiler().popPush("translucent depth copy");
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
@@ -551,29 +557,29 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 		RenderSystem.bindTexture(0);
 
-		worldRenderer.getWorld().getProfiler().swap("translucent terrain");
+		levelRenderer.getLevel().getProfiler().popPush("translucent terrain");
 
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
-		worldRenderer.invokeRenderLayer(RenderLayer.getTranslucent(), modelView, cameraX, cameraY, cameraZ);
+		levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ);
 		// Note: Apparently tripwire isn't rendered in the shadow pass.
-		// worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ);
+		// worldRenderer.invokeRenderType(RenderType.getTripwire(), modelView, cameraX, cameraY, cameraZ);
 
 		// NB: If we want to render anything after translucent terrain, we need to uncomment this line!
 		// setupShadowProgram();
 
-		if (extendedBufferStorage != null) {
-			extendedBufferStorage.endWorldRendering();
+		if (renderBuffersExt != null) {
+			renderBuffersExt.endLevelRendering();
 		}
 
-		debugStringTerrain = ((WorldRenderer) worldRenderer).getChunksDebugString();
+		debugStringTerrain = ((LevelRenderer) levelRenderer).getChunkStatistics();
 
-		worldRenderer.getWorld().getProfiler().swap("generate mipmaps");
+		levelRenderer.getLevel().getProfiler().popPush("generate mipmaps");
 
 		generateMipmaps();
 
-		worldRenderer.getWorld().getProfiler().pop();
+		levelRenderer.getLevel().getProfiler().pop();
 
 		// Restore backface culling
 		RenderSystem.enableCull();
@@ -588,14 +594,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		pipeline.popProgram(GbufferProgram.NONE);
 
 		// Restore the old viewport
-		RenderSystem.viewport(0, 0, client.getWindow().getFramebufferWidth(), client.getWindow().getFramebufferHeight());
+		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
 
-		if (worldRenderer instanceof CullingDataCache) {
-			((CullingDataCache) worldRenderer).restoreState();
+		if (levelRenderer instanceof CullingDataCache) {
+			((CullingDataCache) levelRenderer).restoreState();
 		}
 
 		ACTIVE = false;
-		worldRenderer.getWorld().getProfiler().swap("updatechunks");
+		levelRenderer.getLevel().getProfiler().popPush("updatechunks");
 	}
 
 	@Override
@@ -607,8 +613,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[Iris] Shadow Block Entities: " + getBlockEntitiesDebugString());
 
-		if (buffers instanceof DrawCallTrackingBufferBuilderStorage) {
-			DrawCallTrackingBufferBuilderStorage drawCallTracker = (DrawCallTrackingBufferBuilderStorage) buffers;
+		if (buffers instanceof DrawCallTrackingRenderBuffers) {
+			DrawCallTrackingRenderBuffers drawCallTracker = (DrawCallTrackingRenderBuffers) buffers;
 			messages.add("[Iris] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
 		}
 	}
@@ -618,24 +624,24 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			shadowProgram.use();
 			setupAttributes(shadowProgram);
 		} else {
-			GlProgramManager.useProgram(0);
+			ProgramManager.glUseProgram(0);
 		}
 	}
 
 	private String getEntitiesDebugString() {
-		return renderedShadowEntities + "/" + MinecraftClient.getInstance().world.getRegularEntityCount();
+		return renderedShadowEntities + "/" + Minecraft.getInstance().level.getEntityCount();
 	}
 
 	private String getBlockEntitiesDebugString() {
-		return renderedShadowBlockEntities + "/" + MinecraftClient.getInstance().world.blockEntities.size();
+		return renderedShadowBlockEntities + "/" + Minecraft.getInstance().level.blockEntityList.size();
 	}
 
-	private static ClientWorld getWorld() {
-		return Objects.requireNonNull(MinecraftClient.getInstance().world);
+	private static ClientLevel getLevel() {
+		return Objects.requireNonNull(Minecraft.getInstance().level);
 	}
 
 	private static float getSkyAngle() {
-		return getWorld().getSkyAngle(CapturedRenderingState.INSTANCE.getTickDelta());
+		return getLevel().getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
 	private static float getSunAngle() {

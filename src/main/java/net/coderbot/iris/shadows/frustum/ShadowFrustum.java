@@ -1,8 +1,8 @@
 package net.coderbot.iris.shadows.frustum;
 
-import net.minecraft.client.render.Frustum;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Matrix4f;
+import com.mojang.math.Matrix4f;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.world.phys.AABB;
 
 public class ShadowFrustum extends Frustum {
 	private final BoxCuller boxCuller;
@@ -13,8 +13,9 @@ public class ShadowFrustum extends Frustum {
 		this.boxCuller = boxCuller;
 	}
 
-	public void setPosition(double cameraX, double cameraY, double cameraZ) {
-		super.setPosition(cameraX, cameraY, cameraZ);
+	@Override
+	public void prepare(double cameraX, double cameraY, double cameraZ) {
+		super.prepare(cameraX, cameraY, cameraZ);
 
 		boxCuller.setPosition(cameraX, cameraY, cameraZ);
 	}
@@ -29,11 +30,12 @@ public class ShadowFrustum extends Frustum {
 		return true;
 	}
 
-	public boolean isVisible(Box box) {
-		if (boxCuller.isCulled(box)) {
+	@Override
+	public boolean isVisible(AABB aabb) {
+		if (boxCuller.isCulled(aabb)) {
 			return false;
 		}
 
-		return super.isVisible(box);
+		return super.isVisible(aabb);
 	}
 }

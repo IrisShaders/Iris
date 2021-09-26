@@ -1,17 +1,17 @@
 package net.coderbot.iris.mixin.entity_render_context;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
-import net.coderbot.iris.layer.EntityRenderPhase;
-import net.coderbot.iris.layer.OuterWrappedRenderLayer;
+import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
+import net.coderbot.iris.layer.EntityRenderStateShard;
+import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.shaderpack.IdMap;
-import net.minecraft.client.render.RenderPhase;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,24 +24,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(EntityRenderDispatcher.class)
 public class MixinEntityRenderDispatcher {
-	private static final String RENDER =
-			"render(Lnet/minecraft/entity/Entity;DDDFFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V";
-	private static final String MATRIXSTACK_PUSH = "net/minecraft/client/util/math/MatrixStack.push ()V";
-	private static final String MATRIXSTACK_POP = "net/minecraft/client/util/math/MatrixStack.pop ()V";
 	private static final String CRASHREPORT_CREATE =
-			"net/minecraft/util/crash/CrashReport.create (Ljava/lang/Throwable;Ljava/lang/String;)Lnet/minecraft/util/crash/CrashReport;";
+			"Lnet/minecraft/world/entity/Entity;fillCrashReportCategory(Lnet/minecraft/CrashReportCategory;)V";
 
 	// Inject after MatrixStack#push to increase the chances that we won't be caught out by a poorly-positioned
 	// cancellation in an inject.
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = MATRIXSTACK_PUSH, shift = At.Shift.AFTER))
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
 	private void iris$beginEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
-										MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
+										PoseStack poseStack, MultiBufferSource bufferSource, int light,
 										CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingVertexConsumerProvider)) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
-		Identifier entityId = Registry.ENTITY_TYPE.getId(entity.getType());
+		ResourceLocation entityId = Registry.ENTITY_TYPE.getKey(entity.getType());
 
 		IdMap idMap = BlockRenderingSettings.INSTANCE.getIdMap();
 
@@ -50,30 +46,30 @@ public class MixinEntityRenderDispatcher {
 		}
 
 		int intId = idMap.getEntityIdMap().getOrDefault(entityId, -1);
-		RenderPhase phase = EntityRenderPhase.forId(intId);
+		RenderStateShard phase = EntityRenderStateShard.forId(intId);
 
-		((WrappingVertexConsumerProvider) vertexConsumers).pushWrappingFunction(layer ->
-				new OuterWrappedRenderLayer("iris:is_entity", layer, phase));
+		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(layer ->
+				new OuterWrappedRenderType("iris:is_entity", layer, phase));
 	}
 
 	// Inject before MatrixStack#pop so that our wrapper stack management operations naturally line up
 	// with vanilla's MatrixStack management functions.
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = MATRIXSTACK_POP))
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;popPose()V"))
 	private void iris$endEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
-									  MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
+									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingVertexConsumerProvider)) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
-		((WrappingVertexConsumerProvider) vertexConsumers).popWrappingFunction();
+		((WrappingMultiBufferSource) bufferSource).popWrappingFunction();
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = CRASHREPORT_CREATE))
+	@Inject(method = "render", at = @At(value = "INVOKE", target = CRASHREPORT_CREATE))
 	private void iris$crashedEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
-									      MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
+									      PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									      CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingVertexConsumerProvider)) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
@@ -85,7 +81,7 @@ public class MixinEntityRenderDispatcher {
 			// This could fail if we crash before MatrixStack#push, but this is mostly
 			// a best-effort thing, it doesn't have to work perfectly. NEC will cause
 			// weird chaos no matter what we do.
-			((WrappingVertexConsumerProvider) vertexConsumers).popWrappingFunction();
+			((WrappingMultiBufferSource) bufferSource).popWrappingFunction();
 		} catch (Exception e) {
 			// oh well, we're gonna crash anyways.
 		}

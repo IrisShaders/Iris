@@ -1,15 +1,15 @@
 package net.coderbot.iris.mixin.entity_render_context;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
-import net.coderbot.iris.layer.BlockEntityRenderPhase;
-import net.coderbot.iris.layer.OuterWrappedRenderLayer;
+import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
+import net.coderbot.iris.layer.BlockEntityRenderStateShard;
+import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.shaderpack.IdMap;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.render.RenderPhase;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -26,16 +26,16 @@ public class MixinBlockEntityRenderDispatcher {
 			"render(Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V";
 
 	private static final String RUN_REPORTED =
-			"net/minecraft/client/render/block/entity/BlockEntityRenderDispatcher.runReported(Lnet/minecraft/block/entity/BlockEntity;Ljava/lang/Runnable;)V";
+			"Lnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;tryRender(Lnet/minecraft/world/level/block/entity/BlockEntity;Ljava/lang/Runnable;)V";
 
 	// I inject here in the method so that:
 	//
 	// 1. we can know that some checks we need have already been done
 	// 2. if someone cancels this method hopefully it gets cancelled before this point
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RUN_REPORTED))
-	private void iris$beforeRender(BlockEntity blockEntity, float tickDelta, MatrixStack matrix,
-								   VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingVertexConsumerProvider)) {
+	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED))
+	private void iris$beforeRender(BlockEntity blockEntity, float tickDelta, PoseStack poseStack,
+								   MultiBufferSource bufferSource, CallbackInfo ci) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
@@ -50,17 +50,17 @@ public class MixinBlockEntityRenderDispatcher {
 		// - The block entity has a world
 		// - The block entity thinks that it's supported by a valid block
 
-		int intId = idMap.getBlockProperties().getOrDefault(blockEntity.getCachedState(), -1);
-		RenderPhase phase = BlockEntityRenderPhase.forId(intId);
+		int intId = idMap.getBlockProperties().getOrDefault(blockEntity.getBlockState(), -1);
+		RenderStateShard stateShard = BlockEntityRenderStateShard.forId(intId);
 
-		((WrappingVertexConsumerProvider) vertexConsumers).pushWrappingFunction(layer ->
-				new OuterWrappedRenderLayer("iris:is_block_entity", layer, phase));
+		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->
+				new OuterWrappedRenderType("iris:is_block_entity", type, stateShard));
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))
-	private void iris$afterRender(BlockEntity blockEntity, float tickDelta, MatrixStack matrix,
-								  VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-		if (!(vertexConsumers instanceof WrappingVertexConsumerProvider)) {
+	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))
+	private void iris$afterRender(BlockEntity blockEntity, float tickDelta, PoseStack matrix,
+								  MultiBufferSource bufferSource, CallbackInfo ci) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
@@ -73,6 +73,6 @@ public class MixinBlockEntityRenderDispatcher {
 		// after my inject, but I placed my inject there in the hopes that it would
 		// not be likely to be affected by a cancel. I hope that the universe doesn't
 		// conspire against me and cause that to break.
-		((WrappingVertexConsumerProvider) vertexConsumers).popWrappingFunction();
+		((WrappingMultiBufferSource) bufferSource).popWrappingFunction();
 	}
 }

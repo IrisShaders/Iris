@@ -12,10 +12,9 @@ import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20C;
-
-import net.minecraft.client.MinecraftClient;
 
 public class ProgramUniforms {
 	private static ProgramUniforms active;
@@ -44,7 +43,7 @@ public class ProgramUniforms {
 	}
 
 	private static long getCurrentTick() {
-		return Objects.requireNonNull(MinecraftClient.getInstance().world).getTime();
+		return Objects.requireNonNull(Minecraft.getInstance().level).getGameTime();
 	}
 
 	public void update() {

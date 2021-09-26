@@ -16,7 +16,7 @@ public class MixinGlStateManager {
 	 * @reason Fix mojang copy-paste error
 	 */
 	@Overwrite
-	public static void method_22607(int index) {
+	public static void _disableVertexAttribArray(int index) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 		GL20C.glDisableVertexAttribArray(index);
 	}
