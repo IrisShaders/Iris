@@ -10,7 +10,7 @@ import org.lwjgl.opengl.GL30C;
 import java.util.Arrays;
 
 public class GlFramebuffer extends GlResource {
-	private Int2IntMap attachments;
+	private final Int2IntMap attachments;
 
 	public GlFramebuffer() {
 		super(GlStateManager.glGenFramebuffers());
