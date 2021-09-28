@@ -26,7 +26,7 @@ public class IrisConfig {
 	 */
 	private boolean enableShaders;
 
-	private Path propertiesPath;
+	private final Path propertiesPath;
 
 	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;

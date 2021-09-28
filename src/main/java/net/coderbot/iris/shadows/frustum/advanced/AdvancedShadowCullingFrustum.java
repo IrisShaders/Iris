@@ -295,7 +295,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements SodiumFrust
 	}
 
 	private boolean isAnyCornerVisible(float x1, float y1, float z1, float x2, float y2, float z2) {
-		for(int i = 0; i < planeCount; ++i) {
+		for (int i = 0; i < planeCount; ++i) {
 			Vector4f plane = this.planes[i];
 
 			// dot(plane, point) > 0.0F implies inside

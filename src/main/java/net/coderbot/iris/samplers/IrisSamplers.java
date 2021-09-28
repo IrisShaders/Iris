@@ -77,7 +77,7 @@ public class IrisSamplers {
 				"shadowcolor", "shadowcolor0", "shadowcolor1");
 
 		for (String samplerName : shadowSamplers) {
-			if(samplers.hasSampler(samplerName)) {
+			if (samplers.hasSampler(samplerName)) {
 				return true;
 			}
 		}
