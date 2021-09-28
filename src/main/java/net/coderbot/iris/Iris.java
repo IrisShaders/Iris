@@ -86,7 +86,7 @@ public class Iris implements ClientModInitializer {
 			logger.catching(Level.WARN, e);
 		}
 
-		irisConfig = new IrisConfig();
+		irisConfig = new IrisConfig(FabricLoader.getInstance().getConfigDir().resolve("iris.properties"));
 
 		try {
 			irisConfig.initialize();
