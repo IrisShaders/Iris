@@ -16,7 +16,7 @@
     "MixinGlUniform",
     "MixinLivingEntityRenderer",
     "MixinMinecraft",
-    "MixinMinecraftClient",
+    "MixinMinecraft_PipelineDestruction",
     "MixinModelViewBobbing",
     "MixinShaderInstance",
     "MixinTextureAtlas",
