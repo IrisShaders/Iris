@@ -56,11 +56,14 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getRawPrecipitation() {
-		Biome.Precipitation precipitation = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().player.blockPosition()).getPrecipitation();
-		switch (precipitation.getName()) {
-			case "rain":
+		if (Minecraft.getInstance().level == null) {
+			return 0;
+		}
+		Biome.Precipitation precipitation = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().getCameraEntity().blockPosition()).getPrecipitation();
+		switch (precipitation) {
+			case RAIN:
 				return 1;
-			case "snow":
+			case SNOW:
 				return 2;
 			default:
 				return 0;
