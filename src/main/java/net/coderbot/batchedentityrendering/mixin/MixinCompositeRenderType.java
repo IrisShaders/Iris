@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net/minecraft/client/renderer/RenderType$CompositeRenderType")
 public abstract class MixinCompositeRenderType extends RenderType implements BlendingStateHolder {
 	private static final String INIT =
-			"<init>(Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;IIZZLnet/minecraft/client/renderer/RenderType$CompositeState;)V";
+			"<init>(Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;IZZLnet/minecraft/client/renderer/RenderType$CompositeState;)V";
 
 	@Unique
 	private TransparencyType transparencyType;
