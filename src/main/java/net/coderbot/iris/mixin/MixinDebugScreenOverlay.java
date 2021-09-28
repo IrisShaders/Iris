@@ -1,8 +1,6 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.ShadowRenderer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;

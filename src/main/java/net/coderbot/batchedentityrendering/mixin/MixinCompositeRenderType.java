@@ -13,6 +13,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(targets = "net/minecraft/client/renderer/RenderType$CompositeRenderType")
 public abstract class MixinCompositeRenderType extends RenderType implements BlendingStateHolder {
+	private static final String INIT =
+			"<init>(Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;IIZZLnet/minecraft/client/renderer/RenderType$CompositeState;)V";
+
 	@Unique
 	private TransparencyType transparencyType;
 
@@ -20,7 +23,7 @@ public abstract class MixinCompositeRenderType extends RenderType implements Ble
 		super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
 	}
 
-	@Inject(method = "<init>", at = @At("RETURN"))
+	@Inject(method = INIT, at = @At("RETURN"))
 	private void batchedentityrendering$onCompositeInit(String string, VertexFormat vertexFormat, VertexFormat.Mode mode, int i, boolean bl, boolean bl2, CompositeState compositeState, CallbackInfo ci) {
 		RenderStateShard.TransparencyStateShard transparency = ((CompositeStateAccessor) (Object) compositeState).getTransparency();
 

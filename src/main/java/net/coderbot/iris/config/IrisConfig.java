@@ -8,7 +8,6 @@ import java.util.Properties;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
-import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * A class dedicated to storing the config values of shaderpacks. Right now it only stores the path to the current shaderpack
@@ -29,10 +28,10 @@ public class IrisConfig {
 
 	private Path propertiesPath;
 
-	public IrisConfig() {
+	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;
 		enableShaders = true;
-		propertiesPath = FabricLoader.getInstance().getConfigDir().resolve("iris.properties");
+		this.propertiesPath = propertiesPath;
 	}
 
 	/**
