@@ -13,6 +13,7 @@
     "MixinGameRenderer",
     "MixinProgram",
     "MixinGlStateManager",
+    "MixinGlStateManager_AmdCrashFix",
     "MixinGlUniform",
     "MixinLivingEntityRenderer",
     "MixinMinecraftClient",

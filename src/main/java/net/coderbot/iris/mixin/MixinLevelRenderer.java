@@ -14,9 +14,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,8 +25,6 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
 
 @Mixin(LevelRenderer.class)
 @Environment(EnvType.CLIENT)
@@ -132,7 +127,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getTimeOfDay(F)F"),
-			slice = @Slice(from = @At(value = "FIELD", target = "Lcom/mojang/math/Vector3f;YP:Lcom/mojang/math/Vector3f;")))
+			slice = @Slice(from = @At(value = "FIELD", target = "com/mojang/math/Vector3f.YP : Lcom/mojang/math/Vector3f;")))
 	private void iris$renderSky$tiltSun(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
 		poseStack.mulPose(Vector3f.ZP.rotationDegrees(pipeline.getSunPathRotation()));
 	}
@@ -215,17 +210,12 @@ public class MixinLevelRenderer {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}*/
 
-	@Inject(method = RENDER, at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
 	private void iris$beginTranslucents(PoseStack poseStack, float tickDelta, long limitTime,
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-										LightTexture lightTexture, Matrix4f matrix4f,
-										CallbackInfo ci, ProfilerFiller profiler, Vec3 vec3d, double d, double e, double f,
-										Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3,
-										MultiBufferSource.BufferSource bufferSource) {
-		profiler.popPush("iris_entity_draws");
-		bufferSource.endBatch();
-
-		profiler.popPush("iris_pre_translucent");
+										LightTexture lightTexture, Matrix4f projection,
+										CallbackInfo ci) {
+		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
 }
