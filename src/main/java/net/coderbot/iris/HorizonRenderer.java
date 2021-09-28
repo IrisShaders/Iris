@@ -92,8 +92,8 @@ public class HorizonRenderer {
 	}
 
 	private void buildBottomPlane(VertexConsumer consumer, int radius) {
-		for(int x = -radius; x <= radius; x += 64) {
-			for(int z = -radius; z <= radius; z += 64) {
+		for (int x = -radius; x <= radius; x += 64) {
+			for (int z = -radius; z <= radius; z += 64) {
 				consumer.vertex(x + 64, BOTTOM, z);
 				consumer.endVertex();
 				consumer.vertex(x, BOTTOM, z);

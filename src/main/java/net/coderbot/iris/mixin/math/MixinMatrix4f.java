@@ -29,7 +29,7 @@ public class MixinMatrix4f implements Matrix4fAccess {
 
 	@Override
 	public void copyFromArray(float[] m) {
-		if(m.length != 16) return;
+		if (m.length != 16) return;
 		this.m00 = m[0];
 		this.m10 = m[1];
 		this.m20 = m[2];

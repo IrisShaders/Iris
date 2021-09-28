@@ -45,7 +45,7 @@ public class MixinGui {
 		warningLines.add("[Iris] Sodium isn't installed; you will have poor performance.");
 		warningLines.add("[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
 
-		for(int i = 0; i < warningLines.size(); ++i) {
+		for (int i = 0; i < warningLines.size(); ++i) {
 			String string = warningLines.get(i);
 
 			final int lineHeight = 9;
