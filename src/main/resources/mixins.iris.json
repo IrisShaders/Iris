@@ -17,6 +17,7 @@
     "MixinGlStateManager_AmdCrashFix",
     "MixinLevelRenderer",
     "MixinLivingEntityRenderer",
+    "MixinMinecraft",
     "MixinModelViewBobbing",
     "MixinBufferSource_WrapperChecking",
     "MixinParticleEngine",

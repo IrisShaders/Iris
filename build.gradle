@@ -21,17 +21,11 @@ dependencies {
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// Critical, needed for loading our custom language files
+	// Needed for loading our custom language files
 	includeFabricApiModule "fabric-resource-loader-v0"
 
-	// Needed for adding the reload keybinding
+	// Needed for adding some key binds (reload, toggle, open shaders GUI)
 	includeFabricApiModule "fabric-key-binding-api-v1"
-
-	// Needed for the END_CLIENT_TICK event
-	includeFabricApiModule "fabric-lifecycle-events-v1"
-
-	// Required by fabric-lifecycle-events-v1
-	includeFabricApiModule "fabric-api-base"
 
 	// JUnit 5 Jupiter test engine
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
