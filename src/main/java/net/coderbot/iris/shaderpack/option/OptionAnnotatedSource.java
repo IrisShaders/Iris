@@ -11,24 +11,31 @@ import java.util.regex.Pattern;
 /**
  * This class encapsulates the source code of a single shader source file along with the
  * corresponding configurable options within the source file.
- *
+ * <p>
  * The shader configuration system revolves around a carefully defined way of directly editing
  * shader source files in order to change configuration options. This class handles the first
  * step of that process—discovering configurable options from shader source files—as well as
  * the final step of that process—editing shader source files to apply the modified values
  * of valid configuration options.
- *
+ * <p>
  * Intermediate steps of that process include considering the annotated source for all shader
  * source files within a shader pack in order to deduplicate options that are common to multiple
  * source files, and discarding options that are ambiguous between source files. In addition,
  * another step includes loading changed option values from on-disk configuration files.
- *
+ * <p>
  * The name "OptionAnnotatedSource" is based on the fact that this class simultaneously
  * stores a snapshot of the shader source code at the time of option discovery, as well
  * as data for each line ("annotations") about the relevant option represented by that
  * line, or alternatively an optional diagnostic message for that line saying why a potential
  * option was not parsed as a valid shader option.
- *
+ * <p>
+ * Note that for the most part, each line of the file is parsed in isolation from every
+ * other line. This means that option conflicts can arise even within the same source file,
+ * where option declarations have the same name and type but different default values.
+ * The only exception to this isolation is
+ * {@link OptionAnnotatedSource#getBooleanDefineReferences() boolean define reference tracking},
+ * which is nevertheless still relatively context-free.
+ * <p>
  * The data stored within this class is immutable. This ensures that once you have discovered
  * options from a given shader source file, that you may then apply any changed option values
  * without having to re-parse the shader source code for options, and without risking having
@@ -54,7 +61,7 @@ public final class OptionAnnotatedSource {
 	private final ImmutableMap<Integer, String> diagnostics;
 
 	/**
-	 * Keeps track of references to boolean #define options. Corelletes the name of the #define
+	 * Keeps track of references to boolean #define options. Correlates the name of the #define
 	 * option to one of the lines it was referenced on.
 	 *
 	 * References to boolean #define options that happen in plain #if directives are not analyzed
@@ -62,6 +69,12 @@ public final class OptionAnnotatedSource {
 	 * match OptiFine behavior. Though this might have originally been an oversight, shader packs
 	 * now anticipate this behavior, so it must be replicated here. Since it would be complex to 
 	 * fully parse #if directives, this also makes the code simpler.
+	 *
+	 * Note that for the purposes of "confirming" a boolean #define option, it does not matter
+	 * where the reference occurs in a given file - only that it is used at least once in the
+	 * same "logical file" (that is, a file after all #includes have been processed) as it is
+	 * defined. This is because shader config options are parsed as if all #include directives
+	 * have already been substituted for the relevant file.
 	 */
 	private final ImmutableMap<String, Integer> booleanDefineReferences;
 
