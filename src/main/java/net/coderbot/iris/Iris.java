@@ -30,6 +30,7 @@ import org.lwjgl.glfw.GLFW;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
 @Environment(EnvType.CLIENT)
@@ -87,7 +88,7 @@ public class Iris implements ClientModInitializer {
 			logger.catching(Level.WARN, e);
 		}
 
-		irisConfig = new IrisConfig();
+		irisConfig = new IrisConfig(FabricLoader.getInstance().getConfigDir().resolve("iris.properties"));
 
 		try {
 			irisConfig.initialize();
@@ -102,48 +103,48 @@ public class Iris implements ClientModInitializer {
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
 		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 
-		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			if (reloadKeybind.consumeClick()) {
-				try {
-					reload();
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded"), false);
-					}
-
-				} catch (Exception e) {
-					logger.error("Error while reloading Shaders for Iris!", e);
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
-					}
-				}
-			} else if (toggleShadersKeybind.consumeClick()) {
-				IrisConfig config = getIrisConfig();
-				try {
-					config.setShadersEnabled(!config.areShadersEnabled());
-					config.save();
-
-					reload();
-					if (minecraftClient.player != null) {
-						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
-					}
-				} catch (Exception e) {
-					logger.error("Error while toggling shaders!", e);
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
-					}
-
-					setShadersDisabled();
-					currentPackName = "(off) [fallback, check your logs for errors]";
-				}
-			} else if (shaderpackScreenKeybind.consumeClick()) {
-				minecraftClient.setScreen(new ShaderPackScreen(null));
-			}
-		});
-
 		pipelineManager = new PipelineManager(Iris::createPipeline);
+	}
+
+	public static void handleKeybinds(Minecraft minecraft) {
+		if (reloadKeybind.consumeClick()) {
+			try {
+				reload();
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded"), false);
+				}
+
+			} catch (Exception e) {
+				logger.error("Error while reloading Shaders for Iris!", e);
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
+				}
+			}
+		} else if (toggleShadersKeybind.consumeClick()) {
+			IrisConfig config = getIrisConfig();
+			try {
+				config.setShadersEnabled(!config.areShadersEnabled());
+				config.save();
+
+				reload();
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
+				}
+			} catch (Exception e) {
+				logger.error("Error while toggling shaders!", e);
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
+				}
+
+				setShadersDisabled();
+				currentPackName = "(off) [fallback, check your logs for errors]";
+			}
+		} else if (shaderpackScreenKeybind.consumeClick()) {
+			minecraft.setScreen(new ShaderPackScreen(null));
+		}
 	}
 
 	public static void loadShaderpack() {

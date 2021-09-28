@@ -4,11 +4,11 @@
   "package": "net.coderbot.iris.mixin.fantastic",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinTerrainParticle",
     "MixinFireworkSparkParticle",
-    "MixinStationaryItemParticle",
+    "MixinLevelRenderer",
     "MixinParticleEngine",
-    "MixinLevelRenderer"
+    "MixinStationaryItemParticle",
+    "MixinTerrainParticle"
   ],
   "injectors": {
     "defaultRequire": 1

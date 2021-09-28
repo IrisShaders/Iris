@@ -2,8 +2,6 @@ package net.coderbot.iris.mixin.gui;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.screen.HudHideable;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
@@ -46,7 +44,7 @@ public class MixinGui {
 		List<String> warningLines = new ArrayList<>();
 		warningLines.add(ChatFormatting.YELLOW + "[Iris] You are running an experimental version of Iris without Sodium; expect poor performance.");
 
-		for(int i = 0; i < warningLines.size(); ++i) {
+		for (int i = 0; i < warningLines.size(); ++i) {
 			String string = warningLines.get(i);
 
 			final int lineHeight = 9;

@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.vendored.joml.Vector4f;
-import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.HashMap;
 import java.util.Map;

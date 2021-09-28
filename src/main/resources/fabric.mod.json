@@ -41,11 +41,14 @@
 
   "depends": {
     "fabricloader": ">=0.11.3",
-    "minecraft": "1.18.x"
+    "minecraft": "1.18.x",
+    "fabric-resource-loader-v0": ">=0.3.2",
+    "fabric-key-binding-api-v1": ">=1.0.1"
   },
 
   "breaks": {
     "iris-explorer": "*",
+    "originsenhanced": "<=1.3.2",
     "batchedentityrendering": "*",
     "canvas": "*",
     "optifabric": "*"

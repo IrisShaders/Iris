@@ -69,7 +69,7 @@ public class SamplerUniforms {
 				"shadowcolor", "shadowcolor0", "shadowcolor1");
 
 		for (String samplerName : shadowSamplers) {
-			if(uniformHolder.location(samplerName, UniformType.INT).isPresent()) {
+			if (uniformHolder.location(samplerName, UniformType.INT).isPresent()) {
 				return true;
 			}
 		}
