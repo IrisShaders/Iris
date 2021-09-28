@@ -14,6 +14,7 @@
     "MixinFogRenderer",
     "MixinGameRenderer",
     "MixinGlStateManager",
+    "MixinGlStateManager_AmdCrashFix",
     "MixinLevelRenderer",
     "MixinLivingEntityRenderer",
     "MixinModelViewBobbing",

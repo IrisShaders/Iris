@@ -50,6 +50,7 @@
 
   "breaks": {
     "iris-explorer": "*",
+    "originsenhanced": "<=1.3.2",
     "batchedentityrendering": "*",
     "canvas": "*",
     "optifabric": "*",
