@@ -2,6 +2,7 @@ package net.coderbot.iris.mixin.gui;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.screen.HudHideable;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
