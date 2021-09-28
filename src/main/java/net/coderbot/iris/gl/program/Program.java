@@ -1,22 +1,30 @@
 package net.coderbot.iris.gl.program;
 
+import com.mojang.blaze3d.shaders.ProgramManager;
 import net.coderbot.iris.gl.GlResource;
-
 import org.lwjgl.opengl.GL20C;
 
 public final class Program extends GlResource {
 	private final ProgramUniforms uniforms;
+	private final ProgramSamplers samplers;
 
-	Program(int program, ProgramUniforms uniforms) {
+	Program(int program, ProgramUniforms uniforms, ProgramSamplers samplers) {
 		super(program);
 
 		this.uniforms = uniforms;
+		this.samplers = samplers;
 	}
 
 	public void use() {
-		GL20C.glUseProgram(getGlId());
+		ProgramManager.glUseProgram(getGlId());
 
 		uniforms.update();
+		samplers.update();
+	}
+
+	public static void unbind() {
+		ProgramUniforms.clearActiveUniforms();
+		ProgramManager.glUseProgram(0);
 	}
 
 	public void destroyInternal() {

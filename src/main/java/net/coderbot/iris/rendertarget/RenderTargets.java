@@ -6,13 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableSet;
-import net.coderbot.iris.Iris;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.shaderpack.PackDirectives;
 
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.minecraft.client.gl.Framebuffer;
+import net.minecraft.client.Minecraft;
+import org.lwjgl.opengl.GL20C;
 
 public class RenderTargets {
 	/**
@@ -29,17 +28,17 @@ public class RenderTargets {
 	private int cachedWidth;
 	private int cachedHeight;
 
-	public RenderTargets(Framebuffer reference, PackRenderTargetDirectives directives) {
-		this(reference.textureWidth, reference.textureHeight, directives.getRenderTargetSettings());
+	public RenderTargets(com.mojang.blaze3d.pipeline.RenderTarget reference, PackRenderTargetDirectives directives) {
+		this(reference.width, reference.height, directives.getRenderTargetSettings());
 	}
 
 	public RenderTargets(int width, int height, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
-		targets = new RenderTarget[MAX_RENDER_TARGETS];
+		targets = new net.coderbot.iris.rendertarget.RenderTarget[MAX_RENDER_TARGETS];
 
 		renderTargets.forEach((index, settings) -> {
 			// TODO: Handle render targets above 8
 			// TODO: Handle mipmapping?
-			targets[index] = RenderTarget.builder().setDimensions(width, height).setInternalFormat(settings.getRequestedFormat()).build();
+			targets[index] = net.coderbot.iris.rendertarget.RenderTarget.builder().setDimensions(width, height).setInternalFormat(settings.getRequestedFormat()).build();
 		});
 
 		this.depthTexture = new DepthTexture(width, height);
@@ -49,6 +48,21 @@ public class RenderTargets {
 		this.cachedHeight = height;
 
 		this.ownedFramebuffers = new ArrayList<>();
+
+		// NB: Make sure all buffers are cleared so that they don't contain undefined
+		// data. Otherwise very weird things can happen.
+		//
+		// TODO: Make this respect the clear color of each buffer, destroy these framebuffers afterwards.
+		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+		createFramebufferWritingToMain(new int[] {0,1,2,3,4,5,6,7}).bind();
+		RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT, false);
+
+		createFramebufferWritingToAlt(new int[] {0,1,2,3,4,5,6,7}).bind();
+		RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT, false);
+
+		// Make sure to rebind the vanilla framebuffer.
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
 	public void destroy() {
@@ -56,7 +70,7 @@ public class RenderTargets {
 			owned.destroy();
 		}
 
-		for (RenderTarget target : targets) {
+		for (net.coderbot.iris.rendertarget.RenderTarget target : targets) {
 			target.destroy();
 		}
 
@@ -64,7 +78,7 @@ public class RenderTargets {
 		noTranslucents.destroy();
 	}
 
-	public RenderTarget get(int index) {
+	public net.coderbot.iris.rendertarget.RenderTarget get(int index) {
 		return targets[index];
 	}
 
@@ -82,11 +96,10 @@ public class RenderTargets {
 			return;
 		}
 
-		Iris.logger.info("Resizing render targets to " + newWidth + "x" + newHeight);
 		cachedWidth = newWidth;
 		cachedHeight = newHeight;
 
-		for (RenderTarget target : targets) {
+		for (net.coderbot.iris.rendertarget.RenderTarget target : targets) {
 			target.resize(newWidth, newHeight);
 		}
 
@@ -143,7 +156,7 @@ public class RenderTargets {
 		ownedFramebuffers.add(framebuffer);
 
 		for (int i = 0; i < stageWritesToAlt.length; i++) {
-			RenderTarget target = this.get(i);
+			net.coderbot.iris.rendertarget.RenderTarget target = this.get(i);
 
 			int textureId = stageWritesToAlt[i] ? target.getAltTexture() : target.getMainTexture();
 

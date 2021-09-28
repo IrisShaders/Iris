@@ -1,7 +1,11 @@
 {
   "iris.shaders.reloaded": "Shader neu geladen!",
+  "iris.shaders.toggled": "Shader umgeschaltet auf: %s",
+  "iris.shaders.toggled.failure": "Shader umschalten fehlgeschlagen! Grund: %s",
   "iris.keybind.reload": "Shader neu laden",
   "iris.shaders.reloaded.failure": "Shader neu laden fehlgeschlagen! Grund: %s",
+  "iris.keybind.shaderPackSelection": "Shaderpack Auswahlbildschirm",
+  "iris.keybind.toggleShaders": "Shader umschalten",
 
   "options.iris.apply": "Anwenden",
   "options.iris.refresh": "Aktualisieren",

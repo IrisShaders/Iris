@@ -59,10 +59,13 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 					throw new RuntimeException("Odd MixinMerged annotation with values: " + annotation.values);
 				}
 
+				// WorldRenderer is the Yarn name for LevelRenderer
 				if (!"net.diebuddies.mixins.MixinWorldRenderer".equals(annotation.values.get(1))) {
 					continue;
 				}
 
+				// renderLayer is the Yarn name for renderChunkLayer, it's part of the name used by the PhysicsMod
+				// callback injector.
 				if (!method.name.contains("renderLayer")) {
 					continue;
 				}
@@ -78,20 +81,24 @@ public class YeetPhysicsMod implements IMixinConfigPlugin {
 		}
 
 		MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
-		String renderLayer = mappingResolver.mapClassName("intermediary", "net.minecraft.class_1921").replace('.', '/');
 
-		// startDrawing is a member of RenderPhase.
-		String startDrawing = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23516", "()V");
+		// The corresponding yarn name of RenderType is RenderLayer.
+		String renderType = mappingResolver.mapClassName("intermediary", "net.minecraft.class_1921").replace('.', '/');
 
-		// endDrawing is a member of RenderPhase.
-		String endDrawing = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23518", "()V");
+		// setupRenderState is a member of RenderStateShard.
+		// The corresponding Yarn name is startDrawing
+		String setupRenderState = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23516", "()V");
 
-		// getSolid is a member of RenderLayer.
-		String getSolid = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_1921", "method_23577", "()Lnet/minecraft/class_1921;");
+		// clearRenderState is a member of RenderStateShard.
+		// The corresponding Yarn name is endDrawing
+		String clearRenderState = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_4668", "method_23518", "()V");
 
-		redirect(found, renderLayer, startDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectStartDrawing", "(L" + renderLayer + ";)V");
-		redirect(found, renderLayer, endDrawing, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectEndDrawing", "(L" + renderLayer + ";)V");
-		redirect(found, renderLayer, getSolid, "()L" + renderLayer + ";", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "getTargetRenderLayer", "()L" + renderLayer + ";");
+		// Solid is a member of RenderType.
+		String solid = mappingResolver.mapMethodName("intermediary", "net.minecraft.class_1921", "method_23577", "()Lnet/minecraft/class_1921;");
+
+		redirect(found, renderType, setupRenderState, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectSetupRenderState", "(L" + renderType + ";)V");
+		redirect(found, renderType, clearRenderState, "()V", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "redirectClearRenderState", "(L" + renderType + ";)V");
+		redirect(found, renderType, solid, "()L" + renderType + ";", "net/coderbot/iris/compat/physicsmod/PhysicsModHooks", "getTargetRenderType", "()L" + renderType + ";");
 	}
 
 	private static void redirect(MethodNode found, String owner, String name, String desc, String replacementOwner, String replacementName, String replacementDesc) {

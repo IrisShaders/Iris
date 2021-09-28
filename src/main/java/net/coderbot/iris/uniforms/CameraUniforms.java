@@ -6,15 +6,14 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import java.util.function.Supplier;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.Vec3;
 
 /**
- * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#celestial-bodies">Uniforms: Camera</a>
+ * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#camera">Uniforms: Camera</a>
  */
 public class CameraUniforms {
-	private static final MinecraftClient client = MinecraftClient.getInstance();
+	private static final Minecraft client = Minecraft.getInstance();
 
 	private CameraUniforms() {
 	}
@@ -28,16 +27,16 @@ public class CameraUniforms {
 	}
 
 	private static int getRenderDistanceInBlocks() {
-		return client.options.viewDistance * 16;
+		return client.options.renderDistance * 16;
 	}
 
-	public static Vec3d getCameraPosition() {
-		return client.gameRenderer.getCamera().getPos();
+	public static Vec3 getCameraPosition() {
+		return client.gameRenderer.getMainCamera().getPosition();
 	}
 
-	private static class PreviousCameraPosition implements Supplier<Vec3d> {
-		private Vec3d previousCameraPosition = new Vec3d(0.0, 0.0, 0.0);
-		private Vec3d currentCameraPosition = new Vec3d(0.0, 0.0, 0.0);
+	private static class PreviousCameraPosition implements Supplier<Vec3> {
+		private Vec3 previousCameraPosition = new Vec3(0.0, 0.0, 0.0);
+		private Vec3 currentCameraPosition = new Vec3(0.0, 0.0, 0.0);
 
 		private PreviousCameraPosition(FrameUpdateNotifier notifier) {
 			notifier.addListener(this::update);
@@ -49,7 +48,7 @@ public class CameraUniforms {
 		}
 
 		@Override
-		public Vec3d get() {
+		public Vec3 get() {
 			return previousCameraPosition;
 		}
 	}

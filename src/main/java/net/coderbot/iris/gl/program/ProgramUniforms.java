@@ -5,28 +5,35 @@ import java.util.*;
 
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
+import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.Uniform;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20C;
 
-import net.minecraft.client.MinecraftClient;
-
 public class ProgramUniforms {
+	private static ProgramUniforms active;
 	private final ImmutableList<Uniform> perTick;
 	private final ImmutableList<Uniform> perFrame;
+	private final ImmutableList<Uniform> dynamic;
+	private final ImmutableList<ValueUpdateNotifier> notifiersToReset;
 
 	private ImmutableList<Uniform> once;
 	long lastTick = -1;
 	int lastFrame = -1;
 
-	public ProgramUniforms(ImmutableList<Uniform> once, ImmutableList<Uniform> perTick, ImmutableList<Uniform> perFrame) {
+	public ProgramUniforms(ImmutableList<Uniform> once, ImmutableList<Uniform> perTick, ImmutableList<Uniform> perFrame,
+						   ImmutableList<Uniform> dynamic, ImmutableList<ValueUpdateNotifier> notifiersToReset) {
 		this.once = once;
 		this.perTick = perTick;
 		this.perFrame = perFrame;
+		this.dynamic = dynamic;
+		this.notifiersToReset = notifiersToReset;
 	}
 
 	private void updateStage(ImmutableList<Uniform> uniforms) {
@@ -36,10 +43,18 @@ public class ProgramUniforms {
 	}
 
 	private static long getCurrentTick() {
-		return Objects.requireNonNull(MinecraftClient.getInstance().world).getTime();
+		return Objects.requireNonNull(Minecraft.getInstance().level).getGameTime();
 	}
 
 	public void update() {
+		if (active != null) {
+			active.removeListeners();
+		}
+
+		active = this;
+
+		updateStage(dynamic);
+
 		if (once != null) {
 			updateStage(once);
 			updateStage(perTick);
@@ -68,11 +83,25 @@ public class ProgramUniforms {
 		}
 	}
 
+	public void removeListeners() {
+		active = null;
+
+		for (ValueUpdateNotifier notifier : notifiersToReset) {
+			notifier.setListener(null);
+		}
+	}
+
+	public static void clearActiveUniforms() {
+		if (active != null) {
+			active.removeListeners();
+		}
+	}
+
 	public static Builder builder(String name, int program) {
 		return new Builder(name, program);
 	}
 
-	public static class Builder implements LocationalUniformHolder {
+	public static class Builder implements DynamicLocationalUniformHolder {
 		private final String name;
 		private final int program;
 
@@ -80,7 +109,10 @@ public class ProgramUniforms {
 		private final Map<String, Uniform> once;
 		private final Map<String, Uniform> perTick;
 		private final Map<String, Uniform> perFrame;
+		private final Map<String, Uniform> dynamic;
 		private final Map<String, UniformType> uniformNames;
+		private final Map<String, UniformType> externalUniformNames;
+		private final List<ValueUpdateNotifier> notifiersToReset;
 
 		protected Builder(String name, int program) {
 			this.name = name;
@@ -90,7 +122,10 @@ public class ProgramUniforms {
 			once = new HashMap<>();
 			perTick = new HashMap<>();
 			perFrame = new HashMap<>();
+			dynamic = new HashMap<>();
 			uniformNames = new HashMap<>();
+			externalUniformNames = new HashMap<>();
+			notifiersToReset = new ArrayList<>();
 		}
 
 		@Override
@@ -143,11 +178,37 @@ public class ProgramUniforms {
 				if (provided == null && !name.startsWith("gl_")) {
 					String typeName = getTypeName(type);
 
+					if (isSampler(type)) {
+						// don't print a warning, samplers are managed elsewhere.
+						// TODO: Detect unsupported samplers?
+						continue;
+					}
+
+					UniformType externalProvided = externalUniformNames.get(name);
+
+					if (externalProvided != null) {
+						if (externalProvided != expected) {
+							String expectedName;
+
+							if (expected != null) {
+								expectedName = expected.toString();
+							} else {
+								expectedName = "(unsupported type: " + getTypeName(type) + ")";
+							}
+
+							Iris.logger.error("[" + this.name + "] Wrong uniform type for externally-managed uniform " + name + ": " + externalProvided + " is provided but the program expects " + expectedName + ".");
+						}
+
+						continue;
+					}
+
 					if (size == 1) {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
 					} else {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + name + " of size " + size + " and type " + typeName);
 					}
+
+					continue;
 				}
 
 				// TODO: This is an absolutely horrific hack, but is needed until custom uniforms work.
@@ -170,10 +231,26 @@ public class ProgramUniforms {
 					once.remove(name);
 					perTick.remove(name);
 					perFrame.remove(name);
+					dynamic.remove(name);
 				}
 			}
 
-			return new ProgramUniforms(ImmutableList.copyOf(once.values()), ImmutableList.copyOf(perTick.values()), ImmutableList.copyOf(perFrame.values()));
+			return new ProgramUniforms(ImmutableList.copyOf(once.values()), ImmutableList.copyOf(perTick.values()), ImmutableList.copyOf(perFrame.values()),
+					ImmutableList.copyOf(dynamic.values()), ImmutableList.copyOf(notifiersToReset));
+		}
+
+		@Override
+		public Builder addDynamicUniform(Uniform uniform, ValueUpdateNotifier notifier) {
+			dynamic.put(locations.get(uniform.getLocation()), uniform);
+			notifiersToReset.add(notifier);
+
+			return this;
+		}
+
+		@Override
+		public UniformHolder externallyManagedUniform(String name, UniformType type) {
+			externalUniformNames.put(name, type);
+			return this;
 		}
 	}
 
@@ -196,6 +273,8 @@ public class ProgramUniforms {
 			typeName = "mat2";
 		} else if (type == GL20C.GL_FLOAT_VEC2) {
 			typeName = "vec2";
+		} else if (type == GL20C.GL_INT_VEC2) {
+			typeName = "vec2i";
 		} else if (type == GL20C.GL_SAMPLER_3D) {
 			typeName = "sampler3D";
 		} else if (type == GL20C.GL_SAMPLER_2D) {
@@ -249,5 +328,13 @@ public class ProgramUniforms {
 		} else {
 			return null;
 		}
+	}
+
+	private static boolean isSampler(int type) {
+		return type == GL20C.GL_SAMPLER_1D
+				|| type == GL20C.GL_SAMPLER_2D
+				|| type == GL20C.GL_SAMPLER_3D
+				|| type == GL20C.GL_SAMPLER_1D_SHADOW
+				|| type == GL20C.GL_SAMPLER_2D_SHADOW;
 	}
 }

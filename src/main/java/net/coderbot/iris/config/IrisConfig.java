@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import net.coderbot.iris.Iris;
-import net.fabricmc.loader.api.FabricLoader;
+import net.coderbot.iris.gui.option.IrisVideoSettings;
 
 /**
  * A class dedicated to storing the config values of shaderpacks. Right now it only stores the path to the current shaderpack
@@ -26,12 +26,12 @@ public class IrisConfig {
 	 */
 	private boolean enableShaders;
 
-	private Path propertiesPath;
+	private final Path propertiesPath;
 
-	public IrisConfig() {
+	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;
 		enableShaders = true;
-		propertiesPath = FabricLoader.getInstance().getConfigDir().resolve("iris.properties");
+		this.propertiesPath = propertiesPath;
 	}
 
 	/**
@@ -103,9 +103,17 @@ public class IrisConfig {
 		}
 
 		Properties properties = new Properties();
+		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
+		try {
+			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("maxShadowRenderDistance", "32"));
+		} catch (NumberFormatException e) {
+			Iris.logger.error("Shadow distance setting reset; value is invalid.");
+			IrisVideoSettings.shadowDistance = 32;
+			save();
+		}
 
 		if (shaderPackName != null) {
 			if (shaderPackName.equals("(internal)") || shaderPackName.isEmpty()) {
@@ -123,6 +131,8 @@ public class IrisConfig {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName().orElse(""));
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
+		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
+		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
 	}
 }

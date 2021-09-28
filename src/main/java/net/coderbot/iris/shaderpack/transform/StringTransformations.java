@@ -1,9 +1,11 @@
 package net.coderbot.iris.shaderpack.transform;
 
 public class StringTransformations implements Transformations {
-	private String version;
+	private String prefix;
+	private String extensions;
 	private StringBuilder injections;
 	private String body;
+	private StringBuilder suffix;
 
 	public StringTransformations(String base) {
 		int versionStringStart = base.indexOf("#version");
@@ -17,9 +19,57 @@ public class StringTransformations implements Transformations {
 
 		int splitPoint = base.indexOf("\n") + 1;
 
-		this.version = prefix + base.substring(0, splitPoint);
+		this.prefix = prefix + base.substring(0, splitPoint);
+		this.extensions = "";
 		this.injections = new StringBuilder();
 		this.body = base.substring(splitPoint);
+		this.suffix = new StringBuilder("\n");
+
+		if (!body.contains("#extension")) {
+			// Don't try to hoist #extension lines if there are none.
+			return;
+		}
+
+		// We need to make a best effort avoid injecting non-preprocessor code fragments before #extension
+		// declarations.
+		//
+		// Some strict drivers (like Mesa drivers) really do not like this.
+		StringBuilder extensions = new StringBuilder();
+		StringBuilder body = new StringBuilder();
+
+		boolean inBody = false;
+
+		for (String line : this.body.split("\\R")) {
+			String trimmedLine = line.trim();
+
+			if (!trimmedLine.isEmpty()
+					&& !trimmedLine.startsWith("#extension")
+					&& !trimmedLine.startsWith("#define")
+					&& !trimmedLine.startsWith("//")) {
+				inBody = true;
+			}
+
+			if (inBody) {
+				body.append(line);
+				body.append('\n');
+			} else {
+				extensions.append(line);
+				extensions.append('\n');
+			}
+		}
+
+		this.extensions = extensions.toString();
+		this.body = body.toString();
+	}
+
+	@Override
+	public String getPrefix() {
+		return prefix;
+	}
+
+	@Override
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
 	}
 
 	@Override
@@ -28,10 +78,22 @@ public class StringTransformations implements Transformations {
 	}
 
 	@Override
+	public void define(String key, String value) {
+		// TODO: This isn't super efficient, but oh well.
+		extensions = "#define " + key + " " + value + "\n" + extensions;
+	}
+
+	@Override
 	public void injectLine(InjectionPoint at, String line) {
-		if (at == InjectionPoint.AFTER_VERSION) {
+		if (at == InjectionPoint.BEFORE_CODE) {
 			injections.append(line);
 			injections.append('\n');
+		} else if (at == InjectionPoint.DEFINES) {
+			// TODO: This isn't super efficient, but oh well.
+			extensions = line + "\n" + extensions;
+		} else if (at == InjectionPoint.END) {
+			suffix.append(line);
+			suffix.append('\n');
 		} else {
 			throw new IllegalArgumentException("Unsupported injection point: " + at);
 		}
@@ -45,13 +107,15 @@ public class StringTransformations implements Transformations {
 			throw new UnsupportedOperationException();
 		}
 
-		version = version.replace(from, to);
+		prefix = prefix.replace(from, to);
+		extensions = extensions.replace(from, to);
 		injections = new StringBuilder(injections.toString().replace(from, to));
 		body = body.replace(from, to);
+		suffix = new StringBuilder(suffix.toString().replace(from, to));
 	}
 
 	@Override
 	public String toString() {
-		return version + injections + body;
+		return prefix + extensions + injections + body + suffix;
 	}
 }
