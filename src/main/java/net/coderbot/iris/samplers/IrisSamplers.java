@@ -52,6 +52,8 @@ public class IrisSamplers {
 
 			final String name = "colortex" + i;
 
+			// TODO: How do custom textures interact with aliases?
+
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
 
@@ -124,8 +126,9 @@ public class IrisSamplers {
 	public static void addCompositeSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
 		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId,
 				"gdepthtex", "depthtex0");
+		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, "depthtex1");
 		// TODO: "no translucents, no hand" depth texture when in-world hand rendering is implemented.
-		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId,
-				"depthtex1", "depthtex2");
+		//       that's what depthtex2 is supposed to be.
+		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, "depthtex2");
 	}
 }
