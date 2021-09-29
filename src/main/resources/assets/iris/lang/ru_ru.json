@@ -1,11 +1,18 @@
 {
   "iris.shaders.reloaded": "Шейдеры перезагружены!",
+  "iris.shaders.toggled": "Шейдеры переключены на %s!",
   "iris.keybind.reload": "Перезагрузить шейдеры",
-  "iris.shaders.reloaded.failure": "Ошибка при перезагрузке шейдеров! Причина: %s",
+  "iris.keybind.shaderPackSelection": "Экран выбора шейдеров",
+  "iris.keybind.toggleShaders": "Переключить шейдеры",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "Не удалось перезагрузить шейдеры! Причина: %s",
+  "iris.shaders.toggled.failure": "Не удалось переключить шейдеры! Причина: %s",
+  "iris.sodium.failure.title": "Не удалось загрузить Iris!",
+  "iris.sodium.failure.reason": "Вы загрузили Sodium в вашу папку с модами, однако он встроен в Iris. Пожалуйста, закройте игру и удалите Sodium из вашей папки с модами.",
   
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
-  "options.iris.openShaderPackFolder": "Откройте папку c шейдером...",
+  "options.iris.openShaderPackFolder": "Открыть папку c шейдером...",
   "options.iris.refreshShaderPacks": "Обновить список шейдеров",
   "options.iris.shaderPackSelection": "Шейдеры...",
   "options.iris.shaderPackSelection.title": "Шейдеры",
@@ -17,6 +24,9 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
   "options.iris.shaders.disabled": "Шейдеры: Выключены",
   "options.iris.shaders.enabled": "Шейдеры: Включены",
+  "options.iris.shadowDistance": "Максимальное расстояние для теней",
+  "options.iris.shadowDistance.enabled": "Позволяет вам изменить максимальное расстояние для теней. Блоки и существа за этим расстоянием не будут иметь теней. Снижая этот параметр, вы можете кардинально улучшить производительность.",
+  "options.iris.shadowDistance.disabled": "Ваши текущие шейдеры уже установили своё расстояние для теней, вы не сможете её изменить.",
   
   "pack.iris.select.title": "Выберите",
   "pack.iris.list.label": "+ Перетащите шейдер для добавления"
