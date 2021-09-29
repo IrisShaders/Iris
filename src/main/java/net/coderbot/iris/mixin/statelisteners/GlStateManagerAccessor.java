@@ -10,4 +10,9 @@ public interface GlStateManagerAccessor {
 	static GlStateManager.FogState getFOG() {
 		throw new AssertionError();
 	}
+
+	@Accessor("TEXTURES")
+	static GlStateManager.TextureState[] getTEXTURES() {
+		throw new AssertionError();
+	}
 }

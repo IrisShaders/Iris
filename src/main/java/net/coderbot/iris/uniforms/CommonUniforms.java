@@ -3,18 +3,20 @@ package net.coderbot.iris.uniforms;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
+import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
+import net.coderbot.iris.samplers.TextureAtlasTracker;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
-import net.coderbot.iris.texunits.TextureAtlasInterface;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
@@ -70,6 +72,16 @@ public final class CommonUniforms {
 			return new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
 		}, EntityColorRenderStateShard.getUpdateNotifier());
 
+		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
+		//       but we do. How will custom uniforms depending on atlasSize work?
+		uniforms.uniform2i("atlasSize", () -> {
+			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
+
+			Vec2 atlasSize = TextureAtlasTracker.INSTANCE.getAtlasSize(glId);
+
+			return new Vector2i((int) atlasSize.x, (int) atlasSize.y);
+		}, StateUpdateNotifiers.atlasTextureNotifier);
+
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
 
@@ -93,13 +105,7 @@ public final class CommonUniforms {
 			// TODO: Parse the value of const float wetnessHalfLife and const float drynessHalfLife from the shaderpack's fragment shader configuration
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
-			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor)
-			.uniform2i(ONCE, "atlasSize", CommonUniforms::getAtlasSize);
-	}
-
-	private static Vec2 getAtlasSize() {
-		// TODO: is the block atlas used for this uniform all the time???
-		return ((TextureAtlasInterface) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getAtlasSize();
+			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor);
 	}
 
 	private static Vec3 getSkyColor() {
