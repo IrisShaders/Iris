@@ -9,14 +9,11 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import net.coderbot.iris.shaderpack.texture.CustomTextureData;
-import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ShaderProperties {
@@ -162,17 +159,17 @@ public class ShaderProperties {
 				blendDisabled.add(pass);
 			});
 
-			handleStageSamplerDirective("texture.", key, value, stageSamplerList -> {
-				String stageName = stageSamplerList[0];
-				String samplerName = stageSamplerList[1];
-
+			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
+				// TODO: Remove
 				System.out.println("Processing custom texture property: " + "Stage: " + stageName + " Sampler: " + samplerName + " Path: " + value);
 
 				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
+
 				if (!optionalTextureStage.isPresent()) {
 					Iris.logger.warn("Unknown texture stage " + "\"" + stageName + "\"," + " ignoring custom texture directive for " + key);
 					return;
 				}
+
 				TextureStage stage = optionalTextureStage.get();
 
 				Object2ObjectMap<String, String> customTexturePropertyMap = customTextureDataMap.getOrDefault(stage, new Object2ObjectOpenHashMap<>());
@@ -208,13 +205,13 @@ public class ShaderProperties {
 		}
 	}
 
-	private static void handleStageSamplerDirective(String prefix, String key, String value, Consumer<String[]> handler) {
+	private static void handleTwoArgDirective(String prefix, String key, String value, BiConsumer<String, String> handler) {
 		if (key.startsWith(prefix)) {
 			int endOfPassIndex = key.indexOf(".", prefix.length());
 			String stage = key.substring(prefix.length(), endOfPassIndex);
 			String sampler = key.substring(endOfPassIndex + 1);
 
-			handler.accept(new String[] {stage, sampler});
+			handler.accept(stage, sampler);
 		}
 	}
 
