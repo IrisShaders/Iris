@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinRenderSystem {
 	private static Runnable atlasTextureListener;
 
-	@Inject(method = "_setShaderTexture(ILnet/minecraft/resources/ResourceLocation;)V", at = @At("RETURN"), remap = false)
+	@Inject(method = "_setShaderTexture(ILnet/minecraft/resources/ResourceLocation;)V", at = @At("RETURN"))
 	private static void _setShaderTexture(int unit, ResourceLocation resourceLocation, CallbackInfo ci) {
 		if (unit == 0 && atlasTextureListener != null) {
 			atlasTextureListener.run();
