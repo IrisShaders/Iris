@@ -3,13 +3,13 @@ package net.coderbot.iris.uniforms;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Vector4f;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
 import net.coderbot.iris.pipeline.newshader.FogMode;
-import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
 import net.coderbot.iris.samplers.TextureAtlasTracker;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
@@ -73,7 +73,7 @@ public final class CommonUniforms {
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
 		uniforms.uniform2i("atlasSize", () -> {
-			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
+			int glId = RenderSystem.getShaderTexture(0);
 
 			Vec2 atlasSize = TextureAtlasTracker.INSTANCE.getAtlasSize(glId);
 

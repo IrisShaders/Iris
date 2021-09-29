@@ -19,6 +19,7 @@
     "MixinMinecraft",
     "MixinMinecraft_PipelineDestruction",
     "MixinModelViewBobbing",
+    "MixinRenderSystem",
     "MixinShaderInstance",
     "MixinTextureAtlas",
     "MixinTitleScreen",
