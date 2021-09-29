@@ -13,6 +13,7 @@
     "MixinGameRenderer",
     "MixinProgram",
     "MixinGlStateManager",
+    "MixinGlStateManager_AtlasTracking",
     "MixinGlUniform",
     "MixinLivingEntityRenderer",
     "MixinMinecraft",
