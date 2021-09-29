@@ -1,6 +1,7 @@
 package net.coderbot.iris.postprocess;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -56,6 +57,13 @@ public class CompositeRenderer {
 				renderTargetDirectives.getRenderTargetSettings();
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
+		final ImmutableSet.Builder<Integer> flippedAtLeastOnce = new ImmutableSet.Builder<>();
+
+		// flipping deferred_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
+		// TODO: hardcoded for SEUS PTGI E12
+		//if (sources.length != 0 && sources[0].getName().contains("deferred")) {
+		//	bufferFlipper.flip(0);
+		//}
 
 		for (ProgramSource source : sources) {
 			if (source == null || !source.isValid()) {
@@ -66,8 +74,9 @@ public class CompositeRenderer {
 			ProgramDirectives directives = source.getDirectives();
 
 			ImmutableSet<Integer> flipped = bufferFlipper.snapshot();
+			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
-			pass.program = createProgram(source, flipped, shadowMapRendererSupplier);
+			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowMapRendererSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
 
 			boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
@@ -82,8 +91,11 @@ public class CompositeRenderer {
 			pass.framebuffer = framebuffer;
 			pass.viewportScale = directives.getViewportScale();
 			pass.mipmappedBuffers = directives.getMipmappedBuffers();
+			pass.flippedAtLeastOnce = flippedAtLeastOnceSnapshot;
 
 			passes.add(pass);
+
+			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
 
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
@@ -93,8 +105,21 @@ public class CompositeRenderer {
 					continue;
 				}
 
+				// compare with boxed Boolean objects to avoid NPEs
+				if (explicitFlips.get(buffer) == Boolean.FALSE) {
+					continue;
+				}
+
 				bufferFlipper.flip(buffer);
+				flippedAtLeastOnce.add(buffer);
 			}
+
+			explicitFlips.forEach((buffer, shouldFlip) -> {
+				if (shouldFlip) {
+					bufferFlipper.flip(buffer);
+					flippedAtLeastOnce.add(buffer);
+				}
+			});
 		}
 
 		this.passes = passes.build();
@@ -105,6 +130,7 @@ public class CompositeRenderer {
 	private static final class Pass {
 		Program program;
 		GlFramebuffer framebuffer;
+		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
 		float viewportScale;
@@ -180,7 +206,7 @@ public class CompositeRenderer {
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
-	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped,
+	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 														   Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
@@ -196,7 +222,7 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds);
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);

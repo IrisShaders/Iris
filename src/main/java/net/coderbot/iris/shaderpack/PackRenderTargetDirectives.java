@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.*;
 import net.coderbot.iris.Iris;
@@ -23,6 +24,18 @@ public class PackRenderTargetDirectives {
 		"gaux3",
 		"gaux4"
 	);
+
+	public static final ImmutableMap<String, Integer> LEGACY_RENDER_TARGET_MAP;
+
+	static {
+		ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
+
+		for (int index = 0; index < LEGACY_RENDER_TARGETS.size(); index++) {
+			builder.put(LEGACY_RENDER_TARGETS.get(index), index);
+		}
+
+		LEGACY_RENDER_TARGET_MAP = builder.build();
+	}
 
 	// TODO: Support 16 render targets instead of just 8, we need other changes elsewhere first.
 	public static final Set<Integer> BASELINE_SUPPORTED_RENDER_TARGETS = ImmutableSet.of(0, 1, 2, 3, 4, 5, 6, 7);

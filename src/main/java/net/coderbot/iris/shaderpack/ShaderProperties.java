@@ -1,5 +1,8 @@
 package net.coderbot.iris.shaderpack;
 
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -51,6 +54,7 @@ public class ShaderProperties {
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
 	private ShaderProperties() {
@@ -178,9 +182,26 @@ public class ShaderProperties {
 				customTextureDataMap.put(stage, customTexturePropertyMap);
 			});
 
-			// TODO: Buffer flip, size directives
+			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
+				handleBooleanValue(key, value, shouldFlip -> {
+					explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
+							.put(buffer, shouldFlip);
+				});
+			});
+
+			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
 		});
+	}
+
+	private static void handleBooleanValue(String key, String value, BooleanConsumer handler) {
+		if ("true".equals(value)) {
+			handler.accept(true);
+		} else if ("false".equals(value)) {
+			handler.accept(false);
+		} else {
+			Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
+		}
 	}
 
 	private static void handleBooleanDirective(String key, String value, String expectedKey, Consumer<OptionalBoolean> handler) {
@@ -317,5 +338,9 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextureData() {
 		return customTextureDataMap;
+	}
+
+	public Object2ObjectMap<String, Object2BooleanMap<String>> getExplicitFlips() {
+		return explicitFlips;
 	}
 }

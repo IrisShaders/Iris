@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.lwjgl.opengl.GL20C;
 
 import java.util.ArrayList;
@@ -44,7 +45,11 @@ public class ProgramSamplers {
 	}
 
 	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds) {
-		return new CustomTextureSamplerInterceptor(samplerHolder, customTextureIds);
+		return customTextureSamplerInterceptor(samplerHolder, customTextureIds, ImmutableSet.of());
+	}
+
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+		return new CustomTextureSamplerInterceptor(samplerHolder, customTextureIds, flippedAtLeastOnceSnapshot);
 	}
 
 	public static final class Builder implements SamplerHolder {
@@ -176,10 +181,23 @@ public class ProgramSamplers {
 	public static final class CustomTextureSamplerInterceptor implements SamplerHolder {
 		private final SamplerHolder samplerHolder;
 		private final Object2IntMap<String> customTextureIds;
+		private final ImmutableSet<String> deactivatedOverrides;
 
-		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds) {
+		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
 			this.samplerHolder = samplerHolder;
 			this.customTextureIds = customTextureIds;
+
+			ImmutableSet.Builder<String> deactivatedOverrides = new ImmutableSet.Builder<>();
+
+			for (int deactivatedOverride : flippedAtLeastOnceSnapshot) {
+				deactivatedOverrides.add("colortex" + deactivatedOverride);
+
+				if (deactivatedOverride < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
+					deactivatedOverrides.add(PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(deactivatedOverride));
+				}
+			}
+
+			this.deactivatedOverrides = deactivatedOverrides.build();
 		}
 
 		@Override
@@ -195,7 +213,7 @@ public class ProgramSamplers {
 		@Override
 		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
 			for (String name : names) {
-				if (customTextureIds.containsKey(name)) {
+				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
 					sampler = () -> customTextureIds.getInt(name);
 					break;
 				}
@@ -207,7 +225,7 @@ public class ProgramSamplers {
 		@Override
 		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
 			for (String name : names) {
-				if (customTextureIds.containsKey(name)) {
+				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
 					sampler = () -> customTextureIds.getInt(name);
 					break;
 				}

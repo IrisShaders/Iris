@@ -1,8 +1,12 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,6 +23,7 @@ public class ProgramDirectives {
 	private final AlphaTestOverride alphaTestOverride;
 	private final boolean disableBlend;
 	private final ImmutableSet<Integer> mipmappedBuffers;
+	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
@@ -34,10 +39,42 @@ public class ProgramDirectives {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 			disableBlend = properties.getBlendDisabled().contains(source.getName());
+
+			ImmutableMap.Builder<Integer, Boolean> explicitFlips = ImmutableMap.builder();
+
+			Object2BooleanMap<String> explicitFlipsStr = properties.getExplicitFlips().get(source.getName());
+
+			if (explicitFlipsStr == null) {
+				explicitFlipsStr = Object2BooleanMaps.emptyMap();
+			}
+
+			explicitFlipsStr.forEach((buffer, shouldFlip) -> {
+				Integer index = PackRenderTargetDirectives.LEGACY_RENDER_TARGET_MAP.get(buffer);
+
+				if (index == null && buffer.startsWith("colortex")) {
+					String id = buffer.substring("colortex".length());
+
+					try {
+						index = Integer.parseInt(id);
+					} catch (NumberFormatException e) {
+						// fall through to index == null check for unknown buffer.
+					}
+				}
+
+				if (index != null) {
+					explicitFlips.put(index, shouldFlip);
+				} else {
+					Iris.logger.warn("Unknown buffer with ID " + buffer + " specified in flip directive for pass "
+							+ source.getName());
+				}
+			});
+
+			this.explicitFlips = explicitFlips.build();
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
 			disableBlend = false;
+			explicitFlips = ImmutableMap.of();
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -104,5 +141,9 @@ public class ProgramDirectives {
 
 	public ImmutableSet<Integer> getMipmappedBuffers() {
 		return mipmappedBuffers;
+	}
+
+	public ImmutableMap<Integer, Boolean> getExplicitFlips() {
+		return explicitFlips;
 	}
 }
