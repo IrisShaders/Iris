@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 public class LanguageMap {
 	private final Map<String, Map<String, String>> translationMaps;
@@ -34,6 +35,12 @@ public class LanguageMap {
 			// Also note that OptiFine uses a property scheme for loading language entries to keep parity with other
 			// OptiFine features
 			String currentFileName = path.getFileName().toString().toLowerCase(Locale.ROOT);
+
+			if (!currentFileName.endsWith(".lang")) {
+				// This file lacks a .lang file extension and should be ignored.
+				return;
+			}
+
 			String currentLangCode = currentFileName.substring(0, currentFileName.lastIndexOf("."));
 			Properties properties = new Properties();
 
@@ -48,6 +55,10 @@ public class LanguageMap {
 			properties.forEach((key, value) -> currentLanguageMap.put(key.toString(), value.toString()));
 			translationMaps.put(currentLangCode, currentLanguageMap);
 		});
+	}
+
+	public Set<String> getLanguages() {
+		return translationMaps.keySet();
 	}
 
 	public Map<String, String> getTranslations(String language) {
