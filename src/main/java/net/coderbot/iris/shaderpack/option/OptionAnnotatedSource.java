@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.shaderpack.parsing.ParsedString;
 
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -115,6 +116,12 @@ public final class OptionAnnotatedSource {
 		"superSamplingLevel",
 		"noiseTextureResolution"
 	);
+
+	public OptionAnnotatedSource(final String source) {
+		// Match any valid newline sequence
+		// https://stackoverflow.com/a/31060125
+		this(ImmutableList.copyOf(source.split("\\R")));
+	}
 
 	/**
 	 * Parses the lines of a shader source file in order to locate valid options from it.
@@ -284,6 +291,9 @@ public final class OptionAnnotatedSource {
 		// Remove the leading comment for processing.
 		boolean hasLeadingComment = line.takeComments();
 
+		// allow but do not require whitespace between comments and #define
+		line.takeSomeWhitespace();
+
 		if (!line.takeLiteral("#define")) {
 			builder.diagnostics.put(index,
 					"This line contains an occurrence of \"#define\" " +
@@ -403,12 +413,14 @@ public final class OptionAnnotatedSource {
 		return booleanDefineReferences;
 	}
 
-	public OptionSet getOptionSet(String filePath) {
+	public OptionSet getOptionSet(String filePath, Set<String> booleanDefineReferences) {
 		OptionSet.Builder builder = OptionSet.builder();
 
 		booleanOptions.forEach((lineIndex, option) -> {
-			OptionLocation location = new OptionLocation(filePath, lineIndex);
-			builder.addBooleanOption(location, option);
+			if (booleanDefineReferences.contains(option.getName())) {
+				OptionLocation location = new OptionLocation(filePath, lineIndex);
+				builder.addBooleanOption(location, option);
+			}
 		});
 
 		stringOptions.forEach((lineIndex, option) -> {
@@ -458,9 +470,17 @@ public final class OptionAnnotatedSource {
 				if (stringOption.getType() == OptionType.DEFINE) {
 					if (stringOption.getName().contains(stringOption.getDefaultValue())) {
 						// TODO
+						// #define MODE MODE_ONE // [MODE_ONE MODE_TWO]
 						throw new IllegalStateException("Not yet implemented: setting option value " +
 							"where the name contains the default value; name = " + stringOption.getName() +
 							", default value = " + stringOption.getDefaultValue());
+					}
+
+					if ("#define".contains(stringOption.getDefaultValue())) {
+						// TODO
+						// #define efine 1 // [1 2]
+						throw new IllegalStateException("Not yet implemented: setting option value " +
+								"where the default value " + stringOption.getDefaultValue() + " matches #define");
 					}
 
 					return existing.replaceFirst(Pattern.quote(stringOption.getDefaultValue()), Matcher.quoteReplacement(value));

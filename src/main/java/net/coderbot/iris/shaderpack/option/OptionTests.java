@@ -10,7 +10,7 @@ import java.util.List;
 
 public class OptionTests {
 	public static void main(String[] args) throws IOException  {
-		List<String> lines = Files.readAllLines(Paths.get("run/shaderpacks/Sildurs Vibrant Shaders v1.29 Lite/shaders/shaders.settings"));
+		List<String> lines = Files.readAllLines(Paths.get("run/shaderpacks/Sildurs Vibrant Shaders v1.29 Medium/shaders/shaders.settings"));
 
 		OptionAnnotatedSource source = new OptionAnnotatedSource(ImmutableList.copyOf(lines));
 

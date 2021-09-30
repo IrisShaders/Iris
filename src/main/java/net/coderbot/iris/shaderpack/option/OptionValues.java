@@ -42,12 +42,12 @@ public class OptionValues {
                 return;
             }
 
-            if (!option.getAllowedValues().contains(value)) {
+            if (!option.getOption().getAllowedValues().contains(value)) {
                 // TODO: Diagnostics for this
                 return;
             }
 
-            if (value.equals(option.getDefaultValue())) {
+            if (value.equals(option.getOption().getDefaultValue())) {
                 // Ignore the value if it's a default.
                 return;
             }

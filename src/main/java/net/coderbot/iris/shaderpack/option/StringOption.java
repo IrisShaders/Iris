@@ -1,6 +1,9 @@
 package net.coderbot.iris.shaderpack.option;
 
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class StringOption extends BaseOption {
 	private final String defaultValue;
@@ -9,14 +12,14 @@ public class StringOption extends BaseOption {
 	private StringOption(OptionType type, String name, String defaultValue) {
 		super(type, name, null);
 
-		this.defaultValue = defaultValue;
+		this.defaultValue = Objects.requireNonNull(defaultValue);
 		this.allowedValues = ImmutableList.of(defaultValue);
 	}
 
 	private StringOption(OptionType type, String name, String comment, String defaultValue, ImmutableList<String> allowedValues) {
 		super(type, name, comment);
 
-		this.defaultValue = defaultValue;
+		this.defaultValue = Objects.requireNonNull(defaultValue);
 		this.allowedValues = allowedValues;
 	}
 
@@ -63,10 +66,12 @@ public class StringOption extends BaseOption {
 		return new StringOption(type, name, comment.trim(), defaultValue, builder.build());
 	}
 
+	@NotNull
 	public String getDefaultValue() {
 		return defaultValue;
 	}
 
+	@NotNull
 	public ImmutableList<String> getAllowedValues() {
 		return allowedValues;
 	}
