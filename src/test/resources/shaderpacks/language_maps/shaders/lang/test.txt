@@ -1,0 +1,1 @@
+This is a text file but it shouldn't be parsed as a language file
