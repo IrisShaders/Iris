@@ -107,6 +107,17 @@ sourceSets {
 			runtimeClasspath += vendored.output
 		}
 	}
+
+	test {
+		java {
+			// headers / API stubs are only available at compilation time.
+			compileClasspath += headers.output
+
+			// Vendored sources are available at compilation time and runtime.
+			compileClasspath += vendored.output
+			runtimeClasspath += vendored.output
+		}
+	}
 }
 
 java {

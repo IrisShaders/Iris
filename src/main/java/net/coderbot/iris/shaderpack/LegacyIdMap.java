@@ -5,6 +5,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+// TODO: Don't reference vanilla Minecraft classes, so that the shaderpack loader can be properly isolated from
+//       Minecraft.
 public class LegacyIdMap {
 
 	public static void addLegacyValues(Object2IntMap<BlockState> blockIdMap) {
