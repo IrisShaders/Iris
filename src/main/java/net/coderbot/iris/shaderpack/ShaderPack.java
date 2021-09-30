@@ -21,6 +21,12 @@ public class ShaderPack {
 	private final LanguageMap languageMap;
 	private final CustomTexture customNoiseTexture;
 
+	/**
+	 * Reads a shader pack from the disk.
+	 *
+	 * @param root The path to the "shaders" directory within the shader pack
+	 * @throws IOException
+	 */
 	public ShaderPack(Path root) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
