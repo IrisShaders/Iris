@@ -65,4 +65,32 @@ public class OptionApplyTest {
 
 		System.out.println(options);
 	}
+
+	@Test
+	void testWeirdDefine() {
+		// TODO: Fix OptionAnnotatedSource so that this test doesn't fail
+		testTrivial(
+				"#define NAME fine // [fine notfine]",
+				ImmutableMap.of("NAME", "notfine"),
+				"#define NAME notfine // [fine notfine]\n"
+		);
+	}
+
+	@Test
+	void testWeirdDefine2() {
+		// TODO: Fix OptionAnnotatedSource so that this test doesn't fail
+		testTrivial(
+				"#define MODE_DEFAULT MODE_D // [MODE_A MODE_D]",
+				ImmutableMap.of("MODE_DEFAULT", "MODE_A"),
+				"#define MODE_DEFAULT MODE_A // [MODE_A MODE_D]\n"
+		);
+	}
+
+	private void testTrivial(String base, ImmutableMap<String, String> changes, String expected) {
+		OptionAnnotatedSource source = new OptionAnnotatedSource(base);
+		OptionSet options = source.getOptionSet("<hardcoded>", source.getBooleanDefineReferences().keySet());
+		OptionValues values = new OptionValues(options, changes);
+
+		Assertions.assertEquals(expected, source.apply(values));
+	}
 }

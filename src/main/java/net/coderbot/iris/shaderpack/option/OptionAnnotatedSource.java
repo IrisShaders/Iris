@@ -408,7 +408,6 @@ public final class OptionAnnotatedSource {
 		return diagnostics;
 	}
 
-	// TODO: Actually do something with this
 	public ImmutableMap<String, Integer> getBooleanDefineReferences() {
 		return booleanDefineReferences;
 	}
@@ -469,7 +468,7 @@ public final class OptionAnnotatedSource {
 			return values.getStringValue(stringOption.getName()).map(value -> {
 				if (stringOption.getType() == OptionType.DEFINE) {
 					if (stringOption.getName().contains(stringOption.getDefaultValue())) {
-						// TODO
+						// TODO: This needs to be fixed
 						// #define MODE MODE_ONE // [MODE_ONE MODE_TWO]
 						throw new IllegalStateException("Not yet implemented: setting option value " +
 							"where the name contains the default value; name = " + stringOption.getName() +
@@ -477,7 +476,7 @@ public final class OptionAnnotatedSource {
 					}
 
 					if ("#define".contains(stringOption.getDefaultValue())) {
-						// TODO
+						// TODO: This needs to be fixed
 						// #define efine 1 // [1 2]
 						throw new IllegalStateException("Not yet implemented: setting option value " +
 								"where the default value " + stringOption.getDefaultValue() + " matches #define");
