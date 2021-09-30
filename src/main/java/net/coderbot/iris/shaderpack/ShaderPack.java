@@ -3,6 +3,8 @@ package net.coderbot.iris.shaderpack;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -21,13 +23,17 @@ public class ShaderPack {
 	private final LanguageMap languageMap;
 	private final CustomTexture customNoiseTexture;
 
+	public ShaderPack(Path root) throws IOException {
+		this(root, Collections.emptyMap());
+	}
+
 	/**
 	 * Reads a shader pack from the disk.
 	 *
 	 * @param root The path to the "shaders" directory within the shader pack
 	 * @throws IOException
 	 */
-	public ShaderPack(Path root) throws IOException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
