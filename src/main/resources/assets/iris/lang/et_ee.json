@@ -7,6 +7,8 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Varjutajate taaslaadimine ebaõnnestus! Põhjus: %s",
   "iris.shaders.toggled.failure": "Varjutajate lülitamine ebaõnnestus! Põhjus: %s",
+  "iris.sodium.failure.title": "Irise laadimine ebaõnnestus!",
+  "iris.sodium.failure.reason": "Sinu mods kaustas on Sodium, ent Iris juba sisaldab seda. Palun sulge mäng ja eemalda Sodium oma mods kaustast.",
 
   "options.iris.apply": "Rakenda",
   "options.iris.refresh": "Värskenda",
@@ -22,6 +24,9 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" on juba varjutajapakkide kaustas!",
   "options.iris.shaders.disabled": "Varjutajad: keelatud",
   "options.iris.shaders.enabled": "Varjutajad: lubatud",
+  "options.iris.shadowDistance": "Maks. varjukaugus",
+  "options.iris.shadowDistance.enabled": "Võimaldab muuta varjude maksimaalset kaugust. Sellest kaugem maastik ning olemid ei heida varjusid. Varjukauguse vähendamine võib jõudlust märkimisväärselt suurendada.",
+  "options.iris.shadowDistance.disabled": "Sinu praegune varjutajapakk on varjude nähtavuskauguse juba seadnud, sa ei saa seda muuta.",
 
   "pack.iris.select.title": "Vali",
   "pack.iris.list.label": "+ Varjutajapakkide lisamiseks sikuta need siia"
