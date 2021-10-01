@@ -1,8 +1,5 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Consumer;
@@ -16,7 +13,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import org.lwjgl.opengl.GL11C;
+import net.coderbot.iris.gl.blending.BlendModeFunction;
 
 public class ShaderProperties {
 	private boolean enableClouds = true;
@@ -160,13 +157,7 @@ public class ShaderProperties {
 
 				int i = 0;
 				for (String modeName : modeArray) {
-					try {
-						modes[i] = (int) GL11C.class.getDeclaredField("GL_" + modeName).get(null);
-					} catch (IllegalAccessException e) {
-						Iris.logger.error("Unable to get GL constant " + modeName, e);
-					} catch (NoSuchFieldException e) {
-						Iris.logger.error("Invalid GL constant " + modeName, e);
-					}
+					modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
 					i++;
 				}
 				blendModeOverrides.put(pass, modes);
