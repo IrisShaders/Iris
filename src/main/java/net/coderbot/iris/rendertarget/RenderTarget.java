@@ -80,6 +80,10 @@ public class RenderTarget {
 		return altTexture;
 	}
 
+	public InternalTextureFormat getInternalFormat() {
+		return internalFormat;
+	}
+
 	public void destroy() {
 		requireValid();
 		isValid = false;

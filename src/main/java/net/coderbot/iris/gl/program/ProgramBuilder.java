@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 
+import java.util.OptionalInt;
 import java.util.function.IntSupplier;
 
 public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder {
@@ -102,12 +103,12 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	}
 
 	@Override
-	public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
-		return samplers.addDefaultSampler(sampler, postBind, names);
+	public boolean addDefaultSampler(IntSupplier sampler, OptionalInt internalFormat, Runnable postBind, String... names) {
+		return samplers.addDefaultSampler(sampler, internalFormat, postBind, names);
 	}
 
 	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-		return samplers.addDynamicSampler(sampler, postBind, names);
+	public boolean addDynamicSampler(IntSupplier sampler, OptionalInt internalFormat, Runnable postBind, String... names) {
+		return samplers.addDynamicSampler(sampler, internalFormat, postBind, names);
 	}
 }

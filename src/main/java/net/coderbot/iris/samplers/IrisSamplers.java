@@ -9,6 +9,8 @@ import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+
+import java.util.OptionalInt;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -50,25 +52,28 @@ public class IrisSamplers {
 				}
 			};
 
+			OptionalInt internalFormat = OptionalInt.of(renderTargets.get(index).getInternalFormat().getGlFormat());
+
 			final String name = "colortex" + i;
+			final String imageName = "colorimg" + i;
 
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
 
 				// colortex0 is the default sampler in fullscreen passes
 				if (i == 0 && isFullscreenPass) {
-					samplers.addDefaultSampler(sampler, name, legacyName);
+					samplers.addDefaultSampler(sampler, internalFormat, name, imageName, legacyName);
 				} else {
-					samplers.addDynamicSampler(sampler, name, legacyName);
+					samplers.addDynamicSampler(sampler, internalFormat, name, imageName, legacyName);
 				}
 			} else {
-				samplers.addDynamicSampler(sampler, name);
+				samplers.addDynamicSampler(sampler, internalFormat, name);
 			}
 		}
 	}
 
 	public static void addNoiseSampler(SamplerHolder samplers, AbstractTexture texture) {
-		samplers.addDynamicSampler(texture::getId, "noisetex");
+		samplers.addDynamicSampler(texture::getId, OptionalInt.empty(), "noisetex");
 	}
 
 	public static boolean hasShadowSamplers(SamplerHolder samplers) {
@@ -94,16 +99,16 @@ public class IrisSamplers {
 
 		if (waterShadowEnabled) {
 			usesShadows = true;
-			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "watershadow");
+			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, OptionalInt.empty(), "shadowtex0", "watershadow");
 			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId,
-					"shadowtex1", "shadow");
+					OptionalInt.empty(), "shadowtex1", "shadow");
 		} else {
-			usesShadows = samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "shadow");
-			usesShadows |= samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId, "shadowtex1");
+			usesShadows = samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, OptionalInt.empty(), "shadowtex0", "shadow");
+			usesShadows |= samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId, OptionalInt.empty(), "shadowtex1");
 		}
 
-		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture0Id, "shadowcolor", "shadowcolor0");
-		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture1Id, "shadowcolor1");
+		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture0Id, OptionalInt.empty(), "shadowcolor", "shadowcolor0");
+		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture1Id, OptionalInt.empty(), "shadowcolor1");
 
 		return usesShadows;
 	}
@@ -111,21 +116,21 @@ public class IrisSamplers {
 	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
-		samplers.addDynamicSampler(normals::getId, "normals");
-		samplers.addDynamicSampler(specular::getId, "specular");
+		samplers.addDynamicSampler(normals::getId, OptionalInt.empty(), "normals");
+		samplers.addDynamicSampler(specular::getId, OptionalInt.empty(), "specular");
 	}
 
 	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
-		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId, "depthtex0");
+		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId, OptionalInt.empty(), "depthtex0");
 		// TODO: Should depthtex2 be made available to gbuffer / shadow programs?
-		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, "depthtex1");
+		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, OptionalInt.empty(), "depthtex1");
 	}
 
 	public static void addCompositeSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
 		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId,
-				"gdepthtex", "depthtex0");
+				OptionalInt.empty(), "gdepthtex", "depthtex0");
 		// TODO: "no translucents, no hand" depth texture when in-world hand rendering is implemented.
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId,
-				"depthtex1", "depthtex2");
+				OptionalInt.empty(), "depthtex1", "depthtex2");
 	}
 }

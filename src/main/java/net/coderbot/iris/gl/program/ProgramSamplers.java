@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL20C;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.IntSupplier;
 
@@ -104,13 +105,13 @@ public class ProgramSamplers {
 		}
 
 		@Override
-		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+		public boolean addDefaultSampler(IntSupplier sampler, OptionalInt internalFormat, Runnable postBind, String... names) {
 			if (nextUnit != 0) {
 				// TODO: Relax this restriction!
 				throw new IllegalStateException("Texture unit 0 is already used.");
 			}
 
-			return addDynamicSampler(sampler, postBind, true, names);
+			return addDynamicSampler(sampler, internalFormat, postBind, true, names);
 		}
 
 		/**
@@ -118,11 +119,13 @@ public class ProgramSamplers {
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override
-		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-			return addDynamicSampler(sampler, postBind, false, names);
+		public boolean addDynamicSampler(IntSupplier sampler, OptionalInt internalFormat, Runnable postBind, String... names) {
+			return addDynamicSampler(sampler, internalFormat, postBind, false, names);
 		}
 
-		private boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, boolean used, String... names) {
+		private boolean addDynamicSampler(IntSupplier sampler, OptionalInt internalFormat, Runnable postBind, boolean used, String... names) {
+			OptionalInt imageUnit = OptionalInt.empty();
+
 			for (String name : names) {
 				int location = GL20C.glGetUniformLocation(program, name);
 
@@ -131,15 +134,24 @@ public class ProgramSamplers {
 					continue;
 				}
 
-				// Make sure that we aren't out of texture units.
-				if (remainingUnits <= 0) {
-					throw new IllegalStateException("No more available texture units while activating sampler " + name);
+				if (name.startsWith("colorimg") && name.length() == 9) {
+					int imgIndex = Character.getNumericValue(name.charAt(8));
+
+					if (imgIndex >= 0 && imgIndex <= 5) {
+						imageUnit = OptionalInt.of(imgIndex);
+						calls.add(new GlUniform1iCall(location, imgIndex));
+					}
+				} else {
+					// Make sure that we aren't out of texture units.
+					if (remainingUnits <= 0) {
+						throw new IllegalStateException("No more available texture units while activating sampler " + name);
+					}
+
+					//System.out.println("Binding dynamic sampler " + name + " to texture unit " + nextUnit);
+
+					// Set up this sampler uniform to use this particular texture unit.
+					calls.add(new GlUniform1iCall(location, nextUnit));
 				}
-
-				//System.out.println("Binding dynamic sampler " + name + " to texture unit " + nextUnit);
-
-				// Set up this sampler uniform to use this particular texture unit.
-				calls.add(new GlUniform1iCall(location, nextUnit));
 
 				// And mark this texture unit as used.
 				used = true;
@@ -149,7 +161,7 @@ public class ProgramSamplers {
 				return false;
 			}
 
-			samplers.add(new SamplerBinding(nextUnit, sampler, postBind));
+			samplers.add(new SamplerBinding(nextUnit, imageUnit, internalFormat, sampler, postBind));
 
 			remainingUnits -= 1;
 			nextUnit += 1;
