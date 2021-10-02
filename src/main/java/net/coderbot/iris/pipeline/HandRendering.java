@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
@@ -41,11 +42,13 @@ public class HandRendering {
 
 		rendering = true;
 
+		RenderSystem.clear(256, Minecraft.ON_OSX);
+
 		poseStack.pushPose();
 
         final PoseStack.Pose pose = poseStack.last();
 
-		pose.pose().multiply(Matrix4f.perspective(minecraft.options.fov, minecraft.getWindow().getWidth() / (float)minecraft.getWindow().getHeight(), .05f, gameRenderer.getRenderDistance() * 4f));
+		gameRenderer.resetProjectionMatrix(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
 
         pose.pose().setIdentity();
         pose.normal().setIdentity();
