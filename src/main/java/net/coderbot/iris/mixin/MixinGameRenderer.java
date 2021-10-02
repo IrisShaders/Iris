@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL20;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -42,8 +43,8 @@ public class MixinGameRenderer {
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 	}
 
-	@Inject(method = "renderItemInHand", at = @At("HEAD"), cancellable = true)
-	private void cancelRenderItemInHand(CallbackInfo ci) {
-		ci.cancel();
+	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z"))
+	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
+		return false;
 	}
 }
