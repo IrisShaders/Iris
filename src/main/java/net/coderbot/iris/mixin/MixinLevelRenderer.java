@@ -223,7 +223,7 @@ public class MixinLevelRenderer {
 		pipeline.beginTranslucents();
 	}
 
-	@Inject(method = "renderLevel", at = @At(value = "RETURN", by = -3, shift = At.Shift.BY))
+	@Inject(method = "renderLevel", at = @At(value = "RETURN", by = -2, shift = At.Shift.BY))
 	private void iris$renderHands(CallbackInfo ci) {
 		Minecraft.getInstance().getProfiler().popPush("iris_hand");
 		HandRendering.render();
