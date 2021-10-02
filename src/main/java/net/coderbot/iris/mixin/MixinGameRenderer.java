@@ -41,4 +41,9 @@ public class MixinGameRenderer {
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 	}
+
+	@Inject(method = "renderItemInHand", at = @At("HEAD"), cancellable = true)
+	private void cancelRenderItemInHand(CallbackInfo ci) {
+		ci.cancel();
+	}
 }
