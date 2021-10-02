@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.*;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.vendored.joml.Vector4f;
 
 import java.util.Collections;
@@ -98,6 +99,12 @@ public class PackRenderTargetDirectives {
 			} else {
 				Iris.logger.warn("Unrecognized internal texture format " + format + " specified for " + bufferName + "Format, ignoring.");
 			}
+
+			Optional<PixelFormat> pixelFormat = PixelFormat.fromShaderpackString(format);
+
+			if (pixelFormat.isPresent()) {
+				settings.pixelFormat = pixelFormat.get();
+			}
 		});
 
 		// TODO: Only for composite and deferred
@@ -112,17 +119,23 @@ public class PackRenderTargetDirectives {
 
 	public static final class RenderTargetSettings {
 		private InternalTextureFormat requestedFormat;
+		private PixelFormat pixelFormat;
 		private boolean clear;
 		private Vector4f clearColor;
 
 		public RenderTargetSettings() {
 			this.requestedFormat = InternalTextureFormat.RGBA;
+			this.pixelFormat = PixelFormat.RGBA;
 			this.clear = true;
 			this.clearColor = new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 
-		public InternalTextureFormat getRequestedFormat() {
+		public InternalTextureFormat getInternalFormat() {
 			return requestedFormat;
+		}
+
+		public PixelFormat getPixelFormat() {
+			return pixelFormat;
 		}
 
 		public boolean shouldClear() {

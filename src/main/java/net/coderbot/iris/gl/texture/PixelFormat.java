@@ -37,6 +37,73 @@ public enum PixelFormat {
 		}
 	}
 
+	public static Optional<PixelFormat> fromShaderpackString(String name) {
+		switch(name) {
+			case "R8":
+			case "R8_SNORM":
+			case "R16_SNORM":
+			case "R32F":
+				return Optional.of(PixelFormat.RED);
+
+			case "RG8":
+			case "RG8_SNORM":
+			case "RG16_SNORM":
+			case "RG32F":
+				return Optional.of(PixelFormat.RG);
+
+			case "RGB8":
+			case "RGB8_SNORM":
+			case "RGB16_SNORM":
+			case "RGB32F":
+			case "R3_G3_B2":
+			case "R11F_G11F_B10F":
+			case "RGB9_E5":
+				return Optional.of(PixelFormat.RGB);
+
+			case "RGBA8":
+			case "RGBA8_SNORM":
+			case "RGBA16_SNORM":
+			case "RGBA32F":
+			case "RGB5_A1":
+			case "RGB10_A2":
+				return Optional.of(PixelFormat.RGBA);
+
+			case "R8I":
+			case "R8UI":
+			case "R16I":
+			case "R16UI":
+			case "R32I":
+			case "R32UI":
+				return Optional.of(PixelFormat.RED_INTEGER);
+
+			case "RG8I":
+			case "RG8UI":
+			case "RG16I":
+			case "RG16UI":
+			case "RG32I":
+			case "RG32UI":
+				return Optional.of(PixelFormat.RG_INTEGER);
+
+			case "RGB8I":
+			case "RGB8UI":
+			case "RGB16I":
+			case "RGB16UI":
+			case "RGB32I":
+			case "RGB32UI":
+				return Optional.of(PixelFormat.RGB_INTEGER);
+
+			case "RGBA8I":
+			case "RGBA8UI":
+			case "RGBA16I":
+			case "RGBA16UI":
+			case "RGBA32I":
+			case "RGBA32UI":
+				return Optional.of(PixelFormat.RGBA_INTEGER);
+		}
+
+		return Optional.empty();
+	}
+
 	public int getGlFormat() {
 		return glFormat;
 	}
