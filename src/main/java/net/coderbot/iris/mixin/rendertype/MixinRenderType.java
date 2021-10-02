@@ -3,6 +3,8 @@ package net.coderbot.iris.mixin.rendertype;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.layer.UseProgramRenderStateShard;
+import net.coderbot.iris.pipeline.HandRendering;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -150,7 +152,11 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypes(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
+		if(HandRendering.isRendering()) {
+			cir.setReturnValue(wrap(base, GbufferProgram.HAND));
+		} else {
+			cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
+		}
 	}
 
 	@Inject(at = @At("RETURN"), method = {

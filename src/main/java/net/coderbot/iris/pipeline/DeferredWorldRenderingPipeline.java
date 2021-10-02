@@ -82,6 +82,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass blockEntities;
 	@Nullable
+	private final Pass hand;
+	@Nullable
 	private final Pass glowingEntities;
 	@Nullable
 	private final Pass glint;
@@ -256,6 +258,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
 		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
+		this.hand = programs.getGbuffersHand().map(this::createPass).orElse(entities);
 		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
 		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
 		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
@@ -381,6 +384,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			case WEATHER:
 				return weather;
 			case HAND:
+				return hand;
 			default:
 				// TODO
 				throw new UnsupportedOperationException("TODO: Unsupported gbuffer program: " + program);

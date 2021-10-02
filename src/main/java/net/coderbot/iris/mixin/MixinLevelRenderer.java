@@ -8,6 +8,7 @@ import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.pipeline.HandRendering;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
@@ -15,7 +16,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.renderer.*;
 import net.minecraft.world.phys.Vec3;
+
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,6 +33,10 @@ import net.fabricmc.api.Environment;
 @Mixin(LevelRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinLevelRenderer {
+	@Shadow
+	@Final
+	private RenderBuffers renderBuffers;
+
 	private static final String RENDER_LEVEL = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
 	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;F)V";
@@ -59,6 +67,8 @@ public class MixinLevelRenderer {
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 
 		pipeline.beginLevelRendering();
+
+		HandRendering.prepareForRendering(renderBuffers, poseStack, tickDelta, camera, gameRenderer);
 	}
 
 	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
@@ -211,5 +221,11 @@ public class MixinLevelRenderer {
 										CallbackInfo ci) {
 		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
+	}
+
+	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
+	private void iris$renderHands(CallbackInfo ci) {
+		Minecraft.getInstance().getProfiler().popPush("iris_hand");
+		HandRendering.render();
 	}
 }
