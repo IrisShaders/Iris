@@ -29,7 +29,6 @@
     "MixinTweakFarPlane",
     "entity_render_context.MixinBlockEntityRenderDispatcher",
     "entity_render_context.MixinEntityRenderDispatcher",
-    "fabulous.MixinDisableFabulousGraphics",
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",
     "math.MixinMatrix4f",
