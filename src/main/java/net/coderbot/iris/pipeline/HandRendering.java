@@ -18,24 +18,24 @@ public class HandRendering {
 
 	private final Minecraft minecraft = Minecraft.getInstance();
 
-	private static GameRenderer gameRenderer;
-	private static RenderBuffers renderBuffers;
-	private static PoseStack poseStack;
-	private static float tickDelta;
-	private static Camera camera;
+	private GameRenderer gameRenderer;
+	private RenderBuffers renderBuffers;
+	private PoseStack poseStack;
+	private float tickDelta;
+	private Camera camera;
 
 	private boolean rendering;
 
 	private boolean canRender;
 
 	public void prepareForRendering(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer) {
-		canRender = !(camera.isDetached() || !(camera.getEntity() instanceof Player) || minecraft.options.hideGui || (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).isSleeping()) || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR);
+		this.canRender = !(camera.isDetached() || !(camera.getEntity() instanceof Player) || minecraft.options.hideGui || (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).isSleeping()) || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR);
 
-		HandRendering.gameRenderer = gameRenderer;
-		HandRendering.renderBuffers = renderBuffers;
-		HandRendering.poseStack = poseStack;
-		HandRendering.tickDelta = tickDelta;
-		HandRendering.camera = camera;
+		this.gameRenderer = gameRenderer;
+		this.renderBuffers = renderBuffers;
+		this.poseStack = poseStack;
+		this.tickDelta = tickDelta;
+		this.camera = camera;
 	}
 
 	public void render() {
