@@ -2,7 +2,6 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 
 import net.minecraft.client.Camera;
@@ -15,7 +14,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 
 public class HandRendering {
-	private static final Minecraft minecraft = Minecraft.getInstance();
+	public static final HandRendering INSTANCE = new HandRendering();
+
+	private final Minecraft minecraft = Minecraft.getInstance();
 
 	private static GameRenderer gameRenderer;
 	private static RenderBuffers renderBuffers;
@@ -23,11 +24,11 @@ public class HandRendering {
 	private static float tickDelta;
 	private static Camera camera;
 
-	private static boolean rendering;
+	private boolean rendering;
 
-	private static boolean canRender;
+	private boolean canRender;
 
-	public static void prepareForRendering(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer) {
+	public void prepareForRendering(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer) {
 		canRender = !(camera.isDetached() || !(camera.getEntity() instanceof Player) || minecraft.options.hideGui || (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).isSleeping()) || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR);
 
 		HandRendering.gameRenderer = gameRenderer;
@@ -37,7 +38,7 @@ public class HandRendering {
 		HandRendering.camera = camera;
 	}
 
-	public static void render() {
+	public void render() {
 		if(!canRender) return;
 
 		rendering = true;
@@ -72,7 +73,7 @@ public class HandRendering {
 		rendering = false;
 	}
 
-	public static boolean isRendering() {
+	public boolean isRendering() {
 		return rendering;
 	}
 }

@@ -68,7 +68,7 @@ public class MixinLevelRenderer {
 
 		pipeline.beginLevelRendering();
 
-		HandRendering.prepareForRendering(renderBuffers, poseStack, tickDelta, camera, gameRenderer);
+		HandRendering.INSTANCE.prepareForRendering(renderBuffers, poseStack, tickDelta, camera, gameRenderer);
 	}
 
 	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
@@ -226,6 +226,6 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "RETURN", by = -2, shift = At.Shift.BY))
 	private void iris$renderHands(CallbackInfo ci) {
 		Minecraft.getInstance().getProfiler().popPush("iris_hand");
-		HandRendering.render();
+		HandRendering.INSTANCE.render();
 	}
 }
