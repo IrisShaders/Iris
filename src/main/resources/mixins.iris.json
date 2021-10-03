@@ -29,7 +29,6 @@
     "MixinLevelRenderer",
     "MixinVertexBuffer",
     "LevelRendererAccessor",
-    "fabulous.MixinDisableFabulousGraphics",
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",
     "math.MixinMatrix4f",
