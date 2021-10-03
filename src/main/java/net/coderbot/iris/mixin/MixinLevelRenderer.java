@@ -224,7 +224,12 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "RETURN", by = -2, shift = At.Shift.BY))
-	private void iris$renderHands(CallbackInfo ci) {
+	private void iris$renderHands(PoseStack poseStack, float tickDelta, long limitTime,
+										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
+										LightTexture lightTexture, Matrix4f projection, 
+										CallbackInfo ci) {
+		if(!((GameRendererAccessor)gameRenderer).getRenderHand()) return;
+
 		Minecraft.getInstance().getProfiler().popPush("iris_hand");
 		HandRendering.INSTANCE.render();
 	}

@@ -28,7 +28,7 @@ public class HandRendering {
 	private boolean canRender;
 
 	public void prepareForRendering(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer) {
-		this.canRender = !(camera.isDetached() || !(camera.getEntity() instanceof Player) || minecraft.options.hideGui || (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).isSleeping()) || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR);
+		this.canRender = !(camera.isDetached() || !(camera.getEntity() instanceof Player) || ((GameRendererAccessor)gameRenderer).getPanoramicMode() | minecraft.options.hideGui || (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).isSleeping()) || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR);
 
 		this.gameRenderer = gameRenderer;
 		this.renderBuffers = renderBuffers;
