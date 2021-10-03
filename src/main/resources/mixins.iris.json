@@ -6,6 +6,7 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "DimensionTypeAccessor",
+    "GameRendererAccessor",
     "LevelRendererAccessor",
     "MixinBlockStateBehavior",
     "MixinClientLanguage",
