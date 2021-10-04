@@ -1,5 +1,6 @@
 package net.coderbot.iris.postprocess;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import org.lwjgl.opengl.GL11;
@@ -37,17 +38,17 @@ public class FullScreenQuadRenderer {
 		
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
-		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, quadBuffer);
+		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, quadBuffer);
 		DefaultVertexFormat.POSITION_TEX.setupBufferState(0L);
 	}
 
 	public void renderQuad() {
-		GL20C.glDrawArrays(GL20C.GL_TRIANGLE_STRIP, 0, 4);
+		GlStateManager._drawArrays(GL20C.GL_TRIANGLE_STRIP, 0, 4);
 	}
 
 	public static void end() {
 		DefaultVertexFormat.POSITION_TEX.clearBufferState();
-		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
+		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
 
 		RenderSystem.enableDepthTest();
 
@@ -76,11 +77,11 @@ public class FullScreenQuadRenderer {
 			0.0F, 0.0F
 		};
 
-		int buffer = GL20C.glGenBuffers();
+		int buffer = GlStateManager._glGenBuffers();
 
-		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, buffer);
+		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, buffer);
 		GL20C.glBufferData(GL20C.GL_ARRAY_BUFFER, vertices, GL20C.GL_STATIC_DRAW);
-		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
+		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
 
 		return buffer;
 	}

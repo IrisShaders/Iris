@@ -2,6 +2,7 @@
 
 package net.coderbot.iris.gl.shader;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
@@ -10,7 +11,7 @@ public class ProgramCreator {
 	private static final Logger LOGGER = LogManager.getLogger(ProgramCreator.class);
 
 	public static int create(String name, GlShader... shaders) {
-		int program = GL20C.glCreateProgram();
+		int program = GlStateManager.glCreateProgram();
 
 		// TODO: This is *really* hardcoded, we need to refactor this to support external calls
 		// to glBindAttribLocation
@@ -19,10 +20,10 @@ public class ProgramCreator {
 		GL20C.glBindAttribLocation(program, 12, "at_tangent");
 
 		for (GlShader shader : shaders) {
-			GL20C.glAttachShader(program, shader.getHandle());
+			GlStateManager.glAttachShader(program, shader.getHandle());
 		}
 
-		GL20C.glLinkProgram(program);
+		GlStateManager.glLinkProgram(program);
 
 		String log = GL20C.glGetProgramInfoLog(program);
 
@@ -30,7 +31,7 @@ public class ProgramCreator {
 			LOGGER.warn("Program link log for " + name + ": " + log);
 		}
 
-		int result = GL20C.glGetProgrami(program, GL20C.GL_LINK_STATUS);
+		int result = GlStateManager.glGetProgrami(program, GL20C.GL_LINK_STATUS);
 
 		if (result != GL20C.GL_TRUE) {
 			throw new RuntimeException("Shader program linking failed, see log for details");
