@@ -29,7 +29,7 @@ public class RenderTarget {
 		this.type = builder.type;
 
 		int[] textures = new int[2];
-		GL11C.glGenTextures(textures);
+		GlStateManager._genTextures(textures);
 
 		this.mainTexture = textures[0];
 		this.altTexture = textures[1];

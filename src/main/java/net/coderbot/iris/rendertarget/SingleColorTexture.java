@@ -13,7 +13,7 @@ import java.nio.IntBuffer;
 
 public class SingleColorTexture extends GlResource {
 	public SingleColorTexture(int red, int green, int blue, int alpha) {
-		super(GL11C.glGenTextures());
+		super(GlStateManager._genTexture());
 		GlStateManager._bindTexture(getGlId());
 
 		IntBuffer pixel = BufferUtils.createIntBuffer(4);

@@ -35,7 +35,7 @@ public class ShadowRenderTargets {
 		int[] drawBuffers = new int[formats.length];
 
 		targets = new int[formats.length];
-		GL20C.glGenTextures(targets);
+		GlStateManager._genTextures(targets);
 
 		depthTexture = new DepthTexture(resolution, resolution);
 		noTranslucents = new DepthTexture(resolution, resolution);
@@ -84,7 +84,7 @@ public class ShadowRenderTargets {
 	public void destroy() {
 		framebuffer.destroy();
 
-		GL20C.glDeleteTextures(targets);
+		GlStateManager._deleteTextures(targets);
 		depthTexture.destroy();
 		noTranslucents.destroy();
 	}

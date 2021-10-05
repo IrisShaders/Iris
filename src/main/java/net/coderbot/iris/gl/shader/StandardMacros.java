@@ -9,10 +9,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.mojang.blaze3d.platform.GlUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL20C;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
@@ -172,7 +172,7 @@ public class StandardMacros {
 	 * @return graphics driver prefixed with "MC_GL_RENDERER_"
 	 */
 	public static String getRenderer() {
-		String renderer = Objects.requireNonNull(GL11.glGetString(GL11C.GL_RENDERER)).toLowerCase(Locale.ROOT);
+		String renderer = Objects.requireNonNull(GlUtil.getRenderer()).toLowerCase(Locale.ROOT);
 		if (renderer.startsWith("amd")) {
 			return "MC_GL_RENDERER_RADEON";
 		} else if (renderer.startsWith("ati")) {
@@ -205,7 +205,7 @@ public class StandardMacros {
 	 * @return the graphics card prefixed with "MC_GL_VENDOR_"
 	 */
 	public static String getVendor() {
-		String vendor = Objects.requireNonNull(GL11.glGetString(GL11C.GL_VENDOR)).toLowerCase(Locale.ROOT);
+		String vendor = Objects.requireNonNull(GlUtil.getVendor()).toLowerCase(Locale.ROOT);
 		if (vendor.startsWith("ati")) {
 			return "MC_GL_VENDOR_ATI";
 		} else if (vendor.startsWith("intel")) {

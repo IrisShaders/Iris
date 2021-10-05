@@ -13,6 +13,7 @@ import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -237,7 +238,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private void setupMipmappingForBoundTexture(int filteringMode) {
-		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
+		IrisRenderSystem.generateMipmaps(GL20C.GL_TEXTURE_2D);
 		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
 	}
 

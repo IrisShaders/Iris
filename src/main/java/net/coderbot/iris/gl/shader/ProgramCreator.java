@@ -3,6 +3,7 @@
 package net.coderbot.iris.gl.shader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
@@ -15,9 +16,9 @@ public class ProgramCreator {
 
 		// TODO: This is *really* hardcoded, we need to refactor this to support external calls
 		// to glBindAttribLocation
-		GL20C.glBindAttribLocation(program, 10, "mc_Entity");
-		GL20C.glBindAttribLocation(program, 11, "mc_midTexCoord");
-		GL20C.glBindAttribLocation(program, 12, "at_tangent");
+		IrisRenderSystem.bindAttributeLocation(program, 10, "mc_Entity");
+		IrisRenderSystem.bindAttributeLocation(program, 11, "mc_midTexCoord");
+		IrisRenderSystem.bindAttributeLocation(program, 12, "at_tangent");
 
 		for (GlShader shader : shaders) {
 			GlStateManager.glAttachShader(program, shader.getHandle());

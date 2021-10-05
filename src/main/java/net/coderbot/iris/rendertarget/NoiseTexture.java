@@ -20,7 +20,7 @@ public class NoiseTexture extends GlResource {
 	int height;
 
 	public NoiseTexture(int width, int height) {
-		super(GL11C.glGenTextures());
+		super(GlStateManager._genTexture());
 		GlStateManager._bindTexture(getGlId());
 
 		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
