@@ -258,7 +258,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
 		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
-		this.hand = programs.getGbuffersHand().map(this::createPass).orElse(entities);
+		this.hand = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
 		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
 		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
 		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
