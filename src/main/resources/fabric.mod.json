@@ -20,10 +20,10 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "net.coderbot.iris.Iris"
+      "net.irisshaders.iris.Iris"
     ],
     "modmenu": [
-      "net.coderbot.iris.compat.modmenu.ModMenuIntegration"
+      "net.irisshaders.iris.compat.modmenu.ModMenuIntegration"
     ]
   },
 
