@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.coderbot.batchedentityrendering.mixin",
+  "package": "net.irisshaders.batchedentityrendering.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinBannerRenderer",

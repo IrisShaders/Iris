@@ -1,8 +1,8 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "plugin": "net.coderbot.iris.compat.physicsmod.mixin.YeetPhysicsMod",
-  "package": "net.coderbot.iris.compat.physicsmod.mixin",
+  "plugin": "net.irisshaders.iris.compat.physicsmod.mixin.YeetPhysicsMod",
+  "package": "net.irisshaders.iris.compat.physicsmod.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinLevelRenderer"

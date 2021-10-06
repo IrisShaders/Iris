@@ -1,8 +1,8 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.coderbot.iris.mixin",
-  "plugin": "net.coderbot.iris.mixin.shadows.IrisShadowsMixinPlugin",
+  "package": "net.irisshaders.iris.mixin",
+  "plugin": "net.irisshaders.iris.mixin.shadows.IrisShadowsMixinPlugin",
   "compatibilityLevel": "JAVA_8",
   "client": [
     "DimensionTypeAccessor",
