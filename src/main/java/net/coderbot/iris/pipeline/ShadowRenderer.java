@@ -364,11 +364,110 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 	}
 
+	private void setupGlState(float[] orthoMatrix) {
+		// Set up the shadow program
+		setupShadowProgram();
+
+		// Set up and clear our framebuffer
+		targets.getFramebuffer().bind();
+
+		// TODO: Support shadow clear color directives & disable buffer clearing
+		// Ensure that the color and depth values are cleared appropriately
+		RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		RenderSystem.clearDepth(1.0f);
+		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
+
+		// Set up the viewport
+		RenderSystem.viewport(0, 0, resolution, resolution);
+
+		// Set up our orthographic projection matrix and load it into the legacy matrix stack
+		RenderSystem.matrixMode(GL11.GL_PROJECTION);
+		RenderSystem.pushMatrix();
+		GL11.glLoadMatrixf(orthoMatrix);
+		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+	}
+
+	private void restoreGlState(Minecraft client) {
+		// Restore backface culling
+		RenderSystem.enableCull();
+
+		// Make sure to unload the projection matrix
+		RenderSystem.matrixMode(GL11.GL_PROJECTION);
+		RenderSystem.popMatrix();
+		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+
+		// Restore the old viewport
+		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
+	}
+
+	private void copyPreTranslucentDepth(LevelRendererAccessor levelRenderer) {
+		setProfilerTarget("translucent depth copy");
+
+		// Copy the content of the depth texture before rendering translucent content.
+		// This is needed for the shadowtex0 / shadowtex1 split.
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
+		RenderSystem.bindTexture(0);
+	}
+
+	private void renderEntities(LevelRendererAccessor levelRenderer, Frustum frustum, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
+		EntityRenderDispatcher dispatcher = levelRenderer.getEntityRenderDispatcher();
+
+		int shadowEntities = 0;
+
+		levelRenderer.getLevel().getProfiler().push("cull");
+
+		List<Entity> renderedEntities = new ArrayList<>(32);
+
+		// TODO: I'm sure that this can be improved / optimized.
+		for (Entity entity : getLevel().entitiesForRendering()) {
+			if (!dispatcher.shouldRender(entity, frustum, cameraX, cameraY, cameraZ) || entity.isSpectator()) {
+				continue;
+			}
+
+			renderedEntities.add(entity);
+		}
+
+		setProfilerTarget("sort");
+
+		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
+		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
+
+		setProfilerTarget("build geometry");
+
+		for (Entity entity : renderedEntities) {
+			levelRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
+			shadowEntities++;
+		}
+
+		renderedShadowEntities = shadowEntities;
+	}
+
+	private void renderBlockEntities(LevelRendererAccessor levelRenderer, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
+		levelRenderer.getLevel().getProfiler().push("build blockentities");
+
+		int shadowBlockEntities = 0;
+
+		// TODO: Use visibleChunks to cull block entities
+		for (BlockEntity entity : getLevel().blockEntityList) {
+			modelView.pushPose();
+			BlockPos pos = entity.getBlockPos();
+			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
+			BlockEntityRenderDispatcher.instance.render(entity, tickDelta, modelView, bufferSource);
+			modelView.popPose();
+
+			shadowBlockEntities++;
+		}
+
+		renderedShadowBlockEntities = shadowBlockEntities;
+	}
+
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		Minecraft client = Minecraft.getInstance();
 
-		levelRenderer.getLevel().getProfiler().popPush("shadows");
+		setProfilerTarget("shadows");
 		ACTIVE = true;
 
 		// Create our camera
@@ -422,31 +521,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		client.smartCull = wasChunkCullingEnabled;
 
-		levelRenderer.getLevel().getProfiler().popPush("terrain");
+		setProfilerTarget("terrain");
 
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
 
-		// Set up the shadow program
-		setupShadowProgram();
-
-		// Set up and clear our framebuffer
-		targets.getFramebuffer().bind();
-
-		// TODO: Support shadow clear color directives & disable buffer clearing
-		// Ensure that the color and depth values are cleared appropriately
-		RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		RenderSystem.clearDepth(1.0f);
-		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
-
-		// Set up the viewport
-		RenderSystem.viewport(0, 0, resolution, resolution);
-
-		// Set up our orthographic projection matrix and load it into the legacy matrix stack
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.pushMatrix();
-		GL11.glLoadMatrixf(orthoMatrix);
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+		setupGlState(orthoMatrix);
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
@@ -468,7 +548,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// without shaders, which doesn't integrate with their shadow distortion code.
 		setupShadowProgram();
 
-		levelRenderer.getLevel().getProfiler().popPush("entities");
+		setProfilerTarget("entities");
 
 		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
 		// it is set to a fixed value.
@@ -492,72 +572,21 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		MultiBufferSource.BufferSource bufferSource = buffers.bufferSource();
-		EntityRenderDispatcher dispatcher = levelRenderer.getEntityRenderDispatcher();
 
-		int shadowEntities = 0;
+		renderEntities(levelRenderer, entityShadowFrustum, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
 
-		levelRenderer.getLevel().getProfiler().push("cull");
+		renderBlockEntities(levelRenderer, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
 
-		List<Entity> renderedEntities = new ArrayList<>(32);
-
-		// TODO: I'm sure that this can be improved / optimized.
-		for (Entity entity : getLevel().entitiesForRendering()) {
-			if (!dispatcher.shouldRender(entity, entityShadowFrustum, cameraX, cameraY, cameraZ) || entity.isSpectator()) {
-				continue;
-			}
-
-			renderedEntities.add(entity);
-		}
-
-		levelRenderer.getLevel().getProfiler().popPush("sort");
-
-		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
-		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
-
-		levelRenderer.getLevel().getProfiler().popPush("build geometry");
-
-		for (Entity entity : renderedEntities) {
-			levelRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
-			shadowEntities++;
-		}
-
-		levelRenderer.getLevel().getProfiler().pop();
-
-		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
-
-		int shadowBlockEntities = 0;
-
-		// TODO: Use visibleChunks to cull block entities
-		for (BlockEntity entity : getLevel().blockEntityList) {
-			modelView.pushPose();
-			BlockPos pos = entity.getBlockPos();
-			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			BlockEntityRenderDispatcher.instance.render(entity, tickDelta, modelView, bufferSource);
-			modelView.popPose();
-
-			shadowBlockEntities++;
-		}
-
-		renderedShadowEntities = shadowEntities;
-		renderedShadowBlockEntities = shadowBlockEntities;
-
-		levelRenderer.getLevel().getProfiler().popPush("draw entities");
+		setProfilerTarget("draw entities");
 
 		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
 		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
 		// shadow...
 		bufferSource.endBatch();
 
-		levelRenderer.getLevel().getProfiler().popPush("translucent depth copy");
+		copyPreTranslucentDepth(levelRenderer);
 
-		// Copy the content of the depth texture before rendering translucent content.
-		// This is needed for the shadowtex0 / shadowtex1 split.
-		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
-		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
-		RenderSystem.bindTexture(0);
-
-		levelRenderer.getLevel().getProfiler().popPush("translucent terrain");
+		setProfilerTarget("translucent terrain");
 
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
@@ -575,33 +604,24 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		debugStringTerrain = ((LevelRenderer) levelRenderer).getChunkStatistics();
 
-		levelRenderer.getLevel().getProfiler().popPush("generate mipmaps");
+		setProfilerTarget("generate mipmaps");
 
 		generateMipmaps();
 
 		levelRenderer.getLevel().getProfiler().pop();
 
-		// Restore backface culling
-		RenderSystem.enableCull();
-
-		// Make sure to unload the projection matrix
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.popMatrix();
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+		restoreGlState(client);
 
 		pipeline.endShadowRender();
 		// Note: This unbinds the shadow framebuffer
 		pipeline.popProgram(GbufferProgram.NONE);
-
-		// Restore the old viewport
-		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
 
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
 
 		ACTIVE = false;
-		levelRenderer.getLevel().getProfiler().popPush("updatechunks");
+		setProfilerTarget("updatechunks");
 	}
 
 	@Override
@@ -638,6 +658,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	private static ClientLevel getLevel() {
 		return Objects.requireNonNull(Minecraft.getInstance().level);
+	}
+
+	private void setProfilerTarget(String target) {
+		getLevel().getProfiler().popPush(target);
 	}
 
 	private static float getSkyAngle() {
