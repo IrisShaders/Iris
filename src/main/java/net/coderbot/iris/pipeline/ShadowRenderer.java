@@ -385,6 +385,15 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.pushMatrix();
 		GL11.glLoadMatrixf(orthoMatrix);
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+
+		// Disable backface culling
+		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
+		// shadow.
+		//
+		// However, it only partially resolves issues of light leaking into caves.
+		//
+		// TODO: Better way of preventing light from leaking into places where it shouldn't
+		RenderSystem.disableCull();
 	}
 
 	private void restoreGlState(Minecraft client) {
@@ -527,15 +536,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		pipeline.beginShadowRender();
 
 		setupGlState(orthoMatrix);
-
-		// Disable backface culling
-		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
-		// shadow.
-		//
-		// However, it only partially resolves issues of light leaking into caves.
-		//
-		// TODO: Better way of preventing light from leaking into places where it shouldn't
-		RenderSystem.disableCull();
 
 		// Render all opaque terrain
 		levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ);
