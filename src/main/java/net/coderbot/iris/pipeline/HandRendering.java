@@ -2,8 +2,10 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix4f;
 
 import net.coderbot.iris.mixin.GameRendererAccessor;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -48,6 +50,8 @@ public class HandRendering {
 
         final PoseStack.Pose pose = poseStack.last();
 
+		Matrix4f oldProjectionMatrix = CapturedRenderingState.INSTANCE.getGbufferProjection();
+
 		gameRenderer.resetProjectionMatrix(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
 
         pose.pose().setIdentity();
@@ -60,6 +64,8 @@ public class HandRendering {
 		minecraft.getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, renderBuffers.bufferSource(), minecraft.player, minecraft.getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
 		poseStack.popPose();
+
+		CapturedRenderingState.INSTANCE.setGbufferProjection(oldProjectionMatrix);
 
 		rendering = false;
 	}
