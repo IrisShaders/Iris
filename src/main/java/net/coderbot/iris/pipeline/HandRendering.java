@@ -50,8 +50,6 @@ public class HandRendering {
 
         final PoseStack.Pose pose = poseStack.last();
 
-		Matrix4f oldProjectionMatrix = CapturedRenderingState.INSTANCE.getGbufferProjection();
-
 		gameRenderer.resetProjectionMatrix(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
 
         pose.pose().setIdentity();
@@ -64,8 +62,6 @@ public class HandRendering {
 		minecraft.getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, renderBuffers.bufferSource(), minecraft.player, minecraft.getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
 		poseStack.popPose();
-
-		CapturedRenderingState.INSTANCE.setGbufferProjection(oldProjectionMatrix);
 
 		rendering = false;
 	}
