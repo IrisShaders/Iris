@@ -35,7 +35,7 @@ public class HandRenderer {
 		this.camera = camera;
 	}
 
-	private void setupProjectionMatrix() {
+	private void setupGlState() {
         final PoseStack.Pose pose = poseStack.last();
 
 		gameRenderer.resetProjectionMatrix(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
@@ -57,7 +57,7 @@ public class HandRenderer {
 
 		poseStack.pushPose();
 
-		setupProjectionMatrix();
+		setupGlState();
 
 		minecraft.getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, renderBuffers.bufferSource(), minecraft.player, minecraft.getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
