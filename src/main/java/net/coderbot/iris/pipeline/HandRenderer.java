@@ -2,10 +2,8 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
 
 import net.coderbot.iris.mixin.GameRendererAccessor;
-import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -14,9 +12,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 
-public class HandRendering {
-	public static final HandRendering INSTANCE = new HandRendering();
-
+public class HandRenderer {
 	private final Minecraft minecraft = Minecraft.getInstance();
 
 	private GameRenderer gameRenderer;
@@ -25,7 +21,7 @@ public class HandRendering {
 	private float tickDelta;
 	private Camera camera;
 
-	private boolean rendering;
+	public static boolean ACTIVE;
 
 	private boolean canRender;
 
@@ -39,15 +35,7 @@ public class HandRendering {
 		this.camera = camera;
 	}
 
-	public void render() {
-		if(!canRender) return;
-
-		rendering = true;
-
-		RenderSystem.clear(256, Minecraft.ON_OSX);
-
-		poseStack.pushPose();
-
+	private void setupProjectionMatrix() {
         final PoseStack.Pose pose = poseStack.last();
 
 		gameRenderer.resetProjectionMatrix(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
@@ -58,15 +46,23 @@ public class HandRendering {
 		if(minecraft.options.bobView) {
 			((GameRendererAccessor)gameRenderer).invokeBobView(poseStack, tickDelta);
 		}
+	}
+
+	public void render() {
+		if(!canRender) return;
+
+		ACTIVE = true;
+
+		RenderSystem.clear(256, Minecraft.ON_OSX);
+
+		poseStack.pushPose();
+
+		setupProjectionMatrix();
 
 		minecraft.getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, renderBuffers.bufferSource(), minecraft.player, minecraft.getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
 		poseStack.popPose();
 
-		rendering = false;
-	}
-
-	public boolean isRendering() {
-		return rendering;
+		ACTIVE = false;
 	}
 }

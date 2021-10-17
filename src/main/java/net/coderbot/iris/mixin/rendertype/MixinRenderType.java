@@ -3,7 +3,7 @@ package net.coderbot.iris.mixin.rendertype;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.layer.UseProgramRenderStateShard;
-import net.coderbot.iris.pipeline.HandRendering;
+import net.coderbot.iris.pipeline.HandRenderer;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -152,7 +152,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypes(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		if(HandRendering.INSTANCE.isRendering()) {
+		if(HandRenderer.ACTIVE) {
 			cir.setReturnValue(wrap(base, GbufferProgram.HAND));
 		} else {
 			cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));

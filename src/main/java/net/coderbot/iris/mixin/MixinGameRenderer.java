@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.HandRendering;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import org.lwjgl.opengl.GL20;
@@ -35,7 +35,7 @@ public class MixinGameRenderer {
 	// https://github.com/jellysquid3/sodium-fabric/blob/1df506fd39dac56bb410725c245e6e51208ec732/src/main/java/me/jellysquid/mods/sodium/client/render/chunk/shader/ChunkProgram.java#L56
 	@Inject(method = "resetProjectionMatrix", at = @At("HEAD"))
 	private void iris$captureProjectionMatrix(Matrix4f projectionMatrix, CallbackInfo callback) {
-		if(HandRendering.INSTANCE.isRendering()) return;
+		if(HandRenderer.ACTIVE) return; // TODO: This probably should be replaced with something better
 
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projectionMatrix);
 	}
