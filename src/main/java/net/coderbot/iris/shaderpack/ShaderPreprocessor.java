@@ -1,5 +1,12 @@
 package net.coderbot.iris.shaderpack;
 
+import net.coderbot.iris.Iris;
+import org.anarres.cpp.DefaultPreprocessorListener;
+import org.anarres.cpp.Feature;
+import org.anarres.cpp.Preprocessor;
+import org.anarres.cpp.StringLexerSource;
+import org.anarres.cpp.Token;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,7 +25,7 @@ public class ShaderPreprocessor {
 			processed.append('\n');
 		}
 
-		return processed.toString();
+		return glslPreprocessSource(processed.toString());
 	}
 
 	private static List<String> processInternal(Path rootPath, Path shaderPath, String source) throws IOException {
@@ -86,5 +93,55 @@ public class ShaderPreprocessor {
 
 	private static String readFile(Path path) throws IOException {
 		return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+	}
+
+
+	// Derived from GlShader from Canvas, licenced under LGPL
+	public static String glslPreprocessSource(String source) {
+		// NB: This doesn't work when ran in the above methods, only directly when creating the pass for some reason.
+		// The C preprocessor won't understand the #version token, so we must remove it and readd it later.
+
+		source = source.substring(source.indexOf("#version"));
+		int versionStringEnd = source.indexOf('\n');
+
+		String versionLine = source.substring(0, versionStringEnd);
+		source = source.substring(versionStringEnd + 1);
+
+		@SuppressWarnings("resource")
+		final Preprocessor pp = new Preprocessor();
+		pp.setListener(new DefaultPreprocessorListener());
+		pp.addInput(new StringLexerSource(source, true));
+		pp.addFeature(Feature.KEEPCOMMENTS);
+
+		final StringBuilder builder = new StringBuilder();
+
+		try {
+			for (;;) {
+				final Token tok = pp.token();
+				if (tok == null) break;
+				if (tok.getType() == Token.EOF) break;
+				builder.append(tok.getText());
+			}
+		} catch (final Exception e) {
+			Iris.logger.error("GLSL source pre-processing failed", e);
+		}
+
+		builder.append("\n");
+
+		source = builder.toString();
+
+		// restore GLSL version
+		source = versionLine + "\n" + source;
+
+		// strip leading whitepsace before newline, makes next change more reliable
+		source = source.replaceAll("[ \t]*[\r\n]", "\n");
+		// consolidate newlines
+		source = source.replaceAll("\n{2,}", "\n\n");
+		// inefficient way to remove multiple orhpaned comment blocks
+		source = source.replaceAll("\\/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*\\/[\\s]+\\/\\*", "/*");
+		source = source.replaceAll("\\/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*\\/[\\s]+\\/\\*", "/*");
+		source = source.replaceAll("\\/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*\\/[\\s]+\\/\\*", "/*");
+
+		return source;
 	}
 }
