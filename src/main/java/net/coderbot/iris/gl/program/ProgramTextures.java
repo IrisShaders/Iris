@@ -6,7 +6,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.image.ImageBinding;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GLCapabilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,8 +62,10 @@ public class ProgramTextures {
 		private final ImmutableList.Builder<SamplerBinding> samplers;
 		private final ImmutableList.Builder<ImageBinding> images;
 		private final List<GlUniform1iCall> calls;
-		private int remainingTextureUnits;
 		private int nextTextureUnit;
+		private int nextImageUnit;
+		private final int maxTextureUnits;
+		private final int maxImageUnits;
 
 		private Builder(int program, Set<Integer> reservedTextureUnits) {
 			this.program = program;
@@ -70,25 +74,15 @@ public class ProgramTextures {
 			this.images = ImmutableList.builder();
 			this.calls = new ArrayList<>();
 
-			int maxTextureUnits = SamplerLimits.get().getMaxTextureUnits();
+			maxTextureUnits = SamplerLimits.get().getMaxTextureUnits();
+			maxImageUnits = SamplerLimits.get().getMaxImageUnits();
 
-			for (int unit : reservedTextureUnits) {
-				if (unit >= maxTextureUnits) {
-					throw new IllegalStateException("Cannot mark texture unit " + unit + " as reserved because that " +
-							"texture unit isn't available on this system! Only " + maxTextureUnits +
-							" texture units are available.");
-				}
-			}
-
-			this.remainingTextureUnits = maxTextureUnits - reservedTextureUnits.size();
 			this.nextTextureUnit = 0;
+			this.nextImageUnit = 0;
 
 			while (reservedTextureUnits.contains(nextTextureUnit)) {
 				nextTextureUnit += 1;
 			}
-
-			//System.out.println("Begin building samplers. Reserved texture units are " + reservedTextureUnits +
-			//		", next texture unit is " + nextTextureUnit + ", there are " + remainingTextureUnits + " units remaining.");
 		}
 
 		public void addExternalSampler(int textureUnit, String... names) {
@@ -106,7 +100,6 @@ public class ProgramTextures {
 				}
 
 				// Set up this sampler uniform to use this particular texture unit.
-				//System.out.println("Binding external sampler " + name + " to texture unit " + textureUnit);
 				calls.add(new GlUniform1iCall(location, textureUnit));
 			}
 		}
@@ -139,14 +132,22 @@ public class ProgramTextures {
 				return;
 			}
 
+			if (!GL.getCapabilities().OpenGL42) {
+				throw new IllegalStateException("Shader tried to bind an image unit, but OpenGL 4.2 is not supported.");
+			}
+
 			if (name.startsWith("colorimg") && name.length() == 9) {
 				int imageIndex = Character.getNumericValue(name.charAt(8));
 
-				if (imageIndex >= 0 && imageIndex <= 5) {
-					images.add(new ImageBinding(imageIndex, internalFormat, textureID));
-
-					calls.add(new GlUniform1iCall(location, imageIndex));
+				if (nextImageUnit >= maxImageUnits) {
+					throw new IllegalStateException("Shader tried to allocate more image units than are available on the GPU.");
 				}
+
+				images.add(new ImageBinding(nextImageUnit, internalFormat, textureID));
+
+				calls.add(new GlUniform1iCall(location, nextImageUnit));
+
+				nextImageUnit += 1;
 			}
 		}
 
@@ -160,11 +161,9 @@ public class ProgramTextures {
 				}
 
 				// Make sure that we aren't out of texture units.
-				if (remainingTextureUnits <= 0) {
+				if (nextTextureUnit >= maxTextureUnits) {
 					throw new IllegalStateException("No more available texture units while activating sampler " + name);
 				}
-
-				//System.out.println("Binding dynamic sampler " + name + " to texture unit " + nextTextureUnit);
 
 				// Set up this sampler uniform to use this particular texture unit.
 				calls.add(new GlUniform1iCall(location, nextTextureUnit));
@@ -179,14 +178,11 @@ public class ProgramTextures {
 
 			samplers.add(new SamplerBinding(nextTextureUnit, textureID));
 
-			remainingTextureUnits -= 1;
 			nextTextureUnit += 1;
 
-			while (remainingTextureUnits > 0 && reservedTextureUnits.contains(nextTextureUnit)) {
+			while (reservedTextureUnits.contains(nextTextureUnit)) {
 				nextTextureUnit += 1;
 			}
-
-			//System.out.println("The next unit is " + nextTextureUnit + ", there are " + remainingTextureUnits + " units remaining.");
 
 			return true;
 		}

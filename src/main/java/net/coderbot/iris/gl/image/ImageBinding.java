@@ -8,15 +8,15 @@ import java.util.function.IntSupplier;
 public class ImageBinding {
 	private final int imageUnit;
 	private final int internalFormat;
-	private final IntSupplier texture;
+	private final IntSupplier textureID;
 
-	public ImageBinding(int imageUnit, int internalFormat, IntSupplier texture) {
-		this.texture = texture;
+	public ImageBinding(int imageUnit, int internalFormat, IntSupplier textureID) {
+		this.textureID = textureID;
 		this.imageUnit = imageUnit;
 		this.internalFormat = internalFormat;
 	}
 
 	public void update() {
-		GL42C.glBindImageTexture(imageUnit, texture.getAsInt(), 0, false, 0, GL42C.GL_READ_WRITE, internalFormat);
+		GL42C.glBindImageTexture(imageUnit, textureID.getAsInt(), 0, false, 0, GL42C.GL_READ_WRITE, internalFormat);
 	}
 }
