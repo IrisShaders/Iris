@@ -2,7 +2,7 @@ package net.coderbot.iris.samplers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import net.coderbot.iris.gl.sampler.SamplerHolder;
+import net.coderbot.iris.gl.program.ProgramTextures;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
@@ -10,7 +10,6 @@ import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 
-import java.util.OptionalInt;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -32,7 +31,7 @@ public class IrisSamplers {
 		// no construction allowed
 	}
 
-	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,
+	public static void addRenderTargetSamplers(ProgramTextures.Builder samplers, Supplier<ImmutableSet<Integer>> flipped,
 											   RenderTargets renderTargets, boolean isFullscreenPass) {
 		// colortex0,1,2,3 are only able to be sampled from fullscreen passes.
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
@@ -41,7 +40,7 @@ public class IrisSamplers {
 		for (int i = startIndex; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
 			final int index = i;
 
-			IntSupplier sampler = () -> {
+			IntSupplier textureID = () -> {
 				ImmutableSet<Integer> flippedBuffers = flipped.get();
 				RenderTarget target = renderTargets.get(index);
 
@@ -52,31 +51,35 @@ public class IrisSamplers {
 				}
 			};
 
-			OptionalInt internalFormat = OptionalInt.of(renderTargets.get(index).getInternalFormat().getGlFormat());
+			if (i <= 5) {
+				final String imageName = "colorimg" + i;
+				final int internalFormat = renderTargets.get(index).getInternalFormat().getGlFormat();
+
+				samplers.addTextureImage(textureID, internalFormat, imageName);
+			}
 
 			final String name = "colortex" + i;
-			final String imageName = "colorimg" + i;
 
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
 
 				// colortex0 is the default sampler in fullscreen passes
 				if (i == 0 && isFullscreenPass) {
-					samplers.addDefaultSampler(sampler, internalFormat, name, imageName, legacyName);
+					samplers.addDefaultSampler(textureID, name, legacyName);
 				} else {
-					samplers.addDynamicSampler(sampler, internalFormat, name, imageName, legacyName);
+					samplers.addDynamicSampler(textureID, name, legacyName);
 				}
 			} else {
-				samplers.addDynamicSampler(sampler, internalFormat, name);
+				samplers.addDynamicSampler(textureID, name);
 			}
 		}
 	}
 
-	public static void addNoiseSampler(SamplerHolder samplers, AbstractTexture texture) {
-		samplers.addDynamicSampler(texture::getId, OptionalInt.empty(), "noisetex");
+	public static void addNoiseSampler(ProgramTextures.Builder samplers, AbstractTexture texture) {
+		samplers.addDynamicSampler(texture::getId, "noisetex");
 	}
 
-	public static boolean hasShadowSamplers(SamplerHolder samplers) {
+	public static boolean hasShadowSamplers(ProgramTextures.Builder samplers) {
 		// TODO: Keep this up to date with the actual definitions.
 		ImmutableList<String> shadowSamplers = ImmutableList.of("shadowtex0", "shadowtex1", "shadow", "watershadow",
 				"shadowcolor", "shadowcolor0", "shadowcolor1");
@@ -90,7 +93,7 @@ public class IrisSamplers {
 		return false;
 	}
 
-	public static boolean addShadowSamplers(SamplerHolder samplers, ShadowMapRenderer shadowMapRenderer) {
+	public static boolean addShadowSamplers(ProgramTextures.Builder samplers, ShadowMapRenderer shadowMapRenderer) {
 		boolean usesShadows;
 
 		// TODO: figure this out from parsing the shader source code to be 100% compatible with the legacy
@@ -99,38 +102,38 @@ public class IrisSamplers {
 
 		if (waterShadowEnabled) {
 			usesShadows = true;
-			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, OptionalInt.empty(), "shadowtex0", "watershadow");
+			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "watershadow");
 			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId,
-					OptionalInt.empty(), "shadowtex1", "shadow");
+					"shadowtex1", "shadow");
 		} else {
-			usesShadows = samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, OptionalInt.empty(), "shadowtex0", "shadow");
-			usesShadows |= samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId, OptionalInt.empty(), "shadowtex1");
+			usesShadows = samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "shadow");
+			usesShadows |= samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId, "shadowtex1");
 		}
 
-		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture0Id, OptionalInt.empty(), "shadowcolor", "shadowcolor0");
-		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture1Id, OptionalInt.empty(), "shadowcolor1");
+		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture0Id, "shadowcolor", "shadowcolor0");
+		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture1Id, "shadowcolor1");
 
 		return usesShadows;
 	}
 
-	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
+	public static void addLevelSamplers(ProgramTextures.Builder samplers, AbstractTexture normals, AbstractTexture specular) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
-		samplers.addDynamicSampler(normals::getId, OptionalInt.empty(), "normals");
-		samplers.addDynamicSampler(specular::getId, OptionalInt.empty(), "specular");
+		samplers.addDynamicSampler(normals::getId, "normals");
+		samplers.addDynamicSampler(specular::getId, "specular");
 	}
 
-	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
-		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId, OptionalInt.empty(), "depthtex0");
+	public static void addWorldDepthSamplers(ProgramTextures.Builder samplers, RenderTargets renderTargets) {
+		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId, "depthtex0");
 		// TODO: Should depthtex2 be made available to gbuffer / shadow programs?
-		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, OptionalInt.empty(), "depthtex1");
+		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, "depthtex1");
 	}
 
-	public static void addCompositeSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
+	public static void addCompositeSamplers(ProgramTextures.Builder samplers, RenderTargets renderTargets) {
 		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId,
-				OptionalInt.empty(), "gdepthtex", "depthtex0");
+				"gdepthtex", "depthtex0");
 		// TODO: "no translucents, no hand" depth texture when in-world hand rendering is implemented.
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId,
-				OptionalInt.empty(), "depthtex1", "depthtex2");
+				 "depthtex1", "depthtex2");
 	}
 }

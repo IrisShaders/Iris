@@ -257,10 +257,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
-		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
-		IrisSamplers.addLevelSamplers(builder, normals, specular);
-		IrisSamplers.addNoiseSampler(builder, noise);
-		IrisSamplers.addShadowSamplers(builder, this);
+		IrisSamplers.addRenderTargetSamplers(builder.samplers, flipped, gbufferRenderTargets, false);
+		IrisSamplers.addLevelSamplers(builder.samplers, normals, specular);
+		IrisSamplers.addNoiseSampler(builder.samplers, noise);
+		IrisSamplers.addShadowSamplers(builder.samplers, this);
 
 		return builder.build();
 	}

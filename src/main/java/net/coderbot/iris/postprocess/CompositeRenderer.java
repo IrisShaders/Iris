@@ -192,12 +192,12 @@ public class CompositeRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
-		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
-		IrisSamplers.addNoiseSampler(builder, noiseTexture);
-		IrisSamplers.addCompositeSamplers(builder, renderTargets);
+		IrisSamplers.addRenderTargetSamplers(builder.samplers, () -> flipped, renderTargets, true);
+		IrisSamplers.addNoiseSampler(builder.samplers, noiseTexture);
+		IrisSamplers.addCompositeSamplers(builder.samplers, renderTargets);
 
-		if (IrisSamplers.hasShadowSamplers(builder)) {
-			IrisSamplers.addShadowSamplers(builder, shadowMapRendererSupplier.get());
+		if (IrisSamplers.hasShadowSamplers(builder.samplers)) {
+			IrisSamplers.addShadowSamplers(builder.samplers, shadowMapRendererSupplier.get());
 		}
 
 		// TODO: Don't duplicate this with FinalPassRenderer

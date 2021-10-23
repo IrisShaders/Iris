@@ -6,7 +6,7 @@ import java.util.function.IntFunction;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.program.ProgramTextures;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
@@ -30,11 +30,11 @@ public class SodiumTerrainPipeline {
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
 
-	private final IntFunction<ProgramSamplers> createTerrainSamplers;
-	private final IntFunction<ProgramSamplers> createShadowSamplers;
+	private final IntFunction<ProgramTextures> createTerrainSamplers;
+	private final IntFunction<ProgramTextures> createShadowSamplers;
 
-	public SodiumTerrainPipeline(ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
-								 IntFunction<ProgramSamplers> createShadowSamplers) {
+	public SodiumTerrainPipeline(ProgramSet programSet, IntFunction<ProgramTextures> createTerrainSamplers,
+								 IntFunction<ProgramTextures> createShadowSamplers) {
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
@@ -214,11 +214,11 @@ public class SodiumTerrainPipeline {
 		return uniforms.buildUniforms();
 	}
 
-	public ProgramSamplers initTerrainSamplers(int programId) {
+	public ProgramTextures initTerrainSamplers(int programId) {
 		return createTerrainSamplers.apply(programId);
 	}
 
-	public ProgramSamplers initShadowSamplers(int programId) {
+	public ProgramTextures initShadowSamplers(int programId) {
 		return createShadowSamplers.apply(programId);
 	}
 

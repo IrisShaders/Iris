@@ -6,9 +6,9 @@ import org.lwjgl.opengl.GL20C;
 
 public final class Program extends GlResource {
 	private final ProgramUniforms uniforms;
-	private final ProgramSamplers samplers;
+	private final ProgramTextures samplers;
 
-	Program(int program, ProgramUniforms uniforms, ProgramSamplers samplers) {
+	Program(int program, ProgramUniforms uniforms, ProgramTextures samplers) {
 		super(program);
 
 		this.uniforms = uniforms;

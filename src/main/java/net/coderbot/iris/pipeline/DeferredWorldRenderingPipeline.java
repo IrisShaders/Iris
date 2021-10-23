@@ -15,7 +15,7 @@ import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.program.ProgramTextures;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.postprocess.BufferFlipper;
@@ -211,8 +211,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
-		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
-			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+		IntFunction<ProgramTextures> createTerrainSamplers = (programId) -> {
+			ProgramTextures.Builder builder = ProgramTextures.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 			IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
 			IrisSamplers.addLevelSamplers(builder, normals, specular);
@@ -227,8 +227,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return builder.build();
 		};
 
-		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
-			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+		IntFunction<ProgramTextures> createShadowTerrainSamplers = (programId) -> {
+			ProgramTextures.Builder builder = ProgramTextures.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 			IrisSamplers.addRenderTargetSamplers(builder, () -> flippedBeforeTerrain, renderTargets, false);
 			IrisSamplers.addLevelSamplers(builder, normals, specular);
@@ -485,14 +485,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
-		IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
-		IrisSamplers.addLevelSamplers(builder, normals, specular);
-		IrisSamplers.addWorldDepthSamplers(builder, renderTargets);
-		IrisSamplers.addNoiseSampler(builder, noise);
+		IrisSamplers.addRenderTargetSamplers(builder.samplers, flipped, renderTargets, false);
+		IrisSamplers.addLevelSamplers(builder.samplers, normals, specular);
+		IrisSamplers.addWorldDepthSamplers(builder.samplers, renderTargets);
+		IrisSamplers.addNoiseSampler(builder.samplers, noise);
 
-		if (IrisSamplers.hasShadowSamplers(builder)) {
+		if (IrisSamplers.hasShadowSamplers(builder.samplers)) {
 			createShadowMapRenderer.run();
-			IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
+			IrisSamplers.addShadowSamplers(builder.samplers, shadowMapRenderer);
 		}
 
 		GlFramebuffer framebufferBeforeTranslucents =

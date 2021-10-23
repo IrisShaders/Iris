@@ -2,7 +2,6 @@ package net.coderbot.iris.gl.program;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderConstants;
@@ -12,10 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 
-import java.util.OptionalInt;
-import java.util.function.IntSupplier;
-
-public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder {
+public class ProgramBuilder extends ProgramUniforms.Builder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
 	public static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
@@ -30,13 +26,13 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		.build();
 
 	private final int program;
-	private final ProgramSamplers.Builder samplers;
+	public final ProgramTextures.Builder samplers;
 
 	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
 		super(name, program);
 
 		this.program = program;
-		this.samplers = ProgramSamplers.builder(program, reservedTextureUnits);
+		this.samplers = ProgramTextures.builder(program, reservedTextureUnits);
 	}
 
 	public void bindAttributeLocation(int index, String name) {
@@ -90,25 +86,5 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile " + shaderType + " shader for program " + name, e);
 		}
-	}
-
-	@Override
-	public void addExternalSampler(int textureUnit, String... names) {
-		samplers.addExternalSampler(textureUnit, names);
-	}
-
-	@Override
-	public boolean hasSampler(String name) {
-		return samplers.hasSampler(name);
-	}
-
-	@Override
-	public boolean addDefaultSampler(IntSupplier sampler, OptionalInt internalFormat, Runnable postBind, String... names) {
-		return samplers.addDefaultSampler(sampler, internalFormat, postBind, names);
-	}
-
-	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, OptionalInt internalFormat, Runnable postBind, String... names) {
-		return samplers.addDynamicSampler(sampler, internalFormat, postBind, names);
 	}
 }
