@@ -1,8 +1,6 @@
 package net.coderbot.iris.gl.sampler;
 
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL42C;
+import org.lwjgl.opengl.*;
 
 public class SamplerLimits {
 	private final int maxTextureUnits;
@@ -14,6 +12,8 @@ public class SamplerLimits {
 
 		if (GL.getCapabilities().OpenGL42) {
 			this.maxImageUnits = GL42C.glGetInteger(GL42C.GL_MAX_IMAGE_UNITS);
+		} else if (GL.getCapabilities().GL_EXT_shader_image_load_store) {
+			this.maxImageUnits = EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT;
 		} else {
 			this.maxImageUnits = 0;
 		}

@@ -6,13 +6,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.image.ImageBinding;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
-import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GLCapabilities;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.IntSupplier;
 
