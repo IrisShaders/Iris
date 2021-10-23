@@ -132,22 +132,20 @@ public class ProgramTextures {
 				return;
 			}
 
-			if (!GL.getCapabilities().OpenGL42) {
-				throw new IllegalStateException("Shader tried to bind an image unit, but OpenGL 4.2 is not supported.");
+			if (nextImageUnit >= maxImageUnits) {
+				throw new IllegalStateException("Shader tried to allocate more image units than are available on the GPU.");
 			}
 
 			if (name.startsWith("colorimg") && name.length() == 9) {
 				int imageIndex = Character.getNumericValue(name.charAt(8));
 
-				if (nextImageUnit >= maxImageUnits) {
-					throw new IllegalStateException("Shader tried to allocate more image units than are available on the GPU.");
+				if (imageIndex >= 0 && imageIndex <= 5) {
+					images.add(new ImageBinding(nextImageUnit, internalFormat, textureID));
+
+					calls.add(new GlUniform1iCall(location, nextImageUnit));
+
+					nextImageUnit += 1;
 				}
-
-				images.add(new ImageBinding(nextImageUnit, internalFormat, textureID));
-
-				calls.add(new GlUniform1iCall(location, nextImageUnit));
-
-				nextImageUnit += 1;
 			}
 		}
 
