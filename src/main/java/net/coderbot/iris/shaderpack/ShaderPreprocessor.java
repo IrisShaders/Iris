@@ -107,6 +107,18 @@ public class ShaderPreprocessor {
 		String versionLine = source.substring(0, versionStringEnd);
 		source = source.substring(versionStringEnd + 1);
 
+		List<String> extensionLines = new ArrayList<>();
+
+		while (source.contains("#extension")) {
+			int extensionLineStart = source.indexOf("#extension");
+			int extensionLineEnd = source.indexOf("\n", extensionLineStart);
+
+			String extensionLine = source.substring(extensionLineStart, extensionLineEnd);
+			source = source.replaceFirst(extensionLine, "");
+
+			extensionLines.add(extensionLine);
+		}
+
 		@SuppressWarnings("resource")
 		final Preprocessor pp = new Preprocessor();
 		pp.setListener(new DefaultPreprocessorListener());
@@ -128,19 +140,20 @@ public class ShaderPreprocessor {
 
 		builder.append("\n");
 
-		source = builder.toString();
+		// restore extensions
+		for (String line : extensionLines) {
+			builder.insert(0, line + "\n");
+		}
 
 		// restore GLSL version
-		source = versionLine + "\n" + source;
+		builder.insert(0, versionLine + "\n");
 
-		// strip leading whitepsace before newline, makes next change more reliable
+		source = builder.toString();
+
+		// strip leading whitespace before newline, makes next change more reliable
 		source = source.replaceAll("[ \t]*[\r\n]", "\n");
 		// consolidate newlines
 		source = source.replaceAll("\n{2,}", "\n\n");
-		// inefficient way to remove multiple orhpaned comment blocks
-		source = source.replaceAll("\\/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*\\/[\\s]+\\/\\*", "/*");
-		source = source.replaceAll("\\/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*\\/[\\s]+\\/\\*", "/*");
-		source = source.replaceAll("\\/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*\\/[\\s]+\\/\\*", "/*");
 
 		return source;
 	}
