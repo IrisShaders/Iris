@@ -27,6 +27,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.system.CallbackI;
 
 import java.util.Map;
 import java.util.Objects;
@@ -59,26 +60,34 @@ public class CompositeRenderer {
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 		final ImmutableSet.Builder<Integer> flippedAtLeastOnce = new ImmutableSet.Builder<>();
 
+		if (sources.length == 0) {
+			this.passes = ImmutableList.of();
+			GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+			return;
+		}
+
+		// NB: Flipping deferred_pre or composite_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
+		if (sources[0].getName().contains("deferred")) {
+			packDirectives.getDeferredPreExplicitFlips().forEach((buffer, shouldFlip) -> {
+				if (shouldFlip) {
+					bufferFlipper.flip(buffer);
+				}
+			});
+		} else {
+			packDirectives.getCompositePreExplicitFlips().forEach((buffer, shouldFlip) -> {
+				if (shouldFlip) {
+					bufferFlipper.flip(buffer);
+				}
+			});
+		}
+
 		for (ProgramSource source : sources) {
-			if (source == null || !source.isValid() && !source.isVirtual()) {
-				continue;
-			}
-
-			ProgramDirectives directives = source.getDirectives();
-			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
-
-			if (source.isVirtual()) {
-				// Virtual programs - deferred_pre or composite_pre
-				explicitFlips.forEach((buffer, shouldFlip) -> {
-					if (shouldFlip) {
-						bufferFlipper.flip(buffer);
-						// flipping deferred_pre or composite_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
-					}
-				});
+			if (source == null || !source.isValid()) {
 				continue;
 			}
 
 			Pass pass = new Pass();
+			ProgramDirectives directives = source.getDirectives();
 
 			ImmutableSet<Integer> flipped = bufferFlipper.snapshot();
 			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
@@ -101,6 +110,8 @@ public class CompositeRenderer {
 			pass.flippedAtLeastOnce = flippedAtLeastOnceSnapshot;
 
 			passes.add(pass);
+
+			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
 
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {

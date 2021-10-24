@@ -39,37 +39,7 @@ public class ProgramDirectives {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 			disableBlend = properties.getBlendDisabled().contains(source.getName());
-
-			ImmutableMap.Builder<Integer, Boolean> explicitFlips = ImmutableMap.builder();
-
-			Object2BooleanMap<String> explicitFlipsStr = properties.getExplicitFlips().get(source.getName());
-
-			if (explicitFlipsStr == null) {
-				explicitFlipsStr = Object2BooleanMaps.emptyMap();
-			}
-
-			explicitFlipsStr.forEach((buffer, shouldFlip) -> {
-				Integer index = PackRenderTargetDirectives.LEGACY_RENDER_TARGET_MAP.get(buffer);
-
-				if (index == null && buffer.startsWith("colortex")) {
-					String id = buffer.substring("colortex".length());
-
-					try {
-						index = Integer.parseInt(id);
-					} catch (NumberFormatException e) {
-						// fall through to index == null check for unknown buffer.
-					}
-				}
-
-				if (index != null) {
-					explicitFlips.put(index, shouldFlip);
-				} else {
-					Iris.logger.warn("Unknown buffer with ID " + buffer + " specified in flip directive for pass "
-							+ source.getName());
-				}
-			});
-
-			this.explicitFlips = explicitFlips.build();
+			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(properties, source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;

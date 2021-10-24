@@ -50,7 +50,6 @@ import org.lwjgl.opengl.GL30C;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -228,22 +227,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return shadowMapRenderer;
 		};
 
-		// Virtual programs - deferred_pre and composite_pre
-		ProgramSource[] deferredPrograms = Arrays.copyOf(programs.getDeferred(), programs.getDeferred().length + 1);
-		deferredPrograms[0] = new ProgramSource("deferred_pre", null, null, null, null, programs.getPack().getShaderProperties());;
-		System.arraycopy(programs.getDeferred(), 0, deferredPrograms, 1, programs.getDeferred().length);
-
-		ProgramSource[] compositePrograms = Arrays.copyOf(programs.getComposite(), programs.getComposite().length + 1);
-		compositePrograms[0] = new ProgramSource("composite_pre", null, null, null, null, programs.getPack().getShaderProperties());;
-		System.arraycopy(programs.getComposite(), 0, compositePrograms, 1, programs.getComposite().length);
-
-		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), deferredPrograms, renderTargets,
+		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
 				customTextureIdMap.getOrDefault(TextureStage.DEFERRED, new Object2IntOpenHashMap<>()));
 
 		flippedAfterTranslucent = flipper.snapshot();
 
-		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), compositePrograms, renderTargets,
+		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
 				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, new Object2IntOpenHashMap<>()));
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(),
