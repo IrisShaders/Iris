@@ -3,6 +3,8 @@ package net.coderbot.iris.pipeline;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import org.lwjgl.opengl.GL11C;
+
 import net.coderbot.iris.mixin.GameRendererAccessor;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -13,6 +15,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 
 public class HandRenderer {
+	public static final HandRenderer INSTANCE = new HandRenderer();
+
 	private final Minecraft minecraft = Minecraft.getInstance();
 
 	private GameRenderer gameRenderer;
@@ -36,6 +40,8 @@ public class HandRenderer {
 	}
 
 	private void setupGlState() {
+		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT, false);
+
         final PoseStack.Pose pose = poseStack.last();
 
 		gameRenderer.resetProjectionMatrix(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
@@ -52,8 +58,6 @@ public class HandRenderer {
 		if(!canRender) return;
 
 		ACTIVE = true;
-
-		RenderSystem.clear(256, Minecraft.ON_OSX);
 
 		poseStack.pushPose();
 

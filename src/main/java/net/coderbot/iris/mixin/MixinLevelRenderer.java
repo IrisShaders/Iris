@@ -52,9 +52,6 @@ public class MixinLevelRenderer {
 	@Unique
 	private WorldRenderingPipeline pipeline;
 
-	@Unique
-	private HandRenderer handRenderer = new HandRenderer();
-
 	@Inject(method = RENDER_LEVEL, at = @At("HEAD"))
 	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid()) {
@@ -71,7 +68,7 @@ public class MixinLevelRenderer {
 
 		pipeline.beginLevelRendering();
 
-		handRenderer.prepareForRendering(renderBuffers, poseStack, tickDelta, camera, gameRenderer);
+		HandRenderer.INSTANCE.prepareForRendering(renderBuffers, poseStack, tickDelta, camera, gameRenderer);
 	}
 
 	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
@@ -234,6 +231,6 @@ public class MixinLevelRenderer {
 		if(!((GameRendererAccessor)gameRenderer).getRenderHand()) return;
 
 		Minecraft.getInstance().getProfiler().popPush("iris_hand");
-		handRenderer.render();
+		HandRenderer.INSTANCE.render();
 	}
 }
