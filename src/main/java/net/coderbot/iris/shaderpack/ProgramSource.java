@@ -54,4 +54,8 @@ public class ProgramSource {
 			return Optional.empty();
 		}
 	}
+
+	public boolean isVirtual() {
+		return name.endsWith("_pre");
+	}
 }

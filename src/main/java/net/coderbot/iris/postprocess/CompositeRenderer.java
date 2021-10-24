@@ -59,19 +59,26 @@ public class CompositeRenderer {
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 		final ImmutableSet.Builder<Integer> flippedAtLeastOnce = new ImmutableSet.Builder<>();
 
-		// flipping deferred_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
-		// TODO: hardcoded for SEUS PTGI E12
-		//if (sources.length != 0 && sources[0].getName().contains("deferred")) {
-		//	bufferFlipper.flip(0);
-		//}
-
 		for (ProgramSource source : sources) {
-			if (source == null || !source.isValid()) {
+			if (source == null || !source.isValid() && !source.isVirtual()) {
+				continue;
+			}
+
+			ProgramDirectives directives = source.getDirectives();
+			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
+
+			if (source.isVirtual()) {
+				// Virtual programs - deferred_pre or composite_pre
+				explicitFlips.forEach((buffer, shouldFlip) -> {
+					if (shouldFlip) {
+						bufferFlipper.flip(buffer);
+						// flipping deferred_pre or composite_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
+					}
+				});
 				continue;
 			}
 
 			Pass pass = new Pass();
-			ProgramDirectives directives = source.getDirectives();
 
 			ImmutableSet<Integer> flipped = bufferFlipper.snapshot();
 			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
@@ -94,8 +101,6 @@ public class CompositeRenderer {
 			pass.flippedAtLeastOnce = flippedAtLeastOnceSnapshot;
 
 			passes.add(pass);
-
-			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
 
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
