@@ -27,7 +27,6 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.system.CallbackI;
 
 import java.util.Map;
 import java.util.Objects;
@@ -46,7 +45,7 @@ public class CompositeRenderer {
 							 AbstractTexture noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
 							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier,
-							 Object2IntMap<String> customTextureIds) {
+							 Object2IntMap<String> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips) {
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
@@ -60,26 +59,12 @@ public class CompositeRenderer {
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 		final ImmutableSet.Builder<Integer> flippedAtLeastOnce = new ImmutableSet.Builder<>();
 
-		if (sources.length == 0) {
-			this.passes = ImmutableList.of();
-			GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
-			return;
-		}
-
-		// NB: Flipping deferred_pre or composite_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
-		if (sources[0].getName().contains("deferred")) {
-			packDirectives.getDeferredPreExplicitFlips().forEach((buffer, shouldFlip) -> {
-				if (shouldFlip) {
-					bufferFlipper.flip(buffer);
-				}
-			});
-		} else {
-			packDirectives.getCompositePreExplicitFlips().forEach((buffer, shouldFlip) -> {
-				if (shouldFlip) {
-					bufferFlipper.flip(buffer);
-				}
-			});
-		}
+		explicitPreFlips.forEach((buffer, shouldFlip) -> {
+			if (shouldFlip) {
+				bufferFlipper.flip(buffer);
+				// NB: Flipping deferred_pre or composite_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
+			}
+		});
 
 		for (ProgramSource source : sources) {
 			if (source == null || !source.isValid()) {

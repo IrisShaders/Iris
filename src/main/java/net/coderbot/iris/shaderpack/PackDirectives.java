@@ -14,8 +14,6 @@ public class PackDirectives {
 	private boolean areCloudsEnabled;
 	private boolean separateAo;
 	private boolean oldLighting;
-	private ImmutableMap<Integer, Boolean> compositePreExplicitFlips;
-	private ImmutableMap<Integer, Boolean> deferredPreExplicitFlips;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
@@ -33,8 +31,6 @@ public class PackDirectives {
 		areCloudsEnabled = properties.areCloudsEnabled();
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
-		compositePreExplicitFlips = getExplicitFlips(properties, "composite_pre");
-		deferredPreExplicitFlips = getExplicitFlips(properties, "deferred_pre");
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -42,8 +38,6 @@ public class PackDirectives {
 		areCloudsEnabled = directives.areCloudsEnabled();
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
-		compositePreExplicitFlips = directives.compositePreExplicitFlips;
-		deferredPreExplicitFlips = directives.deferredPreExplicitFlips;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -76,14 +70,6 @@ public class PackDirectives {
 
 	public PackShadowDirectives getShadowDirectives() {
 		return shadowDirectives;
-	}
-
-	public ImmutableMap<Integer, Boolean> getCompositePreExplicitFlips() {
-		return compositePreExplicitFlips;
-	}
-
-	public ImmutableMap<Integer, Boolean> getDeferredPreExplicitFlips() {
-		return deferredPreExplicitFlips;
 	}
 
 	public void acceptDirectivesFrom(DirectiveHolder directives) {

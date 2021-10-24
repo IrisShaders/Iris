@@ -229,13 +229,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
-				customTextureIdMap.getOrDefault(TextureStage.DEFERRED, new Object2IntOpenHashMap<>()));
+				customTextureIdMap.getOrDefault(TextureStage.DEFERRED, new Object2IntOpenHashMap<>()),
+				programs.getPackDirectives().getExplicitFlips(programs.getPack().getShaderProperties(), "deferred_pre"));
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
-				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, new Object2IntOpenHashMap<>()));
+				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, new Object2IntOpenHashMap<>()),
+				programs.getPackDirectives().getExplicitFlips(programs.getPack().getShaderProperties(), "composite_pre"));
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowMapRendererSupplier,
 				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, new Object2IntOpenHashMap<>()));
