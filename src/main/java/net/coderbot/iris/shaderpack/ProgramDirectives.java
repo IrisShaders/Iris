@@ -39,7 +39,7 @@ public class ProgramDirectives {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 			disableBlend = properties.getBlendDisabled().contains(source.getName());
-			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(properties, source.getName());
+			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;

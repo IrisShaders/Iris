@@ -3,7 +3,10 @@ package net.coderbot.iris.shaderpack;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 import java.util.Set;
 
@@ -14,6 +17,8 @@ public class PackDirectives {
 	private boolean areCloudsEnabled;
 	private boolean separateAo;
 	private boolean oldLighting;
+	private Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
+	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
@@ -31,6 +36,8 @@ public class PackDirectives {
 		areCloudsEnabled = properties.areCloudsEnabled();
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
+		customTextureDataMap = properties.getCustomTextureData();
+		explicitFlips = properties.getExplicitFlips();
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -38,6 +45,8 @@ public class PackDirectives {
 		areCloudsEnabled = directives.areCloudsEnabled();
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
+		customTextureDataMap = directives.customTextureDataMap;
+		explicitFlips = directives.explicitFlips;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -72,6 +81,10 @@ public class PackDirectives {
 		return shadowDirectives;
 	}
 
+	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextureData() {
+		return customTextureDataMap;
+	}
+
 	public void acceptDirectivesFrom(DirectiveHolder directives) {
 		renderTargetDirectives.acceptDirectives(directives);
 		shadowDirectives.acceptDirectives(directives);
@@ -87,10 +100,10 @@ public class PackDirectives {
 
 	}
 
-	public ImmutableMap<Integer, Boolean> getExplicitFlips(ShaderProperties properties, String pass) {
+	public ImmutableMap<Integer, Boolean> getExplicitFlips(String pass) {
 		ImmutableMap.Builder<Integer, Boolean> explicitFlips = ImmutableMap.builder();
 
-		Object2BooleanMap<String> explicitFlipsStr = properties.getExplicitFlips().get(pass);
+		Object2BooleanMap<String> explicitFlipsStr = this.explicitFlips.get(pass);
 
 		if (explicitFlipsStr == null) {
 			explicitFlipsStr = Object2BooleanMaps.emptyMap();

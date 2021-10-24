@@ -30,7 +30,6 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final Map<String, Map<String, String>> langMap;
 	private final CustomTextureData customNoiseTexture;
-	private final ShaderProperties shaderProperties;
 
 	public ShaderPack(Path root) throws IOException {
 		// A null path is not allowed.
@@ -38,7 +37,7 @@ public class ShaderPack {
 
 		this.root = root;
 
-		this.shaderProperties = loadProperties(root, "shaders.properties")
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
 
@@ -140,14 +139,6 @@ public class ShaderPack {
 
 	public Optional<CustomTextureData> getCustomNoiseTexture() {
 		return Optional.ofNullable(customNoiseTexture);
-	}
-
-	public ShaderProperties getShaderProperties() {
-		return shaderProperties;
-	}
-
-	public Path getRoot() {
-		return root;
 	}
 
 	private Map<String, Map<String, String>> parseLangEntries(Path root) throws IOException {

@@ -189,7 +189,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
 		});
 
-		programs.getPack().getShaderProperties().getCustomTextureData().forEach((textureStage, customTexturePropertiesMap) -> {
+		programs.getPackDirectives().getCustomTextureData().forEach((textureStage, customTexturePropertiesMap) -> {
 			Object2IntMap<String> customTextureIds = customTextureIdMap.getOrDefault(textureStage, new Object2IntOpenHashMap<>());
 			customTexturePropertiesMap.forEach((samplerName, path) -> {
 				try {
@@ -230,14 +230,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
 				customTextureIdMap.getOrDefault(TextureStage.DEFERRED, new Object2IntOpenHashMap<>()),
-				programs.getPackDirectives().getExplicitFlips(programs.getPack().getShaderProperties(), "deferred_pre"));
+				programs.getPackDirectives().getExplicitFlips("deferred_pre"));
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
 				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, new Object2IntOpenHashMap<>()),
-				programs.getPackDirectives().getExplicitFlips(programs.getPack().getShaderProperties(), "composite_pre"));
+				programs.getPackDirectives().getExplicitFlips("composite_pre"));
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowMapRendererSupplier,
 				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, new Object2IntOpenHashMap<>()));
