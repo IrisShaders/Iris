@@ -3,17 +3,17 @@ package kroppeb.stareval.parser;
 import kroppeb.stareval.exception.ParseException;
 import kroppeb.stareval.exception.UnexpectedCharacterException;
 import kroppeb.stareval.exception.UnexpectedEndingException;
-import kroppeb.stareval.element.Expression;
+import kroppeb.stareval.element.ExpressionElement;
 
 class Tokenizer {
 	private Tokenizer() {
 	}
 
-	static Expression parse(String input, ParserOptions options) throws ParseException {
+	static ExpressionElement parse(String input, ParserOptions options) throws ParseException {
 		return parseInternal(new StringReader(input), options);
 	}
 
-	static Expression parseInternal(StringReader input, ParserOptions options) throws ParseException {
+	static ExpressionElement parseInternal(StringReader input, ParserOptions options) throws ParseException {
 		// parser stack
 		final Parser stack = new Parser();
 		ParserOptions.TokenRules tokenRules = options.getTokenRules();
