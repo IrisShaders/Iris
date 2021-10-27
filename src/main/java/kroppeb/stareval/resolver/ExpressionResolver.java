@@ -207,12 +207,7 @@ public class ExpressionResolver {
 				throw new RuntimeException("Unknown variable: " + name);
 			if (type.equals(targetType)) {
 				this.log("[DEBUG] resolved variable %s to type %s", name, targetType);
-				return new Expression() {
-					@Override
-					public void evaluateTo(FunctionContext c, FunctionReturn r) {
-						c.getVariable(name).evaluateTo(c, r);
-					}
-				};
+				return (c, r) -> c.getVariable(name).evaluateTo(c, r);
 			}
 			if (!allowImplicit) {
 				this.log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",

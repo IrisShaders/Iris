@@ -1,15 +1,27 @@
 package kroppeb.stareval.function;
 
+import kroppeb.stareval.expression.ConstantExpression;
 import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.parsing.MatrixType;
 import net.coderbot.iris.parsing.VectorType;
 
 public abstract class Type {
+	public abstract ConstantExpression createConstant(FunctionReturn functionReturn);
 
 	public abstract static class Primitive extends Type {
 	}
 
 	public static class ObjectType extends Type {
+		@Override
+		public ConstantExpression createConstant(FunctionReturn functionReturn) {
+			Object object = functionReturn.objectReturn;
+			return new ConstantExpression(this) {
+				@Override
+				public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
+					functionReturn.objectReturn = object;
+				}
+			};
+		}
 
 		@Override
 		public Object createArray(int length) {
@@ -36,6 +48,17 @@ public abstract class Type {
 
 	public static class Boolean extends Primitive {
 		@Override
+		public ConstantExpression createConstant(FunctionReturn functionReturn) {
+			boolean value = functionReturn.booleanReturn;
+			return new ConstantExpression(this) {
+				@Override
+				public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
+					functionReturn.booleanReturn = value;
+				}
+			};
+		}
+
+		@Override
 		public Object createArray(int length) {
 			return new boolean[length];
 		}
@@ -60,6 +83,17 @@ public abstract class Type {
 
 	public static class Int extends Primitive {
 		@Override
+		public ConstantExpression createConstant(FunctionReturn functionReturn) {
+			int value = functionReturn.intReturn;
+			return new ConstantExpression(this) {
+				@Override
+				public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
+					functionReturn.intReturn = value;
+				}
+			};
+		}
+
+		@Override
 		public Object createArray(int length) {
 			return new int[length];
 		}
@@ -83,6 +117,17 @@ public abstract class Type {
 	}
 
 	public static class Float extends Primitive {
+		@Override
+		public ConstantExpression createConstant(FunctionReturn functionReturn) {
+			float value = functionReturn.floatReturn;
+			return new ConstantExpression(this) {
+				@Override
+				public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
+					functionReturn.floatReturn = value;
+				}
+			};
+		}
+
 		@Override
 		public Object createArray(int length) {
 			return new float[length];
