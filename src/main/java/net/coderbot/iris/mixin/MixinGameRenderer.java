@@ -43,9 +43,4 @@ public class MixinGameRenderer {
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 	}
-
-	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z"))
-	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
-		return false;
-	}
 }
