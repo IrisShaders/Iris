@@ -45,7 +45,11 @@ public class MixinLevelRenderer {
 	@Unique
 	private WorldRenderingPipeline pipeline;
 
-	@Inject(method = RENDER_LEVEL, at = @At("HEAD"))
+	// Begin shader rendering after buffers have been cleared.
+	// At this point we've ensured that Minecraft's main framebuffer is cleared.
+	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
+	// all pixels.
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER))
 	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
 	                                   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									   Matrix4f projection, CallbackInfo callback) {
@@ -80,16 +84,6 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;compileChunksUntil(J)V", shift = At.Shift.AFTER))
 	private void iris$renderTerrainShadows(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.renderShadows((LevelRendererAccessor) this, camera);
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR))
-	private void iris$beforeClear(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.pushProgram(GbufferProgram.CLEAR);
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER))
-	private void iris$afterClear(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.popProgram(GbufferProgram.CLEAR);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY))

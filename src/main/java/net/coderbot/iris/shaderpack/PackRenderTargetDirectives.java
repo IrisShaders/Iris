@@ -118,7 +118,7 @@ public class PackRenderTargetDirectives {
 		public RenderTargetSettings() {
 			this.requestedFormat = InternalTextureFormat.RGBA;
 			this.clear = true;
-			this.clearColor = new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+			this.clearColor = null;
 		}
 
 		public InternalTextureFormat getRequestedFormat() {
@@ -129,8 +129,8 @@ public class PackRenderTargetDirectives {
 			return clear;
 		}
 
-		public Vector4f getClearColor() {
-			return clearColor;
+		public Optional<Vector4f> getClearColor() {
+			return Optional.ofNullable(clearColor);
 		}
 
 		@Override
