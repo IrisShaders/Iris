@@ -14,30 +14,29 @@ import net.coderbot.iris.vendored.joml.Vector4f;
 public abstract class CachedUniform implements VariableExpression {
 	private final String name;
 	private final UniformUpdateFrequency updateFrequency;
-	private int location = -1;
+	private boolean changed = true;
 	
 	public CachedUniform(String name, UniformUpdateFrequency updateFrequency) {
 		this.name = name;
 		this.updateFrequency = updateFrequency;
 	}
 	
-	public void setLocation(int location) {
-		this.location = location;
-	}
-	
-	public int getLocation() {
-		return location;
+	public void markUnchanged() {
+		this.changed = false;
 	}
 	
 	public void update() {
-		if (doUpdate() && this.location != -1) {
-			this.push();
-		}
+		this.changed = doUpdate();
 	}
 	
 	protected abstract boolean doUpdate();
 	
-	protected abstract void push();
+	public abstract void push(int location);
+	
+	public void pushIfChanged(int location) {
+		if (this.changed)
+			push(location);
+	}
 	
 	@Override
 	public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
@@ -48,39 +47,40 @@ public abstract class CachedUniform implements VariableExpression {
 	
 	public abstract Type getType();
 	
-	static public CachedUniform forExpression(String name, Type type, Expression expression, FunctionContext context){
+	static public CachedUniform forExpression(String name, Type type, Expression expression, FunctionContext context) {
 		final FunctionReturn held = new FunctionReturn();
-		if(type.equals(Type.Boolean)){
-			return new BooleanCachedUniform(name, UniformUpdateFrequency.PER_FRAME,() -> {
-				expression.evaluateTo(context,held);
+		final UniformUpdateFrequency frequency = UniformUpdateFrequency.CUSTOM;
+		if (type.equals(Type.Boolean)) {
+			return new BooleanCachedUniform(name, frequency, () -> {
+				expression.evaluateTo(context, held);
 				return held.booleanReturn;
 			});
-		}else if(type.equals(Type.Int)){
-			return new IntCachedUniform(name, UniformUpdateFrequency.PER_FRAME,() -> {
-				expression.evaluateTo(context,held);
+		} else if (type.equals(Type.Int)) {
+			return new IntCachedUniform(name, frequency, () -> {
+				expression.evaluateTo(context, held);
 				return held.intReturn;
 			});
-		}else if(type.equals(Type.Float)){
-			return new FloatCachedUniform(name, UniformUpdateFrequency.PER_FRAME,() -> {
-				expression.evaluateTo(context,held);
+		} else if (type.equals(Type.Float)) {
+			return new FloatCachedUniform(name, frequency, () -> {
+				expression.evaluateTo(context, held);
 				return held.floatReturn;
 			});
-		}else if(type.equals(VectorType.VEC2)){
-			return new Float2VectorCachedUniform(name, UniformUpdateFrequency.PER_FRAME,() -> {
-				expression.evaluateTo(context,held);
+		} else if (type.equals(VectorType.VEC2)) {
+			return new Float2VectorCachedUniform(name, frequency, () -> {
+				expression.evaluateTo(context, held);
 				return (Vector2f) held.objectReturn;
 			});
-		}else if(type.equals(VectorType.VEC3)){
-			return new Float3VectorCachedUniform(name, UniformUpdateFrequency.PER_FRAME,() -> {
-				expression.evaluateTo(context,held);
+		} else if (type.equals(VectorType.VEC3)) {
+			return new Float3VectorCachedUniform(name, frequency, () -> {
+				expression.evaluateTo(context, held);
 				return (Vector3f) held.objectReturn;
 			});
-		}else if(type.equals(VectorType.VEC4)){
-			return new Float4VectorCachedUniform(name, UniformUpdateFrequency.PER_FRAME,() -> {
-				expression.evaluateTo(context,held);
+		} else if (type.equals(VectorType.VEC4)) {
+			return new Float4VectorCachedUniform(name, frequency, () -> {
+				expression.evaluateTo(context, held);
 				return (Vector4f) held.objectReturn;
 			});
-		}else{
+		} else {
 			throw new IllegalArgumentException("Custom uniforms of type: " + type + " are currently not supported");
 		}
 	}

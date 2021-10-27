@@ -17,7 +17,9 @@ import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
-import net.coderbot.iris.uniforms.*;
+import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
@@ -35,15 +37,19 @@ public class CompositeRenderer {
 	private final AbstractTexture noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
+	private final CustomUniforms customUniforms;
 
 	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, RenderTargets renderTargets,
 							 AbstractTexture noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
-							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
+							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier,
+							 CustomUniforms customUniforms) {
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.renderTargets = renderTargets;
+		this.customUniforms = customUniforms;
+
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -134,6 +140,9 @@ public class CompositeRenderer {
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
 
+			// program is the identifier for composite :shrug:
+			this.customUniforms.push(renderPass.program);
+
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 		}
 
@@ -191,33 +200,28 @@ public class CompositeRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		this.customUniforms.assignTo(builder);
+
 		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
 		IrisSamplers.addNoiseSampler(builder, noiseTexture);
 		IrisSamplers.addCompositeSamplers(builder, renderTargets);
+
 
 		if (IrisSamplers.hasShadowSamplers(builder)) {
 			IrisSamplers.addShadowSamplers(builder, shadowMapRendererSupplier.get());
 		}
 
-
-		source.getParent().getPack().customUniforms.buildTo(
-				builder,
-				holder -> CameraUniforms.addCameraUniforms(holder, this.updateNotifier),
-				ViewportUniforms::addViewportUniforms,
-				WorldTimeUniforms::addWorldTimeUniforms,
-				SystemTimeUniforms::addSystemTimeUniforms,
-				BiomeParameters::biomeParameters,
-				new CelestialUniforms(source.getParent().getPackDirectives().getSunPathRotation())::addCelestialUniforms,
-				// holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
-				holder -> MatrixUniforms.addMatrixUniforms(holder, source.getParent().getPackDirectives()),
-				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
-		);
-
 		// TODO: Don't duplicate this with FinalPassRenderer
 		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
 
-		return builder.build();
+		Program build = builder.build();
+
+		// tell the customUniforms that those locations belong to this pass
+		// this is just an object to index the internal map
+		this.customUniforms.mapholderToPass(builder, build);
+
+		return build;
 	}
 
 	public void destroy() {

@@ -19,8 +19,8 @@ public class Float3VectorCachedUniform extends VectorCachedUniform<Vector3f> {
 	}
 	
 	@Override
-	protected void push() {
-		GL21.glUniform3f(this.getLocation(), this.cached.x, this.cached.y, this.cached.z);
+	public void push(int location) {
+		GL21.glUniform3f(location, this.cached.x, this.cached.y, this.cached.z);
 	}
 	
 	@Override

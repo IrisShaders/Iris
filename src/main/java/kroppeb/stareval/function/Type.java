@@ -167,7 +167,7 @@ public abstract class Type {
 
 	@Deprecated
 	public static UniformType convert(Type type) {
-		if (type == Type.Int) return UniformType.INT;
+		if (type == Type.Int || type == Type.Boolean) return UniformType.INT;
 		else if (type == Type.Float) return UniformType.FLOAT;
 		else if (type == VectorType.VEC2) return UniformType.VEC2;
 		else if (type == VectorType.VEC3) return UniformType.VEC3;

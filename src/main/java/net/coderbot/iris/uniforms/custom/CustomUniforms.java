@@ -12,9 +12,7 @@ import kroppeb.stareval.parser.Parser;
 import kroppeb.stareval.resolver.ExpressionResolver;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
-import net.coderbot.iris.gl.uniform.Uniform;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.parsing.IrisFunctions;
 import net.coderbot.iris.parsing.IrisOptions;
 import net.coderbot.iris.parsing.VectorType;
@@ -25,16 +23,17 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
-public class CustomUniforms extends Uniform implements FunctionContext {
+public class CustomUniforms implements FunctionContext {
 	private final Map<String, CachedUniform> variables = new Object2ObjectLinkedOpenHashMap<>();
 	private final Map<String, Expression> variablesExpressions = new Object2ObjectLinkedOpenHashMap<>();
 	private final CustomUniformFixedInputUniformsHolder inputHolder;
 	private final List<CachedUniform> uniforms = new ArrayList<>();
-private final List<CachedUniform> uniformOrder;
+	private final List<CachedUniform> uniformOrder;
+	private final Map<Object, Object2IntMap<CachedUniform>> locationMap = new Object2ObjectOpenHashMap<>();
+	private final Map<CachedUniform, List<CachedUniform>> dependsOn;
+	private final Map<CachedUniform, List<CachedUniform>> requiredBy;
 
 	private CustomUniforms(CustomUniformFixedInputUniformsHolder inputHolder, Map<String, Builder.Variable> variables) {
-		super(-1);
-
 		this.inputHolder = inputHolder;
 		ExpressionResolver resolver = new ExpressionResolver(
 				IrisFunctions.functions,
@@ -70,8 +69,8 @@ private final List<CachedUniform> uniformOrder;
 		{
 			// toposort
 
-			Map<CachedUniform, List<CachedUniform>> dependsOn = new Object2ObjectOpenHashMap<>();
-			Map<CachedUniform, List<CachedUniform>> requiredBy = new Object2ObjectOpenHashMap<>();
+			this.dependsOn = new Object2ObjectOpenHashMap<>();
+			this.requiredBy = new Object2ObjectOpenHashMap<>();
 			Object2IntMap<CachedUniform> dependsOnCount = new Object2IntOpenHashMap<>();
 
 			for (CachedUniform input : this.inputHolder.getAll()) {
@@ -83,18 +82,34 @@ private final List<CachedUniform> uniformOrder;
 			}
 
 			FunctionReturn functionReturn = new FunctionReturn();
-			Set<VariableExpression> requires = new ObjectOpenHashBigSet<>();
+			Set<VariableExpression> requires = new ObjectOpenHashSet<>();
+			Set<CachedUniform> brokenUniforms = new ObjectOpenHashSet<>();
+
 			for (Map.Entry<String, Expression> entry : this.variablesExpressions.entrySet()) {
 				requires.clear();
+
 				entry.getValue().listVariables(requires);
 				if (requires.isEmpty()) {
 					continue;
 				}
-				List<CachedUniform> dependencies = requires.stream()
-						.map(v -> (CachedUniform) v.partialEval(this, functionReturn))
-						.collect(Collectors.toList());
 
 				CachedUniform uniform = this.variables.get(entry.getKey());
+
+				List<CachedUniform> dependencies = new ArrayList<>();
+				for (VariableExpression v : requires) {
+					Expression evaluated = v.partialEval(this, functionReturn);
+					if (evaluated instanceof CachedUniform) {
+						dependencies.add((CachedUniform) evaluated);
+					} else {
+						// we are depending on a broken uniform
+						brokenUniforms.add(uniform);
+					}
+				}
+
+				if (dependencies.isEmpty()) {
+					// can be empty if we rely on broken uniforms
+					continue;
+				}
 
 				dependsOn.put(uniform, dependencies);
 				dependsOnCount.put(uniform, dependencies.size());
@@ -117,7 +132,13 @@ private final List<CachedUniform> uniformOrder;
 
 			while (!free.isEmpty()) {
 				CachedUniform pop = free.remove(free.size() - 1);
-				ordered.add(pop);
+				if (!brokenUniforms.contains(pop)) {
+					// only add those that are broken
+					ordered.add(pop);
+				} else {
+					// mark all those that rely on use as broken too
+					brokenUniforms.addAll(requiredBy.get(pop));
+				}
 				for (CachedUniform dependent : requiredBy.get(pop)) {
 					int count = dependsOnCount.mergeInt(dependent, -1, Integer::sum);
 					assert count >= 0;
@@ -128,13 +149,25 @@ private final List<CachedUniform> uniformOrder;
 				}
 			}
 
-			if (!dependsOnCount.isEmpty()) {
-				throw new IllegalStateException("Circular reference detected");
+			if (!brokenUniforms.isEmpty()) {
+				Iris.logger.warn(
+						"The following uniforms won't work, either because they are broken, or reference a broken uniform: \n" +
+								brokenUniforms.stream().map(CachedUniform::getName).collect(Collectors.joining(", ")));
 			}
+
+			if (!dependsOnCount.isEmpty()) {
+				throw new IllegalStateException("Circular reference detected between: " +
+						dependsOnCount.object2IntEntrySet()
+								.stream()
+								.map(entry -> entry.getKey().getName() + " (" + entry.getIntValue() + ")")
+								.collect(Collectors.joining(", "))
+				);
+			}
+
 			this.uniformOrder = ordered;
 		}
 	}
-	
+
 	private void addVariable(Expression expression, CachedUniform uniform) throws Exception {
 		String name = uniform.getName();
 		if (this.variables.containsKey(name))
@@ -145,28 +178,104 @@ private final List<CachedUniform> uniformOrder;
 		this.variables.put(name, uniform);
 		this.variablesExpressions.put(name, expression);
 	}
-	
+
 	public void assignTo(LocationalUniformHolder targetHolder) {
-		for (CachedUniform uniform : this.uniforms) {
-			OptionalInt location = targetHolder.location(uniform.getName(), Type.convert(uniform.getType()));
-			if (location.isPresent()) {
-				uniform.setLocation(location.getAsInt());
+		Object2IntMap<CachedUniform> locations = new Object2IntOpenHashMap<>();
+		for (CachedUniform uniform : this.uniformOrder) {
+			try {
+				OptionalInt location = targetHolder.location(uniform.getName(), Type.convert(uniform.getType()));
+				if (location.isPresent()) {
+					locations.put(uniform, location.getAsInt());
+				}
+			} catch (Exception e){
+				throw new RuntimeException(uniform.getName(), e);
 			}
 		}
+		this.locationMap.put(targetHolder, locations);
 	}
 
-	@Override
+	public void mapholderToPass(LocationalUniformHolder holder, Object pass) {
+		locationMap.put(pass, locationMap.remove(holder));
+	}
+
+
 	public void update() {
 		for (CachedUniform value : this.uniformOrder) {
 			value.update();
 		}
 	}
 
+	public void push(Object pass) {
+		Object2IntMap<CachedUniform> uniforms = this.locationMap.get(pass);
+		if (uniforms != null) {
+			uniforms.forEach(CachedUniform::pushIfChanged);
+		}
+	}
+
+	/**
+	 * This function will do the following:
+	 * <ul>
+	 *     <li>
+	 *         Remove unused uniforms
+	 *     </li>
+	 *     <li>
+	 *         TODO: Create separate push lists for each renderpass
+	 *     </li>
+	 *     <li>
+	 *         TODO: Sort the others in the correct execution line <p/>
+	 *               note: that if a `EVERY_FRAME` depends on a `EVERY_TICK`, it has to correctly now that it's
+	 *               dependency hasn't updated <br/>
+	 *                  suggestion: set a boolean in the `EVERY_TICK` execution line saying this is a tick
+	 *                  and have it set to false in the `EVERY_FRAME`. Depending on the value, `frameDependencies` or
+	 *                  `allDependencies` lists are used
+	 *     </li>
+	 * </ul>
+	 */
+	public void optimise() {
+
+		Object2IntMap<CachedUniform> dependedByCount = new Object2IntOpenHashMap<>();
+
+		// Count the times a uniform is depended on
+		for (List<CachedUniform> dependencies : this.dependsOn.values()) {
+			for (CachedUniform dependency : dependencies) {
+				dependedByCount.mergeInt(dependency, 1, Integer::sum);
+			}
+		}
+
+		// Count the times a pass depends on a uniform
+		// ensures they wont ever be removed
+		for (Object2IntMap<CachedUniform> map : this.locationMap.values()) {
+			for (CachedUniform cachedUniform : map.keySet()) {
+				dependedByCount.mergeInt(cachedUniform, 1, Integer::sum);
+			}
+		}
+
+
+		Set<CachedUniform> unused = new ObjectOpenHashSet<>();
+		for (int i = this.uniformOrder.size() - 1; i >= 0; i--) {
+			CachedUniform uniform = this.uniformOrder.get(i);
+			if (!dependedByCount.containsKey(uniform)) {
+				// not used
+				unused.add(uniform);
+				// remove dependencies
+				List<CachedUniform> dependencies = this.dependsOn.get(uniform);
+				if (dependencies != null) {
+					for (CachedUniform dependency : dependencies) {
+						// reduce count by 1
+						dependedByCount.computeIntIfPresent(dependency, (key, value) -> value - 1);
+					}
+				}
+			}
+		}
+
+		this.uniformOrder.removeAll(unused);
+	}
+
 	@Override
 	public boolean hasVariable(String name) {
 		return this.inputHolder.containsKey(name) || this.variables.containsKey(name);
 	}
-	
+
 	@Override
 	public Expression getVariable(String name) {
 		// TODO: Make the simplify just return these ones
@@ -179,14 +288,7 @@ private final List<CachedUniform> uniformOrder;
 		throw new RuntimeException("Unknown variable: " + name);
 	}
 
-	public interface Factory {
-		void buildTo(
-				LocationalUniformHolder targetHolder,
-				Consumer<UniformHolder>... uniforms
-		);
-	}
-
-	public static class Builder implements Factory {
+	public static class Builder {
 		Map<String, Variable> variables = new Object2ObjectLinkedOpenHashMap<>();
 
 		public void addVariable(String type, String name, String expression, boolean isUniform) {
@@ -210,33 +312,22 @@ private final List<CachedUniform> uniformOrder;
 		}
 
 		public CustomUniforms build(
-				CustomUniformFixedInputUniformsHolder inputHolder,
-				LocationalUniformHolder targetHolder
+				CustomUniformFixedInputUniformsHolder inputHolder
 		) {
-			CustomUniforms customUniforms = new CustomUniforms(inputHolder, this.variables);
-			customUniforms.assignTo(targetHolder);
-			return customUniforms;
+			Iris.logger.info("Starting custom uniform resolving");
+			return new CustomUniforms(inputHolder, this.variables);
 		}
 
 
 		@SafeVarargs
 		public final CustomUniforms build(
-				LocationalUniformHolder targetHolder,
 				Consumer<UniformHolder>... uniforms
 		) {
 			CustomUniformFixedInputUniformsHolder.Builder inputs = new CustomUniformFixedInputUniformsHolder.Builder();
 			for (Consumer<UniformHolder> uniform : uniforms) {
 				uniform.accept(inputs);
 			}
-			return this.build(inputs.build(), targetHolder);
-		}
-
-		@SafeVarargs
-		@Override
-		public final void buildTo(LocationalUniformHolder targetHolder, Consumer<UniformHolder>... uniforms) {
-			Iris.logger.info("Starting custom uniform parsing");
-			CustomUniforms customUniforms = this.build(targetHolder, uniforms);
-			targetHolder.addUniform(UniformUpdateFrequency.PER_FRAME, customUniforms);
+			return this.build(inputs.build());
 		}
 
 		private static class Variable {
@@ -262,30 +353,6 @@ private final List<CachedUniform> uniformOrder;
 				.put("vec4", VectorType.VEC4)
 				.build();
 
-}
 
-	static class DependencyTree {
-		final private Map<CachedUniform, Set<CachedUniform>> dependsOn = new Object2ObjectOpenHashMap<>();
-		final private Map<CachedUniform, Set<CachedUniform>> requiredBy = new Object2ObjectOpenHashMap<>();
-		final private Map<String, CachedUniform> inputs = new Object2ObjectOpenHashMap<>();
-
-		final private FunctionContext functionContext = new FunctionContext() {
-			@Override
-			public Expression getVariable(String name) {
-				return inputs.get(name);
-			}
-
-			@Override
-			public boolean hasVariable(String name) {
-				return inputs.containsKey(name);
-			}
-		};
-
-		void addInputs(Collection<CachedUniform> variables) {
-			for (CachedUniform uniform : variables) {
-				requiredBy.put(uniform, new ObjectOpenHashBigSet<>());
-				inputs.put(uniform.getName(), uniform);
-			}
-		}
 	}
 }

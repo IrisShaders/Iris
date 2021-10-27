@@ -11,7 +11,6 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.postprocess.BufferFlipper;
@@ -116,17 +115,28 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final List<String> programStackLog = new ArrayList<>();
 
 	private static final ResourceLocation WATER_IDENTIFIER = new ResourceLocation("minecraft", "water");
-	private final CustomUniforms.Factory customUniforms;
+	private final CustomUniforms customUniforms;
+
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
-		// TODO should we clear this at the end of the constructor?
-		this.customUniforms = programs.getPack().customUniforms;
 
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
+
+		this.customUniforms = programs.getPack().customUniforms.build(
+				holder -> CameraUniforms.addCameraUniforms(holder, this.updateNotifier),
+				ViewportUniforms::addViewportUniforms,
+				WorldTimeUniforms::addWorldTimeUniforms,
+				SystemTimeUniforms::addSystemTimeUniforms,
+				BiomeParameters::biomeParameters,
+				new CelestialUniforms(this.getSunPathRotation())::addCelestialUniforms,
+				// holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
+				holder -> MatrixUniforms.addMatrixUniforms(holder, programs.getPackDirectives()),
+				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
+		);
 
 		this.allPasses = new ArrayList<>();
 
@@ -200,12 +210,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		};
 
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
-				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
+				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier, customUniforms);
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
-				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
+				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier, customUniforms);
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowMapRendererSupplier);
 
@@ -243,7 +253,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 			return builder.build();
 		};
-
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
 		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
@@ -274,6 +283,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs, createTerrainSamplers, createShadowTerrainSamplers);
+
+
+		// first optimization pass
+		this.customUniforms.optimise();
 	}
 
 	private void checkWorld() {
@@ -482,6 +495,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		// TODO replace with
+		// SamplerUniforms.addCommonSamplerUniforms(builder);
+		// SamplerUniforms.addWorldSamplerUniforms(builder);
+		// SamplerUniforms.addDepthSamplerUniforms(builder);
+
+		this.customUniforms.assignTo(builder);
 
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
@@ -496,18 +515,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
 		}
 
-		this.customUniforms.buildTo(
-				builder,
-				holder -> CameraUniforms.addCameraUniforms(holder, this.updateNotifier),
-				ViewportUniforms::addViewportUniforms,
-				WorldTimeUniforms::addWorldTimeUniforms,
-				SystemTimeUniforms::addSystemTimeUniforms,
-				BiomeParameters::biomeParameters,
-				new CelestialUniforms(this.getSunPathRotation())::addCelestialUniforms,
-				// holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
-				holder -> MatrixUniforms.addMatrixUniforms(holder, source.getParent().getPackDirectives()),
-				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
-		);
 
 		GlFramebuffer framebufferBeforeTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
@@ -524,6 +531,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				source.getDirectives().shouldDisableBlend());
 
 		allPasses.add(pass);
+
+		// tell the customUniforms that those locations belong to this pass
+		this.customUniforms.mapholderToPass(builder, pass);
+
 
 		return pass;
 	}
@@ -550,6 +561,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				framebufferAfterTranslucents.bind();
 			}
 			program.use();
+
+			// push the custom uniforms
+			DeferredWorldRenderingPipeline.this.customUniforms.push(this);
 
 			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
 			// that.
@@ -750,6 +764,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		updateNotifier.onNewFrame();
 		// Get ready for world rendering
 		prepareRenderTargets();
+
+		// Update custom uniforms
+		DeferredWorldRenderingPipeline.this.customUniforms.update();
 
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.

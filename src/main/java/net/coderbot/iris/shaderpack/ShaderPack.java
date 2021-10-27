@@ -23,7 +23,7 @@ public class ShaderPack {
 	private final LanguageMap languageMap;
 	private final CustomTexture customNoiseTexture;
 
-	public final CustomUniforms.Factory customUniforms;
+	public final CustomUniforms.Builder customUniforms;
 
 	/**
 	 * Reads a shader pack from the disk.
