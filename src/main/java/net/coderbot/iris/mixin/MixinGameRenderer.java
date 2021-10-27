@@ -35,8 +35,6 @@ public class MixinGameRenderer {
 	// https://github.com/jellysquid3/sodium-fabric/blob/1df506fd39dac56bb410725c245e6e51208ec732/src/main/java/me/jellysquid/mods/sodium/client/render/chunk/shader/ChunkProgram.java#L56
 	@Inject(method = "resetProjectionMatrix", at = @At("HEAD"))
 	private void iris$captureProjectionMatrix(Matrix4f projectionMatrix, CallbackInfo callback) {
-		if(HandRenderer.ACTIVE) return; // TODO: This probably should be replaced with something better
-
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projectionMatrix);
 	}
 
