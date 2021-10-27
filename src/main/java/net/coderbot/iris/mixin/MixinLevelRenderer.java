@@ -102,6 +102,8 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY))
 	private void iris$beginSky(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.SKY);
+		// TODO: Move the injection instead
+		RenderSystem.setShader(GameRenderer::getPositionShader);
 
 	}
 
