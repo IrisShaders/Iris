@@ -4,11 +4,11 @@ import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.fabricmc.loader.api.FabricLoader;
@@ -36,7 +36,7 @@ public class NewShaderTests {
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs);
 
-		String shaderJson = "{\n" +
+		StringBuilder shaderJson = new StringBuilder("{\n" +
 				"    \"blend\": {\n" +
 				"        \"func\": \"add\",\n" +
 				"        \"srcrgb\": \"srcalpha\",\n" +
@@ -65,19 +65,22 @@ public class NewShaderTests {
 				"        { \"name\": \"shadowtex1\" },\n" +
 				"        { \"name\": \"depthtex0\" },\n" +
 				"        { \"name\": \"depthtex1\" },\n" +
-				"        { \"name\": \"noisetex\" },\n" +
-				"        { \"name\": \"colortex0\" },\n" +
-				"        { \"name\": \"colortex1\" },\n" +
-				"        { \"name\": \"colortex2\" },\n" +
-				"        { \"name\": \"colortex3\" },\n" +
-				"        { \"name\": \"colortex4\" },\n" +
-				"        { \"name\": \"colortex5\" },\n" +
-				"        { \"name\": \"colortex6\" },\n" +
-				"        { \"name\": \"colortex7\" },\n" +
-				"        { \"name\": \"gaux1\" },\n" +
-				"        { \"name\": \"gaux2\" },\n" +
-				"        { \"name\": \"gaux3\" },\n" +
-				"        { \"name\": \"gaux4\" },\n" +
+				"        { \"name\": \"noisetex\" },\n");
+
+		// TODO: SamplerHolder should really be responsible for this...
+		for (int buffer : PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS) {
+			if (buffer >= 4 && buffer < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
+				shaderJson.append("        { \"name\": \"");
+				shaderJson.append(PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(buffer));
+				shaderJson.append("\" },\n");
+			}
+
+			shaderJson.append("        { \"name\": \"colortex");
+			shaderJson.append(buffer);
+			shaderJson.append("\" },\n");
+		}
+
+		shaderJson.append(
 				"        { \"name\": \"shadowcolor\" },\n" +
 				"        { \"name\": \"shadowcolor0\" },\n" +
 				"        { \"name\": \"shadowcolor1\" }\n" +
@@ -94,15 +97,17 @@ public class NewShaderTests {
 				"        { \"name\": \"iris_ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
 				"        { \"name\": \"iris_FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
 				"    ]\n" +
-				"}";
+				"}");
 
-		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJson, vertex, fragment);
+		String shaderJsonString = shaderJson.toString();
+
+		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, fragment);
 
 		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
 		Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
 		Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
-		Files.write(debugOutDir.resolve(name + ".json"), shaderJson.getBytes(StandardCharsets.UTF_8));
+		Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, fogMode);

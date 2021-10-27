@@ -5,8 +5,6 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
-import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
-import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceProvider;
@@ -26,6 +24,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 	GlFramebuffer writingToAfterTranslucent;
 	GlFramebuffer baseline;
 	HashMap<String, IntSupplier> dynamicSamplers;
+	private final boolean intensitySwizzle;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
@@ -41,6 +40,13 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 		this.baseline = baseline;
 		this.dynamicSamplers = new HashMap<>();
 		this.parent = parent;
+
+		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
+		this.intensitySwizzle = getName().contains("intensity");
+	}
+
+	public boolean isIntensitySwizzle() {
+		return intensitySwizzle;
 	}
 
 	@Override

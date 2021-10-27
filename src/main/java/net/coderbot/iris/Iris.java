@@ -39,7 +39,7 @@ public class Iris implements ClientModInitializer {
 	// The recommended version of Sodium for use with Iris
 	private static final String SODIUM_VERSION = "0.3.2+IRIS2";
 
-	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	private static Path shaderpacksDirectory;
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
@@ -81,7 +81,7 @@ public class Iris implements ClientModInitializer {
 		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
 
 		try {
-			Files.createDirectories(SHADERPACKS_DIRECTORY);
+			Files.createDirectories(getShaderpacksDirectory());
 		} catch (IOException e) {
 			logger.warn("Failed to create the shaderpacks directory!");
 			logger.catching(Level.WARN, e);
@@ -190,7 +190,7 @@ public class Iris implements ClientModInitializer {
 		Path shaderPackRoot;
 
 		try {
-			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
+			shaderPackRoot = getShaderpacksDirectory().resolve(name);
 		} catch (InvalidPathException e) {
 			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
@@ -312,7 +312,7 @@ public class Iris implements ClientModInitializer {
 			// identified as a shader pack due to it containing
 			// folders which contain "shaders" folders, this is
 			// necessary to check against that
-			if (pack.equals(SHADERPACKS_DIRECTORY)) {
+			if (pack.equals(getShaderpacksDirectory())) {
 				return false;
 			}
 			try {
@@ -478,5 +478,13 @@ public class Iris implements ClientModInitializer {
 
 	public static boolean isPhysicsModInstalled() {
 		return physicsModInstalled;
+	}
+
+	public static Path getShaderpacksDirectory() {
+		if (shaderpacksDirectory == null) {
+			shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+		}
+
+		return shaderpacksDirectory;
 	}
 }

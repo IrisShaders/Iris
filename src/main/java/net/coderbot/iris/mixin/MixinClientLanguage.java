@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.LanguageMap;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.client.resources.language.LanguageInfo;
@@ -71,7 +72,7 @@ public class MixinClientLanguage {
 		//
 		// So we also check if the user is loading a special language, and if the shaderpack has support for that
 		// language. If they do, we load that, but if they do not, we load "en_us" instead.
-		Map<String, Map<String, String>> languageMap = pack.getLangMap();
+		LanguageMap languageMap = pack.getLanguageMap();
 
 		if (storage.containsKey(key)) {
 			// TODO: Should we allow shader packs to override existing MC translations?
@@ -79,7 +80,7 @@ public class MixinClientLanguage {
 		}
 
 		for (String code : languageCodes) {
-			Map<String, String> translations = languageMap.get(code);
+			Map<String, String> translations = languageMap.getTranslations(code);
 
 			if (translations != null) {
 				String translation = translations.get(key);
