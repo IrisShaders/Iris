@@ -682,21 +682,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 	}
 
-	public static GbufferProgram getProgramForSheet(ParticleRenderType sheet) {
-		if (sheet == ParticleRenderType.PARTICLE_SHEET_OPAQUE || sheet == ParticleRenderType.TERRAIN_SHEET || sheet == ParticleRenderType.CUSTOM) {
-			return GbufferProgram.TEXTURED_LIT;
-		} else if (sheet == ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT) {
-			// TODO: Should we be using some other pass? (gbuffers_water?)
-			return GbufferProgram.TEXTURED_LIT;
-		} else {
-			// sheet == ParticleTextureSheet.PARTICLE_SHEET_LIT
-			//
-			// Yes, this seems backwards. However, in this case, these particles are always bright regardless of the
-			// lighting condition, and therefore don't use the textured_lit program.
-			return GbufferProgram.TEXTURED;
-		}
-	}
-
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		this.shadowMapRenderer.renderShadows(levelRenderer, playerCamera);
