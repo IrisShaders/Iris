@@ -21,6 +21,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
@@ -42,11 +43,12 @@ public class FinalPassRenderer {
 	private final AbstractTexture noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
+	private final CustomUniforms customUniforms;
 
 	public FinalPassRenderer(ProgramSet pack, RenderTargets renderTargets, AbstractTexture noiseTexture,
 							 FrameUpdateNotifier updateNotifier, ImmutableSet<Integer> flippedBuffers,
 							 CenterDepthSampler centerDepthSampler,
-							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
+							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier, CustomUniforms customUniforms) {
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 
@@ -56,6 +58,7 @@ public class FinalPassRenderer {
 
 		this.noiseTexture = noiseTexture;
 		this.renderTargets = renderTargets;
+		this.customUniforms = customUniforms;
 		this.finalPass = pack.getCompositeFinal().map(source -> {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
@@ -133,6 +136,10 @@ public class FinalPassRenderer {
 			}
 
 			finalPass.program.use();
+
+			// program is the identifier for final :shrug:
+			this.customUniforms.push(finalPass.program);
+
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 		}
 
@@ -230,6 +237,8 @@ public class FinalPassRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		this.customUniforms.assignTo(builder);
+
 		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
 		IrisSamplers.addNoiseSampler(builder, noiseTexture);
 		IrisSamplers.addCompositeSamplers(builder, renderTargets);
@@ -242,7 +251,13 @@ public class FinalPassRenderer {
 		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
 
-		return builder.build();
+		Program build = builder.build();
+
+		// tell the customUniforms that those locations belong to this pass
+		// this is just an object to index the internal map
+		this.customUniforms.mapholderToPass(builder, build);
+
+		return build;
 	}
 
 	public void destroy() {

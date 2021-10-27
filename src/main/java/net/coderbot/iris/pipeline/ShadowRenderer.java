@@ -35,6 +35,7 @@ import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.*;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -96,11 +97,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private String debugStringTerrain = "(unavailable)";
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
+	private final CustomUniforms customUniforms;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
-                          Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-                          AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
+						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
+						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet,
+						  CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
+		this.customUniforms = customUniforms;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
 
@@ -257,12 +261,20 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		this.customUniforms.assignTo(builder);
+
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
 		IrisSamplers.addLevelSamplers(builder, normals, specular);
 		IrisSamplers.addNoiseSampler(builder, noise);
 		IrisSamplers.addShadowSamplers(builder, this);
 
-		return builder.build();
+		Program build = builder.build();
+
+		// tell the customUniforms that those locations belong to this pass
+		// this is just an object to index the internal map
+		this.customUniforms.mapholderToPass(builder, build);
+
+		return build;
 	}
 
 	private static void setupAttributes(Program program) {
@@ -588,6 +600,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.popMatrix();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+
+		// program is the identifier for shadow :shrug:
+		this.customUniforms.push(shadowProgram);
 
 		pipeline.endShadowRender();
 		// Note: This unbinds the shadow framebuffer

@@ -193,7 +193,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
 					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise,
-					programs);
+					programs, customUniforms);
 			createShadowMapRenderer = () -> {
 			};
 		};
@@ -217,7 +217,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier, customUniforms);
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(),
-				centerDepthSampler, shadowMapRendererSupplier);
+				centerDepthSampler, shadowMapRendererSupplier, customUniforms);
 
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
