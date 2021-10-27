@@ -44,14 +44,7 @@ public class GlFramebuffer extends GlResource {
 
 		for (int buffer : buffers) {
 			if (buffer >= 8) {
-				// TODO: this shouldn't be permitted.
-				Iris.logger.warn("Ignoring draw buffer " + buffer + " from draw buffers array " +
-						Arrays.toString(buffers) + " since Iris doesn't support extended color buffers yet.");
-
-				// Don't write anything here.
-				glBuffers[index++] = GL30C.GL_NONE;
-
-				continue;
+				throw new IllegalArgumentException("Only 8 color attachments are supported, but an attempt was made to write to a color attachment with index " + buffer);
 			}
 
 			glBuffers[index++] = GL30C.GL_COLOR_ATTACHMENT0 + buffer;
