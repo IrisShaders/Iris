@@ -501,6 +501,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				ViewportUniforms::addViewportUniforms,
 				WorldTimeUniforms::addWorldTimeUniforms,
 				SystemTimeUniforms::addSystemTimeUniforms,
+				BiomeParameters::biomeParameters,
 				new CelestialUniforms(this.getSunPathRotation())::addCelestialUniforms,
 				// holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
 				holder -> MatrixUniforms.addMatrixUniforms(holder, source.getParent().getPackDirectives()),
