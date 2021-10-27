@@ -15,7 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ClearPassCreator {
-	public static ImmutableList<ClearPass> createClearPasses(RenderTargets renderTargets, PackRenderTargetDirectives renderTargetDirectives) {
+	public static ImmutableList<ClearPass> createClearPasses(RenderTargets renderTargets, boolean fullClear,
+															 PackRenderTargetDirectives renderTargetDirectives) {
 		final int maxDrawBuffers = GlStateManager._getInteger(GL21C.GL_MAX_DRAW_BUFFERS);
 
 		// Sort buffers by their clear color so we can group up glClear calls.
@@ -25,7 +26,7 @@ public class ClearPassCreator {
 			// unboxed
 			final int buffer = bufferI;
 
-			if (settings.shouldClear()) {
+			if (fullClear || settings.shouldClear()) {
 				Vector4f defaultClearColor;
 
 				if (buffer == 0) {

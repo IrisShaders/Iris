@@ -90,6 +90,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass eyes;
 
+	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
 
 	private final GlFramebuffer baseline;
@@ -262,7 +263,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
 		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
-		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, programs.getPackDirectives().getRenderTargetDirectives());
+		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+				programs.getPackDirectives().getRenderTargetDirectives());
+		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+				programs.getPackDirectives().getRenderTargetDirectives());
+
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		if (shadowMapRenderer == null) {
@@ -629,13 +634,22 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		renderTargets.resizeIfNeeded(main.width, main.height);
 
+		final ImmutableList<ClearPass> passes;
+
+		if (renderTargets.isFullClearRequired()) {
+			renderTargets.onFullClear();
+			passes = clearPassesFull;
+		} else {
+			passes = clearPasses;
+		}
+
 		Vec3 fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
 
 		// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
 		//     will give you pink reflections and other weirdness if this is zero.
 		Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
 
-		for (ClearPass clearPass : clearPasses) {
+		for (ClearPass clearPass : passes) {
 			clearPass.execute(fogColor);
 		}
 	}

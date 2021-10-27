@@ -6,12 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL20C;
 
 public class RenderTargets {
 	/**
@@ -27,6 +23,7 @@ public class RenderTargets {
 
 	private int cachedWidth;
 	private int cachedHeight;
+	private boolean fullClearRequired;
 
 	public RenderTargets(com.mojang.blaze3d.pipeline.RenderTarget reference, PackRenderTargetDirectives directives) {
 		this(reference.width, reference.height, directives.getRenderTargetSettings());
@@ -51,18 +48,7 @@ public class RenderTargets {
 
 		// NB: Make sure all buffers are cleared so that they don't contain undefined
 		// data. Otherwise very weird things can happen.
-		//
-		// TODO: Make this respect the clear color of each buffer, destroy these framebuffers afterwards.
-		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-		createFramebufferWritingToMain(new int[] {0,1,2,3,4,5,6,7}).bind();
-		RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT, false);
-
-		createFramebufferWritingToAlt(new int[] {0,1,2,3,4,5,6,7}).bind();
-		RenderSystem.clear(GL20C.GL_COLOR_BUFFER_BIT, false);
-
-		// Make sure to rebind the vanilla framebuffer.
-		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+		fullClearRequired = true;
 	}
 
 	public void destroy() {
@@ -105,6 +91,16 @@ public class RenderTargets {
 
 		depthTexture.resize(newWidth, newHeight);
 		noTranslucents.resize(newWidth, newHeight);
+
+		fullClearRequired = true;
+	}
+
+	public boolean isFullClearRequired() {
+		return fullClearRequired;
+	}
+
+	public void onFullClear() {
+		fullClearRequired = false;
 	}
 
 	public GlFramebuffer createFramebufferWritingToMain(int[] drawBuffers) {
