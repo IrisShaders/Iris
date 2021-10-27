@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -14,9 +15,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.pipeline.ShadowRenderer;
-import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
-import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -31,7 +30,9 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Camera;
@@ -40,6 +41,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
@@ -100,8 +102,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private final Set<ShaderInstance> loadedShaders;
 
-	private final GlFramebuffer clearAltBuffers;
-	private final GlFramebuffer clearMainBuffers;
+	private final ImmutableList<ClearPass> clearPassesFull;
+	private final ImmutableList<ClearPass> clearPasses;
 	private final GlFramebuffer baseline;
 
 	private Runnable createShadowMapRenderer;
@@ -330,10 +332,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programSet.getPackDirectives().shouldUseSeparateAo());
 
-		int[] buffersToBeCleared = programSet.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
-
-		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
-		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
+		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+				programSet.getPackDirectives().getRenderTargetDirectives());
+		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+				programSet.getPackDirectives().getRenderTargetDirectives());
 
 		if (shadowMapRenderer == null) {
 			// Fallback just in case.
@@ -486,14 +488,24 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		renderTargets.resizeIfNeeded(main.width, main.height);
 
-		clearMainBuffers.bind();
-		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+		final ImmutableList<ClearPass> passes;
 
-		clearAltBuffers.bind();
-		// Not clearing the depth buffer since there's only one of those and it was already cleared
-		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
+		if (renderTargets.isFullClearRequired()) {
+			renderTargets.onFullClear();
+			passes = clearPassesFull;
+		} else {
+			passes = clearPasses;
+		}
+
+		Vec3 fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
+
+		// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
+		//     will give you pink reflections and other weirdness if this is zero.
+		Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
+
+		for (ClearPass clearPass : passes) {
+			clearPass.execute(fogColor);
+		}
 
 		// Make sure to switch back to the main framebuffer. If we forget to do this then our alt buffers might be
 		// cleared to the fog color, which absolutely is not what we want!
