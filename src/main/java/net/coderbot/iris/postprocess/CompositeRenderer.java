@@ -1,9 +1,5 @@
 package net.coderbot.iris.postprocess;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Supplier;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -14,20 +10,23 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.rendertarget.*;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
-import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
@@ -199,6 +198,20 @@ public class CompositeRenderer {
 		if (IrisSamplers.hasShadowSamplers(builder)) {
 			IrisSamplers.addShadowSamplers(builder, shadowMapRendererSupplier.get());
 		}
+
+
+		source.getParent().getPack().customUniforms.buildTo(
+				builder,
+				holder -> CameraUniforms.addCameraUniforms(holder, this.updateNotifier),
+				ViewportUniforms::addViewportUniforms,
+				WorldTimeUniforms::addWorldTimeUniforms,
+				SystemTimeUniforms::addSystemTimeUniforms,
+				BiomeParameters::biomeParameters,
+				new CelestialUniforms(source.getParent().getPackDirectives().getSunPathRotation())::addCelestialUniforms,
+				// holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
+				holder -> MatrixUniforms.addMatrixUniforms(holder, source.getParent().getPackDirectives()),
+				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
+		);
 
 		// TODO: Don't duplicate this with FinalPassRenderer
 		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
