@@ -88,6 +88,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShaderInstance weather;
 	private final ShaderInstance crumbling;
 	private final ShaderInstance text;
+	private final ShaderInstance textIntensity;
 	private final ShaderInstance block;
 	private final ShaderInstance beacon;
 	private final ShaderInstance glint;
@@ -305,7 +306,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
 			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
 			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, terrainCutoutAlpha, DefaultVertexFormat.BLOCK, FogMode.OFF);
+			// TODO: block entities text?
 			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.LINEAR);
+			this.textIntensity = createShader("gbuffers_entities_text_intensity", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.LINEAR);
 			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
 			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK, FogMode.LINEAR);
 			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.LINEAR);
@@ -692,6 +695,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public ShaderInstance getText() {
 		return text;
+	}
+
+	@Override
+	public ShaderInstance getTextIntensity() {
+		return textIntensity;
 	}
 
 	@Override

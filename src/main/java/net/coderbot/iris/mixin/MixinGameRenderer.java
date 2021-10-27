@@ -292,13 +292,21 @@ public class MixinGameRenderer {
 
 	@Inject(method = {
 			"getRendertypeTextShader",
-			"getRendertypeTextIntensityShader",
-			"getRendertypeTextSeeThroughShader",
-			"getRendertypeTextIntensitySeeThroughShader"
+			"getRendertypeTextSeeThroughShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTextShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getText, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRendertypeTextIntensityShader",
+			"getRendertypeTextIntensitySeeThroughShader"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideTextIntensityShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
+			override(CoreWorldRenderingPipeline::getTextIntensity, cir);
 		}
 	}
 
