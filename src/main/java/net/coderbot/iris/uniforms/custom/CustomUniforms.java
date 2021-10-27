@@ -27,8 +27,8 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 	private final Map<String, CachedUniform> variables = new Object2ObjectLinkedOpenHashMap<>();
 	private final CustomUniformFixedInputUniformsHolder inputHolder;
 	private final ExpressionResolver resolver;
-	
-	
+
+
 	public CustomUniforms(CustomUniformFixedInputUniformsHolder inputHolder) {
 		super(-1);
 		this.inputHolder = inputHolder;
@@ -45,26 +45,25 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 				},
 				true);
 	}
-	
-	public CachedUniform addVariable(Type type, String name, String expression) throws Exception {
+
+	public CachedUniform addVariable(Type type, String name, ExpressionElement expression) throws Exception {
 		if (this.variables.containsKey(name))
 			throw new Exception("Duplicated variable: " + name);
 		if (this.inputHolder.containsKey(name))
 			throw new Exception("Variable shadows build in uniform: " + name);
-		
-		ExpressionElement ast = Parser.parse(expression, IrisOptions.options);
-		Expression expr = this.resolver.resolveExpression(type, ast);
+
+		Expression expr = this.resolver.resolveExpression(type, expression);
 		CachedUniform uniform = CachedUniform.forExpression(type, expr, this);
 		this.variables.put(name, uniform);
 		return uniform;
 	}
-	
-	public CachedUniform addUniform(Type type, String name, String expression, int location) throws Exception {
+
+	public CachedUniform addUniform(Type type, String name, ExpressionElement expression, int location) throws Exception {
 		CachedUniform uniform = this.addVariable(type, name, expression);
 		uniform.setLocation(location);
 		return uniform;
 	}
-	
+
 	@Override
 	public void update() {
 		this.inputHolder.updateAll();
@@ -72,7 +71,7 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 			value.update();
 		}
 	}
-	
+
 	@Override
 	public Expression getVariable(String name) {
 		// TODO: just add the function return as an argument
@@ -84,32 +83,37 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 			return (context, functionReturn) -> customUniform.writeTo(functionReturn);
 		throw new RuntimeException("Unknown variable: " + name);
 	}
-	
+
 	public interface Factory {
 		void buildTo(
 				LocationalUniformHolder targetHolder,
 				Consumer<UniformHolder>... uniforms
 		);
 	}
-	
+
 	public static class Builder implements Factory {
 		Map<String, Variable> variables = new Object2ObjectLinkedOpenHashMap<>();
-		
+
 		public void addVariable(String type, String name, String expression, boolean isUniform) {
 			if (variables.containsKey(name)) {
 				Iris.logger.warn("Ignoring duplicated custom uniform name: " + name);
 				return;
 			}
-			
+
 			Type parsedType = types.get(type);
 			if (parsedType == null) {
 				Iris.logger.warn("Ignoring invalid uniform type: " + type + " of " + name);
 				return;
 			}
-			
-			variables.put(name, new Variable(parsedType, name, expression, isUniform));
+
+			try {
+				ExpressionElement ast = Parser.parse(expression, IrisOptions.options);
+				variables.put(name, new Variable(parsedType, name, ast, isUniform));
+			} catch (Exception e) {
+				Iris.logger.warn("Failed to parse custom variable/uniform");
+			}
 		}
-		
+
 		public CustomUniforms build(
 				CustomUniformFixedInputUniformsHolder inputHolder,
 				LocationalUniformHolder targetHolder
@@ -128,18 +132,18 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 					} else {
 						customUniforms.addVariable(variable.type, variable.name, variable.expression);
 					}
-					Iris.logger.info("Was able to parse uniform " + variable.name + " = " + variable.expression);
+					Iris.logger.info("Was able to resolve uniform " + variable.name + " = " + variable.expression);
 				} catch (Exception e) {
 					Iris.logger
-							.warn("Failed to parse uniform " + variable.name + ", reason: " + e
+							.warn("Failed to resolve uniform " + variable.name + ", reason: " + e
 									.getMessage() + " ( = " + variable.expression + ")");
 					Iris.logger.catching(e);
 				}
 			}
 			return customUniforms;
 		}
-		
-		
+
+
 		@SafeVarargs
 		public final CustomUniforms build(
 				LocationalUniformHolder targetHolder,
@@ -151,7 +155,7 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 			}
 			return this.build(inputs.build(), targetHolder);
 		}
-		
+
 		@SafeVarargs
 		@Override
 		public final void buildTo(LocationalUniformHolder targetHolder, Consumer<UniformHolder>... uniforms) {
@@ -159,21 +163,21 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 			CustomUniforms customUniforms = this.build(targetHolder, uniforms);
 			targetHolder.addUniform(UniformUpdateFrequency.PER_FRAME, customUniforms);
 		}
-		
+
 		private static class Variable {
 			final public Type type;
 			final public String name;
-			final public String expression;
+			final public ExpressionElement expression;
 			final public boolean uniform;
-			
-			public Variable(Type type, String name, String expression, boolean uniform) {
+
+			public Variable(Type type, String name, ExpressionElement expression, boolean uniform) {
 				this.type = type;
 				this.name = name;
 				this.expression = expression;
 				this.uniform = uniform;
 			}
 		}
-		
+
 		final private static Map<String, Type> types = new ImmutableMap.Builder<String, Type>()
 				.put("bool", Type.Boolean)
 				.put("float", Type.Float)
@@ -182,7 +186,7 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 				.put("vec3", VectorType.VEC3)
 				.put("vec4", VectorType.VEC4)
 				.build();
-		
-		
+
+
 	}
 }
