@@ -1,8 +1,6 @@
 package net.coderbot.iris.uniforms;
 
-import java.util.Objects;
-import java.util.function.IntSupplier;
-
+import com.mojang.math.Vector4f;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
@@ -31,12 +29,11 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Objects;
+import java.util.function.IntSupplier;
+
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
-
-import com.mojang.math.Vector4f;
-
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
@@ -55,7 +52,7 @@ public final class CommonUniforms {
 		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
 		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms);
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
-		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
+		// HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
 		FogUniforms.addFogUniforms(uniforms);
 
 		uniforms.uniform4f("entityColor", () -> {

@@ -12,6 +12,14 @@ public class UnaryExpressionElement implements ExpressionElement {
 		this.inner = inner;
 	}
 
+	public UnaryOp getOp() {
+		return this.op;
+	}
+
+	public ExpressionElement getInner() {
+		return this.inner;
+	}
+
 	@Override
 	public String toString() {
 		return "UnaryExpr{" + this.op + " {" + this.inner + "} }";

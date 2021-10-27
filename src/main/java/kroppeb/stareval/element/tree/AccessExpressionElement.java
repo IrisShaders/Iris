@@ -11,6 +11,14 @@ public class AccessExpressionElement implements AccessibleExpressionElement {
 		this.index = index;
 	}
 
+	public AccessibleExpressionElement getBase() {
+		return this.base;
+	}
+
+	public String getIndex() {
+		return this.index;
+	}
+
 	@Override
 	public String toString() {
 		return "Access{" + this.base + "[" + this.index + "]}";

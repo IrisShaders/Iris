@@ -1,10 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.function.IntFunction;
-import java.util.function.Supplier;
-
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -32,8 +27,8 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
-import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.*;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleRenderType;
@@ -41,11 +36,12 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.*;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -109,7 +105,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 
 	private boolean isBeforeTranslucent;
-
 	private final int waterId;
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
@@ -120,9 +115,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final List<String> programStackLog = new ArrayList<>();
 
 	private static final ResourceLocation WATER_IDENTIFIER = new ResourceLocation("minecraft", "water");
+	private final CustomUniforms.Factory customUniforms;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
+
+		// TODO should we clear this at the end of the constructor?
+		this.customUniforms = programs.getPack().customUniforms;
 
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
@@ -184,7 +183,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
 					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise,
 					programs);
-			createShadowMapRenderer = () -> {};
+			createShadowMapRenderer = () -> {
+			};
 		};
 
 		BufferFlipper flipper = new BufferFlipper();
@@ -264,7 +264,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
 		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[]{0});
 
 		if (shadowMapRenderer == null) {
 			// Fallback just in case.
@@ -474,7 +474,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+					source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -494,6 +494,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			createShadowMapRenderer.run();
 			IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
 		}
+
+		this.customUniforms.buildTo(
+				builder,
+				holder -> CameraUniforms.addCameraUniforms(holder, this.updateNotifier),
+				ViewportUniforms::addViewportUniforms,
+				WorldTimeUniforms::addWorldTimeUniforms,
+				SystemTimeUniforms::addSystemTimeUniforms,
+				new CelestialUniforms(this.getSunPathRotation())::addCelestialUniforms,
+				// holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
+				holder -> MatrixUniforms.addMatrixUniforms(holder, source.getParent().getPackDirectives()),
+				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
+		);
 
 		GlFramebuffer framebufferBeforeTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
@@ -535,7 +547,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			} else {
 				framebufferAfterTranslucents.bind();
 			}
-
 			program.use();
 
 			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
@@ -580,7 +591,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
 
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
-
 		// Destroy our render targets
 		//
 		// While it's possible to just clear them instead and reuse them, we'd need to investigate whether or not this
@@ -660,7 +670,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(),
+				renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 
 		deferredRenderer.renderAll();
@@ -722,7 +733,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginLevelRendering() {
 		isRenderingWorld = true;
 		isBeforeTranslucent = true;
-
 		checkWorld();
 
 		if (!isRenderingWorld) {
@@ -731,11 +741,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		if (!programStack.isEmpty()) {
-			throw new IllegalStateException("Program stack before the start of rendering, something has gone very wrong!");
+			throw new IllegalStateException(
+					"Program stack before the start of rendering, something has gone very wrong!");
 		}
 
 		updateNotifier.onNewFrame();
-
 		// Get ready for world rendering
 		prepareRenderTargets();
 
@@ -759,7 +769,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			Iris.logger.fatal("Program stack not empty at end of rendering, something has gone very wrong!");
 			Iris.logger.fatal("Program stack log: " + programStackLog);
 			Iris.logger.fatal("Program stack content: " + programStack);
-			throw new IllegalStateException("Program stack not empty at end of rendering, something has gone very wrong!");
+			throw new IllegalStateException(
+					"Program stack not empty at end of rendering, something has gone very wrong!");
 		}
 
 		isRenderingWorld = false;

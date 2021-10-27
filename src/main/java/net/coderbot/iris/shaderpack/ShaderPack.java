@@ -1,14 +1,19 @@
 package net.coderbot.iris.shaderpack;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-
-import net.coderbot.iris.Iris;
-import org.jetbrains.annotations.Nullable;
+import java.util.function.BiConsumer;
 
 public class ShaderPack {
 	private final ProgramSet base;
@@ -21,6 +26,8 @@ public class ShaderPack {
 	private final LanguageMap languageMap;
 	private final CustomTexture customNoiseTexture;
 
+	public final CustomUniforms.Factory customUniforms;
+
 	/**
 	 * Reads a shader pack from the disk.
 	 *
@@ -32,8 +39,8 @@ public class ShaderPack {
 		Objects.requireNonNull(root);
 
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
-			.map(ShaderProperties::new)
-			.orElseGet(ShaderProperties::empty);
+				.map(ShaderProperties::new)
+				.orElseGet(ShaderProperties::empty);
 
 		this.base = new ProgramSet(root, root, shaderProperties, this);
 		this.overworld = loadOverrides(root, "world0", shaderProperties, this);
@@ -56,6 +63,7 @@ public class ShaderPack {
 				return null;
 			}
 		}).orElse(null);
+		this.customUniforms = shaderProperties.customUniforms;
 	}
 
 	@Nullable
@@ -71,7 +79,24 @@ public class ShaderPack {
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
-		Properties properties = new Properties();
+		// FIXME: remove order dependency
+		//  suggestion by https://stackoverflow.com/a/17011319/8707677
+		Properties properties = new Properties() {
+			private transient final Map<Object, Object> map = Object2ObjectMaps.synchronize(
+					new Object2ObjectLinkedOpenHashMap<>());
+
+			@Override
+			public synchronized Object put(Object key, Object value) {
+				if (map.put(key, value) != null)
+					throw new IllegalArgumentException("Duplicated definition in properties");
+				return super.put(key, value);
+			}
+
+			@Override
+			public synchronized void forEach(BiConsumer<? super Object, ? super Object> action) {
+				this.map.forEach(action);
+			}
+		};
 
 		try {
 			// NB: shaders.properties is specified to be encoded with ISO-8859-1 by OptiFine,

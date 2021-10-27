@@ -1,11 +1,10 @@
 package net.coderbot.iris.uniforms;
 
-import java.util.OptionalLong;
-import java.util.function.IntSupplier;
-
-import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+
+import java.util.OptionalLong;
+import java.util.function.IntSupplier;
 
 /**
  * Implements uniforms relating the system time (as opposed to the world time)
@@ -28,7 +27,7 @@ public final class SystemTimeUniforms {
 		uniforms
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "frameCounter", COUNTER)
 			// TODO: Don't hardcode framemod8 here for Sildur's Vibrant Shaders
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "framemod8", () -> COUNTER.getAsInt() % 8)
+			// .uniform1i(UniformUpdateFrequency.PER_FRAME, "framemod8", () -> COUNTER.getAsInt() % 8)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTime", TIMER::getLastFrameTime)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeCounter", TIMER::getFrameTimeCounter);
 	}

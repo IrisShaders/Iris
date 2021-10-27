@@ -1,22 +1,14 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.function.Consumer;
-
-import it.unimi.dsi.fastutil.objects.Object2FloatMap;
-import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.objects.*;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
+
+import java.util.Optional;
+import java.util.Properties;
+import java.util.function.Consumer;
 
 public class ShaderProperties {
 	private boolean enableClouds = true;
@@ -53,6 +45,7 @@ public class ShaderProperties {
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
 	private String noiseTexturePath = null;
+	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 
 	private ShaderProperties() {
 		// empty
@@ -156,6 +149,27 @@ public class ShaderProperties {
 				}
 
 				blendDisabled.add(pass);
+			});
+
+
+			handlePassDirective("variable.", key, value, pass -> {
+				String[] parts = pass.split("\\.");
+				if(parts.length != 2){
+					Iris.logger.warn("Custom variables should take the form of `variable.<type>.<name> = <expression>. Ignoring " + key);
+					return;
+				}
+
+				customUniforms.addVariable(parts[0], parts[1], value, false);
+			});
+
+			handlePassDirective("uniform.", key, value, pass -> {
+				String[] parts = pass.split("\\.");
+				if(parts.length != 2){
+					Iris.logger.warn("Custom uniforms should take the form of `uniform.<type>.<name> = <expression>. Ignoring " + key);
+					return;
+				}
+
+				customUniforms.addVariable(parts[0], parts[1], value, true);
 			});
 
 			// TODO: Buffer flip, size directives
