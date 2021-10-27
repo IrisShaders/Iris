@@ -8,8 +8,8 @@ import java.util.function.Supplier;
 
 public class Float4MatrixCachedUniform extends VectorCachedUniform<Matrix4f> {
 	
-	public Float4MatrixCachedUniform(UniformUpdateFrequency updateFrequency, Supplier<Matrix4f> supplier) {
-		super(updateFrequency, new Matrix4f(), supplier);
+	public Float4MatrixCachedUniform(String name, UniformUpdateFrequency updateFrequency, Supplier<Matrix4f> supplier) {
+		super(name, updateFrequency, new Matrix4f(), supplier);
 	}
 	
 	@Override

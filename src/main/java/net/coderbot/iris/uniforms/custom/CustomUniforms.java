@@ -1,10 +1,12 @@
 package net.coderbot.iris.uniforms.custom;
 
 import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.*;
 import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.expression.Expression;
+import kroppeb.stareval.expression.VariableExpression;
 import kroppeb.stareval.function.FunctionContext;
+import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
 import kroppeb.stareval.parser.Parser;
 import kroppeb.stareval.resolver.ExpressionResolver;
@@ -18,56 +20,144 @@ import net.coderbot.iris.parsing.IrisOptions;
 import net.coderbot.iris.parsing.VectorType;
 import net.coderbot.iris.uniforms.custom.cached.CachedUniform;
 
-import java.util.Map;
-import java.util.OptionalInt;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 
 public class CustomUniforms extends Uniform implements FunctionContext {
 	private final Map<String, CachedUniform> variables = new Object2ObjectLinkedOpenHashMap<>();
+	private final Map<String, Expression> variablesExpressions = new Object2ObjectLinkedOpenHashMap<>();
 	private final CustomUniformFixedInputUniformsHolder inputHolder;
-	private final ExpressionResolver resolver;
+	private final List<CachedUniform> uniforms = new ArrayList<>();
+private final List<CachedUniform> uniformOrder;
 
-
-	public CustomUniforms(CustomUniformFixedInputUniformsHolder inputHolder) {
+	private CustomUniforms(CustomUniformFixedInputUniformsHolder inputHolder, Map<String, Builder.Variable> variables) {
 		super(-1);
+
 		this.inputHolder = inputHolder;
-		this.resolver = new ExpressionResolver(
+		ExpressionResolver resolver = new ExpressionResolver(
 				IrisFunctions.functions,
 				(name) -> {
 					Type type = this.inputHolder.getType(name);
 					if (type != null)
 						return type;
-					CachedUniform uniform = this.variables.get(name);
-					if (uniform != null)
-						return uniform.getType();
+					Builder.Variable variable = variables.get(name);
+					if (variable != null)
+						return variable.type;
 					return null;
 				},
 				true);
-	}
 
-	public CachedUniform addVariable(Type type, String name, ExpressionElement expression) throws Exception {
+		for (Builder.Variable variable : variables.values()) {
+			try {
+				Expression expression = resolver.resolveExpression(variable.type, variable.expression);
+				CachedUniform cachedUniform = CachedUniform
+						.forExpression(variable.name, variable.type, expression, this);
+				this.addVariable(expression, cachedUniform);
+				if (variable.uniform) {
+					this.uniforms.add(cachedUniform);
+				}
+				Iris.logger.info("Was able to resolve uniform " + variable.name + " = " + variable.expression);
+			} catch (Exception e) {
+				Iris.logger
+						.warn("Failed to resolve uniform " + variable.name + ", reason: " + e
+								.getMessage() + " ( = " + variable.expression + ")");
+				Iris.logger.catching(e);
+			}
+		}
+
+		{
+			// toposort
+
+			Map<CachedUniform, List<CachedUniform>> dependsOn = new Object2ObjectOpenHashMap<>();
+			Map<CachedUniform, List<CachedUniform>> requiredBy = new Object2ObjectOpenHashMap<>();
+			Object2IntMap<CachedUniform> dependsOnCount = new Object2IntOpenHashMap<>();
+
+			for (CachedUniform input : this.inputHolder.getAll()) {
+				requiredBy.put(input, new ObjectArrayList<>());
+			}
+
+			for (CachedUniform input : this.variables.values()) {
+				requiredBy.put(input, new ObjectArrayList<>());
+			}
+
+			FunctionReturn functionReturn = new FunctionReturn();
+			Set<VariableExpression> requires = new ObjectOpenHashBigSet<>();
+			for (Map.Entry<String, Expression> entry : this.variablesExpressions.entrySet()) {
+				requires.clear();
+				entry.getValue().listVariables(requires);
+				if (requires.isEmpty()) {
+					continue;
+				}
+				List<CachedUniform> dependencies = requires.stream()
+						.map(v -> (CachedUniform) v.partialEval(this, functionReturn))
+						.collect(Collectors.toList());
+
+				CachedUniform uniform = this.variables.get(entry.getKey());
+
+				dependsOn.put(uniform, dependencies);
+				dependsOnCount.put(uniform, dependencies.size());
+
+				for (CachedUniform dependency : dependencies) {
+					requiredBy.get(dependency).add(uniform);
+				}
+			}
+
+			// actual toposort:
+			List<CachedUniform> ordered = new ObjectArrayList<>();
+			List<CachedUniform> free = new ObjectArrayList<>();
+
+			// init
+			for (CachedUniform entry : requiredBy.keySet()) {
+				if (!dependsOnCount.containsKey(entry)) {
+					free.add(entry);
+				}
+			}
+
+			while (!free.isEmpty()) {
+				CachedUniform pop = free.remove(free.size() - 1);
+				ordered.add(pop);
+				for (CachedUniform dependent : requiredBy.get(pop)) {
+					int count = dependsOnCount.mergeInt(dependent, -1, Integer::sum);
+					assert count >= 0;
+					if (count == 0) {
+						free.add(dependent);
+						dependsOnCount.removeInt(dependent);
+					}
+				}
+			}
+
+			if (!dependsOnCount.isEmpty()) {
+				throw new IllegalStateException("Circular reference detected");
+			}
+			this.uniformOrder = ordered;
+		}
+	}
+	
+	private void addVariable(Expression expression, CachedUniform uniform) throws Exception {
+		String name = uniform.getName();
 		if (this.variables.containsKey(name))
 			throw new Exception("Duplicated variable: " + name);
 		if (this.inputHolder.containsKey(name))
 			throw new Exception("Variable shadows build in uniform: " + name);
 
-		Expression expr = this.resolver.resolveExpression(type, expression);
-		CachedUniform uniform = CachedUniform.forExpression(type, expr, this);
 		this.variables.put(name, uniform);
-		return uniform;
+		this.variablesExpressions.put(name, expression);
 	}
-
-	public CachedUniform addUniform(Type type, String name, ExpressionElement expression, int location) throws Exception {
-		CachedUniform uniform = this.addVariable(type, name, expression);
-		uniform.setLocation(location);
-		return uniform;
+	
+	public void assignTo(LocationalUniformHolder targetHolder) {
+		for (CachedUniform uniform : this.uniforms) {
+			OptionalInt location = targetHolder.location(uniform.getName(), Type.convert(uniform.getType()));
+			if (location.isPresent()) {
+				uniform.setLocation(location.getAsInt());
+			}
+		}
 	}
 
 	@Override
 	public void update() {
-		this.inputHolder.updateAll();
-		for (CachedUniform value : this.variables.values()) {
+		for (CachedUniform value : this.uniformOrder) {
 			value.update();
 		}
 	}
@@ -79,13 +169,13 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 	
 	@Override
 	public Expression getVariable(String name) {
-		// TODO: just add the function return as an argument
+		// TODO: Make the simplify just return these ones
 		final CachedUniform inputUniform = this.inputHolder.getUniform(name);
 		if (inputUniform != null)
-			return (context, functionReturn) -> inputUniform.writeTo(functionReturn);
+			return inputUniform;
 		final CachedUniform customUniform = this.variables.get(name);
 		if (customUniform != null)
-			return (context, functionReturn) -> customUniform.writeTo(functionReturn);
+			return customUniform;
 		throw new RuntimeException("Unknown variable: " + name);
 	}
 
@@ -123,28 +213,8 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 				CustomUniformFixedInputUniformsHolder inputHolder,
 				LocationalUniformHolder targetHolder
 		) {
-			CustomUniforms customUniforms = new CustomUniforms(inputHolder);
-			for (Variable variable : this.variables.values()) {
-				try {
-					if (variable.uniform) {
-						OptionalInt location = targetHolder.location(variable.name, Type.convert(variable.type));
-						if (location.isPresent()) {
-							customUniforms
-									.addUniform(variable.type, variable.name, variable.expression, location.getAsInt());
-						} else {
-							customUniforms.addVariable(variable.type, variable.name, variable.expression);
-						}
-					} else {
-						customUniforms.addVariable(variable.type, variable.name, variable.expression);
-					}
-					Iris.logger.info("Was able to resolve uniform " + variable.name + " = " + variable.expression);
-				} catch (Exception e) {
-					Iris.logger
-							.warn("Failed to resolve uniform " + variable.name + ", reason: " + e
-									.getMessage() + " ( = " + variable.expression + ")");
-					Iris.logger.catching(e);
-				}
-			}
+			CustomUniforms customUniforms = new CustomUniforms(inputHolder, this.variables);
+			customUniforms.assignTo(targetHolder);
 			return customUniforms;
 		}
 
@@ -192,6 +262,30 @@ public class CustomUniforms extends Uniform implements FunctionContext {
 				.put("vec4", VectorType.VEC4)
 				.build();
 
+}
 
+	static class DependencyTree {
+		final private Map<CachedUniform, Set<CachedUniform>> dependsOn = new Object2ObjectOpenHashMap<>();
+		final private Map<CachedUniform, Set<CachedUniform>> requiredBy = new Object2ObjectOpenHashMap<>();
+		final private Map<String, CachedUniform> inputs = new Object2ObjectOpenHashMap<>();
+
+		final private FunctionContext functionContext = new FunctionContext() {
+			@Override
+			public Expression getVariable(String name) {
+				return inputs.get(name);
+			}
+
+			@Override
+			public boolean hasVariable(String name) {
+				return inputs.containsKey(name);
+			}
+		};
+
+		void addInputs(Collection<CachedUniform> variables) {
+			for (CachedUniform uniform : variables) {
+				requiredBy.put(uniform, new ObjectOpenHashBigSet<>());
+				inputs.put(uniform.getName(), uniform);
+			}
+		}
 	}
 }

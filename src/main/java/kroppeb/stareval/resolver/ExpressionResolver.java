@@ -11,6 +11,7 @@ import kroppeb.stareval.element.tree.UnaryExpressionElement;
 import kroppeb.stareval.expression.CallExpression;
 import kroppeb.stareval.expression.ConstantExpression;
 import kroppeb.stareval.expression.Expression;
+import kroppeb.stareval.expression.VariableExpression;
 import kroppeb.stareval.function.*;
 
 import java.util.*;
@@ -206,17 +207,38 @@ public class ExpressionResolver {
 			if (type == null)
 				throw new RuntimeException("Unknown variable: " + name);
 			if (type.equals(targetType)) {
-				this.log("[DEBUG] resolved variable %s to type %s", name, targetType);
-				return (c, r) -> c.getVariable(name).evaluateTo(c, r);
+				log("[DEBUG] resolved variable %s to type %s", name, targetType);
+				// TODO: We should add a variable provider (and have this as default)
+				//       doing so would remove the need for a FunctionContext.
+				return new VariableExpression() {
+					@Override
+					public void evaluateTo(FunctionContext c, FunctionReturn r) {
+						c.getVariable(name).evaluateTo(c, r);
+					}
+
+					@Override
+					public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
+						return context.hasVariable(name)?context.getVariable(name):this;
+					}
+				};
 			}
 			if (!allowImplicit) {
-				this.log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
+				log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
 						name, type, targetType);
 				return null;
 			}
-			this.log("[DEBUG] trying implicit casts to resolve variable %s (of type %s) to type %s",
-					name, type, targetType);
-			castable = (c, r) -> c.getVariable(name).evaluateTo(c, r);
+			// TODO duplicate of above
+			castable = new VariableExpression() {
+				@Override
+				public void evaluateTo(FunctionContext c, FunctionReturn r) {
+					c.getVariable(name).evaluateTo(c, r);
+				}
+
+				@Override
+				public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
+					return context.hasVariable(name)?context.getVariable(name):this;
+				}
+			};
 			innerType = type;
 		} else {
 			throw new RuntimeException("unexpected token: " + expression.toString());
