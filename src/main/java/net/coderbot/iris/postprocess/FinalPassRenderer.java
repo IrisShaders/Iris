@@ -85,7 +85,8 @@ public class FinalPassRenderer {
 
 			SwapPass swap = new SwapPass();
 			swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {target});
-			swap.from.readBuffer(target);
+			// NB: This is handled in RenderTargets now.
+			//swap.from.readBuffer(target);
 			swap.targetTexture = renderTargets.get(target).getMainTexture();
 
 			swapPasses.add(swap);
@@ -156,7 +157,7 @@ public class FinalPassRenderer {
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
-		for (int i = 0; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
+		for (int i = 0; i < renderTargets.getRenderTargetCount(); i++) {
 			// Reset mipmapping states at the end of the frame.
 			resetRenderTarget(renderTargets.get(i));
 		}

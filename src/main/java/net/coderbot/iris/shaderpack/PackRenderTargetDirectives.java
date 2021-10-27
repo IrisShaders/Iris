@@ -24,8 +24,19 @@ public class PackRenderTargetDirectives {
 		"gaux4"
 	);
 
-	// TODO: Support 16 render targets instead of just 8, we need other changes elsewhere first.
-	public static final Set<Integer> BASELINE_SUPPORTED_RENDER_TARGETS = ImmutableSet.of(0, 1, 2, 3, 4, 5, 6, 7);
+	// TODO: Instead of just passing this, the shader pack loader should try to figure out what color buffers are in
+	//       use.
+	public static final Set<Integer> BASELINE_SUPPORTED_RENDER_TARGETS;
+
+	static {
+		ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
+
+		for (int i = 0; i < IrisLimits.MAX_COLOR_BUFFERS; i++) {
+			builder.add(i);
+		}
+
+		BASELINE_SUPPORTED_RENDER_TARGETS = builder.build();
+	}
 
 	private final Int2ObjectMap<RenderTargetSettings> renderTargetSettings;
 
