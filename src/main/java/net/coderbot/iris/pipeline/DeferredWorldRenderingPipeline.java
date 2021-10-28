@@ -194,7 +194,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			customTexturePropertiesMap.forEach((samplerName, path) -> {
 				try {
 					CustomTextureData textureData = programs.getPack().readTexture(path);
-					AbstractTexture customTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
+					AbstractTexture customTexture = new NativeImageBackedCustomTexture(textureData);
 					customTextureIds.put(samplerName, customTexture.getId());
 				} catch (IOException | UnsupportedOperationException e) {
 					Iris.logger.error("Unable to read the custom texture at " + path, e);
