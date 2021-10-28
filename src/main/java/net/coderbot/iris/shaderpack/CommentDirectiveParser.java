@@ -90,8 +90,20 @@ public class CommentDirectiveParser {
 
 		// TODO: This is a similar hack but just for complementary.
 		if (haystack.contains("COLORED_LIGHT") && haystack.contains("Complementary Shaders by EminGT")
-				&& haystack.contains("/* DRAWBUFFERS:03618 */") && needle.equals("DRAWBUFFERS")) {
-			return Optional.of("0361");
+				&& needle.equals("DRAWBUFFERS")) {
+			if (haystack.contains("/* DRAWBUFFERS:03618 */") && haystack.contains("/* DRAWBUFFERS:0361 */")) {
+				if (haystack.contains("#define COLORED_LIGHT_DEFINE") && !haystack.contains("//#define COLORED_LIGHT_DEFINE")) {
+					return Optional.of("03618");
+				} else {
+					return Optional.of("0361");
+				}
+			} else if (haystack.contains("/*DRAWBUFFERS:05*/") && haystack.contains("/*DRAWBUFFERS:059*/")) {
+				if (haystack.contains("#define COLORED_LIGHT_DEFINE") && !haystack.contains("//#define COLORED_LIGHT_DEFINE")) {
+					return Optional.of("059");
+				} else {
+					return Optional.of("05");
+				}
+			}
 		}
 
 		String before = haystack.substring(0, indexOfPrefix).trim();
