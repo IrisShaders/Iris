@@ -139,17 +139,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
-		this.customUniforms = programs.getPack().customUniforms.build(
-				holder -> CameraUniforms.addCameraUniforms(holder, this.updateNotifier),
-				ViewportUniforms::addViewportUniforms,
-				WorldTimeUniforms::addWorldTimeUniforms,
-				SystemTimeUniforms::addSystemTimeUniforms,
-				BiomeParameters::biomeParameters,
-				new CelestialUniforms(this.getSunPathRotation())::addCelestialUniforms,
-				holder -> MatrixUniforms.addMatrixUniforms(holder, programs.getPackDirectives()),
-				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
-		);
-
 		this.allPasses = new ArrayList<>();
 
 		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programs.getPackDirectives().getRenderTargetDirectives());
@@ -201,6 +190,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		// TODO: Change this once earlier passes are implemented.
 		ImmutableSet<Integer> flippedBeforeTerrain = ImmutableSet.of();
+
+		this.customUniforms = programs.getPack().customUniforms.build(
+				holder -> CameraUniforms.addCameraUniforms(holder, this.updateNotifier),
+				ViewportUniforms::addViewportUniforms,
+				WorldTimeUniforms::addWorldTimeUniforms,
+				SystemTimeUniforms::addSystemTimeUniforms,
+				BiomeParameters::biomeParameters,
+				new CelestialUniforms(this.getSunPathRotation())::addCelestialUniforms,
+				holder -> MatrixUniforms.addMatrixUniforms(holder, programs.getPackDirectives()),
+				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
+		);
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
