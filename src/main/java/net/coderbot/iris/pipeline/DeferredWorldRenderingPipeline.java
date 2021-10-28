@@ -201,6 +201,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			Object2IntMap<String> customTextureIds = customTextureIdMap.getOrDefault(textureStage, new Object2IntOpenHashMap<>());
 			customTexturePropertiesMap.forEach((samplerName, path) -> {
 				try {
+					if (path.startsWith("minecraft:textures/atlas/")) {
+						customTextureIds.put(samplerName, Minecraft.getInstance().getModelManager().getAtlas(new ResourceLocation(path)).getId());
+						return;
+					}
+
 					CustomTextureData textureData = programs.getPack().readTexture(path);
 					AbstractTexture customTexture = new NativeImageBackedCustomTexture(textureData);
 					customTextureIds.put(samplerName, customTexture.getId());

@@ -54,7 +54,7 @@ public abstract class CustomTextureData {
 			try {
 				return IOUtils.toByteArray(Minecraft.getInstance().getResourceManager().getResource(location).getInputStream());
 			} catch (IOException e) {
-				Iris.logger.error("Custom texture failed to load from identifier!", e);
+				Iris.logger.error("Failed to read identifier-based texture at " + location, e);
 				try {
 					return MissingTextureAtlasSprite.getTexture().getPixels().asByteArray();
 				} catch (IOException ex) {
