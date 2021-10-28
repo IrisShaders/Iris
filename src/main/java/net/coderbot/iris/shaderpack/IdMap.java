@@ -30,6 +30,8 @@ import org.apache.logging.log4j.Level;
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
  */
+// TODO: Don't reference vanilla Minecraft classes, so that the shaderpack loader can be properly isolated from
+//       Minecraft.
 public class IdMap {
 	/**
 	 * Maps a given item ID to an integer ID
