@@ -179,7 +179,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private static void copyShaderPack(Path pack, String name) throws IOException {
-		Path target = Iris.SHADERPACKS_DIRECTORY.resolve(name);
+		Path target = Iris.getShaderpacksDirectory().resolve(name);
 
 		// Copy the pack file into the shaderpacks folder.
 		Files.copy(pack, target);
@@ -254,6 +254,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void openShaderPackFolder() {
-		Util.getPlatform().openFile(Iris.SHADERPACKS_DIRECTORY.toFile());
+		Util.getPlatform().openFile(Iris.getShaderpacksDirectory().toFile());
 	}
 }

@@ -110,9 +110,9 @@ public class PackDirectives {
 		}
 
 		explicitFlipsStr.forEach((buffer, shouldFlip) -> {
-			Integer index = PackRenderTargetDirectives.LEGACY_RENDER_TARGET_MAP.get(buffer);
+			int index = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.indexOf(buffer);
 
-			if (index == null && buffer.startsWith("colortex")) {
+			if (index == -1 && buffer.startsWith("colortex")) {
 				String id = buffer.substring("colortex".length());
 
 				try {
@@ -122,7 +122,7 @@ public class PackDirectives {
 				}
 			}
 
-			if (index != null) {
+			if (index != -1) {
 				explicitFlips.put(index, shouldFlip);
 			} else {
 				Iris.logger.warn("Unknown buffer with ID " + buffer + " specified in flip directive for pass "
