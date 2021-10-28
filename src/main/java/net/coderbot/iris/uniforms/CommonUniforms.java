@@ -43,16 +43,7 @@ public final class CommonUniforms {
 	}
 
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
-	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
-		CameraUniforms.addCameraUniforms(uniforms, updateNotifier);
-		ViewportUniforms.addViewportUniforms(uniforms);
-		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
-		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
-		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
-		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
-		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms);
-		MatrixUniforms.addMatrixUniforms(uniforms, directives);
-		// HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
+	public static void addDynamicUniforms(DynamicUniformHolder uniforms) {
 		FogUniforms.addFogUniforms(uniforms);
 
 		uniforms.uniform4f("entityColor", () -> {
@@ -79,6 +70,27 @@ public final class CommonUniforms {
 			return new Vector2i((int) atlasSize.x, (int) atlasSize.y);
 		}, StateUpdateNotifiers.atlasTextureNotifier);
 
+		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
+				CapturedRenderingState.INSTANCE.getEntityIdNotifier());
+
+		uniforms.uniform1i("blockEntityId", CapturedRenderingState.INSTANCE::getCurrentRenderedBlockEntity,
+				CapturedRenderingState.INSTANCE.getBlockEntityIdNotifier());
+	}
+
+	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
+		CommonUniforms.addNonDynamicUniforms(uniforms, idMap, directives, updateNotifier);
+		CommonUniforms.addDynamicUniforms(uniforms);
+	}
+
+	private static void addNonDynamicUniforms(UniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
+		CameraUniforms.addCameraUniforms(uniforms, updateNotifier);
+		ViewportUniforms.addViewportUniforms(uniforms);
+		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
+		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
+		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
+		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms);
+		MatrixUniforms.addMatrixUniforms(uniforms, directives);
+		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
 

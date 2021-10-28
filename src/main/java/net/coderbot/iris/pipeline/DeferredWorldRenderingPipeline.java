@@ -133,7 +133,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				SystemTimeUniforms::addSystemTimeUniforms,
 				BiomeParameters::biomeParameters,
 				new CelestialUniforms(this.getSunPathRotation())::addCelestialUniforms,
-				// holder -> IdMapUniforms.addIdMapUniforms(holder, source.getParent().getPack().getIdMap()),
 				holder -> MatrixUniforms.addMatrixUniforms(holder, programs.getPackDirectives()),
 				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
 		);
@@ -494,12 +493,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
-		// TODO replace with
-		// SamplerUniforms.addCommonSamplerUniforms(builder);
-		// SamplerUniforms.addWorldSamplerUniforms(builder);
-		// SamplerUniforms.addDepthSamplerUniforms(builder);
-
+		CommonUniforms.addDynamicUniforms(builder);
 		this.customUniforms.assignTo(builder);
 
 		Supplier<ImmutableSet<Integer>> flipped =
@@ -514,7 +508,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			createShadowMapRenderer.run();
 			IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
 		}
-
 
 		GlFramebuffer framebufferBeforeTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());

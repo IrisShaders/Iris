@@ -199,7 +199,7 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		CommonUniforms.addDynamicUniforms(builder);
 		this.customUniforms.assignTo(builder);
 
 		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);

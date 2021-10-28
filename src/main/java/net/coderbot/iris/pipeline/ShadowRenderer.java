@@ -134,7 +134,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.noise = noise;
 
 		if (shadow != null) {
-			this.shadowProgram = createProgram(shadow, directives, flipped);
+			this.shadowProgram = createProgram(shadow, flipped);
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// TODO: Check for image load / store too once supported.
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
@@ -245,7 +245,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
-	private Program createProgram(ProgramSource source, PackDirectives directives,
+	private Program createProgram(ProgramSource source,
 								  Supplier<ImmutableSet<Integer>> flipped) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
@@ -260,7 +260,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		CommonUniforms.addDynamicUniforms(builder);
 		this.customUniforms.assignTo(builder);
 
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
