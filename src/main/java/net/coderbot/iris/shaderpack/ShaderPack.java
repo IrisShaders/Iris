@@ -91,8 +91,10 @@ public class ShaderPack {
 	public CustomTextureData readTexture(String path) throws IOException, UnsupportedOperationException {
 		CustomTextureData customTextureData;
 		if (path.contains(":") && ResourceLocation.isValidResourceLocation(path)) {
-			ResourceLocation textureIdentifier = new ResourceLocation(path);
-			customTextureData = new CustomTextureData.ResourceData(new TextureFilteringData(true, false), textureIdentifier);
+//			Identifier textureIdentifier = new Identifier(path);
+//			byte[] content = IOUtils.toByteArray(MinecraftClient.getInstance().getResourceManager().getResource(textureIdentifier).getInputStream());
+//			customTextureData = new CustomTextureData.ResourceData(new TextureFilteringData(true, false), textureIdentifier.getNamespace(), textureIdentifier.getPath());
+			throw new UnsupportedOperationException("Identifier-based custom textures are not yet supported");
 		} else {
 			// TODO: Make sure the resulting path is within the shaderpack?
 			if (path.startsWith("/")) {

@@ -1,16 +1,8 @@
 package net.coderbot.iris.shaderpack.texture;
 
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.resources.ResourceLocation;
-import org.apache.commons.compress.utils.IOUtils;
-
-import java.io.IOException;
 
 public abstract class CustomTextureData {
 	private final TextureFilteringData filteringData;
@@ -23,8 +15,6 @@ public abstract class CustomTextureData {
 		return filteringData;
 	}
 
-	public abstract byte[] getContent();
-
 	public static final class PngData extends CustomTextureData {
 		private final byte[] content;
 
@@ -34,35 +24,28 @@ public abstract class CustomTextureData {
 			this.content = content;
 		}
 
-		@Override
 		public byte[] getContent() {
 			return content;
 		}
 	}
 
 	public static final class ResourceData extends CustomTextureData {
-		private final ResourceLocation location;
+		private final String namespace;
+		private final String location;
 
-		public ResourceData(TextureFilteringData filteringData, ResourceLocation location) {
+		public ResourceData(TextureFilteringData filteringData, String namespace, String location) {
 			super(filteringData);
 
+			this.namespace = namespace;
 			this.location = location;
 		}
 
-		@Override
-		public byte[] getContent() {
-			try {
-				return IOUtils.toByteArray(Minecraft.getInstance().getResourceManager().getResource(location).getInputStream());
-			} catch (IOException e) {
-				Iris.logger.error("Failed to read identifier-based texture at " + location, e);
-				try {
-					return MissingTextureAtlasSprite.getTexture().getPixels().asByteArray();
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-				// If getting the missing texture fails we're just screwed either way.
-				return null;
-			}
+		public String getNamespace() {
+			return namespace;
+		}
+
+		public String getLocation() {
+			return location;
 		}
 	}
 
@@ -82,7 +65,6 @@ public abstract class CustomTextureData {
 			this.pixelType = pixelType;
 		}
 
-		@Override
 		public final byte[] getContent() {
 			return content;
 		}

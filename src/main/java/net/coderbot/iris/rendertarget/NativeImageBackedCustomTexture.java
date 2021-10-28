@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 public class NativeImageBackedCustomTexture extends DynamicTexture {
-	public NativeImageBackedCustomTexture(CustomTextureData textureData) throws IOException {
+	public NativeImageBackedCustomTexture(CustomTextureData.PngData textureData) throws IOException {
 		super(create(textureData.getContent()));
 
 		// By default, images are unblurred and not clamped.
