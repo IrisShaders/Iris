@@ -192,14 +192,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		ImmutableSet<Integer> flippedBeforeTerrain = ImmutableSet.of();
 
 		this.customUniforms = programs.getPack().customUniforms.build(
-				holder -> CameraUniforms.addCameraUniforms(holder, this.updateNotifier),
-				ViewportUniforms::addViewportUniforms,
-				WorldTimeUniforms::addWorldTimeUniforms,
-				SystemTimeUniforms::addSystemTimeUniforms,
-				BiomeParameters::biomeParameters,
-				new CelestialUniforms(this.getSunPathRotation())::addCelestialUniforms,
-				holder -> MatrixUniforms.addMatrixUniforms(holder, programs.getPackDirectives()),
-				holder -> CommonUniforms.generalCommonUniforms(holder, this.updateNotifier)
+				holder -> CommonUniforms.addNonDynamicUniforms(holder, programs.getPack().getIdMap(), programs.getPackDirectives(), this.updateNotifier)
 		);
 
 		createShadowMapRenderer = () -> {

@@ -18,7 +18,7 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 public class BiomeParameters {
 	private static final Minecraft client = Minecraft.getInstance();
 	
-	public static void biomeParameters(UniformHolder uniforms) {
+	public static void addBiomeUniforms(UniformHolder uniforms) {
 		
 		uniforms
 				.uniform1i(PER_TICK, "biome", playerI(player ->
