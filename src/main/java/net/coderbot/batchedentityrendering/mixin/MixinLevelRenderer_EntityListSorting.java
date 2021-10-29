@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 
 import java.util.*;
 
@@ -23,7 +24,9 @@ public class MixinLevelRenderer_EntityListSorting {
 	@Shadow
 	private ClientLevel level;
 
-	@ModifyVariable(method = "renderLevel", at = @At(value = "INVOKE_ASSIGN", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"), ordinal = 0)
+	@ModifyVariable(method = "renderLevel", at = @At(value = "INVOKE_ASSIGN", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"),
+			slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderBuffers;bufferSource()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;"),
+					to = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderChunks:Lit/unimi/dsi/fastutil/objects/ObjectList;")), allow = 1)
     private Iterator<Entity> batchedentityrendering$sortEntityList(Iterator<Entity> iterator) {
         // Sort the entity list first in order to allow vanilla's entity batching code to work better.
         this.level.getProfiler().push("sortEntityList");
