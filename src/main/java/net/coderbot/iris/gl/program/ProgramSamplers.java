@@ -3,7 +3,7 @@ package net.coderbot.iris.gl.program;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
@@ -44,11 +44,11 @@ public class ProgramSamplers {
 		return new Builder(program, reservedTextureUnits);
 	}
 
-	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds) {
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds) {
 		return customTextureSamplerInterceptor(samplerHolder, customTextureIds, ImmutableSet.of());
 	}
 
-	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
 		return new CustomTextureSamplerInterceptor(samplerHolder, customTextureIds, flippedAtLeastOnceSnapshot);
 	}
 
@@ -180,10 +180,10 @@ public class ProgramSamplers {
 
 	public static final class CustomTextureSamplerInterceptor implements SamplerHolder {
 		private final SamplerHolder samplerHolder;
-		private final Object2IntMap<String> customTextureIds;
+		private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 		private final ImmutableSet<String> deactivatedOverrides;
 
-		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2IntMap<String> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
 			this.samplerHolder = samplerHolder;
 			this.customTextureIds = customTextureIds;
 
@@ -214,7 +214,7 @@ public class ProgramSamplers {
 		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
 			for (String name : names) {
 				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
-					sampler = () -> customTextureIds.getInt(name);
+					sampler = customTextureIds.get(name);
 					break;
 				}
 			}
@@ -226,7 +226,7 @@ public class ProgramSamplers {
 		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
 			for (String name : names) {
 				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
-					sampler = () -> customTextureIds.getInt(name);
+					sampler = customTextureIds.get(name);
 					break;
 				}
 			}

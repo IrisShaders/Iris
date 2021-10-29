@@ -1,7 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.shaders.ProgramManager;
@@ -10,6 +8,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
@@ -37,7 +36,10 @@ import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
-import net.coderbot.iris.uniforms.*;
+import net.coderbot.iris.uniforms.CameraUniforms;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.CelestialUniforms;
+import net.coderbot.iris.uniforms.CommonUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -64,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class ShadowRenderer implements ShadowMapRenderer {
@@ -91,7 +94,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture noise;
 
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
-	private final Object2IntMap<String> customTextureIds;
+	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 
 	public static boolean ACTIVE = false;
 	private final String debugStringOverall;
@@ -104,7 +107,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
                           AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet,
-													Object2IntMap<String> customTextureIds) {
+													Object2ObjectMap<String, IntSupplier> customTextureIds) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();

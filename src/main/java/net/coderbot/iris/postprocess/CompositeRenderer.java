@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -30,6 +30,7 @@ import org.lwjgl.opengl.GL30C;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class CompositeRenderer {
@@ -39,13 +40,13 @@ public class CompositeRenderer {
 	private final AbstractTexture noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
-	private final Object2IntMap<String> customTextureIds;
+	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 
 	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, RenderTargets renderTargets,
 							 AbstractTexture noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
 							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier,
-							 Object2IntMap<String> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips) {
+							 Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips) {
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
