@@ -150,11 +150,6 @@ public class ShaderPreprocessor {
 
 		source = builder.toString();
 
-		// strip leading whitespace before newline, makes next change more reliable
-		source = source.replaceAll("[ \t]*[\r\n]", "\n");
-		// consolidate newlines
-		source = source.replaceAll("\n{2,}", "\n\n");
-
 		return source;
 	}
 }
