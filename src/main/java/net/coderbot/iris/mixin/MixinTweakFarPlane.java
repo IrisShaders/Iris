@@ -74,7 +74,7 @@ public class MixinTweakFarPlane {
 		//
 		// Coefficient values: 0.83 for fast fog, 0.95 for fancy fog, 1.0 for no fog
 		//
-		// We mimic "fast" fog here
+		// On 1.16, we select the value based on if GL_NV_fog_distance is supported, and on 1.17+ only fancy fog is supported.
 
 		renderDistance *= GL.getCapabilities().GL_NV_fog_distance ? 0.95 : 0.83F;
 	}
