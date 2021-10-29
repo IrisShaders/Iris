@@ -3,7 +3,7 @@ package net.coderbot.iris.uniforms;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
-import net.coderbot.iris.mixin.statelisteners.CapabilityTrackerAccessor;
+import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
 
 public class FogUniforms {
@@ -15,7 +15,7 @@ public class FogUniforms {
 		uniforms.uniform1i("fogMode", () -> {
 			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
 
-			if (!((CapabilityTrackerAccessor) fog.enable).getState()) {
+			if (!((BooleanStateAccessor) fog.enable).isEnabled()) {
 				return 0;
 			}
 
@@ -28,7 +28,7 @@ public class FogUniforms {
 		uniforms.uniform1f("fogDensity", () -> {
 			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
 
-			if (!((CapabilityTrackerAccessor) fog.enable).getState()) {
+			if (!((BooleanStateAccessor) fog.enable).isEnabled()) {
 				return 0.0f;
 			}
 

@@ -30,6 +30,8 @@ import org.apache.logging.log4j.Level;
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
  */
+// TODO: Don't reference vanilla Minecraft classes, so that the shaderpack loader can be properly isolated from
+//       Minecraft.
 public class IdMap {
 	/**
 	 * Maps a given item ID to an integer ID
@@ -311,25 +313,31 @@ public class IdMap {
 		// Once we have a list of properties and their expected values, we iterate over every possible state of this
 		// block and check for ones that match the filters. This isn't particularly efficient, but it works!
 		for (BlockState state : stateManager.getPossibleStates()) {
-			boolean matches = true;
-
-			for (Map.Entry<Property<?>, String> condition : properties.entrySet()) {
-				// TODO: Do something about these raw types...
-				Property property = condition.getKey();
-				String expectedValue = condition.getValue();
-
-				String actualValue = property.getName((Comparable) state.getValue(property));
-
-				if (!expectedValue.equals(actualValue)) {
-					matches = false;
-					break;
-				}
-			}
-
-			if (matches) {
+			if (checkState(state, properties)) {
 				idMap.put(state, intId);
 			}
 		}
+	}
+
+	// We ignore generics here, the actual types don't matter because we just convert
+	// them to strings anyways, and the compiler checks just get in the way.
+	//
+	// If you're able to rewrite this function without SuppressWarnings, feel free.
+	// But otherwise it works fine.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static boolean checkState(BlockState state, Map<Property<?>, String> expectedValues) {
+		for (Map.Entry<Property<?>, String> condition : expectedValues.entrySet()) {
+			Property property = condition.getKey();
+			String expectedValue = condition.getValue();
+
+			String actualValue = property.getName(state.getValue(property));
+
+			if (!expectedValue.equals(actualValue)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

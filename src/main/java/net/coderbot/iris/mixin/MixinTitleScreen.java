@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinTitleScreen {
 	@Inject(method = "init", at = @At("RETURN"))
 	public void iris$showSodiumIncompatScreen(CallbackInfo ci) {
-		if(Iris.isSodiumInvalid()) {
+		if (Iris.isSodiumInvalid()) {
 			Minecraft.getInstance().setScreen(new AlertScreen(
 					Minecraft.getInstance()::stop,
 					new TranslatableComponent("iris.sodium.failure.title").withStyle(ChatFormatting.RED),

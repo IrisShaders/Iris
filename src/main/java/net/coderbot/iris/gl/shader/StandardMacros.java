@@ -1,5 +1,6 @@
 package net.coderbot.iris.gl.shader;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -148,6 +149,19 @@ public class StandardMacros {
 		// see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
 
 		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toList());
+	}
+
+	/**
+	 * Returns the list of Iris-exclusive uniforms supported in the current version of Iris.
+	 *
+	 * @return List of definitions corresponding to the uniform names prefixed with "MC_"
+	 */
+	public static List<String> getIrisDefines() {
+		List<String> defines = new ArrayList<>();
+		// All Iris-exclusive uniforms should have a corresponding definition here. Example:
+		// defines.add("MC_UNIFORM_DRAGON_DEATH_PROGRESS");
+
+		return defines;
 	}
 
 	/**

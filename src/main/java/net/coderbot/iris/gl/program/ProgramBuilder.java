@@ -24,11 +24,12 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
 		.define(StandardMacros.getRenderer())
 		.define(StandardMacros.getVendor())
+		.defineAll(StandardMacros.getIrisDefines())
 		.defineAll(StandardMacros.getGlExtensions())
 		.build();
 
 	private final int program;
-	private ProgramSamplers.Builder samplers;
+	private final ProgramSamplers.Builder samplers;
 
 	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
 		super(name, program);

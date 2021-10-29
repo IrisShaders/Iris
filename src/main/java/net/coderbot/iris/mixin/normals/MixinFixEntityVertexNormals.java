@@ -62,12 +62,12 @@ public class MixinFixEntityVertexNormals {
 		// we're only interested in it because we want to restore the matrix state before rendering the last
 		// immediate buffers
 		@Slice(id = "after_translucent_rendering", from = @At(value = "FIELD:FIRST",
-			target = "Lnet/minecraft/client/render/WorldRenderer;transparencyShader:Lnet/minecraft/client/gl/ShaderEffect;")),
+			target = "net/minecraft/client/renderer/LevelRenderer.transparencyChain : Lnet/minecraft/client/renderer/PostChain;")),
 		// The opposite of the previous slice, everything up until the translucency rendering.
 		@Slice(id = "before_translucent_rendering",
 			from = @At(value = "INVOKE_STRING", target = PROFILER_SWAP, args = "ldc=entities"),
 			to = @At(value = "FIELD:FIRST", target =
-				"Lnet/minecraft/client/render/WorldRenderer;transparencyShader:Lnet/minecraft/client/gl/ShaderEffect;")
+				"net/minecraft/client/renderer/LevelRenderer.transparencyChain : Lnet/minecraft/client/renderer/PostChain;")
 		)
 	})
 	private void iris$setupGlMatrix(PoseStack poseStack, float tickDelta, long limitTime,

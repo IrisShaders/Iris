@@ -18,8 +18,8 @@ public class IrisParticleRenderTypes {
 			bufferBuilder.begin(7, DefaultVertexFormat.PARTICLE);
 		}
 
-		public void end(Tesselator tessellator) {
-			tessellator.end();
+		public void end(Tesselator tesselator) {
+			tesselator.end();
 		}
 
 		public String toString() {

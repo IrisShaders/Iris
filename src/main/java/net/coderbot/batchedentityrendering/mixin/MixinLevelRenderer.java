@@ -21,7 +21,8 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
  * Tracks whether or not the world is being rendered, and manages grouping
  * with different entities.
  */
-@Mixin(value = LevelRenderer.class)
+// Uses a priority of 999 to apply before the main Iris mixins to draw entities before deferred runs.
+@Mixin(value = LevelRenderer.class, priority = 999)
 public class MixinLevelRenderer {
 	private static final String RENDER_ENTITY =
 			"Lnet/minecraft/client/renderer/LevelRenderer;renderEntity(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V";

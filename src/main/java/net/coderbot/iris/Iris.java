@@ -27,7 +27,6 @@ import org.lwjgl.glfw.GLFW;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -38,7 +37,7 @@ public class Iris implements ClientModInitializer {
 	// The recommended version of Sodium for use with Iris
 	private static final String SODIUM_VERSION = "0.2.0+IRIS4";
 
-	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	private static Path shaderpacksDirectory;
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
@@ -80,13 +79,13 @@ public class Iris implements ClientModInitializer {
 		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
 
 		try {
-			Files.createDirectories(SHADERPACKS_DIRECTORY);
+			Files.createDirectories(getShaderpacksDirectory());
 		} catch (IOException e) {
 			logger.warn("Failed to create the shaderpacks directory!");
 			logger.catching(Level.WARN, e);
 		}
 
-		irisConfig = new IrisConfig();
+		irisConfig = new IrisConfig(FabricLoader.getInstance().getConfigDir().resolve("iris.properties"));
 
 		try {
 			irisConfig.initialize();
@@ -102,48 +101,48 @@ public class Iris implements ClientModInitializer {
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
 		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 
-		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-			if (reloadKeybind.consumeClick()) {
-				try {
-					reload();
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded"), false);
-					}
-
-				} catch (Exception e) {
-					logger.error("Error while reloading Shaders for Iris!", e);
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
-					}
-				}
-			} else if (toggleShadersKeybind.consumeClick()) {
-				IrisConfig config = getIrisConfig();
-				try {
-					config.setShadersEnabled(!config.areShadersEnabled());
-					config.save();
-
-					reload();
-					if (minecraftClient.player != null) {
-						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
-					}
-				} catch (Exception e) {
-					logger.error("Error while toggling shaders!", e);
-
-					if (minecraftClient.player != null) {
-						minecraftClient.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
-					}
-
-					setShadersDisabled();
-					currentPackName = "(off) [fallback, check your logs for errors]";
-				}
-			} else if (shaderpackScreenKeybind.consumeClick()) {
-				minecraftClient.setScreen(new ShaderPackScreen(null));
-			}
-		});
-
 		pipelineManager = new PipelineManager(Iris::createPipeline);
+	}
+
+	public static void handleKeybinds(Minecraft minecraft) {
+		if (reloadKeybind.consumeClick()) {
+			try {
+				reload();
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded"), false);
+				}
+
+			} catch (Exception e) {
+				logger.error("Error while reloading Shaders for Iris!", e);
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
+				}
+			}
+		} else if (toggleShadersKeybind.consumeClick()) {
+			IrisConfig config = getIrisConfig();
+			try {
+				config.setShadersEnabled(!config.areShadersEnabled());
+				config.save();
+
+				reload();
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
+				}
+			} catch (Exception e) {
+				logger.error("Error while toggling shaders!", e);
+
+				if (minecraft.player != null) {
+					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
+				}
+
+				setShadersDisabled();
+				currentPackName = "(off) [fallback, check your logs for errors]";
+			}
+		} else if (shaderpackScreenKeybind.consumeClick()) {
+			minecraft.setScreen(new ShaderPackScreen(null));
+		}
 	}
 
 	public static void loadShaderpack() {
@@ -190,7 +189,7 @@ public class Iris implements ClientModInitializer {
 		Path shaderPackRoot;
 
 		try {
-			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
+			shaderPackRoot = getShaderpacksDirectory().resolve(name);
 		} catch (InvalidPathException e) {
 			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
@@ -312,7 +311,7 @@ public class Iris implements ClientModInitializer {
 			// identified as a shader pack due to it containing
 			// folders which contain "shaders" folders, this is
 			// necessary to check against that
-			if (pack.equals(SHADERPACKS_DIRECTORY)) {
+			if (pack.equals(getShaderpacksDirectory())) {
 				return false;
 			}
 			try {
@@ -470,5 +469,13 @@ public class Iris implements ClientModInitializer {
 
 	public static boolean isPhysicsModInstalled() {
 		return physicsModInstalled;
+	}
+
+	public static Path getShaderpacksDirectory() {
+		if (shaderpacksDirectory == null) {
+			shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+		}
+
+		return shaderpacksDirectory;
 	}
 }

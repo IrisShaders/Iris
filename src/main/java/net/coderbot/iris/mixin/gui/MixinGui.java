@@ -2,7 +2,6 @@ package net.coderbot.iris.mixin.gui;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.screen.HudHideable;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
@@ -46,7 +45,7 @@ public class MixinGui {
 		warningLines.add("[Iris] Sodium isn't installed; you will have poor performance.");
 		warningLines.add("[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
 
-		for(int i = 0; i < warningLines.size(); ++i) {
+		for (int i = 0; i < warningLines.size(); ++i) {
 			String string = warningLines.get(i);
 
 			final int lineHeight = 9;

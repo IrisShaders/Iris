@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(LivingEntityRenderer.class)
 public abstract class MixinLivingEntityRenderer {
 	@Shadow
-	abstract float getAttackAnim(LivingEntity entity, float tickDelta);
+	abstract float getWhiteOverlayProgress(LivingEntity entity, float tickDelta);
 
 	@ModifyVariable(method = "render", at = @At("HEAD"))
 	private MultiBufferSource iris$wrapProvider(MultiBufferSource bufferSource, LivingEntity entity, float yaw,
@@ -28,12 +28,12 @@ public abstract class MixinLivingEntityRenderer {
 		}
 
 		boolean hurt;
-		if(Iris.isPhysicsModInstalled()) {
+		if (Iris.isPhysicsModInstalled()) {
 			hurt = entity.hurtTime > 0 && !entity.isDeadOrDying();
 		} else {
 			hurt = entity.hurtTime > 0 || entity.deathTime > 0;
 		}
-		float whiteFlash = getAttackAnim(entity, tickDelta);
+		float whiteFlash = getWhiteOverlayProgress(entity, tickDelta);
 
 		if (hurt || whiteFlash > 0.0) {
 			EntityColorRenderStateShard phase = new EntityColorRenderStateShard(hurt, whiteFlash);
