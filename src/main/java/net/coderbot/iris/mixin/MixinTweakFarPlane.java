@@ -81,6 +81,6 @@ public class MixinTweakFarPlane {
 		//
 		// On 1.16, we select the value based on if GL_NV_fog_distance is supported, and on 1.17+ only fancy fog is supported.
 
-		renderDistance *= GL.getCapabilities().GL_NV_fog_distance ? 0.95 : 0.83F;
+		renderDistance *= 0.95F;
 	}
 }

@@ -60,7 +60,8 @@ public class TriforceCompositePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in float iris_FogFragCoord;");
 		}
 
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ProjectionMatrix mat4(1.0)");
+		// This is used to scale the quad projection matrix from (0, 1) to (-1, 1).
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ProjectionMatrix mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
