@@ -5,6 +5,7 @@ import net.coderbot.iris.Iris;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.GameRenderer;
+import org.lwjgl.opengl.GL;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -75,6 +76,6 @@ public class MixinTweakFarPlane {
 		//
 		// We mimic "fast" fog here
 
-		renderDistance *= 0.83F;
+		renderDistance *= GL.getCapabilities().GL_NV_fog_distance ? 0.95 : 0.83F;
 	}
 }
