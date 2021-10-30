@@ -48,6 +48,7 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -96,11 +97,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private String debugStringTerrain = "(unavailable)";
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
+	private final ProfilerFiller profiler;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
                           AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
 		this.pipeline = pipeline;
+		this.profiler = Minecraft.getInstance().getProfiler();
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
 
@@ -409,8 +412,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
 	}
 
-	private void copyPreTranslucentDepth(LevelRendererAccessor levelRenderer) {
-		setProfilerTarget("translucent depth copy");
+	private void copyPreTranslucentDepth() {
+		profiler.popPush("translucent depth copy");
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
@@ -425,7 +428,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		int shadowEntities = 0;
 
-		levelRenderer.getLevel().getProfiler().push("cull");
+		profiler.push("cull");
 
 		List<Entity> renderedEntities = new ArrayList<>(32);
 
@@ -438,12 +441,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			renderedEntities.add(entity);
 		}
 
-		setProfilerTarget("sort");
+		profiler.popPush("sort");
 
 		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
 		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
 
-		setProfilerTarget("build geometry");
+		profiler.popPush("build geometry");
 
 		for (Entity entity : renderedEntities) {
 			levelRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
@@ -453,8 +456,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		renderedShadowEntities = shadowEntities;
 	}
 
-	private void renderBlockEntities(LevelRendererAccessor levelRenderer, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
-		levelRenderer.getLevel().getProfiler().push("build blockentities");
+	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
+		profiler.push("build blockentities");
 
 		int shadowBlockEntities = 0;
 
@@ -476,7 +479,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		Minecraft client = Minecraft.getInstance();
 
-		setProfilerTarget("shadows");
+		profiler.popPush("shadows");
 		ACTIVE = true;
 
 		// Create our camera
@@ -487,13 +490,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		ORTHO = new Matrix4f();
 		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
 
-		levelRenderer.getLevel().getProfiler().push("terrain_setup");
+		profiler.push("terrain_setup");
 
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).saveState();
 		}
 
-		levelRenderer.getLevel().getProfiler().push("initialize frustum");
+		profiler.push("initialize frustum");
 
 		Frustum frustum = createShadowFrustum();
 
@@ -507,7 +510,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// Center the frustum on the player camera position
 		frustum.prepare(cameraX, cameraY, cameraZ);
 
-		levelRenderer.getLevel().getProfiler().pop();
+		profiler.pop();
 
 		// Disable chunk occlusion culling - it's a bit complex to get this properly working with shadow rendering
 		// as-is, however in the future it will be good to work on restoring it for a nice performance boost.
@@ -530,7 +533,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		client.smartCull = wasChunkCullingEnabled;
 
-		setProfilerTarget("terrain");
+		profiler.popPush("terrain");
 
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
@@ -548,7 +551,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// without shaders, which doesn't integrate with their shadow distortion code.
 		setupShadowProgram();
 
-		setProfilerTarget("entities");
+		profiler.popPush("entities");
 
 		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
 		// it is set to a fixed value.
@@ -575,18 +578,18 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		renderEntities(levelRenderer, entityShadowFrustum, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
 
-		renderBlockEntities(levelRenderer, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+		renderBlockEntities(bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
 
-		setProfilerTarget("draw entities");
+		profiler.popPush("draw entities");
 
 		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
 		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
 		// shadow...
 		bufferSource.endBatch();
 
-		copyPreTranslucentDepth(levelRenderer);
+		copyPreTranslucentDepth();
 
-		setProfilerTarget("translucent terrain");
+		profiler.popPush("translucent terrain");
 
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
@@ -604,11 +607,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		debugStringTerrain = ((LevelRenderer) levelRenderer).getChunkStatistics();
 
-		setProfilerTarget("generate mipmaps");
+		profiler.popPush("generate mipmaps");
 
 		generateMipmaps();
 
-		levelRenderer.getLevel().getProfiler().pop();
+		profiler.pop();
 
 		restoreGlState(client);
 
@@ -621,7 +624,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		ACTIVE = false;
-		setProfilerTarget("updatechunks");
+		profiler.popPush("updatechunks");
 	}
 
 	@Override
@@ -658,10 +661,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	private static ClientLevel getLevel() {
 		return Objects.requireNonNull(Minecraft.getInstance().level);
-	}
-
-	private void setProfilerTarget(String target) {
-		getLevel().getProfiler().popPush(target);
 	}
 
 	private static float getSkyAngle() {
