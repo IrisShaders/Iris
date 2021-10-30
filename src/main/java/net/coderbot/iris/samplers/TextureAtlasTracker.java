@@ -70,8 +70,8 @@ public class TextureAtlasTracker {
 
 		// Bind this texture and grab the atlas size from it.
 		RenderSystem.bindTexture(atlas.getId());
-		int width = GL20C.glGetTexLevelParameteri(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_WIDTH);
-		int height = GL20C.glGetTexLevelParameteri(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_HEIGHT);
+		int width = GlStateManager._getTexLevelParameter(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_WIDTH);
+		int height = GlStateManager._getTexLevelParameter(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_HEIGHT);
 
 		TextureAtlasInterface atlasI = (TextureAtlasInterface) atlas;
 		atlasI.setAtlasSize(width, height);

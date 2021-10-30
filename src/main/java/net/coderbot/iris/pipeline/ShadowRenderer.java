@@ -276,14 +276,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private static void setupAttribute(Program program, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = GL20.glGetAttribLocation(program.getProgramId(), name);
+		int location = IrisRenderSystem.getAttribLocation(program.getProgramId(), name);
 
 		if (location != -1) {
 			if (location != expectedLocation) {
 				throw new IllegalStateException();
 			}
 
-			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
+			IrisRenderSystem.vertexAttrib4f(location, v0, v1, v2, v3);
 		}
 	}
 
@@ -447,7 +447,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// Set up our orthographic projection matrix and load it into the legacy matrix stack
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.pushMatrix();
-		GL11.glLoadMatrixf(orthoMatrix);
+		IrisRenderSystem.loadMatrixf(orthoMatrix);
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 
 		// Disable backface culling
@@ -556,7 +556,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// This is needed for the shadowtex0 / shadowtex1 split.
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 		RenderSystem.bindTexture(0);
 
 		levelRenderer.getLevel().getProfiler().popPush("translucent terrain");

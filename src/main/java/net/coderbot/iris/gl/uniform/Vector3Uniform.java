@@ -3,8 +3,9 @@ package net.coderbot.iris.gl.uniform;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import java.util.function.Supplier;
+
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.minecraft.world.phys.Vec3;
-import org.lwjgl.opengl.GL21;
 
 public class Vector3Uniform extends Uniform {
 	private final Vector3f cachedValue;
@@ -47,7 +48,7 @@ public class Vector3Uniform extends Uniform {
 
 		if (!newValue.equals(cachedValue)) {
 			cachedValue.set(newValue.x(), newValue.y(), newValue.z());
-			GL21.glUniform3f(location, cachedValue.x(), cachedValue.y(), cachedValue.z());
+			IrisRenderSystem.uniform3f(location, cachedValue.x(), cachedValue.y(), cachedValue.z());
 		}
 	}
 }

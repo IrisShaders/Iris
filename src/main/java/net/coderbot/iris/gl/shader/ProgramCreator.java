@@ -26,7 +26,7 @@ public class ProgramCreator {
 
 		GlStateManager.glLinkProgram(program);
 
-		String log = GL20C.glGetProgramInfoLog(program);
+		String log = IrisRenderSystem.getProgramInfoLog(program);
 
 		if (!log.isEmpty()) {
 			LOGGER.warn("Program link log for " + name + ": " + log);

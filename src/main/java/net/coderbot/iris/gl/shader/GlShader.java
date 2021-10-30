@@ -4,6 +4,7 @@ package net.coderbot.iris.gl.shader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.GlResource;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
@@ -33,7 +34,7 @@ public class GlShader extends GlResource {
 		ShaderWorkarounds.safeShaderSource(handle, src);
 		GlStateManager.glCompileShader(handle);
 
-		String log = GL20C.glGetShaderInfoLog(handle);
+		String log = IrisRenderSystem.getShaderInfoLog(handle);
 
 		if (!log.isEmpty()) {
 			LOGGER.warn("Shader compilation log for " + name + ": " + log);

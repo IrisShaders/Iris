@@ -1,6 +1,6 @@
 package net.coderbot.iris.gl.uniform;
 
-import org.lwjgl.opengl.GL20;
+import net.coderbot.iris.gl.IrisRenderSystem;
 
 import java.util.function.Supplier;
 import net.minecraft.world.phys.Vec2;
@@ -22,7 +22,7 @@ public class Vector2IntegerUniform extends Uniform {
 
 		if (cachedValue == null || !newValue.equals(cachedValue)) {
 			cachedValue = newValue;
-			GL20.glUniform2i(this.location, (int) newValue.x, (int) newValue.y);
+			IrisRenderSystem.uniform2i(this.location, (int) newValue.x, (int) newValue.y);
 		}
 	}
 }
