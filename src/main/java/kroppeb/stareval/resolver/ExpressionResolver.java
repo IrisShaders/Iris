@@ -253,7 +253,7 @@ public class ExpressionResolver {
 				return new CallExpression(f, new Expression[]{castable});
 			}
 		}
-		this.log("[DEBUG] failed to resolved %s to type %s, even using implicit casts");
+		this.log("[DEBUG] failed to resolved %s to type %s, even using implicit casts", expression, targetType);
 		return null;
 	}
 
