@@ -65,13 +65,7 @@ public class CompositeRenderer {
 			pass.program = createProgram(source, flipped, shadowMapRendererSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
 
-			boolean[] stageWritesToAlt = new boolean[RenderTargets.MAX_RENDER_TARGETS];
-
-			for (int i = 0; i < stageWritesToAlt.length; i++) {
-				stageWritesToAlt[i] = !bufferFlipper.isFlipped(i);
-			}
-
-			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(stageWritesToAlt, drawBuffers);
+			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
 			pass.stageReadsFromAlt = flipped;
 			pass.framebuffer = framebuffer;
@@ -82,12 +76,6 @@ public class CompositeRenderer {
 
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
-				if (buffer >= RenderTargets.MAX_RENDER_TARGETS) {
-					// Don't flip extended buffers
-					// TODO: Support extended buffers
-					continue;
-				}
-
 				bufferFlipper.flip(buffer);
 			}
 		}
