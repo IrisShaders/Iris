@@ -40,7 +40,6 @@ public class ShaderProperties {
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
-	// TODO: Custom textures
 	// TODO: private Map<String, String> optifineVersionRequirements;
 	// TODO: private Set<String> sliderOptions;
 	// TODO: Parse profiles
@@ -97,7 +96,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 
-			// TODO: Min optifine versions, custom textures, shader options layout / appearance / profiles
+			// TODO: Min optifine versions, shader options layout / appearance / profiles
 			// TODO: Custom uniforms
 
 			handlePassDirective("scale.", key, value, pass -> {
