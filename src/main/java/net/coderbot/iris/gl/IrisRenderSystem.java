@@ -18,19 +18,9 @@ public class IrisRenderSystem {
 		GL30C.glGenerateMipmap(mipmapTarget);
 	}
 
-	public static void bindAttributeLocation(int program, int index, ByteBuffer name) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glBindAttribLocation(program, index, name);
-	}
-
 	public static void bindAttributeLocation(int program, int index, CharSequence name) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glBindAttribLocation(program, index, name);
-	}
-
-	public static void bindFragDataLocation(int program, int index, ByteBuffer name) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glBindFragDataLocation(program, index, name);
 	}
 
 	public static void texImage2D(int i, int j, int k, int l, int m, int n, int o, int p, @Nullable ByteBuffer byteBuffer) {
