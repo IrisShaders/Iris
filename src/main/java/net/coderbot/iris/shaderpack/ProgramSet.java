@@ -326,7 +326,8 @@ public class ProgramSet {
 			vertexSource = readFile(vertexPath);
 
 			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(inclusionRoot, vertexPath, vertexSource);
+				vertexSource = IncludePreprocessor.process(inclusionRoot, vertexPath, vertexSource);
+				vertexSource = GlslPreprocessor.glslPreprocessSource(vertexSource);
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
@@ -338,7 +339,8 @@ public class ProgramSet {
 			geometrySource = readFile(geometryPath);
 
 			if (geometrySource != null) {
-				geometrySource = ShaderPreprocessor.process(inclusionRoot, geometryPath, geometrySource);
+				geometrySource = IncludePreprocessor.process(inclusionRoot, geometryPath, geometrySource);
+				geometrySource = GlslPreprocessor.glslPreprocessSource(geometrySource);
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
@@ -350,7 +352,8 @@ public class ProgramSet {
 			fragmentSource = readFile(fragmentPath);
 
 			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(inclusionRoot, fragmentPath, fragmentSource);
+				fragmentSource = IncludePreprocessor.process(inclusionRoot, fragmentPath, fragmentSource);
+				fragmentSource = GlslPreprocessor.glslPreprocessSource(fragmentSource);
 			}
 		} catch (IOException e) {
 			// TODO: Better handling?
