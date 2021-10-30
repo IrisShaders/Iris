@@ -601,9 +601,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.popMatrix();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 
-		// program is the identifier for shadow :shrug:
-		this.customUniforms.push(shadowProgram);
-
 		pipeline.endShadowRender();
 		// Note: This unbinds the shadow framebuffer
 		pipeline.popProgram(GbufferProgram.NONE);
@@ -637,6 +634,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private void setupShadowProgram() {
 		if (shadowProgram != null) {
 			shadowProgram.use();
+
+			// program is the identifier for shadow :shrug:
+			this.customUniforms.push(shadowProgram);
 			setupAttributes(shadowProgram);
 		} else {
 			ProgramManager.glUseProgram(0);
