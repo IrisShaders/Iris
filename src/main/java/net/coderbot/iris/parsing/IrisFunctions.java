@@ -2,11 +2,9 @@ package net.coderbot.iris.parsing;
 
 import kroppeb.stareval.expression.Expression;
 import kroppeb.stareval.function.*;
-import net.coderbot.iris.vendored.joml.Matrix4f;
-import net.coderbot.iris.vendored.joml.Vector2f;
-import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.*;
 
+import java.lang.Math;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.function.BiConsumer;
@@ -718,6 +716,17 @@ public class IrisFunctions {
 							functionReturn.floatReturn = ((Vector2f) functionReturn.objectReturn).x;
 						}
 					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC2}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector2i) functionReturn.objectReturn).x;
+						}
+					});
 					
 					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
 							Type.Float,
@@ -729,6 +738,17 @@ public class IrisFunctions {
 							functionReturn.floatReturn = ((Vector3f) functionReturn.objectReturn).x;
 						}
 					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC3}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector3i) functionReturn.objectReturn).x;
+						}
+					});
 					
 					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
 							Type.Float,
@@ -738,6 +758,17 @@ public class IrisFunctions {
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
 							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).x;
+						}
+					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC4}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector4i) functionReturn.objectReturn).x;
 						}
 					});
 				}
@@ -756,6 +787,17 @@ public class IrisFunctions {
 							functionReturn.floatReturn = ((Vector2f) functionReturn.objectReturn).y;
 						}
 					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC2}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector2i) functionReturn.objectReturn).y;
+						}
+					});
 					
 					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
 							Type.Float,
@@ -767,6 +809,17 @@ public class IrisFunctions {
 							functionReturn.floatReturn = ((Vector3f) functionReturn.objectReturn).y;
 						}
 					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC3}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector3i) functionReturn.objectReturn).y;
+						}
+					});
 					
 					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
 							Type.Float,
@@ -776,6 +829,17 @@ public class IrisFunctions {
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
 							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).y;
+						}
+					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC4}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector4i) functionReturn.objectReturn).y;
 						}
 					});
 				}
@@ -794,6 +858,17 @@ public class IrisFunctions {
 							functionReturn.floatReturn = ((Vector3f) functionReturn.objectReturn).z;
 						}
 					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC3}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector3i) functionReturn.objectReturn).z;
+						}
+					});
 					
 					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
 							Type.Float,
@@ -803,6 +878,17 @@ public class IrisFunctions {
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
 							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).z;
+						}
+					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC4}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector4i) functionReturn.objectReturn).z;
 						}
 					});
 				}
@@ -819,6 +905,17 @@ public class IrisFunctions {
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
 							functionReturn.floatReturn = ((Vector4f) functionReturn.objectReturn).w;
+						}
+					});
+
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
+							Type.Int,
+							new Type[]{VectorType.I_VEC4}
+					) {
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[0].evaluateTo(context, functionReturn);
+							functionReturn.intReturn = ((Vector4i) functionReturn.objectReturn).w;
 						}
 					});
 				}

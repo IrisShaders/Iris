@@ -2,9 +2,7 @@ package net.coderbot.iris.parsing;
 
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
-import net.coderbot.iris.vendored.joml.Vector2f;
-import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.*;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -89,10 +87,10 @@ abstract public class VectorType extends Type.ObjectType {
 	public static final JOMLVector<Vector2f> VEC2 = new JOMLVector<>("vec2", Vector2f::new);
 	public static final JOMLVector<Vector3f> VEC3 = new JOMLVector<>("vec3", Vector3f::new);
 	public static final JOMLVector<Vector4f> VEC4 = new JOMLVector<>("vec4", Vector4f::new);
-	
-	public static final VectorType I_VEC2 = new ArrayVector(Type.Int, 2);
-	public static final VectorType I_VEC3 = new ArrayVector(Type.Int, 3);
-	public static final VectorType I_VEC4 = new ArrayVector(Type.Int, 4);
+
+	public static final JOMLVector<Vector2i> I_VEC2 = new JOMLVector<>("ivec2", Vector2i::new);
+	public static final JOMLVector<Vector3i> I_VEC3 = new JOMLVector<>("ivec3", Vector3i::new);
+	public static final JOMLVector<Vector4i> I_VEC4 = new JOMLVector<>("ivec4", Vector4i::new);
 	
 	public static final VectorType B_VEC2 = new ArrayVector(Type.Boolean, 2);
 	public static final VectorType B_VEC3 = new ArrayVector(Type.Boolean, 3);
