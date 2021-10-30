@@ -10,7 +10,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 /**
- * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread,
+ * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
 public class IrisRenderSystem {
 	public static void generateMipmaps(int mipmapTarget) {
