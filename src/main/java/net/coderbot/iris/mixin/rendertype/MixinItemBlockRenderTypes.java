@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import net.coderbot.batchedentityrendering.impl.WrappableRenderType;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.layer.UseProgramRenderStateShard;
@@ -37,7 +38,9 @@ public abstract class MixinItemBlockRenderTypes {
 		RenderType base = cir.getReturnValue();
 
 		if(HandRenderer.isActive()) {
-			cir.setReturnValue(wrap(base, GbufferProgram.HAND));
+			if(!(base instanceof WrappableRenderType)) {
+				cir.setReturnValue(wrap(base, GbufferProgram.HAND));
+			}
 		}
     }
 
