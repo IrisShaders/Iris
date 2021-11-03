@@ -57,6 +57,7 @@ public class RenderTargets {
 
 		depthTexture.destroy();
 		noTranslucents.destroy();
+		noHand.destroy();
 	}
 
 	public int getRenderTargetCount() {
@@ -94,6 +95,7 @@ public class RenderTargets {
 
 		depthTexture.resize(newWidth, newHeight);
 		noTranslucents.resize(newWidth, newHeight);
+		noHand.resize(newWidth, newHeight);
 
 		fullClearRequired = true;
 	}
