@@ -1,5 +1,6 @@
 package net.coderbot.iris.test.shaderpack;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.LanguageMap;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.test.IrisTests;
@@ -11,6 +12,7 @@ import java.util.Map;
 public class LanguageMapTest {
 	@Test
 	void testLoadLanguages() {
+		Iris.isJUnitTesting = true;
 		ShaderPack shaderPack;
 
 		// ensure that we can actually load the shader pack

@@ -68,7 +68,7 @@ public class IdMap {
 
 		// TODO: Properly override block render layers
 
-		if (blockPropertiesMap == null) {
+		if (blockPropertiesMap == null && !Iris.isJUnitTesting) {
 			// Fill in with default values...
 			blockPropertiesMap = new Object2IntOpenHashMap<>();
 			LegacyIdMap.addLegacyValues(blockPropertiesMap);
