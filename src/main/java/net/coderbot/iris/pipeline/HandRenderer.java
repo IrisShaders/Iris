@@ -59,8 +59,6 @@ public class HandRenderer {
 
 		Minecraft.getInstance().getProfiler().pop();
 
-		gameRenderer.resetProjectionMatrix(CapturedRenderingState.INSTANCE.getGbufferModelView());
-
 		poseStack.popPose();
 
 		ACTIVE = false;
