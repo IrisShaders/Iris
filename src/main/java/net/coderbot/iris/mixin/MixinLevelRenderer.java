@@ -217,15 +217,8 @@ public class MixinLevelRenderer {
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 										LightTexture lightTexture, Matrix4f projection,
 										CallbackInfo ci) {
+		HandRenderer.INSTANCE.render(renderBuffers, poseStack, tickDelta, camera, gameRenderer);
 		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "RETURN", by = -2, shift = At.Shift.BY))
-	private void iris$renderHands(PoseStack poseStack, float tickDelta, long limitTime,
-										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-										LightTexture lightTexture, Matrix4f projection, 
-										CallbackInfo ci) {
-		HandRenderer.INSTANCE.render(renderBuffers, poseStack, tickDelta, camera, gameRenderer);
 	}
 }
