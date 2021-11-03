@@ -32,6 +32,15 @@ public abstract class MixinItemBlockRenderTypes {
 		return wrap("iris:" + name, wrapped, program);
 	}
 
+	@Inject(method = "getRenderType(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/client/renderer/RenderType;", at = @At("RETURN"), cancellable = true)
+	private static void getRenderType(ItemStack itemStack, boolean bl, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
+
+		if(HandRenderer.isActive()) {
+			cir.setReturnValue(wrap(base, GbufferProgram.HAND));
+		}
+    }
+
 	@Inject(method = "getRenderType(Lnet/minecraft/world/level/block/state/BlockState;Z)Lnet/minecraft/client/renderer/RenderType;", at = @At("RETURN"), cancellable = true)
 	private static void getRenderType(BlockState blockState, boolean bl, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
