@@ -49,6 +49,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public void beginHand() {
+
+	}
+
+	@Override
 	public void beginTranslucents() {
 		// stub: nothing to do here
 	}

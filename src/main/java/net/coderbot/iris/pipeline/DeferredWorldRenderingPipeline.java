@@ -664,10 +664,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public void beginHand() {
+		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
+		// all non-translucent content without the hand, as required.
+		baseline.bindAsReadBuffer();
+		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		GlStateManager._bindTexture(0);
+	}
+
+	@Override
 	public void beginTranslucents() {
 		isBeforeTranslucent = false;
 
-		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
+		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());

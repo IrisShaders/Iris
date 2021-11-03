@@ -13,6 +13,9 @@ public interface WorldRenderingPipeline {
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
 	void beginShadowRender();
 	void endShadowRender();
+
+	void beginHand();
+
 	void beginTranslucents();
 	void pushProgram(GbufferProgram program);
 	void popProgram(GbufferProgram program);
