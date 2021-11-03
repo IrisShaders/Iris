@@ -18,7 +18,7 @@ import net.minecraft.world.level.GameType;
 public class HandRenderer {
 	public static final HandRenderer INSTANCE = new HandRenderer();
 
-	public static boolean ACTIVE;
+	private static boolean ACTIVE;
 
 	private void setupGlState(GameRenderer gameRenderer, PoseStack poseStack, float tickDelta, Camera camera) {
         final PoseStack.Pose pose = poseStack.last();
@@ -64,5 +64,9 @@ public class HandRenderer {
 		poseStack.popPose();
 
 		ACTIVE = false;
+	}
+
+	public static boolean isActive() {
+		return ACTIVE;
 	}
 }

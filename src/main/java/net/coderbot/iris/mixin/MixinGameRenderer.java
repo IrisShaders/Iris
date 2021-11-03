@@ -37,7 +37,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getProjectionMatrix", at = @At(value = "INVOKE", target = "Lcom/mojang/math/Matrix4f;multiply(Lcom/mojang/math/Matrix4f;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void scaleHandDepth(Camera camera, float f, boolean bl, CallbackInfoReturnable<Matrix4f> cir, PoseStack poseStack) {
-        if (HandRenderer.ACTIVE) {
+        if (HandRenderer.isActive()) {
             // This value is taken directly from Shaders Mod.
             poseStack.scale(1F, 1F, 0.125F);
         }

@@ -152,7 +152,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypes(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		if(!HandRenderer.ACTIVE) {
+		if(!HandRenderer.isActive()) {
 			cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 		} else {
 			cir.setReturnValue(wrap(base, GbufferProgram.HAND));
