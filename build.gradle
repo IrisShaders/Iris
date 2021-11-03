@@ -108,6 +108,7 @@ sourceSets {
 		}
 	}
 
+/*
 	test {
 		java {
 			// headers / API stubs are only available at compilation time.
@@ -119,6 +120,7 @@ sourceSets {
 		}
 	}
 }
+*/
 
 java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
