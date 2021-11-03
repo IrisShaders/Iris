@@ -32,10 +32,12 @@ dependencies {
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
 
+/*
 test {
 	// Use JUnit 5 Platform for tests
 	useJUnitPlatform()
 }
+*/
 
 def includeFabricApiModule(String moduleName) {
 	Object dependency = fabricApi.module(moduleName, project.fabric_version);
@@ -108,7 +110,6 @@ sourceSets {
 		}
 	}
 
-/*
 	test {
 		java {
 			// headers / API stubs are only available at compilation time.
@@ -120,7 +121,6 @@ sourceSets {
 		}
 	}
 }
-*/
 
 java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
