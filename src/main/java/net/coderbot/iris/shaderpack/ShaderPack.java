@@ -103,7 +103,19 @@ public class ShaderPack {
 				throw new IllegalArgumentException("Unknown dimension " + dimension);
 		}
 
-		return ProgramSet.merged(base, overrides);
+		// NB: If a dimension overrides directory is present, none of the files from the parent directory are "merged"
+		//     into the override. Rather, we act as if the overrides directory contains a completely different set of
+		//     shader programs unrelated to that of the base shader pack.
+		//
+		//     This makes sense because if base defined a composite pass and the override didn't, it would make it
+		//     impossible to "un-define" the composite pass. It also removes a lot of complexity related to "merging"
+		//     program sets. At the same time, this might be desired behavior by shader pack authors. It could make
+		//     sense to bring it back as a configurable option, and have a more maintainable set of code backing it.
+		if (overrides != null) {
+			return overrides;
+		} else {
+			return base;
+		}
 	}
 
 	public IdMap getIdMap() {
