@@ -1,11 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -18,6 +14,11 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 
+/**
+ * The parsed representation of the shaders.properties file. This class is not meant to be stored permanently, rather
+ * it merely exists as an intermediate step until we build up PackDirectives and ProgramDirectives objects from the
+ * values in here & the values parsed from shader source code.
+ */
 public class ShaderProperties {
 	private boolean enableClouds = true;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
