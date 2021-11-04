@@ -37,10 +37,8 @@ public abstract class MixinItemBlockRenderTypes {
 	private static void getRenderType(ItemStack itemStack, boolean bl, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		if(HandRenderer.isActive()) {
-			if(!(base instanceof WrappableRenderType)) {
-				cir.setReturnValue(wrap(base, GbufferProgram.HAND));
-			}
+		if(HandRenderer.isActive() && !(base instanceof WrappableRenderType)) {
+			cir.setReturnValue(wrap(base, GbufferProgram.HAND));
 		}
     }
 

@@ -1,9 +1,6 @@
 package net.coderbot.iris.pipeline;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-
-import org.lwjgl.opengl.GL11C;
 
 import net.coderbot.iris.mixin.GameRendererAccessor;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
