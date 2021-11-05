@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.GameRendererAccessor;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
@@ -20,6 +21,7 @@ public class HandRenderer {
 	private void setupGlState(GameRenderer gameRenderer, PoseStack poseStack, float tickDelta, Camera camera) {
         final PoseStack.Pose pose = poseStack.last();
 
+		// We have a inject in getProjectionMatrix to scale the matrix so the hand doesn't clip through blocks.
 		gameRenderer.resetProjectionMatrix(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
 
         pose.pose().setIdentity();
@@ -39,7 +41,7 @@ public class HandRenderer {
 							|| Minecraft.getInstance().gameMode.getPlayerMode() == GameType.SPECTATOR);
 	}
 
-	public void render(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer) {
+	public void render(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
 		if(!canRender(camera, gameRenderer)) {
 			return;
 		}
@@ -52,7 +54,11 @@ public class HandRenderer {
 
 		setupGlState(gameRenderer, poseStack, tickDelta, camera);
 
+		pipeline.pushProgram(GbufferProgram.HAND);
+
 		Minecraft.getInstance().getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, renderBuffers.bufferSource(), Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
+
+		pipeline.popProgram(GbufferProgram.HAND);
 
 		Minecraft.getInstance().getProfiler().pop();
 

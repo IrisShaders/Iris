@@ -218,7 +218,7 @@ public class MixinLevelRenderer {
 										LightTexture lightTexture, Matrix4f projection,
 										CallbackInfo ci) {
 		pipeline.beginHand();
-		HandRenderer.INSTANCE.render(renderBuffers, poseStack, tickDelta, camera, gameRenderer);
+		HandRenderer.INSTANCE.render(renderBuffers, poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
