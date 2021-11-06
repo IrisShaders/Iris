@@ -52,10 +52,11 @@ public class HandRenderer {
 		if (Minecraft.getInstance().player.getItemBySlot(hand == InteractionHand.OFF_HAND ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND).getItem() instanceof BlockItem) {
 			return ItemBlockRenderTypes.getChunkRenderType(((BlockItem) Minecraft.getInstance().player.getItemBySlot(hand == InteractionHand.OFF_HAND ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND).getItem()).getBlock().defaultBlockState()) == RenderType.translucent();
 		}
+
 		return false;
 	}
 
-	public void render(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
+	public void renderSolid(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
 		if(!canRender(camera, gameRenderer)) {
 			return;
 		}
