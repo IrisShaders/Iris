@@ -17,6 +17,7 @@
     "MixinGlStateManager",
     "MixinGlStateManager_AmdCrashFix",
     "MixinGlStateManager_AtlasTracking",
+    "MixinItemInHandRenderer",
     "MixinLevelRenderer",
     "MixinLivingEntityRenderer",
     "MixinMinecraft",
