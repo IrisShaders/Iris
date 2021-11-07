@@ -56,6 +56,10 @@ public class HandRenderer {
 		return false;
 	}
 
+	public boolean isAnyHandTranslucent() {
+		return isHandTranslucent(InteractionHand.MAIN_HAND) || isHandTranslucent(InteractionHand.OFF_HAND);
+	}
+
 	public void renderSolid(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
 		if(!canRender(camera, gameRenderer)) {
 			return;
@@ -91,7 +95,7 @@ public class HandRenderer {
 	}
 
 	public void renderTranslucent(RenderBuffers renderBuffers, PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if(!canRender(camera, gameRenderer)) {
+		if(!canRender(camera, gameRenderer) || !isAnyHandTranslucent()) {
 			return;
 		}
 
@@ -102,6 +106,8 @@ public class HandRenderer {
 		Minecraft.getInstance().getProfiler().push("iris_hand_translucent");
 
 		setupGlState(gameRenderer, poseStack, tickDelta, camera);
+
+		RenderSystem.enableBlend();
 
 		pipeline.pushProgram(GbufferProgram.HAND_TRANSLUCENT);
 
