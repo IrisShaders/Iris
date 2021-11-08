@@ -5,7 +5,6 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.layer.EntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
-import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -34,7 +33,7 @@ public class MixinEntityRenderDispatcher {
 	private void iris$beginEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 										PoseStack poseStack, MultiBufferSource bufferSource, int light,
 										CallbackInfo ci) {
-		if (!(bufferSource instanceof WrappingMultiBufferSource) || HandRenderer.isActive()) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 
@@ -59,7 +58,7 @@ public class MixinEntityRenderDispatcher {
 	private void iris$endEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
-		if (!(bufferSource instanceof WrappingMultiBufferSource) || HandRenderer.isActive()) {
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
 

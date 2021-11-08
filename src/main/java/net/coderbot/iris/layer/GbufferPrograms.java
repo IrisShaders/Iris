@@ -1,6 +1,7 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 
 public class GbufferPrograms {
@@ -12,7 +13,9 @@ public class GbufferPrograms {
 	 */
 	private static GbufferProgram refine(GbufferProgram program) {
 		if (program == GbufferProgram.ENTITIES || program == GbufferProgram.TERRAIN || program == GbufferProgram.TRANSLUCENT_TERRAIN) {
-			if (entities) {
+			if (HandRenderer.isActive()) {
+				return GbufferProgram.HAND;
+			} else if (entities) {
 				return GbufferProgram.ENTITIES;
 			} else if (blockEntities) {
 				return GbufferProgram.BLOCK_ENTITIES;
