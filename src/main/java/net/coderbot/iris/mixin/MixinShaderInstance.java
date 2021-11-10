@@ -95,4 +95,13 @@ public class MixinShaderInstance {
 
 		logger.warn(message, arg1, arg2);
 	}
+
+	@Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/shaders/Uniform;glBindAttribLocation(IILjava/lang/CharSequence;)V"))
+	public void redirectBindAttributeLocation(int i, int j, CharSequence charSequence) {
+		if (((Object) this) instanceof ExtendedShader) {
+			Uniform.glBindAttribLocation(i, j, "va" + charSequence);
+		} else {
+			Uniform.glBindAttribLocation(i, j, charSequence);
+		}
+	}
 }
