@@ -15,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 @Mixin(ShaderInstance.class)
@@ -98,7 +100,7 @@ public class MixinShaderInstance {
 
 	@Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/shaders/Uniform;glBindAttribLocation(IILjava/lang/CharSequence;)V"))
 	public void redirectBindAttributeLocation(int i, int j, CharSequence charSequence) {
-		if (((Object) this) instanceof ExtendedShader) {
+		if (((Object) this) instanceof ExtendedShader && Arrays.asList("Position", "Color", "Normal", "UV0", "UV1", "UV2").contains(charSequence)) {
 			Uniform.glBindAttribLocation(i, j, "va" + charSequence);
 		} else {
 			Uniform.glBindAttribLocation(i, j, charSequence);
