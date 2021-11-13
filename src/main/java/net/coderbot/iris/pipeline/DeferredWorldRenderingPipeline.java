@@ -518,14 +518,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
-		TextureStage textureStage = null;
-		if (source.getName().contains("gbuffers") || source.getName().contains("shadow")) {
-			textureStage = TextureStage.GBUFFERS_AND_SHADOW;
-		} else if (source.getName().contains("composite") || source.getName().contains("final")) {
-			textureStage = TextureStage.COMPOSITE_AND_FINAL;
-		} else if (source.getName().contains("deferred")) {
-			textureStage = TextureStage.DEFERRED;
-		}
+		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIdMap.getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
 
