@@ -6,6 +6,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
@@ -192,7 +193,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		});
 
 		programs.getPackDirectives().getCustomTextureData().forEach((textureStage, customTexturePropertiesMap) -> {
-			Object2ObjectMap<String, IntSupplier> customTextureIds = customTextureIdMap.getOrDefault(textureStage, new Object2ObjectOpenHashMap<>());
+			Object2ObjectMap<String, IntSupplier> customTextureIds = customTextureIdMap.getOrDefault(textureStage, Object2ObjectMaps.emptyMap());
 			customTexturePropertiesMap.forEach((samplerName, path) -> {
 				try {
 					CustomTextureData textureData = programs.getPack().readTexture(path);
@@ -218,7 +219,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
 					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise,
-					programs, customTextureIdMap.getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, new Object2ObjectOpenHashMap<>()));
+					programs, customTextureIdMap.getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 			createShadowMapRenderer = () -> {};
 		};
 
@@ -235,18 +236,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
-				customTextureIdMap.getOrDefault(TextureStage.DEFERRED, new Object2ObjectOpenHashMap<>()),
+				customTextureIdMap.getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()),
 				programs.getPackDirectives().getExplicitFlips("deferred_pre"));
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
 				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
-				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, new Object2ObjectOpenHashMap<>()),
+				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
 				programs.getPackDirectives().getExplicitFlips("composite_pre"));
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, noise, updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowMapRendererSupplier,
-				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, new Object2ObjectOpenHashMap<>()),
+				customTextureIdMap.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
 				this.compositeRenderer.getFlippedAtLeastOnceFinal());
 
 		Supplier<ImmutableSet<Integer>> flipped =
@@ -254,7 +255,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIdMap.getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, new Object2ObjectOpenHashMap<>()));
+			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIdMap.getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular);
@@ -271,7 +272,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIdMap.getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, new Object2ObjectOpenHashMap<>()));
+			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIdMap.getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeTerrain, renderTargets, false);
 			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular);
@@ -526,7 +527,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			textureStage = TextureStage.DEFERRED;
 		}
 
-		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIdMap.getOrDefault(textureStage, new Object2ObjectOpenHashMap<>()));
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIdMap.getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
 
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular);
