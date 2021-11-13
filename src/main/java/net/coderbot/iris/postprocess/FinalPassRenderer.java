@@ -47,11 +47,13 @@ public class FinalPassRenderer {
 	private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 
+	// TODO: The length of this argument list is getting a bit ridiculous
 	public FinalPassRenderer(ProgramSet pack, RenderTargets renderTargets, AbstractTexture noiseTexture,
 							 FrameUpdateNotifier updateNotifier, ImmutableSet<Integer> flippedBuffers,
 							 CenterDepthSampler centerDepthSampler,
 							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier,
-							 Object2ObjectMap<String, IntSupplier> customTextureIds) {
+							 Object2ObjectMap<String, IntSupplier> customTextureIds,
+							 ImmutableSet<Integer> flippedAtLeastOnce) {
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.customTextureIds = customTextureIds;
@@ -66,7 +68,7 @@ public class FinalPassRenderer {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 
-			pass.program = createProgram(source, flippedBuffers, shadowMapRendererSupplier);
+			pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowMapRendererSupplier);
 			pass.stageReadsFromAlt = flippedBuffers;
 			pass.mipmappedBuffers = directives.getMipmappedBuffers();
 
@@ -221,11 +223,12 @@ public class FinalPassRenderer {
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
-	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped,
+	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 								  Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
+		Objects.requireNonNull(flipped);
 		ProgramBuilder builder;
 
 		try {
@@ -236,7 +239,7 @@ public class FinalPassRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds);
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);

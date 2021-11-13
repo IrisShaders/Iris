@@ -41,6 +41,7 @@ public class CompositeRenderer {
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
+	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 
 	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, RenderTargets renderTargets,
 							 AbstractTexture noiseTexture, FrameUpdateNotifier updateNotifier,
@@ -113,8 +114,13 @@ public class CompositeRenderer {
 		}
 
 		this.passes = passes.build();
+		this.flippedAtLeastOnceFinal = flippedAtLeastOnce.build();
 
 		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+	}
+
+	public ImmutableSet<Integer> getFlippedAtLeastOnceFinal() {
+		return this.flippedAtLeastOnceFinal;
 	}
 
 	private static final class Pass {
