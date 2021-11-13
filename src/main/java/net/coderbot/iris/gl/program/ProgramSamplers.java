@@ -200,9 +200,29 @@ public class ProgramSamplers {
 			this.deactivatedOverrides = deactivatedOverrides.build();
 		}
 
+		private IntSupplier getOverride(IntSupplier existing, String... names) {
+			for (String name : names) {
+				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
+					return customTextureIds.get(name);
+				}
+			}
+
+			return existing;
+		}
+
 		@Override
 		public void addExternalSampler(int textureUnit, String... names) {
-			samplerHolder.addExternalSampler(textureUnit, names);
+			IntSupplier override = getOverride(null, names);
+
+			if (override != null) {
+				if (textureUnit == 0) {
+					samplerHolder.addDefaultSampler(override, names);
+				} else {
+					samplerHolder.addDynamicSampler(override, names);
+				}
+			} else {
+				samplerHolder.addExternalSampler(textureUnit, names);
+			}
 		}
 
 		@Override
@@ -212,24 +232,14 @@ public class ProgramSamplers {
 
 		@Override
 		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
-			for (String name : names) {
-				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
-					sampler = customTextureIds.get(name);
-					break;
-				}
-			}
+			sampler = getOverride(sampler, names);
 
 			return samplerHolder.addDefaultSampler(sampler, postBind, names);
 		}
 
 		@Override
 		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-			for (String name : names) {
-				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
-					sampler = customTextureIds.get(name);
-					break;
-				}
-			}
+			sampler = getOverride(sampler, names);
 
 			return samplerHolder.addDynamicSampler(sampler, postBind, names);
 		}
