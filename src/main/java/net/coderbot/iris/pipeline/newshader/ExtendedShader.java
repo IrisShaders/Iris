@@ -1,5 +1,7 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
+import com.mojang.blaze3d.shaders.Program;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
@@ -7,6 +9,7 @@ import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
@@ -25,8 +28,9 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 	GlFramebuffer baseline;
 	HashMap<String, IntSupplier> dynamicSamplers;
 	private final boolean intensitySwizzle;
+	private final Program geometry;
 
-	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
+	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent, boolean isGeometryShaderPresent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
@@ -40,6 +44,19 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 		this.baseline = baseline;
 		this.dynamicSamplers = new HashMap<>();
 		this.parent = parent;
+		// There is no geometry shader type here, so we have to improvise.
+		if (isGeometryShaderPresent) {
+			this.geometry = Program.compileShader(Program.Type.FRAGMENT, string + "Geometry", resourceFactory.getResource(new ResourceLocation(string + ".gsh")).getInputStream(), resourceFactory.getResource(new ResourceLocation(string + ".gsh")).getSourceName(), new GlslPreprocessor() {
+				@Nullable
+				@Override
+				public String applyImport(boolean bl, String string) {
+					// We won't be preprocessing anything here.
+					return string;
+				}
+			});
+		} else {
+			this.geometry = null;
+		}
 
 		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
 		this.intensitySwizzle = getName().contains("intensity");
@@ -145,5 +162,9 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 		}
 
 		return used;
+	}
+
+	public Program getGeometry() {
+		return geometry;
 	}
 }

@@ -35,6 +35,7 @@ public class NewShaderTests {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat);
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs);
+		String geometry = TriforcePatcher.patch(source.getGeometrySource().orElse(null), ShaderType.GEOMETRY, alpha, true, inputs);
 
 		StringBuilder shaderJson = new StringBuilder("{\n" +
 				"    \"blend\": {\n" +
@@ -101,12 +102,15 @@ public class NewShaderTests {
 
 		String shaderJsonString = shaderJson.toString();
 
-		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, fragment);
+		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, fragment, geometry);
 
 		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
 		Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
 		Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+		if (geometry != null) {
+			Files.write(debugOutDir.resolve(name + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
+		}
 		Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, uniforms -> {
@@ -114,18 +118,20 @@ public class NewShaderTests {
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-		}, parent);
+		}, parent, source.getGeometrySource().isPresent());
 	}
 
 	private static class IrisProgramResourceFactory implements ResourceProvider {
 		private final String json;
 		private final String vertex;
 		private final String fragment;
+		private final String geometry;
 
-		public IrisProgramResourceFactory(String json, String vertex, String fragment) {
+		public IrisProgramResourceFactory(String json, String vertex, String fragment, String geometry) {
 			this.json = json;
 			this.vertex = vertex;
 			this.fragment = fragment;
+			this.geometry = geometry;
 		}
 
 		@Override
@@ -138,6 +144,8 @@ public class NewShaderTests {
 				return new StringResource(id, vertex);
 			} else if (path.endsWith("fsh")) {
 				return new StringResource(id, fragment);
+			} else if (path.endsWith("gsh")) {
+				return new StringResource(id, geometry);
 			}
 
 			throw new IOException("Couldn't load " + id);

@@ -12,6 +12,7 @@
     "MixinEntityRenderDispatcher",
     "MixinGameRenderer",
     "MixinProgram",
+    "MixinProgramManager",
     "MixinGlStateManager",
     "MixinGlStateManager_AtlasTracking",
     "MixinGlUniform",

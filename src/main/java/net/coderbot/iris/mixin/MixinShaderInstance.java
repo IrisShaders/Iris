@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin;
 
+import com.mojang.blaze3d.shaders.Shader;
 import com.mojang.blaze3d.shaders.Uniform;
 import net.coderbot.iris.pipeline.newshader.ExtendedShader;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -94,5 +95,12 @@ public class MixinShaderInstance {
 		}
 
 		logger.warn(message, arg1, arg2);
+	}
+
+	@Inject(method = "attachToProgram", at = @At("HEAD"))
+	private void attachGeometryShader(CallbackInfo ci) {
+		if (((Object) this) instanceof ExtendedShader && ((ExtendedShader) (Object) this).getGeometry() != null) {
+			((ExtendedShader) (Object) this).getGeometry().attachToShader((Shader) this);
+		}
 	}
 }

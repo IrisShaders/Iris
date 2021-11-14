@@ -11,6 +11,10 @@ public class TriforcePatcher {
 	public static String patch(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
 		// TODO: Only do the NewLines patches if the source code isn't from gbuffers_lines
 
+		if (source == null) {
+			return null;
+		}
+
 		if (source.contains("moj_import")) {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
@@ -227,6 +231,9 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define varying out");
 		} else if (type == ShaderType.FRAGMENT) {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define varying in");
+		} else if (type == ShaderType.GEOMETRY) {
+			transformations.replaceExact("varying in", "in");
+			transformations.replaceExact("varying out", "out");
 		}
 
 		if (type == ShaderType.FRAGMENT) {
