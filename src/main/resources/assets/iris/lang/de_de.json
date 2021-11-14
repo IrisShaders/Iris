@@ -8,7 +8,7 @@
   "iris.shaders.reloaded.failure": "Neuladen der Shader fehlgeschlagen! Grund: %s",
   "iris.shaders.toggled.failure": "Umschalten der Shader fehlgeschlagen! Grund: %s",
   "iris.sodium.failure.title": "Iris konnte nicht geladen werden!",
-  "iris.sodium.failure.reason": "Sodium befindet sich in deinen Mods-Ordner, wird aber von Iris mitgeliefert. Bitte schließe das Spiel und entferne Sodium aus deinen Mods-Ordner.",
+  "iris.sodium.failure.reason": "Sodium befindet sich in deinem Mods-Ordner, wird aber von Iris mitgeliefert. Bitte schließe das Spiel und entferne Sodium aus deinen Mods-Ordner.",
 
   "options.iris.apply": "Anwenden",
   "options.iris.refresh": "Aktualisieren",
