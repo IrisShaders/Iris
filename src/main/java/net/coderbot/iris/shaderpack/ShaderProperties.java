@@ -166,6 +166,14 @@ public class ShaderProperties {
 				// TODO: Remove
 				System.out.println("Processing custom texture property: " + "Stage: " + stageName + " Sampler: " + samplerName + " Path: " + value);
 
+				String[] parts = value.split(" ");
+
+				// TODO: Support raw textures
+				if (parts.length > 1) {
+					Iris.logger.warn("Custom texture directive for stage " + stageName + ", sampler " + samplerName + " contains more parts than we expected: " + value);
+					return;
+				}
+
 				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
 
 				if (!optionalTextureStage.isPresent()) {
