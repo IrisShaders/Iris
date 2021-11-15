@@ -34,10 +34,6 @@ import net.fabricmc.api.Environment;
 @Mixin(LevelRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinLevelRenderer {
-	@Shadow
-	@Final
-	private RenderBuffers renderBuffers;
-
 	private static final String RENDER_LEVEL = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
 	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;F)V";

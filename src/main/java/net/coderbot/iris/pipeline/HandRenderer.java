@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import com.mojang.math.Matrix4f;
 import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.GameRendererAccessor;
@@ -25,19 +26,19 @@ public class HandRenderer {
 	private static boolean renderingSolid;
 	private FullyBufferedMultiBufferSource bufferSource = new FullyBufferedMultiBufferSource();
 
-	private void setupGlState(GameRenderer gameRenderer, PoseStack poseStack, float tickDelta, Camera camera) {
+	private void setupGlState(GameRenderer gameRenderer, Camera camera, PoseStack poseStack, float tickDelta) {
         final PoseStack.Pose pose = poseStack.last();
 
-		// We have a inject in getProjectionMatrix to scale the matrix so the hand doesn't clip through blocks.
-		gameRenderer.resetProjectionMatrix(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
+		// We need to scale the matrix by 0.125 so the hand doesn't clip through blocks.
+		gameRenderer.resetProjectionMatrix(getHandProjectionMatrix(gameRenderer, camera, tickDelta));
 
-        pose.pose().setIdentity();
+		pose.pose().setIdentity();
         pose.normal().setIdentity();
 
-		((GameRendererAccessor)gameRenderer).invokeBobHurt(poseStack, tickDelta);
+		((GameRendererAccessor) gameRenderer).invokeBobHurt(poseStack, tickDelta);
 
 		if(Minecraft.getInstance().options.bobView) {
-			((GameRendererAccessor)gameRenderer).invokeBobView(poseStack, tickDelta);
+			((GameRendererAccessor) gameRenderer).invokeBobView(poseStack, tickDelta);
 		}
 	}
 
@@ -64,8 +65,17 @@ public class HandRenderer {
 		return isHandTranslucent(InteractionHand.MAIN_HAND) || isHandTranslucent(InteractionHand.OFF_HAND);
 	}
 
+	public Matrix4f getHandProjectionMatrix(GameRenderer gameRenderer, Camera camera, float tickDelta) {
+		PoseStack poseStack = new PoseStack();
+		poseStack.last().pose().setIdentity();
+
+		poseStack.scale(1F, 1F, 0.125F);
+		poseStack.last().pose().multiply(Matrix4f.perspective(((GameRendererAccessor) gameRenderer).invokeGetFov(camera, tickDelta, false), (float) Minecraft.getInstance().getWindow().getWidth() / (float) Minecraft.getInstance().getWindow().getHeight(), 0.05F, Math.max(43.25F, gameRenderer.getRenderDistance() * 2.0F)));
+		return poseStack.last().pose();
+	}
+
 	public void renderSolid(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if(!canRender(camera, gameRenderer)) {
+		if(!canRender(camera, gameRenderer) || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
 			return;
 		}
 
@@ -75,7 +85,7 @@ public class HandRenderer {
 
 		Minecraft.getInstance().getProfiler().push("iris_hand");
 
-		setupGlState(gameRenderer, poseStack, tickDelta, camera);
+		setupGlState(gameRenderer, camera, poseStack, tickDelta);
 
 		pipeline.pushProgram(GbufferProgram.HAND);
 
@@ -101,7 +111,7 @@ public class HandRenderer {
 	}
 
 	public void renderTranslucent(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if(!canRender(camera, gameRenderer) || !isAnyHandTranslucent()) {
+		if(!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
 			return;
 		}
 
@@ -111,7 +121,7 @@ public class HandRenderer {
 
 		Minecraft.getInstance().getProfiler().push("iris_hand_translucent");
 
-		setupGlState(gameRenderer, poseStack, tickDelta, camera);
+		setupGlState(gameRenderer, camera, poseStack, tickDelta);
 
 		RenderSystem.enableBlend();
 
