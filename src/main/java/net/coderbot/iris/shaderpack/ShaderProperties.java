@@ -163,9 +163,6 @@ public class ShaderProperties {
 			});
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
-				// TODO: Remove
-				System.out.println("Processing custom texture property: " + "Stage: " + stageName + " Sampler: " + samplerName + " Path: " + value);
-
 				String[] parts = value.split(" ");
 
 				// TODO: Support raw textures
