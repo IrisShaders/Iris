@@ -30,7 +30,9 @@ public class HandRenderer {
         final PoseStack.Pose pose = poseStack.last();
 
 		// We need to scale the matrix by 0.125 so the hand doesn't clip through blocks.
-		gameRenderer.resetProjectionMatrix(getHandProjectionMatrix(gameRenderer, camera, tickDelta));
+		Matrix4f scaleMatrix = Matrix4f.createScaleMatrix(1F, 1F, 0.125F);
+		scaleMatrix.multiply(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
+		gameRenderer.resetProjectionMatrix(scaleMatrix);
 
 		pose.pose().setIdentity();
         pose.normal().setIdentity();
@@ -65,15 +67,6 @@ public class HandRenderer {
 		return isHandTranslucent(InteractionHand.MAIN_HAND) || isHandTranslucent(InteractionHand.OFF_HAND);
 	}
 
-	public Matrix4f getHandProjectionMatrix(GameRenderer gameRenderer, Camera camera, float tickDelta) {
-		PoseStack poseStack = new PoseStack();
-		poseStack.last().pose().setIdentity();
-
-		poseStack.scale(1F, 1F, 0.125F);
-		poseStack.last().pose().multiply(Matrix4f.perspective(((GameRendererAccessor) gameRenderer).invokeGetFov(camera, tickDelta, false), (float) Minecraft.getInstance().getWindow().getWidth() / (float) Minecraft.getInstance().getWindow().getHeight(), 0.05F, Math.max(43.25F, gameRenderer.getRenderDistance() * 2.0F)));
-		return poseStack.last().pose();
-	}
-
 	public void renderSolid(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
 		if(!canRender(camera, gameRenderer) || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
 			return;
@@ -88,8 +81,6 @@ public class HandRenderer {
 		setupGlState(gameRenderer, camera, poseStack, tickDelta);
 
 		pipeline.pushProgram(GbufferProgram.HAND);
-
-		RenderSystem.disableBlend();
 
 		renderingSolid = true;
 
@@ -122,8 +113,6 @@ public class HandRenderer {
 		Minecraft.getInstance().getProfiler().push("iris_hand_translucent");
 
 		setupGlState(gameRenderer, camera, poseStack, tickDelta);
-
-		RenderSystem.enableBlend();
 
 		pipeline.pushProgram(GbufferProgram.HAND_TRANSLUCENT);
 
