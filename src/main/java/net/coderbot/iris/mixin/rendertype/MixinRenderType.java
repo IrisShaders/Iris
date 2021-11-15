@@ -152,7 +152,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypes(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		cir.setReturnValue(wrap(base, GbufferPrograms.refine(GbufferProgram.ENTITIES)));
+		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
@@ -163,7 +163,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypesZ(ResourceLocation texture, boolean affectsOutline, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		cir.setReturnValue(wrap(base, GbufferPrograms.refine(GbufferProgram.ENTITIES)));
+		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
 	}
 
 	@Inject(at = @At("RETURN"), method = {

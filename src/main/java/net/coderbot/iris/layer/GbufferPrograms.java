@@ -11,7 +11,7 @@ public class GbufferPrograms {
 	/**
 	 * Uses additional information to choose a more specific (and appropriate) GbufferProgram.
 	 */
-	public static GbufferProgram refine(GbufferProgram program) {
+	private static GbufferProgram refine(GbufferProgram program) {
 		if (program == GbufferProgram.ENTITIES || program == GbufferProgram.TERRAIN || program == GbufferProgram.TRANSLUCENT_TERRAIN) {
 			if (HandRenderer.isActive()) {
 				return GbufferProgram.HAND;
