@@ -18,4 +18,7 @@ public interface GameRendererAccessor {
 
 	@Invoker
 	void invokeBobView(PoseStack poseStack, float tickDelta);
+
+	@Invoker
+	void invokeBobHurt(PoseStack poseStack, float tickDelta);
 }

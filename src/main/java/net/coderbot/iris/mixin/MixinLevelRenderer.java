@@ -83,7 +83,7 @@ public class MixinLevelRenderer {
 	// render their waypoint beams.
 	@Inject(method = RENDER_LEVEL, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
 	private void iris$endLevelRender(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		HandRenderer.INSTANCE.renderTranslucent(renderBuffers, poseStack, tickDelta, camera, gameRenderer, pipeline);
+		HandRenderer.INSTANCE.renderTranslucent(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeLevelRendering();
 		pipeline = null;
@@ -219,7 +219,7 @@ public class MixinLevelRenderer {
 										LightTexture lightTexture, Matrix4f projection,
 										CallbackInfo ci) {
 		pipeline.beginHand();
-		HandRenderer.INSTANCE.renderSolid(renderBuffers, poseStack, tickDelta, camera, gameRenderer, pipeline);
+		HandRenderer.INSTANCE.renderSolid(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}

@@ -1,9 +1,9 @@
 package net.coderbot.iris.mixin.rendertype;
 
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.layer.UseProgramRenderStateShard;
-import net.coderbot.iris.pipeline.HandRenderer;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -152,11 +152,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypes(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		if (HandRenderer.isActive()) {
-			cir.setReturnValue(wrap(base, GbufferProgram.HAND));
-		} else {
-			cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
-		}
+		cir.setReturnValue(wrap(base, GbufferPrograms.refine(GbufferProgram.ENTITIES)));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
@@ -167,11 +163,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypesZ(ResourceLocation texture, boolean affectsOutline, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		if (HandRenderer.isActive()) {
-			cir.setReturnValue(wrap(base, GbufferProgram.HAND));
-		} else {
-			cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
-		}
+		cir.setReturnValue(wrap(base, GbufferPrograms.refine(GbufferProgram.ENTITIES)));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
