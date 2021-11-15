@@ -140,8 +140,6 @@ public class MixinRenderType {
 		"armorCutoutNoCull",
 		"entitySolid",
 		"entityCutout",
-		"itemEntityTranslucentCull",
-		"entityTranslucentCull",
 		"entitySmoothCutout",
 		"entityDecal",
 		"entityNoOutline",
@@ -153,6 +151,13 @@ public class MixinRenderType {
 		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES));
+	}
+
+	@Inject(method = {"itemEntityTranslucentCull", "entityTranslucentCull"}, at = @At("RETURN"), cancellable = true)
+	private static void iris$wrapItemTranslucentRenderType(ResourceLocation resourceLocation, CallbackInfoReturnable<RenderType> cir) {
+		RenderType base = cir.getReturnValue();
+
+		cir.setReturnValue(wrap(base, GbufferProgram.ENTITIES_TRANSLUCENT));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
