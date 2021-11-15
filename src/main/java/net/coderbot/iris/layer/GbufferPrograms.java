@@ -13,7 +13,7 @@ public class GbufferPrograms {
 	 */
 	private static GbufferProgram refine(GbufferProgram program) {
 		if (program == GbufferProgram.ENTITIES || program == GbufferProgram.TERRAIN || program == GbufferProgram.TRANSLUCENT_TERRAIN) {
-			if (HandRenderer.isActive()) {
+			if (HandRenderer.INSTANCE.isActive()) {
 				return GbufferProgram.HAND;
 			} else if (entities) {
 				return GbufferProgram.ENTITIES;

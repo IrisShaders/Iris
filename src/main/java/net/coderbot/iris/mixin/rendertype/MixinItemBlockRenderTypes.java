@@ -38,7 +38,7 @@ public abstract class MixinItemBlockRenderTypes {
 	private static void getRenderType(ItemStack itemStack, boolean bl, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		if(HandRenderer.isActive()) {
+		if(HandRenderer.INSTANCE.isActive()) {
 			//TODO: Is there a better way to do this?
 			if(base == Sheets.translucentItemSheet()) {
 				cir.setReturnValue(RenderType.entityTranslucentCull(TextureAtlas.LOCATION_BLOCKS));
@@ -52,7 +52,7 @@ public abstract class MixinItemBlockRenderTypes {
 	private static void getRenderType(BlockState blockState, boolean bl, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		if(HandRenderer.isActive()) {
+		if(HandRenderer.INSTANCE.isActive()) {
 			//TODO: Is there a better way to do this?
 			cir.setReturnValue(wrap(base, getChunkRenderType(blockState) == RenderType.translucent() ? GbufferProgram.HAND_TRANSLUCENT : GbufferProgram.HAND));
 		}

@@ -770,6 +770,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		isRenderingWorld = false;
 		programStackLog.clear();
+		HandRenderer.INSTANCE.getBufferSource().resetDrawCalls();
 
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();

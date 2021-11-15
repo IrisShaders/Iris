@@ -22,8 +22,8 @@ import net.minecraft.world.level.GameType;
 public class HandRenderer {
 	public static final HandRenderer INSTANCE = new HandRenderer();
 
-	private static boolean ACTIVE;
-	private static boolean renderingSolid;
+	private boolean ACTIVE;
+	private boolean renderingSolid;
 	private FullyBufferedMultiBufferSource bufferSource = new FullyBufferedMultiBufferSource();
 
 	private void setupGlState(GameRenderer gameRenderer, Camera camera, PoseStack poseStack, float tickDelta) {
@@ -139,16 +139,18 @@ public class HandRenderer {
 
 		bufferSource.endBatch();
 
-		bufferSource.resetDrawCalls();
-
 		ACTIVE = false;
 	}
 
-	public static boolean isActive() {
+	public boolean isActive() {
 		return ACTIVE;
 	}
 
-	public static boolean isRenderingSolid() {
+	public boolean isRenderingSolid() {
 		return renderingSolid;
+	}
+
+	public FullyBufferedMultiBufferSource getBufferSource() {
+		return bufferSource;
 	}
 }
