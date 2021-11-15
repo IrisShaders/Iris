@@ -37,7 +37,6 @@
     "math.MixinMatrix4f",
     "rendertype.MixinFixEyesTranslucency",
     "rendertype.MixinRenderType",
-    "rendertype.MixinItemBlockRenderTypes",
     "rendertype.RenderStateShardAccessor",
     "rendertype.RenderTypeAccessor",
     "shadows.MixinBeaconRenderer",
