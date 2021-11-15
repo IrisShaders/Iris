@@ -12,9 +12,9 @@ public class GbufferPrograms {
 	 * Uses additional information to choose a more specific (and appropriate) GbufferProgram.
 	 */
 	private static GbufferProgram refine(GbufferProgram program) {
-		if (program == GbufferProgram.ENTITIES || program == GbufferProgram.ENTITIES_TRANSLUCENT || program == GbufferProgram.TERRAIN || program == GbufferProgram.TRANSLUCENT_TERRAIN) {
+		if (program == GbufferProgram.ENTITIES || program == GbufferProgram.TERRAIN || program == GbufferProgram.TRANSLUCENT_TERRAIN) {
 			if (HandRenderer.INSTANCE.isActive()) {
-				return program == GbufferProgram.ENTITIES_TRANSLUCENT ? GbufferProgram.HAND_TRANSLUCENT : GbufferProgram.HAND;
+				return HandRenderer.INSTANCE.isRenderingSolid() ? GbufferProgram.HAND : GbufferProgram.HAND_TRANSLUCENT;
 			} else if (entities) {
 				return GbufferProgram.ENTITIES;
 			} else if (blockEntities) {

@@ -370,8 +370,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				return beaconBeam;
 			case ENTITIES:
 				return entities;
-			case ENTITIES_TRANSLUCENT:
-				return entities;
 			case BLOCK_ENTITIES:
 				return blockEntities;
 			case ENTITIES_GLOWING:
