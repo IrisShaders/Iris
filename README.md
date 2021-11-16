@@ -196,4 +196,4 @@ Zoom - https://www.curseforge.com/minecraft/mc-mods/ok-zoomer or https://www.cur
 
 You will also need https://modrinth.com/mod/indium/ and https://www.curseforge.com/minecraft/mc-mods/fabric-api for most mods as well as https://www.curseforge.com/minecraft/mc-mods/modmenu for settings.
 
-If you need further help please ask our helpers and mods in iris-support, and someone will be there shortly to assist you! 
+If you need further help please ask our helpers and mods in the iris-support channel in our Discord server, and someone will be there shortly to assist you! 
