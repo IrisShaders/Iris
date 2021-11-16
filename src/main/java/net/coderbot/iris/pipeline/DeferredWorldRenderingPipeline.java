@@ -84,6 +84,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass blockEntities;
 	@Nullable
+	private final Pass hand;
+	@Nullable
+	private final Pass handTranslucent;
+	@Nullable
 	private final Pass glowingEntities;
 	@Nullable
 	private final Pass glint;
@@ -259,6 +263,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
 		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
+		this.hand = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
+		this.handTranslucent = programs.getGbuffersHandWater().map(this::createPass).orElse(hand);
 		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
 		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
 		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
@@ -388,6 +394,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			case WEATHER:
 				return weather;
 			case HAND:
+				return hand;
+			case HAND_TRANSLUCENT:
+				return handTranslucent;
 			default:
 				// TODO
 				throw new UnsupportedOperationException("TODO: Unsupported gbuffer program: " + program);
@@ -658,10 +667,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public void beginHand() {
+		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
+		// all non-translucent content without the hand, as required.
+		baseline.bindAsReadBuffer();
+		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		GlStateManager._bindTexture(0);
+	}
+
+	@Override
 	public void beginTranslucents() {
 		isBeforeTranslucent = false;
 
-		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
+		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
@@ -711,6 +730,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginLevelRendering() {
 		isRenderingWorld = true;
 		isBeforeTranslucent = true;
+		HandRenderer.INSTANCE.getBufferSource().resetDrawCalls();
 
 		checkWorld();
 

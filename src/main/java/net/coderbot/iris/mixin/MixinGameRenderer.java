@@ -1,9 +1,11 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlUtil;
+
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
@@ -11,10 +13,13 @@ import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import org.lwjgl.opengl.GL20;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -36,6 +41,11 @@ public class MixinGameRenderer {
 		Iris.logger.info("CPU: " + GlUtil.getCpuInfo());
 		Iris.logger.info("GPU: " + GlUtil.getRenderer() + " (Supports OpenGL " + GlUtil.getOpenGLVersion() + ")");
 		Iris.logger.info("OS: " + System.getProperty("os.name"));
+	}
+
+	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z"))
+	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
+		return !Iris.getCurrentPack().isPresent();
 	}
 
 	@Inject(method = "getPositionShader", at = @At("HEAD"), cancellable = true)
@@ -174,6 +184,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? CoreWorldRenderingPipeline::getHandCutout : CoreWorldRenderingPipeline::getHandTranslucent, cir);
 		} else if (GbufferPrograms.isRenderingBlockEntities()) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
@@ -206,6 +218,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? CoreWorldRenderingPipeline::getHandCutout : CoreWorldRenderingPipeline::getHandTranslucent, cir);
 		} else if (GbufferPrograms.isRenderingBlockEntities()) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
