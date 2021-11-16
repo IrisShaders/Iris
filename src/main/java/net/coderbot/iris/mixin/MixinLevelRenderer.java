@@ -6,6 +6,7 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -88,6 +89,7 @@ public class MixinLevelRenderer {
 	// render their waypoint beams.
 	@Inject(method = RENDER, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
 	private void iris$endLevelRender(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
+		HandRenderer.INSTANCE.renderTranslucent(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeLevelRendering();
 		pipeline.setPhase(WorldRenderingPhase.NOT_RENDERING_WORLD);
@@ -219,6 +221,8 @@ public class MixinLevelRenderer {
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 										LightTexture lightTexture, Matrix4f projection,
 										CallbackInfo ci) {
+		pipeline.beginHand();
+		HandRenderer.INSTANCE.renderSolid(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}

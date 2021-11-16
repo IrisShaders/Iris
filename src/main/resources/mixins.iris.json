@@ -5,6 +5,9 @@
   "plugin": "net.coderbot.iris.mixin.shadows.IrisShadowsMixinPlugin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "DimensionTypeAccessor",
+    "GameRendererAccessor",
+    "LevelRendererAccessor",
     "MixinBlockStateBehavior",
     "MixinFogRenderer",
     "MixinDebugScreenOverlay",
@@ -15,6 +18,7 @@
     "MixinGlStateManager",
     "MixinGlStateManager_AtlasTracking",
     "MixinGlUniform",
+    "MixinItemInHandRenderer",
     "MixinLivingEntityRenderer",
     "MixinMinecraft",
     "MixinMinecraft_PipelineDestruction",
