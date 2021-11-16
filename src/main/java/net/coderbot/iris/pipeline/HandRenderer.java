@@ -80,15 +80,11 @@ public class HandRenderer {
 
 		setupGlState(gameRenderer, camera, poseStack, tickDelta);
 
-		pipeline.pushProgram(GbufferProgram.HAND);
-
 		renderingSolid = true;
 
 		Minecraft.getInstance().getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
 		renderingSolid = false;
-
-		pipeline.popProgram(GbufferProgram.HAND);
 
 		Minecraft.getInstance().getProfiler().pop();
 
@@ -114,11 +110,7 @@ public class HandRenderer {
 
 		setupGlState(gameRenderer, camera, poseStack, tickDelta);
 
-		pipeline.pushProgram(GbufferProgram.HAND_TRANSLUCENT);
-
 		Minecraft.getInstance().getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
-
-		pipeline.popProgram(GbufferProgram.HAND_TRANSLUCENT);
 
 		poseStack.popPose();
 
