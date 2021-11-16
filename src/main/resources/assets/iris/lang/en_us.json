@@ -8,7 +8,9 @@
   "iris.shaders.reloaded.failure": "Failed to reload shaders! Reason: %s",
   "iris.shaders.toggled.failure": "Failed to toggle shaders! Reason: %s",
   "iris.sodium.failure.title": "Iris failed to load!",
-  "iris.sodium.failure.reason": "You have Sodium in your mods folder, however Iris includes it. Please close the game, and remove Sodium from your mods folder.",
+  "iris.sodium.failure.download": "Download Sodium",
+  "iris.sodium.failure.reason.notFound": "Iris requires Sodium for good performance, but Sodium is not installed. Please download Sodium, place it in your mods folder, and re-launch the game.",
+  "iris.sodium.failure.reason.incompatible": "Iris requires Sodium for good performance, but an incompatible version was found. Please download the correct version of Sodium, place it in your mods folder, and re-launch the game.",
 
   "options.iris.apply": "Apply",
   "options.iris.refresh": "Refresh",

@@ -62,9 +62,8 @@ public class Iris implements ClientModInitializer {
 					sodiumInstalled = true;
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
-					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will show the user a nice warning, and prevent them from playing the
-					// game with a wrong version of Sodium.
+					// This makes it so that if we don't have the right version of Sodium, it will show the user a
+					// nice warning, and prevent them from playing the game with a wrong version of Sodium.
 					if (!versionString.startsWith(SODIUM_VERSION)) {
 						sodiumInvalid = true;
 					}
