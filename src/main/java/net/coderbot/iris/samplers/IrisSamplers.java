@@ -36,7 +36,7 @@ public class IrisSamplers {
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
 		int startIndex = isFullscreenPass ? 0 : 4;
 
-		for (int i = startIndex; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
+		for (int i = startIndex; i < renderTargets.getRenderTargetCount(); i++) {
 			final int index = i;
 
 			IntSupplier sampler = () -> {
