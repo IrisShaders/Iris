@@ -82,6 +82,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShaderInstance entitiesSolid;
 	private final ShaderInstance entitiesCutout;
 	private final ShaderInstance entitiesEyes;
+	private final ShaderInstance handCutout;
+	private final ShaderInstance handTranslucent;
 	private final ShaderInstance shadowEntitiesCutout;
 	private final ShaderInstance shadowBeaconBeam;
 	private final ShaderInstance lightning;
@@ -274,6 +276,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		Optional<ProgramSource> entitiesSource = first(programSet.getGbuffersEntities(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> entityEyesSource = first(programSet.getGbuffersEntityEyes(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> handSource = first(programSet.getGbuffersHand(), particleSource);
+		Optional<ProgramSource> handTranslucentSource = first(programSet.getGbuffersHandWater(), handSource);
 		Optional<ProgramSource> glintSource = first(programSet.getGbuffersGlint(), programSet.getGbuffersTextured());
 
 		Optional<ProgramSource> damagedBlockSource = first(programSet.getGbuffersDamagedBlock(), terrainSource);
@@ -303,6 +307,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
 			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
 			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
+			this.handCutout = createShader("gbuffers_hand_cutout", handSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
+			this.handTranslucent = createShader("gbuffers_hand_translucent", handTranslucentSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
 			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR, FogMode.LINEAR);
 			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.LINEAR);
 			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
@@ -553,6 +559,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
+	public void beginHand() {
+		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
+		// all non-translucent content excluding the hand, as required.
+		baseline.bindAsReadBuffer();
+		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		GlStateManager._bindTexture(0);
+	}
+
+	@Override
 	public void beginTranslucents() {
 		if (destroyed) {
 			throw new IllegalStateException("Tried to use a destroyed world rendering pipeline");
@@ -560,7 +576,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		isBeforeTranslucent = false;
 
-		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
+		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
@@ -677,6 +693,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public ShaderInstance getEntitiesEyes() {
 		return entitiesEyes;
+	}
+
+	@Override
+	public ShaderInstance getHandCutout() {
+		return handCutout;
+	}
+
+	@Override
+	public ShaderInstance getHandTranslucent() {
+		return handTranslucent;
 	}
 
 	@Override

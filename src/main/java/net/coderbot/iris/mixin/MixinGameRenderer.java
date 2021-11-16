@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.GlUtil;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
@@ -183,6 +184,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? CoreWorldRenderingPipeline::getHandCutout : CoreWorldRenderingPipeline::getHandTranslucent, cir);
 		} else if (GbufferPrograms.isRenderingBlockEntities()) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
@@ -215,6 +218,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(CoreWorldRenderingPipeline::getShadowEntitiesCutout, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? CoreWorldRenderingPipeline::getHandCutout : CoreWorldRenderingPipeline::getHandTranslucent, cir);
 		} else if (GbufferPrograms.isRenderingBlockEntities()) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		} else if (isRenderingWorld()) {
