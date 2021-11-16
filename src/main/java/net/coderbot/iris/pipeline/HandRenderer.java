@@ -84,8 +84,6 @@ public class HandRenderer {
 
 		Minecraft.getInstance().getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
-		renderingSolid = false;
-
 		Minecraft.getInstance().getProfiler().pop();
 
 		gameRenderer.resetProjectionMatrix(CapturedRenderingState.INSTANCE.getGbufferProjection());
@@ -93,6 +91,8 @@ public class HandRenderer {
 		poseStack.popPose();
 
 		bufferSource.endBatch();
+
+		renderingSolid = false;
 
 		ACTIVE = false;
 	}
