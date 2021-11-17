@@ -3,9 +3,10 @@ package net.coderbot.iris.mixin;
 import com.mojang.blaze3d.platform.GlUtil;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -32,6 +33,10 @@ public class MixinGameRenderer {
 
 	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z"))
 	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
-		return !Iris.getCurrentPack().isPresent();
+		if (Iris.getCurrentPack().isPresent()) {
+			return false;
+		} else {
+			return ((GameRendererAccessor) this).getRenderHand();
+		}
 	}
 }
