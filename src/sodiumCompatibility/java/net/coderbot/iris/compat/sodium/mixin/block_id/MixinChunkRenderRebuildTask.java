@@ -49,9 +49,9 @@ public class MixinChunkRenderRebuildTask {
     }
 
     @Inject(method = "performBuild",
-            at = @At(value = "INVOKE", target = "net/minecraft/world/level/block/Block.isEntityBlock()Z"))
+            at = @At(value = "INVOKE", target = "net/minecraft/world/level/block/state/BlockState.hasBlockEntity ()Z"))
     private void iris$resetId(ChunkRenderCacheLocal cache, ChunkBuildBuffers buffers,
-                              CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult<?>> cir) {
+                              CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult> cir) {
         if (buffers instanceof ChunkBuildBuffersExt) {
             ((ChunkBuildBuffersExt) buffers).iris$resetMaterialId();
         }
