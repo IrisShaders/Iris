@@ -35,7 +35,8 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 	// The recommended version of Sodium for use with Iris
-	private static final String SODIUM_VERSION = "0.2.0+IRIS4";
+	private static final String SODIUM_VERSION = "0.2.0";
+	public static final String SODIUM_DOWNLOAD_LINK = "https://www.curseforge.com/minecraft/mc-mods/sodium/files/3488820";
 
 	private static Path shaderpacksDirectory;
 
@@ -62,9 +63,8 @@ public class Iris implements ClientModInitializer {
 					sodiumInstalled = true;
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
-					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will show the user a nice warning, and prevent them from playing the
-					// game with a wrong version of Sodium.
+					// This makes it so that if we don't have the right version of Sodium, it will show the user a
+					// nice warning, and prevent them from playing the game with a wrong version of Sodium.
 					if (!versionString.startsWith(SODIUM_VERSION)) {
 						sodiumInvalid = true;
 					}

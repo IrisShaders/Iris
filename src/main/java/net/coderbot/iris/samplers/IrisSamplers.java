@@ -124,8 +124,9 @@ public class IrisSamplers {
 	public static void addCompositeSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
 		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId,
 				"gdepthtex", "depthtex0");
-		// TODO: "no translucents, no hand" depth texture when in-world hand rendering is implemented.
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId,
-				"depthtex1", "depthtex2");
+				"depthtex1");
+		samplers.addDynamicSampler(renderTargets.getDepthTextureNoHand()::getTextureId,
+				"depthtex2");
 	}
 }

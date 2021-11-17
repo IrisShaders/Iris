@@ -6,6 +6,7 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "DimensionTypeAccessor",
+    "GameRendererAccessor",
     "LevelRendererAccessor",
     "MixinBlockStateBehavior",
     "MixinClientLanguage",
@@ -16,6 +17,7 @@
     "MixinGlStateManager",
     "MixinGlStateManager_AmdCrashFix",
     "MixinGlStateManager_AtlasTracking",
+    "MixinItemInHandRenderer",
     "MixinLevelRenderer",
     "MixinLivingEntityRenderer",
     "MixinMinecraft",

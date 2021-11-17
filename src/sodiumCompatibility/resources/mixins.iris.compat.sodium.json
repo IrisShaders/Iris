@@ -1,0 +1,40 @@
+{
+  "package": "net.coderbot.iris.compat.sodium.mixin",
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "conformVisibility": true
+  },
+  "client": [
+    "block_id.MixinChunkBuildBuffers",
+    "block_id.MixinChunkRenderRebuildTask",
+    "directional_shading.MixinFlatLightPipeline",
+    "directional_shading.MixinSmoothLightPipeline",
+    "options.MixinChunkRenderManager",
+    "options.MixinOptionImpl",
+    "options.MixinSodiumGameOptionPages",
+    "options.MixinSodiumGameOptions",
+    "options.MixinSodiumOptionsGUI",
+    "separate_ao.MixinBlockRenderer",
+    "separate_ao.MixinFluidRenderer",
+    "shader_overrides.MixinChunkProgram",
+    "shader_overrides.MixinChunkRenderManager",
+    "shader_overrides.MixinChunkRenderShaderBackend",
+    "shader_overrides.MixinShaderType",
+    "shader_overrides.ShaderTypeAccessor",
+    "shadow_map.MixinChunkRenderManager",
+    "shadow_map.MixinGameRendererContext",
+    "shadow_map.MixinSodiumWorldRenderer",
+    "vertex_format.ChunkMeshAttributeAccessor",
+    "vertex_format.GlVertexAttributeFormatAccessor",
+    "vertex_format.MixinChunkMeshAttribute",
+    "vertex_format.MixinChunkOneshotGraphicsState",
+    "vertex_format.MixinGlVertexFormatBuilder",
+    "vertex_format.MixinMultidrawChunkRenderBackend",
+    "vertex_format.MixinSodiumWorldRenderer"
+  ],
+  "refmap": "iris-sodium-compat-refmap.json"
+}
