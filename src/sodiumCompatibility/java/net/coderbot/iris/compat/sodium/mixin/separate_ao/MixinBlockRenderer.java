@@ -1,6 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.separate_ao;
 
-import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuffers;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.pipeline.BlockRenderer;
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
@@ -25,8 +25,9 @@ public class MixinBlockRenderer {
     private boolean useSeparateAo;
 
     @Inject(method = "renderModel", remap = false, at = @At("HEAD"))
-    private void renderModel(BlockAndTintGetter level, BlockState state, BlockPos pos, BakedModel model,
-							 ChunkModelBuffers buffers, boolean cull, long seed, CallbackInfoReturnable<Boolean> cir) {
+    private void renderModel(BlockAndTintGetter world, BlockState state, BlockPos pos, BlockPos origin,
+							 BakedModel model, ChunkModelBuilder buffers, boolean cull, long seed,
+							 CallbackInfoReturnable<Boolean> cir) {
         this.useSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
     }
 
