@@ -8,7 +8,9 @@
   "iris.shaders.reloaded.failure": "Não foi possível recarregar os shaders! Motivo: %s",
   "iris.shaders.toggled.failure": "Não foi possível ativar ou desativar os shaders! Motivo: %s",
   "iris.sodium.failure.title": "Não foi possível carregar o Iris!",
-  "iris.sodium.failure.reason": "O Sodium está em sua pasta de mods, mas o Iris já o inclui. Feche o jogo e remova o Sodium da pasta de mods.",
+  "iris.sodium.failure.download": "Baixar Sodium",
+  "iris.sodium.failure.reason.notFound": "O Iris exige o Sodium para maior desempenho, mas o Sodium não está instalado. Baixe o Sodium, coloque-o na pasta de mods e reinicie o jogo.",
+  "iris.sodium.failure.reason.incompatible": "O Iris exige o Sodium para maior desempenho, mas uma versão incompatível foi encontrada. Baixe a versão correta do Sodium, coloque-o na pasta de mods, remova a versão incorreta e reinicie o jogo.",
 
   "options.iris.apply": "Aplicar",
   "options.iris.refresh": "Atualizar",
@@ -27,7 +29,7 @@
   "options.iris.shadowDistance": "Distância máxima de sombras",
   "options.iris.shadowDistance.enabled": "Permite a alteração da distância máxima de sombras. Terrenos e entidadess além dessa distância não exibem sombras. Reduzir a distância de sombras pode reduzir muito o desempenho.",
   "options.iris.shadowDistance.disabled": "Seu pacote de shaders atual já possui uma distância de renderização para sombras. Não é possível alterá-la.",
-
+  
   "pack.iris.select.title": "Selecionar",
   "pack.iris.list.label": "+ arraste e solte nessa janela para adicionar pacotes de shaders"
 }
