@@ -39,7 +39,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     @Shadow(remap = false)
     @Final
     @Mutable
-    private ChunkRenderList chunkRenderLists;
+    private ChunkRenderList chunkRenderList;
 
     @Shadow(remap = false)
     @Final
@@ -55,7 +55,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 	private boolean needsUpdate;
 
     @Unique
-    private ChunkRenderList chunkRenderListsSwap;
+    private ChunkRenderList chunkRenderListSwap;
 
     @Unique
     private ObjectList<RenderSection> tickableChunksSwap;
@@ -72,7 +72,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void iris$onInit(SodiumWorldRenderer worldRenderer, BlockRenderPassManager renderPassManager,
 							 ClientLevel world, int renderDistance, CommandList commandList, CallbackInfo ci) {
-        this.chunkRenderListsSwap = new ChunkRenderList();
+        this.chunkRenderListSwap = new ChunkRenderList();
         this.tickableChunksSwap = new ObjectArrayList<>();
         this.visibleBlockEntitiesSwap = new ObjectArrayList<>();
         this.needsUpdateSwap = true;
@@ -80,9 +80,9 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 
     @Override
     public void iris$swapVisibilityState() {
-        ChunkRenderList chunkRenderListsTmp = chunkRenderLists;
-        chunkRenderLists = chunkRenderListsSwap;
-        chunkRenderListsSwap = chunkRenderListsTmp;
+        ChunkRenderList chunkRenderListTmp = chunkRenderList;
+        chunkRenderList = chunkRenderListSwap;
+        chunkRenderListSwap = chunkRenderListTmp;
 
         ObjectList<RenderSection> tickableChunksTmp = tickableChunks;
         tickableChunks = tickableChunksSwap;
@@ -105,14 +105,14 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 		}
 	}
 
-	@Inject(method = "schedulePendingUpdates", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "schedulePendingUpdates", at = @At("HEAD"), cancellable = true, remap = false)
 	private void iris$noRebuildEnqueueingInShadowPass(RenderSection section, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ci.cancel();
 		}
 	}
 
-	@Redirect(method = "resetLists",
+	@Redirect(method = "resetLists", remap = false,
 			at = @At(value = "INVOKE", target = "java/util/Collection.iterator ()Ljava/util/Iterator;"))
 	private Iterator<?> iris$noQueueClearingInShadowPass(Collection<?> collection) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {

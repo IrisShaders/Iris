@@ -58,7 +58,7 @@ public class MixinSodiumWorldRenderer {
 
     @Inject(method = "scheduleTerrainUpdate()V", remap = false,
             at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/client/render/chunk/ChunkRenderManager.markDirty ()V",
+                    target = "me/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager.markGraphDirty ()V",
                     remap = false))
     private void iris$ensureStateSwappedBeforeMarkDirty(CallbackInfo ci) {
         iris$ensureStateSwapped();

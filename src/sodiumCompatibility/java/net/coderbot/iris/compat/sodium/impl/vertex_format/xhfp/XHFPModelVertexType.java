@@ -15,48 +15,94 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisGlVertexAttributeF
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements ChunkVertexType {
-    public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, 48)
-            .addElement(ChunkMeshAttribute.POSITION, 0, GlVertexAttributeFormat.UNSIGNED_SHORT, 3, false)
-            .addElement(ChunkMeshAttribute.COLOR, 8, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true)
-            .addElement(ChunkMeshAttribute.TEXTURE, 12, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false)
-            .addElement(ChunkMeshAttribute.LIGHT, 16, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, true)
-            .addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 20, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, true)
-            .addElement(IrisChunkMeshAttributes.TANGENT, 24, IrisGlVertexAttributeFormat.BYTE, 4, true)
-            .addElement(IrisChunkMeshAttributes.NORMAL, 28, IrisGlVertexAttributeFormat.BYTE, 3, true)
-            // TODO: This is really dumb - we don't need 16 bytes, we need 2 at most
-            .addElement(IrisChunkMeshAttributes.BLOCK_ID, 32, GlVertexAttributeFormat.FLOAT, 4, false)
-            .build();
+	static final int STRIDE = 40;
 
-    public static final float MODEL_SCALE = (32.0f / 65536.0f);
-    public static final float TEXTURE_SCALE = (1.0f / 32768.0f);
+	public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
+			.addElement(ChunkMeshAttribute.POSITION_ID, 0, GlVertexAttributeFormat.UNSIGNED_SHORT, 4, false)
+			.addElement(ChunkMeshAttribute.COLOR, 8, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true)
+			.addElement(ChunkMeshAttribute.BLOCK_TEXTURE, 12, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false)
+			.addElement(ChunkMeshAttribute.LIGHT_TEXTURE, 16, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, true)
+			.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 20, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, true)
+			.addElement(IrisChunkMeshAttributes.TANGENT, 24, IrisGlVertexAttributeFormat.BYTE, 4, true)
+			.addElement(IrisChunkMeshAttributes.NORMAL, 28, IrisGlVertexAttributeFormat.BYTE, 3, true)
+			.addElement(IrisChunkMeshAttributes.BLOCK_ID, 32, IrisGlVertexAttributeFormat.SHORT, 4, false)
+			.build();
 
-    @Override
-    public ModelVertexSink createFallbackWriter(VertexConsumer consumer) {
-        throw new UnsupportedOperationException();
-    }
+	private static final int POSITION_MAX_VALUE = 32768;
+	private static final int TEXTURE_MAX_VALUE = 32768;
 
-    @Override
-    public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-        return new XHFPModelVertexBufferWriterNio(buffer);
-    }
+	private static final float MODEL_ORIGIN = 8.0f;
+	private static final float MODEL_RANGE = 32.0f;
+	private static final float MODEL_SCALE = MODEL_RANGE / POSITION_MAX_VALUE;
 
-    @Override
-    public BlittableVertexType<ModelVertexSink> asBlittable() {
-        return this;
-    }
+	private static final float MODEL_SCALE_INV = POSITION_MAX_VALUE / MODEL_RANGE;
 
-    @Override
-    public GlVertexFormat<ChunkMeshAttribute> getCustomVertexFormat() {
-        return VERTEX_FORMAT;
-    }
+	private static final float TEXTURE_SCALE = (1.0f / TEXTURE_MAX_VALUE);
 
-    @Override
-    public float getModelScale() {
-        return MODEL_SCALE;
-    }
+	@Override
+	public ModelVertexSink createFallbackWriter(VertexConsumer consumer) {
+		throw new UnsupportedOperationException();
+	}
 
-    @Override
-    public float getTextureScale() {
-        return TEXTURE_SCALE;
-    }
+	@Override
+	public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
+		return new XHFPModelVertexBufferWriterNio(buffer);
+	}
+
+	@Override
+	public BlittableVertexType<ModelVertexSink> asBlittable() {
+		return this;
+	}
+
+	@Override
+	public GlVertexFormat<ChunkMeshAttribute> getCustomVertexFormat() {
+		return VERTEX_FORMAT;
+	}
+
+	@Override
+	public float getTextureScale() {
+		return TEXTURE_SCALE;
+	}
+
+	@Override
+	public float getModelScale() {
+		return MODEL_SCALE;
+	}
+
+	@Override
+	public float getModelOffset() {
+		return -MODEL_ORIGIN;
+	}
+
+	static short encodeBlockTexture(float value) {
+		return (short) (value * TEXTURE_MAX_VALUE);
+	}
+
+	static float decodeBlockTexture(short raw) {
+		return (raw & 0xFFFF) * TEXTURE_SCALE;
+	}
+
+	static short encodePosition(float v) {
+		return (short) ((MODEL_ORIGIN + v) * MODEL_SCALE_INV);
+	}
+
+	static float decodePosition(short raw) {
+		return (raw & 0xFFFF) * MODEL_SCALE - MODEL_ORIGIN;
+	}
+
+	static int encodeLightMapTexCoord(int light) {
+		int r = light;
+
+		// Mask off coordinate values outside 0..255
+		r &= 0x00FF_00FF;
+
+		// Light coordinates are normalized values, so upcasting requires a shift
+		// Scale the coordinates from the range of 0..255 (unsigned byte) into 0..65535 (unsigned short)
+		r <<= 8;
+
+		// Add a half-texel offset to each coordinate so we sample from the center of each texel
+		r += 0x0800_0800;
+
+		return r;
+	}
 }
