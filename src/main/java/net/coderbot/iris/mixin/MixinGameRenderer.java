@@ -32,6 +32,6 @@ public class MixinGameRenderer {
 
 	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z"))
 	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
-		return Iris.getPipelineManager().getPipeline() instanceof FixedFunctionWorldRenderingPipeline;
+		return !Iris.getCurrentPack().isPresent();
 	}
 }
