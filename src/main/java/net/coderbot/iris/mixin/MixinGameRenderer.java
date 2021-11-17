@@ -1,11 +1,16 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlUtil;
+
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -23,5 +28,10 @@ public class MixinGameRenderer {
 		Iris.logger.info("CPU: " + GlUtil.getCpuInfo());
 		Iris.logger.info("GPU: " + GlUtil.getRenderer() + " (Supports OpenGL " + GlUtil.getOpenGLVersion() + ")");
 		Iris.logger.info("OS: " + System.getProperty("os.name"));
+	}
+
+	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z"))
+	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
+		return !Iris.getCurrentPack().isPresent();
 	}
 }
