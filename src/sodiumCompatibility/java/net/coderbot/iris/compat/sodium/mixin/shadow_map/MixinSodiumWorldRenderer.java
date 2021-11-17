@@ -2,9 +2,9 @@ package net.coderbot.iris.compat.sodium.mixin.shadow_map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderManager;
+import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.coderbot.iris.shadows.ShadowRenderingState;
-import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableChunkRenderManager;
+import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer {
     @Shadow(remap = false)
-    private ChunkRenderManager<?> chunkRenderManager;
+    private RenderSectionManager renderSectionManager;
 
     @Shadow(remap = false)
     private double lastCameraX;
@@ -37,8 +37,8 @@ public class MixinSodiumWorldRenderer {
     @Unique
     public void iris$restoreStateIfShadowsWereBeingRendered() {
         if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            if (this.chunkRenderManager instanceof SwappableChunkRenderManager) {
-                ((SwappableChunkRenderManager) this.chunkRenderManager).iris$swapVisibilityState();
+            if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
+                ((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
             }
 
             wasRenderingShadows = false;
@@ -48,8 +48,8 @@ public class MixinSodiumWorldRenderer {
     @Unique
     private void iris$ensureStateSwapped() {
         if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            if (this.chunkRenderManager instanceof SwappableChunkRenderManager) {
-                ((SwappableChunkRenderManager) this.chunkRenderManager).iris$swapVisibilityState();
+            if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
+                ((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
             }
 
             wasRenderingShadows = true;
