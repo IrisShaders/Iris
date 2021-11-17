@@ -1,6 +1,5 @@
 package net.coderbot.iris.compat.sodium.mixin.options;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import me.jellysquid.mods.sodium.client.gui.SodiumGameOptionPages;
 import me.jellysquid.mods.sodium.client.gui.options.Option;
 import me.jellysquid.mods.sodium.client.gui.options.OptionGroup;
@@ -15,6 +14,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 
+// TODO: Port this Mixin
+
 /**
  * Adds the Iris-specific options / option changes to the Sodium game options pages.
  */
@@ -26,8 +27,8 @@ public class MixinSodiumGameOptionPages {
 
     @Redirect(method = "general", remap = false,
             slice = @Slice(
-                    from = @At(value = "CONSTANT", args = "stringValue=View Distance"),
-                    to = @At(value = "CONSTANT", args = "stringValue=Brightness")
+                    from = @At(value = "CONSTANT", args = "stringValue=options.renderDistance"),
+                    to = @At(value = "CONSTANT", args = "options.gamma")
             ),
             at = @At(value = "INVOKE", remap = false,
                     target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
@@ -44,8 +45,8 @@ public class MixinSodiumGameOptionPages {
 
     @ModifyArg(method = "quality", remap = false,
             slice = @Slice(
-                    from = @At(value = "CONSTANT", args = "stringValue=Graphics Quality"),
-                    to = @At(value = "CONSTANT", args = "stringValue=Clouds Quality")
+                    from = @At(value = "CONSTANT", args = "stringValue=options.graphics"),
+                    to = @At(value = "CONSTANT", args = "stringValue=sodium.options.clouds_quality.name")
             ),
             at = @At(value = "INVOKE", remap = false,
                     target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
@@ -53,7 +54,7 @@ public class MixinSodiumGameOptionPages {
                             ")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
             allow = 1)
     private static Option<?> iris$replaceGraphicsQualityButton(Option<?> candidate) {
-        if (!Iris.getIrisConfig().areShadersEnabled() && GlStateManager.supportsFramebufferBlit()) {
+        if (!Iris.getIrisConfig().areShadersEnabled()) {
             return candidate;
         } else {
             return IrisSodiumOptions.createLimitedVideoSettingsButton(vanillaOpts);
