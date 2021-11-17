@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.GlUtil;
 
 import net.coderbot.iris.Iris;
 
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,6 +21,9 @@ import net.minecraft.server.packs.resources.ResourceManager;
 @Mixin(GameRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinGameRenderer {
+	@Shadow
+	private boolean renderHand;
+
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void iris$logSystem(Minecraft client, ResourceManager resourceManager, RenderBuffers bufferBuilderStorage,
 								CallbackInfo ci) {
@@ -36,7 +38,7 @@ public class MixinGameRenderer {
 		if (Iris.getCurrentPack().isPresent()) {
 			return false;
 		} else {
-			return ((GameRendererAccessor) this).getRenderHand();
+			return renderHand;
 		}
 	}
 }
