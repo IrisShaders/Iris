@@ -53,11 +53,5 @@
     "batchedentityrendering": "*",
     "canvas": "*",
     "optifabric": "*"
-  },
-
-  "custom": {
-    "sodium:options": {
-      "mixin.features.shader": false
-    }
   }
 }
