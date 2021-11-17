@@ -169,8 +169,9 @@ public final class CommonUniforms {
 		if (cameraEntity instanceof LivingEntity) {
 			LivingEntity livingEntity = (LivingEntity) cameraEntity;
 
-			if (livingEntity.getEffect(MobEffects.NIGHT_VISION) != null) {
-				return GameRenderer.getNightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+			float nightVisionStrength = GameRenderer.getNightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+			if (nightVisionStrength > 0) {
+				return nightVisionStrength;
 			}
 		}
 

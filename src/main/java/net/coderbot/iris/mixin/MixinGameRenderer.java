@@ -34,4 +34,11 @@ public class MixinGameRenderer {
 	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
 		return !Iris.getCurrentPack().isPresent();
 	}
+	
+	@Inject(method = "getNightVisionScale", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/effect/MobEffectInstance;getDuration()I"), cancellable = true)
+	private static void iris$safecheckNightvisionStrength(LivingEntity livingEntity, float f, CallbackInfoReturnable<Float> cir){
+		if(livingEntity.getEffect(MobEffects.NIGHT_VISION) == null){
+			cir.setReturnValue(0.0f);
+		}
+	}
 }
