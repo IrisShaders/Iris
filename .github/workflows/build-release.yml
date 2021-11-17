@@ -22,30 +22,8 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Fetch the Sodium fork
-        uses: actions/checkout@v2
-        with:
-          repository: 'IrisShaders/sodium-fabric'
-          ref: '1.18.x/snapshot/iris'
-          path: 'sodium-fabric'
-      - name: Cache Sodium
-        uses: actions/cache@v2
-        with:
-          path: |
-            ./sodium-fabric/.gradle/caches
-            ./sodium-fabric/.gradle/loom-cache
-            ./sodium-fabric/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-sodium-${{ hashFiles('./sodium-fabric/**/*.gradle*', './sodium-fabric/**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-sodium-
-      - name: Build initial Iris artifacts
-        run: ./gradlew publishToMavenLocal
-      - name: Build initial Sodium artifacts
-        run: cd ./sodium-fabric && ./gradlew publishToMavenLocal && cd ..
-      - name: List contents of maven local repository
-        run: ls -lR /home/runner/.m2/repository
-      - name: Build combined Iris + Sodium jar
-        run: ./gradlew bundleWithSodium
+      - name: Build Iris jar
+        run: ./gradlew build
       - name: Extract current branch name
         shell: bash
         # bash pattern expansion to grab branch name without slashes

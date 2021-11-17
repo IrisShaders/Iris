@@ -63,7 +63,8 @@ public abstract class MixinDebugScreenOverlay {
 		List<String> messages = cir.getReturnValue();
 
 		if (!Iris.isSodiumInstalled() && Iris.getCurrentPack().isPresent()) {
-			messages.add(1, ChatFormatting.YELLOW + "[Iris] You are running an experimental version of Iris without Sodium; expect poor performance.");
+			messages.add(1, ChatFormatting.YELLOW + "[Iris] Sodium isn't installed; you will have poor performance.");
+			messages.add(2, ChatFormatting.YELLOW + "[Iris] Install Sodium if you want to run benchmarks or get higher FPS!");
 		}
 
 		Iris.getPipelineManager().getPipeline().addDebugText(messages);
