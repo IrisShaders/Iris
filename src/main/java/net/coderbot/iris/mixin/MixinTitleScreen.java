@@ -31,19 +31,11 @@ public class MixinTitleScreen {
 			return;
 		}
 
-		if (Iris.isSodiumInvalid()) {
-			Minecraft.getInstance().setScreen(new AlertScreen(
-					Minecraft.getInstance()::stop,
-					new TranslatableComponent("iris.sodium.failure.title").withStyle(ChatFormatting.RED),
-					new TranslatableComponent("iris.sodium.failure.reason.incompatible"),
-					new TranslatableComponent("menu.quit")));
-		}
-
 		Minecraft.getInstance().setScreen(new ConfirmScreen(
 				(boolean accepted) -> {
 					if (accepted) {
 						try {
-							Util.getPlatform().openUri(new URI("https://www.curseforge.com/minecraft/mc-mods/sodium/files/3488836"));
+							Util.getPlatform().openUri(new URI(Iris.SODIUM_DOWNLOAD_LINK));
 						} catch (URISyntaxException e) {
 							throw new IllegalStateException(e);
 						}
