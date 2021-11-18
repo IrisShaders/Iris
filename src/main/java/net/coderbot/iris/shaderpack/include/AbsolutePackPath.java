@@ -3,9 +3,11 @@ package net.coderbot.iris.shaderpack.include;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+// TODO: Write tests for this
 public class AbsolutePackPath {
 	private final String path;
 
@@ -85,6 +87,19 @@ public class AbsolutePackPath {
 		}
 
 		return normalized.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		AbsolutePackPath that = (AbsolutePackPath) o;
+		return Objects.equals(path, that.path);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(path);
 	}
 
 	public String toString() {

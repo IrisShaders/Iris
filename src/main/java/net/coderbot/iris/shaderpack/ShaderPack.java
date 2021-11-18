@@ -6,8 +6,14 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 
+import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
+import net.coderbot.iris.shaderpack.include.IncludeGraph;
+import net.coderbot.iris.shaderpack.include.IncludeProcessor;
+import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
 import org.jetbrains.annotations.Nullable;
 
 public class ShaderPack {
@@ -35,10 +41,60 @@ public class ShaderPack {
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
 
-		this.base = new ProgramSet(root, root, shaderProperties, this);
-		this.overworld = loadOverrides(root, "world0", shaderProperties, this);
-		this.nether = loadOverrides(root, "world-1", shaderProperties, this);
-		this.end = loadOverrides(root, "world1", shaderProperties, this);
+		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
+		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
+
+		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"),
+				potentialFileNames);
+
+		boolean hasWorld0 = ShaderPackSourceNames.findPresentSources(starts, root,
+				AbsolutePackPath.fromAbsolutePath("/world0"), potentialFileNames);
+
+		boolean hasNether = ShaderPackSourceNames.findPresentSources(starts, root,
+				AbsolutePackPath.fromAbsolutePath("/world-1"), potentialFileNames);
+
+		boolean hasEnd = ShaderPackSourceNames.findPresentSources(starts, root,
+				AbsolutePackPath.fromAbsolutePath("/world1"), potentialFileNames);
+
+		IncludeGraph graph = new IncludeGraph(root, starts.build());
+
+		// TODO: Discover shader options
+		// TODO: Merge shader options
+		// TODO: Apply shader options
+
+		// TODO: Port over remaining ShaderPreprocessor changes.
+
+		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
+
+		Function<AbsolutePackPath, String> sourceProvider = (path) -> {
+			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
+
+			if (lines == null) {
+				return null;
+			}
+
+			StringBuilder builder = new StringBuilder();
+
+			for (String line : lines) {
+				builder.append(line);
+				builder.append('\n');
+			}
+
+			return builder.toString();
+		};
+
+		// TODO: Apply any additional defines (ie StandardMacros and similar)
+		// TODO: Apply GLSL preprocessor
+		// TODO: Create ProgramSets and discover directives
+
+		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/"), sourceProvider, shaderProperties, this);
+
+		this.overworld = loadOverrides(hasWorld0, AbsolutePackPath.fromAbsolutePath("/world0"), sourceProvider,
+				shaderProperties, this);
+		this.nether = loadOverrides(hasNether, AbsolutePackPath.fromAbsolutePath("/world-1"), sourceProvider,
+				shaderProperties, this);
+		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
+				shaderProperties, this);
 
 		this.idMap = new IdMap(root);
 		this.languageMap = new LanguageMap(root.resolve("lang"));
@@ -59,11 +115,10 @@ public class ShaderPack {
 	}
 
 	@Nullable
-	private static ProgramSet loadOverrides(Path root, String subfolder, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
-		Path sub = root.resolve(subfolder);
-
-		if (Files.exists(sub)) {
-			return new ProgramSet(sub, root, shaderProperties, pack);
+	private static ProgramSet loadOverrides(boolean has, AbsolutePackPath path, Function<AbsolutePackPath, String> sourceProvider,
+											ShaderProperties shaderProperties, ShaderPack pack) {
+		if (has) {
+			return new ProgramSet(path, sourceProvider, shaderProperties, pack);
 		}
 
 		return null;
