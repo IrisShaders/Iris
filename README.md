@@ -195,5 +195,3 @@ Various OptiFine features including toggles for animations, particles, and fog -
 Zoom - https://www.curseforge.com/minecraft/mc-mods/ok-zoomer or https://www.curseforge.com/minecraft/mc-mods/logical-zoom, https://modrinth.com/mod/spyzoom for a vanilla alternative
 
 You will also need https://modrinth.com/mod/indium/ and https://www.curseforge.com/minecraft/mc-mods/fabric-api for most mods as well as https://www.curseforge.com/minecraft/mc-mods/modmenu for settings.
-
-If you need further help please ask our helpers and mods in iris-support, and someone will be there shortly to assist you! 
