@@ -57,7 +57,7 @@
 
   "custom": {
     "sodium:options": {
-      "mixin.features.shader": false
-    },
-
+      "mixin.features.sky": false
+    }
+  }
 }
