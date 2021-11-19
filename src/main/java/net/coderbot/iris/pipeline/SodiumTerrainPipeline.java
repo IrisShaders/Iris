@@ -15,7 +15,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
-import net.coderbot.iris.pipeline.newshader.TriforceSodiumPatcher;
+import net.coderbot.iris.pipeline.newshader.TriforcePatcher;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
@@ -84,45 +84,45 @@ public class SodiumTerrainPipeline {
 		AlphaTest cutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
 
 		if (terrainVertex != null) {
-			terrainVertex = TriforceSodiumPatcher.patch(terrainVertex, ShaderType.VERTEX, null, inputs);
+			terrainVertex = TriforcePatcher.patchSodium(terrainVertex, ShaderType.VERTEX, null, inputs);
 		}
 
 		if (translucentVertex != null) {
-			translucentVertex = TriforceSodiumPatcher.patch(translucentVertex, ShaderType.VERTEX, null, inputs);
+			translucentVertex = TriforcePatcher.patchSodium(translucentVertex, ShaderType.VERTEX, null, inputs);
 		}
 
 		if (shadowVertex != null) {
-			shadowVertex = TriforceSodiumPatcher.patch(shadowVertex, ShaderType.VERTEX, null, inputs);
+			shadowVertex = TriforcePatcher.patchSodium(shadowVertex, ShaderType.VERTEX, null, inputs);
 		}
 
 		if (terrainGeometry != null) {
-			terrainGeometry = TriforceSodiumPatcher.patch(terrainGeometry, ShaderType.GEOMETRY, null, inputs);
+			terrainGeometry = TriforcePatcher.patchSodium(terrainGeometry, ShaderType.GEOMETRY, null, inputs);
 		}
 
 		if (translucentGeometry != null) {
-			translucentGeometry = TriforceSodiumPatcher.patch(translucentGeometry, ShaderType.GEOMETRY, null, inputs);
+			translucentGeometry = TriforcePatcher.patchSodium(translucentGeometry, ShaderType.GEOMETRY, null, inputs);
 		}
 
 		if (shadowGeometry != null) {
-			shadowGeometry = TriforceSodiumPatcher.patch(shadowGeometry, ShaderType.GEOMETRY, null, inputs);
+			shadowGeometry = TriforcePatcher.patchSodium(shadowGeometry, ShaderType.GEOMETRY, null, inputs);
 		}
 
 		if (terrainFragment != null) {
 			String fragment = terrainFragment;
 
-			terrainFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
-			terrainCutoutFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs);
+			terrainFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
+			terrainCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs);
 		}
 
 		if (translucentFragment != null) {
-			translucentFragment = TriforceSodiumPatcher.patch(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
+			translucentFragment = TriforcePatcher.patchSodium(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
 		}
 
 		if (shadowFragment != null) {
 			String fragment = shadowFragment;
 
-			shadowFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
-			shadowCutoutFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs);
+			shadowFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs);
+			shadowCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs);
 		}
 
 		this.createTerrainSamplers = createTerrainSamplers;
