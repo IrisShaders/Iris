@@ -108,7 +108,7 @@ A. You need java, please get it from: https://adoptium.net/?variant=openjdk17&jv
 
 > Q. How can I configure my shaders?
 
-A. You can't currently, a configuration menu will be coming in a future version. (https://github.com/IrisShaders/Iris/issues/663)
+A. [#663](https://github.com/IrisShaders/Iris/issues/663)
 
 > Q. Why is (insert shader) not working?
 
@@ -166,7 +166,7 @@ The following shaders have been tested and work with some minor issues:
 
 • Triliton V8 [reflections broken]
 
-• Stereo's Default+ [No Sky on 1.17] 
+• Stereo's Default+ [No sky on 1.17] 
 
 > Q. Will (insert feature) part of OptiFine be added to iris? 
 
@@ -188,7 +188,7 @@ Dynamic Lights - https://www.curseforge.com/minecraft/mc-mods/lambdynamiclights
 
 Smart Leaves - https://www.curseforge.com/minecraft/mc-mods/cull-leaves 
 
-Performance - Iris is already bundled with Sodium but we also recommend Lithium (https://modrinth.com/mod/lithium), Hydrogen (https://modrinth.com/mod/hydrogen), and FerriteCore (https://www.curseforge.com/minecraft/mc-mods/ferritecore-fabric). You can also use either Phosphor (https://modrinth.com/mod/phosphor) or Starlight (https://modrinth.com/mod/starlight). Phosphor does not have a 1.17 version.
+Performance - Iris is already bundled with Sodium but we also recommend Lithium (https://modrinth.com/mod/lithium), Hydrogen (https://modrinth.com/mod/hydrogen), and FerriteCore (https://www.curseforge.com/minecraft/mc-mods/ferritecore-fabric). You can also use either Phosphor (https://modrinth.com/mod/phosphor) or Starlight (https://modrinth.com/mod/starlight). Phosphor does not have a 1.17 version yet.
 
 Various OptiFine features including toggles for animations, particles, and fog - https://www.curseforge.com/minecraft/mc-mods/sodium-extra
 
