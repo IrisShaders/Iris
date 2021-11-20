@@ -19,7 +19,7 @@ public class MixinBlockRenderPass {
 
     @Inject(method = "<init>", at = @At("RETURN"))
 	public void changeAlphaCutoff(String layer, int ordinal, RenderType renderType, boolean translucent, float alphaCutoff, CallbackInfo ci) {
-		if (alphaCutoff == 0.5F) {
+		if (renderType == RenderType.cutoutMipped()) {
 			this.alphaCutoff = 0.1F;
 		}
 	}
