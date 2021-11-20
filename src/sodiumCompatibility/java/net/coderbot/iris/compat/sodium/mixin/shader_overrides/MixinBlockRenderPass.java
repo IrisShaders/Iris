@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BlockRenderPass.class)
 public class MixinBlockRenderPass {
-	@Shadow
+	@Shadow(remap = false)
 	@Final
 	@Mutable
 	private float alphaCutoff;
