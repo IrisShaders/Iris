@@ -35,10 +35,6 @@ public class MixinGameRenderer {
 
 	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z"))
 	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
-		if (Iris.getCurrentPack().isPresent()) {
-			return false;
-		} else {
-			return renderHand;
-		}
+		return !Iris.getCurrentPack().isPresent() && renderHand;
 	}
 }
