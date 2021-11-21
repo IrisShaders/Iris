@@ -14,6 +14,8 @@ import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.transform.line.LineTransform;
+import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.jetbrains.annotations.Nullable;
 
 public class ShaderPack {
@@ -62,8 +64,6 @@ public class ShaderPack {
 		// TODO: Merge shader options
 		// TODO: Apply shader options
 
-		// TODO: Port over remaining ShaderPreprocessor changes.
-
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
 
 		Function<AbsolutePackPath, String> sourceProvider = (path) -> {
@@ -72,6 +72,9 @@ public class ShaderPack {
 			if (lines == null) {
 				return null;
 			}
+
+			// Normalize version directives.
+			lines = LineTransform.apply(lines, VersionDirectiveNormalizer.INSTANCE);
 
 			StringBuilder builder = new StringBuilder();
 

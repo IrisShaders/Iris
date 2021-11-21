@@ -247,23 +247,11 @@ public class ProgramSet {
 		AbsolutePackPath vertexPath = directory.resolve(program + ".vsh");
 		String vertexSource = sourceProvider.apply(vertexPath);
 
-		if (vertexSource != null) {
-			vertexSource = ShaderPreprocessor.process(vertexSource);
-		}
-
 		AbsolutePackPath geometryPath = directory.resolve(program + ".gsh");
 		String geometrySource = sourceProvider.apply(geometryPath);
 
-		if (geometrySource != null) {
-			geometrySource = ShaderPreprocessor.process(geometrySource);
-		}
-
 		AbsolutePackPath fragmentPath = directory.resolve(program + ".fsh");
 		String fragmentSource = sourceProvider.apply(fragmentPath);
-
-		if (fragmentSource != null) {
-			fragmentSource = ShaderPreprocessor.process(fragmentSource);
-		}
 
 		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties);
 	}
