@@ -2,11 +2,23 @@ package net.coderbot.iris.shaderpack.include;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.coderbot.iris.shaderpack.transform.line.LineTransform;
+
+import java.util.Objects;
 
 public class FileNode {
 	private final AbsolutePackPath path;
 	private final ImmutableList<String> lines;
 	private final ImmutableMap<Integer, AbsolutePackPath> includes;
+
+	// NB: The caller is responsible for ensuring that the includes map
+	//     is in sync with the lines list.
+	private FileNode(AbsolutePackPath path, ImmutableList<String> lines,
+					 ImmutableMap<Integer, AbsolutePackPath> includes) {
+		this.path = path;
+		this.lines = lines;
+		this.includes = includes;
+	}
 
 	public FileNode(AbsolutePackPath path, ImmutableList<String> lines) {
 		this.path = path;
@@ -28,6 +40,26 @@ public class FileNode {
 
 	public ImmutableMap<Integer, AbsolutePackPath> getIncludes() {
 		return includes;
+	}
+
+	public FileNode map(LineTransform transform) {
+		ImmutableList.Builder<String> newLines = ImmutableList.builder();
+		int index = 0;
+
+		for (String line : lines) {
+			String transformedLine = transform.transform(index, line);
+
+			if (includes.containsKey(index)) {
+				if (!Objects.equals(line, transformedLine)) {
+					throw new IllegalStateException("Attempted to modify an #include line in LineTransform.");
+				}
+			}
+
+			newLines.add(transformedLine);
+			index += 1;
+		}
+
+		return new FileNode(path, newLines.build(), includes);
 	}
 
 	private static ImmutableMap<Integer, AbsolutePackPath> findIncludes(AbsolutePackPath currentDirectory,

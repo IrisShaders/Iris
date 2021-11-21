@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack.include;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -14,9 +15,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
- * A graph data structure that holds the loaded source of all shader programs
+ * A directed graph data structure that holds the loaded source of all shader programs
  * and the files included by each source file. Each node / vertex in the graph
  * corresponds to a single file in the shader pack, and each edge / connection
  * corresponds to an {@code #include} directive on a given line.
@@ -54,6 +56,12 @@ import java.util.Set;
 public class IncludeGraph {
 	private final ImmutableMap<AbsolutePackPath, FileNode> nodes;
 	private final ImmutableMap<AbsolutePackPath, IOException> failures;
+
+	private IncludeGraph(ImmutableMap<AbsolutePackPath, FileNode> nodes,
+						 ImmutableMap<AbsolutePackPath, IOException> failures) {
+		this.nodes = nodes;
+		this.failures = failures;
+	}
 
 	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths) {
 		Map<AbsolutePackPath, FileNode> nodes = new HashMap<>();
@@ -95,6 +103,16 @@ public class IncludeGraph {
 
 	public ImmutableMap<AbsolutePackPath, FileNode> getNodes() {
 		return nodes;
+	}
+
+	public IncludeGraph map(Function<AbsolutePackPath, LineTransform> transformProvider) {
+		ImmutableMap.Builder<AbsolutePackPath, FileNode> mappedNodes = ImmutableMap.builder();
+
+		nodes.forEach((path, node) -> {
+			mappedNodes.put(path, node.map(transformProvider.apply(path)));
+		});
+
+		return new IncludeGraph(mappedNodes.build(), failures);
 	}
 
 	public ImmutableMap<AbsolutePackPath, IOException> getFailures() {
