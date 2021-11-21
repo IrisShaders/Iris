@@ -47,6 +47,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		this.shaderPackList.render(poseStack, mouseX, mouseY, delta);
 
+		super.render(poseStack, mouseX, mouseY, delta);
+
 		drawCenteredString(poseStack, this.font, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
 
 		if (addedPackDialog != null && addedPackDialogTimer > 0) {
@@ -54,8 +56,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		} else {
 			drawCenteredString(poseStack, this.font, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
 		}
-
-		super.render(poseStack, mouseX, mouseY, delta);
 	}
 
 	@Override
