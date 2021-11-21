@@ -10,7 +10,7 @@
   "iris.sodium.failure.title": "Не удалось загрузить Iris!",
   "iris.sodium.failure.download": "Загрузить Sodium",
   "iris.sodium.failure.reason.notFound": "Iris требует Sodium для хорошей производительности, но Sodium не установлен. Пожалуйста, загрузите Sodium, добавьте его в папку с модами и перезапустите игру.",
-  "iris.sodium.failure.reason.incompatible": "Iris требует Sodium для хорошей производительности, но ваша версия несовместима. Пожалуйтса, загрузите подходящую версию Sodium, добавьте его в папку с модами, удалите старую версию и перезапустите игру.",
+  "iris.sodium.failure.reason.incompatible": "Iris требует Sodium для хорошей производительности, но ваша версия Sodium несовместима. Пожалуйста, загрузите подходящую версию Sodium, добавьте его в папку с модами, удалите старую версию и перезапустите игру.",
   
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
