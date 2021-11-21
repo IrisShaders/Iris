@@ -10,6 +10,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -44,15 +45,24 @@ public class MixinLevelRenderer {
 	@Unique
 	private WorldRenderingPipeline pipeline;
 
-	@Inject(method = RENDER_LEVEL, at = @At("HEAD"))
-	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
+	// Begin shader rendering after buffers have been cleared.
+	// At this point we've ensured that Minecraft's main framebuffer is cleared.
+	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
+	// all pixels.
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER))
+	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
+	                                   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
+									   Matrix4f projection, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid()) {
 			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
 					" didn't work. This is a bug! Please report it to the Iris developers.");
 		}
 
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
+		CapturedRenderingState.INSTANCE.setGbufferProjection(projection);
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
+		SystemTimeUniforms.COUNTER.beginFrame();
+		SystemTimeUniforms.TIMER.beginFrame(startTime);
 
 		Program.unbind();
 
@@ -74,16 +84,6 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;compileChunksUntil(J)V", shift = At.Shift.AFTER))
 	private void iris$renderTerrainShadows(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.renderShadows((LevelRendererAccessor) this, camera);
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR))
-	private void iris$beforeClear(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.pushProgram(GbufferProgram.CLEAR);
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER))
-	private void iris$afterClear(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.popProgram(GbufferProgram.CLEAR);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY))

@@ -26,6 +26,8 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
 		.define(StandardMacros.getRenderer())
 		.define(StandardMacros.getVendor())
+		.define("MC_RENDER_QUALITY", "1.0")
+		.define("MC_SHADOW_QUALITY", "1.0")
 		.defineAll(StandardMacros.getIrisDefines())
 		.defineAll(StandardMacros.getGlExtensions())
 		.build();

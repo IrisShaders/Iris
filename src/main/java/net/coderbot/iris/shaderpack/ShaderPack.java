@@ -8,8 +8,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 
+import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
+import net.coderbot.iris.shaderpack.include.IncludeGraph;
+import net.coderbot.iris.shaderpack.include.IncludeProcessor;
+import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.transform.line.LineTransform;
+import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.jetbrains.annotations.Nullable;
 
 public class ShaderPack {
@@ -41,10 +49,61 @@ public class ShaderPack {
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
 
-		this.base = new ProgramSet(root, root, shaderProperties, this);
-		this.overworld = loadOverrides(root, "world0", shaderProperties, this);
-		this.nether = loadOverrides(root, "world-1", shaderProperties, this);
-		this.end = loadOverrides(root, "world1", shaderProperties, this);
+		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
+		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
+
+		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"),
+				potentialFileNames);
+
+		boolean hasWorld0 = ShaderPackSourceNames.findPresentSources(starts, root,
+				AbsolutePackPath.fromAbsolutePath("/world0"), potentialFileNames);
+
+		boolean hasNether = ShaderPackSourceNames.findPresentSources(starts, root,
+				AbsolutePackPath.fromAbsolutePath("/world-1"), potentialFileNames);
+
+		boolean hasEnd = ShaderPackSourceNames.findPresentSources(starts, root,
+				AbsolutePackPath.fromAbsolutePath("/world1"), potentialFileNames);
+
+		IncludeGraph graph = new IncludeGraph(root, starts.build());
+
+		// TODO: Discover shader options
+		// TODO: Merge shader options
+		// TODO: Apply shader options
+
+		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
+
+		Function<AbsolutePackPath, String> sourceProvider = (path) -> {
+			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
+
+			if (lines == null) {
+				return null;
+			}
+
+			// Normalize version directives.
+			lines = LineTransform.apply(lines, VersionDirectiveNormalizer.INSTANCE);
+
+			StringBuilder builder = new StringBuilder();
+
+			for (String line : lines) {
+				builder.append(line);
+				builder.append('\n');
+			}
+
+			return builder.toString();
+		};
+
+		// TODO: Apply any additional defines (ie StandardMacros and similar)
+		// TODO: Apply GLSL preprocessor
+		// TODO: Create ProgramSets and discover directives
+
+		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/"), sourceProvider, shaderProperties, this);
+
+		this.overworld = loadOverrides(hasWorld0, AbsolutePackPath.fromAbsolutePath("/world0"), sourceProvider,
+				shaderProperties, this);
+		this.nether = loadOverrides(hasNether, AbsolutePackPath.fromAbsolutePath("/world-1"), sourceProvider,
+				shaderProperties, this);
+		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
+				shaderProperties, this);
 
 		this.idMap = new IdMap(root);
 		this.languageMap = new LanguageMap(root.resolve("lang"));
@@ -65,11 +124,10 @@ public class ShaderPack {
 	}
 
 	@Nullable
-	private static ProgramSet loadOverrides(Path root, String subfolder, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
-		Path sub = root.resolve(subfolder);
-
-		if (Files.exists(sub)) {
-			return new ProgramSet(sub, root, shaderProperties, pack);
+	private static ProgramSet loadOverrides(boolean has, AbsolutePackPath path, Function<AbsolutePackPath, String> sourceProvider,
+											ShaderProperties shaderProperties, ShaderPack pack) {
+		if (has) {
+			return new ProgramSet(path, sourceProvider, shaderProperties, pack);
 		}
 
 		return null;
@@ -109,7 +167,19 @@ public class ShaderPack {
 				throw new IllegalArgumentException("Unknown dimension " + dimension);
 		}
 
-		return ProgramSet.merged(base, overrides);
+		// NB: If a dimension overrides directory is present, none of the files from the parent directory are "merged"
+		//     into the override. Rather, we act as if the overrides directory contains a completely different set of
+		//     shader programs unrelated to that of the base shader pack.
+		//
+		//     This makes sense because if base defined a composite pass and the override didn't, it would make it
+		//     impossible to "un-define" the composite pass. It also removes a lot of complexity related to "merging"
+		//     program sets. At the same time, this might be desired behavior by shader pack authors. It could make
+		//     sense to bring it back as a configurable option, and have a more maintainable set of code backing it.
+		if (overrides != null) {
+			return overrides;
+		} else {
+			return base;
+		}
 	}
 
 	public IdMap getIdMap() {
