@@ -17,7 +17,12 @@ loom {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
+	// Temporary fix for Sodium's shadow issue.
+	mappings loom.layered() {
+		officialMojangMappings() {
+			setNameSyntheticMembers(false)
+		}
+	}
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Needed for loading our custom language files
@@ -45,6 +50,8 @@ if (project.sodium_compatibility == "true") {
 
 	dependencies {
 		modImplementation "maven.modrinth:sodium:" + project.sodium_version
+		modImplementation fabricApi.module("fabric-rendering-data-attachment-v1", project.fabric_version)
+		modImplementation fabricApi.module("fabric-rendering-fluids-v1", project.fabric_version)
 	}
 }
 
