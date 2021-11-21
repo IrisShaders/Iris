@@ -14,6 +14,9 @@ import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.VersionParsingException;
+import net.fabricmc.loader.impl.util.version.SemanticVersionImpl;
+import net.fabricmc.loader.impl.util.version.VersionPredicateParser;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -65,8 +68,10 @@ public class Iris implements ClientModInitializer {
 
 					// This makes it so that if we don't have the right version of Sodium, it will show the user a
 					// nice warning, and prevent them from playing the game with a wrong version of Sodium.
-					if (!versionString.startsWith(SODIUM_VERSION)) {
-						sodiumInvalid = true;
+					try {
+						sodiumInvalid = !VersionPredicateParser.parse("~" + SODIUM_VERSION).test(new SemanticVersionImpl(versionString, false));
+					} catch (VersionParsingException e) {
+						throw new RuntimeException("Failed to parse Sodium version: " + versionString);
 					}
 				}
 		);
