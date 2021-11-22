@@ -18,5 +18,6 @@ public enum GbufferProgram {
 	ARMOR_GLINT,
 	EYES,
 	HAND,
+	HAND_TRANSLUCENT,
 	WEATHER
 }
