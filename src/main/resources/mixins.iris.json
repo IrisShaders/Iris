@@ -24,6 +24,7 @@
     "MixinModelViewBobbing",
     "MixinBufferSource_WrapperChecking",
     "MixinParticleEngine",
+    "MixinRenderSystem",
     "MixinTextureAtlas",
     "MixinTheEndPortalRenderer",
     "MixinTitleScreen",

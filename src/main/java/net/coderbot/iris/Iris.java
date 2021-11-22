@@ -94,14 +94,16 @@ public class Iris implements ClientModInitializer {
 			logger.catching(Level.ERROR, e);
 		}
 
-
-		loadShaderpack();
-
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
 		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 
 		pipelineManager = new PipelineManager(Iris::createPipeline);
+	}
+
+	public static void onRenderSystemInit() {
+		// Only load the shader pack when we can access OpenGL
+		loadShaderpack();
 	}
 
 	public static void handleKeybinds(Minecraft minecraft) {

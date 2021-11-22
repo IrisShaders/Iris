@@ -10,6 +10,9 @@ import java.util.function.Function;
 
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.shader.GlShader;
+import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
@@ -83,12 +86,15 @@ public class ShaderPack {
 				builder.append('\n');
 			}
 
-			return builder.toString();
-		};
+			// Apply shader environment defines / constants
+			// TODO: Write our own code pathways for this
+			ShaderConstants constants = ProgramBuilder.MACRO_CONSTANTS;
+			String source = GlShader.processShader(builder.toString(), constants);
 
-		// TODO: Apply any additional defines (ie StandardMacros and similar)
-		// TODO: Apply GLSL preprocessor
-		// TODO: Create ProgramSets and discover directives
+			// TODO: Apply GLSL preprocessor to source
+
+			return source;
+		};
 
 		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/"), sourceProvider, shaderProperties, this);
 

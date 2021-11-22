@@ -107,11 +107,6 @@ public class SodiumTerrainPipeline {
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
 
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
-
 		transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
 		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
 		transformations.define("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
@@ -150,11 +145,6 @@ public class SodiumTerrainPipeline {
 		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
-
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
 		if (IrisLogging.ENABLE_SPAM) {
 			System.out.println("Final patched fragment source:");
