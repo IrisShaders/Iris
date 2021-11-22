@@ -16,6 +16,7 @@ import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.jetbrains.annotations.Nullable;
@@ -64,14 +65,16 @@ public class ShaderPack {
 		boolean hasEnd = ShaderPackSourceNames.findPresentSources(starts, root,
 				AbsolutePackPath.fromAbsolutePath("/world1"), potentialFileNames);
 
+		// Read all files and included files recursively
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
-		// TODO: Discover shader options
-		// TODO: Merge shader options
-		// TODO: Apply shader options
+		// Discover, merge, and apply shader pack options
+		graph = ShaderPackOptions.apply(graph, changedConfigs);
 
+		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
 
+		// Set up our source provider for creating ProgramSets
 		Function<AbsolutePackPath, String> sourceProvider = (path) -> {
 			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
 

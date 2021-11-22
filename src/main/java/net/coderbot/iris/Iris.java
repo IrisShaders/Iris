@@ -2,7 +2,10 @@ package net.coderbot.iris;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
@@ -187,9 +190,11 @@ public class Iris implements ClientModInitializer {
 
 	private static boolean loadExternalShaderpack(String name) {
 		Path shaderPackRoot;
+		Path shaderPackConfigTxt;
 
 		try {
 			shaderPackRoot = getShaderpacksDirectory().resolve(name);
+			shaderPackConfigTxt = getShaderpacksDirectory().resolve(name + ".txt");
 		} catch (InvalidPathException e) {
 			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
@@ -239,8 +244,12 @@ public class Iris implements ClientModInitializer {
 			return false;
 		}
 
+		Map<String, String> changedConfigs = loadConfigProperties(shaderPackConfigTxt)
+				.map(properties -> (Map<String, String>) (Map) properties)
+				.orElse(Collections.emptyMap());
+
 		try {
-			currentPack = new ShaderPack(shaderPackPath);
+			currentPack = new ShaderPack(shaderPackPath, changedConfigs);
 		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
 			logger.catching(e);
@@ -303,6 +312,21 @@ public class Iris implements ClientModInitializer {
 		internal = false;
 
 		logger.info("Shaders are disabled");
+	}
+
+	private static Optional<Properties> loadConfigProperties(Path path) {
+		Properties properties = new Properties();
+
+		try {
+			// NB: config properties are specified to be encoded with ISO-8859-1 by OptiFine,
+			//     so we don't need to do the UTF-8 workaround here.
+			properties.load(Files.newInputStream(path));
+		} catch (IOException e) {
+			// TODO: Better error handling
+			return Optional.empty();
+		}
+
+		return Optional.of(properties);
 	}
 
 	public static boolean isValidShaderpack(Path pack) {

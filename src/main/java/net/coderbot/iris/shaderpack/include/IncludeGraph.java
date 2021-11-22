@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -103,6 +104,21 @@ public class IncludeGraph {
 
 	public ImmutableMap<AbsolutePackPath, FileNode> getNodes() {
 		return nodes;
+	}
+
+	public List<IncludeGraph> computeWeaklyConnectedSubgraphs() {
+		//List<IncludeGraph> components = new ArrayList<>();
+
+		// TODO: WCC
+		//throw new UnsupportedOperationException();
+
+		//return components;
+
+		// TODO: This digraph might not be weakly connected
+		//       A digraph is weakly connected if its corresponding undirected
+		//       graph is connected
+		//       Make an adjacency list and then go from there
+		return Collections.singletonList(this);
 	}
 
 	public IncludeGraph map(Function<AbsolutePackPath, LineTransform> transformProvider) {

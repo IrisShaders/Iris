@@ -430,6 +430,10 @@ public final class OptionAnnotatedSource {
 		return builder.build();
 	}
 
+	public LineTransform asTransform(OptionValues values) {
+		return (index, line) -> edit(values, index, line);
+	}
+
 	public String apply(OptionValues values) {
 		StringBuilder source = new StringBuilder();
 
