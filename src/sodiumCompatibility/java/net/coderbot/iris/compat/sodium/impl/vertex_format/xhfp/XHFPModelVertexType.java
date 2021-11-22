@@ -65,12 +65,12 @@ public class XHFPModelVertexType implements ChunkVertexType {
 	}
 
 	@Override
-	public float getModelScale() {
+	public float getPositionScale() {
 		return MODEL_SCALE;
 	}
 
 	@Override
-	public float getModelOffset() {
+	public float getPositionOffset() {
 		return -MODEL_ORIGIN;
 	}
 

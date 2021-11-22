@@ -76,20 +76,16 @@ public class TriforceSodiumPatcher {
 		}
 
 		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasTex()) {
-				transformations.define("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float u_TextureScale;");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 a_TexCoord;");
+				transformations.define("gl_MultiTexCoord0", "vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
 			} else {
 				transformations.define("gl_MultiTexCoord0", "vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 
 			if (inputs.hasLight()) {
-				new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 a_LightCoord;");
+				new BuiltinUniformReplacementTransformer("_vert_tex_light_coord").apply(transformations);
 			} else {
 				transformations.define("gl_MultiTexCoord1", "vec4(0.0, 0.0, 0.0, 1.0)");
 			}
@@ -102,10 +98,9 @@ public class TriforceSodiumPatcher {
 
 		if (inputs.hasColor()) {
 			// TODO: Handle the fragment shader here
-			transformations.define("gl_Color", "a_Color");
+			transformations.define("gl_Color", "_vert_color");
 
 			if (type == ShaderType.VERTEX) {
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 a_Color;");
 			}
 		} else {
 			transformations.define("gl_Color", "vec4(1.0)");
@@ -125,6 +120,7 @@ public class TriforceSodiumPatcher {
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_NormalMatrix;");
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix u_ModelViewMatrix");
@@ -132,21 +128,52 @@ public class TriforceSodiumPatcher {
 
 		if (type == ShaderType.VERTEX) {
 			// TODO: this breaks Vaporwave-Shaderpack since it expects that vertex positions will be aligned to chunks.
-			transformations.define("gl_Vertex", "vec4(getVertexPosition(), 1.0)");
+			transformations.define("gl_Vertex", "getVertexPosition()");
 
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-					"struct DrawParameters {\n" +
-					"    vec4 Offset;\n" +
-					"};\n" +
-					"layout(std140) uniform ubo_DrawParameters {\n" +
-					"    DrawParameters Chunks[256];\n" +
-					"};\n" +
-					"in vec4 a_Pos; // The position of the vertex around the model origin\n" +
-					"uniform float u_ModelScale;\n" +
-					"uniform float u_ModelOffset;\n" +
-					"uniform vec3 u_CameraTranslation;");
+					"#ifdef USE_VERTEX_COMPRESSION\n" +
+							"in vec4 a_PosId;\n" +
+							"in vec4 a_Color;\n" +
+							"in vec2 a_TexCoord;\n" +
+							"in vec2 a_LightCoord;\n" +
+							"\n" +
+							"#if !defined(VERT_POS_SCALE)\n" +
+							"#error \"VERT_POS_SCALE not defined\"\n" +
+							"#elif !defined(VERT_POS_OFFSET)\n" +
+							"#error \"VERT_POS_OFFSET not defined\"\n" +
+							"#elif !defined(VERT_TEX_SCALE)\n" +
+							"#error \"VERT_TEX_SCALE not defined\"\n" +
+							"#endif\n" +
+							"\n" +
+							"// The position of the vertex around the model origin\n" +
+							"#define _vert_position (a_PosId.xyz * VERT_POS_SCALE + VERT_POS_OFFSET)\n" +
+							"// The block texture coordinate of the vertex\n" +
+							"#define _vert_tex_diffuse_coord (a_TexCoord * VERT_TEX_SCALE)\n" +
+							"// The light texture coordinate of the vertex\n" +
+							"#define _vert_tex_light_coord a_LightCoord;\n" +
+							"// The color of the vertex\n" +
+							"#define _vert_color a_Color\n" +
+							"// The index of the draw command which this vertex belongs to\n" +
+							"#define _draw_id uint(a_PosId.w)\n" +
+							"\n" +
+							"#else\n" +
+							"#error \"Vertex compression must be enabled\"\n" +
+							"#endif\n" +
+							"\n" +
+							"// The translation vector of the current draw command\n" +
+							"#define _draw_translation Chunks[_draw_id].offset.xyz\n " +
+							"struct DrawParameters {\n" +
+							"    // Older AMD drivers can't handle vec3 in std140 layouts correctly\n" +
+							"    // The alignment requirement is 16 bytes (4 float components) anyways, so we're not wasting extra memory with this,\n" +
+							"    // only fixing broken drivers.\n" +
+							"    vec4 offset;\n" +
+							"};\n" +
+							"\n" +
+							"layout(std140) uniform ubo_DrawParameters {\n" +
+							"    DrawParameters Chunks[256];\n" +
+							"}; ");
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec3 getVertexPosition() { vec3 vertexPosition = a_Pos.xyz * u_ModelScale + u_ModelOffset; vec3 chunkOffset = Chunks[int(a_Pos.w)].Offset.xyz; return chunkOffset + vertexPosition + u_CameraTranslation; }");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(_draw_translation + _vert_position, 1.0); }");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
