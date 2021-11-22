@@ -20,6 +20,7 @@ import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.apache.logging.log4j.Level;
@@ -95,7 +96,8 @@ public class ShaderPack {
 			ShaderConstants constants = ProgramBuilder.MACRO_CONSTANTS;
 			String source = GlShader.processShader(builder.toString(), constants);
 
-			// TODO: Apply GLSL preprocessor to source
+			// Apply GLSL preprocessor to source
+			source = JcppProcessor.glslPreprocessSource(source);
 
 			return source;
 		};

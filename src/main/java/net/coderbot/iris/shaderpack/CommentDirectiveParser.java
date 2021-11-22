@@ -26,24 +26,11 @@ public class CommentDirectiveParser {
 	}
 
 	public static Optional<String> findDirectiveInLines(List<String> lines, String key) {
-		/*// We iterate over the list of lines in reverse order because the last occurrence of a directive has a greater
+		// We iterate over the list of lines in reverse order because the last occurrence of a directive has a greater
 		// precedence over an earlier occurrence of a directive.
 		for (int index = lines.size() - 1; index >= 0; index -= 1) {
 			String line = lines.get(index);
 
-			Optional<String> found = findDirective(line, key);
-
-			if (found.isPresent()) {
-				return found;
-			}
-		}*/
-
-		// TODO: Temporary workaround for the fact that BSL uses multiple drawbuffers directives in some files, and
-		// expects preprocessor directives for comment directives to be properly, handled. But we don't do that! After
-		// observation, it seems like the first DRAWBUFFERS directive is generally the "default" directive.
-		//
-		// This is important because if we add a draw buffer that isn't written to, undefined behavior happens!
-		for (String line : lines) {
 			Optional<String> found = findDirective(line, key);
 
 			if (found.isPresent()) {
