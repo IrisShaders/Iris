@@ -125,11 +125,10 @@ public class TriforceSodiumPatcher {
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_NormalMatrix;");
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewProjectionMatrix;");
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix u_ModelViewMatrix");
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix u_ModelViewProjectionMatrix");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (u_ProjectionMatrix * u_ModelViewMatrix)");
 
 		if (type == ShaderType.VERTEX) {
 			// TODO: this breaks Vaporwave-Shaderpack since it expects that vertex positions will be aligned to chunks.

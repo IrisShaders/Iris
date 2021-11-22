@@ -71,8 +71,7 @@ public class MixinSodiumWorldRenderer {
                      target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
                      ordinal = 0,
                      remap = false))
-    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, Frustum frustum, boolean hasForcedFrustum,
-													   int frame, boolean spectator, CallbackInfo ci) {
+    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, int frame, boolean spectator, CallbackInfo ci) {
         iris$ensureStateSwapped();
     }
 

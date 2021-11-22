@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Matrix4f;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
@@ -12,6 +11,7 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.texunits.TextureUnit;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 
 public class IrisChunkShaderInterface {
 	@Nullable
@@ -88,14 +88,8 @@ public class IrisChunkShaderInterface {
 			this.uniformModelViewMatrix.set(modelView);
 		}
 
-		if (this.uniformModelViewProjectionMatrix != null) {
-			Matrix4f modelViewProjection = RenderSystem.getProjectionMatrix().copy();
-			modelViewProjection.multiply(modelView);
-			this.uniformModelViewProjectionMatrix.set(modelViewProjection);
-		}
-
 		if (this.uniformNormalMatrix != null) {
-			Matrix4f normalMatrix = modelView.copy();
+			Matrix4f normalMatrix = new Matrix4f(modelView);
 			normalMatrix.invert();
 			normalMatrix.transpose();
 			this.uniformNormalMatrix.set(normalMatrix);
