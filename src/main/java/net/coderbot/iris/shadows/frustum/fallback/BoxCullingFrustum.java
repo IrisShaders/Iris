@@ -1,13 +1,11 @@
 package net.coderbot.iris.shadows.frustum.fallback;
 
 import com.mojang.math.Matrix4f;
-import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegionVisibility;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
-import net.coderbot.iris.shadows.frustum.SodiumFrustumExt;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
-public class BoxCullingFrustum extends Frustum implements SodiumFrustumExt {
+public class BoxCullingFrustum extends Frustum implements me.jellysquid.mods.sodium.client.util.frustum.Frustum {
 	private final BoxCuller boxCuller;
 
 	public BoxCullingFrustum(BoxCuller boxCuller) {
@@ -18,12 +16,6 @@ public class BoxCullingFrustum extends Frustum implements SodiumFrustumExt {
 
 	public void prepare(double cameraX, double cameraY, double cameraZ) {
 		boxCuller.setPosition(cameraX, cameraY, cameraZ);
-	}
-
-	// for Sodium
-	// TODO: Better way to do this... Maybe we shouldn't be using a frustum for the box culling in the first place!
-	public boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return !boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	// For Immersive Portals
@@ -38,9 +30,11 @@ public class BoxCullingFrustum extends Frustum implements SodiumFrustumExt {
 		return !boxCuller.isCulled(box);
 	}
 
+	// for Sodium
+	// TODO: Better way to do this... Maybe we shouldn't be using a frustum for the box culling in the first place!
 	@Override
-	public RenderRegionVisibility aabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// TODO: FULLY_VISIBLE?
-		return boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ) ? RenderRegionVisibility.CULLED : RenderRegionVisibility.VISIBLE;
+	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		// TODO: Frustum.INSIDE
+		return boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ) ? Visibility.OUTSIDE : Visibility.INTERSECT;
 	}
 }

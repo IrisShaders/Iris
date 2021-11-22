@@ -9,6 +9,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderList;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
+import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
@@ -97,7 +98,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     }
 
     @Inject(method = "update", at = @At("RETURN"))
-	private void iris$captureVisibleBlockEntities(Camera camera, org.joml.FrustumIntersection frustum, int frame, boolean spectator, CallbackInfo ci) {
+	private void iris$captureVisibleBlockEntities(Camera camera, Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
 		}
