@@ -3,10 +3,14 @@ package net.coderbot.iris.shaderpack.option;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.parsing.ParsedString;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -79,7 +83,8 @@ public final class OptionAnnotatedSource {
 	 * defined. This is because shader config options are parsed as if all #include directives
 	 * have already been substituted for the relevant file.
 	 */
-	private final ImmutableMap<String, Integer> booleanDefineReferences;
+	// TODO: Use an immutable list type
+	private final ImmutableMap<String, IntList> booleanDefineReferences;
 
 	private static final ImmutableSet<String> VALID_CONST_OPTION_NAMES = ImmutableSet.of(
 		"shadowMapResolution",
@@ -141,7 +146,7 @@ public final class OptionAnnotatedSource {
 		this.booleanOptions = builder.booleanOptions.build();
 		this.stringOptions = builder.stringOptions.build();
 		this.diagnostics = builder.diagnostics.build();
-		this.booleanDefineReferences = builder.booleanDefineReferences.build();
+		this.booleanDefineReferences = ImmutableMap.copyOf(builder.booleanDefineReferences);
 	}
 
 	private static void parseLine(AnnotationsBuilder builder, int index, String lineText) {
@@ -184,7 +189,8 @@ public final class OptionAnnotatedSource {
 			return;
 		}
 
-		builder.booleanDefineReferences.put(name, index);
+		builder.booleanDefineReferences
+				.computeIfAbsent(name, n -> new IntArrayList()).add(index);
 	}
 
 	private static void parseConst(AnnotationsBuilder builder, int index, ParsedString line) {
@@ -410,7 +416,7 @@ public final class OptionAnnotatedSource {
 		return diagnostics;
 	}
 
-	public ImmutableMap<String, Integer> getBooleanDefineReferences() {
+	public ImmutableMap<String, IntList> getBooleanDefineReferences() {
 		return booleanDefineReferences;
 	}
 
@@ -542,13 +548,13 @@ public final class OptionAnnotatedSource {
 		private final ImmutableMap.Builder<Integer, BooleanOption> booleanOptions;
 		private final ImmutableMap.Builder<Integer, StringOption> stringOptions;
 		private final ImmutableMap.Builder<Integer, String> diagnostics;
-		private final ImmutableMap.Builder<String, Integer> booleanDefineReferences;
+		private final Map<String, IntList> booleanDefineReferences;
 
 		private AnnotationsBuilder() {
 			booleanOptions = ImmutableMap.builder();
 			stringOptions = ImmutableMap.builder();
 			diagnostics = ImmutableMap.builder();
-			booleanDefineReferences = ImmutableMap.builder();
+			booleanDefineReferences = new HashMap<>();
 		}
 	}
 }
