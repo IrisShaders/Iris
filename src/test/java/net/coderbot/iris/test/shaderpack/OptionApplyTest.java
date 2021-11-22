@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.option.OptionAnnotatedSource;
 import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.OptionValues;
@@ -38,9 +39,11 @@ public class OptionApplyTest {
 		OptionAnnotatedSource basicFshAnnotated = new OptionAnnotatedSource(basicFsh);
 
 		// TODO: Separate includes will need more complex boolean define reference behavior
-		OptionSet basicVshSet = basicVshAnnotated.getOptionSet("basic.vsh",
+		OptionSet basicVshSet = basicVshAnnotated.getOptionSet(
+				AbsolutePackPath.fromAbsolutePath("/basic.vsh"),
 				basicVshAnnotated.getBooleanDefineReferences().keySet());
-		OptionSet basicFshSet = basicFshAnnotated.getOptionSet("basic.fsh",
+		OptionSet basicFshSet = basicFshAnnotated.getOptionSet(
+				AbsolutePackPath.fromAbsolutePath("/basic.fsh"),
 				basicFshAnnotated.getBooleanDefineReferences().keySet());
 
 		OptionSet.Builder setBuilder = OptionSet.builder();
@@ -88,7 +91,9 @@ public class OptionApplyTest {
 
 	private void testTrivial(String base, ImmutableMap<String, String> changes, String expected) {
 		OptionAnnotatedSource source = new OptionAnnotatedSource(base);
-		OptionSet options = source.getOptionSet("<hardcoded>", source.getBooleanDefineReferences().keySet());
+		OptionSet options = source.getOptionSet(
+				AbsolutePackPath.fromAbsolutePath("/<hardcoded>"),
+				source.getBooleanDefineReferences().keySet());
 		OptionValues values = new OptionValues(options, changes);
 
 		Assertions.assertEquals(expected, source.apply(values));

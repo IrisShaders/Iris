@@ -1,18 +1,20 @@
 package net.coderbot.iris.shaderpack.option;
 
+import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
+
 /**
  * Encapsulates a single location of an option.
  */
 public class OptionLocation {
-    private final String filePath;
+    private final AbsolutePackPath filePath;
     private final int lineIndex;
 
-    public OptionLocation(String filePath, int lineIndex) {
+    public OptionLocation(AbsolutePackPath filePath, int lineIndex) {
         this.filePath = filePath;
         this.lineIndex = lineIndex;
     }
 
-    public String getFilePath() {
+    public AbsolutePackPath getFilePath() {
         return filePath;
     }
 

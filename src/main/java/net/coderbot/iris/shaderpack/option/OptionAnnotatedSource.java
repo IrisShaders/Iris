@@ -3,7 +3,9 @@ package net.coderbot.iris.shaderpack.option;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.parsing.ParsedString;
+import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -412,7 +414,7 @@ public final class OptionAnnotatedSource {
 		return booleanDefineReferences;
 	}
 
-	public OptionSet getOptionSet(String filePath, Set<String> booleanDefineReferences) {
+	public OptionSet getOptionSet(AbsolutePackPath filePath, Set<String> booleanDefineReferences) {
 		OptionSet.Builder builder = OptionSet.builder();
 
 		booleanOptions.forEach((lineIndex, option) -> {
