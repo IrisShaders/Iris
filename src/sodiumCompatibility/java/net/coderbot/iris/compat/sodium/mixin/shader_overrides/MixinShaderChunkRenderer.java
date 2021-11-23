@@ -47,8 +47,6 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 
 	@Inject(method = "begin", at = @At("HEAD"), cancellable = true, remap = false)
 	private void iris$begin(BlockRenderPass pass, CallbackInfo ci) {
-		ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass, this.vertexType);
-
 		this.override = irisChunkProgramOverrides.getProgramOverride(pass, this.vertexType);
 
 		if (this.override == null) {
