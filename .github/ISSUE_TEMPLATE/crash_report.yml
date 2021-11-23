@@ -1,0 +1,103 @@
+name: Crash Report
+description: Create a report to inform us of a constant crash
+labels: [crash]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this crash report!
+        
+        Before continuing to make the issue, please make sure there are no similar issues on [the issue tracker](https://github.com/IrisShaders/Iris/issues). If there are, consider contributing your information in there instead!
+        
+        Also, make sure you are using the latest version of the mod! If not, try updating to see if it resolves your issue.
+  - type: input
+    id: version
+    attributes:
+      label: Iris and Minecraft Version
+      description: What version of Iris are you running? Include the Minecraft version too. Every part is important! If you do not know what version you are using, look at the file name in your "mods" folder.
+      placeholder: ex. iris-mc1.16.5-1.0.0.jar for Minecraft 1.16.5
+    validations:
+      required: true
+  - type: dropdown
+    id: sodium
+    attributes:
+      label: Are you running Sodium along with Iris?
+      description: This is the case if you kept the default Sodium & Iris when running the installer or if you downloaded the release from Curseforge or Modrinth
+      options:
+        - 'Yes'
+        - 'No'
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What is your Operating System?
+      placeholder: ex. Windows 10
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: What is your GPU?
+      description: Please write the vendor and model of your GPU
+      placeholder: ex. Nvidia GeForce RTX 2070
+    validations:
+      required: true
+  - type: input
+    id: java
+    attributes:
+      label: Java Version
+      description: What Java version are you running? If you haven't touched the one in the launcher, it's Java 8 for 1.16.5 and Java 16 for 1.17
+      placeholder: ex. Java 11
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction Steps
+      description: Provide information on how to reproduce this game crash. You can either fill this section in like the example below or do something else -- just make sure your instructions are minimal and clear, as other people will need to be able to replicate your issue.
+      placeholder: |
+        1. Place a Redstone Lamp in front of a Redstone Repeater
+        2. Use a Lever to activate the Redstone Repeater
+        3. Game Crashes
+      value: |
+        1. Place a Redstone Lamp in front of a Redstone Repeater
+        2. Use a Lever to activate the Redstone Repeater
+        3. Game Crashes
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Crash Report file and latest.log
+      description: |
+        Upload your crash report file and latest.log as an attachment to this issue (drag-and-drop) or to a service such as GitHub Gist (paste a link). This information is critical in resolving your issue!
+        
+        Tip: Messages like "Exit code 0" from your launcher are not what you're looking for. If your launcher does not provide a button to view the most recent crash report, check your game's "crash-reports" folder for the most recent crash report file.
+        
+        This will be automatically formatted into code, so no need for backticks.
+      placeholder: |
+        ---- Minecraft Crash Report ----
+        // There are four lights!
+
+        Time: 4/18/21 5:36 PM
+        Description: Unexpected error
+        
+        java.util.ConcurrentModificationException
+        	at java.util.ArrayList$Itr.checkForComodification(Unknown Source)
+        	at java.util.ArrayList$Itr.next(Unknown Source)
+        	at net.coderbot.iris.pipeline.ShadowRenderer.renderShadows(ShadowRenderer.java:379)
+        	at net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline.renderShadows(DeferredWorldRenderingPipeline.java:651)
+        	at net.minecraft.class_761.handler$ckn000$iris$renderTerrainShadows(class_761.java:9152)
+        	at net.minecraft.class_761.method_22710(class_761.java:1149)
+        	at net.minecraft.class_757.method_3188(class_757.java:727)
+        	at net.minecraft.class_757.method_3192(class_757.java:546)
+      render: shell
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Provide any additional information or context which may be relevant to the issue. This is optional
+    validations:
+      required: false

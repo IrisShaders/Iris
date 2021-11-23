@@ -1,0 +1,28 @@
+{
+  "iris.shaders.reloaded": "已重新加载光影！",
+  "iris.shaders.toggled": "光影已切换到 %s！",
+  "iris.keybind.reload": "重新加载光影",
+  "iris.keybind.shaderPackSelection": "光影包选择界面",
+  "iris.keybind.toggleShaders": "开关光影",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "重新加载光影失败！原因：%s",
+  "iris.shaders.toggled.failure": "切换光影失败！原因：%s",
+
+  "options.iris.apply": "应用",
+  "options.iris.refresh": "刷新",
+  "options.iris.openShaderPackFolder": "打开光影包文件夹...",
+  "options.iris.refreshShaderPacks": "刷新光影包",
+  "options.iris.shaderPackSelection": "光影包...",
+  "options.iris.shaderPackSelection.title": "光影包",
+  "options.iris.shaderPackSelection.addedPack": "已添加光影包 \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "已添加 %s 个光影包",
+  "options.iris.shaderPackSelection.failedAdd": "文件不是有效的光影包",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" 不是有效的光影包",
+  "options.iris.shaderPackSelection.copyError": "无法添加光影包 \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 已存在于光影包文件夹中！",
+  "options.iris.shaders.disabled": "光影：已禁用",
+  "options.iris.shaders.enabled": "光影：已启用",
+
+  "pack.iris.select.title": "选择",
+  "pack.iris.list.label": "+ 拖放光影包以添加"
+}

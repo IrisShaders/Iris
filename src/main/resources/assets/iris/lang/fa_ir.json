@@ -1,0 +1,24 @@
+{
+  "iris.shaders.reloaded": "shader ها بارگیری مجدد شدند!",
+  "iris.keybind.reload": "بارگیری مجدد shader ها",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "خطا در بارگیری مجدد shader ها ، علت : %s",
+
+  "options.iris.apply": "اعمال",
+  "options.iris.refresh": "تازه سازی",
+  "options.iris.openShaderPackFolder": "باز کردن پوشه shader pack ها...",
+  "options.iris.refreshShaderPacks": "تازه سازی shader pack",
+  "options.iris.shaderPackSelection": "Shader Packs...",
+  "options.iris.shaderPackSelection.title": "Shader Packs",
+  "options.iris.shaderPackSelection.addedPack": "shader pack %s اضافه شد!",
+  "options.iris.shaderPackSelection.addedPacks": "shader pack های %s اضافه شدند!",
+  "options.iris.shaderPackSelection.failedAdd": "اسناد مورد نظر یک shader pack قابل قبول نبودند",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" یک shader pack قابل قبول نیست!",
+  "options.iris.shaderPackSelection.copyError": "\"%s\"خطا در بارگیری shader",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" در حال حاضر در پوشه shader pack های شما وجود دارد!",
+  "options.iris.shaders.disabled": "Shaders: غیرفعال",
+  "options.iris.shaders.enabled": "Shaders: فعال",
+
+  "pack.iris.select.title": "انتخاب",
+  "pack.iris.list.label": "+ فایل shader موردنظر را بکشید و در اینجا بندازید."
+}

@@ -1,0 +1,34 @@
+5 -
+-5 -
+5 *
+-5 +
+* 5
+/ 9
+(
+)
+,
+(3
+3)
+(3,)
+3,
+(3,,)
+(,)
+(,5)
+(3,5)
+(3,5,)
+(5, * 3)
+(5, 3 *)
+ohno(
+ohno(,
+(ohno(oh, no),)
+(ohno(oh, no),5)
+ohno(,5)
+ohno(,)
+ohno(,,)
+stone,
+,stone
+,
+,5
+5,
+5+,
+spaces in identifiers are not valid
