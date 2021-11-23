@@ -1,5 +1,7 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
+import me.jellysquid.mods.sodium.client.gl.shader.ShaderParser;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -7,6 +9,11 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TriforceSodiumPatcher {
 	public static String patch(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs) {
@@ -119,8 +126,6 @@ public class TriforceSodiumPatcher {
 		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_NormalMatrix;");
 
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix u_ModelViewMatrix");
@@ -130,48 +135,22 @@ public class TriforceSodiumPatcher {
 			// TODO: this breaks Vaporwave-Shaderpack since it expects that vertex positions will be aligned to chunks.
 			transformations.define("gl_Vertex", "getVertexPosition()");
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-					"#ifdef USE_VERTEX_COMPRESSION\n" +
-							"in vec4 a_PosId;\n" +
-							"in vec4 a_Color;\n" +
-							"in vec2 a_TexCoord;\n" +
-							"in vec2 a_LightCoord;\n" +
-							"\n" +
-							"#if !defined(VERT_POS_SCALE)\n" +
-							"#error \"VERT_POS_SCALE not defined\"\n" +
-							"#elif !defined(VERT_POS_OFFSET)\n" +
-							"#error \"VERT_POS_OFFSET not defined\"\n" +
-							"#elif !defined(VERT_TEX_SCALE)\n" +
-							"#error \"VERT_TEX_SCALE not defined\"\n" +
-							"#endif\n" +
-							"\n" +
-							"// The position of the vertex around the model origin\n" +
-							"#define _vert_position (a_PosId.xyz * VERT_POS_SCALE + VERT_POS_OFFSET)\n" +
-							"// The block texture coordinate of the vertex\n" +
-							"#define _vert_tex_diffuse_coord (a_TexCoord * VERT_TEX_SCALE)\n" +
-							"// The light texture coordinate of the vertex\n" +
-							"#define _vert_tex_light_coord a_LightCoord;\n" +
-							"// The color of the vertex\n" +
-							"#define _vert_color a_Color\n" +
-							"// The index of the draw command which this vertex belongs to\n" +
-							"#define _draw_id uint(a_PosId.w)\n" +
-							"\n" +
-							"#else\n" +
-							"#error \"Vertex compression must be enabled\"\n" +
-							"#endif\n" +
-							"\n" +
-							"// The translation vector of the current draw command\n" +
-							"#define _draw_translation Chunks[_draw_id].offset.xyz\n " +
-							"struct DrawParameters {\n" +
-							"    // Older AMD drivers can't handle vec3 in std140 layouts correctly\n" +
-							"    // The alignment requirement is 16 bytes (4 float components) anyways, so we're not wasting extra memory with this,\n" +
-							"    // only fixing broken drivers.\n" +
-							"    vec4 offset;\n" +
-							"};\n" +
-							"\n" +
-							"layout(std140) uniform ubo_DrawParameters {\n" +
-							"    DrawParameters Chunks[256];\n" +
-							"}; ");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"));
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_matrices.glsl>"));
+
+			if (transformations.contains("irisMain")) {
+				throw new IllegalStateException("Shader already contains \"irisMain\"???");
+			}
+
+			// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
+			// end.
+			transformations.replaceExact("main", "irisMain");
+			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
+					"   _vert_init();\n" +
+					"\n" +
+					"	irisMain();\n" +
+					"}");
 
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(_draw_translation + _vert_position, 1.0); }");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
@@ -249,5 +228,20 @@ public class TriforceSodiumPatcher {
 		}
 
 		transformations.setPrefix(beforeVersion + "#version " + actualVersion + "\n");
+	}
+
+	private static String parseSodiumImport(String shader) {
+		Pattern IMPORT_PATTERN = Pattern.compile("#import <(?<namespace>.*):(?<path>.*)>");
+			Matcher matcher = IMPORT_PATTERN.matcher(shader);
+
+			if (!matcher.matches()) {
+				throw new IllegalArgumentException("Malformed import statement (expected format: " + IMPORT_PATTERN + ")");
+			}
+
+			String namespace = matcher.group("namespace");
+			String path = matcher.group("path");
+
+			ResourceLocation identifier = new ResourceLocation(namespace, path);
+			return ShaderLoader.getShaderSource(identifier);
 	}
 }
