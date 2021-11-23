@@ -49,7 +49,7 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 	private void iris$begin(BlockRenderPass pass, CallbackInfo ci) {
 		ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass, this.vertexType);
 
-		this.override = irisChunkProgramOverrides.getProgramOverride(pass, options);
+		this.override = irisChunkProgramOverrides.getProgramOverride(pass, this.vertexType);
 
 		if (this.override == null) {
 			return;
