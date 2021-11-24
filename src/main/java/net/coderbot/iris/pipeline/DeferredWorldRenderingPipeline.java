@@ -783,6 +783,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		return sodiumTerrainPipeline;
 	}
 
+	@Override
+	public FrameUpdateNotifier getFrameUpdateNotifier() {
+		return updateNotifier;
+	}
+
 	private boolean isRenderingShadow = false;
 
 	public void beginShadowRender() {
@@ -791,9 +796,5 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	public void endShadowRender() {
 		isRenderingShadow = false;
-	}
-
-	public FrameUpdateNotifier getUpdateNotifier() {
-		return updateNotifier;
 	}
 }

@@ -188,23 +188,8 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		FrameUpdateNotifier updateNotifier;
-
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-
-		if (pipeline instanceof DeferredWorldRenderingPipeline) {
-			updateNotifier = ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier();
-		} else if (pipeline instanceof CoreWorldRenderingPipeline) {
-			updateNotifier = ((CoreWorldRenderingPipeline) pipeline).getUpdateNotifier();
-		} else if (pipeline instanceof FixedFunctionWorldRenderingPipeline) {
-			// TODO: This isn't what we should do.
-			updateNotifier = new FrameUpdateNotifier();
-		} else {
-			// TODO: Proper interface
-			throw new IllegalStateException("Unsupported pipeline: " + pipeline);
-		}
-
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier, FogMode.LINEAR);
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), pipeline.getFrameUpdateNotifier(), FogMode.LINEAR);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();

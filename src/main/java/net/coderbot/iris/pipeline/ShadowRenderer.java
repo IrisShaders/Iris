@@ -251,7 +251,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier(), FogMode.LINEAR);
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, pipeline.getFrameUpdateNotifier(), FogMode.LINEAR);
 		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
 		IrisSamplers.addLevelSamplers(builder, normals, specular);
 		IrisSamplers.addNoiseSampler(builder, noise);
