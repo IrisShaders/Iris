@@ -28,7 +28,7 @@ public class MixinSodiumGameOptionPages {
     @Redirect(method = "general", remap = false,
             slice = @Slice(
                     from = @At(value = "CONSTANT", args = "stringValue=options.renderDistance"),
-                    to = @At(value = "CONSTANT", args = "stringValue=options.simulationDistance")
+                    to = @At(value = "CONSTANT", args = "stringValue=options.gamma")
             ),
             at = @At(value = "INVOKE", remap = false,
                     target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +

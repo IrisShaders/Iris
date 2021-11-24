@@ -53,7 +53,7 @@ if (project.sodium_compatibility == "true") {
 	}
 
 	dependencies {
-		modImplementation files("sodium.jar")// Temporary, while Sodium doesn't exist for 1.18. "maven.modrinth:sodium:" + project.sodium_version
+		modImplementation files("sodium118.jar")// Temporary, while Sodium doesn't exist for 1.18. "maven.modrinth:sodium:" + project.sodium_version
 		implementation "org.joml:joml:1.10.2"
 		modImplementation fabricApi.module("fabric-rendering-data-attachment-v1", project.fabric_version)
 		modImplementation fabricApi.module("fabric-rendering-fluids-v1", project.fabric_version)
