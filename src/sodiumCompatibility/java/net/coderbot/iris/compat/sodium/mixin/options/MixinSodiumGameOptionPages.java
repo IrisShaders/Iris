@@ -46,7 +46,7 @@ public class MixinSodiumGameOptionPages {
     @ModifyArg(method = "quality", remap = false,
             slice = @Slice(
                     from = @At(value = "CONSTANT", args = "stringValue=options.graphics"),
-                    to = @At(value = "CONSTANT", args = "stringValue=sodium.options.clouds_quality.name")
+                    to = @At(value = "CONSTANT", args = "stringValue=options.renderClouds")
             ),
             at = @At(value = "INVOKE", remap = false,
                     target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +

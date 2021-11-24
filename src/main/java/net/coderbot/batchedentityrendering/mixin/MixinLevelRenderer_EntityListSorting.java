@@ -14,7 +14,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Captures and tracks the current block being rendered.
+ * Sorts the entity list to allow entities of the same type to be properly batched. Without sorting, entities are
+ * essentially rendered in random order, which makes it harder for entity batching to work properly.
+ *
+ * Sorting reduces the number of RenderTypes that need to be active at any given time for batching to be effective.
+ * For example, instead of the batching system needing to be prepared to render a pig at any time, it can know that
+ * every pig is being rendered all at once, then it can use unused space within the buffer previously used for pigs for
+ * something else.
+ *
+ * This is even more effective with vanilla's entity rendering, since it only has a single buffer for most purposes,
+ * except for a configured set of batched render types.
  *
  * Uses a priority of 1001 so that we apply after Carpet's mixins to LevelRenderer (WorldRenderer), avoiding a conflict:
  * https://github.com/gnembon/fabric-carpet/blob/776f798aecb792a5881ccae8784888156207a047/src/main/java/carpet/mixins/WorldRenderer_pausedShakeMixin.java#L23

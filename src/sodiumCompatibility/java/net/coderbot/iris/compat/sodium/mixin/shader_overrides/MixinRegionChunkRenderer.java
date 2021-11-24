@@ -1,11 +1,12 @@
 package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
 
-import com.mojang.math.Matrix4f;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
+import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import me.jellysquid.mods.sodium.client.render.chunk.RegionChunkRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -26,7 +27,7 @@ public abstract class MixinRegionChunkRenderer implements ShaderChunkRendererExt
 
 	@Redirect(method = "render",
 			at = @At(value = "INVOKE",
-					target = "me/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface.setProjectionMatrix (Lcom/mojang/math/Matrix4f;)V"))
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface;setProjectionMatrix(Lorg/joml/Matrix4f;)V"), remap = false)
 	private void iris$setProjectionMatrix(ChunkShaderInterface itf, Matrix4f matrix) {
 		if (itf != null) {
 			itf.setProjectionMatrix(matrix);
@@ -48,7 +49,7 @@ public abstract class MixinRegionChunkRenderer implements ShaderChunkRendererExt
 
 	@Redirect(method = "setModelMatrixUniforms",
 			at = @At(value = "INVOKE",
-					target = "me/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface.setModelViewMatrix (Lcom/mojang/math/Matrix4f;)V"))
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface;setModelViewMatrix(Lorg/joml/Matrix4f;)V"), remap = false)
 	private void iris$setModelViewMatrix(ChunkShaderInterface itf, Matrix4f matrix) {
 		if (itf != null) {
 			itf.setModelViewMatrix(matrix);

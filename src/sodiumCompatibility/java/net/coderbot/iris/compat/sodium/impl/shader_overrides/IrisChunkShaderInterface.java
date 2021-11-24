@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Matrix4f;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
@@ -12,14 +11,9 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.texunits.TextureUnit;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 
 public class IrisChunkShaderInterface {
-	@Nullable
-	private final GlUniformFloat uniformModelScale;
-	@Nullable
-	private final GlUniformFloat uniformModelOffset;
-	@Nullable
-	private final GlUniformFloat uniformTextureScale;
 	@Nullable
 	private final GlUniformMatrix4f uniformModelViewMatrix;
 	@Nullable
@@ -41,9 +35,6 @@ public class IrisChunkShaderInterface {
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("u_ProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformModelViewProjectionMatrix = contextExt.bindUniformIfPresent("u_ModelViewProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("u_NormalMatrix", GlUniformMatrix4f::new);
-		this.uniformModelScale = contextExt.bindUniformIfPresent("u_ModelScale", GlUniformFloat::new);
-		this.uniformModelOffset = contextExt.bindUniformIfPresent("u_ModelOffset", GlUniformFloat::new);
-		this.uniformTextureScale = contextExt.bindUniformIfPresent("u_TextureScale", GlUniformFloat::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 
 		this.fogShaderComponent = new IrisShaderFogComponent(contextExt);
@@ -59,18 +50,6 @@ public class IrisChunkShaderInterface {
 		RenderSystem.bindTexture(RenderSystem.getShaderTexture(0));
 		RenderSystem.activeTexture(TextureUnit.LIGHTMAP.getUnitId());
 		RenderSystem.bindTexture(RenderSystem.getShaderTexture(2));
-
-		if (this.uniformModelScale != null) {
-			this.uniformModelScale.setFloat(vertexType.getModelScale());
-		}
-
-		if (this.uniformModelOffset != null) {
-			this.uniformModelOffset.setFloat(vertexType.getModelOffset());
-		}
-
-		if (this.uniformTextureScale != null) {
-			this.uniformTextureScale.setFloat(vertexType.getTextureScale());
-		}
 
 		fogShaderComponent.setup();
 		irisProgramUniforms.update();
@@ -88,14 +67,8 @@ public class IrisChunkShaderInterface {
 			this.uniformModelViewMatrix.set(modelView);
 		}
 
-		if (this.uniformModelViewProjectionMatrix != null) {
-			Matrix4f modelViewProjection = RenderSystem.getProjectionMatrix().copy();
-			modelViewProjection.multiply(modelView);
-			this.uniformModelViewProjectionMatrix.set(modelViewProjection);
-		}
-
 		if (this.uniformNormalMatrix != null) {
-			Matrix4f normalMatrix = modelView.copy();
+			Matrix4f normalMatrix = new Matrix4f(modelView);
 			normalMatrix.invert();
 			normalMatrix.transpose();
 			this.uniformNormalMatrix.set(normalMatrix);
