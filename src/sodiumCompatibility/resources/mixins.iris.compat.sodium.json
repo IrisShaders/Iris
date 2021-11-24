@@ -32,7 +32,6 @@
     "shadow_map.frustum.MixinAdvancedShadowCullingFrustum",
     "shadow_map.frustum.MixinBoxCullingFrustum",
     "shadow_map.frustum.MixinCullEverythingFrustum",
-    "shadow_map.frustum.MixinFrustumAdapter",
     "shadow_map.frustum.MixinNonCullingFrustum",
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
