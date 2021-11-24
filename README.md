@@ -42,11 +42,6 @@ Iris has public releases for 1.16 and 1.17 that work with custom versions of Sod
 Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris. Though a [fork of Sodium](https://github.com/IrisShaders/sodium-fabric) is still required, it's my intent that it will be unnecessary in the future. Official downloads of Iris include this modified version of Sodium for performance.
 
 
-## What shader packs can I use right now?
-
-View our [FAQ page](docs/faq.md) to see the list of supported shaders!
-
-
 ## How can I help?
 
 * The Iris Discord server is looking for people willing to provide support and moderate the server! Send @IMS#7902 a message if you'd like to apply.
