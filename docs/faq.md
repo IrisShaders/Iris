@@ -1,4 +1,5 @@
-## FAQ
+# FAQ
+
 > Q. How do I download Iris?
 
 A. Please visit [the official Iris website](https://irisshaders.net/)
@@ -13,7 +14,7 @@ A. [#663](https://github.com/IrisShaders/Iris/issues/663)
 
 > Q. Why is (insert shader) not working?
 
-A. That shader likely currently isn't supported, but should be in the future.
+A. That shader likely isn't supported currently, but should be in the future.
 
 > Q. How do I disable my shaders?
 
@@ -29,7 +30,7 @@ A. There are a few possible reasons:
 
 • You're using macOS, which has limited support.
 
-• You may have an incompatible mod installed. 
+• You may have an incompatible mod installed.
 
 > Q. What shaders have been tested and are working with Iris?
 
@@ -41,9 +42,9 @@ A. The following shaders have been tested and work well:
 
 • [BSL Shaders](https://bitslablab.com/bslshaders/)
 
-• Continuum 1.3 
+• [Continuum 1.3](https://continuum.graphics/downloads)
 
-• Continuum 2.0.4
+• [Continuum 2.0.4](https://continuum.graphics/downloads)
 
 • [SEUS V11](https://www.sonicether.com/seus/)
 
@@ -55,9 +56,9 @@ A. The following shaders have been tested and work well:
 
 • [Skylec v4.0](https://www.curseforge.com/minecraft/customization/skylec-shader)
 
-• Tea V1.5.3
+• [Tea V1.5.3](https://www.curseforge.com/minecraft/customization/beyondbelief-vanilla-reborn)
 
-• XorDev's shaders
+• [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
 
 • [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
 
@@ -67,24 +68,23 @@ The following shaders have been tested and work with some minor issues:
 
 • Triliton V8 [reflections broken]
 
-• Stereo's Default+ [No sky on 1.17] 
+• Stereo's Default+ [No sky on 1.17]
 
-> Q. Will (insert feature) part of OptiFine be added to iris? 
+> Q. Will (insert feature) part of OptiFine be added to iris?
 
-A. Iris is specifically a shaders mod. Other features are not planned for Iris. However, many other wonderful mods have been made by the fabric modding community which cover many of the features of OptiFine. 
+A. Iris is specifically a shaders mod. Other features are not planned for Iris. However, many other wonderful mods have been made by the fabric modding community which cover many of the features of OptiFine.
 
 The following is a short list, more alternatives can be found through further research, the list is alphabetical.
 
 Better Grass/Snow - [LambdaBetterGrass](https://www.curseforge.com/minecraft/mc-mods/lambdabettergrass)
 
-Chunk Caching - [Bobby](https://www.curseforge.com/minecraft/mc-mods/bobby)
-
+Chunk Caching - [Bobby](https://www.curseforge.com/minecraft/mc-mods/bobby) -
 Bobby is incompatible with Starlight.
 
 Connected Textures - [Continuity](https://modrinth.com/mod/continuity)
 
-Custom Item Textures - [CIT-Resewn](https://modrinth.com/mod/cit-resewn)
-You need to enable “Broken Paths” or MANY PACKS WILL NOT WORK. 
+Custom Item Textures - [CIT-Resewn](https://modrinth.com/mod/cit-resewn) -
+You need to enable “Broken Paths” or MANY PACKS WILL NOT WORK.
 
 Dynamic Lights - [LambDynamicLights](https://www.curseforge.com/minecraft/mc-mods/lambdynamiclights)
 
