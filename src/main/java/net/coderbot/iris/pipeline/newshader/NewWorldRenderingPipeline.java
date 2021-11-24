@@ -847,12 +847,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public float getSunPathRotation() {
-		return sunPathRotation;
+	public FrameUpdateNotifier getFrameUpdateNotifier() {
+		return updateNotifier;
 	}
 
 	@Override
-	public FrameUpdateNotifier getUpdateNotifier() {
-		return updateNotifier;
+	public float getSunPathRotation() {
+		return sunPathRotation;
 	}
 }

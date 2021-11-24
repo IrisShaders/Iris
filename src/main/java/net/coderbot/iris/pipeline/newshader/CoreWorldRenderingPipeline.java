@@ -44,6 +44,6 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	ShaderInstance getLines();
 	ShaderInstance getShadowLines();
 	WorldRenderingPhase getPhase();
-	FrameUpdateNotifier getUpdateNotifier();
+	FrameUpdateNotifier getFrameUpdateNotifier();
 	void destroy();
 }
