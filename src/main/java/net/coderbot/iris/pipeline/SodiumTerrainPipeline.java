@@ -63,8 +63,6 @@ public class SodiumTerrainPipeline {
 		translucentSource.ifPresent(sources -> translucentFramebuffer = targets.createGbufferFramebuffer(flippedAfterTranslucent,
 				sources.getDirectives().getDrawBuffers()));
 
-
-
 		this.createTerrainSamplers = createTerrainSamplers;
 		this.createShadowSamplers = createShadowSamplers;
 	}
