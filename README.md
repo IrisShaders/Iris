@@ -35,7 +35,7 @@ These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achi
 
 Iris has public releases for 1.16 and 1.17 that work with custom versions of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
 
-Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris. Though a [fork of Sodium](https://github.com/IrisShaders/sodium-fabric) is still required, it's my intent that it will be unnecessary in the future. Official downloads of Iris include this modified version of Sodium for performance.
+Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris.
 
 
 ## What shader packs can I use right now?
