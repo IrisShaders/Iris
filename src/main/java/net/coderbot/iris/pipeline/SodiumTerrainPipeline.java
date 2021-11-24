@@ -53,32 +53,17 @@ public class SodiumTerrainPipeline {
 								 ImmutableSet<Integer> flippedAfterTranslucent, GlFramebuffer shadowFramebuffer) {
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
-		Optional<ProgramSource> shadowSource = programSet.getShadow();
 
 		this.programSet = programSet;
 		this.shadowFramebuffer = shadowFramebuffer;
 
-		terrainSource.ifPresent(sources -> {
-			terrainVertex = sources.getVertexSource().orElse(null);
-			terrainGeometry = sources.getGeometrySource().orElse(null);
-			terrainFragment = sources.getFragmentSource().orElse(null);
-			terrainFramebuffer = targets.createGbufferFramebuffer(flippedBeforeTranslucent,
-					sources.getDirectives().getDrawBuffers());
-		});
+		terrainSource.ifPresent(sources -> terrainFramebuffer = targets.createGbufferFramebuffer(flippedBeforeTranslucent,
+				sources.getDirectives().getDrawBuffers()));
 
-		translucentSource.ifPresent(sources -> {
-			translucentVertex = sources.getVertexSource().orElse(null);
-			translucentGeometry = sources.getGeometrySource().orElse(null);
-			translucentFragment = sources.getFragmentSource().orElse(null);
-			translucentFramebuffer = targets.createGbufferFramebuffer(flippedAfterTranslucent,
-					sources.getDirectives().getDrawBuffers());
-		});
+		translucentSource.ifPresent(sources -> translucentFramebuffer = targets.createGbufferFramebuffer(flippedAfterTranslucent,
+				sources.getDirectives().getDrawBuffers()));
 
-		shadowSource.ifPresent(sources -> {
-			shadowVertex = sources.getVertexSource().orElse(null);
-			shadowGeometry = sources.getGeometrySource().orElse(null);
-			shadowFragment = sources.getFragmentSource().orElse(null);
-		});
+
 
 		this.createTerrainSamplers = createTerrainSamplers;
 		this.createShadowSamplers = createShadowSamplers;
@@ -88,6 +73,27 @@ public class SodiumTerrainPipeline {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(true, true, false, true, true);
 
 		AlphaTest cutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
+
+		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
+
+		terrainSource.ifPresent(sources -> {
+			terrainVertex = sources.getVertexSource().orElse(null);
+			terrainGeometry = sources.getGeometrySource().orElse(null);
+			terrainFragment = sources.getFragmentSource().orElse(null);
+		});
+
+		translucentSource.ifPresent(sources -> {
+			translucentVertex = sources.getVertexSource().orElse(null);
+			translucentGeometry = sources.getGeometrySource().orElse(null);
+			translucentFragment = sources.getFragmentSource().orElse(null);
+		});
+
+		programSet.getShadow().ifPresent(sources -> {
+			shadowVertex = sources.getVertexSource().orElse(null);
+			shadowGeometry = sources.getGeometrySource().orElse(null);
+			shadowFragment = sources.getFragmentSource().orElse(null);
+		});
 
 		if (terrainVertex != null) {
 			terrainVertex = TriforceSodiumPatcher.patch(terrainVertex, ShaderType.VERTEX, null, inputs, vertexType);
