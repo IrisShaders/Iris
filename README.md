@@ -8,6 +8,10 @@
 * Visit [our Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and get support! It's also a great place to get development updates right as they're happening.
 * Visit [my Patreon page](https://www.patreon.com/coderbot) to support the continued development of Iris!
 
+## FAQ
+
+Find answers to frequently asked questions, including a list of currently support shaders, on our [FAQ page](docs/faq.md).
+
 
 ## Why did you make Iris?
 
@@ -36,11 +40,6 @@ These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achi
 Iris has public releases for 1.16 and 1.17 that work with custom versions of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
 
 Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris. Though a [fork of Sodium](https://github.com/IrisShaders/sodium-fabric) is still required, it's my intent that it will be unnecessary in the future. Official downloads of Iris include this modified version of Sodium for performance.
-
-
-## What shader packs can I use right now?
-
-View our [FAQ page](docs/faq.md) to see the list of supported shaders!
 
 
 ## How can I help?
