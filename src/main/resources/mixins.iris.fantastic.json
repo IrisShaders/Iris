@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.coderbot.iris.mixin.fantastic",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinBarrierParticle",
+    "MixinFireworkSparkParticle",
+    "MixinLevelRenderer",
+    "MixinParticleEngine",
+    "MixinTerrainParticle"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

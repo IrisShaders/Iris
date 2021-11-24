@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "iris",
+  "version": "${version}",
+
+  "name": "Iris",
+  "description": "A new shaders mod for Minecraft intended to be compatible with existing ShadersMod/Optifine shaders",
+  "authors": [
+    "coderbot"
+  ],
+  "contact": {
+    "homepage": "https://github.com/IrisShaders/Iris",
+    "sources": "https://github.com/IrisShaders/Iris.git",
+    "issues": "https://github.com/IrisShaders/Iris/issues"
+  },
+
+  "license": "LGPL-3.0-only",
+  "icon": "assets/iris/iris-logo.png",
+
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.coderbot.iris.Iris"
+    ],
+    "modmenu": [
+      "net.coderbot.iris.compat.modmenu.ModMenuIntegration"
+    ]
+  },
+
+  "mixins": [
+    "mixins.iris.json",
+    "iris-batched-entity-rendering.mixins.json",
+    "mixins.iris.yeetphysicsmod.json",
+    "mixins.iris.fantastic.json",
+    "mixins.iris.vertexformat.json",
+    "mixins.iris.bettermipmaps.json",
+    "mixins.iris.compat.indigo.json",
+    "mixins.iris.compat.sodium.json",
+    "mixins.iris.compat.indium.json"
+  ],
+
+  "accessWidener" : "iris.accesswidener",
+
+  "depends": {
+    "fabricloader": ">=0.7.4",
+    "minecraft": "1.16.x",
+    "fabric-resource-loader-v0": ">=0.3.2",
+    "fabric-key-binding-api-v1": ">=1.0.1"
+  },
+
+  "breaks": {
+    "iris-explorer": "*",
+    "originsenhanced": "<=1.3.2",
+    "batchedentityrendering": "*",
+    "canvas": "*",
+    "optifabric": "*",
+    "imm_ptl_core": "*",
+    "immersive_portals": "*"
+  }
+}

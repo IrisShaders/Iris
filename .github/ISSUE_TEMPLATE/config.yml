@@ -1,0 +1,5 @@
+blank_issues_enable: false
+contact_links:
+  - name: Join the Discord for support using Iris!
+    url: https://discord.gg/jQJnav2jPu
+    about: It's easier for our support staff to help you through our Discord server, so please if you are looking for support, go there. Of course, if you have found an actual bug/crash, please open an issue.

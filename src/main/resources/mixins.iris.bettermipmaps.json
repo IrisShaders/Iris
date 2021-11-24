@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.coderbot.iris.mixin.bettermipmaps",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinMipmapGenerator",
+    "MixinTextureAtlasSprite"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,38 @@
+5
+-5
+thunk
+-thunk
+!thunk
+- ! thunk
+- - thunk
+a - a
+a - - a
+a + ! a
+a * ! a
+- a - a
+- a - - a
+- a + ! a
+- a * ! a
+a - - - - - - - - - - - - - - - a
+- - - - - - - - - - - - - - - - - - a - - - - - - - - - - - - - - - a
+17 / 30 % 6
+12.0 + stone
+ohno()
+!uwu()
+smooth(3, 17, 15)
+!smooth(3, 17, 15)
+smooth(3, 17, 15,)
+(3)
+(5 + 3)
+(ohno(oh, no))
+(!ohno())
+(!ohno(oh, no))
+a * b / c % d
+a + b - c
+a == b && b != c || c < d || d >= e || e <= f && f > h
+a + b * c - d % r * f * f / f - u + u
+test.field
+test. field
+test .field
+test . field
+function(tabs,	are,	valid)
