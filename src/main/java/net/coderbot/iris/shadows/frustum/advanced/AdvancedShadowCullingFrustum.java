@@ -7,7 +7,7 @@ import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
-public class AdvancedShadowCullingFrustum extends Frustum implements me.jellysquid.mods.sodium.client.util.frustum.Frustum {
+public class AdvancedShadowCullingFrustum extends Frustum {
 	// conservative estimate for the maximum number of clipping planes:
 	// 6 base planes, and 5 possible planes added for each base plane.
 	private static final int MAX_CLIPPING_PLANES = 6 * 5;
@@ -314,11 +314,5 @@ public class AdvancedShadowCullingFrustum extends Frustum implements me.jellysqu
 		}
 
 		return true;
-	}
-
-	@Override
-	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// TODO: Visibility.INSIDE
-		return fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ) ? Visibility.INTERSECT : Visibility.OUTSIDE;
 	}
 }

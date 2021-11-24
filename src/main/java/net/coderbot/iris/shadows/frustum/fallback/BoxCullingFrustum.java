@@ -5,7 +5,7 @@ import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
-public class BoxCullingFrustum extends Frustum implements me.jellysquid.mods.sodium.client.util.frustum.Frustum {
+public class BoxCullingFrustum extends Frustum {
 	private final BoxCuller boxCuller;
 
 	public BoxCullingFrustum(BoxCuller boxCuller) {
@@ -28,13 +28,5 @@ public class BoxCullingFrustum extends Frustum implements me.jellysquid.mods.sod
 
 	public boolean isVisible(AABB box) {
 		return !boxCuller.isCulled(box);
-	}
-
-	// for Sodium
-	// TODO: Better way to do this... Maybe we shouldn't be using a frustum for the box culling in the first place!
-	@Override
-	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// TODO: Frustum.INSIDE
-		return boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ) ? Visibility.OUTSIDE : Visibility.INTERSECT;
 	}
 }

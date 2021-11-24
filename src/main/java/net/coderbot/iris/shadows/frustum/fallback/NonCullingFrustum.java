@@ -4,7 +4,7 @@ import com.mojang.math.Matrix4f;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
-public class NonCullingFrustum extends Frustum implements me.jellysquid.mods.sodium.client.util.frustum.Frustum {
+public class NonCullingFrustum extends Frustum {
 	public NonCullingFrustum() {
 		super(new Matrix4f(), new Matrix4f());
 	}
@@ -24,10 +24,5 @@ public class NonCullingFrustum extends Frustum implements me.jellysquid.mods.sod
 
 	public boolean isVisible(AABB box) {
 		return true;
-	}
-
-	@Override
-	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return Visibility.INSIDE;
 	}
 }
