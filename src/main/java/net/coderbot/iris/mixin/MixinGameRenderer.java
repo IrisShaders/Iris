@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlUtil;
 
 import net.coderbot.iris.Iris;
 
+import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,6 +36,6 @@ public class MixinGameRenderer {
 
 	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z"))
 	private boolean disableVanillaHandRendering(GameRenderer gameRenderer) {
-		return !Iris.getCurrentPack().isPresent() && renderHand;
+		return Iris.getPipelineManager().getPipeline() instanceof FixedFunctionWorldRenderingPipeline && renderHand;
 	}
 }
