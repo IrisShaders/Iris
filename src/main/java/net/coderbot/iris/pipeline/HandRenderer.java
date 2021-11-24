@@ -45,12 +45,13 @@ public class HandRenderer {
 	}
 
 	private boolean canRender(Camera camera, GameRenderer gameRenderer) {
-		return !(camera.isDetached() 
-			|| !(camera.getEntity() instanceof Player) 
-				|| ((GameRendererAccessor)gameRenderer).getPanoramicMode() 
-					|| Minecraft.getInstance().options.hideGui 
-						|| (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).isSleeping()) 
-							|| Minecraft.getInstance().gameMode.getPlayerMode() == GameType.SPECTATOR);
+		return !(!((GameRendererAccessor) gameRenderer).getRenderHand()
+				|| camera.isDetached()
+					|| !(camera.getEntity() instanceof Player)
+						|| ((GameRendererAccessor)gameRenderer).getPanoramicMode()
+							|| Minecraft.getInstance().options.hideGui
+								|| (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).isSleeping())
+									|| Minecraft.getInstance().gameMode.getPlayerMode() == GameType.SPECTATOR);
 	}
 
 	public boolean isHandTranslucent(InteractionHand hand) {

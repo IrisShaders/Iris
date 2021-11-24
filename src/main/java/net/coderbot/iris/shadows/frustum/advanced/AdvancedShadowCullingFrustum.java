@@ -3,13 +3,11 @@ package net.coderbot.iris.shadows.frustum.advanced;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
-import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegionVisibility;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
-import net.coderbot.iris.shadows.frustum.SodiumFrustumExt;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
-public class AdvancedShadowCullingFrustum extends Frustum implements SodiumFrustumExt {
+public class AdvancedShadowCullingFrustum extends Frustum {
 	// conservative estimate for the maximum number of clipping planes:
 	// 6 base planes, and 5 possible planes added for each base plane.
 	private static final int MAX_CLIPPING_PLANES = 6 * 5;
@@ -316,11 +314,5 @@ public class AdvancedShadowCullingFrustum extends Frustum implements SodiumFrust
 		}
 
 		return true;
-	}
-
-	@Override
-	public RenderRegionVisibility aabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// TODO: FULLY_VISIBLE
-		return fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ) ? RenderRegionVisibility.VISIBLE : RenderRegionVisibility.CULLED;
 	}
 }

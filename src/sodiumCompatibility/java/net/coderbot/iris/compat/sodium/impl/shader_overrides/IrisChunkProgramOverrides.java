@@ -1,12 +1,13 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
 import me.jellysquid.mods.sodium.client.gl.GlObject;
-import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
-import me.jellysquid.mods.sodium.client.gl.shader.GlShader;
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
+import me.jellysquid.mods.sodium.client.gl.shader.*;
+import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -23,7 +24,7 @@ public class IrisChunkProgramOverrides {
 	private boolean shadersCreated = false;
     private final EnumMap<IrisTerrainPass, GlProgram<IrisChunkShaderInterface>> programs = new EnumMap<>(IrisTerrainPass.class);
 
-    private GlShader createVertexShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+    private GlShader createVertexShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline, ShaderConstants constants) {
         Optional<String> irisVertexShader;
 
         if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
@@ -42,10 +43,11 @@ public class IrisChunkProgramOverrides {
             return null;
         }
 
-        return new GlShader(ShaderType.VERTEX, new ResourceLocation("iris", "sodium-terrain.vsh"), source);
+
+		return new GlShader(ShaderType.VERTEX, new ResourceLocation("iris", "sodium-terrain.vsh"), ShaderParser.parseShader(source, constants));
     }
 
-    private GlShader createGeometryShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+    private GlShader createGeometryShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline, ShaderConstants constants) {
         Optional<String> irisGeometryShader;
 
         if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
@@ -65,10 +67,10 @@ public class IrisChunkProgramOverrides {
         }
 
         return new GlShader(IrisShaderTypes.GEOMETRY, new ResourceLocation("iris", "sodium-terrain.gsh"),
-				source);
+				ShaderParser.parseShader(source, constants));
     }
 
-    private GlShader createFragmentShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+    private GlShader createFragmentShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline, ShaderConstants constants) {
         Optional<String> irisFragmentShader;
 
         if (pass == IrisTerrainPass.SHADOW) {
@@ -91,14 +93,15 @@ public class IrisChunkProgramOverrides {
             return null;
         }
 
-        return new GlShader(ShaderType.FRAGMENT, new ResourceLocation("iris", "sodium-terrain.fsh"), source);
+        return new GlShader(ShaderType.FRAGMENT, new ResourceLocation("iris", "sodium-terrain.fsh"), ShaderParser.parseShader(source, constants));
     }
 
     @Nullable
-    private GlProgram<IrisChunkShaderInterface> createShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
-        GlShader vertShader = createVertexShader(pass, pipeline);
-        GlShader geomShader = createGeometryShader(pass, pipeline);
-        GlShader fragShader = createFragmentShader(pass, pipeline);
+    private GlProgram<IrisChunkShaderInterface> createShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline, ChunkVertexType vertexType) {
+		ShaderConstants constants = constants(vertexType);
+        GlShader vertShader = createVertexShader(pass, pipeline, constants);
+        GlShader geomShader = createGeometryShader(pass, pipeline, constants);
+        GlShader fragShader = createFragmentShader(pass, pipeline, constants);
 
         if (vertShader == null || fragShader == null) {
             if (vertShader != null) {
@@ -127,7 +130,7 @@ public class IrisChunkProgramOverrides {
 
             return builder.attachShader(vertShader)
                     .attachShader(fragShader)
-					.bindAttribute("a_Pos", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID)
+					.bindAttribute("a_PosId", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID)
 					.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
 					.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE)
 					.bindAttribute("a_LightCoord", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE)
@@ -153,6 +156,15 @@ public class IrisChunkProgramOverrides {
         }
     }
 
+	private ShaderConstants constants(ChunkVertexType vertexType) {
+		ShaderConstants.Builder builder = ShaderConstants.builder();
+		builder.add("USE_VERTEX_COMPRESSION");
+		builder.add("VERT_POS_SCALE", String.valueOf(vertexType.getPositionScale()));
+		builder.add("VERT_POS_OFFSET", String.valueOf(vertexType.getPositionOffset()));
+		builder.add("VERT_TEX_SCALE", String.valueOf(vertexType.getTextureScale()));
+		return builder.build();
+	}
+
     private SodiumTerrainPipeline getSodiumTerrainPipeline() {
 		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipeline();
 
@@ -163,13 +175,13 @@ public class IrisChunkProgramOverrides {
 		}
 	}
 
-    private void createShaders() {
+    private void createShaders(ChunkVertexType vertexType) {
     	SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
         Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
 
         if (pipeline != null) {
             for (IrisTerrainPass pass : IrisTerrainPass.values()) {
-                this.programs.put(pass, createShader(pass, pipeline));
+                this.programs.put(pass, createShader(pass, pipeline, vertexType));
             }
         } else {
             this.programs.clear();
@@ -179,13 +191,13 @@ public class IrisChunkProgramOverrides {
     }
 
     @Nullable
-    public GlProgram<IrisChunkShaderInterface> getProgramOverride(BlockRenderPass pass) {
+    public GlProgram<IrisChunkShaderInterface> getProgramOverride(BlockRenderPass pass, ChunkVertexType vertexType) {
         if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
             deleteShaders();
         }
 
         if (!shadersCreated) {
-			createShaders();
+			createShaders(vertexType);
 		}
 
         if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
