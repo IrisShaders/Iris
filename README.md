@@ -40,24 +40,7 @@ Compatibility with Sodium is an ongoing project. I've been chatting with JellySq
 
 ## What shader packs can I use right now?
 
-The following shader packs mostly work, though with a few bugs of course:
-
-* [Sildur's Vibrant Shaders](https://sildurs-shaders.github.io/)
-* [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
-* [BSL Shaders](https://www.bitslablab.com/bslshaders/)
-* [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
-    * Enchantment glints are broken
-* [SEUS Renewed](https://sonicether.com/shaders/download/renewed-v1-0-1/)
-    * Note that SEUS Renewed does not work on some platforms and might fail to compile.
-* [SEUS v11](https://sonicether.com/shaders/download/v11-0/) (from 2016, not to be confused with SEUS PTGI E11)
-    * General issues with weather
-    * Note that SEUS v11 does not work on some platforms and might fail to compile.
-* [Skylec Shader](https://www.curseforge.com/minecraft/customization/skylec-shader) - a very lightweight shaderpack that pulls off some neat effects
-    * Underwater is broken
-    * Weather is broken
-* [XorDev's shaderpacks](https://github.com/XorDev/Minecraft-Shaderpacks)
-
-Other shaderpacks aren't officially supported currently.
+View our [FAQ page](docs/faq.md) to see the list of supported shaders!
 
 
 ## How can I help?
