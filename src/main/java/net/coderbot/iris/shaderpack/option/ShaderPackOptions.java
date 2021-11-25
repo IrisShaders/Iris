@@ -1,21 +1,24 @@
 package net.coderbot.iris.shaderpack.option;
 
 import com.google.common.collect.ImmutableMap;
+import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A helper class that dispatches all the heavy lifting needed to discover, merge, and apply shader pack options to
  * an existing {@link IncludeGraph}.
  */
 public class ShaderPackOptions {
-	public static IncludeGraph apply(IncludeGraph graph, Map<String, String> changedConfigs) {
+	private final OptionSet optionSet;
+	private final OptionValues optionValues;
+	private final IncludeGraph includes;
+	private final OptionMenuContainer menuContainer;
+
+	public ShaderPackOptions(String shaderPackName, ShaderProperties shaderProperties, IncludeGraph graph, Map<String, String> changedConfigs) {
 		Map<AbsolutePackPath, OptionAnnotatedSource> allAnnotations = new HashMap<>();
 		OptionSet.Builder setBuilder = OptionSet.builder();
 
@@ -40,9 +43,25 @@ public class ShaderPackOptions {
 			allAnnotations.putAll(annotations);
 		});
 
-		OptionSet optionSet = setBuilder.build();
-		OptionValues optionValues = new OptionValues(optionSet, changedConfigs);
+		this.optionSet = setBuilder.build();
+		this.optionValues = new OptionValues(optionSet, changedConfigs);
+		this.includes = graph.map(path -> allAnnotations.get(path).asTransform(optionValues));
+		this.menuContainer = new OptionMenuContainer(shaderPackName, shaderProperties, this);
+	}
 
-		return graph.map(path -> allAnnotations.get(path).asTransform(optionValues));
+	public OptionSet getOptionSet() {
+		return optionSet;
+	}
+
+	public OptionValues getOptionValues() {
+		return optionValues;
+	}
+
+	public IncludeGraph getIncludes() {
+		return includes;
+	}
+
+	public OptionMenuContainer getMenuContainer() {
+		return menuContainer;
 	}
 }

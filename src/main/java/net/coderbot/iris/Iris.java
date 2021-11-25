@@ -2,10 +2,7 @@ package net.coderbot.iris;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
@@ -56,6 +53,8 @@ public class Iris implements ClientModInitializer {
 	private static KeyMapping reloadKeybind;
 	private static KeyMapping toggleShadersKeybind;
 	private static KeyMapping shaderpackScreenKeybind;
+
+	private static final Map<String, String> pendingShaderPackOptions = new HashMap<>();
 
 	private static String IRIS_VERSION;
 
@@ -248,8 +247,15 @@ public class Iris implements ClientModInitializer {
 				.map(properties -> (Map<String, String>) (Map) properties)
 				.orElse(Collections.emptyMap());
 
+		changedConfigs.putAll(pendingShaderPackOptions);
+		clearPendingShaderPackOptions();
+
+		Properties configsToSave = new Properties();
+		configsToSave.putAll(changedConfigs);
+		saveConfigProperties(shaderPackConfigTxt, configsToSave);
+
 		try {
-			currentPack = new ShaderPack(shaderPackPath, changedConfigs);
+			currentPack = new ShaderPack(name, shaderPackPath, changedConfigs);
 		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
 			logger.catching(e);
@@ -295,7 +301,7 @@ public class Iris implements ClientModInitializer {
 				.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
 
 		try {
-			currentPack = new ShaderPack(root.resolve("shaders"));
+			currentPack = new ShaderPack("Internal", root.resolve("shaders"));
 		} catch (IOException e) {
 			logger.error("Failed to load internal shaderpack!");
 			throw new RuntimeException("Failed to load internal shaderpack!", e);
@@ -327,6 +333,14 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return Optional.of(properties);
+	}
+
+	private static void saveConfigProperties(Path path, Properties properties) {
+		try {
+			properties.store(Files.newOutputStream(path), "");
+		} catch (IOException e) {
+			// TODO: Better error handling
+		}
 	}
 
 	public static boolean isValidShaderpack(Path pack) {
@@ -363,6 +377,14 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return false;
+	}
+
+	public static void addPendingShaderPackOption(String key, String value) {
+		pendingShaderPackOptions.put(key, value);
+	}
+
+	public static void clearPendingShaderPackOptions() {
+		pendingShaderPackOptions.clear();
 	}
 
 	public static void reload() throws IOException {

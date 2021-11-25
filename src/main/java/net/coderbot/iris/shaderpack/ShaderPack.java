@@ -31,9 +31,12 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
 	private final CustomTexture customNoiseTexture;
+	private final ShaderPackOptions shaderPackOptions;
 
-	public ShaderPack(Path root) throws IOException {
-		this(root, Collections.emptyMap());
+	private final String name;
+
+	public ShaderPack(String name, Path root) throws IOException {
+		this(name, root, Collections.emptyMap());
 	}
 
 	/**
@@ -42,9 +45,11 @@ public class ShaderPack {
 	 * @param root The path to the "shaders" directory within the shader pack
 	 * @throws IOException
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
+	public ShaderPack(String name, Path root, Map<String, String> changedConfigs) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
+
+		this.name = name;
 
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
@@ -69,7 +74,8 @@ public class ShaderPack {
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
 		// Discover, merge, and apply shader pack options
-		graph = ShaderPackOptions.apply(graph, changedConfigs);
+		this.shaderPackOptions = new ShaderPackOptions(name, shaderProperties, graph, changedConfigs);
+		graph = this.shaderPackOptions.getIncludes();
 
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
@@ -195,5 +201,13 @@ public class ShaderPack {
 
 	public LanguageMap getLanguageMap() {
 		return languageMap;
+	}
+
+	public ShaderPackOptions getShaderPackOptions() {
+		return shaderPackOptions;
+	}
+
+	public String getPackName() {
+		return name;
 	}
 }

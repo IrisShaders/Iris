@@ -3,8 +3,12 @@ package net.coderbot.iris.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 
@@ -19,6 +23,7 @@ import net.minecraft.sounds.SoundEvents;
  */
 public final class GuiUtil {
 	private static final ResourceLocation IRIS_WIDGETS_TEX = new ResourceLocation("iris", "textures/gui/widgets.png");
+	private static final Component ELLIPSIS = new TextComponent("...");
 
 	private GuiUtil() {}
 
@@ -70,6 +75,24 @@ public final class GuiUtil {
 		GuiComponent.blit(poseStack, x, y + halfHeight, 0, vOffset + (20 - (height - halfHeight)), halfWidth, height - halfHeight, 256, 256);
 		// Bottom right section
 		GuiComponent.blit(poseStack, x + halfWidth, y + halfHeight, 200 - (width - halfWidth), vOffset + (20 - (height - halfHeight)), width - halfWidth, height - halfHeight, 256, 256);
+	}
+
+	/**
+	 * Shorten a text to a specific length, adding an ellipsis (...)
+	 * to the end if shortened.
+	 *
+	 * Text may lose formatting.
+	 *
+	 * @param font Font to use for determining the width of text
+	 * @param text Text to shorten
+	 * @param width Width to shorten text to
+	 * @return a shortened text
+	 */
+	public static MutableComponent shortenText(Font font, MutableComponent text, int width) {
+		if (font.width(text) > width) {
+			return new TextComponent(font.plainSubstrByWidth(text.getString(), width - font.width(ELLIPSIS))).append(ELLIPSIS).setStyle(text.getStyle());
+		}
+		return text;
 	}
 
 	/**

@@ -1,7 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -40,15 +40,14 @@ public class ShaderProperties {
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
+	private List<String> sliderOptions = new ArrayList<>();
+	private final Map<String, List<String>> profiles = new HashMap<>();
+	private List<String> mainScreenOptions = new ArrayList<>();
+	private final Map<String, List<String>> subScreenOptions = new HashMap<>();
+	private Integer mainScreenColumnCount = null;
+	private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
 	// TODO: Custom textures
 	// TODO: private Map<String, String> optifineVersionRequirements;
-	// TODO: private Set<String> sliderOptions;
-	// TODO: Parse profiles
-	// TODO: private Map<String, String> profiles;
-	// TODO: private List<String> mainScreenOptions;
-	// TODO: private final Map<String, List<String>> subScreenOptions = new HashMap<>();
-	// TODO: private Integer mainScreenColumnCount;
-	// TODO: private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
 	// TODO: Parse custom uniforms / variables
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
@@ -93,7 +92,16 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 
-			// TODO: Min optifine versions, custom textures, shader options layout / appearance / profiles
+			// Defining "sliders" multiple times in the properties file will only result in
+			// the last definition being used, should be tested if behavior matches OptiFine
+			handleWhitespacedListDirective(key, value, "sliders", sliders -> sliderOptions = sliders);
+			handlePrefixedWhitespacedListDirective("profile.", key, value, profiles::put);
+			handleWhitespacedListDirective(key, value, "screen", options -> mainScreenOptions = options);
+			handlePrefixedWhitespacedListDirective("screen.", key, value, subScreenOptions::put);
+			handleIntDirective(key, value, "screen.columns", columns -> mainScreenColumnCount = columns);
+			handleAffixedIntDirective("screen.", ".columns", key, value, subScreenColumnCount::put);
+
+			// TODO: Min optifine versions, custom textures
 			// TODO: Custom uniforms
 
 			handlePassDirective("scale.", key, value, pass -> {
@@ -178,11 +186,58 @@ public class ShaderProperties {
 		}
 	}
 
+	private static void handleIntDirective(String key, String value, String expectedKey, Consumer<Integer> handler) {
+		if (!expectedKey.equals(key)) {
+			return;
+		}
+
+		try {
+			int result = Integer.parseInt(value);
+
+			handler.accept(result);
+		} catch (NumberFormatException nex) {
+			Iris.logger.warn("Unexpected value for integer key " + key + " in shaders.properties: got " + value + ", but expected an integer");
+		}
+	}
+
+	private static void handleAffixedIntDirective(String prefix, String suffix, String key, String value, BiConsumer<String, Integer> handler) {
+		if (key.startsWith(prefix) && key.endsWith(suffix)) {
+			String affixStrippedKey = key.substring(prefix.length(), key.length() - suffix.length());
+
+			try {
+				int result = Integer.parseInt(value);
+
+				handler.accept(affixStrippedKey, result);
+			} catch (NumberFormatException nex) {
+				Iris.logger.warn("Unexpected value for integer key " + key + " in shaders.properties: got " + value + ", but expected an integer");
+			}
+		}
+	}
+
 	private static void handlePassDirective(String prefix, String key, String value, Consumer<String> handler) {
 		if (key.startsWith(prefix)) {
 			String pass = key.substring(prefix.length());
 
 			handler.accept(pass);
+		}
+	}
+
+	private static void handleWhitespacedListDirective(String key, String value, String expectedKey, Consumer<List<String>> handler) {
+		if (!expectedKey.equals(key)) {
+			return;
+		}
+
+		String[] elements = value.split(" ");
+
+		handler.accept(Arrays.asList(elements));
+	}
+
+	private static void handlePrefixedWhitespacedListDirective(String prefix, String key, String value, BiConsumer<String, List<String>> handler) {
+		if (key.startsWith(prefix)) {
+			String prefixStrippedKey = key.substring(prefix.length());
+			String[] elements = value.split(" ");
+
+			handler.accept(prefixStrippedKey, Arrays.asList(elements));
 		}
 	}
 
@@ -284,5 +339,29 @@ public class ShaderProperties {
 
 	public Optional<String> getNoiseTexturePath() {
 		return Optional.ofNullable(noiseTexturePath);
+	}
+
+	public List<String> getSliderOptions() {
+		return sliderOptions;
+	}
+
+	public Map<String, List<String>> getProfiles() {
+		return profiles;
+	}
+
+	public List<String> getMainScreenOptions() {
+		return mainScreenOptions;
+	}
+
+	public Map<String, List<String>> getSubScreenOptions() {
+		return subScreenOptions;
+	}
+
+	public Optional<Integer> getMainScreenColumnCount() {
+		return Optional.ofNullable(mainScreenColumnCount);
+	}
+
+	public Map<String, Integer> getSubScreenColumnCount() {
+		return subScreenColumnCount;
 	}
 }

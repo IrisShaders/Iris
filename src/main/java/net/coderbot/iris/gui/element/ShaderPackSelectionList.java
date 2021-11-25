@@ -35,9 +35,6 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 	@Override
 	public int getRowWidth() {
-		// Temporarily set to only reach a width of up to 312 in order to fit in with
-		// the width of the array of buttons at the bottom of the GUI. May be changed
-		// in the future if this widget is made to occupy half the screen.
 		return Math.min(308, width - 50);
 	}
 
