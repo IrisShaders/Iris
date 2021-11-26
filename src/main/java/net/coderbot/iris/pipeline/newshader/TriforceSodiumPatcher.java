@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderParser;
+import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -16,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TriforceSodiumPatcher {
-	public static String patch(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs) {
+	public static String patch(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, ChunkVertexType vertexType) {
 		if (source.contains("moj_import")) {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
@@ -138,6 +139,10 @@ public class TriforceSodiumPatcher {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"));
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_matrices.glsl>"));
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define USE_VERTEX_COMPRESSION");
+			transformations.define("VERT_POS_SCALE", String.valueOf(vertexType.getPositionScale()));
+			transformations.define("VERT_POS_OFFSET", String.valueOf(vertexType.getPositionOffset()));
+			transformations.define("VERT_TEX_SCALE", String.valueOf(vertexType.getTextureScale()));
 
 			if (transformations.contains("irisMain")) {
 				throw new IllegalStateException("Shader already contains \"irisMain\"???");
