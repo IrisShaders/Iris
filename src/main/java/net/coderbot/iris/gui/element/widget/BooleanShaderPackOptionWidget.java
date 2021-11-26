@@ -1,39 +1,34 @@
-package net.coderbot.iris.gui.element;
+package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
-import net.coderbot.iris.shaderpack.option.StringOption;
+import net.coderbot.iris.shaderpack.option.BooleanOption;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.*;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.List;
-
-public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget {
+// TODO: Deduplicate a lot of code
+public class BooleanShaderPackOptionWidget extends AbstractShaderPackOptionWidget {
+	private static final Component TEXT_TRUE = new TranslatableComponent("label.iris.true").withStyle(ChatFormatting.GREEN);
+	private static final Component TEXT_FALSE = new TranslatableComponent("label.iris.false").withStyle(ChatFormatting.RED);
 	private static final Component DIVIDER = new TextComponent(": ");
 	private static final int VALUE_SECTION_WIDTH = 35;
 
-	private final StringOption option;
-	private final int originalValueIndex;
-	private final String originalValue;
-	private final int valueCount;
+	private final BooleanOption option;
+	private final boolean originalValue;
 
 	private Component label;
-	private Component valueLabel;
-	private int valueIndex;
+	private boolean value;
 
 	private int maxLabelWidth = -1;
 
-	public StringShaderPackOptionWidget(StringOption option, String value) {
+	public BooleanShaderPackOptionWidget(BooleanOption option, boolean value) {
 		this.option = option;
-
-		List<String> values = option.getAllowedValues();
-		this.valueCount = values.size();
-		this.originalValueIndex = values.indexOf(value);
-		this.valueIndex = originalValueIndex;
 		this.originalValue = value;
+		this.value = value;
 
 		updateLabel();
 	}
@@ -54,9 +49,8 @@ public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 		Font font = Minecraft.getInstance().font;
 		font.drawShadow(poseStack, label, x + 6, y + 7, 0xFFFFFF);
 
-		font.drawShadow(poseStack, this.valueLabel, (x + (width - 2)) - (int)(VALUE_SECTION_WIDTH * 0.5) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
-
-		this.maxLabelWidth = (width - 8) - VALUE_SECTION_WIDTH;
+		Component valueLabel = value ? TEXT_TRUE : TEXT_FALSE;
+		font.drawShadow(poseStack, valueLabel, (x + (width - 2)) - (int)(VALUE_SECTION_WIDTH * 0.5) - (int)(font.width(valueLabel) * 0.5), y + 7, 0xFFFFFF);
 	}
 
 	private void updateLabel() {
@@ -65,32 +59,19 @@ public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 				new TranslatableComponent("option." + option.getName()).append(DIVIDER),
 				maxLabelWidth);
 
-		if (this.valueIndex != originalValueIndex) {
+		if (this.value != originalValue) {
 			label = label.withStyle(style -> style.withColor(TextColor.fromRgb(0xffc94a)));
 		}
-		this.label = label;
 
-		String valueStr;
-		if (this.valueIndex < 0) {
-			valueStr = this.originalValue;
-		} else {
-			valueStr = this.option.getAllowedValues().get(this.valueIndex);
-		}
-		this.valueLabel = new TextComponent(valueStr).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff)));
+		this.label = label;
 	}
 
 	private void next() {
-		this.valueIndex = Math.max(this.valueIndex, 0);
-
-		this.valueIndex++;
-
-		if (this.valueIndex >= this.valueCount) {
-			this.valueIndex = 0;
-		}
+		this.value = !this.value;
 	}
 
 	private void queueOptionToPending() {
-		Iris.addPendingShaderPackOption(this.option.getName(), this.option.getAllowedValues().get(valueIndex));
+		Iris.addPendingShaderPackOption(this.option.getName(), Boolean.toString(this.value));
 	}
 
 	@Override

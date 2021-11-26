@@ -1,12 +1,18 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.coderbot.iris.gui.element.AbstractShaderPackOptionWidget;
+import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.element.widget.AbstractShaderPackOptionWidget;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.MergedBooleanOption;
 import net.coderbot.iris.shaderpack.option.MergedStringOption;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.Map;
 
@@ -17,6 +23,23 @@ public abstract class OptionMenuElement {
 			return new AbstractShaderPackOptionWidget() {
 				@Override
 				public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {}
+			};
+		}
+	};
+	public static final OptionMenuElement ERROR = new OptionMenuElement() {
+		@Override
+		public AbstractShaderPackOptionWidget createWidget(NavigationController navigation) {
+			return new AbstractShaderPackOptionWidget() {
+				private final Component label = new TextComponent("ERROR").withStyle(ChatFormatting.DARK_RED);
+
+				@Override
+				public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+					GuiUtil.bindIrisWidgetsTexture();
+					GuiUtil.drawButton(poseStack, x, y, width, height, false, true);
+
+					Font font = Minecraft.getInstance().font;
+					font.draw(poseStack, label, x + (int)(width * 0.5) - (int)(font.width(label) * 0.5), y + 7, 0xFFFFFF);
+				}
 			};
 		}
 	};
@@ -47,7 +70,7 @@ public abstract class OptionMenuElement {
 		if (booleanOptions.containsKey(elementString)) {
 			return new OptionMenuBooleanOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(), booleanOptions.get(elementString).getOption());
 		} else if (stringOptions.containsKey(elementString)) {
-			return new OptionMenuStringOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(), stringOptions.get(elementString).getOption());
+			return new OptionMenuStringOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(), stringOptions.get(elementString).getOption(), shaderProperties.getSliderOptions().contains(elementString));
 		}
 
 		// Handled and ignored with log warning

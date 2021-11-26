@@ -1,5 +1,6 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
@@ -28,7 +29,11 @@ public class OptionMenuScreen {
 				if (element instanceof OptionMenuOptionElement) {
 					container.putOptionForSearching((OptionMenuOptionElement) element);
 				}
-			} catch (IllegalArgumentException ignored) {}
+			} catch (IllegalArgumentException error) {
+				Iris.logger.error(error);
+
+				this.elements.add(OptionMenuElement.ERROR);
+			}
 		}
 	}
 

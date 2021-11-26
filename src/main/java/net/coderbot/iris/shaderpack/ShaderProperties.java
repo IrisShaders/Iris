@@ -202,7 +202,14 @@ public class ShaderProperties {
 
 	private static void handleAffixedIntDirective(String prefix, String suffix, String key, String value, BiConsumer<String, Integer> handler) {
 		if (key.startsWith(prefix) && key.endsWith(suffix)) {
-			String affixStrippedKey = key.substring(prefix.length(), key.length() - suffix.length());
+			int substrBegin = prefix.length();
+			int substrEnd = key.length() - suffix.length();
+
+			if (substrEnd <= substrBegin) {
+				return;
+			}
+
+			String affixStrippedKey = key.substring(substrBegin, substrEnd);
 
 			try {
 				int result = Integer.parseInt(value);
@@ -227,7 +234,7 @@ public class ShaderProperties {
 			return;
 		}
 
-		String[] elements = value.split(" ");
+		String[] elements = value.split(" +");
 
 		handler.accept(Arrays.asList(elements));
 	}
@@ -235,7 +242,7 @@ public class ShaderProperties {
 	private static void handlePrefixedWhitespacedListDirective(String prefix, String key, String value, BiConsumer<String, List<String>> handler) {
 		if (key.startsWith(prefix)) {
 			String prefixStrippedKey = key.substring(prefix.length());
-			String[] elements = value.split(" ");
+			String[] elements = value.split(" +");
 
 			handler.accept(prefixStrippedKey, Arrays.asList(elements));
 		}

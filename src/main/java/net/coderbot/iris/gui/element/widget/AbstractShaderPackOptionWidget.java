@@ -1,4 +1,4 @@
-package net.coderbot.iris.gui.element;
+package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 

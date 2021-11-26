@@ -1,7 +1,7 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
-import net.coderbot.iris.gui.element.AbstractShaderPackOptionWidget;
-import net.coderbot.iris.gui.element.BooleanShaderPackOptionWidget;
+import net.coderbot.iris.gui.element.widget.AbstractShaderPackOptionWidget;
+import net.coderbot.iris.gui.element.widget.BooleanShaderPackOptionWidget;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.BooleanOption;

@@ -1,7 +1,7 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
-import net.coderbot.iris.gui.element.AbstractShaderPackOptionWidget;
-import net.coderbot.iris.gui.element.LinkShaderPackOptionWidget;
+import net.coderbot.iris.gui.element.widget.AbstractShaderPackOptionWidget;
+import net.coderbot.iris.gui.element.widget.LinkShaderPackOptionWidget;
 import net.coderbot.iris.gui.NavigationController;
 import net.minecraft.network.chat.TranslatableComponent;
 

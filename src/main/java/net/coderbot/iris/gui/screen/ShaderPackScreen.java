@@ -315,7 +315,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		ShaderPackSelectionList.ShaderPackEntry entry = (ShaderPackSelectionList.ShaderPackEntry)base;
 		String name = entry.getPackName();
 		Iris.getIrisConfig().setShaderPackName(name);
-		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().enabled);
+		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().shadersEnabled);
 
 		try {
 			Iris.getIrisConfig().save();

@@ -105,4 +105,44 @@ public final class GuiUtil {
 	public static void playButtonClickSound() {
 		client().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1));
 	}
+
+	/**
+	 * A class representing a section of a
+	 * texture, to be easily drawn in GUIs.
+	 */
+	public static class Icon {
+		public static final Icon SEARCH = new Icon(0, 0, 7, 8);
+		public static final Icon CLOSE = new Icon(7, 0, 5, 6);
+		public static final Icon REFRESH = new Icon(12, 0, 11, 11);
+
+		private final int u;
+		private final int v;
+		private final int width;
+		private final int height;
+
+		public Icon(int u, int v, int width, int height) {
+			this.u = u;
+			this.v = v;
+			this.width = width;
+			this.height = height;
+		}
+
+		/**
+		 * Draws this icon to the screen at the specified coordinates.
+		 *
+		 * @param x The x position to draw the icon at (left)
+		 * @param y The y position to draw the icon at (top)
+		 */
+		public void draw(PoseStack poseStack, int x, int y) {
+			// Sets RenderSystem to use solid white as the tint color for blend mode, and enables blend mode
+			RenderSystem.blendColor(1.0f, 1.0f, 1.0f, 1.0f);
+			RenderSystem.enableBlend();
+
+			// Sets RenderSystem to be able to use textures when drawing
+			RenderSystem.enableTexture();
+
+			// Draw the texture to the screen
+			GuiComponent.blit(poseStack, x, y, u, v, width, height, 256, 256);
+		}
+	}
 }
