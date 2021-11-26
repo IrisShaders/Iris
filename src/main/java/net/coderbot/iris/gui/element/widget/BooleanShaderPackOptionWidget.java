@@ -3,6 +3,7 @@ package net.coderbot.iris.gui.element.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.BooleanOption;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -19,9 +20,11 @@ public class BooleanShaderPackOptionWidget extends AbstractShaderPackOptionWidge
 
 	private final BooleanOption option;
 	private final boolean originalValue;
+	private final MutableComponent label;
 
-	private Component label;
+	private Component trimmedLabel;
 	private boolean value;
+	private boolean needsTooltip;
 
 	private int maxLabelWidth = -1;
 
@@ -29,6 +32,7 @@ public class BooleanShaderPackOptionWidget extends AbstractShaderPackOptionWidge
 		this.option = option;
 		this.originalValue = value;
 		this.value = value;
+		this.label = new TranslatableComponent("option." + option.getName());
 
 		updateLabel();
 	}
@@ -47,23 +51,29 @@ public class BooleanShaderPackOptionWidget extends AbstractShaderPackOptionWidge
 		}
 
 		Font font = Minecraft.getInstance().font;
-		font.drawShadow(poseStack, label, x + 6, y + 7, 0xFFFFFF);
+		font.drawShadow(poseStack, trimmedLabel, x + 6, y + 7, 0xFFFFFF);
 
 		Component valueLabel = value ? TEXT_TRUE : TEXT_FALSE;
 		font.drawShadow(poseStack, valueLabel, (x + (width - 2)) - (int)(VALUE_SECTION_WIDTH * 0.5) - (int)(font.width(valueLabel) * 0.5), y + 7, 0xFFFFFF);
+
+		if (hovered && this.needsTooltip) {
+			// To prevent other elements from being drawn on top of the tooltip
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(font, poseStack, this.label, mouseX + 2, mouseY - 16));
+		}
 	}
 
 	private void updateLabel() {
-		MutableComponent label = GuiUtil.shortenText(
-				Minecraft.getInstance().font,
-				new TranslatableComponent("option." + option.getName()).append(DIVIDER),
-				maxLabelWidth);
+		Font font = Minecraft.getInstance().font;
+
+		this.needsTooltip = font.width(label) > maxLabelWidth;
+
+		MutableComponent label = GuiUtil.shortenText(font, this.label.copy().append(DIVIDER), maxLabelWidth);
 
 		if (this.value != originalValue) {
 			label = label.withStyle(style -> style.withColor(TextColor.fromRgb(0xffc94a)));
 		}
 
-		this.label = label;
+		this.trimmedLabel = label;
 	}
 
 	private void next() {

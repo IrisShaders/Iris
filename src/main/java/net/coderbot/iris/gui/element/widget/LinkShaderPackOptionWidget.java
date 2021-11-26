@@ -3,6 +3,7 @@ package net.coderbot.iris.gui.element.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
@@ -15,8 +16,10 @@ public class LinkShaderPackOptionWidget extends AbstractShaderPackOptionWidget {
 
 	private final NavigationController navigation;
 	private final String targetScreenId;
+	private final MutableComponent label;
 
-	private MutableComponent label;
+	private MutableComponent trimmedLabel = null;
+	private boolean needsTooltip = false;
 
 	public LinkShaderPackOptionWidget(NavigationController navigation, MutableComponent label, String targetScreenId) {
 		this.navigation = navigation;
@@ -33,11 +36,19 @@ public class LinkShaderPackOptionWidget extends AbstractShaderPackOptionWidget {
 
 		int labelWidth = width - 20;
 		if (font.width(this.label) > labelWidth) {
-			this.label = GuiUtil.shortenText(font, this.label, labelWidth);
+			this.needsTooltip = true;
+		}
+		if (this.trimmedLabel == null) {
+			this.trimmedLabel = GuiUtil.shortenText(font, this.label, labelWidth);
 		}
 
-		font.drawShadow(poseStack, label, x + (int)(width * 0.5) - (int)(font.width(label) * 0.5), y + 7, 0xFFFFFF);
+		font.drawShadow(poseStack, this.trimmedLabel, x + (int)(width * 0.5) - (int)(font.width(this.trimmedLabel) * 0.5), y + 7, 0xFFFFFF);
 		font.draw(poseStack, ARROW, (x + width) - 10, y + 7, 0xFFFFFF);
+
+		if (hovered && this.needsTooltip) {
+			// To prevent other elements from being drawn on top of the tooltip
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(font, poseStack, this.label, mouseX + 2, mouseY - 16));
+		}
 	}
 
 	@Override

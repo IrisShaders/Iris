@@ -78,6 +78,43 @@ public final class GuiUtil {
 	}
 
 	/**
+	 * Draws a translucent black panel
+	 * with a light border.
+	 *
+	 * @param x The x position of the panel
+	 * @param y The y position of the panel
+	 * @param width The width of the panel
+	 * @param height The height of the panel
+	 */
+	public static void drawPanel(PoseStack poseStack, int x, int y, int width, int height) {
+		int borderColor = 0xDEDEDEDE;
+		int innerColor = 0xDE000000;
+
+		// Top border section
+		GuiComponent.fill(poseStack, x, y, x + width, y + 1, borderColor);
+		// Bottom border section
+		GuiComponent.fill(poseStack, x, (y + height) - 1, x + width, y + height, borderColor);
+		// Left border section
+		GuiComponent.fill(poseStack, x, y + 1, x + 1, (y + height) - 1, borderColor);
+		// Right border section
+		GuiComponent.fill(poseStack, (x + width) - 1, y + 1, x + width, (y + height) - 1, borderColor);
+		// Inner section
+		GuiComponent.fill(poseStack, x + 1, y + 1, (x + width) - 1, (y + height) - 1, innerColor);
+	}
+
+	/**
+	 * Draws a text with a panel behind it.
+	 *
+	 * @param text The text component to draw
+	 * @param x The x position of the panel
+	 * @param y The y position of the panel
+	 */
+	public static void drawTextPanel(Font font, PoseStack poseStack, Component text, int x, int y) {
+		drawPanel(poseStack, x, y, font.width(text) + 8, 16);
+		font.drawShadow(poseStack, text, x + 4, y + 4, 0xFFFFFF);
+	}
+
+	/**
 	 * Shorten a text to a specific length, adding an ellipsis (...)
 	 * to the end if shortened.
 	 *

@@ -3,6 +3,7 @@ package net.coderbot.iris.gui.element.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.StringOption;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -23,8 +24,9 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 	private final int originalValueIndex;
 	private final String originalValue;
 	private final int valueCount;
+	private final MutableComponent label;
 
-	private Component label;
+	private Component trimmedLabel;
 	private Component valueLabel;
 	private int valueIndex;
 	private boolean mouseDown = false;
@@ -33,6 +35,7 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 
 	public SliderShaderPackOptionWidget(StringOption option, String value) {
 		this.option = option;
+		this.label = new TranslatableComponent("option." + option.getName());
 
 		List<String> values = option.getAllowedValues();
 		this.valueCount = values.size();
@@ -71,7 +74,7 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 			}
 
 			Font font = Minecraft.getInstance().font;
-			font.drawShadow(poseStack, label, x + 6, y + 7, 0xFFFFFF);
+			font.drawShadow(poseStack, trimmedLabel, x + 6, y + 7, 0xFFFFFF);
 
 			font.drawShadow(poseStack, this.valueLabel, (x + (width - 2)) - (int)(VALUE_SECTION_WIDTH * 0.5) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
 
@@ -104,6 +107,9 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 		// Draw value label
 		Font font = Minecraft.getInstance().font;
 		font.drawShadow(poseStack, this.valueLabel, (int)(x + (width * 0.5)) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
+
+		// To prevent other elements from being drawn on top of the tooltip
+		ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(font, poseStack, this.label, mouseX + 2, mouseY - 16));
 	}
 
 	private void whileDragging(int x, int width, int mouseX) {
@@ -120,13 +126,13 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 	private void updateLabel() {
 		MutableComponent label = GuiUtil.shortenText(
 				Minecraft.getInstance().font,
-				new TranslatableComponent("option." + option.getName()).append(DIVIDER),
+				this.label.copy().append(DIVIDER),
 				maxLabelWidth);
 
 		if (this.valueIndex != originalValueIndex) {
 			label = label.withStyle(style -> style.withColor(TextColor.fromRgb(0xffc94a)));
 		}
-		this.label = label;
+		this.trimmedLabel = label;
 
 		updateValueLabel();
 	}

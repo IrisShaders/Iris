@@ -19,10 +19,15 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ShaderPackScreen extends Screen implements HudHideable {
+	/**
+	 * Queue rendering to happen on top of all elements. Useful for tooltips or dialogs.
+	 */
+	public static final Set<Runnable> TOP_LAYER_RENDER_QUEUE = new HashSet<>();
+
 	private static final Component SELECT_TITLE = new TranslatableComponent("pack.iris.select.title").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
 	private static final Component CONFIGURE_TITLE = new TranslatableComponent("pack.iris.configure.title").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
 
@@ -75,6 +80,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				drawCenteredString(poseStack, this.font, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
 			}
 		}
+
+		// Render everything queued to render last
+		for (Runnable render : TOP_LAYER_RENDER_QUEUE) {
+			render.run();
+		}
+		TOP_LAYER_RENDER_QUEUE.clear();
 	}
 
 	@Override

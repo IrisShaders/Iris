@@ -94,6 +94,9 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			// Draw dividing line
+			fill(poseStack, x - 3, (y + entryHeight) - 2, x + entryWidth, (y + entryHeight) - 1, 0x66BEBEBE);
+
 			// Draw header text
 			drawCenteredString(poseStack, Minecraft.getInstance().font, text, x + (int)(entryWidth * 0.5), y + 5, 0xFFFFFF);
 
