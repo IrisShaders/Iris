@@ -38,14 +38,8 @@ public abstract class CustomTextureData {
 			this.resourceLocation = resourceLocation;
 		}
 
-		public int getGlId() {
-			AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(resourceLocation);
-			if (texture != null) {
-				return texture.getId();
-			} else {
-				// TODO: Should we give something else if the texture isn't there? This will need some thought
-				return MissingTextureAtlasSprite.getTexture().getId();
-			}
+		public ResourceLocation getResourceLocation() {
+			return resourceLocation;
 		}
 	}
 

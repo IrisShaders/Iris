@@ -40,6 +40,7 @@ import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
@@ -184,7 +185,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 						AbstractTexture customTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
 						customTextureIds.put(samplerName, customTexture::getId);
 					} else if (textureData instanceof CustomTextureData.ResourceData) {
-						customTextureIds.put(samplerName, ((CustomTextureData.ResourceData) textureData)::getGlId);
+						AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(((CustomTextureData.ResourceData) textureData).getResourceLocation());
+
+						IntSupplier glId;
+						if (texture != null) {
+							glId = texture::getId;
+						} else {
+							// TODO: Should we give something else if the texture isn't there? This will need some thought
+							glId = MissingTextureAtlasSprite.getTexture()::getId;
+						}
+						customTextureIds.put(samplerName, glId);
 					}
 				} catch (IOException e) {
 					Iris.logger.error("Unable to parse the image data for the custom texture on sampler " + samplerName, e);
