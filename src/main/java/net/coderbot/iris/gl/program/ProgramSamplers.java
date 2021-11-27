@@ -8,15 +8,12 @@ import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import org.lwjgl.opengl.GL20C;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 public class ProgramSamplers {
 	private final ImmutableList<SamplerBinding> samplerBindings;
@@ -47,12 +44,12 @@ public class ProgramSamplers {
 		return new Builder(program, reservedTextureUnits);
 	}
 
-	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, Supplier<AbstractTexture>> customTextures) {
-		return customTextureSamplerInterceptor(samplerHolder, customTextures, ImmutableSet.of());
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds) {
+		return customTextureSamplerInterceptor(samplerHolder, customTextureIds, ImmutableSet.of());
 	}
 
-	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, Supplier<AbstractTexture>> customTextures, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
-		return new CustomTextureSamplerInterceptor(samplerHolder, customTextures, flippedAtLeastOnceSnapshot);
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+		return new CustomTextureSamplerInterceptor(samplerHolder, customTextureIds, flippedAtLeastOnceSnapshot);
 	}
 
 	public static final class Builder implements SamplerHolder {
@@ -183,12 +180,12 @@ public class ProgramSamplers {
 
 	public static final class CustomTextureSamplerInterceptor implements SamplerHolder {
 		private final SamplerHolder samplerHolder;
-		private final Object2ObjectMap<String, Supplier<AbstractTexture>> customTextures;
+		private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 		private final ImmutableSet<String> deactivatedOverrides;
 
-		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, Supplier<AbstractTexture>> customTextures, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
 			this.samplerHolder = samplerHolder;
-			this.customTextures = customTextures;
+			this.customTextureIds = customTextureIds;
 
 			ImmutableSet.Builder<String> deactivatedOverrides = new ImmutableSet.Builder<>();
 
@@ -205,11 +202,8 @@ public class ProgramSamplers {
 
 		private IntSupplier getOverride(IntSupplier existing, String... names) {
 			for (String name : names) {
-				if (customTextures.containsKey(name) && !deactivatedOverrides.contains(name)) {
-					AbstractTexture texture = customTextures.get(name).get();
-
-					// TODO: Should we give something else if the texture isn't there? This will need some thought
-					return texture != null ? texture::getId : MissingTextureAtlasSprite.getTexture()::getId;
+				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
+					return customTextureIds.get(name);
 				}
 			}
 

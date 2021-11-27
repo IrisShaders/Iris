@@ -11,34 +11,43 @@ import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.IntSupplier;
 
 public class CustomTextureManager {
-	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, Supplier<AbstractTexture>>> customTexturesMap = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
 	private final AbstractTexture noise;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
+	private final List<AbstractTexture> pngBackedTextures = new ArrayList<>();
 
 	public CustomTextureManager(PackDirectives packDirectives, Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap, Optional<CustomTextureData> customNoiseTextureData) {
 		customTextureDataMap.forEach((textureStage, customTextureStageDataMap) -> {
-			Object2ObjectMap<String, Supplier<AbstractTexture>> abstractCustomTextures = new Object2ObjectOpenHashMap<>();
+			Object2ObjectMap<String, IntSupplier> customTextureIds = new Object2ObjectOpenHashMap<>();
 			customTextureStageDataMap.forEach((samplerName, textureData) -> {
 				if (textureData instanceof CustomTextureData.PngData) {
 					try {
-						AbstractTexture abstractTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
-						abstractCustomTextures.put(samplerName, () -> abstractTexture);
+						AbstractTexture texture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
+						pngBackedTextures.add(texture);
+						customTextureIds.put(samplerName, texture::getId);
 					} catch (IOException e) {
 						Iris.logger.error("Unable to parse the image data for the custom texture on stage " + textureStage + ", sampler " + samplerName, e);
 					}
 				} else if (textureData instanceof CustomTextureData.ResourceData) {
-					abstractCustomTextures.put(samplerName, () -> Minecraft.getInstance().getTextureManager().getTexture(((CustomTextureData.ResourceData) textureData).getResourceLocation()));
+					AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(((CustomTextureData.ResourceData) textureData).getResourceLocation());
+
+					// TODO: Should we give something else if the texture isn't there? This will need some thought
+					IntSupplier glId = texture != null ? texture::getId : MissingTextureAtlasSprite.getTexture()::getId;
+					customTextureIds.put(samplerName, glId);
 				}
 			});
 
-			customTexturesMap.put(textureStage, abstractCustomTextures);
+			customTextureIdMap.put(textureStage, customTextureIds);
 		});
 
 		noise = customNoiseTextureData.flatMap(textureData -> {
@@ -62,8 +71,8 @@ public class CustomTextureManager {
 		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
 	}
 
-	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, Supplier<AbstractTexture>>> getCustomTexturesMap() {
-		return customTexturesMap;
+	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> getCustomTextureIdMap() {
+		return customTextureIdMap;
 	}
 
 	public AbstractTexture getNoiseTexture() {
@@ -79,7 +88,7 @@ public class CustomTextureManager {
 	}
 
 	public void destroy() {
-		customTexturesMap.forEach((textureStage, customTextureStageIdMap) -> customTextureStageIdMap.forEach((samplerName, textureData) -> textureData.get().close()));
+		pngBackedTextures.forEach(AbstractTexture::close);
 		normals.close();
 		specular.close();
 		noise.close();
