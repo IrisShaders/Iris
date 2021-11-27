@@ -45,6 +45,9 @@ public class StringElementWidget extends BaseOptionElementWidget {
 		if (this.valueIndex >= this.valueCount) {
 			this.valueIndex = 0;
 		}
+		if (this.valueIndex < 0) {
+			this.valueIndex = this.valueCount - 1;
+		}
 	}
 
 	@Override
