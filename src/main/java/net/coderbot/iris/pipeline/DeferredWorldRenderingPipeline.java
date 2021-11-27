@@ -579,9 +579,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		shadowMapRenderer.destroy();
 
 		// Destroy custom textures and the static samplers (normals, specular, and noise)
-		customTextureManager.getNormals().close();
-		customTextureManager.getSpecular().close();
-		customTextureManager.getNoiseTexture().close();
+		customTextureManager.destroy();
 	}
 
 	private static void destroyPasses(List<Pass> passes) {
