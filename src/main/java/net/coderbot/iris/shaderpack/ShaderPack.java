@@ -56,7 +56,7 @@ public class ShaderPack {
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
 				return readTexture(path);
-			} catch (IOException | UnsupportedOperationException e) {
+			} catch (IOException e) {
 				Iris.logger.error("Unable to read the custom noise texture at " + path, e);
 
 				return null;
