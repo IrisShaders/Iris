@@ -94,7 +94,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture noise;
 
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
-	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
+	private final Object2ObjectMap<String, Supplier<AbstractTexture>> customTextures;
 
 	public static boolean ACTIVE = false;
 	private final String debugStringOverall;
@@ -107,7 +107,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
                           AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet,
-													Object2ObjectMap<String, IntSupplier> customTextureIds) {
+													Object2ObjectMap<String, Supplier<AbstractTexture>> customTextures) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -133,10 +133,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		});
 
 		this.gbufferRenderTargets = gbufferRenderTargets;
+		this.customTextures = customTextures;
 		this.normals = normals;
 		this.specular = specular;
 		this.noise = noise;
-		this.customTextureIds = customTextureIds;
 
 		if (shadow != null) {
 			this.shadowProgram = createProgram(shadow, directives, flipped);
@@ -265,7 +265,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds);
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextures);
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, gbufferRenderTargets, false);
