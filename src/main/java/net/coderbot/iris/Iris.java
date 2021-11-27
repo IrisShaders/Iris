@@ -55,6 +55,7 @@ public class Iris implements ClientModInitializer {
 	private static KeyMapping shaderpackScreenKeybind;
 
 	private static final Map<String, String> pendingShaderPackOptions = new HashMap<>();
+	private static boolean resetShaderPackOptions = false;
 
 	private static String IRIS_VERSION;
 
@@ -250,6 +251,11 @@ public class Iris implements ClientModInitializer {
 		changedConfigs.putAll(pendingShaderPackOptions);
 		clearPendingShaderPackOptions();
 
+		if (resetShaderPackOptions) {
+			changedConfigs.clear();
+		}
+		resetShaderPackOptions = false;
+
 		Properties configsToSave = new Properties();
 		configsToSave.putAll(changedConfigs);
 		saveConfigProperties(shaderPackConfigTxt, configsToSave);
@@ -337,7 +343,7 @@ public class Iris implements ClientModInitializer {
 
 	private static void saveConfigProperties(Path path, Properties properties) {
 		try {
-			properties.store(Files.newOutputStream(path), "");
+			properties.store(Files.newOutputStream(path), null);
 		} catch (IOException e) {
 			// TODO: Better error handling
 		}
@@ -385,6 +391,10 @@ public class Iris implements ClientModInitializer {
 
 	public static void clearPendingShaderPackOptions() {
 		pendingShaderPackOptions.clear();
+	}
+
+	public static void resetShaderPackOptionsOnNextReload() {
+		resetShaderPackOptions = true;
 	}
 
 	public static void reload() throws IOException {

@@ -5,10 +5,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 
@@ -130,6 +132,23 @@ public final class GuiUtil {
 			return new TextComponent(font.plainSubstrByWidth(text.getString(), width - font.width(ELLIPSIS))).append(ELLIPSIS).setStyle(text.getStyle());
 		}
 		return text;
+	}
+
+	/**
+	 * Creates a new translated text, if a translation
+	 * is present. If not, will return the default text
+	 * component passed.
+	 *
+	 * @param defaultText Default text to use if no translation is found
+	 * @param translationDesc Translation key to try and use
+	 * @param format Formatting arguments for the translated text, if created
+	 * @return the translated text if found, otherwise the default provided
+	 */
+	public static MutableComponent translateOrDefault(MutableComponent defaultText, String translationDesc, Object ... format) {
+		if (I18n.exists(translationDesc)) {
+			return new TranslatableComponent(translationDesc, format);
+		}
+		return defaultText;
 	}
 
 	/**

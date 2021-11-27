@@ -21,13 +21,19 @@ public class OptionMenuScreen {
 		this.hasBackButton = hasBackButton;
 
 		for (String elementString : elementStrings) {
+			if ("*".equals(elementString)) {
+				container.queueForUnusedOptionDump(this.elements.size(), this.elements);
+
+				continue;
+			}
+
 			try {
 				OptionMenuElement element = OptionMenuElement.create(elementString, container, shaderProperties, shaderPackOptions);
 
 				this.elements.add(element);
 
 				if (element instanceof OptionMenuOptionElement) {
-					container.putOptionForSearching((OptionMenuOptionElement) element);
+					container.notifyOptionAdded(elementString, (OptionMenuOptionElement) element);
 				}
 			} catch (IllegalArgumentException error) {
 				Iris.logger.error(error);

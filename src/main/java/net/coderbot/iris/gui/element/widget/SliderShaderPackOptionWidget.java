@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.*;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 	private final int valueCount;
 	private final MutableComponent label;
 
-	private Component trimmedLabel;
+	private @Nullable Component trimmedLabel = null;
 	private Component valueLabel;
 	private int valueIndex;
 	private boolean mouseDown = false;
@@ -43,7 +44,7 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 		this.valueIndex = originalValueIndex;
 		this.originalValue = value;
 
-		updateLabel();
+		updateValueLabel();
 	}
 
 	@Override
@@ -53,32 +54,35 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 		// Does not change based on whether widget is hovered, due to the special rendering when hovered
 		GuiUtil.drawButton(poseStack, x, y, width, height, false, false);
 
+		Font font = Minecraft.getInstance().font;
+
+		int valueSectionWidth = Math.max(VALUE_SECTION_WIDTH, font.width(this.valueLabel) + 8);
+
+		this.maxLabelWidth = (width - 8) - valueSectionWidth;
+
+		if (this.trimmedLabel == null) {
+			updateLabel();
+		}
+
 		if (!hovered) {
-			GuiUtil.drawButton(poseStack, (x + width) - (VALUE_SECTION_WIDTH + 2), y + 2, VALUE_SECTION_WIDTH, height - 4, false, true);
+			GuiUtil.drawButton(poseStack, (x + width) - (valueSectionWidth + 2), y + 2, valueSectionWidth, height - 4, false, true);
 
 			// Draw the preview slider
 			if (this.valueIndex >= 0) {
 				// Range of x values the slider can occupy
-				int sliderSpace = (VALUE_SECTION_WIDTH - 4) - PREVIEW_SLIDER_WIDTH;
+				int sliderSpace = (valueSectionWidth - 4) - PREVIEW_SLIDER_WIDTH;
 
 				// Position of slider
-				int sliderPos = ((x + width) - VALUE_SECTION_WIDTH) + (int)(((float)valueIndex / (valueCount - 1)) * sliderSpace);
+				int sliderPos = ((x + width) - valueSectionWidth) + (int)(((float)valueIndex / (valueCount - 1)) * sliderSpace);
 
 				GuiUtil.drawButton(poseStack, sliderPos, y + 4, PREVIEW_SLIDER_WIDTH, height - 8, false, false);
 			}
 
-			if (this.maxLabelWidth < 0) {
-				this.maxLabelWidth = (width - 8) - VALUE_SECTION_WIDTH;
-
-				updateLabel();
-			}
-
-			Font font = Minecraft.getInstance().font;
 			font.drawShadow(poseStack, trimmedLabel, x + 6, y + 7, 0xFFFFFF);
 
-			font.drawShadow(poseStack, this.valueLabel, (x + (width - 2)) - (int)(VALUE_SECTION_WIDTH * 0.5) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
+			font.drawShadow(poseStack, this.valueLabel, (x + (width - 2)) - (int)(valueSectionWidth * 0.5) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
 
-			this.maxLabelWidth = (width - 8) - VALUE_SECTION_WIDTH;
+			this.maxLabelWidth = (width - 8) - valueSectionWidth;
 		} else {
 			renderHovered(poseStack, x, y, width, height, mouseX, mouseY, tickDelta);
 		}
@@ -144,7 +148,9 @@ public class SliderShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 		} else {
 			valueStr = this.option.getAllowedValues().get(this.valueIndex);
 		}
-		this.valueLabel = new TextComponent(valueStr).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff)));
+		this.valueLabel = GuiUtil.translateOrDefault(
+				new TextComponent(valueStr).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff))),
+				"value." + option.getName() + "." + valueStr);
 	}
 
 	private void queueOptionToPending() {

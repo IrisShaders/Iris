@@ -8,6 +8,7 @@ import net.coderbot.iris.shaderpack.option.StringOption;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.*;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 	private final int valueCount;
 	private final MutableComponent label;
 
-	private Component trimmedLabel;
+	private @Nullable Component trimmedLabel = null;
 	private Component valueLabel;
 	private int valueIndex;
 	private boolean needsTooltip;
@@ -40,7 +41,7 @@ public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 		this.valueIndex = originalValueIndex;
 		this.originalValue = value;
 
-		updateLabel();
+		updateValueLabel();
 	}
 
 	@Override
@@ -48,22 +49,24 @@ public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 		GuiUtil.bindIrisWidgetsTexture();
 		GuiUtil.drawButton(poseStack, x, y, width, height, hovered, false);
 
-		GuiUtil.drawButton(poseStack, (x + width) - (VALUE_SECTION_WIDTH + 2), y + 2, VALUE_SECTION_WIDTH, height - 4, false, true);
+		Font font = Minecraft.getInstance().font;
 
-		if (this.maxLabelWidth < 0) {
-			this.maxLabelWidth = (width - 8) - VALUE_SECTION_WIDTH;
+		int valueSectionWidth = Math.max(VALUE_SECTION_WIDTH, font.width(this.valueLabel) + 8);
 
+		this.maxLabelWidth = (width - 8) - valueSectionWidth;
+
+		if (this.trimmedLabel == null) {
 			updateLabel();
 		}
 
-		Font font = Minecraft.getInstance().font;
-		font.drawShadow(poseStack, trimmedLabel, x + 6, y + 7, 0xFFFFFF);
+		GuiUtil.drawButton(poseStack, (x + width) - (valueSectionWidth + 2), y + 2, valueSectionWidth, height - 4, false, true);
 
-		font.drawShadow(poseStack, this.valueLabel, (x + (width - 2)) - (int)(VALUE_SECTION_WIDTH * 0.5) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
+		font.drawShadow(poseStack, trimmedLabel, x + 6, y + 7, 0xFFFFFF);
+		font.drawShadow(poseStack, this.valueLabel, (x + (width - 2)) - (int)(valueSectionWidth * 0.5) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
 
 		if (hovered && this.needsTooltip) {
 			// To prevent other elements from being drawn on top of the tooltip
-			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(font, poseStack, this.trimmedLabel, mouseX + 2, mouseY - 16));
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(font, poseStack, this.label, mouseX + 2, mouseY - 16));
 		}
 	}
 
@@ -79,13 +82,19 @@ public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 		}
 		this.trimmedLabel = label;
 
+		updateValueLabel();
+	}
+
+	private void updateValueLabel() {
 		String valueStr;
 		if (this.valueIndex < 0) {
 			valueStr = this.originalValue;
 		} else {
 			valueStr = this.option.getAllowedValues().get(this.valueIndex);
 		}
-		this.valueLabel = new TextComponent(valueStr).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff)));
+		this.valueLabel = GuiUtil.translateOrDefault(
+				new TextComponent(valueStr).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff))),
+				"value." + option.getName() + "." + valueStr);
 	}
 
 	private void next() {
