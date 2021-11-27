@@ -25,6 +25,8 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 
 	@Override
 	public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+		this.updateRenderParams(width, VALUE_SECTION_WIDTH);
+
 		this.renderOptionWithValue(poseStack, x, y, width, height, hovered);
 		this.renderTooltipIfTrimmed(poseStack, mouseX, mouseY, hovered);
 	}

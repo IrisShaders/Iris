@@ -40,6 +40,8 @@ public class SliderElementWidget extends BaseOptionElementWidget {
 
 	@Override
 	public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+		this.updateRenderParams(width, VALUE_SECTION_WIDTH + 15);
+
 		if (!hovered) {
 			this.renderOptionWithValue(poseStack, x, y, width, height, false, (float)valueIndex / (valueCount - 1), PREVIEW_SLIDER_WIDTH);
 		} else {

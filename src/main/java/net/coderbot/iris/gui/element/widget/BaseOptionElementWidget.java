@@ -15,35 +15,33 @@ public abstract class BaseOptionElementWidget extends AbstractElementWidget {
 	protected static final Component DIVIDER = new TextComponent(": ");
 	protected static final int VALUE_SECTION_WIDTH = 35;
 
-	protected final MutableComponent label;
+	protected final MutableComponent unmodifiedLabel;
+	private final MutableComponent label;
 
 	protected Component trimmedLabel;
 	protected Component valueLabel;
 
 	private boolean isLabelTrimmed;
 	private int maxLabelWidth;
+	private int valueSectionWidth;
 
 	protected BaseOptionElementWidget(MutableComponent label) {
-		this.label = label;
+		this.label = label.copy().append(DIVIDER);
+		this.unmodifiedLabel = label;
 	}
 
-	protected final void renderOptionWithValue(PoseStack poseStack, int x, int y, int width, int height, boolean hovered, float sliderPosition, int sliderWidth) {
-		GuiUtil.bindIrisWidgetsTexture();
-
+	protected final void updateRenderParams(int width, int valueSectionWidth) {
 		// Lazy init of value label
 		if (this.valueLabel == null) {
 			this.valueLabel = createValueLabel();
 		}
 
-		// Draw button background
-		GuiUtil.drawButton(poseStack, x, y, width, height, hovered, false);
-
 		// Determine the width of the value box
 		Font font = Minecraft.getInstance().font;
-		int valueSectionWidth = Math.max(sliderPosition < 0 ? VALUE_SECTION_WIDTH : VALUE_SECTION_WIDTH + 15, font.width(this.valueLabel) + 8);
+		this.valueSectionWidth = Math.max(valueSectionWidth, font.width(this.valueLabel) + 8);
 
 		// Determine maximum width of trimmed label
-		this.maxLabelWidth = (width - 8) - valueSectionWidth;
+		this.maxLabelWidth = (width - 8) - this.valueSectionWidth;
 
 		// Lazy init of trimmed label, and make sure it is only trimmed when necessary
 		if (this.trimmedLabel == null || font.width(this.label) > this.maxLabelWidth != isLabelTrimmed) {
@@ -52,25 +50,34 @@ public abstract class BaseOptionElementWidget extends AbstractElementWidget {
 
 		// Set whether the label has been trimmed (used when updating label and determining whether to render tooltips)
 		this.isLabelTrimmed = font.width(this.label) > this.maxLabelWidth;
+	}
+
+	protected final void renderOptionWithValue(PoseStack poseStack, int x, int y, int width, int height, boolean hovered, float sliderPosition, int sliderWidth) {
+		GuiUtil.bindIrisWidgetsTexture();
+
+		// Draw button background
+		GuiUtil.drawButton(poseStack, x, y, width, height, hovered, false);
 
 		// Draw the value box
-		GuiUtil.drawButton(poseStack, (x + width) - (valueSectionWidth + 2), y + 2, valueSectionWidth, height - 4, false, true);
+		GuiUtil.drawButton(poseStack, (x + width) - (this.valueSectionWidth + 2), y + 2, this.valueSectionWidth, height - 4, false, true);
 
 		// Draw the preview slider
 		if (sliderPosition >= 0) {
 			// Range of x values the slider can occupy
-			int sliderSpace = (valueSectionWidth - 4) - sliderWidth;
+			int sliderSpace = (this.valueSectionWidth - 4) - sliderWidth;
 
 			// Position of slider
-			int sliderPos = ((x + width) - valueSectionWidth) + (int)(sliderPosition * sliderSpace);
+			int sliderPos = ((x + width) - this.valueSectionWidth) + (int)(sliderPosition * sliderSpace);
 
 			GuiUtil.drawButton(poseStack, sliderPos, y + 4, sliderWidth, height - 8, false, false);
 		}
 
+		Font font = Minecraft.getInstance().font;
+
 		// Draw the label
-		font.drawShadow(poseStack, trimmedLabel, x + 6, y + 7, 0xFFFFFF);
+		font.drawShadow(poseStack, this.trimmedLabel, x + 6, y + 7, 0xFFFFFF);
 		// Draw the value label
-		font.drawShadow(poseStack, this.valueLabel, (x + (width - 2)) - (int)(valueSectionWidth * 0.5) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
+		font.drawShadow(poseStack, this.valueLabel, (x + (width - 2)) - (int)(this.valueSectionWidth * 0.5) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
 	}
 
 	protected final void renderOptionWithValue(PoseStack poseStack, int x, int y, int width, int height, boolean hovered) {
@@ -85,7 +92,7 @@ public abstract class BaseOptionElementWidget extends AbstractElementWidget {
 
 	protected final void renderTooltip(PoseStack poseStack, int mouseX, int mouseY, boolean hovered) {
 		if (hovered) {
-			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(Minecraft.getInstance().font, poseStack, this.label, mouseX + 2, mouseY - 16));
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(Minecraft.getInstance().font, poseStack, this.unmodifiedLabel, mouseX + 2, mouseY - 16));
 		}
 	}
 
@@ -101,7 +108,7 @@ public abstract class BaseOptionElementWidget extends AbstractElementWidget {
 	protected final Component createTrimmedLabel() {
 		MutableComponent label = GuiUtil.shortenText(
 				Minecraft.getInstance().font,
-				this.label.copy().append(DIVIDER),
+				this.label.copy(),
 				this.maxLabelWidth);
 
 		if (!this.isValueOriginal()) {
