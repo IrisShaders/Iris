@@ -52,7 +52,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
-	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
@@ -180,10 +180,10 @@ public class ShaderProperties {
 
 				TextureStage stage = optionalTextureStage.get();
 
-				Object2ObjectMap<String, String> customTexturePropertyMap = customTextureDataMap.getOrDefault(stage, new Object2ObjectOpenHashMap<>());
+				Object2ObjectMap<String, String> customTexturePropertyMap = customTextures.getOrDefault(stage, new Object2ObjectOpenHashMap<>());
 				customTexturePropertyMap.put(samplerName, value);
 
-				customTextureDataMap.put(stage, customTexturePropertyMap);
+				customTextures.put(stage, customTexturePropertyMap);
 			});
 
 			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
@@ -336,12 +336,12 @@ public class ShaderProperties {
 		return blendDisabled;
 	}
 
-	public Optional<String> getNoiseTexturePath() {
-		return Optional.ofNullable(noiseTexturePath);
+	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
+		return customTextures;
 	}
 
-	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextureData() {
-		return customTextureDataMap;
+	public Optional<String> getNoiseTexturePath() {
+		return Optional.ofNullable(noiseTexturePath);
 	}
 
 	public Object2ObjectMap<String, Object2BooleanMap<String>> getExplicitFlips() {

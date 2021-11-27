@@ -6,7 +6,6 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 import java.util.Set;
 
@@ -17,7 +16,6 @@ public class PackDirectives {
 	private boolean areCloudsEnabled;
 	private boolean separateAo;
 	private boolean oldLighting;
-	private Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
@@ -36,7 +34,6 @@ public class PackDirectives {
 		areCloudsEnabled = properties.areCloudsEnabled();
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
-		customTextureDataMap = properties.getCustomTextureData();
 		explicitFlips = properties.getExplicitFlips();
 	}
 
@@ -45,7 +42,6 @@ public class PackDirectives {
 		areCloudsEnabled = directives.areCloudsEnabled();
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
-		customTextureDataMap = directives.customTextureDataMap;
 		explicitFlips = directives.explicitFlips;
 	}
 
@@ -79,10 +75,6 @@ public class PackDirectives {
 
 	public PackShadowDirectives getShadowDirectives() {
 		return shadowDirectives;
-	}
-
-	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextureData() {
-		return customTextureDataMap;
 	}
 
 	public void acceptDirectivesFrom(DirectiveHolder directives) {

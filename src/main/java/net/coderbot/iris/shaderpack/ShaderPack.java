@@ -1,8 +1,11 @@
 package net.coderbot.iris.shaderpack;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,6 +26,7 @@ public class ShaderPack {
 
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
+	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
 
 	/**
@@ -58,6 +62,19 @@ public class ShaderPack {
 				return null;
 			}
 		}).orElse(null);
+
+		shaderProperties.getCustomTextures().forEach((textureStage, customTexturePropertiesMap) -> {
+			Object2ObjectMap<String, CustomTextureData> innerCustomTextureDataMap = new Object2ObjectOpenHashMap<>();
+			customTexturePropertiesMap.forEach((samplerName, path) -> {
+				try {
+					innerCustomTextureDataMap.put(samplerName, readTexture(path));
+				} catch (IOException e) {
+					Iris.logger.error("Unable to read the custom texture at " + path, e);
+				}
+			});
+
+			customTextureDataMap.put(textureStage, innerCustomTextureDataMap);
+		});
 	}
 
 	@Nullable
@@ -88,6 +105,7 @@ public class ShaderPack {
 		return Optional.of(properties);
 	}
 
+	// TODO: Implement raw texture data types
 	public CustomTextureData readTexture(String path) throws IOException {
 		CustomTextureData customTextureData;
 		if (path.contains(":") && ResourceLocation.isValidResourceLocation(path)) {
@@ -128,6 +146,10 @@ public class ShaderPack {
 
 	public IdMap getIdMap() {
 		return idMap;
+	}
+
+	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> getCustomTextureDataMap() {
+		return customTextureDataMap;
 	}
 
 	public Optional<CustomTextureData> getCustomNoiseTexture() {

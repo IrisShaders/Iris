@@ -176,6 +176,24 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
 		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
 
+		programs.getPack().getCustomTextureDataMap().forEach((textureStage, customTextureDataMap) -> {
+			Object2ObjectMap<String, IntSupplier> customTextureIds = new Object2ObjectOpenHashMap<>();
+			customTextureDataMap.forEach((samplerName, textureData) -> {
+				try {
+					if (textureData instanceof CustomTextureData.PngData) {
+						AbstractTexture customTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
+						customTextureIds.put(samplerName, customTexture::getId);
+					} else if (textureData instanceof CustomTextureData.ResourceData) {
+						customTextureIds.put(samplerName, ((CustomTextureData.ResourceData) textureData)::getGlId);
+					}
+				} catch (IOException e) {
+					Iris.logger.error("Unable to parse the image data for the custom texture on sampler " + samplerName, e);
+				}
+			});
+
+			customTextureIdMap.put(textureStage, customTextureIds);
+		});
+
 		noise = programs.getPack().getCustomNoiseTexture().flatMap(textureData -> {
 			try {
 				// TODO: Support CustomTextureData types other than PngData
@@ -190,25 +208,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			final int noiseTextureResolution = programs.getPackDirectives().getNoiseTextureResolution();
 
 			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
-		});
-
-		programs.getPackDirectives().getCustomTextureData().forEach((textureStage, customTexturePropertiesMap) -> {
-			Object2ObjectMap<String, IntSupplier> customTextureIds = customTextureIdMap.getOrDefault(textureStage, Object2ObjectMaps.emptyMap());
-			customTexturePropertiesMap.forEach((samplerName, path) -> {
-				try {
-					CustomTextureData textureData = programs.getPack().readTexture(path);
-					if (textureData instanceof CustomTextureData.PngData) {
-						AbstractTexture customTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
-						customTextureIds.put(samplerName, customTexture::getId);
-					} else if (textureData instanceof CustomTextureData.ResourceData) {
-						customTextureIds.put(samplerName, ((CustomTextureData.ResourceData) textureData)::getGlId);
-					}
-				} catch (IOException e) {
-					Iris.logger.error("Unable to read the custom texture at " + path, e);
-				}
-			});
-
-			customTextureIdMap.put(textureStage, customTextureIds);
 		});
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
