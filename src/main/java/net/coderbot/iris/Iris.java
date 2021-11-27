@@ -246,7 +246,7 @@ public class Iris implements ClientModInitializer {
 
 		Map<String, String> changedConfigs = loadConfigProperties(shaderPackConfigTxt)
 				.map(properties -> (Map<String, String>) (Map) properties)
-				.orElse(Collections.emptyMap());
+				.orElse(new HashMap<>());
 
 		changedConfigs.putAll(pendingShaderPackOptions);
 		clearPendingShaderPackOptions();

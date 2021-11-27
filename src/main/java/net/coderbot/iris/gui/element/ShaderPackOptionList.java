@@ -48,7 +48,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 	@Override
 	public int getRowWidth() {
-		return Math.min(366, width - 12);
+		return Math.min(372, width - 12);
 	}
 
 	public void addHeader(Component text, boolean backButton) {
@@ -62,7 +62,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 			row.add(element);
 
 			if (row.size() >= columns) {
-				this.addEntry(new ElementRowEntry(this.navigation, row));
+				this.addEntry(new ElementRowEntry(screen, this.navigation, row));
 				row = new ArrayList<>();
 			}
 		}
@@ -198,13 +198,15 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 	public static class ElementRowEntry extends BaseEntry {
 		private final List<AbstractElementWidget> widgets;
+		private final ShaderPackScreen screen;
 
 		private int cachedWidth;
 		private int cachedPosX;
 
-		public ElementRowEntry(NavigationController navigation, List<AbstractElementWidget> widgets) {
+		public ElementRowEntry(ShaderPackScreen screen, NavigationController navigation, List<AbstractElementWidget> widgets) {
 			super(navigation);
 
+			this.screen = screen;
 			this.widgets = widgets;
 		}
 
@@ -220,7 +222,10 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 			for (int i = 0; i < widgets.size(); i++) {
 				AbstractElementWidget widget = widgets.get(i);
-				widget.render(poseStack, x + (int)((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2, mouseX, mouseY, tickDelta, hovered && (getHoveredWidget(mouseX) == i));
+				boolean widgetHovered = hovered && (getHoveredWidget(mouseX) == i);
+				widget.render(poseStack, x + (int)((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2, mouseX, mouseY, tickDelta, widgetHovered);
+
+				screen.setElementHoveredStatus(widget, widgetHovered);
 			}
 
 			this.cachedWidth = entryWidth;

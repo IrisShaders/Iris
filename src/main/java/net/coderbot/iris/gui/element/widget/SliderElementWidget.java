@@ -5,6 +5,7 @@ import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.shaderpack.option.StringOption;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
@@ -126,6 +127,13 @@ public class SliderElementWidget extends BaseOptionElementWidget {
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
+			if (Screen.hasShiftDown()) {
+				this.valueIndex = this.option.getAllowedValues().indexOf(this.option.getDefaultValue());
+				GuiUtil.playButtonClickSound();
+
+				return true;
+			}
+
 			mouseDown = true;
 			GuiUtil.playButtonClickSound();
 

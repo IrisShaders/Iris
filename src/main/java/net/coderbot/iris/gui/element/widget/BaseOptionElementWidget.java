@@ -4,14 +4,15 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.*;
 
-public abstract class BaseOptionElementWidget extends AbstractElementWidget {
+public abstract class BaseOptionElementWidget extends CommentedElementWidget {
+	protected static final Component SET_TO_DEFAULT = new TranslatableComponent("options.iris.setToDefault").withStyle(ChatFormatting.GREEN);
 	protected static final Component DIVIDER = new TextComponent(": ");
 	protected static final int VALUE_SECTION_WIDTH = 35;
 
@@ -84,15 +85,18 @@ public abstract class BaseOptionElementWidget extends AbstractElementWidget {
 		this.renderOptionWithValue(poseStack, x, y, width, height, hovered, -1, 0);
 	}
 
-	protected final void renderTooltipIfTrimmed(PoseStack poseStack, int mouseX, int mouseY, boolean hovered) {
-		if (this.isLabelTrimmed) {
+	protected final void tryRenderTooltip(PoseStack poseStack, int mouseX, int mouseY, boolean hovered) {
+		if (this.isLabelTrimmed || Screen.hasShiftDown()) {
 			renderTooltip(poseStack, mouseX, mouseY, hovered);
 		}
 	}
 
 	protected final void renderTooltip(PoseStack poseStack, int mouseX, int mouseY, boolean hovered) {
 		if (hovered) {
-			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(Minecraft.getInstance().font, poseStack, this.unmodifiedLabel, mouseX + 2, mouseY - 16));
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(
+					Minecraft.getInstance().font, poseStack,
+					Screen.hasShiftDown() ? SET_TO_DEFAULT : this.unmodifiedLabel,
+					mouseX + 2, mouseY - 16));
 		}
 	}
 
@@ -125,6 +129,17 @@ public abstract class BaseOptionElementWidget extends AbstractElementWidget {
 	public abstract String getValue();
 
 	public abstract boolean isValueOriginal();
+
+	@Override
+	public Component getCommentTitle() {
+		return this.unmodifiedLabel;
+	}
+
+	@Override
+	public Component getCommentBody() {
+		String translation = "option." + getOptionName() + ".comment";
+		return I18n.exists(translation) ? new TranslatableComponent(translation) : null;
+	}
 
 	protected final void onValueChanged() {
 		this.queueValueToPending();

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.shaderpack.option.BooleanOption;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.*;
 import org.lwjgl.glfw.GLFW;
 
@@ -28,7 +29,7 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 		this.updateRenderParams(width, VALUE_SECTION_WIDTH);
 
 		this.renderOptionWithValue(poseStack, x, y, width, height, hovered);
-		this.renderTooltipIfTrimmed(poseStack, mouseX, mouseY, hovered);
+		this.tryRenderTooltip(poseStack, mouseX, mouseY, hovered);
 	}
 
 	@Override
@@ -54,7 +55,11 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == GLFW.GLFW_MOUSE_BUTTON_1 || button == GLFW.GLFW_MOUSE_BUTTON_2) {
-			this.value = !this.value;
+			if (Screen.hasShiftDown()) {
+				this.value = this.option.getDefaultValue();
+			} else {
+				this.value = !this.value;
+			}
 			this.onValueChanged();
 
 			GuiUtil.playButtonClickSound();

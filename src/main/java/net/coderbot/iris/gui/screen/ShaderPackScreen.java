@@ -1,9 +1,12 @@
 package net.coderbot.iris.gui.screen;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
 import net.coderbot.iris.gui.element.ShaderPackSelectionList;
 import net.coderbot.iris.gui.NavigationController;
+import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
+import net.coderbot.iris.gui.element.widget.CommentedElementWidget;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -13,6 +16,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -41,6 +45,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	private Component addedPackDialog = null;
 	private int addedPackDialogTimer = 0;
+
+	private AbstractElementWidget hoveredElement = null;
+	private Component hoveredElementCommentTitle = null;
+	private Component hoveredElementCommentBody = null;
+	private int hoveredElementCommentTimer = 0;
 
 	private boolean optionMenuOpen = false;
 
@@ -78,6 +87,26 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				drawCenteredString(poseStack, this.font, CONFIGURE_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
 			} else {
 				drawCenteredString(poseStack, this.font, SELECT_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
+			}
+		}
+
+		// Draw the comment panel
+		if (this.hoveredElementCommentTimer > 20 &&
+				this.hoveredElementCommentTitle != null &&
+				this.hoveredElementCommentBody != null) {
+			// Wrap comment text into lines, determine height of panel
+			List<FormattedCharSequence> bodyLines = this.font.split(this.hoveredElementCommentBody, 306);
+			int panelHeight = Math.max(50, 18 + (bodyLines.size() * 10));
+
+			int x = (int)(0.5 * this.width) - 157;
+			int y = this.height - (panelHeight + 4);
+
+			GuiUtil.drawPanel(poseStack, x, y, 314, panelHeight);
+
+			this.font.drawShadow(poseStack, this.hoveredElementCommentTitle, x + 4, y + 4, 0xFFFFFF);
+
+			for (int i = 0; i < bodyLines.size(); i++) {
+				this.font.drawShadow(poseStack, bodyLines.get(i), x + 4, (y + 16) + (i * 10), 0xFFFFFF);
 			}
 		}
 
@@ -181,6 +210,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		if (this.addedPackDialogTimer > 0) {
 			this.addedPackDialogTimer--;
+		}
+
+		if (this.hoveredElement != null) {
+			this.hoveredElementCommentTimer++;
+		} else {
+			this.hoveredElementCommentTimer = 0;
 		}
 	}
 
@@ -325,6 +360,13 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		ShaderPackSelectionList.ShaderPackEntry entry = (ShaderPackSelectionList.ShaderPackEntry)base;
 		String name = entry.getPackName();
+
+		// If the pack is being changed, clear pending options from the previous pack to
+		// avoid possible undefined behavior from applying one pack's options to another pack
+		if (!name.equals(Iris.getCurrentPackName())) {
+			Iris.clearPendingShaderPackOptions();
+		}
+
 		Iris.getIrisConfig().setShaderPackName(name);
 		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getEnableShadersButton().shadersEnabled);
 
@@ -351,5 +393,23 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	private void openShaderPackFolder() {
 		Util.getPlatform().openFile(Iris.getShaderpacksDirectory().toFile());
+	}
+
+	// Let the screen know if an element is hovered or not, allowing for accurately updating which element is hovered
+	public void setElementHoveredStatus(AbstractElementWidget widget, boolean hovered) {
+		if (hovered && widget != this.hoveredElement) {
+			this.hoveredElement = widget;
+
+			if (widget instanceof CommentedElementWidget) {
+				this.hoveredElementCommentTitle = ((CommentedElementWidget) widget).getCommentTitle();
+				this.hoveredElementCommentBody = ((CommentedElementWidget) widget).getCommentBody();
+			}
+
+			this.hoveredElementCommentTimer = 0;
+		} else if (!hovered && widget == this.hoveredElement) {
+			this.hoveredElement = null;
+			this.hoveredElementCommentTitle = null;
+			this.hoveredElementCommentBody = null;
+		}
 	}
 }
