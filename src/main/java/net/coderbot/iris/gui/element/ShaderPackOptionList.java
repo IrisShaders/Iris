@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
-import net.coderbot.iris.gui.element.widget.AbstractShaderPackOptionWidget;
+import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
@@ -55,14 +55,14 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 		this.addEntry(new HeaderEntry(this.screen, this.navigation, text, backButton));
 	}
 
-	public void addWidgets(int columns, List<AbstractShaderPackOptionWidget> elements) {
-		List<AbstractShaderPackOptionWidget> row = new ArrayList<>();
+	public void addWidgets(int columns, List<AbstractElementWidget> elements) {
+		List<AbstractElementWidget> row = new ArrayList<>();
 
-		for (AbstractShaderPackOptionWidget element : elements) {
+		for (AbstractElementWidget element : elements) {
 			row.add(element);
 
 			if (row.size() >= columns) {
-				this.addEntry(new OptionRowEntry(this.navigation, row));
+				this.addEntry(new ElementRowEntry(this.navigation, row));
 				row = new ArrayList<>();
 			}
 		}
@@ -196,13 +196,13 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 		}
 	}
 
-	public static class OptionRowEntry extends BaseEntry {
-		private final List<AbstractShaderPackOptionWidget> widgets;
+	public static class ElementRowEntry extends BaseEntry {
+		private final List<AbstractElementWidget> widgets;
 
 		private int cachedWidth;
 		private int cachedPosX;
 
-		public OptionRowEntry(NavigationController navigation, List<AbstractShaderPackOptionWidget> widgets) {
+		public ElementRowEntry(NavigationController navigation, List<AbstractElementWidget> widgets) {
 			super(navigation);
 
 			this.widgets = widgets;
@@ -219,7 +219,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 			float singleWidgetWidth = (float) totalWidthWithoutMargins / widgets.size();
 
 			for (int i = 0; i < widgets.size(); i++) {
-				AbstractShaderPackOptionWidget widget = widgets.get(i);
+				AbstractElementWidget widget = widgets.get(i);
 				widget.render(poseStack, x + (int)((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2, mouseX, mouseY, tickDelta, hovered && (getHoveredWidget(mouseX) == i));
 			}
 

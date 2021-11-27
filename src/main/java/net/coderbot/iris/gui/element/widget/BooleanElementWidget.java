@@ -12,7 +12,7 @@ import net.minecraft.network.chat.*;
 import org.lwjgl.glfw.GLFW;
 
 // TODO: Deduplicate a lot of code
-public class BooleanShaderPackOptionWidget extends AbstractShaderPackOptionWidget {
+public class BooleanElementWidget extends AbstractElementWidget {
 	private static final Component TEXT_TRUE = new TranslatableComponent("label.iris.true").withStyle(ChatFormatting.GREEN);
 	private static final Component TEXT_FALSE = new TranslatableComponent("label.iris.false").withStyle(ChatFormatting.RED);
 	private static final Component DIVIDER = new TextComponent(": ");
@@ -28,7 +28,7 @@ public class BooleanShaderPackOptionWidget extends AbstractShaderPackOptionWidge
 
 	private int maxLabelWidth = -1;
 
-	public BooleanShaderPackOptionWidget(BooleanOption option, boolean value) {
+	public BooleanElementWidget(BooleanOption option, boolean value) {
 		this.option = option;
 		this.originalValue = value;
 		this.value = value;

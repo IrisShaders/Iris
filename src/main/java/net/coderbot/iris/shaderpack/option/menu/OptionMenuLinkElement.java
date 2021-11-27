@@ -1,7 +1,7 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
-import net.coderbot.iris.gui.element.widget.AbstractShaderPackOptionWidget;
-import net.coderbot.iris.gui.element.widget.LinkShaderPackOptionWidget;
+import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
+import net.coderbot.iris.gui.element.widget.LinkElementWidget;
 import net.coderbot.iris.gui.NavigationController;
 import net.minecraft.network.chat.TranslatableComponent;
 
@@ -13,7 +13,7 @@ public class OptionMenuLinkElement extends OptionMenuElement {
 	}
 
 	@Override
-	public AbstractShaderPackOptionWidget createWidget(NavigationController navigation) {
-		return new LinkShaderPackOptionWidget(navigation, new TranslatableComponent("screen." + targetScreenId), targetScreenId);
+	public AbstractElementWidget createWidget(NavigationController navigation) {
+		return new LinkElementWidget(navigation, new TranslatableComponent("screen." + targetScreenId), targetScreenId);
 	}
 }

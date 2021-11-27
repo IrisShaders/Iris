@@ -14,7 +14,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.List;
 
 // TODO: Deduplicate a lot of code
-public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget {
+public class StringElementWidget extends AbstractElementWidget {
 	private static final Component DIVIDER = new TextComponent(": ");
 	private static final int VALUE_SECTION_WIDTH = 35;
 
@@ -31,7 +31,7 @@ public class StringShaderPackOptionWidget extends AbstractShaderPackOptionWidget
 
 	private int maxLabelWidth = -1;
 
-	public StringShaderPackOptionWidget(StringOption option, String value) {
+	public StringElementWidget(StringOption option, String value) {
 		this.option = option;
 		this.label = new TranslatableComponent("option." + option.getName());
 

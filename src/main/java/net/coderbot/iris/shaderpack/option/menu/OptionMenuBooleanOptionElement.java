@@ -1,7 +1,7 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
-import net.coderbot.iris.gui.element.widget.AbstractShaderPackOptionWidget;
-import net.coderbot.iris.gui.element.widget.BooleanShaderPackOptionWidget;
+import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
+import net.coderbot.iris.gui.element.widget.BooleanElementWidget;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.BooleanOption;
@@ -16,7 +16,7 @@ public class OptionMenuBooleanOptionElement extends OptionMenuOptionElement {
 	}
 
 	@Override
-	public AbstractShaderPackOptionWidget createWidget(NavigationController navigation) {
-		return new BooleanShaderPackOptionWidget(option, this.values.shouldFlip(optionId) != option.getDefaultValue()); // Same logic as manually flipping the default value should it be marked as flipped
+	public AbstractElementWidget createWidget(NavigationController navigation) {
+		return new BooleanElementWidget(option, this.values.shouldFlip(optionId) != option.getDefaultValue()); // Same logic as manually flipping the default value should it be marked as flipped
 	}
 }

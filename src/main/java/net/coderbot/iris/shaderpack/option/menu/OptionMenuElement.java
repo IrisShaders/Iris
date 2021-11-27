@@ -2,7 +2,7 @@ package net.coderbot.iris.shaderpack.option.menu;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.NavigationController;
-import net.coderbot.iris.gui.element.widget.AbstractShaderPackOptionWidget;
+import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.MergedBooleanOption;
 import net.coderbot.iris.shaderpack.option.MergedStringOption;
@@ -13,8 +13,8 @@ import java.util.Map;
 public abstract class OptionMenuElement {
 	public static final OptionMenuElement EMPTY = new OptionMenuElement() {
 		@Override
-		public AbstractShaderPackOptionWidget createWidget(NavigationController navigation) {
-			return new AbstractShaderPackOptionWidget() {
+		public AbstractElementWidget createWidget(NavigationController navigation) {
+			return new AbstractElementWidget() {
 				@Override
 				public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {}
 			};
@@ -24,7 +24,7 @@ public abstract class OptionMenuElement {
 	private static final String ELEMENT_EMPTY = "<empty>";
 	private static final String ELEMENT_PROFILE = "<profile>";
 
-	public abstract AbstractShaderPackOptionWidget createWidget(NavigationController navigation);
+	public abstract AbstractElementWidget createWidget(NavigationController navigation);
 
 	public static OptionMenuElement create(String elementString, OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions) throws IllegalArgumentException {
 		// Empty element

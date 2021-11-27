@@ -2,8 +2,8 @@ package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-public abstract class AbstractShaderPackOptionWidget {
-	public AbstractShaderPackOptionWidget() {
+public abstract class AbstractElementWidget {
+	public AbstractElementWidget() {
 	}
 
 	public abstract void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered);

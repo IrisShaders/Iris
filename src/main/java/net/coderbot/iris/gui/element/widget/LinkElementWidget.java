@@ -11,7 +11,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import org.lwjgl.glfw.GLFW;
 
-public class LinkShaderPackOptionWidget extends AbstractShaderPackOptionWidget {
+public class LinkElementWidget extends AbstractElementWidget {
 	private static final Component ARROW = new TextComponent(">");
 
 	private final NavigationController navigation;
@@ -21,7 +21,7 @@ public class LinkShaderPackOptionWidget extends AbstractShaderPackOptionWidget {
 	private MutableComponent trimmedLabel = null;
 	private boolean needsTooltip = false;
 
-	public LinkShaderPackOptionWidget(NavigationController navigation, MutableComponent label, String targetScreenId) {
+	public LinkElementWidget(NavigationController navigation, MutableComponent label, String targetScreenId) {
 		this.navigation = navigation;
 		this.label = label;
 		this.targetScreenId = targetScreenId;
