@@ -12,6 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.BlendModeStorage;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -547,7 +548,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			}
 
 			if (blendModeOverride != null) {
-				GlStateManager._blendFuncSeparate(blendModeOverride[0], blendModeOverride[1], blendModeOverride[2], blendModeOverride[3]);
+				BlendModeStorage.overrideBlend(blendModeOverride);
 			} else if (disableBlend) {
 				GlStateManager._disableBlend();
 			}
@@ -556,6 +557,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		public void stopUsing() {
 			if (alphaTestOverride != null) {
 				AlphaTestOverride.teardown();
+			}
+			if (blendModeOverride != null) {
+				BlendModeStorage.restoreBlend();
 			}
 		}
 
