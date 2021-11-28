@@ -13,6 +13,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 
 public class ShaderProperties {
@@ -49,7 +50,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
-	private final Object2ObjectMap<String, int[]> blendModeOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, BlendMode> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
 	private ShaderProperties() {
@@ -160,7 +161,7 @@ public class ShaderProperties {
 					modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
 					i++;
 				}
-				blendModeOverrides.put(pass, modes);
+				blendModeOverrides.put(pass, new BlendMode(modes[0], modes[1], modes[2], modes[3]));
 			});
 
 			// TODO: Buffer flip, size directives
@@ -286,7 +287,7 @@ public class ShaderProperties {
 		return blendDisabled;
 	}
 
-	public Object2ObjectMap<String, int[]> getBlendModeOverrides() {
+	public Object2ObjectMap<String, BlendMode> getBlendModeOverrides() {
 		return blendModeOverrides;
 	}
 

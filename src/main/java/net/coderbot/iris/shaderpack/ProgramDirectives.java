@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.BlendMode;
 import org.jetbrains.annotations.Nullable;
 
 public class ProgramDirectives {
@@ -18,7 +19,7 @@ public class ProgramDirectives {
 	@Nullable
 	private final AlphaTestOverride alphaTestOverride;
 	private final boolean disableBlend;
-	private final int[] blendModeOverride;
+	private final BlendMode blendModeOverride;
 	private final ImmutableSet<Integer> mipmappedBuffers;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
@@ -105,7 +106,7 @@ public class ProgramDirectives {
 		return disableBlend;
 	}
 
-	public int[] getBlendModeOverride() {
+	public BlendMode getBlendModeOverride() {
 		return blendModeOverride;
 	}
 

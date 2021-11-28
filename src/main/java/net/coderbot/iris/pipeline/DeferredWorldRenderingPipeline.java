@@ -12,6 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeStorage;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
@@ -521,9 +522,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		private final GlFramebuffer framebufferAfterTranslucents;
 		private final AlphaTestOverride alphaTestOverride;
 		private final boolean disableBlend;
-		private final int[] blendModeOverride;
+		private final BlendMode blendModeOverride;
 
-		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend, int[] blendModeOverride) {
+		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend, BlendMode blendModeOverride) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
