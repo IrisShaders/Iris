@@ -31,6 +31,10 @@ public class FullScreenQuadRenderer {
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
+		// scale the quad from [0, 1] to [-1, 1]
+		RenderSystem.translatef(-1.0F, -1.0F, 0.0F);
+		RenderSystem.scalef(2.0F, 2.0F, 0.0F);
+
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
@@ -66,13 +70,13 @@ public class FullScreenQuadRenderer {
 			1.0F, 1.0F, 0.0F,
 			1.0F, 1.0F,
 			// Vertex 1: Top left corner
-			-1.0F, 1.0F, 0.0F,
+			0.0F, 1.0F, 0.0F,
 			0.0F, 1.0F,
 			// Vertex 2: Bottom right corner
-			1.0F, -1.0F, 0.0F,
+			1.0F, 0.0F, 0.0F,
 			1.0F, 0.0F,
 			// Vertex 3: Bottom left corner
-			-1.0F, -1.0F, 0.0F,
+			0.0F, 0.0F, 0.0F,
 			0.0F, 0.0F
 		};
 
