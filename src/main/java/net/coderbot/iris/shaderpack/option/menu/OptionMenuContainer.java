@@ -4,12 +4,15 @@ import com.google.common.collect.Lists;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
 import net.coderbot.iris.gui.NavigationController;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.ShaderProperties;
+import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -22,7 +25,13 @@ public class OptionMenuContainer {
 	private final List<String> unusedOptions = new ArrayList<>(); // To be used when screens contain a "*" element
 	private final Map<List<OptionMenuElement>, Integer> unusedOptionDumpQueue = new HashMap<>(); // Used by screens with "*" element
 
-	public OptionMenuContainer(String shaderPackName, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions) {
+	private final @Nullable String currentProfile;
+	private final Map<String, Profile> profiles;
+
+	public OptionMenuContainer(String shaderPackName, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, @Nullable String currentProfile, Map<String, Profile> profiles) {
+		this.currentProfile = currentProfile;
+		this.profiles = profiles;
+
 		this.mainScreen = new OptionMenuScreen(new TextComponent(shaderPackName).withStyle(ChatFormatting.BOLD), this, shaderProperties, shaderPackOptions, shaderProperties.getMainScreenOptions(), shaderProperties.getMainScreenColumnCount(), false);
 
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getBooleanOptions().keySet());
@@ -57,14 +66,22 @@ public class OptionMenuContainer {
 		}
 	}
 
-	public void applyToMinecraftGui(ShaderPackOptionList optionList, NavigationController navigation) {
+	public void applyToMinecraftGui(ShaderPackScreen packScreen, ShaderPackOptionList optionList, NavigationController navigation) {
 		OptionMenuScreen screen = mainScreen;
 
 		if (navigation.getCurrentScreen() != null && subScreens.containsKey(navigation.getCurrentScreen())) {
 			screen = subScreens.get(navigation.getCurrentScreen());
 		}
 
-		screen.applyToMinecraftGui(optionList);
+		screen.applyToMinecraftGui(packScreen, optionList);
+	}
+
+	public @Nullable String getCurrentProfile() {
+		return currentProfile;
+	}
+
+	public Map<String, Profile> getProfiles() {
+		return profiles;
 	}
 
 	// Screens will call this when they contain a "*" element, so that the list of

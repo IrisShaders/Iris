@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack.option.menu;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.MergedBooleanOption;
 import net.coderbot.iris.shaderpack.option.MergedStringOption;
@@ -13,7 +14,7 @@ import java.util.Map;
 public abstract class OptionMenuElement {
 	public static final OptionMenuElement EMPTY = new OptionMenuElement() {
 		@Override
-		public AbstractElementWidget createWidget(NavigationController navigation) {
+		public AbstractElementWidget createWidget(ShaderPackScreen screen, NavigationController navigation) {
 			return new AbstractElementWidget() {
 				@Override
 				public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {}
@@ -24,7 +25,7 @@ public abstract class OptionMenuElement {
 	private static final String ELEMENT_EMPTY = "<empty>";
 	private static final String ELEMENT_PROFILE = "<profile>";
 
-	public abstract AbstractElementWidget createWidget(NavigationController navigation);
+	public abstract AbstractElementWidget createWidget(ShaderPackScreen screen, NavigationController navigation);
 
 	public static OptionMenuElement create(String elementString, OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions) throws IllegalArgumentException {
 		// Empty element
@@ -33,7 +34,7 @@ public abstract class OptionMenuElement {
 		}
 		// Profile element
 		if (ELEMENT_PROFILE.equals(elementString)) {
-			return EMPTY; // TODO: Profiles
+			return new OptionMenuProfileElement(container.getCurrentProfile(), container.getProfiles());
 		}
 		// Link to sub screen element
 		if (elementString.startsWith("[") && elementString.endsWith("]")) {
@@ -47,7 +48,7 @@ public abstract class OptionMenuElement {
 		if (booleanOptions.containsKey(elementString)) {
 			return new OptionMenuBooleanOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(), booleanOptions.get(elementString).getOption());
 		} else if (stringOptions.containsKey(elementString)) {
-			return new OptionMenuStringOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(), stringOptions.get(elementString).getOption(), shaderProperties.getSliderOptions().contains(elementString));
+			return new OptionMenuStringOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(), stringOptions.get(elementString).getOption());
 		}
 
 		// Handled and ignored with log warning

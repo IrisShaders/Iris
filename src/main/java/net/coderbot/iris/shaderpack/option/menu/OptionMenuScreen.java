@@ -2,6 +2,7 @@ package net.coderbot.iris.shaderpack.option.menu;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.minecraft.network.chat.Component;
@@ -47,8 +48,8 @@ public class OptionMenuScreen {
 		return columnCount.orElse(elements.size() > 18 ? 3 : 2);
 	}
 
-	public void applyToMinecraftGui(ShaderPackOptionList optionList) {
+	public void applyToMinecraftGui(ShaderPackScreen screen, ShaderPackOptionList optionList) {
 		optionList.addHeader(heading, hasBackButton);
-		optionList.addWidgets(getColumnCount(), elements.stream().map(element -> element.createWidget(optionList.getNavigation())).collect(Collectors.toList()));
+		optionList.addWidgets(getColumnCount(), elements.stream().map(element -> element.createWidget(screen, optionList.getNavigation())).collect(Collectors.toList()));
 	}
 }

@@ -2,6 +2,7 @@ package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.StringOption;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -20,8 +21,8 @@ public class StringElementWidget extends BaseOptionElementWidget {
 
 	private int valueIndex;
 
-	public StringElementWidget(StringOption option, String value) {
-		super(new TranslatableComponent("option." + option.getName()));
+	public StringElementWidget(ShaderPackScreen screen, StringOption option, String value) {
+		super(screen, new TranslatableComponent("option." + option.getName()));
 
 		this.option = option;
 
@@ -34,7 +35,7 @@ public class StringElementWidget extends BaseOptionElementWidget {
 
 	@Override
 	public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
-		this.updateRenderParams(width, VALUE_SECTION_WIDTH);
+		this.updateRenderParams(width, 0);
 
 		this.renderOptionWithValue(poseStack, x, y, width, height, hovered);
 		this.tryRenderTooltip(poseStack, mouseX, mouseY, hovered);
@@ -43,14 +44,7 @@ public class StringElementWidget extends BaseOptionElementWidget {
 	private void increment(int amount) {
 		this.valueIndex = Math.max(this.valueIndex, 0);
 
-		this.valueIndex += amount;
-
-		if (this.valueIndex >= this.valueCount) {
-			this.valueIndex = 0;
-		}
-		if (this.valueIndex < 0) {
-			this.valueIndex = this.valueCount - 1;
-		}
+		this.valueIndex = Math.floorMod(this.valueIndex + amount, this.valueCount);
 	}
 
 	@Override

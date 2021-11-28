@@ -12,9 +12,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.*;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
@@ -34,6 +32,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	private static final Component SELECT_TITLE = new TranslatableComponent("pack.iris.select.title").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
 	private static final Component CONFIGURE_TITLE = new TranslatableComponent("pack.iris.configure.title").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
+	private static final int COMMENT_PANEL_WIDTH = 314;
 
 	private final Screen parent;
 
@@ -48,7 +47,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	private AbstractElementWidget hoveredElement = null;
 	private Component hoveredElementCommentTitle = null;
-	private Component hoveredElementCommentBody = null;
+	private List<FormattedCharSequence> hoveredElementCommentBody = null;
 	private int hoveredElementCommentTimer = 0;
 
 	private boolean optionMenuOpen = false;
@@ -91,22 +90,17 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}
 
 		// Draw the comment panel
-		if (this.hoveredElementCommentTimer > 20 &&
-				this.hoveredElementCommentTitle != null &&
-				this.hoveredElementCommentBody != null) {
-			// Wrap comment text into lines, determine height of panel
-			List<FormattedCharSequence> bodyLines = this.font.split(this.hoveredElementCommentBody, 306);
-			int panelHeight = Math.max(50, 18 + (bodyLines.size() * 10));
-
+		if (this.isDisplayingComment()) {
+			// Determine panel height and position
+			int panelHeight = Math.max(50, 18 + (this.hoveredElementCommentBody.size() * 10));
 			int x = (int)(0.5 * this.width) - 157;
 			int y = this.height - (panelHeight + 4);
-
-			GuiUtil.drawPanel(poseStack, x, y, 314, panelHeight);
-
+			// Draw panel
+			GuiUtil.drawPanel(poseStack, x, y, COMMENT_PANEL_WIDTH, panelHeight);
+			// Draw text
 			this.font.drawShadow(poseStack, this.hoveredElementCommentTitle, x + 4, y + 4, 0xFFFFFF);
-
-			for (int i = 0; i < bodyLines.size(); i++) {
-				this.font.drawShadow(poseStack, bodyLines.get(i), x + 4, (y + 16) + (i * 10), 0xFFFFFF);
+			for (int i = 0; i < this.hoveredElementCommentBody.size(); i++) {
+				this.font.drawShadow(poseStack, this.hoveredElementCommentBody.get(i), x + 4, (y + 16) + (i * 10), 0xFFFFFF);
 			}
 		}
 
@@ -143,7 +137,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		if (inWorld) {
 			this.shaderPackList.setRenderBackground(false);
-			this.shaderOptionList.setRenderBackground(false);
+			if (shaderOptionList != null) {
+				this.shaderOptionList.setRenderBackground(false);
+			}
 		}
 
 		if (optionMenuOpen && shaderOptionList != null) {
@@ -402,7 +398,22 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 			if (widget instanceof CommentedElementWidget) {
 				this.hoveredElementCommentTitle = ((CommentedElementWidget) widget).getCommentTitle();
-				this.hoveredElementCommentBody = ((CommentedElementWidget) widget).getCommentBody();
+
+				Component commentBody = ((CommentedElementWidget) widget).getCommentBody();
+				if (commentBody == null) {
+					this.hoveredElementCommentBody = null;
+				} else {
+					// Split comment body into lines by separator "."
+					List<MutableComponent> splitByPeriods = Arrays.stream(commentBody.getString().split("[.][ ]*")).map(TextComponent::new).collect(Collectors.toList());
+					// Line wrap
+					this.hoveredElementCommentBody = new ArrayList<>();
+					for (MutableComponent text : splitByPeriods) {
+						this.hoveredElementCommentBody.addAll(this.font.split(text, COMMENT_PANEL_WIDTH - 8));
+					}
+				}
+			} else {
+				this.hoveredElementCommentTitle = null;
+				this.hoveredElementCommentBody = null;
 			}
 
 			this.hoveredElementCommentTimer = 0;
@@ -410,6 +421,13 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.hoveredElement = null;
 			this.hoveredElementCommentTitle = null;
 			this.hoveredElementCommentBody = null;
+			this.hoveredElementCommentTimer = 0;
 		}
+	}
+
+	public boolean isDisplayingComment() {
+		return this.hoveredElementCommentTimer > 20 &&
+				this.hoveredElementCommentTitle != null &&
+				this.hoveredElementCommentBody != null;
 	}
 }

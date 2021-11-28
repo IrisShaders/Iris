@@ -13,6 +13,7 @@ import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.option.Profile;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
@@ -387,6 +388,10 @@ public class Iris implements ClientModInitializer {
 
 	public static void addPendingShaderPackOption(String key, String value) {
 		pendingShaderPackOptions.put(key, value);
+	}
+
+	public static void addPendingShaderPackOptionsFromProfile(Profile profile) {
+		profile.optionValues.forEach(Iris::addPendingShaderPackOption);
 	}
 
 	public static void clearPendingShaderPackOptions() {

@@ -2,6 +2,7 @@ package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.BooleanOption;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
@@ -17,8 +18,8 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 
 	private boolean value;
 
-	public BooleanElementWidget(BooleanOption option, boolean value) {
-		super(new TranslatableComponent("option." + option.getName()));
+	public BooleanElementWidget(ShaderPackScreen screen, BooleanOption option, boolean value) {
+		super(screen, new TranslatableComponent("option." + option.getName()));
 		this.option = option;
 		this.originalValue = value;
 		this.value = value;
@@ -26,7 +27,7 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 
 	@Override
 	public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
-		this.updateRenderParams(width, VALUE_SECTION_WIDTH);
+		this.updateRenderParams(width, 28);
 
 		this.renderOptionWithValue(poseStack, x, y, width, height, hovered);
 		this.tryRenderTooltip(poseStack, mouseX, mouseY, hovered);

@@ -2,6 +2,7 @@ package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.StringOption;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -27,8 +28,8 @@ public class SliderElementWidget extends BaseOptionElementWidget {
 	private int valueIndex;
 	private boolean mouseDown = false;
 
-	public SliderElementWidget(StringOption option, String value) {
-		super(new TranslatableComponent("option." + option.getName()));
+	public SliderElementWidget(ShaderPackScreen screen, StringOption option, String value) {
+		super(screen, new TranslatableComponent("option." + option.getName()));
 
 		this.option = option;
 
@@ -41,7 +42,7 @@ public class SliderElementWidget extends BaseOptionElementWidget {
 
 	@Override
 	public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
-		this.updateRenderParams(width, VALUE_SECTION_WIDTH + 15);
+		this.updateRenderParams(width, 35);
 
 		if (!hovered) {
 			this.renderOptionWithValue(poseStack, x, y, width, height, false, (float)valueIndex / (valueCount - 1), PREVIEW_SLIDER_WIDTH);
@@ -49,7 +50,11 @@ public class SliderElementWidget extends BaseOptionElementWidget {
 			this.renderSlider(poseStack, x, y, width, height, mouseX, mouseY, tickDelta);
 		}
 
-		this.renderTooltip(poseStack, mouseX, mouseY, hovered);
+		if (!this.screen.isDisplayingComment()) {
+			renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
+		} else if (Screen.hasShiftDown()) {
+			renderTooltip(poseStack, SET_TO_DEFAULT, mouseX, mouseY, hovered);
+		}
 
 		if (this.mouseDown) {
 			// Release if the mouse went off the slider

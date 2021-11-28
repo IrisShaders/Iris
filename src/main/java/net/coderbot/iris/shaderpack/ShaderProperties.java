@@ -41,7 +41,7 @@ public class ShaderProperties {
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
-	private final Map<String, List<String>> profiles = new HashMap<>();
+	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
 	private List<String> mainScreenOptions = new ArrayList<>();
 	private final Map<String, List<String>> subScreenOptions = new HashMap<>();
 	private Integer mainScreenColumnCount = null;

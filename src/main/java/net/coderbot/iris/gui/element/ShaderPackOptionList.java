@@ -43,12 +43,12 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 	public void refresh() {
 		this.clearEntries();
 		this.setScrollAmount(0);
-		container.applyToMinecraftGui(this, navigation);
+		container.applyToMinecraftGui(this.screen, this, navigation);
 	}
 
 	@Override
 	public int getRowWidth() {
-		return Math.min(372, width - 12);
+		return Math.min(400, width - 12);
 	}
 
 	public void addHeader(Component text, boolean backButton) {
@@ -109,6 +109,10 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			this.cachedPosX = x;
+			this.cachedPosY = y;
+			this.cachedWidth = entryWidth;
+
 			// Draw dividing line
 			fill(poseStack, x - 3, (y + entryHeight) - 2, x + entryWidth, (y + entryHeight) - 1, 0x66BEBEBE);
 
@@ -156,10 +160,6 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 						mouseX - (font.width(tooltip) + 10), mouseY - 16
 						));
 			}
-
-			this.cachedPosX = x;
-			this.cachedPosY = y;
-			this.cachedWidth = entryWidth;
 		}
 
 		@Override
@@ -212,6 +212,9 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			this.cachedWidth = entryWidth;
+			this.cachedPosX = x;
+
 			// The amount of space widgets will occupy, excluding margins. Will be divided up between widgets.
 			int totalWidthWithoutMargins = entryWidth - (2 * (widgets.size() - 1));
 
@@ -227,9 +230,6 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 				screen.setElementHoveredStatus(widget, widgetHovered);
 			}
-
-			this.cachedWidth = entryWidth;
-			this.cachedPosX = x;
 		}
 
 		public int getHoveredWidget(int mouseX) {

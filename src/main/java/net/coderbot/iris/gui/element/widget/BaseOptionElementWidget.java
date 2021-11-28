@@ -14,9 +14,9 @@ import net.minecraft.network.chat.*;
 public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	protected static final Component SET_TO_DEFAULT = new TranslatableComponent("options.iris.setToDefault").withStyle(ChatFormatting.GREEN);
 	protected static final Component DIVIDER = new TextComponent(": ");
-	protected static final int VALUE_SECTION_WIDTH = 35;
 
 	protected final MutableComponent unmodifiedLabel;
+	protected final ShaderPackScreen screen;
 	private final MutableComponent label;
 
 	protected Component trimmedLabel;
@@ -26,12 +26,13 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	private int maxLabelWidth;
 	private int valueSectionWidth;
 
-	protected BaseOptionElementWidget(MutableComponent label) {
+	protected BaseOptionElementWidget(ShaderPackScreen screen, MutableComponent label) {
 		this.label = label.copy().append(DIVIDER);
 		this.unmodifiedLabel = label;
+		this.screen = screen;
 	}
 
-	protected final void updateRenderParams(int width, int valueSectionWidth) {
+	protected final void updateRenderParams(int width, int minValueSectionWidth) {
 		// Lazy init of value label
 		if (this.valueLabel == null) {
 			this.valueLabel = createValueLabel();
@@ -39,7 +40,7 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 
 		// Determine the width of the value box
 		Font font = Minecraft.getInstance().font;
-		this.valueSectionWidth = Math.max(valueSectionWidth, font.width(this.valueLabel) + 8);
+		this.valueSectionWidth = Math.max(minValueSectionWidth, font.width(this.valueLabel) + 8);
 
 		// Determine maximum width of trimmed label
 		this.maxLabelWidth = (width - 8) - this.valueSectionWidth;
@@ -86,17 +87,16 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	}
 
 	protected final void tryRenderTooltip(PoseStack poseStack, int mouseX, int mouseY, boolean hovered) {
-		if (this.isLabelTrimmed || Screen.hasShiftDown()) {
-			renderTooltip(poseStack, mouseX, mouseY, hovered);
+		if (this.isLabelTrimmed && !this.screen.isDisplayingComment()) {
+			renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
+		} else if (Screen.hasShiftDown()) {
+			renderTooltip(poseStack, SET_TO_DEFAULT, mouseX, mouseY, hovered);
 		}
 	}
 
-	protected final void renderTooltip(PoseStack poseStack, int mouseX, int mouseY, boolean hovered) {
+	protected final void renderTooltip(PoseStack poseStack, Component text, int mouseX, int mouseY, boolean hovered) {
 		if (hovered) {
-			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(
-					Minecraft.getInstance().font, poseStack,
-					Screen.hasShiftDown() ? SET_TO_DEFAULT : this.unmodifiedLabel,
-					mouseX + 2, mouseY - 16));
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(Minecraft.getInstance().font, poseStack, text, mouseX + 2, mouseY - 16));
 		}
 	}
 
