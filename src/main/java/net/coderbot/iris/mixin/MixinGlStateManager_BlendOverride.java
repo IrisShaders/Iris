@@ -10,21 +10,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager_BlendOverride {
 	@Inject(method = {"_disableBlend", "_enableBlend"}, at = @At("HEAD"), cancellable = true)
-	private static void blendToggleLock(CallbackInfo ci) {
+	private static void iris$blendToggleLock(CallbackInfo ci) {
 		if(BlendModeStorage.isBlendLocked()) {
 			ci.cancel();
 		}
 	}
 
 	@Inject(method = "_blendFunc", at = @At("HEAD"), cancellable = true)
-	private static void blendFuncLock(int i, int j, CallbackInfo ci) {
+	private static void iris$blendFuncLock(int i, int j, CallbackInfo ci) {
 		if(BlendModeStorage.isBlendLocked()) {
 			ci.cancel();
 		}
 	}
 
 	@Inject(method = "_blendFuncSeparate", at = @At("HEAD"), cancellable = true)
-	private static void blendFuncSeparateLock(int i, int j, int k, int l, CallbackInfo ci) {
+	private static void iris$blendFuncSeparateLock(int i, int j, int k, int l, CallbackInfo ci) {
 		if(BlendModeStorage.isBlendLocked()) {
 			ci.cancel();
 		}
