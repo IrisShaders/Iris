@@ -2,17 +2,19 @@
   "iris.shaders.reloaded": "Шейдеры перезагружены!",
   "iris.shaders.toggled": "Шейдеры переключены на %s!",
   "iris.keybind.reload": "Перезагрузить шейдеры",
-  "iris.keybind.shaderPackSelection": "Меню выбора шейдеров",
+  "iris.keybind.shaderPackSelection": "Экран выбора шейдеров",
   "iris.keybind.toggleShaders": "Переключить шейдеры",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Не удалось перезагрузить шейдеры! Причина: %s",
   "iris.shaders.toggled.failure": "Не удалось переключить шейдеры! Причина: %s",
-  "iris.sodium.failure.title": "Ошибка загрузки Iris!",
-  "iris.sodium.failure.reason": "У вас есть Sodium в папке с модами, однако Iris уже содержит его. Пожалуйста, закройте игру и удалите Sodium из папки модов.",
-
+  "iris.sodium.failure.title": "Не удалось загрузить Iris!",
+  "iris.sodium.failure.download": "Загрузить Sodium",
+  "iris.sodium.failure.reason.notFound": "Iris требует Sodium для хорошей производительности, но Sodium не установлен. Пожалуйста, загрузите Sodium, добавьте его в папку с модами и перезапустите игру.",
+  "iris.sodium.failure.reason.incompatible": "Iris требует Sodium для хорошей производительности, но ваша версия Sodium несовместима. Пожалуйста, загрузите подходящую версию Sodium, добавьте его в папку с модами, удалите старую версию и перезапустите игру.",
+  
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
-  "options.iris.openShaderPackFolder": "Открыть папку с шейдерами...",
+  "options.iris.openShaderPackFolder": "Открыть папку c шейдерами...",
   "options.iris.refreshShaderPacks": "Обновить список шейдеров",
   "options.iris.shaderPackSelection": "Пакеты шейдеров...",
   "options.iris.shaderPackSelection.title": "Пакеты шейдеров",
@@ -24,11 +26,10 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
   "options.iris.shaders.disabled": "Шейдеры: Выключены",
   "options.iris.shaders.enabled": "Шейдеры: Включены",
-  "options.iris.shadowDistance": "Дальность теней",
-  "options.iris.shadowDistance.enabled": "Позволяет изменить максимальное расстояние для теней. Местность и сущности за пределами этого расстояния не будут отбрасывать тени. Уменьшение дальности может значительно повысить производительность.",
-  "options.iris.shadowDistance.disabled": "В вашем текущем пакете шейдеров уже установлено расстояние отрисовки теней; вы не можете изменить это.",
-  "options.iris.shadowDistance.sodium_tooltip": "Расстояние отрисовки теней определяет, как далеко потенциально может быть отрисована местность в процессе обработки теней. Меньшие расстояния приводят к сокращению учитываемой территории, что улучшает частоту кадров. Этот параметр нельзя изменить для пакетов шейдеров, в которых уже задано фиксированное расстояние отрисовки теней. Фактическое расстояние отрисовки теней ограничено настройкой общей дальности прорисовки.",
-
-  "pack.iris.select.title": "Выбрать",
-  "pack.iris.list.label": "+ Перетащите пакеты шейдеров для добавления"
+  "options.iris.shadowDistance": "Максимальное расстояние для теней",
+  "options.iris.shadowDistance.enabled": "Позволяет вам изменить максимальное расстояние для теней. Блоки и существа за этим расстоянием не будут иметь теней. Снижая этот параметр, вы можете кардинально улучшить производительность.",
+  "options.iris.shadowDistance.disabled": "Ваши текущие шейдеры уже установили своё расстояние для теней; вы не сможете её изменить.",
+  
+  "pack.iris.select.title": "Выберите",
+  "pack.iris.list.label": "+ Перетащите шейдер для добавления"
 }
