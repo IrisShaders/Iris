@@ -54,6 +54,7 @@ public class CustomTextureManager {
 			if (textureData instanceof CustomTextureData.PngData) {
 				try {
 					AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
+					pngBackedTextures.add(customNoiseTexture);
 
 					return Optional.of(customNoiseTexture);
 				} catch (IOException e) {
@@ -98,6 +99,5 @@ public class CustomTextureManager {
 		pngBackedTextures.forEach(AbstractTexture::close);
 		normals.close();
 		specular.close();
-		noise.close();
 	}
 }
