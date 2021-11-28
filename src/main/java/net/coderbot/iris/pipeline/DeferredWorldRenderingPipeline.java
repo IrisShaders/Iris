@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -34,16 +35,17 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
@@ -84,14 +86,19 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass blockEntities;
 	@Nullable
+	private final Pass hand;
+	@Nullable
+	private final Pass handTranslucent;
+	@Nullable
 	private final Pass glowingEntities;
 	@Nullable
 	private final Pass glint;
 	@Nullable
 	private final Pass eyes;
 
-	private final GlFramebuffer clearAltBuffers;
-	private final GlFramebuffer clearMainBuffers;
+	private final ImmutableList<ClearPass> clearPassesFull;
+	private final ImmutableList<ClearPass> clearPasses;
+
 	private final GlFramebuffer baseline;
 
 	private Runnable createShadowMapRenderer;
@@ -258,14 +265,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
 		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
+		this.hand = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
+		this.handTranslucent = programs.getGbuffersHandWater().map(this::createPass).orElse(hand);
 		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
 		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
 		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
-		int[] buffersToBeCleared = programs.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared().toIntArray();
+		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+				programs.getPackDirectives().getRenderTargetDirectives());
+		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+				programs.getPackDirectives().getRenderTargetDirectives());
 
-		this.clearAltBuffers = renderTargets.createFramebufferWritingToAlt(buffersToBeCleared);
-		this.clearMainBuffers = renderTargets.createFramebufferWritingToMain(buffersToBeCleared);
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 
 		if (shadowMapRenderer == null) {
@@ -326,7 +336,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			throw new IllegalStateException("Program stack in invalid state, popped " + popped + " but expected to pop " + expected);
 		}
 
-		if (popped != GbufferProgram.NONE && popped != GbufferProgram.CLEAR) {
+		if (popped != GbufferProgram.NONE) {
 			Pass poppedPass = getPass(popped);
 
 			if (poppedPass != null) {
@@ -383,6 +393,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			case WEATHER:
 				return weather;
 			case HAND:
+				return hand;
+			case HAND_TRANSLUCENT:
+				return handTranslucent;
 			default:
 				// TODO
 				throw new UnsupportedOperationException("TODO: Unsupported gbuffer program: " + program);
@@ -394,18 +407,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// Note that we don't unbind the framebuffer here. Uses of GbufferProgram.NONE
 			// are responsible for ensuring that the framebuffer is switched properly.
 			Program.unbind();
-			return;
-		} else if (program == GbufferProgram.CLEAR) {
-			// Ensure that Minecraft's main framebuffer is cleared, or else very odd issues will happen with shaders
-			// that have composites that don't write to all pixels.
-			//
-			// NB: colortex0 should not be cleared to the fog color! This causes a lot of issues on shaderpacks like
-			// Sildur's Vibrant Shaders. Instead, it should be cleared to solid black like the other buffers. The
-			// horizon rendered by HorizonRenderer ensures that shaderpacks that don't override the sky rendering don't
-			// have issues, and this also gives shaderpacks more control over sky rendering in general.
-			Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
-			Program.unbind();
-
 			return;
 		}
 
@@ -651,21 +652,41 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		renderTargets.resizeIfNeeded(main.width, main.height);
 
-		clearMainBuffers.bind();
-		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+		final ImmutableList<ClearPass> passes;
 
-		clearAltBuffers.bind();
-		// Not clearing the depth buffer since there's only one of those and it was already cleared
-		RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		RenderSystem.clear(GL11C.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
+		if (renderTargets.isFullClearRequired()) {
+			renderTargets.onFullClear();
+			passes = clearPassesFull;
+		} else {
+			passes = clearPasses;
+		}
+
+		Vec3 fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
+
+		// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
+		//     will give you pink reflections and other weirdness if this is zero.
+		Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
+
+		for (ClearPass clearPass : passes) {
+			clearPass.execute(fogColor);
+		}
+	}
+
+	@Override
+	public void beginHand() {
+		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
+		// all non-translucent content without the hand, as required.
+		baseline.bindAsReadBuffer();
+		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		GlStateManager._bindTexture(0);
 	}
 
 	@Override
 	public void beginTranslucents() {
 		isBeforeTranslucent = false;
 
-		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
+		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
@@ -688,21 +709,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		} else {
 			useProgram(GbufferProgram.NONE);
 			baseline.bind();
-		}
-	}
-
-	public static GbufferProgram getProgramForSheet(ParticleRenderType sheet) {
-		if (sheet == ParticleRenderType.PARTICLE_SHEET_OPAQUE || sheet == ParticleRenderType.TERRAIN_SHEET || sheet == ParticleRenderType.CUSTOM) {
-			return GbufferProgram.TEXTURED_LIT;
-		} else if (sheet == ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT) {
-			// TODO: Should we be using some other pass? (gbuffers_water?)
-			return GbufferProgram.TEXTURED_LIT;
-		} else {
-			// sheet == ParticleTextureSheet.PARTICLE_SHEET_LIT
-			//
-			// Yes, this seems backwards. However, in this case, these particles are always bright regardless of the
-			// lighting condition, and therefore don't use the textured_lit program.
-			return GbufferProgram.TEXTURED;
 		}
 	}
 
@@ -731,6 +737,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginLevelRendering() {
 		isRenderingWorld = true;
 		isBeforeTranslucent = true;
+		HandRenderer.INSTANCE.getBufferSource().resetDrawCalls();
 
 		checkWorld();
 
@@ -783,6 +790,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		return sodiumTerrainPipeline;
 	}
 
+	@Override
+	public FrameUpdateNotifier getFrameUpdateNotifier() {
+		return updateNotifier;
+	}
+
 	private boolean isRenderingShadow = false;
 
 	public void beginShadowRender() {
@@ -791,9 +803,5 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	public void endShadowRender() {
 		isRenderingShadow = false;
-	}
-
-	public FrameUpdateNotifier getUpdateNotifier() {
-		return updateNotifier;
 	}
 }

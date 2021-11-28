@@ -35,9 +35,10 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 	// The recommended version of Sodium for use with Iris
-	private static final String SODIUM_VERSION = "0.2.0+IRIS4";
+	private static final String SODIUM_VERSION = "0.2.0";
+	public static final String SODIUM_DOWNLOAD_LINK = "https://www.curseforge.com/minecraft/mc-mods/sodium/files/3488820";
 
-	public static final Path SHADERPACKS_DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+	private static Path shaderpacksDirectory;
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
@@ -62,9 +63,8 @@ public class Iris implements ClientModInitializer {
 					sodiumInstalled = true;
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
-					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will show the user a nice warning, and prevent them from playing the
-					// game with a wrong version of Sodium.
+					// This makes it so that if we don't have the right version of Sodium, it will show the user a
+					// nice warning, and prevent them from playing the game with a wrong version of Sodium.
 					if (!versionString.startsWith(SODIUM_VERSION)) {
 						sodiumInvalid = true;
 					}
@@ -79,7 +79,7 @@ public class Iris implements ClientModInitializer {
 		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
 
 		try {
-			Files.createDirectories(SHADERPACKS_DIRECTORY);
+			Files.createDirectories(getShaderpacksDirectory());
 		} catch (IOException e) {
 			logger.warn("Failed to create the shaderpacks directory!");
 			logger.catching(Level.WARN, e);
@@ -189,7 +189,7 @@ public class Iris implements ClientModInitializer {
 		Path shaderPackRoot;
 
 		try {
-			shaderPackRoot = SHADERPACKS_DIRECTORY.resolve(name);
+			shaderPackRoot = getShaderpacksDirectory().resolve(name);
 		} catch (InvalidPathException e) {
 			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
@@ -311,7 +311,7 @@ public class Iris implements ClientModInitializer {
 			// identified as a shader pack due to it containing
 			// folders which contain "shaders" folders, this is
 			// necessary to check against that
-			if (pack.equals(SHADERPACKS_DIRECTORY)) {
+			if (pack.equals(getShaderpacksDirectory())) {
 				return false;
 			}
 			try {
@@ -469,5 +469,13 @@ public class Iris implements ClientModInitializer {
 
 	public static boolean isPhysicsModInstalled() {
 		return physicsModInstalled;
+	}
+
+	public static Path getShaderpacksDirectory() {
+		if (shaderpacksDirectory == null) {
+			shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
+		}
+
+		return shaderpacksDirectory;
 	}
 }

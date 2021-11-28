@@ -14,7 +14,6 @@ import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransform
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 
 public class SodiumTerrainPipeline {
@@ -205,10 +204,7 @@ public class SodiumTerrainPipeline {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
-		SamplerUniforms.addCommonSamplerUniforms(uniforms);
-		SamplerUniforms.addLevelSamplerUniforms(uniforms);
-		SamplerUniforms.addDepthSamplerUniforms(uniforms);
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), pipeline.getFrameUpdateNotifier());
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();

@@ -33,6 +33,22 @@ dependencies {
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
 
+if (project.sodium_compatibility == "true") {
+	repositories {
+		maven {
+			name = "Modrinth"
+			url = "https://api.modrinth.com/maven"
+			content {
+				includeGroup "maven.modrinth"
+			}
+		}
+	}
+
+	dependencies {
+		modImplementation "maven.modrinth:sodium:" + project.sodium_version
+	}
+}
+
 test {
 	// Use JUnit 5 Platform for tests
 	useJUnitPlatform()
@@ -50,6 +66,12 @@ processResources {
 
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
+
+		if (project.sodium_compatibility != "true") {
+			filter {
+				String line -> return line.replace("mixins.iris.compat.sodium.json", "empty.json")
+			}
+		}
 	}
 }
 
@@ -97,8 +119,34 @@ sourceSets {
 		}
 	}
 
+	if (project.sodium_compatibility == "true") {
+		// A source set for the code needed to implement sodium compatibility.
+		sodiumCompatibility {
+			java {
+				compileClasspath += main.compileClasspath
+				compileClasspath += main.output
+				compileClasspath += vendored.output
+			}
+		}
+	}
+
 	// The main source code of Iris.
 	main {
+		java {
+			// headers / API stubs are only available at compilation time.
+			compileClasspath += headers.output
+
+			// Vendored sources are available at compilation time and runtime.
+			compileClasspath += vendored.output
+			runtimeClasspath += vendored.output
+
+			if (project.sodium_compatibility == "true") {
+				runtimeClasspath += sourceSets.sodiumCompatibility.output
+			}
+		}
+	}
+
+	test {
 		java {
 			// headers / API stubs are only available at compilation time.
 			compileClasspath += headers.output
@@ -127,27 +175,16 @@ jar {
 
 	// Vendored sources are included in the resulting JAR file.
 	from sourceSets.vendored.output
-}
 
-// To build iris bundled with sodium, just run the task `gradle bundleWithSodium`.
-// Currently requires iris to have been built normally first.
-// You must have a Sodium jar in your mavenLocal repository.
-tasks.register('bundleWithSodium')
-
-bundleWithSodium {
-	finalizedBy build
-	doFirst {
-		project.dependencies {
-			// include sodium jar if bundling with sodium
-			include "me.jellysquid.mods:sodium-fabric:0.2.0+IRIS4+"
+	if (project.sodium_compatibility == "true") {
+		from (sourceSets.sodiumCompatibility.output) {
+			it.filesMatching("*refmap.json") {
+				FileCopyDetails details -> {
+					details.name("iris-sodium-compat-refmap.json")
+				}
+			}
 		}
-		archivesBaseName = archivesBaseName.replace("iris", "iris-and-sodium")
 	}
-}
-
-repositories {
-	// for the Sodium dependency we want to bundle
-	mavenLocal()
 }
 
 // configure the maven publication
