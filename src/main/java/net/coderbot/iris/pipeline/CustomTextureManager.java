@@ -51,15 +51,22 @@ public class CustomTextureManager {
 		});
 
 		noise = customNoiseTextureData.flatMap(textureData -> {
-			try {
-				// TODO: Support CustomTextureData types other than PngData
-				AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
+			if (textureData instanceof CustomTextureData.PngData) {
+				try {
+					AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
 
-				return Optional.of(customNoiseTexture);
-			} catch (IOException e) {
-				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
-				return Optional.empty();
+					return Optional.of(customNoiseTexture);
+				} catch (IOException e) {
+					Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
+					return Optional.empty();
+				}
+			} else if (textureData instanceof CustomTextureData.ResourceData) {
+				AbstractTexture customNoiseTexture = Minecraft.getInstance().getTextureManager().getTexture(((CustomTextureData.ResourceData) textureData).getResourceLocation());
+
+				// TODO: Should we give something else if the texture isn't there? This will need some thought
+				return Optional.of(customNoiseTexture != null ? customNoiseTexture : MissingTextureAtlasSprite.getTexture());
 			}
+			return Optional.empty();
 		}).orElseGet(() -> {
 			final int noiseTextureResolution = packDirectives.getNoiseTextureResolution();
 
