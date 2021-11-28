@@ -144,7 +144,7 @@ public class ShaderPack {
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
-		Properties properties = new Properties();
+		Properties properties = new OrderBackedProperties();
 
 		try {
 			// NB: shaders.properties is specified to be encoded with ISO-8859-1 by OptiFine,

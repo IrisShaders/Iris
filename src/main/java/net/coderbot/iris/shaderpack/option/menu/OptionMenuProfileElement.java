@@ -21,17 +21,24 @@ public class OptionMenuProfileElement extends OptionMenuElement {
 
 		List<String> profileNames = new ArrayList<>(profiles.keySet());
 
-		if (profileName != null) {
-			int currentIndex = profileNames.indexOf(profileName);
+		if (profileNames.size() <= 0) {
+			Profile empty = new Profile.Builder().build();
 
-			int prevIndex = Math.floorMod(currentIndex - 1, profileNames.size());
-			int nextIndex = Math.floorMod(currentIndex + 1, profileNames.size());
-
-			this.previous = profiles.get(profileNames.get(prevIndex));
-			this.next = profiles.get(profileNames.get(nextIndex));
+			this.previous = empty;
+			this.next = empty;
 		} else {
-			this.previous = profiles.get(profileNames.get(profileNames.size() - 1));
-			this.next = profiles.get(profileNames.get(0));
+			if (profileName != null) {
+				int currentIndex = profileNames.indexOf(profileName);
+
+				int prevIndex = Math.floorMod(currentIndex - 1, profileNames.size());
+				int nextIndex = Math.floorMod(currentIndex + 1, profileNames.size());
+
+				this.previous = profiles.get(profileNames.get(prevIndex));
+				this.next = profiles.get(profileNames.get(nextIndex));
+			} else {
+				this.previous = profiles.get(profileNames.get(profileNames.size() - 1));
+				this.next = profiles.get(profileNames.get(0));
+			}
 		}
 	}
 
