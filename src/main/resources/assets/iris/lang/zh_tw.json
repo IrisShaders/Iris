@@ -7,6 +7,8 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "無法重新載入光影！原因：%s",
   "iris.shaders.toggled.failure": "無法使用光影！原因：%s",
+  "iris.sodium.failure.title": "無法載入 Iris！",
+  "iris.sodium.failure.reason": "Iris 已經包含了 Sodium，請您將 Sodium 從模組資料夾中刪除。",
 
   "options.iris.apply": "套用",
   "options.iris.refresh": "重新整理",
@@ -22,6 +24,9 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 已存在於光影包資料夾中！",
   "options.iris.shaders.disabled": "光影：已停用",
   "options.iris.shaders.enabled": "光影：已啟用",
+  "options.iris.shadowDistance": "最大陰影距離",
+  "options.iris.shadowDistance.enabled": "能讓您變更陰影的最大距離。超出此距離的地形和實體將不會有陰影。調低陰影距離能顯著提升效能。",
+  "options.iris.shadowDistance.disabled": "您無法變更目前光影包所設定的陰影顯示距離。",
 
   "pack.iris.select.title": "選擇",
   "pack.iris.list.label": "+ 將光影包拖曳至此"
