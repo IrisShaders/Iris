@@ -1,5 +1,6 @@
 package net.coderbot.iris.shaderpack;
 
+import com.google.gson.JsonObject;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
@@ -7,9 +8,13 @@ import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -117,9 +122,20 @@ public class ShaderPack {
 				// this just fixes shaderpacks like Continuum 2.0.4 that use a leading slash in texture paths
 				path = path.substring(1);
 			}
+
+			boolean blur = false;
+			boolean clamp = false;
+
+			String mcMetaPath = path + ".mcmeta";
+			if (Files.exists(root.resolve(mcMetaPath))) {
+				JsonObject meta = GsonHelper.parse(new BufferedReader(new InputStreamReader(Files.newInputStream(root.resolve(mcMetaPath)), StandardCharsets.UTF_8)));
+				blur = meta.get("texture").getAsJsonObject().get("blur").getAsBoolean();
+				clamp = meta.get("texture").getAsJsonObject().get("clamp").getAsBoolean();
+			}
+
 			byte[] content = Files.readAllBytes(root.resolve(path));
-			// TODO: Read the blur / clamp data from the shaderpack...
-			customTextureData = new CustomTextureData.PngData(new TextureFilteringData(true, false), content);
+
+			customTextureData = new CustomTextureData.PngData(new TextureFilteringData(blur, clamp), content);
 		}
 		return customTextureData;
 	}
