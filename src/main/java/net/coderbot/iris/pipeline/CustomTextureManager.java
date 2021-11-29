@@ -12,6 +12,8 @@ import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -81,11 +83,20 @@ public class CustomTextureManager {
 
 			return texture::getId;
 		} else if (textureData instanceof CustomTextureData.ResourceData) {
-			AbstractTexture texture = Minecraft.getInstance().getTextureManager()
-					.getTexture(((CustomTextureData.ResourceData) textureData).getResourceLocation());
+			ResourceLocation textureLocation = ((CustomTextureData.ResourceData) textureData).getResourceLocation();
+			TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
-			// TODO: Should we give something else if the texture isn't there? This will need some thought
-			return texture != null ? texture::getId : MissingTextureAtlasSprite.getTexture()::getId;
+			// NB: We have to re-query the TextureManager for the texture object every time. This is because the
+			//     AbstractTexture object could be removed / deleted from the TextureManager on resource reloads,
+			//     and we could end up holding on to a deleted texture unless we added special code to handle resource
+			//     reloads. Re-fetching the texture from the TextureManager every time is the most robust approach for
+			//     now.
+			return () -> {
+				AbstractTexture texture = textureManager.getTexture(textureLocation);
+
+				// TODO: Should we give something else if the texture isn't there? This will need some thought
+				return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
+			};
 		} else {
 			throw new IllegalArgumentException("Unable to handle custom texture data " + textureData);
 		}
