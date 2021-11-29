@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinRenderSystem {
 	private static Runnable atlasTextureListener;
 
-	@Inject(method = "initRenderer", at = @At("RETURN"))
+	@Inject(method = "initRenderer", at = @At("RETURN"), remap = false)
 	private static void iris$onRendererInit(int debugVerbosity, boolean alwaysFalse, CallbackInfo ci) {
 		Iris.onRenderSystemInit();
 	}
