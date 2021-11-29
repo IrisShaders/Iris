@@ -10,6 +10,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BlendModeStorage;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
@@ -506,7 +507,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
 
 		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				source.getDirectives().shouldDisableBlend(), source.getDirectives().getBlendModeOverride());
+				source.getDirectives().getBlendModeOverride());
 
 		allPasses.add(pass);
 
@@ -518,15 +519,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		private final GlFramebuffer framebufferBeforeTranslucents;
 		private final GlFramebuffer framebufferAfterTranslucents;
 		private final AlphaTestOverride alphaTestOverride;
-		private final boolean disableBlend;
-		private final BlendMode blendModeOverride;
+		private final BlendModeOverride blendModeOverride;
 
-		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents, AlphaTestOverride alphaTestOverride, boolean disableBlend, BlendMode blendModeOverride) {
+		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents,
+					 AlphaTestOverride alphaTestOverride, BlendModeOverride blendModeOverride) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
 			this.alphaTestOverride = alphaTestOverride;
-			this.disableBlend = disableBlend;
 			this.blendModeOverride = blendModeOverride;
 		}
 
@@ -539,16 +539,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 			program.use();
 
-			// TODO: Render layers will likely override alpha testing and blend state, perhaps we need a way to override
-			// that.
+			// TODO: Render layers will likely override alpha testing state, we'll need to implement a similar system
+			//       as we have for blend mode overrides.
 			if (alphaTestOverride != null) {
 				alphaTestOverride.setup();
 			}
 
 			if (blendModeOverride != null) {
-				BlendModeStorage.overrideBlend(blendModeOverride);
-			} else if (disableBlend) {
-				GlStateManager._disableBlend();
+				blendModeOverride.apply();
 			}
 		}
 
@@ -556,8 +554,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			if (alphaTestOverride != null) {
 				AlphaTestOverride.teardown();
 			}
+
 			if (blendModeOverride != null) {
-				BlendModeStorage.restoreBlend();
+				BlendModeOverride.restore();
 			}
 		}
 

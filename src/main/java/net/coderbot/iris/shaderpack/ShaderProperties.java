@@ -14,6 +14,7 @@ import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 import java.util.Optional;
@@ -53,8 +54,7 @@ public class ShaderProperties {
 	// TODO: Parse custom uniforms / variables
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
-	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
-	private final Object2ObjectMap<String, BlendMode> blendModeOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
@@ -157,7 +157,7 @@ public class ShaderProperties {
 				}
 
 				if ("off".equals(value)) {
-					blendDisabled.add(pass);
+					blendModeOverrides.put(pass, BlendModeOverride.OFF);
 					return;
 				}
 
@@ -169,7 +169,8 @@ public class ShaderProperties {
 					modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
 					i++;
 				}
-				blendModeOverrides.put(pass, new BlendMode(modes[0], modes[1], modes[2], modes[3]));
+
+				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(modes[0], modes[1], modes[2], modes[3])));
 			});
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
@@ -342,11 +343,7 @@ public class ShaderProperties {
 		return viewportScaleOverrides;
 	}
 
-	public ObjectSet<String> getBlendDisabled() {
-		return blendDisabled;
-	}
-
-	public Object2ObjectMap<String, BlendMode> getBlendModeOverrides() {
+	public Object2ObjectMap<String, BlendModeOverride> getBlendModeOverrides() {
 		return blendModeOverrides;
 	}
 

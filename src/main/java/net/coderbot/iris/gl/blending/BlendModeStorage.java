@@ -2,8 +2,10 @@ package net.coderbot.iris.gl.blending;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
+import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 
 public class BlendModeStorage {
+	private static boolean originalBlendEnable;
 	private static BlendMode originalBlend;
 	private static boolean blendLocked;
 
@@ -12,15 +14,36 @@ public class BlendModeStorage {
 	}
 
 	public static void overrideBlend(BlendMode override) {
+		if (!blendLocked) {
+			// Only save the previous state if the blend mode wasn't already locked
+			GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
+
+			originalBlendEnable = ((BooleanStateAccessor) blendState.mode).isEnabled();
+			originalBlend = new BlendMode(blendState.srcRgb, blendState.dstRgb, blendState.srcAlpha, blendState.dstAlpha);
+		}
+
 		blendLocked = false;
-		GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
-		originalBlend = new BlendMode(blendState.srcRgb, blendState.dstRgb, blendState.srcAlpha, blendState.dstAlpha);
-		GlStateManager._blendFuncSeparate(override.getSrcRgb(), override.getDstRgb(), override.getSrcAlpha(), override.getDstAlpha());
+
+		if (override == null) {
+			GlStateManager._disableBlend();
+		} else {
+			GlStateManager._enableBlend();
+			GlStateManager._blendFuncSeparate(override.getSrcRgb(), override.getDstRgb(), override.getSrcAlpha(), override.getDstAlpha());
+		}
+
 		blendLocked = true;
 	}
 
 	public static void restoreBlend() {
 		blendLocked = false;
-		GlStateManager._blendFuncSeparate(originalBlend.getSrcRgb(), originalBlend.getDstRgb(), originalBlend.getSrcAlpha(), originalBlend.getDstAlpha());
+
+		if (originalBlendEnable) {
+			GlStateManager._enableBlend();
+		} else {
+			GlStateManager._disableBlend();
+		}
+
+		GlStateManager._blendFuncSeparate(originalBlend.getSrcRgb(), originalBlend.getDstRgb(),
+				originalBlend.getSrcAlpha(), originalBlend.getDstAlpha());
 	}
 }

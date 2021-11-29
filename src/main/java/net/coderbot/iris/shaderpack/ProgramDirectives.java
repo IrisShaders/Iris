@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
@@ -22,8 +23,8 @@ public class ProgramDirectives {
 	private final float viewportScale;
 	@Nullable
 	private final AlphaTestOverride alphaTestOverride;
-	private final boolean disableBlend;
-	private final BlendMode blendModeOverride;
+	@Nullable
+	private final BlendModeOverride blendModeOverride;
 	private final ImmutableSet<Integer> mipmappedBuffers;
 	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
@@ -40,13 +41,11 @@ public class ProgramDirectives {
 		if (properties != null) {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
-			disableBlend = properties.getBlendDisabled().contains(source.getName());
 			blendModeOverride = properties.getBlendModeOverrides().get(source.getName());
 			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
-			disableBlend = false;
 			blendModeOverride = null;
 			explicitFlips = ImmutableMap.of();
 		}
@@ -109,11 +108,7 @@ public class ProgramDirectives {
 		return Optional.ofNullable(alphaTestOverride);
 	}
 
-	public boolean shouldDisableBlend() {
-		return disableBlend;
-	}
-
-	public BlendMode getBlendModeOverride() {
+	public BlendModeOverride getBlendModeOverride() {
 		return blendModeOverride;
 	}
 
