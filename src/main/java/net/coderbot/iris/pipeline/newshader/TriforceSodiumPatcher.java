@@ -201,11 +201,6 @@ public class TriforceSodiumPatcher {
 		// Just being careful
 		transformations.define("ftransform", "iris_ftransform");
 
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
-
 		return transformations.toString();
 	}
 
