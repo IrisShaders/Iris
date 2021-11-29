@@ -91,7 +91,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final RenderTargets gbufferRenderTargets;
 	private final AbstractTexture normals;
 	private final AbstractTexture specular;
-	private final AbstractTexture noise;
+	private final IntSupplier noise;
 
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
@@ -106,7 +106,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-                          AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet,
+                          AbstractTexture normals, AbstractTexture specular, IntSupplier noise, ProgramSet programSet,
 													Object2ObjectMap<String, IntSupplier> customTextureIds) {
 		this.pipeline = pipeline;
 

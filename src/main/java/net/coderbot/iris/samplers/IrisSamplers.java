@@ -69,8 +69,8 @@ public class IrisSamplers {
 		}
 	}
 
-	public static void addNoiseSampler(SamplerHolder samplers, AbstractTexture texture) {
-		samplers.addDynamicSampler(texture::getId, "noisetex");
+	public static void addNoiseSampler(SamplerHolder samplers, IntSupplier sampler) {
+		samplers.addDynamicSampler(sampler, "noisetex");
 	}
 
 	public static boolean hasShadowSamplers(SamplerHolder samplers) {
