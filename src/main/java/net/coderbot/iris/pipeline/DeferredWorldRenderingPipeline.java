@@ -525,7 +525,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		private final BlendModeOverride blendModeOverride;
 
 		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents,
-					 AlphaTes alphaTestOverride, BlendModeOverride blendModeOverride) {
+					 AlphaTest alphaTestOverride, BlendModeOverride blendModeOverride) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;

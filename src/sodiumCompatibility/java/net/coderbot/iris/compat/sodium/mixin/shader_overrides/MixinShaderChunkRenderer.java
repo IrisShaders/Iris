@@ -80,6 +80,7 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
         	// TODO: Fallback framebuffer handling
 			irisChunkProgramOverrides.unbindFramebuffer();
 
+			override.getInterface().restore();
 			override.unbind();
 			override = null;
 			ci.cancel();

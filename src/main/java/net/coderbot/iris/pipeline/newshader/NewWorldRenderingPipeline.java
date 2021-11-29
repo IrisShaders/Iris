@@ -439,7 +439,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		extendedShader.addIrisSampler("shadowtex1", this.shadowMapRenderer.getDepthTextureNoTranslucentsId());
 		extendedShader.addIrisSampler("depthtex0", this.renderTargets.getDepthTexture().getTextureId());
 		extendedShader.addIrisSampler("depthtex1", this.renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		extendedShader.addIrisSampler("noisetex", this.customTextureManager.getNoiseTexture().getId());
+		extendedShader.addIrisSampler("noisetex", this.customTextureManager.getNoiseTexture().getAsInt());
 		extendedShader.addIrisSampler("shadowcolor", this.shadowMapRenderer.getColorTexture0Id());
 		extendedShader.addIrisSampler("shadowcolor0", this.shadowMapRenderer.getColorTexture0Id());
 		extendedShader.addIrisSampler("shadowcolor1", this.shadowMapRenderer.getColorTexture1Id());
