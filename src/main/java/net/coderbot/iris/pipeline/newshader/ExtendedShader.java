@@ -123,13 +123,8 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 	}
 
 	@Override
-	public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+	public boolean addDefaultSampler(IntSupplier sampler, String... names) {
 		throw new UnsupportedOperationException("addDefaultSampler is not yet implemented");
-	}
-
-	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-		throw new UnsupportedOperationException("postBind isn't supported.");
 	}
 
 	@Override

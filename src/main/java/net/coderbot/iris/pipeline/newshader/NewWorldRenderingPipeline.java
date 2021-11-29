@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -28,6 +29,7 @@ import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -113,9 +115,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final FinalPassRenderer finalPassRenderer;
-	private final NativeImageBackedSingleColorTexture normals;
-	private final NativeImageBackedSingleColorTexture specular;
-	private final AbstractTexture noise;
+	private final CustomTextureManager customTextureManager;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 
@@ -172,24 +172,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);
 
-		// Create some placeholder PBR textures for now
-		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
-		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
-
-		noise = programSet.getPack().getCustomNoiseTexture().flatMap(texture -> {
-			try {
-				AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture(texture);
-
-				return Optional.of(customNoiseTexture);
-			} catch (IOException e) {
-				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
-				return Optional.empty();
-			}
-		}).orElseGet(() -> {
-			final int noiseTextureResolution = programSet.getPackDirectives().getNoiseTextureResolution();
-
-			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
-		});
+		customTextureManager = new CustomTextureManager(programSet.getPackDirectives(), programSet.getPack().getCustomTextureDataMap(), programSet.getPack().getCustomNoiseTexture());
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
@@ -198,8 +181,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null),
-					programSet.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise,
-					programSet);
+					programSet.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets,
+					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
+					programSet, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 			createShadowMapRenderer = () -> {};
 		};
 
@@ -215,14 +199,20 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		};
 
 		this.deferredRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getDeferred(), renderTargets,
-				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
+				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()),
+				programSet.getPackDirectives().getExplicitFlips("deferred_pre"));
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getComposite(), renderTargets,
-				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
-		this.finalPassRenderer = new FinalPassRenderer(programSet, renderTargets, noise, updateNotifier, flipper.snapshot(),
-				centerDepthSampler, shadowMapRendererSupplier);
+				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
+				programSet.getPackDirectives().getExplicitFlips("composite_pre"));
+		this.finalPassRenderer = new FinalPassRenderer(programSet, renderTargets, customTextureManager.getNoiseTexture(), updateNotifier, flipper.snapshot(),
+				centerDepthSampler, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
+				this.compositeRenderer.getFlippedAtLeastOnceFinal());
 
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
@@ -230,14 +220,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
-			IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
-			IrisSamplers.addLevelSamplers(builder, normals, specular);
-			IrisSamplers.addWorldDepthSamplers(builder, renderTargets);
-			IrisSamplers.addNoiseSampler(builder, noise);
+			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			if (IrisSamplers.hasShadowSamplers(builder)) {
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
+			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
+			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
+
+			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 				createShadowMapRenderer.run();
-				IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
 			}
 
 			return builder.build();
@@ -246,14 +238,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
-			IrisSamplers.addRenderTargetSamplers(builder, () -> flippedBeforeTerrain, renderTargets, false);
-			IrisSamplers.addLevelSamplers(builder, normals, specular);
-			IrisSamplers.addNoiseSampler(builder, noise);
+			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
+
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeTerrain, renderTargets, false);
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
+			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
 			// Only initialize these samplers if the shadow map renderer exists.
 			// Otherwise, this program shouldn't be used at all?
-			if (IrisSamplers.hasShadowSamplers(builder) && shadowMapRenderer != null) {
-				IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
+			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor) && shadowMapRenderer != null) {
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
 			}
 
 			return builder.build();
@@ -397,19 +391,23 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
+		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(extendedShader, customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
+
 		// TODO: All samplers added here need to be mirrored in NewShaderTests. Possible way to bypass this?
-		IrisSamplers.addRenderTargetSamplers(extendedShader, flipped, renderTargets, false);
+		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 
 		// TODO: IrisSamplers.addWorldSamplers(builder, normals, specular);
-		extendedShader.addDynamicSampler(normals::getId, "normals");
-		extendedShader.addDynamicSampler(specular::getId, "specular");
+		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getNormals()::getId, "normals");
+		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getSpecular()::getId, "specular");
 
-		IrisSamplers.addWorldDepthSamplers(extendedShader, renderTargets);
-		IrisSamplers.addNoiseSampler(extendedShader, noise);
+		IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
+		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
-		if (IrisSamplers.hasShadowSamplers(extendedShader)) {
+		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 			createShadowMapRenderer.run();
-			IrisSamplers.addShadowSamplers(extendedShader, shadowMapRenderer);
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
 		}
 
 		return extendedShader;
@@ -433,15 +431,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// TODO: waterShadowEnabled?
 		// TODO: Audit these render targets...
 
-		extendedShader.addIrisSampler("normals", this.normals.getId());
-		extendedShader.addIrisSampler("specular", this.specular.getId());
+		extendedShader.addIrisSampler("normals", this.customTextureManager.getNormals().getId());
+		extendedShader.addIrisSampler("specular", this.customTextureManager.getSpecular().getId());
 		extendedShader.addIrisSampler("shadow", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("watershadow", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("shadowtex0", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("shadowtex1", this.shadowMapRenderer.getDepthTextureNoTranslucentsId());
 		extendedShader.addIrisSampler("depthtex0", this.renderTargets.getDepthTexture().getTextureId());
 		extendedShader.addIrisSampler("depthtex1", this.renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		extendedShader.addIrisSampler("noisetex", this.noise.getId());
+		extendedShader.addIrisSampler("noisetex", this.customTextureManager.getNoiseTexture().getId());
 		extendedShader.addIrisSampler("shadowcolor", this.shadowMapRenderer.getColorTexture0Id());
 		extendedShader.addIrisSampler("shadowcolor0", this.shadowMapRenderer.getColorTexture0Id());
 		extendedShader.addIrisSampler("shadowcolor1", this.shadowMapRenderer.getColorTexture1Id());
@@ -827,9 +825,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		compositeRenderer.destroy();
-		normals.close();
-		specular.close();
-		noise.close();
+		customTextureManager.destroy();
 
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
