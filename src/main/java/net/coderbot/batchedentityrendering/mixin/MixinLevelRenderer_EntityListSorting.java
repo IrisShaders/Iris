@@ -25,10 +25,14 @@ import java.util.*;
  * This is even more effective with vanilla's entity rendering, since it only has a single buffer for most purposes,
  * except for a configured set of batched render types.
  *
- * Uses a priority of 1001 so that we apply after Carpet's mixins to LevelRenderer (WorldRenderer), avoiding a conflict:
+ * This injection point has been carefully chosen to avoid conflicts with other mixins such as one from Carpet:
  * https://github.com/gnembon/fabric-carpet/blob/776f798aecb792a5881ccae8784888156207a047/src/main/java/carpet/mixins/WorldRenderer_pausedShakeMixin.java#L23
+ *
+ * By using ModifyVariable instead of Redirect, it is more likely to be compatible with other rendering mods. We also
+ * use a priority of 999 to apply before most other mixins to this method, meaning that other mods adding entities to
+ * the rendering list (like Twilight Forest) are more likely to have these added entities sorted.
  */
-@Mixin(value = LevelRenderer.class, priority = 1001)
+@Mixin(value = LevelRenderer.class, priority = 999)
 public class MixinLevelRenderer_EntityListSorting {
 	@Shadow
 	private ClientLevel level;
