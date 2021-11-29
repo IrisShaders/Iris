@@ -34,6 +34,14 @@ public class BlendModeStorage {
 		blendLocked = true;
 	}
 
+	public static void deferBlendModeToggle(boolean enabled) {
+		originalBlendEnable = enabled;
+	}
+
+	public static void deferBlendFunc(int srcRgb, int dstRgb, int srcAlpha, int dstAlpha) {
+		originalBlend = new BlendMode(srcRgb, dstRgb, srcAlpha, dstAlpha);
+	}
+
 	public static void restoreBlend() {
 		blendLocked = false;
 
