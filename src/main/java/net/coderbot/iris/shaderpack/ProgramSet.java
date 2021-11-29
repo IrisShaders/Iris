@@ -1,17 +1,13 @@
 package net.coderbot.iris.shaderpack;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class ProgramSet {
 	private final PackDirectives packDirectives;
@@ -48,125 +44,56 @@ public class ProgramSet {
 
 	private final ShaderPack pack;
 
-	public ProgramSet(Path root, Path inclusionRoot, ShaderProperties shaderProperties, ShaderPack pack) throws IOException {
+	public ProgramSet(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
+					  ShaderProperties shaderProperties, ShaderPack pack) {
 		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, shaderProperties);
 		this.pack = pack;
 
-		this.shadow = readProgramSource(root, inclusionRoot, "shadow", this, shaderProperties);
+		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties);
 
-		this.shadowcomp = readProgramArray(root, inclusionRoot, "shadowcomp", shaderProperties);
-		this.prepare = readProgramArray(root, inclusionRoot, "prepare", shaderProperties);
+		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties);
+		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
 
-		this.gbuffersBasic = readProgramSource(root, inclusionRoot, "gbuffers_basic", this, shaderProperties);
-		this.gbuffersBeaconBeam = readProgramSource(root, inclusionRoot, "gbuffers_beaconbeam", this, shaderProperties);
-		this.gbuffersTextured = readProgramSource(root, inclusionRoot, "gbuffers_textured", this, shaderProperties);
-		this.gbuffersTexturedLit = readProgramSource(root, inclusionRoot, "gbuffers_textured_lit", this, shaderProperties);
-		this.gbuffersTerrain = readProgramSource(root, inclusionRoot, "gbuffers_terrain", this, shaderProperties);
-		this.gbuffersDamagedBlock = readProgramSource(root, inclusionRoot, "gbuffers_damagedblock", this, shaderProperties);
-		this.gbuffersSkyBasic = readProgramSource(root, inclusionRoot, "gbuffers_skybasic", this, shaderProperties);
-		this.gbuffersSkyTextured = readProgramSource(root, inclusionRoot, "gbuffers_skytextured", this, shaderProperties);
-		this.gbuffersClouds = readProgramSource(root, inclusionRoot, "gbuffers_clouds", this, shaderProperties);
-		this.gbuffersWeather = readProgramSource(root, inclusionRoot, "gbuffers_weather", this, shaderProperties);
-		this.gbuffersEntities = readProgramSource(root, inclusionRoot, "gbuffers_entities", this, shaderProperties);
-		this.gbuffersEntitiesGlowing = readProgramSource(root, inclusionRoot, "gbuffers_entities_glowing", this, shaderProperties);
-		this.gbuffersGlint = readProgramSource(root, inclusionRoot, "gbuffers_armor_glint", this, shaderProperties);
-		this.gbuffersEntityEyes = readProgramSource(root, inclusionRoot, "gbuffers_spidereyes", this, shaderProperties);
-		this.gbuffersBlock = readProgramSource(root, inclusionRoot, "gbuffers_block", this, shaderProperties);
-		this.gbuffersHand = readProgramSource(root, inclusionRoot, "gbuffers_hand", this, shaderProperties);
+		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, shaderProperties);
+		this.gbuffersBeaconBeam = readProgramSource(directory, sourceProvider, "gbuffers_beaconbeam", this, shaderProperties);
+		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, shaderProperties);
+		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, shaderProperties);
+		this.gbuffersTerrain = readProgramSource(directory, sourceProvider, "gbuffers_terrain", this, shaderProperties);
+		this.gbuffersDamagedBlock = readProgramSource(directory, sourceProvider, "gbuffers_damagedblock", this, shaderProperties);
+		this.gbuffersSkyBasic = readProgramSource(directory, sourceProvider, "gbuffers_skybasic", this, shaderProperties);
+		this.gbuffersSkyTextured = readProgramSource(directory, sourceProvider, "gbuffers_skytextured", this, shaderProperties);
+		this.gbuffersClouds = readProgramSource(directory, sourceProvider, "gbuffers_clouds", this, shaderProperties);
+		this.gbuffersWeather = readProgramSource(directory, sourceProvider, "gbuffers_weather", this, shaderProperties);
+		this.gbuffersEntities = readProgramSource(directory, sourceProvider, "gbuffers_entities", this, shaderProperties);
+		this.gbuffersEntitiesGlowing = readProgramSource(directory, sourceProvider, "gbuffers_entities_glowing", this, shaderProperties);
+		this.gbuffersGlint = readProgramSource(directory, sourceProvider, "gbuffers_armor_glint", this, shaderProperties);
+		this.gbuffersEntityEyes = readProgramSource(directory, sourceProvider, "gbuffers_spidereyes", this, shaderProperties);
+		this.gbuffersBlock = readProgramSource(directory, sourceProvider, "gbuffers_block", this, shaderProperties);
+		this.gbuffersHand = readProgramSource(directory, sourceProvider, "gbuffers_hand", this, shaderProperties);
 
-		this.deferred = readProgramArray(root, inclusionRoot, "deferred", shaderProperties);
+		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties);
 
-		this.gbuffersWater = readProgramSource(root, inclusionRoot, "gbuffers_water", this, shaderProperties);
-		this.gbuffersHandWater = readProgramSource(root, inclusionRoot, "gbuffers_hand_water", this, shaderProperties);
+		this.gbuffersWater = readProgramSource(directory, sourceProvider, "gbuffers_water", this, shaderProperties);
+		this.gbuffersHandWater = readProgramSource(directory, sourceProvider, "gbuffers_hand_water", this, shaderProperties);
 
-		this.composite = readProgramArray(root, inclusionRoot, "composite", shaderProperties);
-		this.compositeFinal = readProgramSource(root, inclusionRoot, "final", this, shaderProperties);
+		this.composite = readProgramArray(directory, sourceProvider, "composite", shaderProperties);
+		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, shaderProperties);
 
 		locateDirectives();
 	}
 
-	private ProgramSource[] readProgramArray(Path root, Path inclusionRoot, String name, ShaderProperties shaderProperties) throws IOException {
+	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
+											 Function<AbsolutePackPath, String> sourceProvider, String name,
+											 ShaderProperties shaderProperties) {
 		ProgramSource[] programs = new ProgramSource[16];
 
 		for (int i = 0; i < programs.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
 
-			programs[i] = readProgramSource(root, inclusionRoot, name + suffix, this, shaderProperties);
+			programs[i] = readProgramSource(directory, sourceProvider, name + suffix, this, shaderProperties);
 		}
 
 		return programs;
-	}
-
-	private ProgramSet(ProgramSet base, ProgramSet overrides) {
-		this.pack = base.pack;
-
-		if (this.pack != overrides.pack) {
-			throw new IllegalStateException();
-		}
-
-		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, base.getPackDirectives());
-
-		this.shadow = merge(base.shadow, overrides.shadow);
-
-		this.shadowcomp = merge(base.shadowcomp, overrides.shadowcomp);
-		this.prepare = merge(base.prepare, overrides.prepare);
-
-		this.gbuffersBasic = merge(base.gbuffersBasic, overrides.gbuffersBasic);
-		this.gbuffersBeaconBeam = merge(base.gbuffersBeaconBeam, overrides.gbuffersBeaconBeam);
-		this.gbuffersTextured = merge(base.gbuffersTextured, overrides.gbuffersTextured);
-		this.gbuffersTexturedLit = merge(base.gbuffersTexturedLit, overrides.gbuffersTexturedLit);
-		this.gbuffersTerrain = merge(base.gbuffersTerrain, overrides.gbuffersTerrain);
-		this.gbuffersDamagedBlock = merge(base.gbuffersDamagedBlock, overrides.gbuffersDamagedBlock);
-		this.gbuffersSkyBasic = merge(base.gbuffersSkyBasic, overrides.gbuffersSkyBasic);
-		this.gbuffersSkyTextured = merge(base.gbuffersSkyTextured, overrides.gbuffersSkyTextured);
-		this.gbuffersClouds = merge(base.gbuffersClouds, overrides.gbuffersClouds);
-		this.gbuffersWeather = merge(base.gbuffersWeather, overrides.gbuffersWeather);
-		this.gbuffersEntities = merge(base.gbuffersEntities, overrides.gbuffersEntities);
-		this.gbuffersEntitiesGlowing = merge(base.gbuffersEntitiesGlowing, overrides.gbuffersEntitiesGlowing);
-		this.gbuffersGlint = merge(base.gbuffersGlint, overrides.gbuffersGlint);
-		this.gbuffersEntityEyes = merge(base.gbuffersEntityEyes, overrides.gbuffersEntityEyes);
-		this.gbuffersBlock = merge(base.gbuffersBlock, overrides.gbuffersBlock);
-		this.gbuffersHand = merge(base.gbuffersHand, overrides.gbuffersHand);
-
-		this.deferred = merge(base.deferred, overrides.deferred);
-
-		this.gbuffersWater = merge(base.gbuffersWater, overrides.gbuffersWater);
-		this.gbuffersHandWater = merge(base.gbuffersHandWater, overrides.gbuffersHandWater);
-
-		this.composite = merge(base.composite, overrides.composite);
-		this.compositeFinal = merge(base.compositeFinal, overrides.compositeFinal);
-
-		locateDirectives();
-	}
-
-	private static ProgramSource[] merge(ProgramSource[] base, ProgramSource[] override) {
-		ProgramSource[] merged = new ProgramSource[base.length];
-
-		if (override.length != base.length) {
-			throw new IllegalStateException();
-		}
-
-		for (int i = 0; i < merged.length; i++) {
-			merged[i] = merge(base[i], override[i]);
-		}
-
-		return merged;
-	}
-
-	private static ProgramSource merge(ProgramSource base, ProgramSource override) {
-		if (override != null) {
-			return override;
-		}
-
-		return base;
-	}
-
-	public static ProgramSet merged(ProgramSet base, ProgramSet overrides) {
-		if (overrides == null) {
-			return base;
-		}
-
-		return new ProgramSet(base, overrides);
 	}
 
 	private void locateDirectives() {
@@ -314,55 +241,18 @@ public class ProgramSet {
 		return pack;
 	}
 
-	private static ProgramSource readProgramSource(Path root, Path inclusionRoot, String program, ProgramSet programSet, ShaderProperties properties) throws IOException {
-		String vertexSource = null;
-		String geometrySource = null;
-		String fragmentSource = null;
+	private static ProgramSource readProgramSource(AbsolutePackPath directory,
+												   Function<AbsolutePackPath, String> sourceProvider, String program,
+												   ProgramSet programSet, ShaderProperties properties) {
+		AbsolutePackPath vertexPath = directory.resolve(program + ".vsh");
+		String vertexSource = sourceProvider.apply(vertexPath);
 
-		try {
-			Path vertexPath = root.resolve(program + ".vsh");
-			vertexSource = readFile(vertexPath);
+		AbsolutePackPath geometryPath = directory.resolve(program + ".gsh");
+		String geometrySource = sourceProvider.apply(geometryPath);
 
-			if (vertexSource != null) {
-				vertexSource = ShaderPreprocessor.process(inclusionRoot, vertexPath, vertexSource);
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		try {
-			Path geometryPath = root.resolve(program + ".gsh");
-			geometrySource = readFile(geometryPath);
-
-			if (geometrySource != null) {
-				geometrySource = ShaderPreprocessor.process(inclusionRoot, geometryPath, geometrySource);
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
-
-		try {
-			Path fragmentPath = root.resolve(program + ".fsh");
-			fragmentSource = readFile(fragmentPath);
-
-			if (fragmentSource != null) {
-				fragmentSource = ShaderPreprocessor.process(inclusionRoot, fragmentPath, fragmentSource);
-			}
-		} catch (IOException e) {
-			// TODO: Better handling?
-			throw e;
-		}
+		AbsolutePackPath fragmentPath = directory.resolve(program + ".fsh");
+		String fragmentSource = sourceProvider.apply(fragmentPath);
 
 		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties);
-	}
-
-	private static String readFile(Path path) throws IOException {
-		try {
-			return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-		} catch (FileNotFoundException | NoSuchFileException e) {
-			return null;
-		}
 	}
 }
