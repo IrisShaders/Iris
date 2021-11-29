@@ -1,14 +1,18 @@
 package net.coderbot.iris.shaderpack;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.coderbot.iris.gl.blending.AlphaTest;
-import org.jetbrains.annotations.Nullable;
 
 public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;
@@ -19,6 +23,7 @@ public class ProgramDirectives {
 	private final AlphaTest alphaTestOverride;
 	private final boolean disableBlend;
 	private final ImmutableSet<Integer> mipmappedBuffers;
+	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
@@ -34,10 +39,12 @@ public class ProgramDirectives {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 			disableBlend = properties.getBlendDisabled().contains(source.getName());
+			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
 			disableBlend = false;
+			explicitFlips = ImmutableMap.of();
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -104,5 +111,9 @@ public class ProgramDirectives {
 
 	public ImmutableSet<Integer> getMipmappedBuffers() {
 		return mipmappedBuffers;
+	}
+
+	public ImmutableMap<Integer, Boolean> getExplicitFlips() {
+		return explicitFlips;
 	}
 }

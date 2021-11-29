@@ -110,12 +110,12 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	}
 
 	@Override
-	public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
-		return samplers.addDefaultSampler(sampler, postBind, names);
+	public boolean addDefaultSampler(IntSupplier sampler, String... names) {
+		return samplers.addDefaultSampler(sampler, names);
 	}
 
 	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-		return samplers.addDynamicSampler(sampler, postBind, names);
+	public boolean addDynamicSampler(IntSupplier sampler, String... names) {
+		return samplers.addDynamicSampler(sampler, names);
 	}
 }
