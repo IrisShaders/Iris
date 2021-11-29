@@ -43,6 +43,10 @@ public class BlendModeStorage {
 	}
 
 	public static void restoreBlend() {
+		if (!blendLocked) {
+			return;
+		}
+
 		blendLocked = false;
 
 		if (originalBlendEnable) {

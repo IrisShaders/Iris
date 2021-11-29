@@ -22,6 +22,11 @@ import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+/**
+ * The parsed representation of the shaders.properties file. This class is not meant to be stored permanently, rather
+ * it merely exists as an intermediate step until we build up PackDirectives and ProgramDirectives objects from the
+ * values in here & the values parsed from shader source code.
+ */
 public class ShaderProperties {
 	private boolean enableClouds = true;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;

@@ -51,7 +51,7 @@ public class GlShader extends GlResource {
      * Adds an additional list of defines to the top of a GLSL shader file just after the version declaration. This
      * allows for ghetto shader specialization.
      */
-    private static String processShader(String src, ShaderConstants constants) {
+    public static String processShader(String src, ShaderConstants constants) {
         StringBuilder builder = new StringBuilder(src.length());
         boolean patched = false;
 

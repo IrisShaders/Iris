@@ -550,6 +550,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 			if (blendModeOverride != null) {
 				blendModeOverride.apply();
+			} else {
+				// Previous program on the stack might have applied an override
+				BlendModeOverride.restore();
 			}
 		}
 
