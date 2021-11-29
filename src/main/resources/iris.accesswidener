@@ -1,3 +1,4 @@
 accessWidener v1 named
+accessible class com/mojang/blaze3d/platform/GlStateManager$BlendState
 accessible class com/mojang/blaze3d/platform/GlStateManager$FogState
 accessible class com/mojang/blaze3d/platform/GlStateManager$TextureState
