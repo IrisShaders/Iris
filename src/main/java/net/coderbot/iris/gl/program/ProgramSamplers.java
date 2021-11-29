@@ -114,13 +114,13 @@ public class ProgramSamplers {
 		}
 
 		@Override
-		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+		public boolean addDefaultSampler(IntSupplier sampler, String... names) {
 			if (nextUnit != 0) {
 				// TODO: Relax this restriction!
 				throw new IllegalStateException("Texture unit 0 is already used.");
 			}
 
-			return addDynamicSampler(sampler, postBind, true, names);
+			return addDynamicSampler(sampler, true, names);
 		}
 
 		/**
@@ -128,11 +128,11 @@ public class ProgramSamplers {
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override
-		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-			return addDynamicSampler(sampler, postBind, false, names);
+		public boolean addDynamicSampler(IntSupplier sampler, String... names) {
+			return addDynamicSampler(sampler, false, names);
 		}
 
-		private boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, boolean used, String... names) {
+		private boolean addDynamicSampler(IntSupplier sampler, boolean used, String... names) {
 			for (String name : names) {
 				int location = GL20C.glGetUniformLocation(program, name);
 
@@ -159,7 +159,7 @@ public class ProgramSamplers {
 				return false;
 			}
 
-			samplers.add(new SamplerBinding(nextUnit, sampler, postBind));
+			samplers.add(new SamplerBinding(nextUnit, sampler));
 
 			remainingUnits -= 1;
 			nextUnit += 1;
@@ -231,17 +231,17 @@ public class ProgramSamplers {
 		}
 
 		@Override
-		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+		public boolean addDefaultSampler(IntSupplier sampler, String... names) {
 			sampler = getOverride(sampler, names);
 
-			return samplerHolder.addDefaultSampler(sampler, postBind, names);
+			return samplerHolder.addDefaultSampler(sampler, names);
 		}
 
 		@Override
-		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
+		public boolean addDynamicSampler(IntSupplier sampler, String... names) {
 			sampler = getOverride(sampler, names);
 
-			return samplerHolder.addDynamicSampler(sampler, postBind, names);
+			return samplerHolder.addDynamicSampler(sampler, names);
 		}
 	}
 }
