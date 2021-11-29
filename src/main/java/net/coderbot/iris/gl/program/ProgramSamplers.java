@@ -3,9 +3,11 @@ package net.coderbot.iris.gl.program;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.lwjgl.opengl.GL20C;
 
 import java.util.ArrayList;
@@ -40,6 +42,14 @@ public class ProgramSamplers {
 
 	public static Builder builder(int program, Set<Integer> reservedTextureUnits) {
 		return new Builder(program, reservedTextureUnits);
+	}
+
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds) {
+		return customTextureSamplerInterceptor(samplerHolder, customTextureIds, ImmutableSet.of());
+	}
+
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+		return new CustomTextureSamplerInterceptor(samplerHolder, customTextureIds, flippedAtLeastOnceSnapshot);
 	}
 
 	public static final class Builder implements SamplerHolder {
@@ -165,6 +175,73 @@ public class ProgramSamplers {
 
 		public ProgramSamplers build() {
 			return new ProgramSamplers(samplers.build(), calls);
+		}
+	}
+
+	public static final class CustomTextureSamplerInterceptor implements SamplerHolder {
+		private final SamplerHolder samplerHolder;
+		private final Object2ObjectMap<String, IntSupplier> customTextureIds;
+		private final ImmutableSet<String> deactivatedOverrides;
+
+		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+			this.samplerHolder = samplerHolder;
+			this.customTextureIds = customTextureIds;
+
+			ImmutableSet.Builder<String> deactivatedOverrides = new ImmutableSet.Builder<>();
+
+			for (int deactivatedOverride : flippedAtLeastOnceSnapshot) {
+				deactivatedOverrides.add("colortex" + deactivatedOverride);
+
+				if (deactivatedOverride < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
+					deactivatedOverrides.add(PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(deactivatedOverride));
+				}
+			}
+
+			this.deactivatedOverrides = deactivatedOverrides.build();
+		}
+
+		private IntSupplier getOverride(IntSupplier existing, String... names) {
+			for (String name : names) {
+				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
+					return customTextureIds.get(name);
+				}
+			}
+
+			return existing;
+		}
+
+		@Override
+		public void addExternalSampler(int textureUnit, String... names) {
+			IntSupplier override = getOverride(null, names);
+
+			if (override != null) {
+				if (textureUnit == 0) {
+					samplerHolder.addDefaultSampler(override, names);
+				} else {
+					samplerHolder.addDynamicSampler(override, names);
+				}
+			} else {
+				samplerHolder.addExternalSampler(textureUnit, names);
+			}
+		}
+
+		@Override
+		public boolean hasSampler(String name) {
+			return samplerHolder.hasSampler(name);
+		}
+
+		@Override
+		public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+			sampler = getOverride(sampler, names);
+
+			return samplerHolder.addDefaultSampler(sampler, postBind, names);
+		}
+
+		@Override
+		public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
+			sampler = getOverride(sampler, names);
+
+			return samplerHolder.addDynamicSampler(sampler, postBind, names);
 		}
 	}
 }

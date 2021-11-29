@@ -52,6 +52,8 @@ public class IrisSamplers {
 
 			final String name = "colortex" + i;
 
+			// TODO: How do custom textures interact with aliases?
+
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
 
