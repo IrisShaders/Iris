@@ -39,7 +39,7 @@ public class MixinLevelRenderer_EntityListSorting {
 
 	@ModifyVariable(method = "renderLevel", at = @At(value = "INVOKE_ASSIGN", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"),
 			slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderBuffers;bufferSource()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;"),
-					to = @At(value = "FIELD", target = "net/minecraft/client/renderer/entity/EntityRenderDispatcher.shouldRender (Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/culling/Frustum;DDD)Z")), allow = 1)
+					to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;shouldRender(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/culling/Frustum;DDD)Z")), allow = 1)
     private Iterator<Entity> batchedentityrendering$sortEntityList(Iterator<Entity> iterator) {
         // Sort the entity list first in order to allow vanilla's entity batching code to work better.
         this.level.getProfiler().push("sortEntityList");
