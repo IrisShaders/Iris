@@ -5,13 +5,13 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Sorts the entity list to allow entities of the same type to be properly batched. Without sorting, entities are
@@ -30,24 +30,27 @@ import java.util.Map;
  */
 @Mixin(value = LevelRenderer.class, priority = 1001)
 public class MixinLevelRenderer_EntityListSorting {
-    @Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;entitiesForRendering()Ljava/lang/Iterable;"))
-    private Iterable<Entity> batchedentityrendering$sortEntityList(ClientLevel clientLevel) {
-        // Sort the entity list first in order to allow vanilla's entity batching code to work better.
-        Iterable<Entity> entityIterable = clientLevel.entitiesForRendering();
+	@Shadow
+	private ClientLevel level;
 
-        clientLevel.getProfiler().push("sortEntityList");
+	@ModifyVariable(method = "renderLevel", at = @At(value = "INVOKE_ASSIGN", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"),
+			slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderBuffers;bufferSource()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;"),
+					to = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderChunks:Lit/unimi/dsi/fastutil/objects/ObjectList;")), allow = 1)
+    private Iterator<Entity> batchedentityrendering$sortEntityList(Iterator<Entity> iterator) {
+        // Sort the entity list first in order to allow vanilla's entity batching code to work better.
+        this.level.getProfiler().push("sortEntityList");
 
         Map<EntityType<?>, List<Entity>> sortedEntities = new HashMap<>();
 
         List<Entity> entities = new ArrayList<>();
-        entityIterable.forEach(entity -> {
+        iterator.forEachRemaining(entity -> {
             sortedEntities.computeIfAbsent(entity.getType(), entityType -> new ArrayList<>(32)).add(entity);
         });
 
         sortedEntities.values().forEach(entities::addAll);
 
-        clientLevel.getProfiler().pop();
+        this.level.getProfiler().pop();
 
-        return entities;
+        return entities.iterator();
     }
 }
