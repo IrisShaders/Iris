@@ -1,5 +1,6 @@
 {
   "package": "net.coderbot.iris.compat.sodium.mixin",
+  "plugin": "net.coderbot.iris.compat.sodium.mixin.IrisSodiumCompatMixinPlugin",
   "required": true,
   "compatibilityLevel": "JAVA_8",
   "injectors": {
