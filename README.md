@@ -10,7 +10,7 @@
 
 ## FAQ
 
-Find answers to frequently asked questions, including a list of currently support shaders, on our [FAQ page](docs/faq.md).
+Find answers to frequently asked questions, including a list of currently supported shaders, on our [FAQ page](docs/faq.md).
 
 
 ## Why did you make Iris?
