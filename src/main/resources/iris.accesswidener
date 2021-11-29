@@ -1,4 +1,5 @@
 accessWidener	v1	named
+accessible  class   com/mojang/blaze3d/platform/GlStateManager$BlendState
 accessible  class   com/mojang/blaze3d/platform/GlStateManager$TextureState
 accessible  class   net/minecraft/client/renderer/RenderStateShard$TransparencyStateShard
 accessible  class   net/minecraft/client/renderer/RenderType$CompositeState

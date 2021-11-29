@@ -9,9 +9,12 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,29 +24,28 @@ import java.util.function.IntSupplier;
 
 public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
-	private final AbstractTexture noise;
+	private final IntSupplier noise;
 	private final NativeImageBackedSingleColorTexture normals;
 	private final NativeImageBackedSingleColorTexture specular;
-	private final List<AbstractTexture> pngBackedTextures = new ArrayList<>();
 
-	public CustomTextureManager(PackDirectives packDirectives, Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap, Optional<CustomTextureData> customNoiseTextureData) {
+	/**
+	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
+	 * leaks.
+	 */
+	private final List<AbstractTexture> ownedTextures = new ArrayList<>();
+
+	public CustomTextureManager(PackDirectives packDirectives,
+								Object2ObjectMap<TextureStage,Object2ObjectMap<String, CustomTextureData>> customTextureDataMap,
+								Optional<CustomTextureData> customNoiseTextureData) {
 		customTextureDataMap.forEach((textureStage, customTextureStageDataMap) -> {
 			Object2ObjectMap<String, IntSupplier> customTextureIds = new Object2ObjectOpenHashMap<>();
-			customTextureStageDataMap.forEach((samplerName, textureData) -> {
-				if (textureData instanceof CustomTextureData.PngData) {
-					try {
-						AbstractTexture texture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
-						pngBackedTextures.add(texture);
-						customTextureIds.put(samplerName, texture::getId);
-					} catch (IOException e) {
-						Iris.logger.error("Unable to parse the image data for the custom texture on stage " + textureStage + ", sampler " + samplerName, e);
-					}
-				} else if (textureData instanceof CustomTextureData.ResourceData) {
-					AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(((CustomTextureData.ResourceData) textureData).getResourceLocation());
 
-					// TODO: Should we give something else if the texture isn't there? This will need some thought
-					IntSupplier glId = texture != null ? texture::getId : MissingTextureAtlasSprite.getTexture()::getId;
-					customTextureIds.put(samplerName, glId);
+			customTextureStageDataMap.forEach((samplerName, textureData) -> {
+				try {
+					customTextureIds.put(samplerName, createCustomTexture(textureData));
+				} catch (IOException | ResourceLocationException e) {
+					Iris.logger.error("Unable to parse the image data for the custom texture on stage "
+							+ textureStage + ", sampler " + samplerName, e);
 				}
 			});
 
@@ -51,39 +53,65 @@ public class CustomTextureManager {
 		});
 
 		noise = customNoiseTextureData.flatMap(textureData -> {
-			if (textureData instanceof CustomTextureData.PngData) {
-				try {
-					AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
-					pngBackedTextures.add(customNoiseTexture);
+			try {
+				return Optional.of(createCustomTexture(textureData));
+			} catch (IOException | ResourceLocationException e) {
+				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
 
-					return Optional.of(customNoiseTexture);
-				} catch (IOException e) {
-					Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
-					return Optional.empty();
-				}
-			} else if (textureData instanceof CustomTextureData.ResourceData) {
-				AbstractTexture customNoiseTexture = Minecraft.getInstance().getTextureManager().getTexture(((CustomTextureData.ResourceData) textureData).getResourceLocation());
-
-				// TODO: Should we give something else if the texture isn't there? This will need some thought
-				return Optional.of(customNoiseTexture != null ? customNoiseTexture : MissingTextureAtlasSprite.getTexture());
+				return Optional.empty();
 			}
-			return Optional.empty();
 		}).orElseGet(() -> {
 			final int noiseTextureResolution = packDirectives.getNoiseTextureResolution();
 
-			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
+			AbstractTexture texture = new NativeImageBackedNoiseTexture(noiseTextureResolution);
+			ownedTextures.add(texture);
+
+			return texture::getId;
 		});
 
 		// Create some placeholder PBR textures for now
 		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
 		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
+
+		ownedTextures.add(normals);
+		ownedTextures.add(specular);
+	}
+
+	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
+		if (textureData instanceof CustomTextureData.PngData) {
+			AbstractTexture texture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
+			ownedTextures.add(texture);
+
+			return texture::getId;
+		} else if (textureData instanceof CustomTextureData.ResourceData) {
+			CustomTextureData.ResourceData resourceData = ((CustomTextureData.ResourceData) textureData);
+			String namespace = resourceData.getNamespace();
+			String location = resourceData.getLocation();
+
+			ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+			TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+
+			// NB: We have to re-query the TextureManager for the texture object every time. This is because the
+			//     AbstractTexture object could be removed / deleted from the TextureManager on resource reloads,
+			//     and we could end up holding on to a deleted texture unless we added special code to handle resource
+			//     reloads. Re-fetching the texture from the TextureManager every time is the most robust approach for
+			//     now.
+			return () -> {
+				AbstractTexture texture = textureManager.getTexture(textureLocation);
+
+				// TODO: Should we give something else if the texture isn't there? This will need some thought
+				return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
+			};
+		} else {
+			throw new IllegalArgumentException("Unable to handle custom texture data " + textureData);
+		}
 	}
 
 	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> getCustomTextureIdMap() {
 		return customTextureIdMap;
 	}
 
-	public AbstractTexture getNoiseTexture() {
+	public IntSupplier getNoiseTexture() {
 		return noise;
 	}
 
@@ -96,8 +124,6 @@ public class CustomTextureManager {
 	}
 
 	public void destroy() {
-		pngBackedTextures.forEach(AbstractTexture::close);
-		normals.close();
-		specular.close();
+		ownedTextures.forEach(AbstractTexture::close);
 	}
 }

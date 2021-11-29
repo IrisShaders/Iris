@@ -12,6 +12,9 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.blending.BlendMode;
+import net.coderbot.iris.gl.blending.BlendModeFunction;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 import java.util.Optional;
@@ -51,7 +54,7 @@ public class ShaderProperties {
 	// TODO: Parse custom uniforms / variables
 	private final Object2ObjectMap<String, AlphaTest> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
-	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
+	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
@@ -153,13 +156,21 @@ public class ShaderProperties {
 					return;
 				}
 
-				if (!"off".equals(value)) {
-					// TODO: Support custom blending modes
-					Iris.logger.warn("Custom blending mode directives are not supported, ignoring blend directive for " + key);
+				if ("off".equals(value)) {
+					blendModeOverrides.put(pass, BlendModeOverride.OFF);
 					return;
 				}
 
-				blendDisabled.add(pass);
+				String[] modeArray = value.split(" ");
+				int[] modes = new int[4];
+
+				int i = 0;
+				for (String modeName : modeArray) {
+					modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
+					i++;
+				}
+
+				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(modes[0], modes[1], modes[2], modes[3])));
 			});
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
@@ -332,8 +343,8 @@ public class ShaderProperties {
 		return viewportScaleOverrides;
 	}
 
-	public ObjectSet<String> getBlendDisabled() {
-		return blendDisabled;
+	public Object2ObjectMap<String, BlendModeOverride> getBlendModeOverrides() {
+		return blendModeOverrides;
 	}
 
 	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
