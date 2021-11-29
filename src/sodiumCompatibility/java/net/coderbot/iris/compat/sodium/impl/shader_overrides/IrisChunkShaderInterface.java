@@ -6,6 +6,7 @@ import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
@@ -25,18 +26,20 @@ public class IrisChunkShaderInterface {
 	@Nullable
 	private final GlUniformBlock uniformBlockDrawParameters;
 
+	private final BlendModeOverride blendModeOverride;
 	private final IrisShaderFogComponent fogShaderComponent;
 	private final ProgramUniforms irisProgramUniforms;
 	private final ProgramSamplers irisProgramSamplers;
 
 	public IrisChunkShaderInterface(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
-									boolean isShadowPass) {
+									boolean isShadowPass, BlendModeOverride blendModeOverride) {
 		this.uniformModelViewMatrix = contextExt.bindUniformIfPresent("u_ModelViewMatrix", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("u_ProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformModelViewProjectionMatrix = contextExt.bindUniformIfPresent("u_ModelViewProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("u_NormalMatrix", GlUniformMatrix4f::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 
+		this.blendModeOverride = blendModeOverride;
 		this.fogShaderComponent = new IrisShaderFogComponent(contextExt);
 
 		this.irisProgramUniforms = pipeline.initUniforms(handle);
@@ -51,9 +54,19 @@ public class IrisChunkShaderInterface {
 		RenderSystem.activeTexture(TextureUnit.LIGHTMAP.getUnitId());
 		RenderSystem.bindTexture(RenderSystem.getShaderTexture(2));
 
+		if (blendModeOverride != null) {
+			blendModeOverride.apply();
+		}
+
 		fogShaderComponent.setup();
 		irisProgramUniforms.update();
 		irisProgramSamplers.update();
+	}
+
+	public void restore() {
+		if (blendModeOverride != null) {
+			BlendModeOverride.restore();
+		}
 	}
 
 	public void setProjectionMatrix(Matrix4f matrix) {

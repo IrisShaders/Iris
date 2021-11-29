@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline.newshader;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
@@ -23,10 +24,11 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 	GlFramebuffer writingToBeforeTranslucent;
 	GlFramebuffer writingToAfterTranslucent;
 	GlFramebuffer baseline;
+	BlendModeOverride blendModeOverride;
 	HashMap<String, IntSupplier> dynamicSamplers;
 	private final boolean intensitySwizzle;
 
-	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
+	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
@@ -38,6 +40,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 		this.writingToBeforeTranslucent = writingToBeforeTranslucent;
 		this.writingToAfterTranslucent = writingToAfterTranslucent;
 		this.baseline = baseline;
+		this.blendModeOverride = blendModeOverride;
 		this.dynamicSamplers = new HashMap<>();
 		this.parent = parent;
 
@@ -54,6 +57,10 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 		ProgramUniforms.clearActiveUniforms();
 		super.clear();
 
+		if (this.blendModeOverride != null) {
+			BlendModeOverride.restore();
+		}
+
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
@@ -63,6 +70,10 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 
 		super.apply();
 		uniforms.update();
+
+		if (this.blendModeOverride != null) {
+			this.blendModeOverride.apply();
+		}
 
 		if (parent.isBeforeTranslucent) {
 			writingToBeforeTranslucent.bind();
@@ -123,13 +134,8 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 	}
 
 	@Override
-	public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
+	public boolean addDefaultSampler(IntSupplier sampler, String... names) {
 		throw new UnsupportedOperationException("addDefaultSampler is not yet implemented");
-	}
-
-	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-		throw new UnsupportedOperationException("postBind isn't supported.");
 	}
 
 	@Override

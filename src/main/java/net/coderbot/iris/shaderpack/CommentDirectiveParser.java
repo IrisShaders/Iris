@@ -26,24 +26,11 @@ public class CommentDirectiveParser {
 	}
 
 	public static Optional<String> findDirectiveInLines(List<String> lines, String key) {
-		/*// We iterate over the list of lines in reverse order because the last occurrence of a directive has a greater
+		// We iterate over the list of lines in reverse order because the last occurrence of a directive has a greater
 		// precedence over an earlier occurrence of a directive.
 		for (int index = lines.size() - 1; index >= 0; index -= 1) {
 			String line = lines.get(index);
 
-			Optional<String> found = findDirective(line, key);
-
-			if (found.isPresent()) {
-				return found;
-			}
-		}*/
-
-		// TODO: Temporary workaround for the fact that BSL uses multiple drawbuffers directives in some files, and
-		// expects preprocessor directives for comment directives to be properly, handled. But we don't do that! After
-		// observation, it seems like the first DRAWBUFFERS directive is generally the "default" directive.
-		//
-		// This is important because if we add a draw buffer that isn't written to, undefined behavior happens!
-		for (String line : lines) {
 			Optional<String> found = findDirective(line, key);
 
 			if (found.isPresent()) {
@@ -59,51 +46,11 @@ public class CommentDirectiveParser {
 		String prefix = needle + ":";
 		String suffix = "*/";
 
-		/*// Search for the last occurrence of the directive within the text, since those take precedence.
-		int indexOfPrefix = haystack.lastIndexOf(prefix);*/
-
-		// TODO: Temporary workaround for the fact that BSL uses multiple drawbuffers directives in some files, and
-		// expects preprocessor directives for comment directives to be properly, handled. But we don't do that! After
-		// observation, it seems like the first DRAWBUFFERS directive is generally the "default" directive.
-		//
-		// This is important because if we add a draw buffer that isn't written to, undefined behavior happens!
-		int indexOfPrefix;
-
-		if ((haystack.contains("https://bitslablab.com") || haystack.contains("By LexBoosT")) && needle.equals("DRAWBUFFERS")) {
-			indexOfPrefix = haystack.indexOf(prefix);
-		} else {
-			indexOfPrefix = haystack.lastIndexOf(prefix);
-		}
+		// Search for the last occurrence of the directive within the text, since those take precedence.
+		int indexOfPrefix = haystack.lastIndexOf(prefix);
 
 		if (indexOfPrefix == -1) {
 			return Optional.empty();
-		}
-
-		// TODO: But in this case, the second DRAWBUFFERS directive is the default one!!!
-		// TODO: Actually process #ifdef and #ifndef before processing comment directives!!!!
-		// This hack is needed to get BSL reflections to work for now until we do that.
-		if (haystack.contains("REFLECTION_PREVIOUS")
-				&& (haystack.contains("https://bitslablab.com") || haystack.contains("By LexBoosT"))
-				&& haystack.contains("/*DRAWBUFFERS:05*/") && needle.equals("DRAWBUFFERS")) {
-			return Optional.of("05");
-		}
-
-		// TODO: This is a similar hack but just for complementary.
-		if (haystack.contains("COLORED_LIGHT") && haystack.contains("Complementary Shaders by EminGT")
-				&& needle.equals("DRAWBUFFERS")) {
-			if (haystack.contains("/* DRAWBUFFERS:03618 */") && haystack.contains("/* DRAWBUFFERS:0361 */")) {
-				if (haystack.contains("#define COLORED_LIGHT_DEFINE") && !haystack.contains("//#define COLORED_LIGHT_DEFINE")) {
-					return Optional.of("03618");
-				} else {
-					return Optional.of("0361");
-				}
-			} else if (haystack.contains("/*DRAWBUFFERS:05*/") && haystack.contains("/*DRAWBUFFERS:059*/")) {
-				if (haystack.contains("#define COLORED_LIGHT_DEFINE") && !haystack.contains("//#define COLORED_LIGHT_DEFINE")) {
-					return Optional.of("059");
-				} else {
-					return Optional.of("05");
-				}
-			}
 		}
 
 		String before = haystack.substring(0, indexOfPrefix).trim();

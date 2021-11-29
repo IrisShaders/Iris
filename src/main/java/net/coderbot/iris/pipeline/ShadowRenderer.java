@@ -7,12 +7,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
-import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
@@ -35,7 +37,10 @@ import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
-import net.coderbot.iris.uniforms.*;
+import net.coderbot.iris.uniforms.CameraUniforms;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.CelestialUniforms;
+import net.coderbot.iris.uniforms.CommonUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -60,6 +65,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.nio.FloatBuffer;
 import java.util.Objects;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class ShadowRenderer implements ShadowMapRenderer {
@@ -84,9 +90,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final RenderTargets gbufferRenderTargets;
 	private final AbstractTexture normals;
 	private final AbstractTexture specular;
-	private final AbstractTexture noise;
+	private final IntSupplier noise;
 
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
+	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 
 	public static boolean ACTIVE = false;
 	public static List<BlockEntity> visibleBlockEntities;
@@ -98,8 +105,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private int renderedShadowBlockEntities = 0;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
-						  Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-						  AbstractTexture normals, AbstractTexture specular, AbstractTexture noise, ProgramSet programSet) {
+                          Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
+                          AbstractTexture normals, AbstractTexture specular, IntSupplier noise, ProgramSet programSet,
+													Object2ObjectMap<String, IntSupplier> customTextureIds) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -127,6 +135,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.normals = normals;
 		this.specular = specular;
 		this.noise = noise;
+		this.customTextureIds = customTextureIds;
 
 		if (shadow != null) {
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
@@ -251,11 +260,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier(), FogMode.LINEAR);
-		IrisSamplers.addRenderTargetSamplers(builder, flipped, gbufferRenderTargets, false);
-		IrisSamplers.addLevelSamplers(builder, normals, specular);
-		IrisSamplers.addNoiseSampler(builder, noise);
-		IrisSamplers.addShadowSamplers(builder, this);
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds);
+
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, pipeline.getFrameUpdateNotifier(), FogMode.LINEAR);
+		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, gbufferRenderTargets, false);
+		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular);
+		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noise);
+		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, this);
 
 		return builder.build();
 	}
