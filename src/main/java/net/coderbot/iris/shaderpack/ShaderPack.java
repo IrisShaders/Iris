@@ -15,8 +15,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,8 +34,10 @@ import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 public class ShaderPack {
@@ -111,7 +115,8 @@ public class ShaderPack {
 			ShaderConstants constants = ProgramBuilder.MACRO_CONSTANTS;
 			String source = GlShader.processShader(builder.toString(), constants);
 
-			// TODO: Apply GLSL preprocessor to source
+			// Apply GLSL preprocessor to source
+			source = JcppProcessor.glslPreprocessSource(source);
 
 			return source;
 		};
@@ -164,14 +169,22 @@ public class ShaderPack {
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
 	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
-		Properties properties = new Properties();
+		String fileContents = readProperties(shaderPath, name);
+		if (fileContents == null) {
+			return Optional.empty();
+		}
 
+		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, fileContents);
+
+		StringReader propertiesReader = new StringReader(processed);
+		Properties properties = new Properties();
 		try {
-			// NB: shaders.properties is specified to be encoded with ISO-8859-1 by OptiFine,
+			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
 			//     so we don't need to do the UTF-8 workaround here.
-			properties.load(Files.newInputStream(shaderPath.resolve(name)));
+			properties.load(propertiesReader);
 		} catch (IOException e) {
-			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+			Iris.logger.error("Error loading " + name + " at " + shaderPath);
+			Iris.logger.catching(Level.ERROR, e);
 
 			return Optional.empty();
 		}
@@ -222,6 +235,21 @@ public class ShaderPack {
 
 		JsonReader jsonReader = new JsonReader(reader);
 		return GSON.getAdapter(JsonObject.class).read(jsonReader);
+	}
+
+	private static String readProperties(Path shaderPath, String name) {
+		try {
+			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.UTF_8);
+		} catch (NoSuchFileException e) {
+			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
+
+			return null;
+		} catch (IOException e) {
+			Iris.logger.error("An IOException occurred reading " + name + " from the current shaderpack");
+			Iris.logger.catching(Level.ERROR, e);
+
+			return null;
+		}
 	}
 
 	public ProgramSet getProgramSet(DimensionId dimension) {
