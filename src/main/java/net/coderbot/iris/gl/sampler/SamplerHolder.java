@@ -13,14 +13,6 @@ public interface SamplerHolder {
 	 * Throws an exception if texture unit 0 is already allocated or reserved in some way. Do not call this
 	 * function after calls to addDynamicSampler, it must be called before any calls to addDynamicSampler.
 	 */
-	boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names);
-	boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names);
-
-	default boolean addDefaultSampler(IntSupplier sampler, String... names) {
-		return addDefaultSampler(sampler, () -> {}, names);
-	}
-
-	default boolean addDynamicSampler(IntSupplier sampler, String... names) {
-		return addDynamicSampler(sampler, () -> {}, names);
-	}
+	boolean addDefaultSampler(IntSupplier sampler, String... names);
+	boolean addDynamicSampler(IntSupplier sampler, String... names);
 }

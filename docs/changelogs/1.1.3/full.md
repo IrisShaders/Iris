@@ -77,6 +77,14 @@ This release also marks the completion of the preparatory work needed for Iris t
 
 ## Translations
 
+- Added lolcat translation (credit chalkyjeans)
 - Added Pirate Speak translation (credit NoComment, IMS)
+- Added Slovak translation (credit SmajloSlovakian)
+- Updated Estonian translation (credit Madis0)
+- Updated Farsi translation (credit alirezaahani)
+- Updated German translation (credit GameWithJerry, Levelowel)
 - Updated Italian translation (credit Dar9586)
-- Updated German translation (credit GameWithJerry)
+- Updated Persian translation (credit alirezaahani)
+- Updated Portuguese translation (credit Maneschy12)
+- Updated Russian translation (credit Disguys, BratishkaErik)
+- Updated Traditional Chinese translation (credit HJ-zhtw, Canary233)
