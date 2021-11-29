@@ -8,7 +8,9 @@
   "iris.shaders.reloaded.failure": "無法重新載入光影！原因：%s",
   "iris.shaders.toggled.failure": "無法使用光影！原因：%s",
   "iris.sodium.failure.title": "無法載入 Iris！",
-  "iris.sodium.failure.reason": "Iris 已經包含了 Sodium，請您將 Sodium 從模組資料夾中刪除。",
+  "iris.sodium.failure.download": "下載 Sodium",
+  "iris.sodium.failure.reason.notFound": "為了有良好的效能表現，Iris 需要您尚未安裝的 Sodium。請先下載它、將它存放於模組資料夾後重新啟動遊戲。",
+  "iris.sodium.failure.reason.incompatible": "為了有良好的效能表現，Iris 需要版本相容的 Sodium。請先下載正確的版本、將它存放於模組資料夾、移除不正確的版本後重新啟動遊戲。",
 
   "options.iris.apply": "套用",
   "options.iris.refresh": "重新整理",
