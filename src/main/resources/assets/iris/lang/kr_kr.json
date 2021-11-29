@@ -31,5 +31,5 @@
   "options.iris.shadowDistance.disabled": "현재 사용하고 있는 쉐이더팩은 이미 그림자 표시 범위가 설정돼 있어 바꿀 수 없습니다.",
 
   "pack.iris.select.title": "선택",
-  "pack.iris.list.label": "+ 쉐이더팩을 드래그 앤 드롭하여 추가하기"
+  "pack.iris.list.label": "+ 쉐이더팩을 드래그 & 드롭하여 추가하기"
 }
