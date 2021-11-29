@@ -9,6 +9,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
@@ -42,7 +43,7 @@ public class CustomTextureManager {
 			customTextureStageDataMap.forEach((samplerName, textureData) -> {
 				try {
 					customTextureIds.put(samplerName, createCustomTexture(textureData));
-				} catch (IOException e) {
+				} catch (IOException | ResourceLocationException e) {
 					Iris.logger.error("Unable to parse the image data for the custom texture on stage "
 							+ textureStage + ", sampler " + samplerName, e);
 				}
@@ -54,7 +55,7 @@ public class CustomTextureManager {
 		noise = customNoiseTextureData.flatMap(textureData -> {
 			try {
 				return Optional.of(createCustomTexture(textureData));
-			} catch (IOException e) {
+			} catch (IOException | ResourceLocationException e) {
 				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
 
 				return Optional.empty();
@@ -76,14 +77,18 @@ public class CustomTextureManager {
 		ownedTextures.add(specular);
 	}
 
-	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException {
+	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
 		if (textureData instanceof CustomTextureData.PngData) {
 			AbstractTexture texture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
 			ownedTextures.add(texture);
 
 			return texture::getId;
 		} else if (textureData instanceof CustomTextureData.ResourceData) {
-			ResourceLocation textureLocation = ((CustomTextureData.ResourceData) textureData).getResourceLocation();
+			CustomTextureData.ResourceData resourceData = ((CustomTextureData.ResourceData) textureData);
+			String namespace = resourceData.getNamespace();
+			String location = resourceData.getLocation();
+
+			ResourceLocation textureLocation = new ResourceLocation(namespace, location);
 			TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
 			// NB: We have to re-query the TextureManager for the texture object every time. This is because the

@@ -3,7 +3,6 @@ package net.coderbot.iris.shaderpack.texture;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
-import net.minecraft.resources.ResourceLocation;
 
 public abstract class CustomTextureData {
 	private CustomTextureData() {
@@ -29,14 +28,28 @@ public abstract class CustomTextureData {
 	}
 
 	public static final class ResourceData extends CustomTextureData {
-		private final ResourceLocation resourceLocation;
+		private final String namespace;
+		private final String location;
 
-		public ResourceData(ResourceLocation resourceLocation) {
-			this.resourceLocation = resourceLocation;
+		public ResourceData(String namespace, String location) {
+			this.namespace = namespace;
+			this.location = location;
 		}
 
-		public ResourceLocation getResourceLocation() {
-			return resourceLocation;
+		/**
+		 * @return The namespace of the texture. The caller is responsible for checking whether this is actually
+		 *         a valid namespace.
+		 */
+		public String getNamespace() {
+			return namespace;
+		}
+
+		/**
+		 * @return The path / location of the texture. The caller is responsible for checking whether this is actually
+		 *         a valid path.
+		 */
+		public String getLocation() {
+			return location;
 		}
 	}
 

@@ -7,7 +7,6 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import org.jetbrains.annotations.Nullable;
 
@@ -112,8 +111,14 @@ public class ShaderPack {
 	// TODO: Implement raw texture data types
 	public CustomTextureData readTexture(Path root, String path) throws IOException {
 		CustomTextureData customTextureData;
-		if (path.contains(":") && ResourceLocation.isValidResourceLocation(path)) {
-			customTextureData = new CustomTextureData.ResourceData(new ResourceLocation(path));
+		if (path.contains(":")) {
+			String[] parts = path.split(":");
+
+			if (parts.length > 2) {
+				Iris.logger.warn("Resource location " + path + " contained more than two parts?");
+			}
+
+			customTextureData = new CustomTextureData.ResourceData(parts[0], parts[1]);
 		} else {
 			// TODO: Make sure the resulting path is within the shaderpack?
 			if (path.startsWith("/")) {
