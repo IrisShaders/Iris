@@ -22,7 +22,6 @@ import java.util.Optional;
 import java.util.Properties;
 
 public class ShaderPack {
-	private final Path root;
 	private final ProgramSet base;
 	@Nullable
 	private final ProgramSet overworld;
@@ -37,14 +36,14 @@ public class ShaderPack {
 	/**
 	 * Reads a shader pack from the disk.
 	 *
-	 * @param root The path to the "shaders" directory within the shader pack
-	 * @throws IOException
+	 * @param root The path to the "shaders" directory within the shader pack. The created ShaderPack will not retain
+	 *             this path in any form; once the constructor exits, all disk I/O needed to load this shader pack will
+	 *             have completed, and there is no need to hold on to the path for that reason.
+	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
 	public ShaderPack(Path root) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
-
-		this.root = root;
 
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
@@ -60,7 +59,7 @@ public class ShaderPack {
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
-				return readTexture(path);
+				return readTexture(root, path);
 			} catch (IOException e) {
 				Iris.logger.error("Unable to read the custom noise texture at " + path, e);
 
@@ -72,7 +71,7 @@ public class ShaderPack {
 			Object2ObjectMap<String, CustomTextureData> innerCustomTextureDataMap = new Object2ObjectOpenHashMap<>();
 			customTexturePropertiesMap.forEach((samplerName, path) -> {
 				try {
-					innerCustomTextureDataMap.put(samplerName, readTexture(path));
+					innerCustomTextureDataMap.put(samplerName, readTexture(root, path));
 				} catch (IOException e) {
 					Iris.logger.error("Unable to read the custom texture at " + path, e);
 				}
@@ -111,7 +110,7 @@ public class ShaderPack {
 	}
 
 	// TODO: Implement raw texture data types
-	public CustomTextureData readTexture(String path) throws IOException {
+	public CustomTextureData readTexture(Path root, String path) throws IOException {
 		CustomTextureData customTextureData;
 		if (path.contains(":") && ResourceLocation.isValidResourceLocation(path)) {
 			customTextureData = new CustomTextureData.ResourceData(new ResourceLocation(path));
