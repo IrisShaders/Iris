@@ -9,7 +9,7 @@ Iris version 1.1.3 for Minecraft 1.16.5 and Minecraft 1.17.1 has been released!
 Here's what's changed:
 
 - :sodium: Sodium is no longer bundled, and must be installed separately (The installer still installs it for you)
-- 🌄 Iris now fully supports SEUS Renewed, SEUS PTGI, and SEUS PTGI HRR
+- 🌄 Iris now fully supports SEUS Renewed, and now has functional support (on some hardware / drivers) for SEUS PTGI & SEUS PTGI HRR
 - 🖐 Hands now have proper shadows / lighting with most shader packs
 - 🧙‍♀️Witches and drowned now have proper lighting with Complementary Shaders
 - 🌌 Night sky effects now render properly with Complementary Shaders (galaxies if manually enabled, auroras) and AstraLex (planets)
