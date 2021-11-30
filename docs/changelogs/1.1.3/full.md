@@ -2,12 +2,8 @@
 
 WIP, up-to-date as of:
 
-- 1.16.x: https://github.com/IrisShaders/Iris/commit/1250e2f8dd327acaad9bd1afc41217611478ecd0
-- 1.17.x: https://github.com/IrisShaders/Iris/commit/71c9d4c221056a5a76b6e06ce0e562c864c4cbdb
-
-## Tenative
-
-Just writing out some things for PRs / branches that aren't merged yet
+- 1.16.x: https://github.com/IrisShaders/Iris/commit/91ac46ab59e67d8e77e416cc16429473c19f0a36
+- 1.17.x: https://github.com/IrisShaders/Iris/commit/65fc9ce3fd122bcf28400f1811b525240a4ca27d
 
 ---
 
@@ -15,27 +11,12 @@ This release includes significant changes to the project organization of Iris, a
 
 This release also marks the completion of the preparatory work needed for Iris to properly support shader configuration. We intend to focus our work on supporting shader configuration in the near future, but we have no ETA for when this will be available.
 
----
-
-- Fixed rain causing graphical corruption on SEUS Renewed
-    - Custom texture support was required
-- Fixed water and rain looking completely broken on SEUS PTGI and SEUS PTGI HRR
-    - Support for both custom textures as well as blend mode overrides was required
-- Fixed stairs emitting light on SEUS PTGI HRR
-    - JCPP is now used to preprocess block ID maps, previous versions of Iris processed them incorrectly causing this issue.
-- Iris supports manually enabling the Galaxies setting of Complementary Shaders
-    - Custom texture support was required
-- Iris now supports the planets in the AstraLex night sky
-    - You guessed it, it was custom textures
-- Fixed bugs from manually changing Specular Reflections / RP Support on Complementary / BSL
-    - JCPP is now used to properly conditionally parse directives, instead of using hardcoded workarounds that didn't support changed settings.
-
 ## Sodium
 
 - Iris no longer bundles Sodium, you must now download Sodium separately.
     - Iris no longer requires a forked version of Sodium to function properly, and uses Mixins to work with official Sodium.
     - Sodium is still automatically installed in the installer
-    - This change is being made in order to reduce confusion between Iris and Sodium as projects.
+    - This change is being made in order to reduce confusion between Iris and Sodium as projects, and to streamline the development of Iris.
 
 ## New Shader Features and Fixes
 
@@ -54,6 +35,21 @@ This release also marks the completion of the preparatory work needed for Iris t
 - Fixed fullscreen passes using the wrong quad coordinates (credit to Niemand / Kneemund for the contribution)
     - This severely broke the fullscreen passes of some shaders that Iris doesn't yet support but can support in future updates.
 - Fixed loading "Apex Shaders v1.4" causing a game crash when launching.
+- Fixed rain causing graphical corruption on SEUS Renewed
+    - Custom texture support was required
+- Fixed water and rain looking completely broken on SEUS PTGI and SEUS PTGI HRR
+    - Support for both custom textures as well as blend mode overrides was required
+- Fixed stairs emitting light on SEUS PTGI HRR
+    - JCPP is now used to preprocess block ID maps, previous versions of Iris processed them incorrectly causing this issue.
+- Iris supports manually enabling the Galaxies setting of Complementary Shaders
+    - Custom texture support was required
+- Iris now supports the planets in the AstraLex night sky
+    - You guessed it, it was custom textures
+- Fixed bugs from manually changing Specular Reflections / RP Support on Complementary / BSL
+    - JCPP is now used to properly conditionally parse directives, instead of using hardcoded workarounds that didn't support changed settings.
+- SEUS should now work properly on Mesa drivers without additional external configuration (such as )
+    - Iris now hoists active `#extension` directives to the top of the shader file to adhere strictly to the GL spec, allowing these shaders to compile.
+- Fixed fog looking incorrect in the nether with Enhanced Default
 
 ## 1.17.1+ specific fixes
 
@@ -77,6 +73,15 @@ This release also marks the completion of the preparatory work needed for Iris t
 
 ## Translations
 
+- Added lolcat translation (credit chalkyjeans)
 - Added Pirate Speak translation (credit NoComment, IMS)
+- Added Slovak translation (credit SmajloSlovakian)
+- Updated Estonian translation (credit Madis0)
+- Updated Farsi translation (credit alirezaahani)
+- Updated German translation (credit GameWithJerry, Levelowel)
 - Updated Italian translation (credit Dar9586)
-- Updated German translation (credit GameWithJerry)
+- Updated Persian translation (credit alirezaahani)
+- Updated Portuguese translation (credit Maneschy12)
+- Updated Russian translation (credit Disguys, BratishkaErik)
+- Updated Traditional Chinese translation (credit HJ-zhtw, Canary233)
+- Updated Korean translation (credit craftingmod)
