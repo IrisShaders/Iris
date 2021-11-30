@@ -80,7 +80,7 @@ public class FinalPassRenderer {
 		// The name of this method might seem a bit odd here, but we want a framebuffer with color attachments that line
 		// up with whatever was written last (since we're reading from these framebuffers) instead of trying to create
 		// a framebuffer with color attachments different from what was written last (as we do with normal composite
-		// passes).
+		// passes that write to framebuffers).
 		this.baseline = renderTargets.createGbufferFramebuffer(flippedBuffers, new int[] {0});
 
 		// TODO: We don't actually fully swap the content, we merely copy it from alt to main
