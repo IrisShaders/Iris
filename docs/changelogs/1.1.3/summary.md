@@ -6,7 +6,7 @@ Iris version 1.1.3 for Minecraft 1.16.5 and Minecraft 1.17.1 has been released!
 
 **⬇ Download the release here: https://irisshaders.net/download.html**
 
-Here's what's changed:
+Here's what's changed since 1.1.2:
 
 - :sodium: Sodium is no longer bundled, and must be installed separately (The installer still installs it for you)
 - 🌄 Iris now fully supports SEUS Renewed, and now has functional support (on some hardware / drivers) for SEUS PTGI & SEUS PTGI HRR
