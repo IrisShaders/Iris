@@ -4,7 +4,7 @@
 
 Iris version 1.1.3 for Minecraft 1.16.5 and Minecraft 1.17.1 has been released!
 
-This release was jointly developed by coderbot, IMS, and Justsnoopy30, and also contains major contributions from Kroppeb and maximumpower55. It also contains many other smaller (but still important) contributions from many other people!
+This release was jointly developed by coderbot, IMS, and Justsnoopy30, and also contains major contributions from Kroppeb and maximum#8760. It also contains many other smaller (but still important) contributions from many other people!
 
 **⬇ Download the release here: https://irisshaders.net/download.html**
 
