@@ -88,7 +88,11 @@ public class FinalPassRenderer {
 
 		IntList buffersToBeCleared = pack.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared();
 
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		// The name of this method might seem a bit odd here, but we want a framebuffer with color attachments that line
+		// up with whatever was written last (since we're reading from these framebuffers) instead of trying to create
+		// a framebuffer with color attachments different from what was written last (as we do with normal composite
+		// passes that write to framebuffers).
+		this.baseline = renderTargets.createGbufferFramebuffer(flippedBuffers, new int[] {0});
 
 		// TODO: We don't actually fully swap the content, we merely copy it from alt to main
 		// This works for the most part, but it's not perfect. A better approach would be creating secondary

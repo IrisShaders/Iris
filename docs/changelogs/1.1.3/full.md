@@ -84,3 +84,4 @@ This release also marks the completion of the preparatory work needed for Iris t
 - Updated Portuguese translation (credit Maneschy12)
 - Updated Russian translation (credit Disguys, BratishkaErik)
 - Updated Traditional Chinese translation (credit HJ-zhtw, Canary233)
+- Updated Korean translation (credit craftingmod)
