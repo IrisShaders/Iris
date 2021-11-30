@@ -47,7 +47,7 @@ public class IrisChunkShaderInterface {
 				= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
 	}
 
-	public void setup(ChunkVertexType vertexType) {
+	public void setup() {
 		// See IrisSamplers#addLevelSamplers
 		RenderSystem.activeTexture(TextureUnit.TERRAIN.getUnitId());
 		RenderSystem.bindTexture(RenderSystem.getShaderTexture(0));
