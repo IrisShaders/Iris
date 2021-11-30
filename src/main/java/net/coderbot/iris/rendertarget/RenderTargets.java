@@ -169,7 +169,11 @@ public class RenderTargets {
 			stageWritesToMain = invert(ImmutableSet.of(), drawBuffers);
 		}
 
-		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToMain, drawBuffers);
+		return createColorFramebufferWithDepth(stageWritesToMain, drawBuffers);
+	}
+
+	public GlFramebuffer createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
+		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
 		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
 

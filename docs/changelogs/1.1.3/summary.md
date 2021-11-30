@@ -4,6 +4,8 @@
 
 Iris version 1.1.3 for Minecraft 1.16.5 and Minecraft 1.17.1 has been released!
 
+This release was jointly developed by coderbot, IMS, and Justsnoopy30, and also contains major contributions from Kroppeb and maximum#8760. It also contains many other smaller (but still important) contributions from many other people!
+
 **⬇ Download the release here: https://irisshaders.net/download.html**
 
 Here's what's changed since 1.1.2:
@@ -13,7 +15,7 @@ Here's what's changed since 1.1.2:
 - 🖐 Hands now have proper shadows / lighting with most shader packs
 - 🧙‍♀️Witches and drowned now have proper lighting with Complementary Shaders
 - 🌌 Night sky effects now render properly with Complementary Shaders (galaxies if manually enabled, auroras) and AstraLex (planets)
-- 💡 If manually enabled, Scene-Aware Colored Lighting now works properly on Complementary Shaders
+- 💡 If manually enabled, Scene-Aware Colored Lighting now works properly on Complementary Shaders, even on macOS!
 - 🌈 Rainbows and rain puddles now appear when using Complementary Shaders
 - 🗣 A number of translations have been updated and tweaked
 - 🩹 Patched a number of other minor bugs, crashes, and issues
