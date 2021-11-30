@@ -22,6 +22,7 @@ Here's what's changed since 1.1.2:
 
 Known potential issues:
 
+- ⚠ Sodium 0.4.0-alpha5 for 1.18 is still in early alpha, meaning that you might run into significant bugs or other issues. Please exercise good issue-reporting skills if you want to report issues with the 1.18 versions of Iris / Sodium.
 - ❌ Immersive Portals is not currently compatible with Iris 1.1.3.
 - ⬆ If you are using Indium on 1.17.1+, you must update it to version 1.0.1 or later. Indium 1.0.0 is not compatible with Sodium 0.3.3.
 
