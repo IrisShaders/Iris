@@ -42,10 +42,10 @@ public class OptionValues {
                 return;
             }
 
-            if (!option.getOption().getAllowedValues().contains(value)) {
-                // TODO: Diagnostics for this
-                return;
-            }
+            // NB: We don't check if the option is in the allowed values here. This matches OptiFine
+			//     behavior, the allowed values is only used when the user is changing options in the
+			//     GUI. Profiles might specify values for options that aren't in the allowed values
+			//     list, and values typed manually into the config .txt are unchecked.
 
             if (value.equals(option.getOption().getDefaultValue())) {
                 // Ignore the value if it's a default.
