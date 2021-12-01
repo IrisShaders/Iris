@@ -13,6 +13,8 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Optional;
+
 public class LinkElementWidget extends CommentedElementWidget {
 	private static final Component ARROW = new TextComponent(">");
 
@@ -69,13 +71,13 @@ public class LinkElementWidget extends CommentedElementWidget {
 	}
 
 	@Override
-	public Component getCommentTitle() {
-		return this.label;
+	public Optional<Component> getCommentTitle() {
+		return Optional.of(this.label);
 	}
 
 	@Override
-	public Component getCommentBody() {
+	public Optional<Component> getCommentBody() {
 		String translation = "screen." + this.targetScreenId + ".comment";
-		return I18n.exists(translation) ? new TranslatableComponent(translation) : null;
+		return Optional.ofNullable(I18n.exists(translation) ? new TranslatableComponent(translation) : null);
 	}
 }

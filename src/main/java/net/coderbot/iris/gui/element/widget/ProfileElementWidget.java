@@ -15,6 +15,8 @@ import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Optional;
+
 public class ProfileElementWidget extends BaseOptionElementWidget {
 	private static final MutableComponent PROFILE_LABEL = new TranslatableComponent("options.iris.profile");
 	private static final MutableComponent PROFILE_CUSTOM = new TranslatableComponent("options.iris.profile.custom").withStyle(ChatFormatting.YELLOW);
@@ -48,24 +50,29 @@ public class ProfileElementWidget extends BaseOptionElementWidget {
 	}
 
 	@Override
-	public Component getCommentTitle() {
-		return PROFILE_LABEL;
+	public Optional<Component> getCommentTitle() {
+		return Optional.of(PROFILE_LABEL);
 	}
 
 	@Override
-	public Component getCommentBody() {
+	public Optional<Component> getCommentBody() {
 		String key = "profile.comment";
-		return I18n.exists(key) ? new TranslatableComponent(key) : null;
+		return Optional.ofNullable(I18n.exists(key) ? new TranslatableComponent(key) : null);
 	}
 
 	@Override
 	public String getOptionName() {
-		return null;
+		return "";
 	}
 
 	@Override
 	public String getValue() {
-		return null;
+		return "";
+	}
+
+	@Override
+	protected void queueValueToPending() {
+		// No-op implementation
 	}
 
 	@Override

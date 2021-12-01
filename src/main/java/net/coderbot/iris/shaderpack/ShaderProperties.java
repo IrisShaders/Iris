@@ -1,18 +1,14 @@
 package net.coderbot.iris.shaderpack;
 
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.objects.*;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.*;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
+
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import it.unimi.dsi.fastutil.objects.Object2FloatMap;
-import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.blending.AlphaTestFunction;
-import net.coderbot.iris.gl.blending.AlphaTestOverride;
 
 /**
  * The parsed representation of the shaders.properties file. This class is not meant to be stored permanently, rather
@@ -46,18 +42,20 @@ public class ShaderProperties {
 	private final Map<String, List<String>> subScreenOptions = new HashMap<>();
 	private Integer mainScreenColumnCount = null;
 	private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
-	// TODO: Custom textures
 	// TODO: private Map<String, String> optifineVersionRequirements;
 	// TODO: Parse custom uniforms / variables
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
-	private final ObjectSet<String> blendDisabled = new ObjectOpenHashSet<>();
+	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
 	private ShaderProperties() {
 		// empty
 	}
 
+	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
 	public ShaderProperties(Properties properties) {
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -65,6 +63,7 @@ public class ShaderProperties {
 
 			if ("texture.noise".equals(key)) {
 				noiseTexturePath = value;
+				return;
 			}
 
 			if ("clouds".equals(key) && value.equals("off")) {
@@ -101,7 +100,7 @@ public class ShaderProperties {
 			handleIntDirective(key, value, "screen.columns", columns -> mainScreenColumnCount = columns);
 			handleAffixedIntDirective("screen.", ".columns", key, value, subScreenColumnCount::put);
 
-			// TODO: Min optifine versions, custom textures
+			// TODO: Min optifine versions, shader options layout / appearance / profiles
 			// TODO: Custom uniforms
 
 			handlePassDirective("scale.", key, value, pass -> {
@@ -158,18 +157,67 @@ public class ShaderProperties {
 					return;
 				}
 
-				if (!"off".equals(value)) {
-					// TODO: Support custom blending modes
-					Iris.logger.warn("Custom blending mode directives are not supported, ignoring blend directive for " + key);
+				if ("off".equals(value)) {
+					blendModeOverrides.put(pass, BlendModeOverride.OFF);
 					return;
 				}
 
-				blendDisabled.add(pass);
+				String[] modeArray = value.split(" ");
+				int[] modes = new int[4];
+
+				int i = 0;
+				for (String modeName : modeArray) {
+					modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
+					i++;
+				}
+
+				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(modes[0], modes[1], modes[2], modes[3])));
 			});
 
-			// TODO: Buffer flip, size directives
+			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
+				String[] parts = value.split(" ");
+
+				// TODO: Support raw textures
+				if (parts.length > 1) {
+					Iris.logger.warn("Custom texture directive for stage " + stageName + ", sampler " + samplerName + " contains more parts than we expected: " + value);
+					return;
+				}
+
+				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
+
+				if (!optionalTextureStage.isPresent()) {
+					Iris.logger.warn("Unknown texture stage " + "\"" + stageName + "\"," + " ignoring custom texture directive for " + key);
+					return;
+				}
+
+				TextureStage stage = optionalTextureStage.get();
+
+				Object2ObjectMap<String, String> customTexturePropertyMap = customTextures.getOrDefault(stage, new Object2ObjectOpenHashMap<>());
+				customTexturePropertyMap.put(samplerName, value);
+
+				customTextures.put(stage, customTexturePropertyMap);
+			});
+
+			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
+				handleBooleanValue(key, value, shouldFlip -> {
+					explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
+							.put(buffer, shouldFlip);
+				});
+			});
+
+			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
 		});
+	}
+
+	private static void handleBooleanValue(String key, String value, BooleanConsumer handler) {
+		if ("true".equals(value)) {
+			handler.accept(true);
+		} else if ("false".equals(value)) {
+			handler.accept(false);
+		} else {
+			Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
+		}
 	}
 
 	private static void handleBooleanDirective(String key, String value, String expectedKey, Consumer<OptionalBoolean> handler) {
@@ -245,6 +293,16 @@ public class ShaderProperties {
 			String[] elements = value.split(" +");
 
 			handler.accept(prefixStrippedKey, Arrays.asList(elements));
+		}
+	}
+
+	private static void handleTwoArgDirective(String prefix, String key, String value, BiConsumer<String, String> handler) {
+		if (key.startsWith(prefix)) {
+			int endOfPassIndex = key.indexOf(".", prefix.length());
+			String stage = key.substring(prefix.length(), endOfPassIndex);
+			String sampler = key.substring(endOfPassIndex + 1);
+
+			handler.accept(stage, sampler);
 		}
 	}
 
@@ -340,8 +398,12 @@ public class ShaderProperties {
 		return viewportScaleOverrides;
 	}
 
-	public ObjectSet<String> getBlendDisabled() {
-		return blendDisabled;
+	public Object2ObjectMap<String, BlendModeOverride> getBlendModeOverrides() {
+		return blendModeOverrides;
+	}
+
+	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
+		return customTextures;
 	}
 
 	public Optional<String> getNoiseTexturePath() {
@@ -370,5 +432,9 @@ public class ShaderProperties {
 
 	public Map<String, Integer> getSubScreenColumnCount() {
 		return subScreenColumnCount;
+	}
+
+	public Object2ObjectMap<String, Object2BooleanMap<String>> getExplicitFlips() {
+		return explicitFlips;
 	}
 }

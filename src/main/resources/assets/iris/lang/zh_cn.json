@@ -22,7 +22,10 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 已存在于光影包文件夹中！",
   "options.iris.shaders.disabled": "光影：已禁用",
   "options.iris.shaders.enabled": "光影：已启用",
-
+  "options.iris.shadowDistance": "最大阴影距离",
+  "options.iris.shadowDistance.enabled": "允许您更改阴影的最大距离.超出此距离的地形和实体不会渲染阴影.降低阴影距离可以显着提高性能.",
+  "options.iris.shadowDistance.disabled": "您当前的着色器包已经为阴影设置了渲染距离,您不能改变它.",
+  
   "pack.iris.select.title": "选择",
   "pack.iris.list.label": "+ 拖放光影包以添加"
 }

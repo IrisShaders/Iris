@@ -1,14 +1,20 @@
 package net.coderbot.iris.shaderpack;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.BlendMode;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import org.jetbrains.annotations.Nullable;
 
 public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;
@@ -17,8 +23,10 @@ public class ProgramDirectives {
 	private final float viewportScale;
 	@Nullable
 	private final AlphaTestOverride alphaTestOverride;
-	private final boolean disableBlend;
+	@Nullable
+	private final BlendModeOverride blendModeOverride;
 	private final ImmutableSet<Integer> mipmappedBuffers;
+	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
@@ -33,11 +41,13 @@ public class ProgramDirectives {
 		if (properties != null) {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
-			disableBlend = properties.getBlendDisabled().contains(source.getName());
+			blendModeOverride = properties.getBlendModeOverrides().get(source.getName());
+			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
-			disableBlend = false;
+			blendModeOverride = null;
+			explicitFlips = ImmutableMap.of();
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -98,11 +108,15 @@ public class ProgramDirectives {
 		return Optional.ofNullable(alphaTestOverride);
 	}
 
-	public boolean shouldDisableBlend() {
-		return disableBlend;
+	public BlendModeOverride getBlendModeOverride() {
+		return blendModeOverride;
 	}
 
 	public ImmutableSet<Integer> getMipmappedBuffers() {
 		return mipmappedBuffers;
+	}
+
+	public ImmutableMap<Integer, Boolean> getExplicitFlips() {
+		return explicitFlips;
 	}
 }

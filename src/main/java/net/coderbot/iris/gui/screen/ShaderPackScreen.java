@@ -1,10 +1,11 @@
 package net.coderbot.iris.gui.screen;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
 import net.coderbot.iris.gui.element.ShaderPackSelectionList;
-import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
 import net.coderbot.iris.gui.element.widget.CommentedElementWidget;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -13,7 +14,6 @@ import net.minecraft.Util;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.*;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,9 +45,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private Component addedPackDialog = null;
 	private int addedPackDialogTimer = 0;
 
-	private AbstractElementWidget hoveredElement = null;
-	private Component hoveredElementCommentTitle = null;
-	private List<FormattedCharSequence> hoveredElementCommentBody = null;
+	private @Nullable AbstractElementWidget hoveredElement = null;
+	private Optional<Component> hoveredElementCommentTitle = Optional.empty();
+	private List<FormattedCharSequence> hoveredElementCommentBody = new ArrayList<>();
 	private int hoveredElementCommentTimer = 0;
 
 	private boolean optionMenuOpen = false;
@@ -98,7 +98,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			// Draw panel
 			GuiUtil.drawPanel(poseStack, x, y, COMMENT_PANEL_WIDTH, panelHeight);
 			// Draw text
-			this.font.drawShadow(poseStack, this.hoveredElementCommentTitle, x + 4, y + 4, 0xFFFFFF);
+			this.font.drawShadow(poseStack, this.hoveredElementCommentTitle.orElse(TextComponent.EMPTY), x + 4, y + 4, 0xFFFFFF);
 			for (int i = 0; i < this.hoveredElementCommentBody.size(); i++) {
 				this.font.drawShadow(poseStack, this.hoveredElementCommentBody.get(i), x + 4, (y + 16) + (i * 10), 0xFFFFFF);
 			}
@@ -399,12 +399,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			if (widget instanceof CommentedElementWidget) {
 				this.hoveredElementCommentTitle = ((CommentedElementWidget) widget).getCommentTitle();
 
-				Component commentBody = ((CommentedElementWidget) widget).getCommentBody();
-				if (commentBody == null) {
-					this.hoveredElementCommentBody = null;
+				Optional<Component> commentBody = ((CommentedElementWidget) widget).getCommentBody();
+				if (!commentBody.isPresent()) {
+					this.hoveredElementCommentBody.clear();
 				} else {
 					// Split comment body into lines by separator "."
-					List<MutableComponent> splitByPeriods = Arrays.stream(commentBody.getString().split("[.][ ]*")).map(TextComponent::new).collect(Collectors.toList());
+					List<MutableComponent> splitByPeriods = Arrays.stream(commentBody.get().getString().split("[.][ ]*")).map(TextComponent::new).collect(Collectors.toList());
 					// Line wrap
 					this.hoveredElementCommentBody = new ArrayList<>();
 					for (MutableComponent text : splitByPeriods) {
@@ -412,22 +412,22 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 					}
 				}
 			} else {
-				this.hoveredElementCommentTitle = null;
-				this.hoveredElementCommentBody = null;
+				this.hoveredElementCommentTitle = Optional.empty();
+				this.hoveredElementCommentBody.clear();
 			}
 
 			this.hoveredElementCommentTimer = 0;
 		} else if (!hovered && widget == this.hoveredElement) {
 			this.hoveredElement = null;
-			this.hoveredElementCommentTitle = null;
-			this.hoveredElementCommentBody = null;
+			this.hoveredElementCommentTitle = Optional.empty();
+			this.hoveredElementCommentBody.clear();
 			this.hoveredElementCommentTimer = 0;
 		}
 	}
 
 	public boolean isDisplayingComment() {
 		return this.hoveredElementCommentTimer > 20 &&
-				this.hoveredElementCommentTitle != null &&
-				this.hoveredElementCommentBody != null;
+				this.hoveredElementCommentTitle.isPresent() &&
+				!this.hoveredElementCommentBody.isEmpty();
 	}
 }

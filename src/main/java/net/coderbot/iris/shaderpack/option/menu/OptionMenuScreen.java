@@ -38,7 +38,7 @@ public class OptionMenuScreen {
 					container.notifyOptionAdded(elementString, (OptionMenuOptionElement) element);
 				}
 			} catch (IllegalArgumentException error) {
-				Iris.logger.error(error);
+				Iris.logger.error(error.getMessage());
 
 				this.elements.add(OptionMenuElement.EMPTY);
 			}

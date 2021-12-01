@@ -63,8 +63,16 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 			if (row.size() >= columns) {
 				this.addEntry(new ElementRowEntry(screen, this.navigation, row));
-				row = new ArrayList<>();
+				row = new ArrayList<>(); // Clearing the list would affect the row entry created above
 			}
+		}
+
+		if (row.size() > 0) {
+			while (row.size() < columns) {
+				row.add(AbstractElementWidget.EMPTY);
+			}
+
+			this.addEntry(new ElementRowEntry(screen, this.navigation, row));
 		}
 	}
 

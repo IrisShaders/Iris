@@ -15,10 +15,7 @@ public abstract class OptionMenuElement {
 	public static final OptionMenuElement EMPTY = new OptionMenuElement() {
 		@Override
 		public AbstractElementWidget createWidget(ShaderPackScreen screen, NavigationController navigation) {
-			return new AbstractElementWidget() {
-				@Override
-				public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {}
-			};
+			return AbstractElementWidget.EMPTY;
 		}
 	};
 

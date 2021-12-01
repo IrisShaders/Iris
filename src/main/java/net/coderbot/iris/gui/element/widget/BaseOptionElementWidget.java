@@ -11,6 +11,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.*;
 
+import java.util.Optional;
+
 public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	protected static final Component SET_TO_DEFAULT = new TranslatableComponent("options.iris.setToDefault").withStyle(ChatFormatting.GREEN);
 	protected static final Component DIVIDER = new TextComponent(": ");
@@ -105,7 +107,7 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 		this.valueLabel = createValueLabel();
 	}
 
-	protected final void queueValueToPending() {
+	protected void queueValueToPending() {
 		Iris.addPendingShaderPackOption(this.getOptionName(), this.getValue());
 	}
 
@@ -131,14 +133,14 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	public abstract boolean isValueOriginal();
 
 	@Override
-	public Component getCommentTitle() {
-		return this.unmodifiedLabel;
+	public Optional<Component> getCommentTitle() {
+		return Optional.of(this.unmodifiedLabel);
 	}
 
 	@Override
-	public Component getCommentBody() {
+	public Optional<Component> getCommentBody() {
 		String translation = "option." + getOptionName() + ".comment";
-		return I18n.exists(translation) ? new TranslatableComponent(translation) : null;
+		return Optional.ofNullable(I18n.exists(translation) ? new TranslatableComponent(translation) : null);
 	}
 
 	protected final void onValueChanged() {

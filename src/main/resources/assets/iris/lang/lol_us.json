@@ -1,0 +1,33 @@
+{
+  "iris.shaders.reloaded": "Shadews wewoaded!",
+  "iris.shaders.toggled": "Toggwed shadews to %s!",
+  "iris.keybind.reload": "Wewoad shadews",
+  "iris.keybind.shaderPackSelection": "Shadewpack sewection scween",
+  "iris.keybind.toggleShaders": "Toggwe Shadews",
+  "iris.keybinds": "Iwis",
+  "iris.shaders.reloaded.failure": "Faiwed to wewoad shadews! Reason: %s",
+  "iris.shaders.toggled.failure": "Faiwed to toggwe shadews! Reason: %s",
+  "iris.sodium.failure.title": "Iwis faiwed to woad!",
+  "iris.sodium.failure.reason": "You have Sodium in youw mods fowdew, howevew Iwis incwudes it. Pwease cwose da game, and wemove Sodium from youw mods fowdew.",
+
+  "options.iris.apply": "Appwy",
+  "options.iris.refresh": "Refwesh",
+  "options.iris.openShaderPackFolder": "Open Shadew Pack Fowdew...",
+  "options.iris.refreshShaderPacks": "Refwesh Shadew Packs",
+  "options.iris.shaderPackSelection": "Shadew Packs...",
+  "options.iris.shaderPackSelection.title": "Shadew Packs",
+  "options.iris.shaderPackSelection.addedPack": "Added Shadew Pack \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "Added %s Shadew Packs",
+  "options.iris.shaderPackSelection.failedAdd": "Fiwes wewe not vawid Shadew Packs",
+  "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" ish not a vawid Shadew Pack",
+  "options.iris.shaderPackSelection.copyError": "Couwd not add Shadew Pack \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" ish awwready in youw Shadew Packs fowdew!",
+  "options.iris.shaders.disabled": "Shadews: Disabwed",
+  "options.iris.shaders.enabled": "Shadews: Enabwed",
+  "options.iris.shadowDistance": "Mwax Swadow Dwistance",
+  "options.iris.shadowDistance.enabled": "Awwows you to change da mwaximum dwistance fow swadows. Tewwain and entities beyond dis dwistance wiww not cast swadows. Lowering da shadow distance can sigwificantlwy incwease pewfowmance.",
+  "options.iris.shadowDistance.disabled": "Youw cuwwent shadew pack has awweady set a wendew dwistance fow swadows; you cawwot chwange wit.",
+
+  "pack.iris.select.title": "Sewect",
+  "pack.iris.list.label": "+ Dwag and Dwop Shadew Packs to add"
+}
