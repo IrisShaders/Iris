@@ -19,7 +19,7 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 	private boolean value;
 
 	public BooleanElementWidget(ShaderPackScreen screen, BooleanOption option, boolean value) {
-		super(screen, new TranslatableComponent("option." + option.getName()));
+		super(screen, GuiUtil.translateOrDefault(new TextComponent(option.getName()), "option." + option.getName()));
 		this.option = option;
 		this.originalValue = value;
 		this.value = value;

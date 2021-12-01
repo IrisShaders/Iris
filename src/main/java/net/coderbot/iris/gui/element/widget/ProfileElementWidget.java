@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -30,7 +31,7 @@ public class ProfileElementWidget extends BaseOptionElementWidget {
 		this.previous = previous;
 
 		this.profileLabel = profileName == null ? PROFILE_CUSTOM :
-				new TranslatableComponent("profile." + profileName);
+				GuiUtil.translateOrDefault(new TextComponent(profileName), "profile." + profileName);
 	}
 
 	@Override

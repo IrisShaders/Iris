@@ -2,6 +2,7 @@ package net.coderbot.iris.shaderpack.option.menu;
 
 import com.google.common.collect.Lists;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
@@ -32,14 +33,18 @@ public class OptionMenuContainer {
 		this.currentProfile = currentProfile;
 		this.profiles = profiles;
 
-		this.mainScreen = new OptionMenuScreen(new TextComponent(shaderPackName).withStyle(ChatFormatting.BOLD), this, shaderProperties, shaderPackOptions, shaderProperties.getMainScreenOptions(), shaderProperties.getMainScreenColumnCount(), false);
+		this.mainScreen = new OptionMenuScreen(
+				() -> new TextComponent(shaderPackName).withStyle(ChatFormatting.BOLD),
+				this, shaderProperties, shaderPackOptions, shaderProperties.getMainScreenOptions(), shaderProperties.getMainScreenColumnCount(), false);
 
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getBooleanOptions().keySet());
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getStringOptions().keySet());
 
 		Map<String, Integer> subScreenColumnCounts = shaderProperties.getSubScreenColumnCount();
 		shaderProperties.getSubScreenOptions().forEach((screenKey, options) -> {
-			subScreens.put(screenKey, new OptionMenuScreen(new TranslatableComponent("screen."+screenKey), this, shaderProperties, shaderPackOptions, options, Optional.ofNullable(subScreenColumnCounts.get(screenKey)), true));
+			subScreens.put(screenKey, new OptionMenuScreen(
+					() -> GuiUtil.translateOrDefault(new TextComponent(screenKey), "screen." + screenKey),
+					this, shaderProperties, shaderPackOptions, options, Optional.ofNullable(subScreenColumnCounts.get(screenKey)), true));
 		});
 
 		// Dump all unused options into screens containing "*"

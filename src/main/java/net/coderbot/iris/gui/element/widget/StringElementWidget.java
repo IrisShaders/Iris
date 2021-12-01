@@ -22,7 +22,7 @@ public class StringElementWidget extends BaseOptionElementWidget {
 	private int valueIndex;
 
 	public StringElementWidget(ShaderPackScreen screen, StringOption option, String value) {
-		super(screen, new TranslatableComponent("option." + option.getName()));
+		super(screen, GuiUtil.translateOrDefault(new TextComponent(option.getName()), "option." + option.getName()));
 
 		this.option = option;
 

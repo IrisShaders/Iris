@@ -8,15 +8,16 @@ import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.minecraft.network.chat.Component;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class OptionMenuScreen {
-	private final Component heading;
+	private final Supplier<Component> heading;
 	private final List<OptionMenuElement> elements = new ArrayList<>();
 	private final Optional<Integer> columnCount;
 	private final boolean hasBackButton;
 
-	public OptionMenuScreen(Component heading, OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, List<String> elementStrings, Optional<Integer> columnCount, boolean hasBackButton) {
+	public OptionMenuScreen(Supplier<Component> heading, OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, List<String> elementStrings, Optional<Integer> columnCount, boolean hasBackButton) {
 		this.heading = heading;
 		this.columnCount = columnCount;
 		this.hasBackButton = hasBackButton;
@@ -49,7 +50,7 @@ public class OptionMenuScreen {
 	}
 
 	public void applyToMinecraftGui(ShaderPackScreen screen, ShaderPackOptionList optionList) {
-		optionList.addHeader(heading, hasBackButton);
+		optionList.addHeader(heading.get(), hasBackButton);
 		optionList.addWidgets(getColumnCount(), elements.stream().map(element -> element.createWidget(screen, optionList.getNavigation())).collect(Collectors.toList()));
 	}
 }

@@ -29,7 +29,7 @@ public class SliderElementWidget extends BaseOptionElementWidget {
 	private boolean mouseDown = false;
 
 	public SliderElementWidget(ShaderPackScreen screen, StringOption option, String value) {
-		super(screen, new TranslatableComponent("option." + option.getName()));
+		super(screen, GuiUtil.translateOrDefault(new TextComponent(option.getName()), "option." + option.getName()));
 
 		this.option = option;
 
