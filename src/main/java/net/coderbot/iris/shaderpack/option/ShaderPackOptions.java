@@ -18,7 +18,7 @@ public class ShaderPackOptions {
 	private final IncludeGraph includes;
 	private final OptionMenuContainer menuContainer;
 
-	public ShaderPackOptions(String shaderPackName, ShaderProperties shaderProperties, IncludeGraph graph, Map<String, String> changedConfigs) {
+	public ShaderPackOptions(ShaderProperties shaderProperties, IncludeGraph graph, Map<String, String> changedConfigs) {
 		Map<AbsolutePackPath, OptionAnnotatedSource> allAnnotations = new HashMap<>();
 		OptionSet.Builder setBuilder = OptionSet.builder();
 
@@ -47,21 +47,21 @@ public class ShaderPackOptions {
 		this.optionValues = new OptionValues(optionSet, changedConfigs);
 
 		LinkedHashMap<String, Profile> profiles = new LinkedHashMap<>();
-		String currentProfile = null;
+		Optional<String> currentProfile = Optional.empty();
 
 		for (String name : shaderProperties.getProfiles().keySet()) {
 			Profile profile = Profile.parse(name, shaderProperties.getProfiles());
 			profiles.put(name, profile);
 
 			if (profile.matches(optionSet, optionValues)) {
-				currentProfile = name;
+				currentProfile = Optional.of(name);
 
 				// TODO: disable programs
 			}
 		}
 
 		this.includes = graph.map(path -> allAnnotations.get(path).asTransform(optionValues));
-		this.menuContainer = new OptionMenuContainer(shaderPackName, shaderProperties, this, currentProfile, profiles);
+		this.menuContainer = new OptionMenuContainer(shaderProperties, this, currentProfile, profiles);
 	}
 
 	public OptionSet getOptionSet() {

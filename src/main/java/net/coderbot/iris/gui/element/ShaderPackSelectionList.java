@@ -4,16 +4,15 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
-import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -27,11 +26,11 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	private static final Component SHADERS_DISABLED_LABEL = new TranslatableComponent("options.iris.shaders.disabled");
 	private static final Component SHADERS_ENABLED_LABEL = new TranslatableComponent("options.iris.shaders.enabled");
 
-	private final TopButtonRowEntry enableShadersButton;
+	private final TopButtonRowEntry topButtonRow;
 
 	public ShaderPackSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
-		this.enableShadersButton = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
+		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
 
 		refresh();
 	}
@@ -50,7 +49,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		this.clearEntries();
 
 		try {
-			this.addEntry(enableShadersButton);
+			this.addEntry(topButtonRow);
 
 			Path path = Iris.getShaderpacksDirectory();
 			int index = 0;
@@ -104,8 +103,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 	}
 
-	public TopButtonRowEntry getEnableShadersButton() {
-		return enableShadersButton;
+	public TopButtonRowEntry getTopButtonRow() {
+		return topButtonRow;
 	}
 
 	public static abstract class BaseEntry extends ObjectSelectionList.Entry<BaseEntry> {
@@ -137,7 +136,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			int color = 0xFFFFFF;
 			String name = packName;
 
-			boolean shadersEnabled = list.getEnableShadersButton().shadersEnabled;
+			boolean shadersEnabled = list.getTopButtonRow().shadersEnabled;
 
 			if (font.width(new TextComponent(name).withStyle(ChatFormatting.BOLD)) > this.list.getRowWidth() - 3) {
 				name = font.plainSubstrByWidth(name, this.list.getRowWidth() - 8) + "...";
@@ -162,7 +161,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (list.getEnableShadersButton().shadersEnabled && !this.isSelected() && button == 0) {
+			if (list.getTopButtonRow().shadersEnabled && !this.isSelected() && button == 0) {
 				this.list.select(this.index);
 
 				return true;

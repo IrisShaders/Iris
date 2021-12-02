@@ -1,33 +1,12 @@
 package net.coderbot.iris.shaderpack;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaderpack.texture.CustomTextureData;
-import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
-import net.coderbot.iris.shaderpack.texture.TextureStage;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.function.Function;
-
-import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.shader.GlShader;
@@ -38,10 +17,24 @@ import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
+import net.coderbot.iris.shaderpack.texture.CustomTextureData;
+import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Function;
 
 public class ShaderPack {
 	private static final Gson GSON = new Gson();
@@ -58,10 +51,8 @@ public class ShaderPack {
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
 
-	private final String name;
-
-	public ShaderPack(String name, Path root) throws IOException {
-		this(name, root, Collections.emptyMap());
+	public ShaderPack(Path root) throws IOException {
+		this(root, Collections.emptyMap());
 	}
 
 	/**
@@ -72,11 +63,9 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(String name, Path root, Map<String, String> changedConfigs) throws IOException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
-
-		this.name = name;
 
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
@@ -101,7 +90,7 @@ public class ShaderPack {
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
 		// Discover, merge, and apply shader pack options
-		this.shaderPackOptions = new ShaderPackOptions(name, shaderProperties, graph, changedConfigs);
+		this.shaderPackOptions = new ShaderPackOptions(shaderProperties, graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
 
 		// Prepare our include processor
@@ -317,9 +306,5 @@ public class ShaderPack {
 
 	public ShaderPackOptions getShaderPackOptions() {
 		return shaderPackOptions;
-	}
-
-	public String getPackName() {
-		return name;
 	}
 }

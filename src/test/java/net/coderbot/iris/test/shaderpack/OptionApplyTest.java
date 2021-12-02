@@ -21,7 +21,7 @@ public class OptionApplyTest {
 
 		// ensure that we can actually load the shader pack
 		try {
-			shaderPack = new ShaderPack("Option Apply Test", IrisTests.getTestShaderPackPath("options"));
+			shaderPack = new ShaderPack(IrisTests.getTestShaderPackPath("options"));
 		} catch (Exception e) {
 			Assertions.fail("Couldn't load test shader pack options", e);
 			return;

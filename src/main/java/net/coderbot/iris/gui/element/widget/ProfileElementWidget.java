@@ -12,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
@@ -26,14 +25,13 @@ public class ProfileElementWidget extends BaseOptionElementWidget {
 	private final Profile previous;
 	private final Component profileLabel;
 
-	public ProfileElementWidget(ShaderPackScreen screen, @Nullable String profileName, Profile next, Profile previous) {
+	public ProfileElementWidget(ShaderPackScreen screen, Optional<String> profileName, Profile next, Profile previous) {
 		super(screen, PROFILE_LABEL);
 
 		this.next = next;
 		this.previous = previous;
 
-		this.profileLabel = profileName == null ? PROFILE_CUSTOM :
-				GuiUtil.translateOrDefault(new TextComponent(profileName), "profile." + profileName);
+		this.profileLabel = profileName.map(name -> GuiUtil.translateOrDefault(new TextComponent(name), "profile." + name)).orElse(PROFILE_CUSTOM);
 	}
 
 	@Override

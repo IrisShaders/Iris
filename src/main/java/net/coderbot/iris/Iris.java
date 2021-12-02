@@ -264,7 +264,7 @@ public class Iris implements ClientModInitializer {
 		saveConfigProperties(shaderPackConfigTxt, configsToSave);
 
 		try {
-			currentPack = new ShaderPack(name, shaderPackPath, changedConfigs);
+			currentPack = new ShaderPack(shaderPackPath, changedConfigs);
 		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
 			logger.catching(e);
@@ -310,7 +310,7 @@ public class Iris implements ClientModInitializer {
 				.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
 
 		try {
-			currentPack = new ShaderPack("Internal", root.resolve("shaders"));
+			currentPack = new ShaderPack(root.resolve("shaders"));
 		} catch (IOException e) {
 			logger.error("Failed to load internal shaderpack!");
 			throw new RuntimeException("Failed to load internal shaderpack!", e);
