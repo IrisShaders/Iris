@@ -279,7 +279,7 @@ curseforge {
 
 	project {
 		id = '470001'
-		changelog = "https://github.com/NoComment1105/Iris/tree/trunk/docs/changelogs/${project.mod_version}summary.md"
+		changelog = "https://github.com/IrisShaders/Iris/tree/trunk/docs/changelogs/${project.mod_version}summary.md"
 		releaseType = 'release'
 		relations {
 			requiredDependency 'sodium'
@@ -311,7 +311,7 @@ task modrinth(type: TaskModrinthUpload, dependsOn: remapJar) {
 	versionNumber = "mc$project.mod_version"
 	versionName = "Iris $project.mod_version for Minecraft $project.minecraft_version"
 	releaseType = 'release'
-	changelog = "https://github.com/NoComment1105/Iris/tree/trunk/docs/changelogs/${project.mod_version}summary.md"
+	changelog = "https://github.com/IrisShaders/Iris/tree/trunk/docs/changelogs/${project.mod_version}summary.md"
 
 	uploadFile = remapJar
 
@@ -334,7 +334,7 @@ task github(dependsOn: remapJar) {
 
 		def releaseBuilder = new GHReleaseBuilder(repository, version as String)
 		releaseBuilder.name("Iris $project.mod_version for Minecraft $project.minecraft_version")
-		releaseBuilder.body("https://github.com/NoComment1105/Iris/tree/trunk/docs/changelogs/${project.mod_version}summary.md")
+		releaseBuilder.body("https://github.com/IrisShaders/Iris/tree/trunk/docs/changelogs/${project.mod_version}summary.md")
 		releaseBuilder.commitish(getBranch())
 		releaseBuilder.prerelease(false)
 

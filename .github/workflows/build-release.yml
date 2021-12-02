@@ -15,16 +15,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: FabricMC/fabric-action-scripts@v1
-        id : changelog
-        with:
-          context: changelog
-          workflow_id: build-release.yml
       - name: Cache Gradle packages
         uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Upload artifacts to Curse, Modrinth and Github
         run: ./gradlew build curseforge github modrinth
