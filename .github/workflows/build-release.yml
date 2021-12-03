@@ -18,11 +18,43 @@ jobs:
       - name: Cache Gradle packages
         uses: actions/cache@v2
         with:
-          path: ~/.gradle/caches
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/loom-cache
+            ~/.gradle/wrapper
+            ~/.m2/repository
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle
-      - name: Upload artifacts to Curse, Modrinth and Github
-        run: ./gradlew build curseforge github modrinth
+
+      - run: chmod +x gradlew
+      - name: Build Release
+        run: ./gradlew build --stacktrace
+      - name: Upload release Builds to Github, Curseforge and Modrinth
+        run: ./gradlew github curseforge modrinth --stacktrace
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Switch to 1.17
+        run: git checkout 1.17
+
+      - name: Build 1.17
+        run: ./gradlew build --stacktrace
+      - name: Upload 1.17 Builds to Github, Curseforge and Modrinth
+        run: ./gradlew github curseforge modrinth --stacktrace
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Switch to 1.18
+        run: git checkout 1.18
+
+      - name: Build 1.18
+        run: ./gradlew build --stacktrace
+      - name: Upload 1.18 Builds to Github, Curseforge and Modrinth
+        run: ./gradlew github curseforge modrinth --stacktrace
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}

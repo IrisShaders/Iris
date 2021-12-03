@@ -1,0 +1,86 @@
+//file:noinspection GroovyAssignabilityCheck
+//file:noinspection GrMethodMayBeStatic
+buildscript {
+	repositories {
+		mavenCentral()
+		maven {
+			url 'https://plugins.gradle.org/m2/'
+		}
+	}
+	dependencies {
+		classpath 'org.kohsuke:github-api:1.135'
+		classpath group: 'gradle.plugin.com.modrinth.minotaur', name: 'Minotaur', version: '1.1.0'
+	}
+}
+
+def ENV = System.getenv()
+
+
+curseforge {
+	if (ENV.CURSEFORGE_TOKEN) {
+		apiKey = ENV.CURSEFORGE_TOKEN
+	}
+
+	project {
+		id = '455508'
+		changelog = "https://github.com/IrisShaders/Iris/tree/trunk/docs/changelogs/${project.mod_version}/summary.md"
+		releaseType = 'release'
+		relations {
+			requiredDependency 'sodium'
+		}
+		addGameVersion "$project.minecraft_version"
+		addGameVersion 'Fabric'
+
+		mainArtifact(remapJar) {
+			displayName = "Iris $project.mod_version for Minecraft $project.minecraft_version"
+		}
+		afterEvaluate {
+			uploadTask.dependsOn(remapJar)
+		}
+	}
+	options {
+		forgeGradleIntegration = false
+	}
+}
+
+import com.modrinth.minotaur.TaskModrinthUpload
+
+task modrinth(type: TaskModrinthUpload, dependsOn: remapJar) {
+	onlyIf {
+		ENV.MODRINTH_TOKEN
+	}
+
+	token = ENV.MODRINTH_TOKEN
+	projectId = "YL57xq9U"
+	versionNumber = "mc$project.mod_version"
+	versionName = "Iris $project.mod_version for Minecraft $project.minecraft_version"
+	releaseType = 'release'
+	changelog = "https://github.com/IrisShaders/Iris/tree/trunk/docs/changelogs/${project.mod_version}/summary.md"
+
+	uploadFile = remapJar
+
+	addGameVersion(project.minecraft_version)
+	addLoader('fabric')
+}
+
+
+import org.kohsuke.github.GHReleaseBuilder
+import org.kohsuke.github.GitHub
+
+task github(dependsOn: remapJar) {
+	onlyIf {
+		ENV.GITHUB_TOKEN
+	}
+
+	doLast {
+		def github = GitHub.connectUsingOAuth(ENV.GITHUB_TOKEN as String)
+		def repository = github.getRepository(ENV.GITHUB_REPOSITORY)
+
+		def releaseBuilder = new GHReleaseBuilder(repository, version as String)
+		releaseBuilder.name("Iris $project.mod_version for Minecraft $project.minecraft_version")
+		releaseBuilder.body("https://github.com/IrisShaders/Iris/tree/trunk/docs/changelogs/${project.mod_version}/summary.md")
+
+		def ghRelease = releaseBuilder.create()
+		ghRelease.uploadAsset(file("${project.buildDir}/libs/${project.archivesBaseName}-${project.mod_version}.jar"), "application/java-archive");
+	}
+}
