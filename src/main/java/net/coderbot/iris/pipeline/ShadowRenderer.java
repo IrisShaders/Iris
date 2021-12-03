@@ -81,6 +81,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
 
 	private final Program shadowProgram;
+	private final boolean packHasDisabledCulling;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
 	private final float sunPathRotation;
@@ -143,9 +144,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// TODO: Check for image load / store too once supported.
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+			this.packHasDisabledCulling = !shadow.getParent().getPackDirectives().isShadowCullingEnabled();
 		} else {
 			this.shadowProgram = null;
 			this.packHasVoxelization = false;
+			this.packHasDisabledCulling = false;
 		}
 
 		ProgramSource[] composite = programSet.getComposite();
@@ -313,12 +316,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	private Frustum createShadowFrustum() {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
-		if (packHasVoxelization || packHasIndirectSunBounceGi) {
+		if (packHasDisabledCulling || packHasVoxelization || packHasIndirectSunBounceGi) {
 			double distance = halfPlaneLength * renderDistanceMultiplier;
 
 			String reason;
 
-			if (packHasVoxelization) {
+			if (packHasDisabledCulling) {
+				reason = "(set by shader pack)";
+			} else if (packHasVoxelization) {
 				reason = "(voxelization detected)";
 			} else {
 				reason = "(indirect sunlight GI detected)";
