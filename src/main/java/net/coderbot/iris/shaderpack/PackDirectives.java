@@ -16,6 +16,7 @@ public class PackDirectives {
 	private boolean areCloudsEnabled;
 	private boolean separateAo;
 	private boolean oldLighting;
+	private OptionalBoolean shadowCulling;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
@@ -35,6 +36,7 @@ public class PackDirectives {
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
+		shadowCulling = properties.getShadowCulling();
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -43,6 +45,7 @@ public class PackDirectives {
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
 		explicitFlips = directives.explicitFlips;
+		shadowCulling = directives.shadowCulling;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -67,6 +70,10 @@ public class PackDirectives {
 
 	public boolean isOldLighting() {
 		return oldLighting;
+	}
+
+	public OptionalBoolean getCullingState() {
+		return shadowCulling;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {

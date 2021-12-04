@@ -22,10 +22,7 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
-import net.coderbot.iris.shaderpack.PackDirectives;
-import net.coderbot.iris.shaderpack.PackShadowDirectives;
-import net.coderbot.iris.shaderpack.ProgramSet;
-import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.*;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
@@ -80,6 +77,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
 
 	private final Program shadowProgram;
+	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
 	private final float sunPathRotation;
@@ -142,9 +140,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// TODO: Check for image load / store too once supported.
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
 		} else {
 			this.shadowProgram = null;
 			this.packHasVoxelization = false;
+			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
 
 		ProgramSource[] composite = programSet.getComposite();
@@ -312,12 +312,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	private Frustum createShadowFrustum() {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
-		if (packHasVoxelization || packHasIndirectSunBounceGi) {
+		if ((packCullingState == OptionalBoolean.FALSE || packHasVoxelization || packHasIndirectSunBounceGi) && packCullingState != OptionalBoolean.TRUE) {
 			double distance = halfPlaneLength * renderDistanceMultiplier;
 
 			String reason;
 
-			if (packHasVoxelization) {
+			if (packCullingState == OptionalBoolean.FALSE) {
+				reason = "(set by shader pack)";
+			} else if (packHasVoxelization) {
 				reason = "(voxelization detected)";
 			} else {
 				reason = "(indirect sunlight GI detected)";
