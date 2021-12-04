@@ -13,6 +13,7 @@ import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
@@ -52,6 +53,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
@@ -77,6 +79,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
 
 	private final Program shadowProgram;
+	@NotNull
+	private final BlendModeOverride blendModeOverride;
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
@@ -135,17 +139,39 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.noise = noise;
 		this.customTextureIds = customTextureIds;
 
+		// Note: Ensure that blending is properly overridden during the shadow pass. By default, blending is disabled
+		//       in the shadow pass. Shader packs expect this for colored shadows from stained glass and nether portals
+		//       to work properly.
+		//
+		// Note: Enabling blending in the shadow pass results in weird results since translucency sorting happens
+		//       relative to the player camera, not the shadow camera, so we can't rely on chunks being properly
+		//       sorted in the shadow pass.
+		//
+		// - https://github.com/IrisShaders/Iris/issues/483
+		// - https://github.com/IrisShaders/Iris/issues/987
+		BlendModeOverride blendModeOverride;
+
 		if (shadow != null) {
 			this.shadowProgram = createProgram(shadow, directives, flipped);
+
+			blendModeOverride = shadow.getDirectives().getBlendModeOverride();
+
+			if (blendModeOverride == null) {
+				blendModeOverride = BlendModeOverride.OFF;
+			}
+
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// TODO: Check for image load / store too once supported.
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
 			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
 		} else {
 			this.shadowProgram = null;
+			blendModeOverride = BlendModeOverride.OFF;
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
+
+		this.blendModeOverride = blendModeOverride;
 
 		ProgramSource[] composite = programSet.getComposite();
 
@@ -378,6 +404,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		blendModeOverride.apply();
+
 		Minecraft client = Minecraft.getInstance();
 
 		levelRenderer.getLevel().getProfiler().popPush("shadows");
@@ -614,6 +642,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		ACTIVE = false;
 		levelRenderer.getLevel().getProfiler().popPush("updatechunks");
+
+		BlendModeOverride.restore();
 	}
 
 	@Override
