@@ -3,15 +3,15 @@ package net.coderbot.iris.uniforms;
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.phys.Vec3;
 
 public class CapturedRenderingState {
 	public static final CapturedRenderingState INSTANCE = new CapturedRenderingState();
 
 	private Matrix4f gbufferModelView;
 	private Matrix4f gbufferProjection;
-	private Vec3 fogColor;
+	private Vector3d fogColor;
 	private float tickDelta;
 	private int currentRenderedBlockEntity;
 	private Runnable blockEntityIdListener = null;
@@ -38,16 +38,16 @@ public class CapturedRenderingState {
 		this.gbufferProjection = gbufferProjection.copy();
 	}
 
-	public Vec3 getFogColor() {
+	public Vector3d getFogColor() {
 		if (Minecraft.getInstance().level == null || fogColor == null) {
-			return Vec3.ZERO;
+			return new Vector3d();
 		}
 
 		return fogColor;
 	}
 
 	public void setFogColor(float red, float green, float blue) {
-		fogColor = new Vec3(red, green, blue);
+		fogColor = new Vector3d(red, green, blue);
 	}
 
 	public void setTickDelta(float tickDelta) {

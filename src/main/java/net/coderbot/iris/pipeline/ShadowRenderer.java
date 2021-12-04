@@ -40,6 +40,7 @@ import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CelestialUniforms;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -52,10 +53,8 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
@@ -298,11 +297,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
 		// Determine the camera position
-		Vec3 cameraPos = CameraUniforms.getCameraPosition();
+		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
 
-		double cameraX = cameraPos.get(Direction.Axis.X);
-		double cameraY = cameraPos.get(Direction.Axis.Y);
-		double cameraZ = cameraPos.get(Direction.Axis.Z);
+		double cameraX = cameraPos.x;
+		double cameraY = cameraPos.y;
+		double cameraZ = cameraPos.z;
 
 		// Set up our modelview matrix stack
 		PoseStack modelView = new PoseStack();
@@ -401,7 +400,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		Frustum frustum = createShadowFrustum();
 
 		// Determine the player camera position
-		Vec3 cameraPos = CameraUniforms.getCameraPosition();
+		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
 
 		double cameraX = cameraPos.x();
 		double cameraY = cameraPos.y();
