@@ -108,6 +108,7 @@ public class ProgramDirectives {
 		return Optional.ofNullable(alphaTestOverride);
 	}
 
+	@Nullable
 	public BlendModeOverride getBlendModeOverride() {
 		return blendModeOverride;
 	}

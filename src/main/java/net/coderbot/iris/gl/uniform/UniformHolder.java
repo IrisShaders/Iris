@@ -7,8 +7,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
 
 public interface UniformHolder {
 	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value);
@@ -29,7 +30,7 @@ public interface UniformHolder {
 
 	UniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value);
 
-	UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3> value);
+	UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3d> value);
 
 	UniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value);
 

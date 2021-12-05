@@ -33,12 +33,12 @@ import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20;
@@ -660,7 +660,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			passes = clearPasses;
 		}
 
-		Vec3 fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
+		Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
 
 		// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
 		//     will give you pink reflections and other weirdness if this is zero.

@@ -12,6 +12,7 @@ import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
@@ -23,10 +24,7 @@ import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisSamplers;
-import net.coderbot.iris.shaderpack.PackDirectives;
-import net.coderbot.iris.shaderpack.PackShadowDirectives;
-import net.coderbot.iris.shaderpack.ProgramSet;
-import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.*;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
@@ -41,6 +39,7 @@ import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CelestialUniforms;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -54,7 +53,8 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
@@ -80,6 +80,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
 
 	//private final Program shadowProgram;
+	@NotNull
+	private final BlendModeOverride blendModeOverride;
+	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
 	private final float sunPathRotation;
@@ -137,11 +140,39 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.noise = noise;
 		this.customTextureIds = customTextureIds;
 
+		// Note: Ensure that blending is properly overridden during the shadow pass. By default, blending is disabled
+		//       in the shadow pass. Shader packs expect this for colored shadows from stained glass and nether portals
+		//       to work properly.
+		//
+		// Note: Enabling blending in the shadow pass results in weird results since translucency sorting happens
+		//       relative to the player camera, not the shadow camera, so we can't rely on chunks being properly
+		//       sorted in the shadow pass.
+		//
+		// - https://github.com/IrisShaders/Iris/issues/483
+		// - https://github.com/IrisShaders/Iris/issues/987
+		BlendModeOverride blendModeOverride;
+
 		if (shadow != null) {
+			//this.shadowProgram = createProgram(shadow, directives, flipped);
+
+			blendModeOverride = shadow.getDirectives().getBlendModeOverride();
+
+			if (blendModeOverride == null) {
+				blendModeOverride = BlendModeOverride.OFF;
+			}
+
+			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
+			// TODO: Check for image load / store too once supported.
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
 		} else {
+			//this.shadowProgram = null;
+			blendModeOverride = BlendModeOverride.OFF;
 			this.packHasVoxelization = false;
+			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
+
+		this.blendModeOverride = blendModeOverride;
 
 		ProgramSource[] composite = programSet.getComposite();
 
@@ -293,11 +324,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
 		// Determine the camera position
-		Vec3 cameraPos = CameraUniforms.getCameraPosition();
+		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
 
-		double cameraX = cameraPos.x();
-		double cameraY = cameraPos.y();
-		double cameraZ = cameraPos.z();
+		double cameraX = cameraPos.x;
+		double cameraY = cameraPos.y;
+		double cameraZ = cameraPos.z;
 
 		// Set up our modelview matrix stack
 		PoseStack modelView = new PoseStack();
@@ -308,12 +339,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	private Frustum createShadowFrustum() {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
-		if (packHasVoxelization || packHasIndirectSunBounceGi) {
+		if ((packCullingState == OptionalBoolean.FALSE || packHasVoxelization || packHasIndirectSunBounceGi) && packCullingState != OptionalBoolean.TRUE) {
 			double distance = halfPlaneLength * renderDistanceMultiplier;
 
 			String reason;
 
-			if (packHasVoxelization) {
+			if (packCullingState == OptionalBoolean.FALSE) {
+				reason = "(set by shader pack)";
+			} else if (packHasVoxelization) {
 				reason = "(voxelization detected)";
 			} else {
 				reason = "(indirect sunlight GI detected)";
@@ -371,10 +404,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	@Override
-	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
+	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		blendModeOverride.apply();
+
 		Minecraft client = Minecraft.getInstance();
 
-		worldRenderer.getLevel().getProfiler().popPush("shadows");
+		levelRenderer.getLevel().getProfiler().popPush("shadows");
 		ACTIVE = true;
 		this.visibleBlockEntities = new ArrayList<>();
 
@@ -386,18 +421,18 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		ORTHO = new Matrix4f();
 		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
 
-		worldRenderer.getLevel().getProfiler().push("terrain_setup");
+		levelRenderer.getLevel().getProfiler().push("terrain_setup");
 
 		if (worldRenderer instanceof CullingDataCache) {
 			((CullingDataCache) worldRenderer).saveState();
 		}
 
-		worldRenderer.getLevel().getProfiler().push("initialize frustum");
+		levelRenderer.getLevel().getProfiler().push("initialize frustum");
 
 		Frustum frustum = createShadowFrustum();
 
 		// Determine the player camera position
-		Vec3 cameraPos = CameraUniforms.getCameraPosition();
+		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
 
 		double cameraX = cameraPos.x();
 		double cameraY = cameraPos.y();
@@ -406,7 +441,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// Center the frustum on the player camera position
 		frustum.prepare(cameraX, cameraY, cameraZ);
 
-		worldRenderer.getLevel().getProfiler().pop();
+		levelRenderer.getLevel().getProfiler().pop();
 
 		// Disable chunk occlusion culling - it's a bit complex to get this properly working with shadow rendering
 		// as-is, however in the future it will be good to work on restoring it for a nice performance boost.
@@ -417,19 +452,19 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// Always schedule a terrain update
 		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
-		((LevelRenderer) worldRenderer).needsUpdate();
+		((LevelRenderer) levelRenderer).needsUpdate();
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
-		worldRenderer.invokeSetupRender(playerCamera, frustum, false, worldRenderer.getFrameId(), false);
+		levelRenderer.invokeSetupRender(playerCamera, frustum, false, worldRenderer.getFrameId(), false);
 
 		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
 		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
 		// chunks during traversal, and break rendering in concerning ways.
-		worldRenderer.setFrameId(worldRenderer.getFrameId() + 1);
+		levelRenderer.setFrameId(levelRenderer.getFrameId() + 1);
 
 		client.smartCull = wasChunkCullingEnabled;
 
-		worldRenderer.getLevel().getProfiler().popPush("terrain");
+		levelRenderer.getLevel().getProfiler().popPush("terrain");
 
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
@@ -615,7 +650,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		this.visibleBlockEntities = null;
 		ACTIVE = false;
-		worldRenderer.getLevel().getProfiler().popPush("updatechunks");
+		levelRenderer.getLevel().getProfiler().popPush("updatechunks");
+
+		BlendModeOverride.restore();
 	}
 
 	@Override

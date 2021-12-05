@@ -8,8 +8,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
 
 public interface LocationalUniformHolder extends UniformHolder {
 	LocationalUniformHolder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform);
@@ -80,7 +81,7 @@ public interface LocationalUniformHolder extends UniformHolder {
 	}
 
 	@Override
-	default LocationalUniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3> value) {
+	default LocationalUniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3d> value) {
 		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.converted(id, value)));
 
 		return this;

@@ -61,7 +61,6 @@ public class IdMap {
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
 		loadProperties(shaderPath, "block.properties").ifPresent(blockProperties -> {
-			// TODO: This won't parse block states in block.properties properly
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});

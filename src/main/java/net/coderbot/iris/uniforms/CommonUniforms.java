@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.function.IntSupplier;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Vector4f;
+import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
@@ -16,6 +16,7 @@ import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -35,6 +36,8 @@ import net.minecraft.world.phys.Vec3;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
+
+import com.mojang.math.Vector4f;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
@@ -106,12 +109,13 @@ public final class CommonUniforms {
 			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor);
 	}
 
-	private static Vec3 getSkyColor() {
+	private static Vector3d getSkyColor() {
 		if (client.level == null || client.cameraEntity == null) {
-			return Vec3.ZERO;
+			return new Vector3d();
 		}
 
-		return client.level.getSkyColor(client.cameraEntity.position(), CapturedRenderingState.INSTANCE.getTickDelta());
+		return JomlConversions.fromVec3(client.level.getSkyColor(client.cameraEntity.position(),
+				CapturedRenderingState.INSTANCE.getTickDelta()));
 	}
 
 	static float getBlindness() {
