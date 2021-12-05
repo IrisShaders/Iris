@@ -10,6 +10,7 @@
     "GlStateManagerAccessor",
     "LevelRendererAccessor",
     "MixinBlockStateBehavior",
+    "MixinBufferSource_WrapperChecking",
     "MixinFogRenderer",
     "MixinDebugScreenOverlay",
     "MixinTheEndPortalRenderer",

@@ -125,7 +125,7 @@ public class MixinLevelRenderer {
 		RenderSystem.depthMask(false);
 
 		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
-		RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
+		RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z, 1.0F);
 
 		horizonRenderer.renderHorizon(poseStack.last().pose().copy(), projectionMatrix.copy(), GameRenderer.getPositionShader());
 

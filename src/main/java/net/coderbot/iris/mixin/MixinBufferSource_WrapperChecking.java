@@ -1,5 +1,13 @@
 package net.coderbot.iris.mixin;
 
+import net.coderbot.iris.layer.EntityColorRenderStateShard;
+import net.coderbot.iris.layer.InnerWrappedRenderType;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+
 @Mixin(MultiBufferSource.BufferSource.class)
 public class MixinBufferSource_WrapperChecking {
 	@ModifyVariable(method = "getBuffer", at = @At("HEAD"))

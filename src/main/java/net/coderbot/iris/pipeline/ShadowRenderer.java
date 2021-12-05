@@ -423,8 +423,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		levelRenderer.getLevel().getProfiler().push("terrain_setup");
 
-		if (worldRenderer instanceof CullingDataCache) {
-			((CullingDataCache) worldRenderer).saveState();
+		if (levelRenderer instanceof CullingDataCache) {
+			((CullingDataCache) levelRenderer).saveState();
 		}
 
 		levelRenderer.getLevel().getProfiler().push("initialize frustum");
@@ -455,7 +455,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		((LevelRenderer) levelRenderer).needsUpdate();
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
-		levelRenderer.invokeSetupRender(playerCamera, frustum, false, worldRenderer.getFrameId(), false);
+		levelRenderer.invokeSetupRender(playerCamera, frustum, false, levelRenderer.getFrameId(), false);
 
 		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
 		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
@@ -505,9 +505,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.disableCull();
 
 		// Render all opaque terrain
-		worldRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
-		worldRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
-		worldRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
+		levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
+		levelRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
+		levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
 
 		// TODO: Restore entity & block entity rendering
 
@@ -517,7 +517,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// without shaders, which doesn't integrate with their shadow distortion code.
 		setupShadowProgram();
 
-		worldRenderer.getLevel().getProfiler().popPush("entities");
+		levelRenderer.getLevel().getProfiler().popPush("entities");
 
 		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
 		// it is set to a fixed value.
@@ -541,11 +541,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		MultiBufferSource.BufferSource bufferSource = buffers.bufferSource();
-		EntityRenderDispatcher dispatcher = worldRenderer.getEntityRenderDispatcher();
+		EntityRenderDispatcher dispatcher = levelRenderer.getEntityRenderDispatcher();
 
 		int shadowEntities = 0;
 
-		worldRenderer.getLevel().getProfiler().push("cull");
+		levelRenderer.getLevel().getProfiler().push("cull");
 
 		List<Entity> renderedEntities = new ArrayList<>(32);
 
@@ -558,21 +558,21 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			renderedEntities.add(entity);
 		}
 
-		worldRenderer.getLevel().getProfiler().popPush("sort");
+		levelRenderer.getLevel().getProfiler().popPush("sort");
 
 		// Sort the entities by type first in order to allow vanilla's entity batching system to work better.
 		renderedEntities.sort(Comparator.comparingInt(entity -> entity.getType().hashCode()));
 
-		worldRenderer.getLevel().getProfiler().popPush("build geometry");
+		levelRenderer.getLevel().getProfiler().popPush("build geometry");
 
 		for (Entity entity : renderedEntities) {
-			worldRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
+			levelRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
 			shadowEntities++;
 		}
 
-		worldRenderer.getLevel().getProfiler().pop();
+		levelRenderer.getLevel().getProfiler().pop();
 
-		worldRenderer.getLevel().getProfiler().popPush("build blockentities");
+		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
 
 		int shadowBlockEntities = 0;
 
@@ -589,14 +589,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		renderedShadowEntities = shadowEntities;
 		renderedShadowBlockEntities = shadowBlockEntities;
 
-		worldRenderer.getLevel().getProfiler().popPush("draw entities");
+		levelRenderer.getLevel().getProfiler().popPush("draw entities");
 
 		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
 		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
 		// shadow...
 		bufferSource.endBatch();
 
-		worldRenderer.getLevel().getProfiler().popPush("translucent depth copy");
+		levelRenderer.getLevel().getProfiler().popPush("translucent depth copy");
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
@@ -606,14 +606,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 		RenderSystem.bindTexture(0);
 
-		worldRenderer.getLevel().getProfiler().popPush("translucent terrain");
+		levelRenderer.getLevel().getProfiler().popPush("translucent terrain");
 
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
-		worldRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
+		levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
 		// Note: Apparently tripwire isn't rendered in the shadow pass.
-		// worldRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
+		// levelRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ, projectionMatrix);
 
 		// NB: If we want to render anything after translucent terrain, we need to uncomment this line!
 		// setupShadowProgram();
@@ -624,13 +624,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		RenderSystem.setProjectionMatrix(previousProjectionMatrix);
 
-		debugStringTerrain = ((LevelRenderer) worldRenderer).getChunkStatistics();
+		debugStringTerrain = ((LevelRenderer) levelRenderer).getChunkStatistics();
 
-		worldRenderer.getLevel().getProfiler().popPush("generate mipmaps");
+		levelRenderer.getLevel().getProfiler().popPush("generate mipmaps");
 
 		generateMipmaps();
 
-		worldRenderer.getLevel().getProfiler().pop();
+		levelRenderer.getLevel().getProfiler().pop();
 
 		// Restore backface culling
 		RenderSystem.enableCull();
@@ -644,8 +644,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// Restore the old viewport
 		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
 
-		if (worldRenderer instanceof CullingDataCache) {
-			((CullingDataCache) worldRenderer).restoreState();
+		if (levelRenderer instanceof CullingDataCache) {
+			((CullingDataCache) levelRenderer).restoreState();
 		}
 
 		this.visibleBlockEntities = null;
