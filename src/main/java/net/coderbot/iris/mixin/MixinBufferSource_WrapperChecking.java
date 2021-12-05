@@ -4,6 +4,7 @@ import java.util.Set;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.layer.EntityColorRenderStateShard;
 import net.coderbot.iris.layer.InnerWrappedRenderType;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.mixin.rendertype.RenderStateShardAccessor;
@@ -13,12 +14,25 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MultiBufferSource.BufferSource.class)
 public class MixinBufferSource_WrapperChecking {
 	@Unique
 	private final Set<String> unwrapped = new ObjectOpenHashSet<>();
+
+	@ModifyArg(method = "getBuffer", at = @At("HEAD"))
+	private RenderType unwrapBufferIfNeeded(RenderType renderType) {
+		// Ensure that entity color wrapped render layers do not take effect when entity batching is inoperable.
+		if (renderType instanceof InnerWrappedRenderType) {
+			if (((InnerWrappedRenderType) renderType).getExtra() instanceof EntityColorRenderStateShard) {
+				return ((InnerWrappedRenderType) renderType).unwrap();
+			}
+		}
+
+		return renderType;
+	}
 
 	@Inject(method = "endBatch(Lnet/minecraft/client/renderer/RenderType;)V", at = @At("HEAD"))
 	private void iris$beginDraw(RenderType renderType, CallbackInfo ci) {
