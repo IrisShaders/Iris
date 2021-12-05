@@ -1,23 +1,17 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
-import com.google.common.collect.Lists;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gui.GuiUtil;
-import net.coderbot.iris.gui.NavigationController;
-import net.coderbot.iris.gui.element.ShaderPackOptionList;
-import net.coderbot.iris.gui.screen.ShaderPackScreen;
+
+import com.google.common.collect.Lists;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.TextComponent;
 
 import java.util.*;
 
 public class OptionMenuContainer {
-	private final OptionMenuScreen mainScreen;
-	private final Map<String, OptionMenuScreen> subScreens = new HashMap<>();
+	public final OptionMenuElementScreen mainScreen;
+	public final Map<String, OptionMenuElementScreen> subScreens = new HashMap<>();
 
 	private final List<OptionMenuOptionElement> usedOptionElements = new ArrayList<>();
 	private final List<String> usedOptions = new ArrayList<>();
@@ -31,18 +25,16 @@ public class OptionMenuContainer {
 		this.currentProfile = currentProfile;
 		this.profiles = profiles;
 
-		this.mainScreen = new OptionMenuScreen(
-				() -> new TextComponent(Iris.getCurrentPackName()).withStyle(ChatFormatting.BOLD),
-				this, shaderProperties, shaderPackOptions, shaderProperties.getMainScreenOptions(), shaderProperties.getMainScreenColumnCount(), false);
+		this.mainScreen = new OptionMenuMainElementScreen(
+				this, shaderProperties, shaderPackOptions, shaderProperties.getMainScreenOptions(), shaderProperties.getMainScreenColumnCount());
 
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getBooleanOptions().keySet());
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getStringOptions().keySet());
 
 		Map<String, Integer> subScreenColumnCounts = shaderProperties.getSubScreenColumnCount();
 		shaderProperties.getSubScreenOptions().forEach((screenKey, options) -> {
-			subScreens.put(screenKey, new OptionMenuScreen(
-					() -> GuiUtil.translateOrDefault(new TextComponent(screenKey), "screen." + screenKey),
-					this, shaderProperties, shaderPackOptions, options, Optional.ofNullable(subScreenColumnCounts.get(screenKey)), true));
+			subScreens.put(screenKey, new OptionMenuSubElementScreen(
+					screenKey, this, shaderProperties, shaderPackOptions, options, Optional.ofNullable(subScreenColumnCounts.get(screenKey))));
 		});
 
 		// Dump all unused options into screens containing "*"
@@ -59,7 +51,7 @@ public class OptionMenuContainer {
 						this.notifyOptionAdded(optionId, (OptionMenuOptionElement) element);
 					}
 				} catch (IllegalArgumentException error) {
-					Iris.logger.error(error);
+					Iris.logger.warn(error);
 
 					elementsToInsert.add(OptionMenuElement.EMPTY);
 				}
@@ -67,16 +59,6 @@ public class OptionMenuContainer {
 
 			entry.getKey().addAll(entry.getValue(), elementsToInsert);
 		}
-	}
-
-	public void applyToMinecraftGui(ShaderPackScreen packScreen, ShaderPackOptionList optionList, NavigationController navigation) {
-		OptionMenuScreen screen = mainScreen;
-
-		if (navigation.getCurrentScreen() != null && subScreens.containsKey(navigation.getCurrentScreen())) {
-			screen = subScreens.get(navigation.getCurrentScreen());
-		}
-
-		screen.applyToMinecraftGui(packScreen, optionList);
 	}
 
 	public Optional<String> getCurrentProfile() {
@@ -100,15 +82,5 @@ public class OptionMenuContainer {
 		}
 
 		unusedOptions.remove(optionId);
-	}
-
-	public Map<String, OptionMenuOptionElement> createOptionSearchMap() {
-		Map<String, OptionMenuOptionElement> map = new HashMap<>();
-
-		usedOptionElements.forEach(opt -> {
-			map.put(I18n.get(opt.createDescriptionId()), opt);
-		});
-
-		return map;
 	}
 }

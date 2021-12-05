@@ -1,9 +1,5 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
-import net.coderbot.iris.gui.NavigationController;
-import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
-import net.coderbot.iris.gui.element.widget.ProfileElementWidget;
-import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.Profile;
 
 import java.util.ArrayList;
@@ -12,9 +8,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public class OptionMenuProfileElement extends OptionMenuElement {
-	private final Profile previous;
-	private final Profile next;
-	private final Optional<String> currentProfileName;
+	public final Profile previous;
+	public final Profile next;
+	public final Optional<String> currentProfileName;
 
 	public OptionMenuProfileElement(Optional<String> profileName, Map<String, Profile> profiles) {
 		this.currentProfileName = profileName;
@@ -22,7 +18,7 @@ public class OptionMenuProfileElement extends OptionMenuElement {
 		List<String> profileNames = new ArrayList<>(profiles.keySet());
 
 		if (profileNames.size() <= 0) {
-			Profile empty = new Profile.Builder().build();
+			Profile empty = new Profile.Builder("").build();
 
 			this.previous = empty;
 			this.next = empty;
@@ -40,10 +36,5 @@ public class OptionMenuProfileElement extends OptionMenuElement {
 				this.next = profiles.get(profileNames.get(0));
 			}
 		}
-	}
-
-	@Override
-	public AbstractElementWidget createWidget(ShaderPackScreen screen, NavigationController navigation) {
-		return new ProfileElementWidget(screen, this.currentProfileName, this.next, this.previous);
 	}
 }

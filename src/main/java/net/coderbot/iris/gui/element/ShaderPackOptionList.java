@@ -5,6 +5,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
+import net.coderbot.iris.gui.element.widget.OptionMenuConstructor;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
@@ -43,7 +44,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 	public void refresh() {
 		this.clearEntries();
 		this.setScrollAmount(0);
-		container.applyToMinecraftGui(this.screen, this, navigation);
+		OptionMenuConstructor.constructAndApplyToScreen(this.container, this.screen, this, navigation);
 	}
 
 	@Override

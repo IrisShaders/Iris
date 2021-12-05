@@ -1,9 +1,5 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.coderbot.iris.gui.NavigationController;
-import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
-import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.MergedBooleanOption;
 import net.coderbot.iris.shaderpack.option.MergedStringOption;
@@ -12,17 +8,10 @@ import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import java.util.Map;
 
 public abstract class OptionMenuElement {
-	public static final OptionMenuElement EMPTY = new OptionMenuElement() {
-		@Override
-		public AbstractElementWidget createWidget(ShaderPackScreen screen, NavigationController navigation) {
-			return AbstractElementWidget.EMPTY;
-		}
-	};
+	public static final OptionMenuElement EMPTY = new OptionMenuElement() {};
 
 	private static final String ELEMENT_EMPTY = "<empty>";
 	private static final String ELEMENT_PROFILE = "<profile>";
-
-	public abstract AbstractElementWidget createWidget(ShaderPackScreen screen, NavigationController navigation);
 
 	public static OptionMenuElement create(String elementString, OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions) throws IllegalArgumentException {
 		// Empty element

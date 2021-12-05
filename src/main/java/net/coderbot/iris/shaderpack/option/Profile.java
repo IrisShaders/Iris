@@ -9,17 +9,23 @@ import java.util.List;
 import java.util.Map;
 
 public final class Profile {
+	public final String name;
 	public final Map<String, String> optionValues;
 	public final List<String> disabledPrograms;
 
-	private Profile(Map<String, String> optionValues, List<String> disabledPrograms) {
+	private Profile(String name, Map<String, String> optionValues, List<String> disabledPrograms) {
+		this.name = name;
 		this.optionValues = optionValues;
 		this.disabledPrograms = disabledPrograms;
 	}
 
 	public static Profile parse(String name, Map<String, List<String>> tree) throws IllegalArgumentException {
-		Builder builder = new Builder();
+		Builder builder = new Builder(name);
 		List<String> options = tree.get(name);
+
+		if (options == null) {
+			throw new IllegalArgumentException("Profile \"" + name + "\" does not exist!");
+		}
 
 		for (String option : options) {
 			if (option.startsWith("!program.")) {
@@ -78,10 +84,12 @@ public final class Profile {
 	}
 
 	public static class Builder {
+		private final String name;
 		private final Map<String, String> optionValues = new HashMap<>();
 		private final List<String> disabledPrograms = new ArrayList<>();
 
-		public Builder() {
+		public Builder(String name) {
+			this.name = name;
 		}
 
 		public Builder option(String optionId, String value) {
@@ -104,7 +112,7 @@ public final class Profile {
 		}
 
 		public Profile build() {
-			return new Profile(ImmutableMap.copyOf(optionValues), ImmutableList.copyOf(disabledPrograms));
+			return new Profile(name, ImmutableMap.copyOf(optionValues), ImmutableList.copyOf(disabledPrograms));
 		}
 	}
 }
