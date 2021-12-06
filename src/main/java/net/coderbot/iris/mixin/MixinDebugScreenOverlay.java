@@ -67,7 +67,7 @@ public abstract class MixinDebugScreenOverlay {
 			messages.add(2, ChatFormatting.YELLOW + "[Iris] Install Sodium if you want to run benchmarks or get higher FPS!");
 		}
 
-		Iris.getPipelineManager().getPipeline().addDebugText(messages);
+		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.addDebugText(messages));
 	}
 
 	// stackoverflow.com/a/3758880
