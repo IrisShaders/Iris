@@ -158,7 +158,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			forcedShadowRenderDistanceChunks = OptionalInt.empty();
 		}
 
-		BlockRenderingSettings.INSTANCE.setIdMap(programs.getPack().getIdMap());
+		BlockRenderingSettings.INSTANCE.setBlockStateIds(programs.getPack().getIdMap().getBlockProperties());
+		BlockRenderingSettings.INSTANCE.setEntityIds(programs.getPack().getIdMap().getEntityIdMap());
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programs.getPackDirectives().getAmbientOcclusionLevel());
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programs.getPackDirectives().shouldUseSeparateAo());

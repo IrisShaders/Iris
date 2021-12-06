@@ -370,7 +370,7 @@ public class IdMap {
 		return overrides;
 	}
 
-	public Map<BlockState, Integer> getBlockProperties() {
+	public Object2IntMap<BlockState> getBlockProperties() {
 		return blockPropertiesMap;
 	}
 
