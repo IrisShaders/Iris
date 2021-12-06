@@ -17,7 +17,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.minecraft.client.renderer.RenderType;
+import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -49,9 +50,9 @@ public class IdMap {
 	private Object2IntMap<BlockState> blockPropertiesMap;
 
 	/**
-	 * A map that contains render layers for blocks in block.properties
+	 * A set of render type overrides for specific blocks. Allows shader packs to move blocks to different render types.
 	 */
-	private Map<ResourceLocation, RenderType> blockRenderTypeMap;
+	private Map<NamespacedId, BlockRenderType> blockRenderTypeMap;
 
 	IdMap(Path shaderPath) {
 		itemIdMap = loadProperties(shaderPath, "item.properties")
@@ -340,11 +341,12 @@ public class IdMap {
 	}
 
 	/**
-	 * Parses a render layer map
+	 * Parses a render layer map.
+	 *
+	 * This feature is used by Chocapic v9 and Wisdom Shaders. Otherwise, it is a rarely-used feature.
 	 */
-	private static Map<ResourceLocation, RenderType> parseRenderTypeMap(Properties properties, String keyPrefix, String fileName) {
-		// TODO: Most of this is copied from parseIdMap, it would be nice to reduce duplication.
-		Map<ResourceLocation, RenderType> layerMap = new HashMap<>();
+	private static Map<NamespacedId, BlockRenderType> parseRenderTypeMap(Properties properties, String keyPrefix, String fileName) {
+		Map<NamespacedId, BlockRenderType> overrides = new HashMap<>();
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -355,40 +357,21 @@ public class IdMap {
 				return;
 			}
 
-			RenderType layerType;
+			BlockRenderType renderType = BlockRenderType.fromString(key).orElse(null);
 
-			// See: https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L556-L576
-			switch (key) {
-				case "solid":
-					layerType = RenderType.solid();
-					break;
-				case "cutout":
-					layerType = RenderType.cutout();
-					break;
-				case "cutout_mipped":
-					layerType = RenderType.cutoutMipped();
-					break;
-				case "translucent":
-					layerType = RenderType.translucent();
-					break;
-				default:
-					Iris.logger.warn("Failed to parse line in " + fileName + ": invalid render layer type: " + key);
-					return;
+			if (renderType == null) {
+				Iris.logger.warn("Failed to parse line in " + fileName + ": invalid block render type: " + key);
+				return;
 			}
 
 			for (String part : value.split(" ")) {
-				try {
-					ResourceLocation ResourceLocation = new ResourceLocation(part);
-
-					layerMap.put(ResourceLocation, layerType);
-				} catch (Exception e) {
-					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ":");
-					Iris.logger.catching(Level.WARN, e);
-				}
+				// Note: NamespacedId performs no validation on the content. That will need to be done by whatever is
+				//       converting these things to ResourceLocations.
+				overrides.put(new NamespacedId(part), renderType);
 			}
 		});
 
-		return layerMap;
+		return overrides;
 	}
 
 	public Map<BlockState, Integer> getBlockProperties() {
@@ -401,6 +384,10 @@ public class IdMap {
 
 	public Map<ResourceLocation, Integer> getEntityIdMap() {
 		return entityIdMap;
+	}
+
+	public Map<NamespacedId, BlockRenderType> getBlockRenderTypeMap() {
+		return blockRenderTypeMap;
 	}
 
 	@Override
