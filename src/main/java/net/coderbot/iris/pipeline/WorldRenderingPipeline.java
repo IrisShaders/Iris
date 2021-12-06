@@ -29,6 +29,7 @@ public interface WorldRenderingPipeline {
 	boolean shouldDisableVanillaEntityShadows();
 	boolean shouldDisableDirectionalShading();
 	boolean shouldRenderClouds();
+	boolean shouldRenderUnderwaterOverlay();
 
 	float getSunPathRotation();
 }
