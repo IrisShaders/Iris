@@ -515,6 +515,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		// Note: This will probably be done differently in 1.17 since blend mode overrides are now associated with
+		//       vanilla ShaderInstances.
 		blendModeOverride.apply();
 
 		Minecraft client = Minecraft.getInstance();
@@ -656,6 +658,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		restoreGlState(client);
 
 		pipeline.endShadowRender();
+
+		// Note: This MUST happen before popProgram, otherwise we'll mess up the blend mode override of the program that
+		//       is being restored.
+		BlendModeOverride.restore();
+
 		// Note: This unbinds the shadow framebuffer
 		pipeline.popProgram(GbufferProgram.NONE);
 
@@ -665,8 +672,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		ACTIVE = false;
 		profiler.popPush("updatechunks");
-
-		BlendModeOverride.restore();
 	}
 
 	@Override
