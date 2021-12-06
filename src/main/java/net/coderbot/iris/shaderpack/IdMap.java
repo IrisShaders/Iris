@@ -357,7 +357,10 @@ public class IdMap {
 				return;
 			}
 
-			BlockRenderType renderType = BlockRenderType.fromString(key).orElse(null);
+			// Note: We have to remove the prefix "layer." because fromString expects "cutout", not "layer.cutout".
+			String keyWithoutPrefix = key.substring(keyPrefix.length());
+
+			BlockRenderType renderType = BlockRenderType.fromString(keyWithoutPrefix).orElse(null);
 
 			if (renderType == null) {
 				Iris.logger.warn("Failed to parse line in " + fileName + ": invalid block render type: " + key);
