@@ -23,5 +23,5 @@ public abstract class MixinScreenEffectRenderer {
 		if (pipeline != null && !pipeline.shouldRenderUnderwaterOverlay()) {
 			ci.cancel();
 		}
-    }
+	}
 }
