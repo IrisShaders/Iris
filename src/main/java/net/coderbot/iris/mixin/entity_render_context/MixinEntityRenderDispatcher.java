@@ -6,6 +6,7 @@ import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.layer.EntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -45,7 +46,7 @@ public class MixinEntityRenderDispatcher {
 			return;
 		}
 
-		int intId = idMap.getEntityIdMap().getOrDefault(entityId, -1);
+		int intId = idMap.getEntityIdMap().applyAsInt(new NamespacedId(entityId.getNamespace(), entityId.getPath()));
 		RenderStateShard phase = EntityRenderStateShard.forId(intId);
 
 		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(layer ->

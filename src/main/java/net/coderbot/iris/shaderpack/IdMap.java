@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -26,7 +27,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
-import org.apache.logging.log4j.Level;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -37,12 +37,12 @@ public class IdMap {
 	/**
 	 * Maps a given item ID to an integer ID
 	 */
-	private final Object2IntMap<ResourceLocation> itemIdMap;
+	private final Object2IntMap<NamespacedId> itemIdMap;
 
 	/**
 	 * Maps a given entity ID to an integer ID
 	 */
-	private final Object2IntMap<ResourceLocation> entityIdMap;
+	private final Object2IntMap<NamespacedId> entityIdMap;
 
 	/**
 	 * Maps block states to block ids defined in block.properties
@@ -97,8 +97,7 @@ public class IdMap {
 			//     so we don't need to do the UTF-8 workaround here.
 			properties.load(propertiesReader);
 		} catch (IOException e) {
-			Iris.logger.error("Error loading " + name + " at " + shaderPath);
-			Iris.logger.catching(Level.ERROR, e);
+			Iris.logger.error("Error loading " + name + " at " + shaderPath, e);
 
 			return Optional.empty();
 		}
@@ -114,26 +113,26 @@ public class IdMap {
 
 			return null;
 		} catch (IOException e) {
-			Iris.logger.error("An IOException occurred reading " + name + " from the current shaderpack");
-			Iris.logger.catching(Level.ERROR, e);
+			Iris.logger.error("An IOException occurred reading " + name + " from the current shaderpack", e);
 
 			return null;
 		}
 	}
 
-	private static Object2IntMap<ResourceLocation> parseItemIdMap(Properties properties) {
+	private static Object2IntMap<NamespacedId> parseItemIdMap(Properties properties) {
 		return parseIdMap(properties, "item.", "item.properties");
 	}
 
-	private static Object2IntMap<ResourceLocation> parseEntityIdMap(Properties properties) {
+	private static Object2IntMap<NamespacedId> parseEntityIdMap(Properties properties) {
 		return parseIdMap(properties, "entity.", "entity.properties");
 	}
 
 	/**
-	 * Parses an ResourceLocation map in OptiFine format
+	 * Parses a NamespacedId map in OptiFine format
 	 */
-	private static Object2IntMap<ResourceLocation> parseIdMap(Properties properties, String keyPrefix, String fileName) {
-		Object2IntMap<ResourceLocation> idMap = new Object2IntOpenHashMap<>();
+	private static Object2IntMap<NamespacedId> parseIdMap(Properties properties, String keyPrefix, String fileName) {
+		Object2IntMap<NamespacedId> idMap = new Object2IntOpenHashMap<>();
+		idMap.defaultReturnValue(-1);
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -161,14 +160,9 @@ public class IdMap {
 					continue;
 				}
 
-				try {
-					ResourceLocation ResourceLocation = new ResourceLocation(part);
-
-					idMap.put(ResourceLocation, intId);
-				} catch (Exception e) {
-					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ":");
-					Iris.logger.catching(Level.WARN, e);
-				}
+				// Note: NamespacedId performs no validation on the content. That will need to be done by whatever is
+				//       converting these things to ResourceLocations.
+				idMap.put(new NamespacedId(part), intId);
 			}
 		});
 
@@ -201,8 +195,7 @@ public class IdMap {
 				try {
 					addBlockStates(part, idMap, intId);
 				} catch (Exception e) {
-					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ":");
-					Iris.logger.catching(Level.WARN, e);
+					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ":", e);
 				}
 			}
 		});
@@ -381,11 +374,11 @@ public class IdMap {
 		return blockPropertiesMap;
 	}
 
-	public Map<ResourceLocation, Integer> getItemIdMap() {
+	public Object2IntFunction<NamespacedId> getItemIdMap() {
 		return itemIdMap;
 	}
 
-	public Map<ResourceLocation, Integer> getEntityIdMap() {
+	public Object2IntFunction<NamespacedId> getEntityIdMap() {
 		return entityIdMap;
 	}
 
