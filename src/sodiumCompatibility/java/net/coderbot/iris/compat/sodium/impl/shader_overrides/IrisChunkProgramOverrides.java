@@ -168,7 +168,7 @@ public class IrisChunkProgramOverrides {
     }
 
     private SodiumTerrainPipeline getSodiumTerrainPipeline() {
-		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (worldRenderingPipeline != null) {
 			return worldRenderingPipeline.getSodiumTerrainPipeline();

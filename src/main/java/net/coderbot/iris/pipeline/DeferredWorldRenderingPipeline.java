@@ -277,7 +277,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
 
-		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programs, createTerrainSamplers,
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
 				createShadowTerrainSamplers, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
 				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
 						null);

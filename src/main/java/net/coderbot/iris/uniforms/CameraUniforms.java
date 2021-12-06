@@ -37,6 +37,12 @@ public class CameraUniforms {
 	}
 
 	private static class CameraPositionTracker {
+		/**
+		 * Value range of cameraPosition. We want this to be small enough that precision is maintained when we convert
+		 * from a double to a float, but big enough that shifts happen infrequently, since each shift corresponds with
+		 * a noticeable change in shader animations and similar. 1024 is a reasonable compromise, since this means that
+		 * a player has to walk 1024 blocks on any axis in order to see a shift while playing.
+		 */
 		private static final double RANGE = 1024.0;
 
 		private Vector3d previousCameraPosition = new Vector3d();
@@ -63,18 +69,16 @@ public class CameraUniforms {
 			double dX;
 			double dZ;
 
-			if (currentCameraPosition.x > RANGE) {
+			// If x is out of range, shift so that x is zero again.
+			if (Math.abs(currentCameraPosition.x) > RANGE) {
 				dX = -currentCameraPosition.x;
-			} else if (currentCameraPosition.x < -RANGE) {
-				dX = currentCameraPosition.x;
 			} else {
 				dX = 0.0;
 			}
 
-			if (currentCameraPosition.z > RANGE) {
+			// Same thing, but for z.
+			if (Math.abs(currentCameraPosition.z) > RANGE) {
 				dZ = -currentCameraPosition.z;
-			} else if (currentCameraPosition.z < -RANGE) {
-				dZ = currentCameraPosition.z;
 			} else {
 				dZ = 0.0;
 			}
