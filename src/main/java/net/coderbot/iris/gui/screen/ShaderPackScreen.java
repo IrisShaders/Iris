@@ -254,6 +254,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void openShaderPackFolder() {
-		Util.getPlatform().openFile(Iris.getShaderpacksDirectory().toFile());
+		Util.getPlatform().openUri(Iris.getShaderpacksDirectory().toUri());
 	}
 }
