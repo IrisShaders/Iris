@@ -40,7 +40,7 @@ public class MixinGameRenderer {
 
 	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/player/LocalPlayer;I)V"))
 	private void disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
-		if (!(Iris.getPipelineManager().getPipeline() instanceof FixedFunctionWorldRenderingPipeline)) {
+		if (!(Iris.getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline)) {
 			return;
 		}
 

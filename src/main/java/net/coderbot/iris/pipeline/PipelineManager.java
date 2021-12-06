@@ -6,10 +6,12 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class PipelineManager {
@@ -44,8 +46,13 @@ public class PipelineManager {
 		return pipeline;
 	}
 
-	public WorldRenderingPipeline getPipeline() {
+	@Nullable
+	public WorldRenderingPipeline getPipelineNullable() {
 		return pipeline;
+	}
+
+	public Optional<WorldRenderingPipeline> getPipeline() {
+		return Optional.ofNullable(pipeline);
 	}
 
 	public boolean isSodiumShaderReloadNeeded() {

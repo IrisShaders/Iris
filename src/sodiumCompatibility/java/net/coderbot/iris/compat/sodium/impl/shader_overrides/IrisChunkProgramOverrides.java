@@ -159,7 +159,7 @@ public class IrisChunkProgramOverrides {
     }
 
     public void createShaders(RenderDevice device) {
-        WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipeline();
+        WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
         SodiumTerrainPipeline sodiumTerrainPipeline = null;
 
         if (worldRenderingPipeline != null) {
