@@ -174,10 +174,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		ImmutableSet<Integer> flippedBeforeTerrain = ImmutableSet.of();
 
 		createShadowMapRenderer = () -> {
-			shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null),
-					programSet.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets,
-					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
-					programSet, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
+			shadowMapRenderer = new ShadowRenderer(this,
+					programSet.getShadow().get(), programSet.getPackDirectives(),
+					programSet);
 			createShadowMapRenderer = () -> {};
 		};
 

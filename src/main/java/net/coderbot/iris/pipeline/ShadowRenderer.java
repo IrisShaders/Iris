@@ -85,9 +85,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private int renderedShadowBlockEntities = 0;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
-                          Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-                          AbstractTexture normals, AbstractTexture specular, IntSupplier noise, ProgramSet programSet,
-													Object2ObjectMap<String, IntSupplier> customTextureIds) {
+                          ProgramSet programSet) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
