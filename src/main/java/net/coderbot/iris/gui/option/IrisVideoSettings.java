@@ -55,7 +55,7 @@ public class IrisVideoSettings {
 					new TranslatableComponent("options.chunks", d));
 		}
 	}, client -> {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		Component tooltip;
 

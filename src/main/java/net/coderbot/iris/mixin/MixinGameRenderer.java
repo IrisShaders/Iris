@@ -341,7 +341,7 @@ public class MixinGameRenderer {
 	}
 
 	private static boolean isPhase(WorldRenderingPhase phase) {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			return ((CoreWorldRenderingPipeline) pipeline).getPhase() == phase;
@@ -351,7 +351,7 @@ public class MixinGameRenderer {
 	}
 
 	private static boolean isRenderingWorld() {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			return ((CoreWorldRenderingPipeline) pipeline).getPhase() != WorldRenderingPhase.NOT_RENDERING_WORLD;
@@ -361,7 +361,7 @@ public class MixinGameRenderer {
 	}
 
 	private static void override(Function<CoreWorldRenderingPipeline, ShaderInstance> getter, CallbackInfoReturnable<ShaderInstance> cir) {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			ShaderInstance override = getter.apply(((CoreWorldRenderingPipeline) pipeline));
