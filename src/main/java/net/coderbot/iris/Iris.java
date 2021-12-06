@@ -83,7 +83,9 @@ public class Iris implements ClientModInitializer {
 		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
 
 		try {
-			Files.createDirectories(getShaderpacksDirectory());
+			if (!Files.exists(getShaderpacksDirectory())) {
+				Files.createDirectories(getShaderpacksDirectory());
+			}
 		} catch (IOException e) {
 			logger.warn("Failed to create the shaderpacks directory!");
 			logger.catching(Level.WARN, e);
