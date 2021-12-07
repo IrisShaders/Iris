@@ -11,7 +11,7 @@ import java.nio.file.Path;
 
 public class PropertiesPreprocessor {
 	public static String process(Path rootPath, Path shaderPath, String source) {
-		source = "#define MC_VERSION " + StandardMacros.getMcVersion() + "\n" + source;
+		source = "#define MC_VERSION " + StandardMacros.getMcVersion() + "\n" + source + "\n";
 
 		return preprocessSource(source);
 	}
@@ -36,8 +36,6 @@ public class PropertiesPreprocessor {
 		} catch (final Exception e) {
 			Iris.logger.error("Properties pre-processing failed", e);
 		}
-
-		builder.append("\n");
 
 		source = builder.toString();
 
