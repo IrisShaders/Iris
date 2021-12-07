@@ -7,9 +7,10 @@ import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+import net.coderbot.iris.vendored.joml.Vector2f;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
-import net.minecraft.world.phys.Vec2;
 
 public interface UniformHolder {
 	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value);
@@ -22,9 +23,9 @@ public interface UniformHolder {
 
 	UniformHolder uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value);
 
-	UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2> value);
+	UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2f> value);
 
-	UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2> value);
+	UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2i> value);
 
 	UniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value);
 

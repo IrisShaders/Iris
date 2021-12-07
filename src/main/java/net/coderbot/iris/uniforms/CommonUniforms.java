@@ -14,6 +14,7 @@ import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
+import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
@@ -87,6 +88,9 @@ public final class CommonUniforms {
 	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier){
 		ExternallyManagedUniforms.addExternallyManagedUniforms116(uniforms);
 
+		// TODO: Parse the value of const float eyeBrightnessHalflife from the shaderpack's fragment shader configuration
+		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier);
+
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
@@ -98,8 +102,10 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
-			// TODO: Parse the value of const float eyeBrightnessHalflife from the shaderpack's fragment shader configuration
-			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier))
+			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {
+				Vector2f smoothed = eyeBrightnessSmooth.get();
+				return new Vector2i((int) smoothed.x(),(int) smoothed.y());
+			})
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			// TODO: Parse the value of const float wetnessHalfLife and const float drynessHalfLife from the shaderpack's fragment shader configuration
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
@@ -148,9 +154,9 @@ public final class CommonUniforms {
 		return client.level.getRainLevel(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
-	private static Vec2 getEyeBrightness() {
+	private static Vector2i getEyeBrightness() {
 		if (client.cameraEntity == null || client.level == null) {
-			return Vec2.ZERO;
+			return new Vector2i(0, 0);
 		}
 
 		Vec3 feet = client.cameraEntity.position();
@@ -160,7 +166,7 @@ public final class CommonUniforms {
 		int blockLight = client.level.getBrightness(LightLayer.BLOCK, eyeBlockPos);
 		int skyLight = client.level.getBrightness(LightLayer.SKY, eyeBlockPos);
 
-		return new Vec2(blockLight * 16.0f, skyLight * 16.0f);
+		return new Vector2i(blockLight * 16, skyLight * 16);
 	}
 
 	private static float getNightVision() {
