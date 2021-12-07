@@ -2,12 +2,15 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.xhfp;
 
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
+import me.jellysquid.mods.sodium.client.render.chunk.format.DefaultModelVertexFormats;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexUtil;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
 import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
+import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.vendored.joml.Vector3f;
 
 import java.nio.ByteBuffer;
@@ -16,7 +19,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
     private MaterialIdHolder idHolder;
 
     public XHFPModelVertexBufferWriterNio(VertexBufferView backingBuffer) {
-        super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
+        super(backingBuffer, Iris.isPackActive() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : DefaultModelVertexFormats.MODEL_VERTEX_HFP);
     }
 
     private static final int STRIDE = 48;
