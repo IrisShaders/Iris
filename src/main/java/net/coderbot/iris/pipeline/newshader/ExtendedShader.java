@@ -73,6 +73,8 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder {
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
+		} else if (getName().contains("shadow")) {
+			BlendModeOverride.OFF.apply();
 		}
 
 		if (parent.isBeforeTranslucent) {
