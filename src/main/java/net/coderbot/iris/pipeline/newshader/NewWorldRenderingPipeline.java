@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
@@ -120,9 +121,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	boolean isBeforeTranslucent;
 
-	private final int waterId;
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
+	private final boolean shouldRenderUnderwaterOverlay;
+	private final boolean shouldRenderVignette;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
@@ -142,11 +144,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Files.createDirectories(debugOutDir);
 
 		this.shouldRenderClouds = programSet.getPackDirectives().areCloudsEnabled();
+		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
+		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
 		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programSet.getPackDirectives().getRenderTargetDirectives());
-		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new ResourceLocation("minecraft", "water"), -1);
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programSet.getPackDirectives().getShadowDirectives();
@@ -321,7 +324,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			throw e;
 		}
 
-		BlockRenderingSettings.INSTANCE.setIdMap(programSet.getPack().getIdMap());
+		BlockRenderingSettings.INSTANCE.setBlockStateIds(
+				BlockMaterialMapping.createBlockStateIdMap(programSet.getPack().getIdMap().getBlockProperties()));
+
+		BlockRenderingSettings.INSTANCE.setEntityIds(programSet.getPack().getIdMap().getEntityIdMap());
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programSet.getPackDirectives().getAmbientOcclusionLevel());
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programSet.getPackDirectives().shouldUseSeparateAo());
@@ -610,6 +616,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldRenderClouds() {
 		return shouldRenderClouds;
+	}
+
+	@Override
+	public boolean shouldRenderUnderwaterOverlay() {
+		return shouldRenderUnderwaterOverlay;
+	}
+
+	@Override
+	public boolean shouldRenderVignette() {
+		return shouldRenderVignette;
 	}
 
 	@Override

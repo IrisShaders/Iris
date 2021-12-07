@@ -1,10 +1,10 @@
 package net.coderbot.iris.uniforms;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Vector3f;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.newshader.FogMode;
+import net.coderbot.iris.vendored.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
