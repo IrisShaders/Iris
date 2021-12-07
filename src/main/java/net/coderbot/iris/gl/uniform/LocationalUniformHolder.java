@@ -1,7 +1,6 @@
 package net.coderbot.iris.gl.uniform;
 
 import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
 import java.util.OptionalInt;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -11,6 +10,7 @@ import java.util.function.Supplier;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
+import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
 
 public interface LocationalUniformHolder extends UniformHolder {
