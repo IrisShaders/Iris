@@ -23,7 +23,6 @@ public class MixinSodiumWorldRenderer {
                                 "Lme/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType;" +
                             ")Lme/jellysquid/mods/sodium/client/render/chunk/ChunkRenderBackend;"))
     private ChunkVertexType iris$overrideVertexType(ChunkVertexType vertexType) {
-        // TODO: Don't use the extended vertex format when shaders are disabled.
         return Iris.isPackActive() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
     }
 }
