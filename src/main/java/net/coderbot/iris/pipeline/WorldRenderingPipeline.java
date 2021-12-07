@@ -30,6 +30,7 @@ public interface WorldRenderingPipeline {
 	boolean shouldDisableDirectionalShading();
 	boolean shouldRenderClouds();
 	boolean shouldRenderUnderwaterOverlay();
+	boolean shouldRenderVignette();
 
 	float getSunPathRotation();
 }

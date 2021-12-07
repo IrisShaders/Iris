@@ -121,6 +121,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
+	private final boolean shouldRenderVignette;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
@@ -134,6 +135,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
 		this.shouldRenderUnderwaterOverlay = programs.getPackDirectives().underwaterOverlay();
+		this.shouldRenderVignette = programs.getPackDirectives().vignette();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -443,6 +445,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public boolean shouldRenderUnderwaterOverlay() {
 		return shouldRenderUnderwaterOverlay;
+	}
+
+	@Override
+	public boolean shouldRenderVignette() {
+		return shouldRenderVignette;
 	}
 
 	@Override
