@@ -26,6 +26,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.materialmap.BlockEntry;
 import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
