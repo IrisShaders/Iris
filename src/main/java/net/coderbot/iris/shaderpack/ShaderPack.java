@@ -219,8 +219,14 @@ public class ShaderPack {
 			Path mcMetaResolvedPath = root.resolve(mcMetaPath);
 			if (Files.exists(mcMetaResolvedPath)) {
 				JsonObject meta = loadMcMeta(mcMetaResolvedPath);
-				blur = meta.get("texture").getAsJsonObject().get("blur").getAsBoolean();
-				clamp = meta.get("texture").getAsJsonObject().get("clamp").getAsBoolean();
+				if (meta.get("texture") != null) {
+					if (meta.get("texture").getAsJsonObject().get("blur") != null) {
+						blur = meta.get("texture").getAsJsonObject().get("blur").getAsBoolean();
+					}
+					if (meta.get("texture").getAsJsonObject().get("clamp") != null) {
+						clamp = meta.get("texture").getAsJsonObject().get("clamp").getAsBoolean();
+					}
+				}
 			}
 
 			byte[] content = Files.readAllBytes(root.resolve(path));
