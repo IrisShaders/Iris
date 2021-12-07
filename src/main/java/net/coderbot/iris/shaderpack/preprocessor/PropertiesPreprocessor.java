@@ -1,8 +1,7 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.preprocessor;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.StandardMacros;
-import net.coderbot.iris.shaderpack.preprocessor.PropertiesCommentListener;
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.Preprocessor;
 import org.anarres.cpp.StringLexerSource;
