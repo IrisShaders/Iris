@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
@@ -122,7 +123,7 @@ public class ShaderProperties {
 
 			handlePassDirective("alphaTest.", key, value, pass -> {
 				if ("off".equals(value)) {
-					alphaTestOverrides.put(pass, new AlphaTestOverride.Off());
+					alphaTestOverrides.put(pass, AlphaTestOverride.OFF);
 					return;
 				}
 
@@ -151,7 +152,7 @@ public class ShaderProperties {
 					return;
 				}
 
-				alphaTestOverrides.put(pass, new AlphaTestOverride(function.get(), reference));
+				alphaTestOverrides.put(pass, new AlphaTestOverride(new AlphaTest(function.get().getGlId(), reference)));
 			});
 
 			handlePassDirective("blend.", key, value, pass -> {

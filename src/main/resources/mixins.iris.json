@@ -19,6 +19,7 @@
     "MixinGlStateManager",
     "MixinGlStateManager_AmdCrashFix",
     "MixinGlStateManager_AtlasTracking",
+    "MixinGlStateManager_AlphaTestOverride",
     "MixinGlStateManager_BlendOverride",
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
