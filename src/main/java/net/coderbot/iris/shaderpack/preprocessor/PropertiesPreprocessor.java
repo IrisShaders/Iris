@@ -2,7 +2,7 @@ package net.coderbot.iris.shaderpack;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.StandardMacros;
-import org.anarres.cpp.DefaultPreprocessorListener;
+import net.coderbot.iris.shaderpack.preprocessor.PropertiesCommentListener;
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.Preprocessor;
 import org.anarres.cpp.StringLexerSource;
@@ -21,7 +21,7 @@ public class PropertiesPreprocessor {
 	public static String preprocessSource(String source) {
 		@SuppressWarnings("resource")
 		final Preprocessor pp = new Preprocessor();
-		pp.setListener(new DefaultPreprocessorListener());
+		pp.setListener(new PropertiesCommentListener());
 		pp.addInput(new StringLexerSource(source, true));
 		pp.addFeature(Feature.KEEPCOMMENTS);
 
