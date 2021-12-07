@@ -1,15 +1,16 @@
 package net.coderbot.iris.gl.uniform;
 
 import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
-import com.mojang.math.Vector4f;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+import net.coderbot.iris.vendored.joml.Vector2f;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
-import net.minecraft.world.phys.Vec2;
+import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vendored.joml.Vector4f;
 
 public interface UniformHolder {
 	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value);
@@ -22,9 +23,9 @@ public interface UniformHolder {
 
 	UniformHolder uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value);
 
-	UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2> value);
+	UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2f> value);
 
-	UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2> value);
+	UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2i> value);
 
 	UniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value);
 

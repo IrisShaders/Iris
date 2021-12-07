@@ -17,6 +17,7 @@
     "MixinEntityRenderDispatcher",
     "MixinGameRenderer",
     "MixinProgram",
+    "MixinScreenEffectRenderer",
     "MixinGlStateManager",
     "MixinGlStateManager_AtlasTracking",
     "MixinGlStateManager_BlendOverride",

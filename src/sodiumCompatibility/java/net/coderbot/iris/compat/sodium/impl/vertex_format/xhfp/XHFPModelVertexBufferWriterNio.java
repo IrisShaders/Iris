@@ -6,7 +6,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 
 import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
-import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdHolder;
+import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.vendored.joml.Vector3f;
 
