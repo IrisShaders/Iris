@@ -16,6 +16,7 @@ import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -35,8 +36,6 @@ import net.minecraft.world.phys.Vec3;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
-
-import com.mojang.math.Vector4f;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
