@@ -14,6 +14,7 @@ public class PackDirectives {
 	private float sunPathRotation;
 	private float ambientOcclusionLevel;
 	private boolean areCloudsEnabled;
+	private boolean underwaterOverlay;
 	private boolean separateAo;
 	private boolean oldLighting;
 	private OptionalBoolean shadowCulling;
@@ -33,6 +34,7 @@ public class PackDirectives {
 	PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
 		this(supportedRenderTargets);
 		areCloudsEnabled = properties.areCloudsEnabled();
+		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
@@ -62,6 +64,10 @@ public class PackDirectives {
 
 	public boolean areCloudsEnabled() {
 		return areCloudsEnabled;
+	}
+
+	public boolean underwaterOverlay() {
+		return underwaterOverlay;
 	}
 
 	public boolean shouldUseSeparateAo() {

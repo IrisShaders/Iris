@@ -15,6 +15,7 @@
     "MixinEntityRenderDispatcher",
     "MixinFogRenderer",
     "MixinGameRenderer",
+    "MixinScreenEffectRenderer",
     "MixinGlStateManager",
     "MixinGlStateManager_AmdCrashFix",
     "MixinGlStateManager_AtlasTracking",
