@@ -39,7 +39,7 @@ public class HandRenderer {
 
 		((GameRendererAccessor) gameRenderer).invokeBobHurt(poseStack, tickDelta);
 
-		if(Minecraft.getInstance().options.bobView) {
+		if (Minecraft.getInstance().options.bobView) {
 			((GameRendererAccessor) gameRenderer).invokeBobView(poseStack, tickDelta);
 		}
 	}
@@ -69,7 +69,7 @@ public class HandRenderer {
 	}
 
 	public void renderSolid(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if(!canRender(camera, gameRenderer) || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
+		if (!canRender(camera, gameRenderer) || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
 			return;
 		}
 
@@ -99,7 +99,7 @@ public class HandRenderer {
 	}
 
 	public void renderTranslucent(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if(!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
+		if (!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
 			return;
 		}
 
