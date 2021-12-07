@@ -7,11 +7,10 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
-import net.coderbot.iris.gl.blending.BlendModeStorage;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -37,7 +36,6 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
@@ -120,7 +118,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private boolean isBeforeTranslucent;
 
-	private final int waterId;
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 	private final boolean oldLighting;
@@ -141,7 +138,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.allPasses = new ArrayList<>();
 
 		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programs.getPackDirectives().getRenderTargetDirectives());
-		this.waterId = programs.getPack().getIdMap().getBlockProperties().getOrDefault(Registry.BLOCK.get(WATER_IDENTIFIER).defaultBlockState(), -1);
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programs.getPackDirectives().getShadowDirectives();
@@ -158,7 +154,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			forcedShadowRenderDistanceChunks = OptionalInt.empty();
 		}
 
-		BlockRenderingSettings.INSTANCE.setBlockStateIds(programs.getPack().getIdMap().getBlockProperties());
+		BlockRenderingSettings.INSTANCE.setBlockStateIds(
+				BlockMaterialMapping.createBlockStateIdMap(programs.getPack().getIdMap().getBlockProperties()));
+
 		BlockRenderingSettings.INSTANCE.setEntityIds(programs.getPack().getIdMap().getEntityIdMap());
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programs.getPackDirectives().getAmbientOcclusionLevel());
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
@@ -409,21 +407,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		if (program == GbufferProgram.TERRAIN) {
 			if (terrain != null) {
-				setupAttributes(terrain);
+				setupAttributeDefaults(terrain);
 			}
 		} else if (program == GbufferProgram.TRANSLUCENT_TERRAIN) {
 			if (translucent != null) {
-				setupAttributes(translucent);
-
-				// TODO: This is just making it so that all translucent content renders like water. We need to
-				// properly support mc_Entity!
-				setupAttribute(translucent, "mc_Entity", 10, waterId, -1.0F, -1.0F, -1.0F);
+				setupAttributeDefaults(translucent);
 			}
-		}
-
-		if (program != GbufferProgram.TRANSLUCENT_TERRAIN && pass != null && pass == translucent) {
-			// Make sure that other stuff sharing the same program isn't rendered like water
-			setupAttribute(translucent, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
 		}
 	}
 
@@ -620,12 +609,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 	}
 
-	private static void setupAttributes(Pass pass) {
-		// TODO: Properly add these attributes into the vertex format
-
-		float blockId = -1.0F;
-
-		setupAttribute(pass, "mc_Entity", 10, blockId, -1.0F, -1.0F, -1.0F);
+	private static void setupAttributeDefaults(Pass pass) {
+		setupAttribute(pass, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
 		setupAttribute(pass, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
 		setupAttribute(pass, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
 	}
