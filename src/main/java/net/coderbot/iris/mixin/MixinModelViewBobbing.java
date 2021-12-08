@@ -40,7 +40,7 @@ public class MixinModelViewBobbing {
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/blaze3d/vertex/PoseStack;last()Lcom/mojang/blaze3d/vertex/PoseStack$Pose;"),
 			slice = @Slice(from = @At(value = "INVOKE",
-					       target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V")))
+					       target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lcom/mojang/math/Matrix4f;)V")))
 	private PoseStack.Pose iris$saveBobbing(PoseStack stack) {
 		bobbingEffectsModel = stack.last().pose().copy();
 		bobbingEffectsNormal = stack.last().normal().copy();
