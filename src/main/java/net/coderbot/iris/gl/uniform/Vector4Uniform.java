@@ -1,7 +1,8 @@
 package net.coderbot.iris.gl.uniform;
 
-import com.mojang.math.Vector4f;
 import java.util.function.Supplier;
+
+import net.coderbot.iris.vendored.joml.Vector4f;
 import org.lwjgl.opengl.GL21;
 
 public class Vector4Uniform extends Uniform {

@@ -1,6 +1,5 @@
 package net.coderbot.iris.gui.element;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
@@ -12,15 +11,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
-	public static final List<String> BUILTIN_PACKS = ImmutableList.of();
-
 	private static final Component PACK_LIST_LABEL = new TranslatableComponent("pack.iris.list.label").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
 	private static final Component SHADERS_DISABLED_LABEL = new TranslatableComponent("options.iris.shaders.disabled");
 	private static final Component SHADERS_ENABLED_LABEL = new TranslatableComponent("options.iris.shaders.enabled");
@@ -49,35 +42,41 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	public void refresh() {
 		this.clearEntries();
 
+		Collection<String> names;
+
 		try {
-			this.addEntry(enableShadersButton);
-
-			Path path = Iris.getShaderpacksDirectory();
-			int index = 0;
-
-			for (String pack : BUILTIN_PACKS) {
-				index++;
-				addEntry(index, pack);
-			}
-
-			Collection<Path> folders = Files.list(path).filter(Iris::isValidShaderpack).collect(Collectors.toList());
-
-			for (Path folder : folders) {
-				String name = folder.getFileName().toString();
-
-				if (BUILTIN_PACKS.contains(name)) {
-					continue;
-				}
-
-				index++;
-				addEntry(index, name);
-			}
-
-			this.addEntry(new LabelEntry(PACK_LIST_LABEL));
+			names = Iris.getShaderpacksDirectoryManager().enumerate();
 		} catch (Throwable e) {
 			Iris.logger.error("Error reading files while constructing selection UI");
 			Iris.logger.catching(e);
+
+			// Not translating this since it's going to be seen very rarely,
+			// We're just trying to get more information on a seemingly untraceable bug:
+			// - https://github.com/IrisShaders/Iris/issues/785
+			this.addEntry(new LabelEntry(new TextComponent("")));
+			this.addEntry(new LabelEntry(new TextComponent("There was an error reading your shaderpacks directory")
+					.withStyle(ChatFormatting.RED, ChatFormatting.BOLD)));
+			this.addEntry(new LabelEntry(new TextComponent("")));
+			this.addEntry(new LabelEntry(new TextComponent("Check your logs for more information.")));
+			this.addEntry(new LabelEntry(new TextComponent("Please file an issue report including a log file.")));
+			this.addEntry(new LabelEntry(new TextComponent("If you are able to identify the file causing this, " +
+					"please include it in your report as well.")));
+			this.addEntry(new LabelEntry(new TextComponent("Note that this might be an issue with folder " +
+					"permissions; ensure those are correct first.")));
+
+			return;
 		}
+
+		this.addEntry(enableShadersButton);
+
+		int index = 0;
+
+		for (String name : names) {
+			index++;
+			addEntry(index, name);
+		}
+
+		this.addEntry(new LabelEntry(PACK_LIST_LABEL));
 	}
 
 	public void addEntry(int index, String name) {

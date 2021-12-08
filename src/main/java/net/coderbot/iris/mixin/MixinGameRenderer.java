@@ -50,7 +50,7 @@ public class MixinGameRenderer {
 
 	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/player/LocalPlayer;I)V"))
 	private void disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
-		if (!(Iris.getPipelineManager().getPipeline() instanceof FixedFunctionWorldRenderingPipeline)) {
+		if (!(Iris.getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline)) {
 			return;
 		}
 
@@ -341,7 +341,7 @@ public class MixinGameRenderer {
 	}
 
 	private static boolean isPhase(WorldRenderingPhase phase) {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			return ((CoreWorldRenderingPipeline) pipeline).getPhase() == phase;
@@ -351,7 +351,7 @@ public class MixinGameRenderer {
 	}
 
 	private static boolean isRenderingWorld() {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			return ((CoreWorldRenderingPipeline) pipeline).getPhase() != WorldRenderingPhase.NOT_RENDERING_WORLD;
@@ -361,7 +361,7 @@ public class MixinGameRenderer {
 	}
 
 	private static void override(Function<CoreWorldRenderingPipeline, ShaderInstance> getter, CallbackInfoReturnable<ShaderInstance> cir) {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			ShaderInstance override = getter.apply(((CoreWorldRenderingPipeline) pipeline));

@@ -2,12 +2,15 @@ package net.coderbot.iris.mixin.gui;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.screen.HudHideable;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.entity.Entity;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -55,6 +58,15 @@ public class MixinGui {
 
 			GuiComponent.fill(poseStack, 1, y - 1, 2 + lineWidth + 1, y + lineHeight - 1, 0x9050504E);
 			font.draw(poseStack, string, 2.0F, y, 0xFFFF55);
+		}
+	}
+
+	@Inject(method = "renderVignette", at = @At("HEAD"), cancellable = true)
+	private void iris$disableVignetteRendering(Entity entity, CallbackInfo ci) {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null && !pipeline.shouldRenderVignette()) {
+			ci.cancel();
 		}
 	}
 }

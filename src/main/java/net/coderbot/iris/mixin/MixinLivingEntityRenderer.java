@@ -1,7 +1,6 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
 import net.coderbot.iris.layer.EntityColorMultiBufferSource;
@@ -22,11 +21,6 @@ public abstract class MixinLivingEntityRenderer {
 	private MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource, LivingEntity entity, float yaw,
 												float tickDelta, PoseStack pose, MultiBufferSource bufferSourceArg,
 												int light) {
-		if (!(bufferSource instanceof Groupable)) {
-			// Entity color is not supported in this context, no buffering available.
-			return bufferSource;
-		}
-
 		boolean hurt;
 		if (Iris.isPhysicsModInstalled()) {
 			hurt = entity.hurtTime > 0 && !entity.isDeadOrDying();

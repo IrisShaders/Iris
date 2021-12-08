@@ -1,9 +1,10 @@
 package net.coderbot.iris.gl.uniform;
 
-import com.mojang.math.Vector3f;
-import com.mojang.math.Vector4f;
 import java.util.function.Supplier;
-import net.minecraft.world.phys.Vec3;
+
+import net.coderbot.iris.vendored.joml.Vector3d;
+import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import org.lwjgl.opengl.GL21;
 
 public class Vector3Uniform extends Uniform {
@@ -17,11 +18,11 @@ public class Vector3Uniform extends Uniform {
 		this.value = value;
 	}
 
-	static Vector3Uniform converted(int location, Supplier<Vec3> value) {
+	static Vector3Uniform converted(int location, Supplier<Vector3d> value) {
 		Vector3f held = new Vector3f();
 
 		return new Vector3Uniform(location, () -> {
-			Vec3 updated = value.get();
+			Vector3d updated = value.get();
 
 			held.set((float) updated.x, (float) updated.y, (float) updated.z);
 

@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
@@ -45,13 +46,17 @@ public class SodiumTerrainPipeline {
 
 	ProgramSet programSet;
 
+	private final WorldRenderingPipeline parent;
+
 	private final IntFunction<ProgramSamplers> createTerrainSamplers;
 	private final IntFunction<ProgramSamplers> createShadowSamplers;
 
-	public SodiumTerrainPipeline(ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
+	public SodiumTerrainPipeline(WorldRenderingPipeline parent, ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
 								 IntFunction<ProgramSamplers> createShadowSamplers, RenderTargets targets,
 								 ImmutableSet<Integer> flippedBeforeTranslucent,
 								 ImmutableSet<Integer> flippedAfterTranslucent, GlFramebuffer shadowFramebuffer) {
+		this.parent = Objects.requireNonNull(parent);
+
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 
@@ -211,8 +216,7 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), pipeline.getFrameUpdateNotifier(), FogMode.LINEAR);
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), parent.getFrameUpdateNotifier(), FogMode.LINEAR);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();

@@ -16,19 +16,15 @@ public class IrisVideoSettings {
 	private static final Component ENABLED_TOOLTIP = new TranslatableComponent("options.iris.shadowDistance.enabled");
 
 	public static int getOverriddenShadowDistance(int base) {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-
-		if (pipeline != null) {
-			return pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(base);
-		} else {
-			return base;
-		}
+		return Iris.getPipelineManager().getPipeline()
+				.map(pipeline -> pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(base))
+				.orElse(base);
 	}
 
 	public static boolean isShadowDistanceSliderEnabled() {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-
-		return pipeline == null || !pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent();
+		return Iris.getPipelineManager().getPipeline()
+				.map(pipeline -> !pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent())
+				.orElse(true);
 	}
 
 	// TODO: Add a Sodium video settings button too.
@@ -45,7 +41,7 @@ public class IrisVideoSettings {
 	}, (gameOptions, option) -> {
 		int d = (int) option.get(gameOptions);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null) {
 			d = pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(d);
@@ -59,7 +55,7 @@ public class IrisVideoSettings {
 					new TranslatableComponent("options.chunks", d));
 		}
 	}, client -> {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		Component tooltip;
 

@@ -1,15 +1,15 @@
 package net.coderbot.iris.compat.sodium.mixin.block_id;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import me.jellysquid.mods.sodium.client.model.vertex.VertexSink;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.compat.sodium.impl.block_id.ChunkBuildBuffersExt;
 import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
-import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdHolder;
+import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,10 +29,10 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void iris$onConstruct(ChunkVertexType vertexType, BlockRenderPassManager renderPassManager, CallbackInfo ci) {
-        IdMap map = BlockRenderingSettings.INSTANCE.getIdMap();
+        Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
 
-        if (map != null) {
-            this.idHolder = new MaterialIdHolder(map.getBlockProperties());
+        if (blockStateIds != null) {
+            this.idHolder = new MaterialIdHolder(blockStateIds);
         } else {
             this.idHolder = new MaterialIdHolder();
         }

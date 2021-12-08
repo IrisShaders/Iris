@@ -7,8 +7,6 @@ import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -48,6 +46,7 @@ public class ShaderProperties {
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
+	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
 	// TODO: private Map<String, String> optifineVersionRequirements;
 	// TODO: private Set<String> sliderOptions;
 	// TODO: Parse profiles
@@ -103,6 +102,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
+			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
 
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
 			// TODO: Custom uniforms
@@ -338,6 +338,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getFrustumCulling() {
 		return frustumCulling;
+	}
+
+	public OptionalBoolean getShadowCulling() {
+		return shadowCulling;
 	}
 
 	public Object2ObjectMap<String, AlphaTest> getAlphaTestOverrides() {

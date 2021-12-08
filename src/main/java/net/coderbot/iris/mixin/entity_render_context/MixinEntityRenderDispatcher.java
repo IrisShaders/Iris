@@ -1,11 +1,12 @@
 package net.coderbot.iris.mixin.entity_render_context;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.layer.EntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
-import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -39,13 +40,13 @@ public class MixinEntityRenderDispatcher {
 
 		ResourceLocation entityId = Registry.ENTITY_TYPE.getKey(entity.getType());
 
-		IdMap idMap = BlockRenderingSettings.INSTANCE.getIdMap();
+		Object2IntFunction<NamespacedId> entityIds = BlockRenderingSettings.INSTANCE.getEntityIds();
 
-		if (idMap == null) {
+		if (entityIds == null) {
 			return;
 		}
 
-		int intId = idMap.getEntityIdMap().getOrDefault(entityId, -1);
+		int intId = entityIds.applyAsInt(new NamespacedId(entityId.getNamespace(), entityId.getPath()));
 		RenderStateShard phase = EntityRenderStateShard.forId(intId);
 
 		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(layer ->
