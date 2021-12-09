@@ -1,29 +1,28 @@
-package net.coderbot.iris.compat.sodium.impl.block_id;
+package net.coderbot.iris.block_rendering;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.Map;
-
 public class MaterialIdHolder {
-    private final Map<BlockState, Integer> idMap;
+    private final Object2IntMap<BlockState> blockStateIds;
     public short id;
     public short renderType;
 
     public MaterialIdHolder() {
-        this.idMap = Object2IntMaps.emptyMap();
+        this.blockStateIds = Object2IntMaps.emptyMap();
         this.id = -1;
         this.renderType = -1;
     }
 
-    public MaterialIdHolder(Map<BlockState, Integer> idMap) {
-        this.idMap = idMap;
+    public MaterialIdHolder(Object2IntMap<BlockState> idMap) {
+        this.blockStateIds = idMap;
         this.id = -1;
         this.renderType = -1;
     }
 
     public void set(BlockState state, short renderType) {
-        this.id = (short) this.idMap.getOrDefault(state, -1).intValue();
+        this.id = (short) this.blockStateIds.getOrDefault(state, -1);
         this.renderType = renderType;
     }
 

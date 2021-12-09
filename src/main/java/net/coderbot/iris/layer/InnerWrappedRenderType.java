@@ -77,6 +77,10 @@ public class InnerWrappedRenderType extends RenderType implements WrappableRende
 		return "iris_wrapped:" + this.wrapped.toString();
 	}
 
+	public RenderStateShard getExtra() {
+		return extra;
+	}
+
 	private static boolean shouldSortOnUpload(RenderType type) {
 		return ((RenderTypeAccessor) type).shouldSortOnUpload();
 	}

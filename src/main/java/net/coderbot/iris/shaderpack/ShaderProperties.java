@@ -36,6 +36,7 @@ public class ShaderProperties {
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
+	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
 	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
 	private List<String> mainScreenOptions = new ArrayList<>();
@@ -90,6 +91,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
+			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
 
 			// Defining "sliders" multiple times in the properties file will only result in
 			// the last definition being used, should be tested if behavior matches OptiFine
@@ -388,6 +390,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getFrustumCulling() {
 		return frustumCulling;
+	}
+
+	public OptionalBoolean getShadowCulling() {
+		return shadowCulling;
 	}
 
 	public Object2ObjectMap<String, AlphaTestOverride> getAlphaTestOverrides() {
