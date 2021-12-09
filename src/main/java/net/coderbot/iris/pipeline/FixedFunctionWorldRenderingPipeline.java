@@ -108,6 +108,16 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public boolean shouldRenderUnderwaterOverlay() {
+		return true;
+	}
+
+	@Override
+	public boolean shouldRenderVignette() {
+		return true;
+	}
+
+	@Override
 	public float getSunPathRotation() {
 		// No sun tilt
 		return 0;

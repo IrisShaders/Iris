@@ -1,8 +1,7 @@
-package net.coderbot.iris.shaderpack;
+package net.coderbot.iris.shaderpack.preprocessor;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.StandardMacros;
-import org.anarres.cpp.DefaultPreprocessorListener;
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.Preprocessor;
 import org.anarres.cpp.StringLexerSource;
@@ -12,7 +11,7 @@ import java.nio.file.Path;
 
 public class PropertiesPreprocessor {
 	public static String process(Path rootPath, Path shaderPath, String source) {
-		source = "#define MC_VERSION " + StandardMacros.getMcVersion() + "\n" + source;
+		source = "#define MC_VERSION " + StandardMacros.getMcVersion() + "\n" + source + "\n";
 
 		return preprocessSource(source);
 	}
@@ -21,7 +20,7 @@ public class PropertiesPreprocessor {
 	public static String preprocessSource(String source) {
 		@SuppressWarnings("resource")
 		final Preprocessor pp = new Preprocessor();
-		pp.setListener(new DefaultPreprocessorListener());
+		pp.setListener(new PropertiesCommentListener());
 		pp.addInput(new StringLexerSource(source, true));
 		pp.addFeature(Feature.KEEPCOMMENTS);
 
@@ -37,8 +36,6 @@ public class PropertiesPreprocessor {
 		} catch (final Exception e) {
 			Iris.logger.error("Properties pre-processing failed", e);
 		}
-
-		builder.append("\n");
 
 		source = builder.toString();
 
