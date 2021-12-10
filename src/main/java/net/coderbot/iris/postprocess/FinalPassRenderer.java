@@ -175,7 +175,15 @@ public class FinalPassRenderer {
 		}
 
 		for (SwapPass swapPass : swapPasses) {
-			swapPass.from.bindAsReadBuffer();
+			// NB: We need to use bind(), not bindAsReadBuffer()... Previously we used bindAsReadBuffer() here which
+			//     broke TAA on many packs and on many drivers.
+			//
+			// Note that glCopyTexSubImage2D reads from the current GL_READ_BUFFER (given by glReadBuffer()) for the
+			// current framebuffer bound to GL_FRAMEBUFFER, but that is distinct from the current GL_READ_FRAMEBUFFER,
+			// which is what bindAsReadBuffer() binds.
+			//
+			// Also note that RenderTargets already calls readBuffer(0) for us.
+			swapPass.from.bind();
 
 			RenderSystem.bindTexture(swapPass.targetTexture);
 			GL20C.glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
