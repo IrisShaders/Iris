@@ -1,11 +1,9 @@
 package net.coderbot.iris.pipeline;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import com.mojang.math.Matrix4f;
 import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
-import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.GameRendererAccessor;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
@@ -39,7 +37,7 @@ public class HandRenderer {
 
 		((GameRendererAccessor) gameRenderer).invokeBobHurt(poseStack, tickDelta);
 
-		if(Minecraft.getInstance().options.bobView) {
+		if (Minecraft.getInstance().options.bobView) {
 			((GameRendererAccessor) gameRenderer).invokeBobView(poseStack, tickDelta);
 		}
 	}
@@ -69,7 +67,7 @@ public class HandRenderer {
 	}
 
 	public void renderSolid(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if(!canRender(camera, gameRenderer) || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
+		if (!canRender(camera, gameRenderer) || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
 			return;
 		}
 
@@ -99,7 +97,7 @@ public class HandRenderer {
 	}
 
 	public void renderTranslucent(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if(!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
+		if (!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
 			return;
 		}
 
