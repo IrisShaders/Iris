@@ -222,10 +222,10 @@ def getVersionMetadata() {
 	def workflow_id = System.getenv("GITHUB_WORKFLOW")
 
 	// CI builds only
-	if (build_id != null && workflow_id != "build-release") {
-		return "+build.${build_id}"
-	} else if (workflow_id == "build-release") {
+	if (workflow_id == "build-release") {
 		return ""
+	} else if (build_id != null) {
+		return "+build.${build_id}"
 	}
 
 	if (grgit != null) {
