@@ -15,7 +15,7 @@
   "options.iris.apply": "套用",
   "options.iris.refresh": "重新整理",
   "options.iris.openShaderPackFolder": "開啟光影包資料夾……",
-  "options.iris.refreshShaderPacks": "重新載入光影包",
+  "options.iris.refreshShaderPacks": "重新整理",
   "options.iris.shaderPackSelection": "光影包……",
   "options.iris.shaderPackSelection.title": "光影包",
   "options.iris.shaderPackSelection.addedPack": "已新增光影包 \"%s\"",
