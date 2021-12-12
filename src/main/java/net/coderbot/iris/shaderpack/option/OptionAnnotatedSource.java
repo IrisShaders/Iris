@@ -467,7 +467,7 @@ public final class OptionAnnotatedSource {
 		BooleanOption booleanOption = booleanOptions.get(index);
 
 		if (booleanOption != null) {
-			if (values.shouldFlip(booleanOption.getName())) {
+			if (values.isBooleanFlipped(booleanOption.getName())) {
 				if (booleanOption.getType() == OptionType.DEFINE) {
 					return flipBooleanDefine(existing);
 				} else if (booleanOption.getType() == OptionType.CONST) {

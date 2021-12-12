@@ -21,7 +21,7 @@ public class ImmutableOptionValues implements OptionValues {
 	}
 
 	@Override
-	public boolean shouldFlip(String name) {
+	public boolean isBooleanFlipped(String name) {
 		return flippedBooleanValues.contains(name);
 	}
 
