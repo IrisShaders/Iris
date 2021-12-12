@@ -14,6 +14,6 @@ public class AlphaTestOverride {
 	}
 
 	public static void restore() {
-		AlphaTestStorage.restoreBlend();
+		AlphaTestStorage.restoreAlphaTest();
 	}
 }

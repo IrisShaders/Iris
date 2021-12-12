@@ -152,7 +152,7 @@ public class ShaderProperties {
 					return;
 				}
 
-				alphaTestOverrides.put(pass, new AlphaTestOverride(new AlphaTest(function.get().getGlId(), reference)));
+				alphaTestOverrides.put(pass, new AlphaTestOverride(new AlphaTest(function.get(), reference)));
 			});
 
 			handlePassDirective("blend.", key, value, pass -> {

@@ -1,16 +1,16 @@
 package net.coderbot.iris.gl.blending;
 
 public class AlphaTest {
-	private final int func;
+	private final AlphaTestFunction function;
 	private final float reference;
 
-	public AlphaTest(int func, float reference) {
-		this.func = func;
+	public AlphaTest(AlphaTestFunction function, float reference) {
+		this.function = function;
 		this.reference = reference;
 	}
 
-	public int getFunc() {
-		return func;
+	public AlphaTestFunction getFunction() {
+		return function;
 	}
 
 	public float getReference() {

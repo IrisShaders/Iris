@@ -15,11 +15,11 @@ public class AlphaTestStorage {
 
 	public static void overrideAlphaTest(AlphaTest override) {
 		if (!alphaTestLocked) {
-			// Only save the previous state if the blend mode wasn't already locked
+			// Only save the previous state if the alpha test wasn't already locked
 			GlStateManager.AlphaState alphaState = GlStateManagerAccessor.getALPHA_TEST();
 
 			originalAlphaTestEnable = ((BooleanStateAccessor) alphaState.mode).isEnabled();
-			originalAlphaTest = new AlphaTest(alphaState.func, alphaState.reference);
+			originalAlphaTest = new AlphaTest(AlphaTestFunction.fromGlId(alphaState.func).get(), alphaState.reference);
 		}
 
 		alphaTestLocked = false;
@@ -28,7 +28,7 @@ public class AlphaTestStorage {
 			GlStateManager._disableAlphaTest();
 		} else {
 			GlStateManager._enableAlphaTest();
-			GlStateManager._alphaFunc(override.getFunc(), override.getReference());
+			GlStateManager._alphaFunc(override.getFunction().getGlId(), override.getReference());
 		}
 
 		alphaTestLocked = true;
@@ -38,11 +38,11 @@ public class AlphaTestStorage {
 		originalAlphaTestEnable = enabled;
 	}
 
-	public static void deferAlphaFunc(int func, float reference) {
-		originalAlphaTest = new AlphaTest(func, reference);
+	public static void deferAlphaFunc(int function, float reference) {
+		originalAlphaTest = new AlphaTest(AlphaTestFunction.fromGlId(function).get(), reference);
 	}
 
-	public static void restoreBlend() {
+	public static void restoreAlphaTest() {
 		if (!alphaTestLocked) {
 			return;
 		}
@@ -55,6 +55,6 @@ public class AlphaTestStorage {
 			GlStateManager._disableAlphaTest();
 		}
 
-		GlStateManager._alphaFunc(originalAlphaTest.getFunc(), originalAlphaTest.getReference());
+		GlStateManager._alphaFunc(originalAlphaTest.getFunction().getGlId(), originalAlphaTest.getReference());
 	}
 }
