@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack.option;
 import com.google.common.collect.ImmutableMap;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 
 import java.util.Collections;
 import java.util.HashMap;

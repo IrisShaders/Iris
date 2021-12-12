@@ -7,7 +7,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.option.OptionAnnotatedSource;
 import net.coderbot.iris.shaderpack.option.OptionSet;
-import net.coderbot.iris.shaderpack.option.OptionValues;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.test.IrisTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

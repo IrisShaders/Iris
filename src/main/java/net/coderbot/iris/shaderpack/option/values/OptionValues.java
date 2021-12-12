@@ -1,4 +1,6 @@
-package net.coderbot.iris.shaderpack.option;
+package net.coderbot.iris.shaderpack.option.values;
+
+import net.coderbot.iris.shaderpack.option.OptionSet;
 
 import java.util.*;
 
