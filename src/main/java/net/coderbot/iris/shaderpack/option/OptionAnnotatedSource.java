@@ -457,8 +457,6 @@ public final class OptionAnnotatedSource {
 		// See if it's a boolean option
 		BooleanOption booleanOption = booleanOptions.get(index);
 
-		// TODO: Check all of this code
-
 		if (booleanOption != null) {
 			if (values.shouldFlip(booleanOption.getName())) {
 				if (booleanOption.getType() == OptionType.DEFINE) {
@@ -466,8 +464,7 @@ public final class OptionAnnotatedSource {
 				} else if (booleanOption.getType() == OptionType.CONST) {
 					return editConst(existing, Boolean.toString(booleanOption.getDefaultValue()), Boolean.toString(!booleanOption.getDefaultValue()));
 				} else {
-					// TODO: This shouldn't be possible.
-					throw new IllegalArgumentException("Unknown option type " + booleanOption.getType());
+					throw new AssertionError("Unknown option type " + booleanOption.getType());
 				}
 			} else {
 				return existing;
@@ -479,27 +476,11 @@ public final class OptionAnnotatedSource {
 		if (stringOption != null) {
 			return values.getStringValue(stringOption.getName()).map(value -> {
 				if (stringOption.getType() == OptionType.DEFINE) {
-					if (stringOption.getName().contains(stringOption.getDefaultValue())) {
-						// TODO: This needs to be fixed
-						// #define MODE MODE_ONE // [MODE_ONE MODE_TWO]
-						throw new IllegalStateException("Not yet implemented: setting option value " +
-							"where the name contains the default value; name = " + stringOption.getName() +
-							", default value = " + stringOption.getDefaultValue());
-					}
-
-					if ("#define".contains(stringOption.getDefaultValue())) {
-						// TODO: This needs to be fixed
-						// #define efine 1 // [1 2]
-						throw new IllegalStateException("Not yet implemented: setting option value " +
-								"where the default value " + stringOption.getDefaultValue() + " matches #define");
-					}
-
-					return existing.replaceFirst(Pattern.quote(stringOption.getDefaultValue()), Matcher.quoteReplacement(value));
+					return "#define " + stringOption.getName() + " " + value + " // OptionAnnotatedSource: Changed option";
 				} else if (stringOption.getType() == OptionType.CONST) {
 					return editConst(existing, stringOption.getDefaultValue(), value);
 				} else {
-					// TODO: This shouldn't be possible.
-					throw new IllegalArgumentException("Unknown option type " + stringOption.getType());
+					throw new AssertionError("Unknown option type " + stringOption.getType());
 				}
 			}).orElse(existing);
 		}
