@@ -28,7 +28,8 @@ public class ProgramDirectives {
 	private final ImmutableSet<Integer> mipmappedBuffers;
 	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
-	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets) {
+	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets,
+					  @Nullable BlendModeOverride defaultBlendOverride) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
 		// For SEUS v08 and SEUS v10 to work, this will need to be set to 01234567. However, doing this causes
@@ -41,12 +42,15 @@ public class ProgramDirectives {
 		if (properties != null) {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
-			blendModeOverride = properties.getBlendModeOverrides().get(source.getName());
+
+			BlendModeOverride blendModeOverride = properties.getBlendModeOverrides().get(source.getName());
+			this.blendModeOverride = blendModeOverride != null ? blendModeOverride : defaultBlendOverride;
+
 			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
-			blendModeOverride = null;
+			blendModeOverride = defaultBlendOverride;
 			explicitFlips = ImmutableMap.of();
 		}
 
