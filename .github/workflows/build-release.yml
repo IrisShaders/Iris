@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew build --stacktrace
 
       - name: Upload artifacts to Modrinth, Curseforge and GitHub
-        uses: Kir-Antipov/mc-publish@v1.1
+        uses: Kir-Antipov/mc-publish@v2.0
         with:
           modrinth-id: YL57xq9U
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
@@ -49,4 +49,6 @@ jobs:
 
           loaders: fabric
 
-          game-versions: 1.16.5 # Presently this action does not allow for file read strings to be used
+          dependencies: sodium | depends | *
+
+          version-resolver: latest # Defaults to selecting the latest compatible version of Minecraft, using the tag from the fabric.mod.json
