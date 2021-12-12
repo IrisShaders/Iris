@@ -67,7 +67,11 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			return;
 		}
 
-		this.addEntry(enableShadersButton);
+		if (names.size() > 0) {
+			// Only add the enable / disable shaders button if the user has added a shader pack. Otherwise, the button
+			// doesn't really make sense.
+			this.addEntry(enableShadersButton);
+		}
 
 		int index = 0;
 
