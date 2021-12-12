@@ -118,17 +118,17 @@ public class ProgramDirectives {
 				.toArray();
 	}
 
-	private static Optional<CommentDirective> getAppliedDirective(Optional<CommentDirective> optionalDrawbuffersPair, Optional<CommentDirective> optionalRendertargetsPair) {
-		if (optionalDrawbuffersPair.isPresent() && optionalRendertargetsPair.isPresent()) {
-			if (optionalDrawbuffersPair.get().getLocation() > optionalRendertargetsPair.get().getLocation()) {
-				return optionalDrawbuffersPair;
+	private static Optional<CommentDirective> getAppliedDirective(Optional<CommentDirective> optionalDrawbuffersDirective, Optional<CommentDirective> optionalRendertargetsDirective) {
+		if (optionalDrawbuffersDirective.isPresent() && optionalRendertargetsDirective.isPresent()) {
+			if (optionalDrawbuffersDirective.get().getLocation() > optionalRendertargetsDirective.get().getLocation()) {
+				return optionalDrawbuffersDirective;
 			} else {
-				return optionalRendertargetsPair;
+				return optionalRendertargetsDirective;
 			}
-		} else if (optionalDrawbuffersPair.isPresent()) {
-			return optionalDrawbuffersPair;
-		} else if (optionalRendertargetsPair.isPresent()) {
-			return optionalRendertargetsPair;
+		} else if (optionalDrawbuffersDirective.isPresent()) {
+			return optionalDrawbuffersDirective;
+		} else if (optionalRendertargetsDirective.isPresent()) {
+			return optionalRendertargetsDirective;
 		} else {
 			return Optional.empty();
 		}
