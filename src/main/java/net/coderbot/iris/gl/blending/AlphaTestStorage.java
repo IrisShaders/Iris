@@ -14,7 +14,7 @@ public class AlphaTestStorage {
 	}
 
 	public static void overrideAlphaTest(AlphaTest override) {
-		if (!alphaTestLocked) {
+		/*if (!alphaTestLocked) {
 			// Only save the previous state if the alpha test wasn't already locked
 			GlStateManager.AlphaState alphaState = GlStateManagerAccessor.getALPHA_TEST();
 
@@ -31,7 +31,7 @@ public class AlphaTestStorage {
 			GlStateManager._alphaFunc(override.getFunction().getGlId(), override.getReference());
 		}
 
-		alphaTestLocked = true;
+		alphaTestLocked = true;*/
 	}
 
 	public static void deferAlphaTestToggle(boolean enabled) {
@@ -43,7 +43,7 @@ public class AlphaTestStorage {
 	}
 
 	public static void restoreAlphaTest() {
-		if (!alphaTestLocked) {
+		/*if (!alphaTestLocked) {
 			return;
 		}
 
@@ -55,6 +55,6 @@ public class AlphaTestStorage {
 			GlStateManager._disableAlphaTest();
 		}
 
-		GlStateManager._alphaFunc(originalAlphaTest.getFunction().getGlId(), originalAlphaTest.getReference());
+		GlStateManager._alphaFunc(originalAlphaTest.getFunction().getGlId(), originalAlphaTest.getReference());*/
 	}
 }
