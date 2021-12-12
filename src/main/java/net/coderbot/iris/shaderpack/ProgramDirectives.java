@@ -34,7 +34,7 @@ public class ProgramDirectives {
 		//
 		// TODO: Figure out how to infer the DRAWBUFFERS directive when it is missing.
 		Optional<CommentDirective> optionalDrawbuffersDirective = findDrawbuffersDirective(source.getFragmentSource());
-		Optional<CommentDirective> optionalRendertargetsDirective = findRenderTargetDirective(source.getFragmentSource());
+		Optional<CommentDirective> optionalRendertargetsDirective = findRendertargetsDirective(source.getFragmentSource());
 
 		Optional<CommentDirective> optionalCommentDirective = getAppliedDirective(optionalDrawbuffersDirective, optionalRendertargetsDirective);
 		drawBuffers = optionalCommentDirective.map((commentDirective) -> {
@@ -91,7 +91,7 @@ public class ProgramDirectives {
 		return stageSource.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, CommentDirective.Type.DRAWBUFFERS));
 	}
 
-	private static Optional<CommentDirective> findRenderTargetDirective(Optional<String> stageSource) {
+	private static Optional<CommentDirective> findRendertargetsDirective(Optional<String> stageSource) {
 		return stageSource.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, CommentDirective.Type.RENDERTARGETS));
 	}
 
