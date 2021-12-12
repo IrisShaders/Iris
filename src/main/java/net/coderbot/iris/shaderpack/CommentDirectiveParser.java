@@ -1,7 +1,5 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
