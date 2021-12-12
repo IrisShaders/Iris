@@ -543,10 +543,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 			program.use();
 
-			// TODO: Render layers will likely override alpha testing state, we'll need to implement a similar system
-			//       as we have for blend mode overrides.
 			if (alphaTestOverride != null) {
-				alphaTestOverride.setup();
+				alphaTestOverride.apply();
+			} else {
+				// Previous program on the stack might have applied an override
+				AlphaTestOverride.restore();
 			}
 
 			if (blendModeOverride != null) {
@@ -559,7 +560,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		public void stopUsing() {
 			if (alphaTestOverride != null) {
-				AlphaTestOverride.teardown();
+				AlphaTestOverride.restore();
 			}
 
 			if (blendModeOverride != null) {
