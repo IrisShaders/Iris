@@ -1,7 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
-import com.mojang.math.Vector4f;
 import net.coderbot.iris.vendored.joml.Vector2i;
+import net.coderbot.iris.vendored.joml.Vector4f;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;

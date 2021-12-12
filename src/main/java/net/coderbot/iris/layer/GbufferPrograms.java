@@ -70,7 +70,7 @@ public class GbufferPrograms {
 	public static void push(GbufferProgram program) {
 		program = refine(program);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null) {
 			pipeline.pushProgram(program);
@@ -80,7 +80,7 @@ public class GbufferPrograms {
 	public static void pop(GbufferProgram program) {
 		program = refine(program);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null) {
 			pipeline.popProgram(program);

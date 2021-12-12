@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin.vertices.block_rendering;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.minecraft.client.renderer.ChunkBufferBuilderPack;
 import net.minecraft.client.renderer.RenderType;
@@ -38,20 +38,20 @@ public class MixinChunkRebuildTask {
 
 	// Resolve the ID map on the main thread to avoid thread safety issues
 	@Unique
-	private final IdMap idMap = getIdMap();
+	private final Object2IntMap<BlockState> blockStateIds = getBlockStateIds();
 
 	@Unique
-	private IdMap getIdMap() {
-		return BlockRenderingSettings.INSTANCE.getIdMap();
+	private Object2IntMap<BlockState> getBlockStateIds() {
+		return BlockRenderingSettings.INSTANCE.getBlockStateIds();
 	}
 
 	@Unique
 	private short resolveBlockId(BlockState state) {
-		if (idMap == null) {
+		if (blockStateIds == null) {
 			return -1;
 		}
 
-		return (short) (int) idMap.getBlockProperties().getOrDefault(state, -1);
+		return (short) blockStateIds.getOrDefault(state, -1);
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/BlockRenderDispatcher;renderLiquid(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/BlockAndTintGetter;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/level/material/FluidState;)Z"), locals = LocalCapture.CAPTURE_FAILHARD, remap = true)

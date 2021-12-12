@@ -12,11 +12,11 @@ import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.renderer.*;
-import net.minecraft.world.phys.Vec3;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -116,7 +116,7 @@ public class MixinLevelRenderer {
 	private void iris$renderSky$drawHorizon(PoseStack poseStack, float tickDelta, CallbackInfo callback) {
 		RenderSystem.depthMask(false);
 
-		Vec3 fogColor = CapturedRenderingState.INSTANCE.getFogColor();
+		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
 		RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
 
 		new HorizonRenderer().renderHorizon(poseStack);
@@ -200,13 +200,6 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BOUNDS, shift = At.Shift.AFTER))
 	private void iris$endWorldBorder(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
-	}
-
-	@Inject(method = "renderSnowAndRain", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;defaultAlphaFunc()V", shift = At.Shift.AFTER))
-	private void iris$applyWeatherOverrides(LightTexture manager, float f, double d, double e, double g, CallbackInfo ci) {
-		// TODO: This is a temporary workaround for https://github.com/IrisShaders/Iris/issues/219
-		pipeline.pushProgram(GbufferProgram.WEATHER);
-		pipeline.popProgram(GbufferProgram.WEATHER);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
