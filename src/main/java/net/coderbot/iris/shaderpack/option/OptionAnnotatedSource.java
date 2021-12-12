@@ -387,8 +387,16 @@ public final class OptionAnnotatedSource {
 
 		String comment = line.takeRest().trim();
 
-		builder.stringOptions.put(index, StringOption.create(OptionType.DEFINE, name, comment, value));
+		StringOption option = StringOption.create(OptionType.DEFINE, name, comment, value);
 
+		if (option.getAllowedValues().size() == 1) {
+			// Some shader packs have "#define PI 3.14" and that shouldn't be parsed as a config option.
+			builder.diagnostics.put(index,
+				"Ignoring this #define because it only has one allowed value - the default value.");
+			return;
+		}
+
+		builder.stringOptions.put(index, option);
 
 		/*
 	    //#define   SHADOWS // Whether shadows are enabled
