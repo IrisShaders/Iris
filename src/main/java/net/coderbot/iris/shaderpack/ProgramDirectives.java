@@ -37,7 +37,7 @@ public class ProgramDirectives {
 		Optional<CommentDirective> optionalRendertargetsDirective = findRendertargetsDirective(source.getFragmentSource());
 
 		Optional<CommentDirective> optionalCommentDirective = getAppliedDirective(optionalDrawbuffersDirective, optionalRendertargetsDirective);
-		drawBuffers = optionalCommentDirective.map((commentDirective) -> {
+		drawBuffers = optionalCommentDirective.map(commentDirective -> {
 			if (commentDirective.getType() == CommentDirective.Type.DRAWBUFFERS) {
 				return parseDigits(commentDirective.getDirective().toCharArray());
 			} else if (commentDirective.getType() == CommentDirective.Type.RENDERTARGETS) {
