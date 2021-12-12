@@ -24,6 +24,11 @@ public class ProgramCreator {
 
 		GL20C.glLinkProgram(program);
 
+        //Always detach shaders according to https://www.khronos.org/opengl/wiki/Shader_Compilation#Cleanup
+        for (GlShader shader : shaders) {
+            GL20C.glDetachShader(program, shader.getHandle());
+        }
+
 		String log = GL20C.glGetProgramInfoLog(program);
 
 		if (!log.isEmpty()) {

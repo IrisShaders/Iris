@@ -24,13 +24,14 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
 		.define(StandardMacros.getRenderer())
 		.define(StandardMacros.getVendor())
+		.define("MC_RENDER_QUALITY", "1.0")
+		.define("MC_SHADOW_QUALITY", "1.0")
+		.defineAll(StandardMacros.getIrisDefines())
 		.defineAll(StandardMacros.getGlExtensions())
 		.build();
 
-
-
 	private final int program;
-	private ProgramSamplers.Builder samplers;
+	private final ProgramSamplers.Builder samplers;
 
 	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
 		super(name, program);
@@ -62,7 +63,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		fragment = buildShader(ShaderType.FRAGMENT, name + ".fsh", fragmentSource);
 
 		int programId;
-		
+
 		if (geometry != null) {
 			programId = ProgramCreator.create(name, vertex, geometry, fragment);
 		} else {
@@ -86,7 +87,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 
 	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {
 		try {
-			return new GlShader(shaderType, name, source, MACRO_CONSTANTS);
+			return new GlShader(shaderType, name, source, EMPTY_CONSTANTS);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile " + shaderType + " shader for program " + name, e);
 		}
@@ -103,12 +104,12 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	}
 
 	@Override
-	public boolean addDefaultSampler(IntSupplier sampler, Runnable postBind, String... names) {
-		return samplers.addDefaultSampler(sampler, postBind, names);
+	public boolean addDefaultSampler(IntSupplier sampler, String... names) {
+		return samplers.addDefaultSampler(sampler, names);
 	}
 
 	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, Runnable postBind, String... names) {
-		return samplers.addDynamicSampler(sampler, postBind, names);
+	public boolean addDynamicSampler(IntSupplier sampler, String... names) {
+		return samplers.addDynamicSampler(sampler, names);
 	}
 }

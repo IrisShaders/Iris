@@ -13,6 +13,7 @@ public class PackShadowDirectives {
 	private Float fov;
 	private float distance;
 	private float distanceRenderMul;
+	private boolean explicitRenderDistance;
 	private float intervalSize;
 
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
@@ -27,29 +28,29 @@ public class PackShadowDirectives {
 		//
 		// If FOV is defined, shadows will use a perspective projection controlled by the FOV, and shadowDistance will
 		// be disregarded for the purposes of creating the projection matrix. However, it will still be used to figure
-		// out the render distance for shadows.
+		// out the render distance for shadows if shadowRenderDistanceMul is greater than zero.
 		this.fov = null;
 
 		// By default, an orthographic projection with a half plane of 160 meters is used, corresponding to a render
 		// distance of 10 chunks.
 		//
-		// It's recommended for shader pack authors to lower this setting to meet their needs, since having a render
-		// distance that is this high will impact performance quite heavily on most systems.
+		// It's recommended for shader pack authors to lower this setting to meet their needs in addition to setting
+		// shadowRenderDistanceMul to a nonzero value, since having a high shadow render distance will impact
+		// performance quite heavily on most systems.
 		this.distance = 160.0f;
 
-		// By default, Iris uses the shadow distance / half plane length to determine the render distance within the
-		// shadow pass.
+		// By default, shadows are not culled based on distance from the player. However, pack authors may
+		// enable this by setting shadowRenderDistanceMul to a nonzero value.
 		//
-		// ShadersMod and OptiFine set this to -1.0 by default, which prevents them from using the shadow distance to
-		// restrict the render distance within the shadow pass unless the shader pack explicitly enables it.
+		// Culling shadows based on the shadow matrices is often infeasible because shader packs frequently
+		// employ non-linear transformations that end up fitting more far away chunks into the shadow map,
+		// as well as giving higher detail to close up chunks.
 		//
-		// On OptiFine, this means that every chunk within the player's render distance will be rendered in the shadow
-		// pass, destroying framerates by default. ShadersMod implements frustum culling, but OptiFine disables it!
-		//
-		// This seems like undesirable behavior, so I've made it so that Iris sets this variable to 1.0 by default.
-		// If a shaderpack author truly relies on the unspecified shadow render distance behavior, they can set the
-		// variable to -1.0 themselves.
-		this.distanceRenderMul = 1.0f;
+		// However, Iris does still does cull shadows whenever it can - but, it does so by analyzing
+		// whether or not shadows can possibly be cast into the player's view, instead of just checking
+		// the shadow matrices.
+		this.distanceRenderMul = -1.0f;
+		this.explicitRenderDistance = false;
 
 		// By default, a shadow interval size of 2 meters is used. This means that the shadow camera will be snapped to
 		// a grid where each grid cell is 2 meters by 2 meters by 2 meters, and it will only move either when the sun /
@@ -83,6 +84,10 @@ public class PackShadowDirectives {
 		return distanceRenderMul;
 	}
 
+	public boolean isDistanceRenderMulExplicit() {
+		return explicitRenderDistance;
+	}
+
 	public float getIntervalSize() {
 		return intervalSize;
 	}
@@ -105,8 +110,10 @@ public class PackShadowDirectives {
 		directives.acceptCommentFloatDirective("SHADOWHPL", distance -> this.distance = distance);
 		directives.acceptConstFloatDirective("shadowDistance", distance -> this.distance = distance);
 
-		directives.acceptConstFloatDirective("shadowDistanceRenderMul",
-				distanceRenderMul -> this.distanceRenderMul = distanceRenderMul);
+		directives.acceptConstFloatDirective("shadowDistanceRenderMul", distanceRenderMul -> {
+			this.distanceRenderMul = distanceRenderMul;
+			this.explicitRenderDistance = true;
+		});
 
 		directives.acceptConstFloatDirective("shadowIntervalSize",
 				intervalSize -> this.intervalSize = intervalSize);

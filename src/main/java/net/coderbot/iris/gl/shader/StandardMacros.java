@@ -1,5 +1,6 @@
 package net.coderbot.iris.gl.shader;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -14,7 +15,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 public class StandardMacros {
 
@@ -28,7 +29,7 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L696-L699">Optifine Doc</a>
 	 */
 	public static String getMcVersion() {
-		String version = SharedConstants.getGameVersion().getReleaseTarget();
+		String version = SharedConstants.getCurrentVersion().getReleaseTarget();
 			// release target so snapshots are set to the higher version
 			//
 			// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
@@ -70,7 +71,7 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714">Optifine Doc</a>
 	 */
 	public static String getOsString() {
-		switch (Util.getOperatingSystem()) {
+		switch (Util.getPlatform()) {
 			case OSX:
 				return "MC_OS_MAC";
 			case LINUX:
@@ -148,6 +149,19 @@ public class StandardMacros {
 		// see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
 
 		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toList());
+	}
+
+	/**
+	 * Returns the list of Iris-exclusive uniforms supported in the current version of Iris.
+	 *
+	 * @return List of definitions corresponding to the uniform names prefixed with "MC_"
+	 */
+	public static List<String> getIrisDefines() {
+		List<String> defines = new ArrayList<>();
+		// All Iris-exclusive uniforms should have a corresponding definition here. Example:
+		// defines.add("MC_UNIFORM_DRAGON_DEATH_PROGRESS");
+
+		return defines;
 	}
 
 	/**

@@ -1,6 +1,7 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 
 public class GbufferPrograms {
@@ -12,7 +13,9 @@ public class GbufferPrograms {
 	 */
 	private static GbufferProgram refine(GbufferProgram program) {
 		if (program == GbufferProgram.ENTITIES || program == GbufferProgram.TERRAIN || program == GbufferProgram.TRANSLUCENT_TERRAIN) {
-			if (entities) {
+			if (HandRenderer.INSTANCE.isActive()) {
+				return HandRenderer.INSTANCE.isRenderingSolid() ? GbufferProgram.HAND : GbufferProgram.HAND_TRANSLUCENT;
+			} else if (entities) {
 				return GbufferProgram.ENTITIES;
 			} else if (blockEntities) {
 				return GbufferProgram.BLOCK_ENTITIES;
@@ -67,7 +70,7 @@ public class GbufferPrograms {
 	public static void push(GbufferProgram program) {
 		program = refine(program);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null) {
 			pipeline.pushProgram(program);
@@ -77,7 +80,7 @@ public class GbufferPrograms {
 	public static void pop(GbufferProgram program) {
 		program = refine(program);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null) {
 			pipeline.popProgram(program);

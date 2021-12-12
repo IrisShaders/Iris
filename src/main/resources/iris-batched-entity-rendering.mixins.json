@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.coderbot.batchedentityrendering.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinBannerRenderer",
+    "MixinBufferBuilder",
+    "MixinBufferBuilder_SegmentRendering",
+    "MixinRenderBuffers",
+    "MixinDebugScreenOverlay",
+    "MixinTheEndPortalRenderer",
+    "MixinBufferSource",
+    "MixinCompositeRenderType",
+    "MixinLevelRenderer",
+    "MixinLevelRenderer_EntityListSorting",
+    "CompositeStateAccessor",
+    "RenderTypeAccessor",
+    "RenderStateShardAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

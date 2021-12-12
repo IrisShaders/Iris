@@ -1,0 +1,8 @@
+a;(a)
+a - b - c;((a - b) - c)
+a * b - c;((a * b) - c)
+a - b * c;(a - (b * c))
+a * b / c % d; (((a * b) / c) % d)
+a + b - c; ((a + b) - c)
+a == b && b != c || c < d || d >= e || e <= f && f > h;((((((a == b) && (b != c)) || (c < d)) || (d >= e)) || (e <= f)) && (f > h))
+a + b * c - d % r * f * f / f - u + u;((((a + (b * c)) - ((((d % r) * f) * f) / f)) - u) + u)

@@ -1,10 +1,10 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -13,9 +13,7 @@ import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransform
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.SamplerUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -30,11 +28,16 @@ public class SodiumTerrainPipeline {
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
 
+	private final WorldRenderingPipeline parent;
+
 	private final IntFunction<ProgramSamplers> createTerrainSamplers;
 	private final IntFunction<ProgramSamplers> createShadowSamplers;
 
-	public SodiumTerrainPipeline(ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
+	public SodiumTerrainPipeline(WorldRenderingPipeline parent,
+								 ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
 								 IntFunction<ProgramSamplers> createShadowSamplers) {
+		this.parent = Objects.requireNonNull(parent);
+
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
@@ -108,11 +111,6 @@ public class SodiumTerrainPipeline {
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
 
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
-
 		transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
 		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
 		transformations.define("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
@@ -129,7 +127,7 @@ public class SodiumTerrainPipeline {
 
 		new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			System.out.println("Final patched vertex source:");
 			System.out.println(transformations);
 		}
@@ -152,12 +150,7 @@ public class SodiumTerrainPipeline {
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
 
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
-
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisLogging.ENABLE_SPAM) {
 			System.out.println("Final patched fragment source:");
 			System.out.println(transformations);
 		}
@@ -204,11 +197,7 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
-		SamplerUniforms.addCommonSamplerUniforms(uniforms);
-		SamplerUniforms.addWorldSamplerUniforms(uniforms);
-		SamplerUniforms.addDepthSamplerUniforms(uniforms);
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), parent.getFrameUpdateNotifier());
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();

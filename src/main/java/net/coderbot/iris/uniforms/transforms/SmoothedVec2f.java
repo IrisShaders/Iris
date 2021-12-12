@@ -1,21 +1,21 @@
 package net.coderbot.iris.uniforms.transforms;
 
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.minecraft.util.math.Vec2f;
-
+import net.coderbot.iris.vendored.joml.Vector2f;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import java.util.function.Supplier;
 
-public class SmoothedVec2f implements Supplier<Vec2f> {
+public class SmoothedVec2f implements Supplier<Vector2f> {
 	private final SmoothedFloat x;
 	private final SmoothedFloat y;
 
-	public SmoothedVec2f(float halfLife, Supplier<Vec2f> unsmoothed, FrameUpdateNotifier updateNotifier) {
+	public SmoothedVec2f(float halfLife, Supplier<Vector2i> unsmoothed, FrameUpdateNotifier updateNotifier) {
 		x = new SmoothedFloat(halfLife, () -> unsmoothed.get().x, updateNotifier);
 		y = new SmoothedFloat(halfLife, () -> unsmoothed.get().y, updateNotifier);
 	}
 
 	@Override
-	public Vec2f get() {
-		return new Vec2f(x.getAsFloat(), y.getAsFloat());
+	public Vector2f get() {
+		return new Vector2f(x.getAsFloat(), y.getAsFloat());
 	}
 }

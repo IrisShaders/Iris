@@ -2,7 +2,10 @@ package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import it.unimi.dsi.fastutil.ints.*;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.vendored.joml.Vector4f;
@@ -24,8 +27,19 @@ public class PackRenderTargetDirectives {
 		"gaux4"
 	);
 
-	// TODO: Support 16 render targets instead of just 8, we need other changes elsewhere first.
-	public static final Set<Integer> BASELINE_SUPPORTED_RENDER_TARGETS = ImmutableSet.of(0, 1, 2, 3, 4, 5, 6, 7);
+	// TODO: Instead of just passing this, the shader pack loader should try to figure out what color buffers are in
+	//       use.
+	public static final Set<Integer> BASELINE_SUPPORTED_RENDER_TARGETS;
+
+	static {
+		ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
+
+		for (int i = 0; i < IrisLimits.MAX_COLOR_BUFFERS; i++) {
+			builder.add(i);
+		}
+
+		BASELINE_SUPPORTED_RENDER_TARGETS = builder.build();
+	}
 
 	private final Int2ObjectMap<RenderTargetSettings> renderTargetSettings;
 
@@ -105,7 +119,9 @@ public class PackRenderTargetDirectives {
 				shouldClear -> settings.clear = shouldClear);
 
 		// TODO: Only for composite, deferred, and final
-		// TODO: what happens if clear = false but clearColor is specified?
+
+		// Note: This is still relevant even if shouldClear is false,
+		// since this will be the initial color of the buffer.
 		directives.acceptConstVec4Directive(bufferName + "ClearColor",
 				clearColor -> settings.clearColor = clearColor);
 	}
@@ -118,7 +134,7 @@ public class PackRenderTargetDirectives {
 		public RenderTargetSettings() {
 			this.requestedFormat = InternalTextureFormat.RGBA;
 			this.clear = true;
-			this.clearColor = new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
+			this.clearColor = null;
 		}
 
 		public InternalTextureFormat getRequestedFormat() {
@@ -129,8 +145,8 @@ public class PackRenderTargetDirectives {
 			return clear;
 		}
 
-		public Vector4f getClearColor() {
-			return clearColor;
+		public Optional<Vector4f> getClearColor() {
+			return Optional.ofNullable(clearColor);
 		}
 
 		@Override

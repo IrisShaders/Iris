@@ -5,11 +5,12 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 
-// These expressions are copied directly from BSL
-//
+// These expressions are copied directly from BSL and Complementary.
+
 // TODO: Remove once custom uniforms are actually supported, this is just a temporary thing to get BSL & Complementary
 // mostly working under Iris.
 public class HardcodedCustomUniforms {
@@ -20,6 +21,10 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "shadowFade", HardcodedCustomUniforms::getShadowFade);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "rainStrengthS", rainStrengthS(updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "blindFactor", HardcodedCustomUniforms::getBlindFactor);
+		// The following uniforms are Complementary specific, used for the biome check.
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isDry", new SmoothedFloat(20, () -> getRawPrecipitation() == 0 ? 1 : 0, updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isRainy", new SmoothedFloat(20, () -> getRawPrecipitation() == 1 ? 1 : 0, updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isSnowy", new SmoothedFloat(20, () -> getRawPrecipitation() == 2 ? 1 : 0, updateNotifier));
 	}
 
 	private static float getTimeAngle() {
@@ -27,28 +32,42 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static int getWorldDayTime() {
-		World world     = MinecraftClient.getInstance().world;
-		long  timeOfDay = world.getTimeOfDay();
-		long dayTime = ((DimensionTypeAccessor) world.getDimension()).getFixedTime()
-																	 .orElse(timeOfDay % 24000L);
+		Level level = Minecraft.getInstance().level;
+		long  timeOfDay = level.getDayTime();
+		long dayTime = ((DimensionTypeAccessor) level.dimensionType()).getFixedTime().orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}
 
 	private static float getTimeBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * 2.0),0.0);
+		return (float) java.lang.Math.max(java.lang.Math.sin(getTimeAngle() * java.lang.Math.PI * 2.0),0.0);
 	}
 
 	private static float getMoonBrightness() {
-		return (float) Math.max(Math.sin(getTimeAngle() * Math.PI * (-2.0)),0.0);
+		return (float) java.lang.Math.max(java.lang.Math.sin(getTimeAngle() * java.lang.Math.PI * (-2.0)),0.0);
 	}
 
 	private static float getShadowFade() {
-		return (float) Math.clamp(0.0, 1.0, 1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.23) * 100.0);
+		return (float) Math.clamp(0.0, 1.0, 1.0 - (java.lang.Math.abs(java.lang.Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.23) * 100.0);
 	}
 
 	private static SmoothedFloat rainStrengthS(FrameUpdateNotifier updateNotifier) {
 		return new SmoothedFloat(15, CommonUniforms::getRainStrength, updateNotifier);
+	}
+
+	private static float getRawPrecipitation() {
+		if (Minecraft.getInstance().level == null) {
+			return 0;
+		}
+		Biome.Precipitation precipitation = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().getCameraEntity().blockPosition()).getPrecipitation();
+		switch (precipitation) {
+			case RAIN:
+				return 1;
+			case SNOW:
+				return 2;
+			default:
+				return 0;
+		}
 	}
 
 	private static float getBlindFactor() {
@@ -57,6 +76,6 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float frac(float value) {
-		return Math.abs(value % 1);
+		return java.lang.Math.abs(value % 1);
 	}
 }

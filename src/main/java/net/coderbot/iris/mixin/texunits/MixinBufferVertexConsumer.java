@@ -1,12 +1,10 @@
 package net.coderbot.iris.mixin.texunits;
 
+import com.mojang.blaze3d.vertex.BufferVertexConsumer;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.coderbot.iris.texunits.TextureUnit;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-
-import net.minecraft.client.render.BufferVertexConsumer;
-import net.minecraft.client.render.VertexConsumer;
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
@@ -29,8 +27,8 @@ public interface MixinBufferVertexConsumer {
 	 * @author coderbot16
 	 */
 	@Overwrite
-	default VertexConsumer overlay(int u, int v) {
-		return ((BufferVertexConsumer) this).texture((short) u, (short) v, TextureUnit.OVERLAY.getSamplerId());
+	default VertexConsumer overlayCoords(int u, int v) {
+		return ((BufferVertexConsumer) this).uvShort((short) u, (short) v, TextureUnit.OVERLAY.getSamplerId());
 	}
 
 	/**
@@ -38,7 +36,7 @@ public interface MixinBufferVertexConsumer {
 	 * @author coderbot16
 	 */
 	@Overwrite
-	default VertexConsumer light(int u, int v) {
-		return ((BufferVertexConsumer) this).texture((short) u, (short) v, TextureUnit.LIGHTMAP.getSamplerId());
+	default VertexConsumer uv2(int u, int v) {
+		return ((BufferVertexConsumer) this).uvShort((short) u, (short) v, TextureUnit.LIGHTMAP.getSamplerId());
 	}
 }

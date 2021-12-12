@@ -8,8 +8,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.texunits.TextureUnit;
-import net.minecraft.client.texture.AbstractTexture;
-
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -37,7 +36,7 @@ public class IrisSamplers {
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
 		int startIndex = isFullscreenPass ? 0 : 4;
 
-		for (int i = startIndex; i < RenderTargets.MAX_RENDER_TARGETS; i++) {
+		for (int i = startIndex; i < renderTargets.getRenderTargetCount(); i++) {
 			final int index = i;
 
 			IntSupplier sampler = () -> {
@@ -52,6 +51,8 @@ public class IrisSamplers {
 			};
 
 			final String name = "colortex" + i;
+
+			// TODO: How do custom textures interact with aliases?
 
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
@@ -68,8 +69,8 @@ public class IrisSamplers {
 		}
 	}
 
-	public static void addNoiseSampler(SamplerHolder samplers, AbstractTexture texture) {
-		samplers.addDynamicSampler(texture::getGlId, "noisetex");
+	public static void addNoiseSampler(SamplerHolder samplers, IntSupplier sampler) {
+		samplers.addDynamicSampler(sampler, "noisetex");
 	}
 
 	public static boolean hasShadowSamplers(SamplerHolder samplers) {
@@ -78,7 +79,7 @@ public class IrisSamplers {
 				"shadowcolor", "shadowcolor0", "shadowcolor1");
 
 		for (String samplerName : shadowSamplers) {
-			if(samplers.hasSampler(samplerName)) {
+			if (samplers.hasSampler(samplerName)) {
 				return true;
 			}
 		}
@@ -109,11 +110,11 @@ public class IrisSamplers {
 		return usesShadows;
 	}
 
-	public static void addWorldSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
+	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
-		samplers.addDynamicSampler(normals::getGlId, "normals");
-		samplers.addDynamicSampler(specular::getGlId, "specular");
+		samplers.addDynamicSampler(normals::getId, "normals");
+		samplers.addDynamicSampler(specular::getId, "specular");
 	}
 
 	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
@@ -125,8 +126,9 @@ public class IrisSamplers {
 	public static void addCompositeSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
 		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId,
 				"gdepthtex", "depthtex0");
-		// TODO: "no translucents, no hand" depth texture when in-world hand rendering is implemented.
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId,
-				"depthtex1", "depthtex2");
+				"depthtex1");
+		samplers.addDynamicSampler(renderTargets.getDepthTextureNoHand()::getTextureId,
+				"depthtex2");
 	}
 }

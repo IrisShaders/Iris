@@ -1,13 +1,13 @@
 package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.mixin.WorldRendererAccessor;
-import net.coderbot.iris.rendertarget.DepthTexture;
-import net.minecraft.client.render.Camera;
+import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.minecraft.client.Camera;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+
+import java.util.List;
 
 public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
@@ -19,7 +19,7 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 		});
 
 		// NB: We don't use getDepthTextureNoTranslucents
-		GlStateManager.bindTexture(targets.getDepthTexture().getTextureId());
+		GlStateManager._bindTexture(targets.getDepthTexture().getTextureId());
 
 		// We have to do this or else sampling a sampler2DShadow produces "undefined" results.
 		//
@@ -33,7 +33,7 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
 		GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
 
-		GlStateManager.bindTexture(0);
+		GlStateManager._bindTexture(0);
 
 		targets.getFramebuffer().bind();
 
@@ -46,8 +46,13 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 	}
 
 	@Override
-	public void renderShadows(WorldRendererAccessor worldRenderer, Camera playerCamera) {
+	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		// No-op
+	}
+
+	@Override
+	public void addDebugText(List<String> messages) {
+		messages.add("[Iris] Shadow Maps: not used by shader pack");
 	}
 
 	public int getDepthTextureId() {

@@ -1,11 +1,12 @@
 package net.coderbot.iris.mixin;
 
-import net.coderbot.iris.layer.EntityColorRenderPhase;
-import net.coderbot.iris.layer.InnerWrappedRenderLayer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.layer.EntityColorRenderStateShard;
+import net.coderbot.iris.layer.EntityColorMultiBufferSource;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,21 +15,25 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(LivingEntityRenderer.class)
 public abstract class MixinLivingEntityRenderer {
 	@Shadow
-	abstract float getAnimationCounter(LivingEntity entity, float tickDelta);
+	abstract float getWhiteOverlayProgress(LivingEntity entity, float tickDelta);
 
 	@ModifyVariable(method = "render", at = @At("HEAD"))
-	private VertexConsumerProvider iris$wrapProvider(VertexConsumerProvider provider, LivingEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		boolean hurt = entity.hurtTime > 0 || entity.deathTime > 0;
-		float whiteFlash = getAnimationCounter(entity, tickDelta);
+	private MultiBufferSource iris$wrapProvider(MultiBufferSource bufferSource, LivingEntity entity, float yaw,
+												float tickDelta, PoseStack pose, MultiBufferSource bufferSourceArg,
+												int light) {
+		boolean hurt;
+		if (Iris.isPhysicsModInstalled()) {
+			hurt = entity.hurtTime > 0 && !entity.isDeadOrDying();
+		} else {
+			hurt = entity.hurtTime > 0 || entity.deathTime > 0;
+		}
+		float whiteFlash = getWhiteOverlayProgress(entity, tickDelta);
 
 		if (hurt || whiteFlash > 0.0) {
-			// TODO: Don't round the white flash?
-			// This rounding kinda changes how creeper flashes work but it isn't particularly noticeable.
-			// It avoids a big waste of memory with the current buffered entity rendering code creepers are exploding.
-			EntityColorRenderPhase phase = new EntityColorRenderPhase(hurt, Math.round(whiteFlash));
-			return layer -> provider.getBuffer(new InnerWrappedRenderLayer("iris_entity_color", layer, phase));
+			EntityColorRenderStateShard phase = new EntityColorRenderStateShard(hurt, whiteFlash);
+			return new EntityColorMultiBufferSource(bufferSource, phase);
 		} else {
-			return provider;
+			return bufferSource;
 		}
 	}
 }

@@ -1,46 +1,49 @@
 package net.coderbot.iris.mixin;
 
-import com.mojang.blaze3d.platform.GlDebugInfo;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.blaze3d.vertex.PoseStack;
+
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.uniforms.CapturedRenderingState;
-import net.coderbot.iris.uniforms.SystemTimeUniforms;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BufferBuilderStorage;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.math.Matrix4f;
-import org.lwjgl.opengl.GL20;
+import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
+
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.render.GameRenderer;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.client.renderer.MultiBufferSource.BufferSource;
+import net.minecraft.server.packs.resources.ResourceManager;
 
 @Mixin(GameRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinGameRenderer {
-	// TODO: This probably won't be compatible with mods that directly mess with the GL projection matrix.
-	// https://github.com/jellysquid3/sodium-fabric/blob/1df506fd39dac56bb410725c245e6e51208ec732/src/main/java/me/jellysquid/mods/sodium/client/render/chunk/shader/ChunkProgram.java#L56
+	@Shadow
+	private boolean renderHand;
+
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void iris$logSystem(MinecraftClient client, ResourceManager resourceManager, BufferBuilderStorage bufferBuilderStorage, CallbackInfo ci) {
+	private void iris$logSystem(Minecraft client, ResourceManager resourceManager, RenderBuffers bufferBuilderStorage,
+								CallbackInfo ci) {
 		Iris.logger.info("Hardware information:");
-		Iris.logger.info("CPU: " + GlDebugInfo.getCpuInfo());
-		Iris.logger.info("GPU: " + GlDebugInfo.getRenderer() + " (Supports OpenGL " + GlDebugInfo.getVersion() + ")");
+		Iris.logger.info("CPU: " + GlUtil.getCpuInfo());
+		Iris.logger.info("GPU: " + GlUtil.getRenderer() + " (Supports OpenGL " + GlUtil.getOpenGLVersion() + ")");
 		Iris.logger.info("OS: " + System.getProperty("os.name"));
 	}
 
-	@Inject(method = "loadProjectionMatrix(Lnet/minecraft/util/math/Matrix4f;)V", at = @At("HEAD"))
-	private void iris$captureProjectionMatrix(Matrix4f projectionMatrix, CallbackInfo callback) {
-		CapturedRenderingState.INSTANCE.setGbufferProjection(projectionMatrix);
-	}
+	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/player/LocalPlayer;I)V"))
+	private void disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
+		if (!(Iris.getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline)) {
+			return;
+		}
 
-	@Inject(method = "render(FJZ)V", at = @At("HEAD"))
-	private void iris$beginFrame(float tickDelta, long startTime, boolean tick, CallbackInfo callback) {
-		SystemTimeUniforms.COUNTER.beginFrame();
-		SystemTimeUniforms.TIMER.beginFrame(startTime);
+		itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, localPlayer, light);
 	}
 }

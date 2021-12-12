@@ -1,7 +1,7 @@
 package net.coderbot.iris.shadows;
 
+import com.mojang.math.Matrix4f;
 import net.coderbot.iris.pipeline.ShadowRenderer;
-import net.minecraft.util.math.Matrix4f;
 
 public class ShadowRenderingState {
 	public static boolean areShadowsCurrentlyBeingRendered() {

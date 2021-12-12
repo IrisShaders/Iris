@@ -1,15 +1,14 @@
 package net.coderbot.iris;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.math.MatrixStack;
 
 /**
  * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
@@ -48,13 +47,13 @@ public class HorizonRenderer {
 
 	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {
 		consumer.vertex(x1, BOTTOM, z1);
-		consumer.next();
+		consumer.endVertex();
 		consumer.vertex(x1, TOP, z1);
-		consumer.next();
+		consumer.endVertex();
 		consumer.vertex(x2, TOP, z2);
-		consumer.next();
+		consumer.endVertex();
 		consumer.vertex(x2, BOTTOM, z2);
-		consumer.next();
+		consumer.endVertex();
 	}
 
 	private void buildHalf(VertexConsumer consumer, double adjacent, double opposite, boolean invert) {
@@ -93,16 +92,16 @@ public class HorizonRenderer {
 	}
 
 	private void buildBottomPlane(VertexConsumer consumer, int radius) {
-		for(int x = -radius; x <= radius; x += 64) {
-			for(int z = -radius; z <= radius; z += 64) {
+		for (int x = -radius; x <= radius; x += 64) {
+			for (int z = -radius; z <= radius; z += 64) {
 				consumer.vertex(x + 64, BOTTOM, z);
-				consumer.next();
+				consumer.endVertex();
 				consumer.vertex(x, BOTTOM, z);
-				consumer.next();
+				consumer.endVertex();
 				consumer.vertex(x, BOTTOM, z + 64);
-				consumer.next();
+				consumer.endVertex();
 				consumer.vertex(x + 64, BOTTOM, z + 64);
-				consumer.next();
+				consumer.endVertex();
 			}
 		}
 	}
@@ -123,22 +122,22 @@ public class HorizonRenderer {
 	}
 
 	private int getRenderDistanceInBlocks() {
-		return MinecraftClient.getInstance().options.viewDistance * 16;
+		return Minecraft.getInstance().options.renderDistance * 16;
 	}
 
-	public void renderHorizon(MatrixStack matrices) {
-		BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+	public void renderHorizon(PoseStack poseStack) {
+		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
 		// Build the horizon quads into a buffer
-		buffer.begin(GL11.GL_QUADS, VertexFormats.POSITION);
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION);
 		buildHorizon(buffer);
 		buffer.end();
 
 		// Render the horizon buffer
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
-		RenderSystem.multMatrix(matrices.peek().getModel());
-		BufferRenderer.draw(buffer);
+		RenderSystem.multMatrix(poseStack.last().pose());
+		BufferUploader.end(buffer);
 		RenderSystem.popMatrix();
 	}
 }

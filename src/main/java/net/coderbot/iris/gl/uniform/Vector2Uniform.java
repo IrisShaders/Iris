@@ -2,15 +2,14 @@ package net.coderbot.iris.gl.uniform;
 
 import java.util.function.Supplier;
 
+import net.coderbot.iris.vendored.joml.Vector2f;
 import org.lwjgl.opengl.GL20;
 
-import net.minecraft.util.math.Vec2f;
-
 public class Vector2Uniform extends Uniform {
-	private Vec2f cachedValue;
-	private final Supplier<Vec2f> value;
+	private Vector2f cachedValue;
+	private final Supplier<Vector2f> value;
 
-	Vector2Uniform(int location, Supplier<Vec2f> value) {
+	Vector2Uniform(int location, Supplier<Vector2f> value) {
 		super(location);
 
 		this.cachedValue = null;
@@ -20,7 +19,7 @@ public class Vector2Uniform extends Uniform {
 
 	@Override
 	public void update() {
-		Vec2f newValue = value.get();
+		Vector2f newValue = value.get();
 
 		if (cachedValue == null || !newValue.equals(cachedValue)) {
 			cachedValue = newValue;
