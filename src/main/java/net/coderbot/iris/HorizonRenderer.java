@@ -134,7 +134,7 @@ public class HorizonRenderer {
 	}
 
 	private int getRenderDistanceInBlocks() {
-		return Minecraft.getInstance().options.renderDistance * 16;
+		return Minecraft.getInstance().options.getEffectiveRenderDistance() * 16;
 	}
 
 	public void close() {

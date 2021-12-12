@@ -335,9 +335,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 				reason = "(indirect sunlight GI detected)";
 			}
 
-			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
-				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
-						+ " blocks (capped by normal render distance)";
+			if (distance <= 0 || distance > Minecraft.getInstance().options.getEffectiveRenderDistance() * 16) {
+				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.getEffectiveRenderDistance() * 16
+						+ " blocks ";
+				debugStringShadowDistance += Minecraft.getInstance().isLocalServer() ? "(capped by normal render distance)" : "(capped by normal/server render distance)";
 				debugStringShadowCulling = "disabled " + reason;
 				return new NonCullingFrustum();
 			} else {
@@ -357,9 +358,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 				setter = "(set by user)";
 			}
 
-			if (distance >= Minecraft.getInstance().options.renderDistance * 16) {
-				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
-						+ " blocks (capped by normal render distance)";
+			if (distance >= Minecraft.getInstance().options.getEffectiveRenderDistance() * 16) {
+				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.getEffectiveRenderDistance() * 16
+						+ " blocks ";
+				debugStringShadowDistance += Minecraft.getInstance().isLocalServer() ? "(capped by normal render distance)" : "(capped by normal/server render distance)";
 				boxCuller = null;
 			} else {
 				debugStringShadowDistance = "render distance = " + distance + " blocks " + setter;

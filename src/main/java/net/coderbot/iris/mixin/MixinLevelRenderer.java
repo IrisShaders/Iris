@@ -74,10 +74,10 @@ public class MixinLevelRenderer {
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 
-		if(previousViewDistance != minecraft.options.renderDistance) {
+		if(previousViewDistance != minecraft.options.getEffectiveRenderDistance()) {
 			horizonRenderer.close();
 			horizonRenderer = new HorizonRenderer();
-			previousViewDistance = minecraft.options.renderDistance;
+			previousViewDistance = minecraft.options.getEffectiveRenderDistance();
 		}
 
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());

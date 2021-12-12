@@ -29,7 +29,7 @@ public class CameraUniforms {
 
 	private static int getRenderDistanceInBlocks() {
 		// TODO: Should we ask the game renderer for this?
-		return client.options.renderDistance * 16;
+		return client.options.getEffectiveRenderDistance() * 16;
 	}
 
 	public static Vector3d getUnshiftedCameraPosition() {
