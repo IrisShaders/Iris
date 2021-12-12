@@ -17,7 +17,7 @@
   "options.iris.shaderPackSelection.addedPack": "旣添影囊 \"%s\"",
   "options.iris.shaderPackSelection.addedPacks": "旣添影囊 %s ",
   "options.iris.shaderPackSelection.failedAdd": "非可行之影囊",
-  "options.iris.shaderPackSelection.failedAddSingle": 「\"%s\」者，非可行之影囊也",
+  "options.iris.shaderPackSelection.failedAddSingle": "「%s」者，非可行之影囊也",
   "options.iris.shaderPackSelection.copyError": "弗能添新影囊 \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 旣存於影囊資料夾中！",
   "options.iris.shaders.disabled": "影：關",
