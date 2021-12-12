@@ -11,21 +11,27 @@ body:
         
         Also, make sure you are using the latest version of the mod! If not, try updating to see if it resolves your issue.
   - type: input
-    id: version
+    id: minecraft-version
     attributes:
-      label: Iris and Minecraft Version
-      description: What version of Iris are you running? Include the Minecraft version too. Every part is important! If you do not know what version you are using, look at the file name in your "mods" folder.
-      placeholder: ex. iris-mc1.16.5-1.0.0.jar for Minecraft 1.16.5
+      label: Minecraft Version
+      description: What version of Minecraft are you running? If you do not know what version you are using, look in the bottom left corner of the main menu in game.
+      placeholder: ex. Minecraft 1.16.5
     validations:
       required: true
-  - type: dropdown
-    id: sodium
+  - type: input
+    id: iris-version
     attributes:
-      label: Are you running Sodium along with Iris?
-      description: This is the case if you kept the default Sodium & Iris when running the installer or if you downloaded the release from Curseforge or Modrinth
-      options:
-        - 'Yes'
-        - 'No'
+      label: Iris Version
+      description: What version of Iris are you running? Every part is important! If you do not know what version you are using, look at the file name in your "mods" folder.
+      placeholder: ex. iris-mc1.17-1.1.3.jar
+    validations:
+      required: true
+  - type: input
+    id: sodium-version
+    attributes:
+      label: Sodium Version
+      description: What version of Sodium are you running along with Iris? Every part is important! If you do not know what version you are using, look at the file name in your "mods" folder. If you aren't running Sodium please put N/A.
+      placeholder: ex. sodium-fabric-mc1.17.1-0.3.3+build.8.jar
     validations:
       required: true
   - type: input
