@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack.option;
 import com.google.common.collect.ImmutableMap;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
+import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 
 import java.util.Collections;
@@ -42,7 +43,7 @@ public class ShaderPackOptions {
 		});
 
 		OptionSet optionSet = setBuilder.build();
-		OptionValues optionValues = new OptionValues(optionSet, changedConfigs);
+		OptionValues optionValues = new MutableOptionValues(optionSet, changedConfigs);
 
 		return graph.map(path -> allAnnotations.get(path).asTransform(optionValues));
 	}

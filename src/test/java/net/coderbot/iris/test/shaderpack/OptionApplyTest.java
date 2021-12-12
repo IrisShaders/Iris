@@ -7,6 +7,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.option.OptionAnnotatedSource;
 import net.coderbot.iris.shaderpack.option.OptionSet;
+import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.test.IrisTests;
 import org.junit.jupiter.api.Assertions;
@@ -62,7 +63,7 @@ public class OptionApplyTest {
 				"GODRAYS", "16"
 		);
 
-		OptionValues values = new OptionValues(options, changes);
+		OptionValues values = new MutableOptionValues(options, changes);
 
 		System.out.println(basicVshAnnotated.apply(values));
 		System.out.println(basicFshAnnotated.apply(values));
@@ -102,7 +103,7 @@ public class OptionApplyTest {
 		OptionSet options = source.getOptionSet(
 				AbsolutePackPath.fromAbsolutePath("/<hardcoded>"),
 				source.getBooleanDefineReferences().keySet());
-		OptionValues values = new OptionValues(options, changes);
+		OptionValues values = new MutableOptionValues(options, changes);
 
 		Assertions.assertEquals(expected, source.apply(values));
 	}
