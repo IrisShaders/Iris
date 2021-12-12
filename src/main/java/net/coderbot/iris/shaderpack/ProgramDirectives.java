@@ -4,14 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
-import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -37,7 +34,19 @@ public class ProgramDirectives {
 		// undefined data to be written to colortex7.
 		//
 		// TODO: Figure out how to infer the DRAWBUFFERS directive when it is missing.
-		drawBuffers = findDrawbuffersDirective(source.getFragmentSource()).orElse(new int[] { 0 });
+		Optional<CommentDirective> optionalDrawbuffersDirective = findDrawbuffersDirective(source.getFragmentSource());
+		Optional<CommentDirective> optionalRendertargetsDirective = findRendertargetsDirective(source.getFragmentSource());
+
+		Optional<CommentDirective> optionalCommentDirective = getAppliedDirective(optionalDrawbuffersDirective, optionalRendertargetsDirective);
+		drawBuffers = optionalCommentDirective.map(commentDirective -> {
+			if (commentDirective.getType() == CommentDirective.Type.DRAWBUFFERS) {
+				return parseDigits(commentDirective.getDirective().toCharArray());
+			} else if (commentDirective.getType() == CommentDirective.Type.RENDERTARGETS) {
+				return parseDigitList(commentDirective.getDirective());
+			} else {
+				throw new IllegalStateException("Unhandled comment directive type!");
+			}
+		}).orElse(new int[] { 0 });
 
 		if (properties != null) {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
@@ -82,11 +91,12 @@ public class ProgramDirectives {
 		this.mipmappedBuffers = ImmutableSet.copyOf(mipmappedBuffers);
 	}
 
-	private static Optional<int[]> findDrawbuffersDirective(Optional<String> stageSource) {
-		return stageSource
-			.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, "DRAWBUFFERS"))
-			.map(String::toCharArray)
-			.map(ProgramDirectives::parseDigits);
+	private static Optional<CommentDirective> findDrawbuffersDirective(Optional<String> stageSource) {
+		return stageSource.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, CommentDirective.Type.DRAWBUFFERS));
+	}
+
+	private static Optional<CommentDirective> findRendertargetsDirective(Optional<String> stageSource) {
+		return stageSource.flatMap(fragment -> CommentDirectiveParser.findDirective(fragment, CommentDirective.Type.RENDERTARGETS));
 	}
 
 	private static int[] parseDigits(char[] directiveChars) {
@@ -98,6 +108,28 @@ public class ProgramDirectives {
 		}
 
 		return buffers;
+	}
+
+	private static int[] parseDigitList(String digitListString) {
+		return Arrays.stream(digitListString.split(","))
+				.mapToInt(Integer::parseInt)
+				.toArray();
+	}
+
+	private static Optional<CommentDirective> getAppliedDirective(Optional<CommentDirective> optionalDrawbuffersDirective, Optional<CommentDirective> optionalRendertargetsDirective) {
+		if (optionalDrawbuffersDirective.isPresent() && optionalRendertargetsDirective.isPresent()) {
+			if (optionalDrawbuffersDirective.get().getLocation() > optionalRendertargetsDirective.get().getLocation()) {
+				return optionalDrawbuffersDirective;
+			} else {
+				return optionalRendertargetsDirective;
+			}
+		} else if (optionalDrawbuffersDirective.isPresent()) {
+			return optionalDrawbuffersDirective;
+		} else if (optionalRendertargetsDirective.isPresent()) {
+			return optionalRendertargetsDirective;
+		} else {
+			return Optional.empty();
+		}
 	}
 
 	public int[] getDrawBuffers() {

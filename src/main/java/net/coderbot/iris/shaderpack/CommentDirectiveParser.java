@@ -1,7 +1,5 @@
 package net.coderbot.iris.shaderpack;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -25,24 +23,8 @@ public class CommentDirectiveParser {
 		// cannot be constructed
 	}
 
-	public static Optional<String> findDirectiveInLines(List<String> lines, String key) {
-		// We iterate over the list of lines in reverse order because the last occurrence of a directive has a greater
-		// precedence over an earlier occurrence of a directive.
-		for (int index = lines.size() - 1; index >= 0; index -= 1) {
-			String line = lines.get(index);
-
-			Optional<String> found = findDirective(line, key);
-
-			if (found.isPresent()) {
-				return found;
-			}
-		}
-
-		// Didn't find any declarations of the directive.
-		return Optional.empty();
-	}
-
-	public static Optional<String> findDirective(String haystack, String needle) {
+	public static Optional<CommentDirective> findDirective(String haystack, CommentDirective.Type type) {
+		String needle = type.name();
 		String prefix = needle + ":";
 		String suffix = "*/";
 
@@ -74,7 +56,7 @@ public class CommentDirectiveParser {
 		// Remove the suffix and everything afterwards, also trim any whitespace
 		haystack = haystack.substring(0, indexOfSuffix).trim();
 
-		return Optional.of(haystack);
+		return Optional.of(new CommentDirective(CommentDirective.Type.valueOf(needle), haystack, indexOfPrefix));
 	}
 
 	// Test code for directive parsing. It's a bit homegrown but it works.
@@ -103,69 +85,66 @@ public class CommentDirectiveParser {
 			test("normal text", Optional.empty(), () -> {
 				String line = "Some normal text that doesn't contain a DRAWBUFFERS directive of any sort";
 
-				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 
 			test("partial directive", Optional.empty(), () -> {
 				String line = "Some normal text that doesn't contain a /* DRAWBUFFERS: directive of any sort";
 
-				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 
 			test("bad spacing", Optional.of("321"), () -> {
 				String line = "/*DRAWBUFFERS:321*/ OptiFine will detect this directive, but ShadersMod will not...";
 
-				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 
 			test("matchAtEnd", Optional.of("321"), () -> {
-				String line = "A line containg a drawbuffers directive: /* DRAWBUFFERS:321 */";
+				String line = "A line containing a drawbuffers directive: /* DRAWBUFFERS:321 */";
 
-				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 
 			test("matchAtStart", Optional.of("31"), () -> {
-				String line = "/* DRAWBUFFERS:31 */ This is a line containg a drawbuffers directive";
+				String line = "/* DRAWBUFFERS:31 */ This is a line containing a drawbuffers directive";
 
-				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 
 			test("matchInMiddle", Optional.of("31"), () -> {
-				String line = "This is a line /* DRAWBUFFERS:31 */ containg a drawbuffers directive";
+				String line = "This is a line /* DRAWBUFFERS:31 */ containing a drawbuffers directive";
 
-				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 
 			test("emptyMatch", Optional.of(""), () -> {
-				String line = "/* DRAWBUFFERS: */ This is a line containg an invalid but still matching drawbuffers directive";
+				String line = "/* DRAWBUFFERS: */ This is a line containing an invalid but still matching drawbuffers directive";
 
-				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 
 			test("duplicates", Optional.of("3"), () -> {
 				String line = "/* TEST:2 */ This line contains multiple directives, the last one should be used /* TEST:3 */";
 
-				return CommentDirectiveParser.findDirective(line, "TEST");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 
-			test("lines", Optional.of("It works"), () -> {
-				String[] linesArray = new String[]{
-					"/* Here's a random comment line */",
-					"/* Test directive:Duplicate handling? */",
-					"uniform sampler2D test;",
-					"/* Test directive:Duplicate handling within a line? */ Let's see /* Test directive:It works */"
-				};
+			test("multi-line", Optional.of("It works"), () -> {
+				String lines =
+					"/* Here's a random comment line */\n" +
+					"/* RENDERTARGETS:Duplicate handling? */\n" +
+					"uniform sampler2D test;\n" +
+					"/* RENDERTARGETS:Duplicate handling within a line? */ Let's see /* RENDERTARGETS:It works */\n";
 
-				List<String> lines = Arrays.asList(linesArray);
-
-				return CommentDirectiveParser.findDirectiveInLines(lines, "Test directive");
+				return CommentDirectiveParser.findDirective(lines, CommentDirective.Type.RENDERTARGETS).map(CommentDirective::getDirective);
 			});
 
 			// OptiFine finds this directive, but ShadersMod does not...
 			test("bad spacing from BSL composite6", Optional.of("12"), () -> {
 				String line = "    /*DRAWBUFFERS:12*/";
 
-				return CommentDirectiveParser.findDirective(line, "DRAWBUFFERS");
+				return CommentDirectiveParser.findDirective(line, CommentDirective.Type.DRAWBUFFERS).map(CommentDirective::getDirective);
 			});
 		}
 	}
