@@ -509,6 +509,10 @@ public class Iris implements ClientModInitializer {
 		return physicsModInstalled;
 	}
 
+	public static boolean isPackActive() {
+		return !(getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline);
+	}
+
 	public static Path getShaderpacksDirectory() {
 		if (shaderpacksDirectory == null) {
 			shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");

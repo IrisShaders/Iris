@@ -7,6 +7,10 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Nie udało się przeładować Shaderów! Powód: %s",
   "iris.shaders.toggled.failure": "Nie udało się przełączyć Shaderów! Powód: %s",
+  "iris.sodium.failure.title": "Iris nie udało się załadować!",
+  "iris.sodium.failure.download": "Pobierz Sodium",
+  "iris.sodium.failure.reason.notFound": "Iris wymaga Sodium dla poprawnego działania, a Sodium nie jest zainstalowane. Proszę pobrać Sodium, umieścić go w folderze mods i ponownie uruchomić grę.",
+  "iris.sodium.failure.reason.incompatible": "Iris wymaga Sodium dla poprawnego działania, znaleziono niekompatybilną wersję Sodium. Proszę pobrać właściwą wersję Sodium, umieścić ją w folderze mods oraz usunąć niekompatybilną wersję i ponownie uruchomić grę.",
 
   "options.iris.apply": "Zastosuj",
   "options.iris.refresh": "Odśwież",
@@ -22,6 +26,9 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" jest już w twoim folderze z Shaderami!",
   "options.iris.shaders.disabled": "Shadery: Wyłączone",
   "options.iris.shaders.enabled": "Shadery: Włączone",
+  "options.iris.shadowDistance": "Maksymalna odległość cieni",
+  "options.iris.shadowDistance.enabled": "Umożliwia zmianę maksymalnej odległości wyświetlania cieni. Teren i obiekty znajdujące się poza tą odległością nie będą rzucały cieni. Zmniejszenie odległości cieni może znacząco zwiększyć wydajność.",
+  "options.iris.shadowDistance.disabled": "Twój aktualny shader pack ma już ustawioną odległość renderowania cieni; nie możesz jej zmienić.",
 
   "pack.iris.select.title": "Wybierz",
   "pack.iris.list.label": "+ Przeciągnij i upuść Shader Packi, aby dodać"

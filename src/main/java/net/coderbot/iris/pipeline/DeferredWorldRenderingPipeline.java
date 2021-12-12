@@ -9,9 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.gl.blending.AlphaTest;
-import net.coderbot.iris.gl.blending.BlendMode;
-import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.*;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -547,10 +545,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 			program.use();
 
-			// TODO: Render layers will likely override alpha testing state, we'll need to implement a similar system
-			//       as we have for blend mode overrides.
 			if (alphaTestOverride != null) {
-				alphaTestOverride.setup();
+				AlphaTestStorage.overrideAlphaTest(alphaTestOverride);
+			} else {
+				// Previous program on the stack might have applied an override
+				AlphaTestStorage.restoreAlphaTest();
 			}
 
 			if (blendModeOverride != null) {
@@ -563,7 +562,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		public void stopUsing() {
 			if (alphaTestOverride != null) {
-				AlphaTest.teardown();
+				AlphaTestStorage.restoreAlphaTest();
 			}
 
 			if (blendModeOverride != null) {

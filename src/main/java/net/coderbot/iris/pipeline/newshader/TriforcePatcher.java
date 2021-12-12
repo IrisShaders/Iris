@@ -67,6 +67,7 @@ public class TriforcePatcher {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 		transformations.define("gl_FogFragCoord", "iris_FogFragCoord");
 
+		// TODO: This doesn't handle geometry shaders... How do we do that?
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out float iris_FogFragCoord;");
 		} else if (type == ShaderType.FRAGMENT) {
@@ -104,12 +105,10 @@ public class TriforcePatcher {
 			}
 		}
 
-		// TODO: Patching should take in mind cases where there are not color or normal vertex attributes
-
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec4 iris_ColorModulator;");
 
 		if (inputs.hasColor()) {
-			// TODO: Handle the fragment shader here
+			// TODO: Handle the fragment / geometry shader here
 			transformations.define("gl_Color", "(Color * iris_ColorModulator)");
 
 			if (type == ShaderType.VERTEX) {
