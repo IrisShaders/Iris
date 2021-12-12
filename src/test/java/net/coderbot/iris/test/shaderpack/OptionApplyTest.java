@@ -7,7 +7,8 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.option.OptionAnnotatedSource;
 import net.coderbot.iris.shaderpack.option.OptionSet;
-import net.coderbot.iris.shaderpack.option.OptionValues;
+import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.test.IrisTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 public class OptionApplyTest {
-	@Test
+	//@Test
+	// TODO: Re-enable this once we can load shader packs in tests without referencing OpenGL / LWJGL / Minecraft.
 	void testOptions() {
 		ShaderPack shaderPack;
 
@@ -61,7 +63,7 @@ public class OptionApplyTest {
 				"GODRAYS", "16"
 		);
 
-		OptionValues values = new OptionValues(options, changes);
+		OptionValues values = new MutableOptionValues(options, changes);
 
 		System.out.println(basicVshAnnotated.apply(values));
 		System.out.println(basicFshAnnotated.apply(values));
@@ -71,21 +73,28 @@ public class OptionApplyTest {
 
 	@Test
 	void testWeirdDefine() {
-		// TODO: Fix OptionAnnotatedSource so that this test doesn't fail
 		testTrivial(
 				"#define NAME fine // [fine notfine]",
 				ImmutableMap.of("NAME", "notfine"),
-				"#define NAME notfine // [fine notfine]\n"
+				"#define NAME notfine // OptionAnnotatedSource: Changed option\n"
 		);
 	}
 
 	@Test
 	void testWeirdDefine2() {
-		// TODO: Fix OptionAnnotatedSource so that this test doesn't fail
 		testTrivial(
 				"#define MODE_DEFAULT MODE_D // [MODE_A MODE_D]",
 				ImmutableMap.of("MODE_DEFAULT", "MODE_A"),
-				"#define MODE_DEFAULT MODE_A // [MODE_A MODE_D]\n"
+				"#define MODE_DEFAULT MODE_A // OptionAnnotatedSource: Changed option\n"
+		);
+	}
+
+	@Test
+	void testNormalDefine() {
+		testTrivial(
+				"   #define    OPTION       A // [A B C]",
+				ImmutableMap.of("OPTION", "C"),
+				"#define OPTION C // OptionAnnotatedSource: Changed option\n"
 		);
 	}
 
@@ -94,7 +103,7 @@ public class OptionApplyTest {
 		OptionSet options = source.getOptionSet(
 				AbsolutePackPath.fromAbsolutePath("/<hardcoded>"),
 				source.getBooleanDefineReferences().keySet());
-		OptionValues values = new OptionValues(options, changes);
+		OptionValues values = new MutableOptionValues(options, changes);
 
 		Assertions.assertEquals(expected, source.apply(values));
 	}

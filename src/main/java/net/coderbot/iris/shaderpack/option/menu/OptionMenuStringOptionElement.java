@@ -1,8 +1,8 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
 import net.coderbot.iris.shaderpack.ShaderProperties;
-import net.coderbot.iris.shaderpack.option.OptionValues;
 import net.coderbot.iris.shaderpack.option.StringOption;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 
 public class OptionMenuStringOptionElement extends OptionMenuOptionElement {
 	public final StringOption option;

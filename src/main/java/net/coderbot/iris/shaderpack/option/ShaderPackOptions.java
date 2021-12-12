@@ -5,6 +5,8 @@ import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
+import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 
 import java.util.*;
 
@@ -44,7 +46,7 @@ public class ShaderPackOptions {
 		});
 
 		this.optionSet = setBuilder.build();
-		this.optionValues = new OptionValues(optionSet, changedConfigs);
+		this.optionValues = new MutableOptionValues(optionSet, changedConfigs);
 
 		LinkedHashMap<String, Profile> profiles = new LinkedHashMap<>();
 		Optional<String> currentProfile = Optional.empty();

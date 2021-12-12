@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.shaderpack.parsing.ParsedString;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 
@@ -387,8 +388,16 @@ public final class OptionAnnotatedSource {
 
 		String comment = line.takeRest().trim();
 
-		builder.stringOptions.put(index, StringOption.create(OptionType.DEFINE, name, comment, value));
+		StringOption option = StringOption.create(OptionType.DEFINE, name, comment, value);
 
+		if (option.getAllowedValues().size() == 1) {
+			// Some shader packs have "#define PI 3.14" and that shouldn't be parsed as a config option.
+			builder.diagnostics.put(index,
+				"Ignoring this #define because it only has one allowed value - the default value.");
+			return;
+		}
+
+		builder.stringOptions.put(index, option);
 
 		/*
 	    //#define   SHADOWS // Whether shadows are enabled
@@ -457,17 +466,14 @@ public final class OptionAnnotatedSource {
 		// See if it's a boolean option
 		BooleanOption booleanOption = booleanOptions.get(index);
 
-		// TODO: Check all of this code
-
 		if (booleanOption != null) {
-			if (values.shouldFlip(booleanOption.getName())) {
+			if (values.isBooleanFlipped(booleanOption.getName())) {
 				if (booleanOption.getType() == OptionType.DEFINE) {
 					return flipBooleanDefine(existing);
 				} else if (booleanOption.getType() == OptionType.CONST) {
 					return editConst(existing, Boolean.toString(booleanOption.getDefaultValue()), Boolean.toString(!booleanOption.getDefaultValue()));
 				} else {
-					// TODO: This shouldn't be possible.
-					throw new IllegalArgumentException("Unknown option type " + booleanOption.getType());
+					throw new AssertionError("Unknown option type " + booleanOption.getType());
 				}
 			} else {
 				return existing;
@@ -479,27 +485,11 @@ public final class OptionAnnotatedSource {
 		if (stringOption != null) {
 			return values.getStringValue(stringOption.getName()).map(value -> {
 				if (stringOption.getType() == OptionType.DEFINE) {
-					if (stringOption.getName().contains(stringOption.getDefaultValue())) {
-						// TODO: This needs to be fixed
-						// #define MODE MODE_ONE // [MODE_ONE MODE_TWO]
-						throw new IllegalStateException("Not yet implemented: setting option value " +
-							"where the name contains the default value; name = " + stringOption.getName() +
-							", default value = " + stringOption.getDefaultValue());
-					}
-
-					if ("#define".contains(stringOption.getDefaultValue())) {
-						// TODO: This needs to be fixed
-						// #define efine 1 // [1 2]
-						throw new IllegalStateException("Not yet implemented: setting option value " +
-								"where the default value " + stringOption.getDefaultValue() + " matches #define");
-					}
-
-					return existing.replaceFirst(Pattern.quote(stringOption.getDefaultValue()), Matcher.quoteReplacement(value));
+					return "#define " + stringOption.getName() + " " + value + " // OptionAnnotatedSource: Changed option";
 				} else if (stringOption.getType() == OptionType.CONST) {
 					return editConst(existing, stringOption.getDefaultValue(), value);
 				} else {
-					// TODO: This shouldn't be possible.
-					throw new IllegalArgumentException("Unknown option type " + stringOption.getType());
+					throw new AssertionError("Unknown option type " + stringOption.getType());
 				}
 			}).orElse(existing);
 		}

@@ -2,6 +2,7 @@ package net.coderbot.iris.shaderpack.option;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,7 +61,7 @@ public final class Profile {
 			String value = entry.getValue();
 
 			if (options.getBooleanOptions().containsKey(option)) {
-				boolean currentValue = options.getBooleanOptions().get(option).getOption().getDefaultValue() != values.shouldFlip(option);
+				boolean currentValue = options.getBooleanOptions().get(option).getOption().getDefaultValue() != values.isBooleanFlipped(option);
 
 				if (("true".equals(value) && !currentValue) ||
 						("false".equals(value) && currentValue)) {
