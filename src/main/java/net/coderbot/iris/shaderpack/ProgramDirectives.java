@@ -6,15 +6,12 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.text.html.Option;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;
@@ -40,18 +37,15 @@ public class ProgramDirectives {
 		Optional<CommentDirective> optionalRendertargetsDirective = findRenderTargetDirective(source.getFragmentSource());
 
 		Optional<CommentDirective> optionalCommentDirective = getAppliedDirective(optionalDrawbuffersDirective, optionalRendertargetsDirective);
-		if (optionalCommentDirective.isPresent()) {
-			CommentDirective commentDirective = optionalCommentDirective.get();
+		drawBuffers = optionalCommentDirective.map((commentDirective) -> {
 			if (commentDirective.getType() == CommentDirective.Type.DRAWBUFFERS) {
-				drawBuffers = parseDigits(commentDirective.getDirective().toCharArray());
+				return parseDigits(commentDirective.getDirective().toCharArray());
 			} else if (commentDirective.getType() == CommentDirective.Type.RENDERTARGETS) {
-				drawBuffers = parseDigitList(commentDirective.getDirective());
+				return parseDigitList(commentDirective.getDirective());
 			} else {
 				throw new IllegalStateException("Unhandled comment directive type!");
 			}
-		} else {
-			drawBuffers = new int[] { 0 };
-		}
+		}).orElse(new int[] { 0 });
 
 		if (properties != null) {
 			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
