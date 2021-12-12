@@ -18,11 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *
  * As it turns out, OptiFine significantly reduces the far plane distance compared to vanilla. This is likely because
  * vanilla chooses a far plane that is four times the render distance in blocks, which is a bit overkill. Instead,
- * OptiFine makes the far plane only two times the render distance in blocks, and to compensate, adds a minimum distance
+ * OptiFine makes the far plane only 1024 blocks above the render distance in blocks (two times the render distance in 1.16 and lower), and (in 1.16) to compensate, adds a minimum distance
  * for the far plane to make it not appear too closely to the player.
  *
- * OptiFine also modifies the distance of the far plane based on the fog setting. We mimic the "fast" fog setting
- * because that is the setting that reduces the far plane distance the most.
+ * On 1.16 and lower, OptiFine also modifies the distance of the far plane based on the fog setting.
  *
  * So why is this needed? As it turns out, shaderpacks actually rely on this behavior to work properly. Most notably,
  * the water reflection code in Sildur's Vibrant Shaders will often create impossible reflections with the default far
@@ -49,26 +48,28 @@ public class MixinTweakFarPlane {
 	private float iris$tweakViewDistanceToMatchOptiFine(GameRenderer renderer) {
 		if (!Iris.getCurrentPack().isPresent()) {
 			// Don't mess with the far plane if no shaderpack is loaded
-			return this.renderDistance * 4.0F;
+			return this.getDepthFar();
 		}
 
-		float tweakedViewDistance = this.getDepthFar();
+		float tweakedViewDistance = this.renderDistance;
 
 		// Halve the distance of the far plane in the projection matrix from vanilla. Normally, the far plane is 4 times
-		// the view distance, but this makes it so that it is only two times the view distance.
-		tweakedViewDistance *= 0.5;
+		// the view distance, but this makes it so that it is only the view distance + 1024 blocks. (OptiFine for 1.16 and lower uses view distance * 2, and OptiFine for 1.17+ uses view distance + 1024)
+		tweakedViewDistance += 1024.0F;
 
 		// Use a minimum distance for the far plane
 		// The real far plane will be 4 times this, so this will result in a far plane of 173 meters.
 		//
 		// Math.max returns the maximum of the two values, so whenever tweakedViewDistance falls below 43.25F, this code
 		// forces it to take on a value of 43.25F.
-		tweakedViewDistance = Math.max(43.25F, tweakedViewDistance);
+		// NB: This should not be activated on 1.17+.
+		//tweakedViewDistance = Math.max(43.25F, tweakedViewDistance);
 
 		return tweakedViewDistance;
 	}
 
-	@Inject(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderDistance:F", shift = At.Shift.AFTER))
+	// Seemingly, this should not be activated on 1.17.
+	//@Inject(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderDistance:F", shift = At.Shift.AFTER))
 	private void iris$tweakViewDistanceBasedOnFog(float f, long l, PoseStack poseStack, CallbackInfo ci) {
 		if (!Iris.getCurrentPack().isPresent()) {
 			// Don't mess with the far plane if no shaderpack is loaded
