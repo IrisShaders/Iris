@@ -114,27 +114,7 @@ You can rebind these keyboard shortcuts to any other key you want in the Control
 
 ## Shader compatibility
 
-The following shaders have been tested and work well:
-
-- Complementary Shaders (https://www.curseforge.com/minecraft/customization/complementary-shaders)
-- Prismarine Shaders (https://www.curseforge.com/minecraft/customization/prismarine-shader)
-- BSL Shaders (https://bitslablab.com/bslshaders/)
-- Continuum 1.3 
-- Continuum 2.0.4
-- SEUS V11 (https://www.sonicether.com/seus/)
-- SEUS Renewed (https://www.sonicether.com/seus/)
-- Sildur's Enhanced Default (https://sildurs-shaders.github.io/)
-- Sildur's Vibrant Shaders (https://sildurs-shaders.github.io/)
-- Skylec v4.0 (https://www.curseforge.com/minecraft/customization/skylec-shader)
-- Tea V1.5.3
-- XorDev's shaders
-- ProjectLUMA
-- RedHat shaders (https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
-
-The following shaders have been tested and work with some minor issues:
-
-- Triliton V8 [reflections broken]
-- Stereo's Default+ [No sky on 1.17]
+For a list of compatible shaders, check out the [supported shaders list](supportedshaders.md).
 
 Other shaders are considered **unsupported** at the moment. When using shaders which are not in this list, except them to have major visual problems, or even not run at all. More shaders will be added as supported as new features are being added to Iris.
 
