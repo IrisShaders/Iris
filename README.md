@@ -8,6 +8,11 @@
 * Visit [our Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and get support! It's also a great place to get development updates right as they're happening.
 * Visit [my Patreon page](https://www.patreon.com/coderbot) to support the continued development of Iris!
 
+## FAQ
+
+Find answers to frequently asked questions on our [FAQ page](docs/faq.md).\
+A list of known-supported shaderpacks can be found [here](docs/supportedshaders.md)
+
 
 ## Why did you make Iris?
 
@@ -36,28 +41,6 @@ These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achi
 Iris has public releases for 1.16.5, 1.17.1, and 1.18 that work with the official releases of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
 
 Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris.
-
-
-## What shader packs can I use right now?
-
-The following shader packs mostly work, though with a few bugs of course:
-
-* [Sildur's Vibrant Shaders](https://sildurs-shaders.github.io/)
-* [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
-* [BSL Shaders](https://www.bitslablab.com/bslshaders/)
-* [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
-    * Enchantment glints are broken
-* [SEUS Renewed](https://sonicether.com/shaders/download/renewed-v1-0-1/)
-    * Note that SEUS Renewed does not work on some platforms and might fail to compile.
-* [SEUS v11](https://sonicether.com/shaders/download/v11-0/) (from 2016, not to be confused with SEUS PTGI E11)
-    * General issues with weather
-    * Note that SEUS v11 does not work on some platforms and might fail to compile.
-* [Skylec Shader](https://www.curseforge.com/minecraft/customization/skylec-shader) - a very lightweight shaderpack that pulls off some neat effects
-    * Underwater is broken
-    * Weather is broken
-* [XorDev's shaderpacks](https://github.com/XorDev/Minecraft-Shaderpacks)
-
-Other shaderpacks aren't officially supported currently.
 
 
 ## How can I help?
