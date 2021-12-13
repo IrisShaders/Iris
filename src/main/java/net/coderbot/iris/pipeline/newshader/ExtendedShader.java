@@ -38,6 +38,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	HashMap<String, IntSupplier> dynamicSamplers;
 	private final boolean intensitySwizzle;
 	private final ProgramImages.Builder imageBuilder;
+	private ProgramImages currentImages;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
@@ -55,6 +56,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.dynamicSamplers = new HashMap<>();
 		this.parent = parent;
 		this.imageBuilder = ProgramImages.builder(programId);
+		this.currentImages = imageBuilder.build();
 
 		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
 		this.intensitySwizzle = getName().contains("intensity");
@@ -82,7 +84,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 		super.apply();
 		uniforms.update();
-		imageBuilder.build().update();
+		currentImages.update();
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
@@ -174,5 +176,6 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	@Override
 	public void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name) {
 		imageBuilder.addTextureImage(textureID, internalFormat, name);
+		this.currentImages = imageBuilder.build();
 	}
 }
