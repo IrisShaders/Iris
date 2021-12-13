@@ -29,7 +29,7 @@ public class RenderTargets {
 
 		renderTargets.forEach((index, settings) -> {
 			// TODO: Handle mipmapping?
-			targets[index] = net.coderbot.iris.rendertarget.RenderTarget.builder().setDimensions(width, height).setInternalFormat(settings.getRequestedFormat()).build();
+			targets[index] = net.coderbot.iris.rendertarget.RenderTarget.builder().setDimensions(width, height).setInternalFormat(settings.getInternalFormat()).build();
 		});
 
 		this.depthTexture = new DepthTexture(width, height);
