@@ -16,6 +16,8 @@
 
 • [SEUS Renewed](https://www.sonicether.com/seus/)
 
+• [SEUS PTGI](https://www.sonicether.com/seus)
+
 • [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
 
 • [Sildur's Vibrant Shaders](https://sildurs-shaders.github.io/)
