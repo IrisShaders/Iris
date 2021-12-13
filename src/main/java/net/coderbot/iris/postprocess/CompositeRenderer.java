@@ -14,6 +14,7 @@ import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
@@ -222,11 +223,14 @@ public class CompositeRenderer {
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRendererSupplier.get());
+			IrisImages.addShadowColorImages(builder, shadowMapRendererSupplier.get());
 		}
 
 		// TODO: Don't duplicate this with FinalPassRenderer

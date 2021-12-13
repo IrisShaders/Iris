@@ -118,6 +118,11 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	}
 
 	@Override
+	public boolean hasImage(String name) {
+		return images.hasImage(name);
+	}
+
+	@Override
 	public void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name) {
 		images.addTextureImage(textureID, internalFormat, name);
 	}

@@ -54,6 +54,11 @@ public class ProgramImages {
 		}
 
 		@Override
+		public boolean hasImage(String name) {
+			return GL20C.glGetUniformLocation(program, name) != -1;
+		}
+
+		@Override
 		public void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name) {
 			int location = GL20C.glGetUniformLocation(program, name);
 

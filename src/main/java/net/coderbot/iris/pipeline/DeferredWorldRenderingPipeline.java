@@ -14,6 +14,7 @@ import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -22,6 +23,7 @@ import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -231,6 +233,19 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return builder.build();
 		};
 
+		IntFunction<ProgramImages> createTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
+			if (IrisImages.hasShadowImages(builder)) {
+				createShadowMapRenderer.run();
+				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
 		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
@@ -243,6 +258,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// Otherwise, this program shouldn't be used at all?
 			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor) && shadowMapRenderer != null) {
 				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
+		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeTerrain, renderTargets);
+
+			if (IrisImages.hasShadowImages(builder) && shadowMapRenderer != null) {
+				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
 			}
 
 			return builder.build();
@@ -280,7 +307,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
 
-		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers, createShadowTerrainSamplers);
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
+				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages);
 	}
 
 	private void checkWorld() {
@@ -490,6 +518,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
 
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+		IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
 		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
 		IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
@@ -497,6 +527,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 			createShadowMapRenderer.run();
 			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+			IrisImages.addShadowColorImages(builder, shadowMapRenderer);
 		}
 
 		GlFramebuffer framebufferBeforeTranslucents =

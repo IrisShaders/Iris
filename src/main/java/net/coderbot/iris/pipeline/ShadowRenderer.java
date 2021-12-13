@@ -21,6 +21,7 @@ import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.*;
 import net.coderbot.iris.shadow.ShadowMatrices;
@@ -280,9 +281,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, pipeline.getFrameUpdateNotifier());
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, gbufferRenderTargets, false);
+		IrisImages.addRenderTargetImages(builder, flipped, gbufferRenderTargets);
+
 		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noise);
+
 		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, this);
+		IrisImages.addShadowColorImages(builder, this);
 
 		return builder.build();
 	}
@@ -740,6 +745,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	@Override
 	public int getColorTexture1Id() {
 		return targets.getColorTextureId(1);
+	}
+
+	@Override
+	public ShadowRenderTargets getRenderTargets() {
+		return targets;
 	}
 
 	@Override

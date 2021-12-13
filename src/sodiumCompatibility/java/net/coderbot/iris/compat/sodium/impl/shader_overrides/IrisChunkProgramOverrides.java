@@ -9,6 +9,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
@@ -140,14 +141,17 @@ public class IrisChunkProgramOverrides {
                     .build((program, name) -> {
                         ProgramUniforms uniforms = pipeline.initUniforms(name);
                         ProgramSamplers samplers;
+						ProgramImages images;
 
                         if (pass == IrisTerrainPass.SHADOW) {
                             samplers = pipeline.initShadowSamplers(name);
+							images = pipeline.initShadowImages(name);
                         } else {
                             samplers = pipeline.initTerrainSamplers(name);
+							images = pipeline.initTerrainImages(name);
                         }
 
-                        return new IrisChunkProgram(device, program, name, uniforms, samplers);
+                        return new IrisChunkProgram(device, program, name, uniforms, samplers, images);
                     });
         } finally {
             vertShader.delete();
