@@ -1,6 +1,6 @@
-> Q. What shaders have been tested and are working with Iris?
-> 
-A. The following shaders have been tested and work well:
+> ### Q. What shaders have been tested and are working with Iris? 
+
+#### A. The following shaders have been tested and work well:
 
 • [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
 
@@ -28,10 +28,12 @@ A. The following shaders have been tested and work well:
 
 • [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
 
-The following shaders have been tested and work with some minor issues:
+• [Sora Shaders v1.12](https://www.curseforge.com/minecraft/customization/sora-shaders)
 
-• Project Luma [No Sky, broken end portals/gateways]
+#### The following shaders have been tested and work with some minor issues:
 
-• Triliton V8 [reflections broken]
+• [Project Luma](https://www.curseforge.com/minecraft/customization/projectluma) (Nothing renders in The End)
 
-• Stereo's Default+ [No sky on 1.17]
+• [Triliton V8](https://www.curseforge.com/minecraft/customization/trilitons-shaders) (Reflections broken)
+
+• [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus) (Broken Clouds in 1.16, No sky on 1.17)
