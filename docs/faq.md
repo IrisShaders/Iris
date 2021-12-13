@@ -10,7 +10,7 @@ A. [#663](https://github.com/IrisShaders/Iris/issues/663)
 
 > Q. Why is (insert shader) not working?
 
-A. That shader likely isn't supported currently, but should be in the future.
+A. That shader likely isn't supported currently, but should be in the future. See the list of supported shaders [here](./supportedshaders.md)
 
 > Q. How do I disable my shaders?
 
