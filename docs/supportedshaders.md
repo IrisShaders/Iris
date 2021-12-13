@@ -30,11 +30,10 @@
 
 * [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
 
-* [Sora Shaders v1.12](https://www.curseforge.com/minecraft/customization/sora-shaders)
-
 #### The following shaders have been tested and work with some minor issues:
 
 * [Project Luma](https://www.curseforge.com/minecraft/customization/projectluma) (Nothing renders in The End)
+  * [Sora Shaders v1.12](https://www.curseforge.com/minecraft/customization/sora-shaders) (Number edit of LUMA. Works well though)
 
 * [Triliton V8](https://www.curseforge.com/minecraft/customization/trilitons-shaders) (Reflections broken)
 
