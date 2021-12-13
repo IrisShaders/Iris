@@ -147,7 +147,7 @@ public class IrisRenderSystem {
 		if (GL.getCapabilities().OpenGL42) {
 			return GlStateManager._getInteger(GL42C.GL_MAX_IMAGE_UNITS);
 		} else if (GL.getCapabilities().GL_EXT_shader_image_load_store) {
-			return EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT;
+			return GlStateManager._getInteger(EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT);
 		} else {
 			return 0;
 		}
