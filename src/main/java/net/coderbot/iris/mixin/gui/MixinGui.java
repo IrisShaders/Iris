@@ -2,11 +2,14 @@ package net.coderbot.iris.mixin.gui;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.screen.HudHideable;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.entity.Entity;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -43,7 +46,7 @@ public class MixinGui {
 
 		List<String> warningLines = new ArrayList<>();
 		warningLines.add("[Iris] Sodium isn't installed; you will have poor performance.");
-		warningLines.add("[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
+		warningLines.add("[Iris] Install Sodium if you want to run benchmarks or get higher FPS!");
 
 		for (int i = 0; i < warningLines.size(); ++i) {
 			String string = warningLines.get(i);
@@ -54,6 +57,15 @@ public class MixinGui {
 
 			GuiComponent.fill(poseStack, 1, y - 1, 2 + lineWidth + 1, y + lineHeight - 1, 0x9050504E);
 			font.draw(poseStack, string, 2.0F, y, 0xFFFF55);
+		}
+	}
+
+	@Inject(method = "renderVignette", at = @At("HEAD"), cancellable = true)
+	private void iris$disableVignetteRendering(Entity entity, CallbackInfo ci) {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null && !pipeline.shouldRenderVignette()) {
+			ci.cancel();
 		}
 	}
 }

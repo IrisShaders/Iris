@@ -1,8 +1,10 @@
 package net.coderbot.iris.mixin.rendertype;
 
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.layer.UseProgramRenderStateShard;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -138,12 +140,12 @@ public class MixinRenderType {
 		"armorCutoutNoCull",
 		"entitySolid",
 		"entityCutout",
-		"itemEntityTranslucentCull",
-		"entityTranslucentCull",
 		"entitySmoothCutout",
 		"entityDecal",
 		"entityNoOutline",
 		"entityShadow",
+		"entityTranslucentCull",
+		"itemEntityTranslucentCull",
 		"text",
 		"textSeeThrough",
 	}, cancellable = true)

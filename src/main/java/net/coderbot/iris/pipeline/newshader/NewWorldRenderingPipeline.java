@@ -7,11 +7,13 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.coderbot.iris.Iris;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -20,18 +22,18 @@ import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
-import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
-import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
-import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.fabricmc.loader.api.FabricLoader;
@@ -39,11 +41,8 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
@@ -82,6 +81,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShaderInstance entitiesSolid;
 	private final ShaderInstance entitiesCutout;
 	private final ShaderInstance entitiesEyes;
+	private final ShaderInstance handCutout;
+	private final ShaderInstance handTranslucent;
 	private final ShaderInstance shadowEntitiesCutout;
 	private final ShaderInstance shadowBeaconBeam;
 	private final ShaderInstance lightning;
@@ -111,9 +112,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final FinalPassRenderer finalPassRenderer;
-	private final NativeImageBackedSingleColorTexture normals;
-	private final NativeImageBackedSingleColorTexture specular;
-	private final AbstractTexture noise;
+	private final CustomTextureManager customTextureManager;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 
@@ -124,9 +123,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	boolean isBeforeTranslucent;
 
-	private final int waterId;
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
+	private final boolean shouldRenderUnderwaterOverlay;
+	private final boolean shouldRenderVignette;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
@@ -146,11 +146,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Files.createDirectories(debugOutDir);
 
 		this.shouldRenderClouds = programSet.getPackDirectives().areCloudsEnabled();
+		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
+		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
 		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programSet.getPackDirectives().getRenderTargetDirectives());
-		this.waterId = programSet.getPack().getIdMap().getBlockProperties().getOrDefault(new ResourceLocation("minecraft", "water"), -1);
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programSet.getPackDirectives().getShadowDirectives();
@@ -170,24 +171,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);
 
-		// Create some placeholder PBR textures for now
-		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
-		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
-
-		noise = programSet.getPack().getCustomNoiseTexture().flatMap(texture -> {
-			try {
-				AbstractTexture customNoiseTexture = new NativeImageBackedCustomTexture(texture);
-
-				return Optional.of(customNoiseTexture);
-			} catch (IOException e) {
-				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
-				return Optional.empty();
-			}
-		}).orElseGet(() -> {
-			final int noiseTextureResolution = programSet.getPackDirectives().getNoiseTextureResolution();
-
-			return new NativeImageBackedNoiseTexture(noiseTextureResolution);
-		});
+		customTextureManager = new CustomTextureManager(programSet.getPackDirectives(), programSet.getPack().getCustomTextureDataMap(), programSet.getPack().getCustomNoiseTexture());
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
@@ -196,8 +180,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null),
-					programSet.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets, normals, specular, noise,
-					programSet);
+					programSet.getPackDirectives(), renderTargets);
 			createShadowMapRenderer = () -> {};
 		};
 
@@ -213,14 +196,20 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		};
 
 		this.deferredRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getDeferred(), renderTargets,
-				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
+				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()),
+				programSet.getPackDirectives().getExplicitFlips("deferred_pre"));
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getComposite(), renderTargets,
-				noise, updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier);
-		this.finalPassRenderer = new FinalPassRenderer(programSet, renderTargets, noise, updateNotifier, flipper.snapshot(),
-				centerDepthSampler, shadowMapRendererSupplier);
+				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
+				programSet.getPackDirectives().getExplicitFlips("composite_pre"));
+		this.finalPassRenderer = new FinalPassRenderer(programSet, renderTargets, customTextureManager.getNoiseTexture(), updateNotifier, flipper.snapshot(),
+				centerDepthSampler, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
+				this.compositeRenderer.getFlippedAtLeastOnceFinal());
 
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
@@ -228,14 +217,29 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
-			IrisSamplers.addRenderTargetSamplers(builder, flipped, renderTargets, false);
-			IrisSamplers.addLevelSamplers(builder, normals, specular);
-			IrisSamplers.addWorldDepthSamplers(builder, renderTargets);
-			IrisSamplers.addNoiseSampler(builder, noise);
+			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			if (IrisSamplers.hasShadowSamplers(builder)) {
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
+			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
+			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
+
+			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 				createShadowMapRenderer.run();
-				IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
+		IntFunction<ProgramImages> createTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
+			if (IrisImages.hasShadowImages(builder)) {
+				createShadowMapRenderer.run();
+				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
 			}
 
 			return builder.build();
@@ -244,14 +248,28 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
-			IrisSamplers.addRenderTargetSamplers(builder, () -> flippedBeforeTerrain, renderTargets, false);
-			IrisSamplers.addLevelSamplers(builder, normals, specular);
-			IrisSamplers.addNoiseSampler(builder, noise);
+			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
+
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeTerrain, renderTargets, false);
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
+			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
 			// Only initialize these samplers if the shadow map renderer exists.
 			// Otherwise, this program shouldn't be used at all?
-			if (IrisSamplers.hasShadowSamplers(builder) && shadowMapRenderer != null) {
-				IrisSamplers.addShadowSamplers(builder, shadowMapRenderer);
+			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor) && shadowMapRenderer != null) {
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
+		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeTerrain, renderTargets);
+
+			if (IrisImages.hasShadowImages(builder) && shadowMapRenderer != null) {
+				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
 			}
 
 			return builder.build();
@@ -274,6 +292,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		Optional<ProgramSource> entitiesSource = first(programSet.getGbuffersEntities(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> entityEyesSource = first(programSet.getGbuffersEntityEyes(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> handSource = first(programSet.getGbuffersHand(), particleSource);
+		Optional<ProgramSource> handTranslucentSource = first(programSet.getGbuffersHandWater(), handSource);
 		Optional<ProgramSource> glintSource = first(programSet.getGbuffersGlint(), programSet.getGbuffersTextured());
 
 		Optional<ProgramSource> damagedBlockSource = first(programSet.getGbuffersDamagedBlock(), terrainSource);
@@ -303,6 +323,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
 			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
 			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
+			this.handCutout = createShader("gbuffers_hand_cutout", handSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
+			this.handTranslucent = createShader("gbuffers_hand_translucent", handTranslucentSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
 			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR, FogMode.LINEAR);
 			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.LINEAR);
 			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
@@ -327,7 +349,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			throw e;
 		}
 
-		BlockRenderingSettings.INSTANCE.setIdMap(programSet.getPack().getIdMap());
+		BlockRenderingSettings.INSTANCE.setBlockStateIds(
+				BlockMaterialMapping.createBlockStateIdMap(programSet.getPack().getIdMap().getBlockProperties()));
+
+		BlockRenderingSettings.INSTANCE.setEntityIds(programSet.getPack().getIdMap().getEntityIdMap());
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programSet.getPackDirectives().getAmbientOcclusionLevel());
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programSet.getPackDirectives().shouldUseSeparateAo());
@@ -359,8 +384,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			}
 		}
 
-		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(programSet, createTerrainSamplers,
-				createShadowTerrainSamplers, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
+				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
 				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
 				null);
 	}
@@ -391,19 +416,28 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
+		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(extendedShader, customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
+
 		// TODO: All samplers added here need to be mirrored in NewShaderTests. Possible way to bypass this?
-		IrisSamplers.addRenderTargetSamplers(extendedShader, flipped, renderTargets, false);
+		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
 
 		// TODO: IrisSamplers.addWorldSamplers(builder, normals, specular);
-		extendedShader.addDynamicSampler(normals::getId, "normals");
-		extendedShader.addDynamicSampler(specular::getId, "specular");
+		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getNormals()::getId, "normals");
+		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getSpecular()::getId, "specular");
 
-		IrisSamplers.addWorldDepthSamplers(extendedShader, renderTargets);
-		IrisSamplers.addNoiseSampler(extendedShader, noise);
+		IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
+		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
-		if (IrisSamplers.hasShadowSamplers(extendedShader)) {
+		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 			createShadowMapRenderer.run();
-			IrisSamplers.addShadowSamplers(extendedShader, shadowMapRenderer);
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+		}
+
+		if (IrisImages.hasShadowImages(extendedShader)) {
+			IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
 		}
 
 		return extendedShader;
@@ -427,15 +461,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// TODO: waterShadowEnabled?
 		// TODO: Audit these render targets...
 
-		extendedShader.addIrisSampler("normals", this.normals.getId());
-		extendedShader.addIrisSampler("specular", this.specular.getId());
+		extendedShader.addIrisSampler("normals", this.customTextureManager.getNormals().getId());
+		extendedShader.addIrisSampler("specular", this.customTextureManager.getSpecular().getId());
 		extendedShader.addIrisSampler("shadow", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("watershadow", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("shadowtex0", this.shadowMapRenderer.getDepthTextureId());
 		extendedShader.addIrisSampler("shadowtex1", this.shadowMapRenderer.getDepthTextureNoTranslucentsId());
 		extendedShader.addIrisSampler("depthtex0", this.renderTargets.getDepthTexture().getTextureId());
 		extendedShader.addIrisSampler("depthtex1", this.renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		extendedShader.addIrisSampler("noisetex", this.noise.getId());
+		extendedShader.addIrisSampler("noisetex", this.customTextureManager.getNoiseTexture().getAsInt());
 		extendedShader.addIrisSampler("shadowcolor", this.shadowMapRenderer.getColorTexture0Id());
 		extendedShader.addIrisSampler("shadowcolor0", this.shadowMapRenderer.getColorTexture0Id());
 		extendedShader.addIrisSampler("shadowcolor1", this.shadowMapRenderer.getColorTexture1Id());
@@ -452,6 +486,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			// gaux1 -> colortex4, gaux2 -> colortex5, gaux3 -> colortex6, gaux4 -> colortex7
 			extendedShader.addIrisSampler("gaux" + i, this.renderTargets.get(i + 3).getMainTexture());
 		}
+
+		IrisImages.addRenderTargetImages(extendedShader, () -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent, renderTargets);
+		IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
 
 		return extendedShader;
 	}
@@ -497,7 +534,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			passes = clearPasses;
 		}
 
-		Vec3 fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
+		Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
 
 		// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
 		//     will give you pink reflections and other weirdness if this is zero.
@@ -553,6 +590,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
+	public void beginHand() {
+		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
+		// all non-translucent content excluding the hand, as required.
+		baseline.bindAsReadBuffer();
+		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
+		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		GlStateManager._bindTexture(0);
+	}
+
+	@Override
 	public void beginTranslucents() {
 		if (destroyed) {
 			throw new IllegalStateException("Tried to use a destroyed world rendering pipeline");
@@ -560,7 +607,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		isBeforeTranslucent = false;
 
-		// We need to copy the current depth texture so that depthtex1 and depthtex2 can contain the depth values for
+		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
@@ -602,6 +649,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldRenderClouds() {
 		return shouldRenderClouds;
+	}
+
+	@Override
+	public boolean shouldRenderUnderwaterOverlay() {
+		return shouldRenderUnderwaterOverlay;
+	}
+
+	@Override
+	public boolean shouldRenderVignette() {
+		return shouldRenderVignette;
 	}
 
 	@Override
@@ -677,6 +734,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public ShaderInstance getEntitiesEyes() {
 		return entitiesEyes;
+	}
+
+	@Override
+	public ShaderInstance getHandCutout() {
+		return handCutout;
+	}
+
+	@Override
+	public ShaderInstance getHandTranslucent() {
+		return handTranslucent;
 	}
 
 	@Override
@@ -801,9 +868,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		compositeRenderer.destroy();
-		normals.close();
-		specular.close();
-		noise.close();
+		customTextureManager.destroy();
 
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
@@ -821,12 +886,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public float getSunPathRotation() {
-		return sunPathRotation;
+	public FrameUpdateNotifier getFrameUpdateNotifier() {
+		return updateNotifier;
 	}
 
 	@Override
-	public FrameUpdateNotifier getUpdateNotifier() {
-		return updateNotifier;
+	public float getSunPathRotation() {
+		return sunPathRotation;
 	}
 }

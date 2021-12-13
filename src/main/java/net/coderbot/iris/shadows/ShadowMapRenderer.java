@@ -13,5 +13,6 @@ public interface ShadowMapRenderer {
 	// TODO: Support more shadow color textures as well as support there being no shadow color textures.
 	int getColorTexture0Id();
 	int getColorTexture1Id();
+	ShadowRenderTargets getRenderTargets();
 	void destroy();
 }

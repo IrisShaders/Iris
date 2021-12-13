@@ -6,15 +6,16 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.Options;
+import net.minecraft.client.renderer.*;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -58,7 +59,7 @@ public class MixinLevelRenderer {
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
 	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
 	// all pixels.
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER))
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER, remap = false))
 	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
 	                                   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									   Matrix4f projection, CallbackInfo callback) {
@@ -88,6 +89,7 @@ public class MixinLevelRenderer {
 	// render their waypoint beams.
 	@Inject(method = RENDER, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
 	private void iris$endLevelRender(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
+		HandRenderer.INSTANCE.renderTranslucent(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeLevelRendering();
 		pipeline.setPhase(WorldRenderingPhase.NOT_RENDERING_WORLD);
@@ -122,7 +124,7 @@ public class MixinLevelRenderer {
 	private void iris$renderSky$drawHorizon(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
 		RenderSystem.depthMask(false);
 
-		Vec3 fogColor = CapturedRenderingState.INSTANCE.getFogColor();
+		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
 		RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z, 1.0F);
 
 		horizonRenderer.renderHorizon(poseStack.last().pose().copy(), projectionMatrix.copy(), GameRenderer.getPositionShader());
@@ -219,6 +221,8 @@ public class MixinLevelRenderer {
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 										LightTexture lightTexture, Matrix4f projection,
 										CallbackInfo ci) {
+		pipeline.beginHand();
+		HandRenderer.INSTANCE.renderSolid(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}

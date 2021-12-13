@@ -1,5 +1,8 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
+import me.jellysquid.mods.sodium.client.gl.shader.ShaderParser;
+import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -7,9 +10,14 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TriforceSodiumPatcher {
-	public static String patch(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs) {
+	public static String patch(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, ChunkVertexType vertexType) {
 		if (source.contains("moj_import")) {
 			throw new IllegalStateException("Iris shader programs may not use moj_import directives.");
 		}
@@ -76,20 +84,16 @@ public class TriforceSodiumPatcher {
 		}
 
 		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasTex()) {
-				transformations.define("gl_MultiTexCoord0", "vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float u_TextureScale;");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 a_TexCoord;");
+				transformations.define("gl_MultiTexCoord0", "vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
 			} else {
 				transformations.define("gl_MultiTexCoord0", "vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 
 			if (inputs.hasLight()) {
-				new BuiltinUniformReplacementTransformer("a_LightCoord").apply(transformations);
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 a_LightCoord;");
+				new BuiltinUniformReplacementTransformer("_vert_tex_light_coord").apply(transformations);
 			} else {
 				transformations.define("gl_MultiTexCoord1", "vec4(0.0, 0.0, 0.0, 1.0)");
 			}
@@ -102,10 +106,9 @@ public class TriforceSodiumPatcher {
 
 		if (inputs.hasColor()) {
 			// TODO: Handle the fragment shader here
-			transformations.define("gl_Color", "a_Color");
+			transformations.define("gl_Color", "_vert_color");
 
 			if (type == ShaderType.VERTEX) {
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 a_Color;");
 			}
 		} else {
 			transformations.define("gl_Color", "vec4(1.0)");
@@ -124,31 +127,41 @@ public class TriforceSodiumPatcher {
 		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_NormalMatrix;");
 
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewProjectionMatrix;");
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix u_ModelViewMatrix");
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix u_ModelViewProjectionMatrix");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (u_ProjectionMatrix * u_ModelViewMatrix)");
 
 		if (type == ShaderType.VERTEX) {
 			// TODO: this breaks Vaporwave-Shaderpack since it expects that vertex positions will be aligned to chunks.
-			transformations.define("gl_Vertex", "vec4(getVertexPosition(), 1.0)");
+			transformations.define("gl_Vertex", "getVertexPosition()");
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-					"struct DrawParameters {\n" +
-					"    vec4 Offset;\n" +
-					"};\n" +
-					"layout(std140) uniform ubo_DrawParameters {\n" +
-					"    DrawParameters Chunks[256];\n" +
-					"};\n" +
-					"in vec4 a_Pos; // The position of the vertex around the model origin\n" +
-					"uniform float u_ModelScale;\n" +
-					"uniform float u_ModelOffset;\n" +
-					"uniform vec3 u_CameraTranslation;");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"));
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_matrices.glsl>"));
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define USE_VERTEX_COMPRESSION");
+			transformations.define("VERT_POS_SCALE", String.valueOf(vertexType.getPositionScale()));
+			transformations.define("VERT_POS_OFFSET", String.valueOf(vertexType.getPositionOffset()));
+			transformations.define("VERT_TEX_SCALE", String.valueOf(vertexType.getTextureScale()));
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec3 getVertexPosition() { vec3 vertexPosition = a_Pos.xyz * u_ModelScale + u_ModelOffset; vec3 chunkOffset = Chunks[int(a_Pos.w)].Offset.xyz; return chunkOffset + vertexPosition + u_CameraTranslation; }");
+			if (transformations.contains("irisMain")) {
+				throw new IllegalStateException("Shader already contains \"irisMain\"???");
+			}
+
+			// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
+			// end.
+			transformations.replaceExact("main", "irisMain");
+			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
+					"   _vert_init();\n" +
+					"\n" +
+					"	irisMain();\n" +
+					"}");
+
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(_draw_translation + _vert_position, 1.0); }");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+		} else {
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
 		}
 
 		if (type == ShaderType.VERTEX) {
@@ -188,11 +201,6 @@ public class TriforceSodiumPatcher {
 		// Just being careful
 		transformations.define("ftransform", "iris_ftransform");
 
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
-
 		return transformations.toString();
 	}
 
@@ -223,5 +231,20 @@ public class TriforceSodiumPatcher {
 		}
 
 		transformations.setPrefix(beforeVersion + "#version " + actualVersion + "\n");
+	}
+
+	private static String parseSodiumImport(String shader) {
+		Pattern IMPORT_PATTERN = Pattern.compile("#import <(?<namespace>.*):(?<path>.*)>");
+			Matcher matcher = IMPORT_PATTERN.matcher(shader);
+
+			if (!matcher.matches()) {
+				throw new IllegalArgumentException("Malformed import statement (expected format: " + IMPORT_PATTERN + ")");
+			}
+
+			String namespace = matcher.group("namespace");
+			String path = matcher.group("path");
+
+			ResourceLocation identifier = new ResourceLocation(namespace, path);
+			return ShaderLoader.getShaderSource(identifier);
 	}
 }

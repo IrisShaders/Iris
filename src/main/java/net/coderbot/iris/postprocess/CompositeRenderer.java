@@ -4,30 +4,29 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.newshader.TriforceCompositePatcher;
-import net.coderbot.iris.pipeline.newshader.TriforcePatcher;
-import net.coderbot.iris.rendertarget.*;
+import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
@@ -35,37 +34,50 @@ import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.FogUniforms117;
+import net.coderbot.iris.uniforms.IrisInternalUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+
+import java.util.function.IntSupplier;
 
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
 
 	private final ImmutableList<Pass> passes;
-	private final AbstractTexture noiseTexture;
+	private final IntSupplier noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
+	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
+	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 
 	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, RenderTargets renderTargets,
-							 AbstractTexture noiseTexture, FrameUpdateNotifier updateNotifier,
+							 IntSupplier noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
-							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
+							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier,
+							 Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips) {
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.renderTargets = renderTargets;
+		this.customTextureIds = customTextureIds;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
 				renderTargetDirectives.getRenderTargetSettings();
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
+		final ImmutableSet.Builder<Integer> flippedAtLeastOnce = new ImmutableSet.Builder<>();
+
+		explicitPreFlips.forEach((buffer, shouldFlip) -> {
+			if (shouldFlip) {
+				bufferFlipper.flip(buffer);
+				// NB: Flipping deferred_pre or composite_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
+			}
+		});
 
 		for (ProgramSource source : sources) {
 			if (source == null || !source.isValid()) {
@@ -76,8 +88,9 @@ public class CompositeRenderer {
 			ProgramDirectives directives = source.getDirectives();
 
 			ImmutableSet<Integer> flipped = bufferFlipper.snapshot();
+			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
-			pass.program = createProgram(source, flipped, shadowMapRendererSupplier);
+			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowMapRendererSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
@@ -86,23 +99,45 @@ public class CompositeRenderer {
 			pass.framebuffer = framebuffer;
 			pass.viewportScale = directives.getViewportScale();
 			pass.mipmappedBuffers = directives.getMipmappedBuffers();
+			pass.flippedAtLeastOnce = flippedAtLeastOnceSnapshot;
 
 			passes.add(pass);
 
+			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
+
 			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
+				// compare with boxed Boolean objects to avoid NPEs
+				if (explicitFlips.get(buffer) == Boolean.FALSE) {
+					continue;
+				}
+
 				bufferFlipper.flip(buffer);
+				flippedAtLeastOnce.add(buffer);
 			}
+
+			explicitFlips.forEach((buffer, shouldFlip) -> {
+				if (shouldFlip) {
+					bufferFlipper.flip(buffer);
+					flippedAtLeastOnce.add(buffer);
+				}
+			});
 		}
 
 		this.passes = passes.build();
+		this.flippedAtLeastOnceFinal = flippedAtLeastOnce.build();
 
-		GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+	}
+
+	public ImmutableSet<Integer> getFlippedAtLeastOnceFinal() {
+		return this.flippedAtLeastOnceFinal;
 	}
 
 	private static final class Pass {
 		Program program;
 		GlFramebuffer framebuffer;
+		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
 		float viewportScale;
@@ -174,12 +209,12 @@ public class CompositeRenderer {
 		//
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
-		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
-		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
+		IrisRenderSystem.generateMipmaps(GL20C.GL_TEXTURE_2D);
+		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
-	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped,
+	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 														   Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
 		String vertex = TriforceCompositePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
 
@@ -200,15 +235,19 @@ public class CompositeRenderer {
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
+		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
+
+		IrisInternalUniforms.addFogUniforms(builder);
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, FogMode.OFF);
-		FogUniforms117.addFogUniforms(builder);
+		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 
-		IrisSamplers.addRenderTargetSamplers(builder, () -> flipped, renderTargets, true);
-		IrisSamplers.addNoiseSampler(builder, noiseTexture);
-		IrisSamplers.addCompositeSamplers(builder, renderTargets);
+		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
+		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
-		if (IrisSamplers.hasShadowSamplers(builder)) {
-			IrisSamplers.addShadowSamplers(builder, shadowMapRendererSupplier.get());
+		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRendererSupplier.get());
+			IrisImages.addShadowColorImages(builder, shadowMapRendererSupplier.get());
 		}
 
 		// TODO: Don't duplicate this with FinalPassRenderer

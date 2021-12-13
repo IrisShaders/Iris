@@ -1,15 +1,16 @@
 package net.coderbot.iris.mixin.entity_render_context;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.layer.BlockEntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
-import net.coderbot.iris.shaderpack.IdMap;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,9 +37,9 @@ public class MixinBlockEntityRenderDispatcher {
 			return;
 		}
 
-		IdMap idMap = BlockRenderingSettings.INSTANCE.getIdMap();
+		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
 
-		if (idMap == null) {
+		if (blockStateIds == null) {
 			return;
 		}
 
@@ -47,7 +48,7 @@ public class MixinBlockEntityRenderDispatcher {
 		// - The block entity has a world
 		// - The block entity thinks that it's supported by a valid block
 
-		int intId = idMap.getBlockProperties().getOrDefault(blockEntity.getBlockState(), -1);
+		int intId = blockStateIds.getOrDefault(blockEntity.getBlockState(), -1);
 		RenderStateShard stateShard = BlockEntityRenderStateShard.forId(intId);
 
 		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->

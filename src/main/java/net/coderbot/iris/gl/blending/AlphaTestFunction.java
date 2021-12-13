@@ -22,6 +22,29 @@ public enum AlphaTestFunction {
 		this.expression = expression;
 	}
 
+	public static Optional<AlphaTestFunction> fromGlId(int glId) {
+		switch(glId) {
+			case GL11.GL_NEVER:
+				return Optional.of(NEVER);
+			case GL11.GL_LESS:
+				return Optional.of(LESS);
+			case GL11.GL_EQUAL:
+				return Optional.of(EQUAL);
+			case GL11.GL_LEQUAL:
+				return Optional.of(LEQUAL);
+			case GL11.GL_GREATER:
+				return Optional.of(GREATER);
+			case GL11.GL_NOTEQUAL:
+				return Optional.of(NOTEQUAL);
+			case GL11.GL_GEQUAL:
+				return Optional.of(GEQUAL);
+			case GL11.GL_ALWAYS:
+				return Optional.of(ALWAYS);
+			default:
+				return Optional.empty();
+		}
+	}
+
 	public static Optional<AlphaTestFunction> fromString(String name) {
 		if ("GL_ALWAYS".equals(name)) {
 			// shaders.properties states that GL_ALWAYS is the name to use, but I haven't verified that this actually

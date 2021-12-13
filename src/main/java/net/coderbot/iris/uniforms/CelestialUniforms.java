@@ -4,10 +4,11 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import com.mojang.math.Vector4f;
 import java.util.Objects;
 
+import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 
@@ -68,7 +69,7 @@ public final class CelestialUniforms {
 	}
 
 	private Vector4f getCelestialPositionInWorldSpace(float y) {
-		Vector4f position = new Vector4f(0.0F, y, 0.0F, 0.0F);
+		com.mojang.math.Vector4f position = new com.mojang.math.Vector4f(0.0F, y, 0.0F, 0.0F);
 
 		// TODO: Deduplicate / remove this function.
 		Matrix4f celestial = new Matrix4f();
@@ -82,11 +83,11 @@ public final class CelestialUniforms {
 
 		position.transform(celestial);
 
-		return position;
+		return JomlConversions.toJoml(position);
 	}
 
 	private Vector4f getCelestialPosition(float y) {
-		Vector4f position = new Vector4f(0.0F, y, 0.0F, 0.0F);
+		com.mojang.math.Vector4f position = new com.mojang.math.Vector4f(0.0F, y, 0.0F, 0.0F);
 
 		Matrix4f celestial = CapturedRenderingState.INSTANCE.getGbufferModelView().copy();
 
@@ -98,11 +99,11 @@ public final class CelestialUniforms {
 
 		position.transform(celestial);
 
-		return position;
+		return JomlConversions.toJoml(position);
 	}
 
 	private static Vector4f getUpPosition() {
-		Vector4f upVector = new Vector4f(0.0F, 100.0F, 0.0F, 0.0F);
+		com.mojang.math.Vector4f upVector = new com.mojang.math.Vector4f(0.0F, 100.0F, 0.0F, 0.0F);
 
 		// Get the current GBuffer model view matrix, since that is the basis of the celestial model view matrix
 		Matrix4f preCelestial = CapturedRenderingState.INSTANCE.getGbufferModelView().copy();
@@ -114,7 +115,7 @@ public final class CelestialUniforms {
 		// Use this matrix to transform the vector.
 		upVector.transform(preCelestial);
 
-		return upVector;
+		return JomlConversions.toJoml(upVector);
 	}
 
 	public static boolean isDay() {

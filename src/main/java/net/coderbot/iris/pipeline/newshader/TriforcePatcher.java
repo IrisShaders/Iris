@@ -67,6 +67,7 @@ public class TriforcePatcher {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 		transformations.define("gl_FogFragCoord", "iris_FogFragCoord");
 
+		// TODO: This doesn't handle geometry shaders... How do we do that?
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out float iris_FogFragCoord;");
 		} else if (type == ShaderType.FRAGMENT) {
@@ -104,13 +105,11 @@ public class TriforcePatcher {
 			}
 		}
 
-		// TODO: Patching should take in mind cases where there are not color or normal vertex attributes
-
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec4 iris_ColorModulator;");
 
 		if (inputs.hasColor()) {
-			// TODO: Handle the fragment shader here
-			transformations.define("gl_Color", "(vaColor * iris_ColorModulator)");
+			// TODO: Handle the fragment / geometry shader here
+			transformations.define("gl_Color", "(iris_Color * iris_ColorModulator)");
 
 			if (type == ShaderType.VERTEX) {
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 vaColor;");
@@ -255,11 +254,6 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
 
 		//System.out.println(transformations.toString());
-
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
 		return transformations.toString();
 	}

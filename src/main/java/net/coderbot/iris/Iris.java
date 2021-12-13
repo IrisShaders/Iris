@@ -14,6 +14,7 @@ import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
@@ -24,6 +25,7 @@ import net.minecraft.resources.ResourceKey;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -36,9 +38,11 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 	// The recommended version of Sodium for use with Iris
-	private static final String SODIUM_VERSION = "0.3.2+IRIS2";
+	private static final String SODIUM_VERSION = "0.3.3";
+	public static final String SODIUM_DOWNLOAD_LINK = "https://www.curseforge.com/minecraft/mc-mods/sodium/files/3535040";
 
 	private static Path shaderpacksDirectory;
+	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
@@ -46,6 +50,7 @@ public class Iris implements ClientModInitializer {
 	private static boolean sodiumInvalid;
 	private static boolean sodiumInstalled;
 	private static boolean physicsModInstalled;
+	private static boolean initialized;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
@@ -63,9 +68,8 @@ public class Iris implements ClientModInitializer {
 					sodiumInstalled = true;
 					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
-					// A lot of people are reporting visual bugs with Iris + Sodium. This makes it so that if we don't have
-					// the right fork of Sodium, it will show the user a nice warning, and prevent them from playing the
-					// game with a wrong version of Sodium.
+					// This makes it so that if we don't have the right version of Sodium, it will show the user a
+					// nice warning, and prevent them from playing the game with a wrong version of Sodium.
 					if (!versionString.startsWith(SODIUM_VERSION)) {
 						sodiumInvalid = true;
 					}
@@ -80,7 +84,9 @@ public class Iris implements ClientModInitializer {
 		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
 
 		try {
-			Files.createDirectories(getShaderpacksDirectory());
+			if (!Files.exists(getShaderpacksDirectory())) {
+				Files.createDirectories(getShaderpacksDirectory());
+			}
 		} catch (IOException e) {
 			logger.warn("Failed to create the shaderpacks directory!");
 			logger.catching(Level.WARN, e);
@@ -95,14 +101,22 @@ public class Iris implements ClientModInitializer {
 			logger.catching(Level.ERROR, e);
 		}
 
-
-		loadShaderpack();
-
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
 		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 
-		pipelineManager = new PipelineManager(Iris::createPipeline);
+		initialized = true;
+	}
+
+	public static void onRenderSystemInit() {
+		if (!initialized) {
+			Iris.logger.warn("Iris::onRenderSystemInit was called, but Iris::onInitializeClient was not called." +
+					" Is Not Enough Crashes doing something weird? Trying to avoid a crash but this is an odd state.");
+			return;
+		}
+
+		// Only load the shader pack when we can access OpenGL
+		loadShaderpack();
 	}
 
 	public static void handleKeybinds(Minecraft minecraft) {
@@ -147,6 +161,15 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static void loadShaderpack() {
+		if (irisConfig == null) {
+			if (!initialized) {
+				throw new IllegalStateException("Iris::loadShaderpack was called, but Iris::onInitializeClient wasn't" +
+						" called yet. How did this happen?");
+			} else {
+				throw new NullPointerException("Iris.irisConfig was null unexpectedly");
+			}
+		}
+
 		if (!irisConfig.areShadersEnabled()) {
 			logger.info("Shaders are disabled because enableShaders is set to false in iris.properties");
 
@@ -359,7 +382,7 @@ public class Iris implements ClientModInitializer {
 	private static void destroyEverything() {
 		currentPack = null;
 
-		pipelineManager.destroyPipeline();
+		getPipelineManager().destroyPipeline();
 
 		// Close the zip filesystem that the shaderpack was loaded from
 		//
@@ -429,10 +452,16 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
+	@NotNull
 	public static PipelineManager getPipelineManager() {
+		if (pipelineManager == null) {
+			pipelineManager = new PipelineManager(Iris::createPipeline);
+		}
+
 		return pipelineManager;
 	}
 
+	@NotNull
 	public static Optional<ShaderPack> getCurrentPack() {
 		return Optional.ofNullable(currentPack);
 	}
@@ -480,11 +509,23 @@ public class Iris implements ClientModInitializer {
 		return physicsModInstalled;
 	}
 
+	public static boolean isPackActive() {
+		return !(getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline);
+	}
+
 	public static Path getShaderpacksDirectory() {
 		if (shaderpacksDirectory == null) {
 			shaderpacksDirectory = FabricLoader.getInstance().getGameDir().resolve("shaderpacks");
 		}
 
 		return shaderpacksDirectory;
+	}
+
+	public static ShaderpackDirectoryManager getShaderpacksDirectoryManager() {
+		if (shaderpacksDirectoryManager == null) {
+			shaderpacksDirectoryManager = new ShaderpackDirectoryManager(shaderpacksDirectory);
+		}
+
+		return shaderpacksDirectoryManager;
 	}
 }

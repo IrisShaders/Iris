@@ -21,27 +21,6 @@ import java.util.Objects;
 
 @Mixin(ShaderInstance.class)
 public class MixinShaderInstance {
-	@Redirect(method = {"apply", "updateLocations"}, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/shaders/Uniform;glGetUniformLocation(ILjava/lang/CharSequence;)I"))
-	private int iris$redirectGetUniformLocation(int programId, CharSequence name) {
-		int location = Uniform.glGetUniformLocation(programId, name);
-
-		if (location == -1 && name.equals("Sampler0")) {
-			location = Uniform.glGetUniformLocation(programId, "tex");
-
-			if (location == -1) {
-				location = Uniform.glGetUniformLocation(programId, "gtexture");
-
-				if (location == -1) {
-					location = Uniform.glGetUniformLocation(programId, "texture");
-
-					// TODO: If a shader samples from *any* sampler with a name that isn't known, then it should act like sampler 0.
-				}
-			}
-		}
-
-		return location;
-	}
-
 	@Unique
 	private String lastSamplerName;
 
