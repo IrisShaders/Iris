@@ -56,7 +56,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.dynamicSamplers = new HashMap<>();
 		this.parent = parent;
 		this.imageBuilder = ProgramImages.builder(programId);
-		this.currentImages = imageBuilder.build();
+		this.currentImages = null;
 
 		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
 		this.intensitySwizzle = getName().contains("intensity");
@@ -84,6 +84,12 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 		super.apply();
 		uniforms.update();
+
+		if (currentImages == null) {
+			// rebuild if needed
+			currentImages = imageBuilder.build();
+		}
+
 		currentImages.update();
 
 		if (this.blendModeOverride != null) {
@@ -176,6 +182,8 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	@Override
 	public void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name) {
 		imageBuilder.addTextureImage(textureID, internalFormat, name);
-		this.currentImages = imageBuilder.build();
+
+		// mark for rebuild if needed
+		this.currentImages = null;
 	}
 }
