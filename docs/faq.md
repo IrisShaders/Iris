@@ -1,9 +1,5 @@
 # FAQ
 
-> Q. How do I download Iris?
-
-A. Please visit [the official Iris website](https://irisshaders.net/)
-
 > Q. Why doesn't the Iris Installer work?
 
 A. You need java, please get it from: [Adoptium.net](https://adoptium.net/?variant=openjdk17&jvmVariant=hotspot)
@@ -34,41 +30,7 @@ A. There are a few possible reasons:
 
 > Q. What shaders have been tested and are working with Iris?
 
-A. The following shaders have been tested and work well:
-
-• [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
-
-• [Prismarine Shaders](https://www.curseforge.com/minecraft/customization/prismarine-shader)
-
-• [BSL Shaders](https://bitslablab.com/bslshaders/)
-
-• [Continuum 1.3](https://continuum.graphics/downloads)
-
-• [Continuum 2.0.4](https://continuum.graphics/downloads)
-
-• [SEUS V11](https://www.sonicether.com/seus/)
-
-• [SEUS Renewed](https://www.sonicether.com/seus/)
-
-• [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
-
-• [Sildur's Vibrant Shaders](https://sildurs-shaders.github.io/)
-
-• [Skylec v4.0](https://www.curseforge.com/minecraft/customization/skylec-shader)
-
-• [Tea V1.5.3](https://www.curseforge.com/minecraft/customization/beyondbelief-vanilla-reborn)
-
-• [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
-
-• [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
-
-The following shaders have been tested and work with some minor issues:
-
-• Project Luma [No Sky, broken end portals/gateways]
-
-• Triliton V8 [reflections broken]
-
-• Stereo's Default+ [No sky on 1.17]
+A. See [this](./supportedshaders.md) document for the list
 
 > Q. Will (insert feature) part of OptiFine be added to iris?
 
