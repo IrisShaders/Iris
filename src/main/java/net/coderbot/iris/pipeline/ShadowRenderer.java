@@ -60,7 +60,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -412,10 +411,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.viewport(0, 0, resolution, resolution);
 
 		// Set up our orthographic projection matrix and load it into the legacy matrix stack
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.pushMatrix();
-		IrisRenderSystem.loadMatrixf(orthoMatrix);
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+		IrisRenderSystem.setupProjectionMatrix(orthoMatrix);
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
@@ -432,9 +428,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.enableCull();
 
 		// Make sure to unload the projection matrix
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.popMatrix();
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+		IrisRenderSystem.restoreProjectionMatrix();
 
 		// Restore the old viewport
 		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());

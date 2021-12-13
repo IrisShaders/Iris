@@ -1,8 +1,12 @@
 package net.coderbot.iris.gl;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
@@ -130,20 +134,40 @@ public class IrisRenderSystem {
 		GL30C.glDetachShader(program, shader);
 	}
 
-	public static void bindImageTexture(boolean useExt, int unit, int texture, int level, boolean layered, int layer, int access, int format) {
+	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		if (useExt) {
-			EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
+			if (GL.getCapabilities().OpenGL42) {
+				GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
+			} else {
+				EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
+			}
+	}
+	
+	public static int getMaxImageUnits() {
+		if (GL.getCapabilities().OpenGL42) {
+			return GlStateManager._getInteger(GL42C.GL_MAX_IMAGE_UNITS);
+		} else if (GL.getCapabilities().GL_EXT_shader_image_load_store) {
+			return EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT;
 		} else {
-			GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
+			return 0;
 		}
 	}
 
 	// These functions are deprecated and unavailable in the core profile.
 
 	@Deprecated
-	public static void loadMatrixf(float[] matrix) {
+	public static void setupProjectionMatrix(float[] matrix) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-        GL21.glLoadMatrixf(matrix);
+		RenderSystem.matrixMode(GL11.GL_PROJECTION);
+		RenderSystem.pushMatrix();
+		GL20.glLoadMatrixf(matrix);
+		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+	}
+
+	@Deprecated
+	public static void restoreProjectionMatrix() {
+		RenderSystem.matrixMode(GL11.GL_PROJECTION);
+		RenderSystem.popMatrix();
+		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 	}
 }
