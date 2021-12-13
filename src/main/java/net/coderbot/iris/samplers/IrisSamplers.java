@@ -75,8 +75,10 @@ public class IrisSamplers {
 
 	public static boolean hasShadowSamplers(SamplerHolder samplers) {
 		// TODO: Keep this up to date with the actual definitions.
+		// TODO: Don't query image presence using the sampler interface even though the current underlying implementation
+		//       is the same.
 		ImmutableList<String> shadowSamplers = ImmutableList.of("shadowtex0", "shadowtex1", "shadow", "watershadow",
-				"shadowcolor", "shadowcolor0", "shadowcolor1");
+				"shadowcolor", "shadowcolor0", "shadowcolor1", "shadowcolorimg0", "shadowcolorimg1");
 
 		for (String samplerName : shadowSamplers) {
 			if (samplers.hasSampler(samplerName)) {

@@ -1,7 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL21;
 
 import java.nio.FloatBuffer;
 import java.util.Arrays;
@@ -29,7 +29,7 @@ public class MatrixFromFloatArrayUniform extends Uniform {
 			buffer.put(cachedValue);
 			buffer.rewind();
 
-			GL21.glUniformMatrix4fv(location, false, buffer);
+			IrisRenderSystem.uniformMatrix4fv(location, false, buffer);
 		}
 	}
 }

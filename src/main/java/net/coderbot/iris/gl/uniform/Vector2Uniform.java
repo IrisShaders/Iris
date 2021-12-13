@@ -2,8 +2,8 @@ package net.coderbot.iris.gl.uniform;
 
 import java.util.function.Supplier;
 
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.vendored.joml.Vector2f;
-import org.lwjgl.opengl.GL20;
 
 public class Vector2Uniform extends Uniform {
 	private Vector2f cachedValue;
@@ -23,7 +23,7 @@ public class Vector2Uniform extends Uniform {
 
 		if (cachedValue == null || !newValue.equals(cachedValue)) {
 			cachedValue = newValue;
-			GL20.glUniform2f(this.location, newValue.x, newValue.y);
+			IrisRenderSystem.uniform2f(this.location, newValue.x, newValue.y);
 		}
 	}
 }

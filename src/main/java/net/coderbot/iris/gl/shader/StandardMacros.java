@@ -9,6 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.opengl.*;
 
 import net.minecraft.SharedConstants;
@@ -91,7 +93,7 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L705-L707">Optifine Doc for GLSL Version</a>
 	 */
 	public static String getGlVersion(int name) {
-		String info = GL20.glGetString(name);
+		String info = GlStateManager._getString(name);
 
 		Matcher matcher = SEMVER_PATTERN.matcher(Objects.requireNonNull(info));
 
@@ -141,12 +143,12 @@ public class StandardMacros {
 	 */
 	public static List<String> getGlExtensions() {
 		// In OpenGL Core, we must use a new way of retrieving extensions.
-		int numExtensions = GL30C.glGetInteger(GL30C.GL_NUM_EXTENSIONS);
+		int numExtensions = GlStateManager._getInteger(GL30C.GL_NUM_EXTENSIONS);
 
 		String[] extensions = new String[numExtensions];
 
 		for (int i = 0; i < numExtensions; i++) {
-			extensions[i] = GL30C.glGetStringi(GL30C.GL_EXTENSIONS, i);
+			extensions[i] = RenderSystem.getString(GL30C.GL_EXTENSIONS, i);
 		}
 
 		// TODO(21w10a): unified way of getting extensions on the core and compatibility profile?
@@ -179,7 +181,7 @@ public class StandardMacros {
 	 * @return graphics driver prefixed with "MC_GL_RENDERER_"
 	 */
 	public static String getRenderer() {
-		String renderer = Objects.requireNonNull(GL11.glGetString(GL11C.GL_RENDERER)).toLowerCase(Locale.ROOT);
+		String renderer = Objects.requireNonNull(GlUtil.getRenderer()).toLowerCase(Locale.ROOT);
 		if (renderer.startsWith("amd")) {
 			return "MC_GL_RENDERER_RADEON";
 		} else if (renderer.startsWith("ati")) {
@@ -212,7 +214,7 @@ public class StandardMacros {
 	 * @return the graphics card prefixed with "MC_GL_VENDOR_"
 	 */
 	public static String getVendor() {
-		String vendor = Objects.requireNonNull(GL11.glGetString(GL11C.GL_VENDOR)).toLowerCase(Locale.ROOT);
+		String vendor = Objects.requireNonNull(GlUtil.getVendor()).toLowerCase(Locale.ROOT);
 		if (vendor.startsWith("ati")) {
 			return "MC_GL_VENDOR_ATI";
 		} else if (vendor.startsWith("intel")) {
