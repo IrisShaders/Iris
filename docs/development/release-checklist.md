@@ -10,7 +10,7 @@ release sufficiently, follow these steps to publish that new release to the publ
     2. Insert a changelog from the relevant summary file to the Iris version being released
     3. Publish
     4. Repeat for each branch being released
-4. The action will proceed to run, generate and publish the artifacts necessary, for all release, to CurseForge, GitHub and Modrinth
+4. The action will generate and publish the relevant JAR file to CurseForge, GitHub and Modrinth.
 5. Once complete, download the build for each release. For each version:
     1. Put the JAR into a folder called `mods`
     2. Compress that folder into a ZIP file.
