@@ -2,19 +2,21 @@ package net.coderbot.iris.gl.program;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.shader.StandardMacros;
+import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 
 import java.util.function.IntSupplier;
 
-public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder {
+public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder, ImageHolder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
 	public static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
@@ -32,12 +34,14 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 
 	private final int program;
 	private final ProgramSamplers.Builder samplers;
+	private final ProgramImages.Builder images;
 
 	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
 		super(name, program);
 
 		this.program = program;
 		this.samplers = ProgramSamplers.builder(program, reservedTextureUnits);
+		this.images = ProgramImages.builder(program);
 	}
 
 	public void bindAttributeLocation(int index, String name) {
@@ -82,7 +86,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	}
 
 	public Program build() {
-		return new Program(program, super.buildUniforms(), this.samplers.build());
+		return new Program(program, super.buildUniforms(), this.samplers.build(), this.images.build());
 	}
 
 	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {
@@ -111,5 +115,10 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	@Override
 	public boolean addDynamicSampler(IntSupplier sampler, String... names) {
 		return samplers.addDynamicSampler(sampler, names);
+	}
+
+	@Override
+	public void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name) {
+		images.addTextureImage(textureID, internalFormat, name);
 	}
 }

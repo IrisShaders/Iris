@@ -16,6 +16,9 @@ public class ImageBinding {
 		this.textureID = textureID;
 		this.imageUnit = imageUnit;
 		this.internalFormat = internalFormat;
+
+		// We can assume that image bindings are supported here, as otherwise ImageLimits
+		// would report that zero image units are supported.
 		this.useExt = !GL.getCapabilities().OpenGL42;
 	}
 
