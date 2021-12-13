@@ -34,6 +34,10 @@ public class ProgramImages {
 		}
 	}
 
+	public int getActiveImages() {
+		return imageBindings.size();
+	}
+
 	public static Builder builder(int program) {
 		return new Builder(program);
 	}

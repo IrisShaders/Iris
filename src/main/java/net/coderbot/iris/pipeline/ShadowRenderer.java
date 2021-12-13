@@ -150,8 +150,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			this.blendModeOverride = shadow.getDirectives().getBlendModeOverride();
 
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
-			// TODO: Check for image load / store too once supported.
-			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+			// Also assume voxelization if image load / store is detected.
+			this.packHasVoxelization = shadow.getGeometrySource().isPresent() || shadowProgram.getActiveImages() > 0;
 			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
 		} else {
 			this.shadowProgram = null;

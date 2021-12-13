@@ -42,4 +42,8 @@ public final class Program extends GlResource {
 	public int getProgramId() {
 		return getGlId();
 	}
+
+	public int getActiveImages() {
+		return images.getActiveImages();
+	}
 }
