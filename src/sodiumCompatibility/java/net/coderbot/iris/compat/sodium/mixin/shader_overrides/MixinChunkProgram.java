@@ -1,8 +1,8 @@
 package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
 
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.texunits.TextureUnit;
-import org.lwjgl.opengl.GL20C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -34,7 +34,7 @@ public class MixinChunkProgram {
             return;
         }
 
-        GL20C.glUniform1i(location, value);
+        IrisRenderSystem.uniform1i(location, value);
     }
 
     @Redirect(method = "setup", remap = false,
@@ -44,7 +44,7 @@ public class MixinChunkProgram {
             return;
         }
 
-        GL20C.glUniform3f(location, v1, v2, v3);
+        IrisRenderSystem.uniform3f(location, v1, v2, v3);
     }
 
     @Redirect(method = "setup", remap = false,
@@ -54,7 +54,7 @@ public class MixinChunkProgram {
             return;
         }
 
-        GL20C.glUniform2f(location, v1, v2);
+        IrisRenderSystem.uniform2f(location, v1, v2);
     }
 
     @Redirect(method = "setup", remap = false,
@@ -66,6 +66,6 @@ public class MixinChunkProgram {
             return;
         }
 
-        GL20C.glUniformMatrix4fv(location, transpose, buffer);
+        IrisRenderSystem.uniformMatrix4fv(location, transpose, buffer);
     }
 }

@@ -1,5 +1,6 @@
 package net.coderbot.iris.gl.image;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL42C;
@@ -10,7 +11,7 @@ public class ImageLimits {
 
 	private ImageLimits() {
 		if (GL.getCapabilities().OpenGL42) {
-			this.maxImageUnits = GL42C.glGetInteger(GL42C.GL_MAX_IMAGE_UNITS);
+			this.maxImageUnits = GlStateManager._getInteger(GL42C.GL_MAX_IMAGE_UNITS);
 		} else if (GL.getCapabilities().GL_EXT_shader_image_load_store) {
 			this.maxImageUnits = EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT;
 		} else {

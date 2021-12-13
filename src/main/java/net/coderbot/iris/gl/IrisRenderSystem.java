@@ -2,8 +2,10 @@ package net.coderbot.iris.gl;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL42C;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -123,7 +125,21 @@ public class IrisRenderSystem {
 		GL30C.glVertexAttrib4f(index, v0, v1, v2, v3);
 	}
 
-	// These functions are deprecated and unavailable in OpenGL 3 core
+	public static void detachShader(int program, int shader) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glDetachShader(program, shader);
+	}
+
+	public static void bindImageTexture(boolean useExt, int unit, int texture, int level, boolean layered, int layer, int access, int format) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		if (useExt) {
+			EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
+		} else {
+			GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
+		}
+	}
+
+	// These functions are deprecated and unavailable in the core profile.
 
 	@Deprecated
 	public static void loadMatrixf(float[] matrix) {

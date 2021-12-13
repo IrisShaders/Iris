@@ -28,7 +28,7 @@ public class ProgramCreator {
 
         //Always detach shaders according to https://www.khronos.org/opengl/wiki/Shader_Compilation#Cleanup
         for (GlShader shader : shaders) {
-            GL20C.glDetachShader(program, shader.getHandle());
+            IrisRenderSystem.detachShader(program, shader.getHandle());
         }
 
 		String log = IrisRenderSystem.getProgramInfoLog(program);

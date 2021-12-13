@@ -1,6 +1,6 @@
 package net.coderbot.iris.gl.image;
 
-import org.lwjgl.opengl.EXTShaderImageLoadStore;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL42C;
 
@@ -23,10 +23,6 @@ public class ImageBinding {
 	}
 
 	public void update() {
-		if (useExt) {
-			EXTShaderImageLoadStore.glBindImageTextureEXT(imageUnit, textureID.getAsInt(), 0, false, 0, GL42C.GL_READ_WRITE, internalFormat);
-		} else {
-			GL42C.glBindImageTexture(imageUnit, textureID.getAsInt(), 0, false, 0, GL42C.GL_READ_WRITE, internalFormat);
-		}
+		IrisRenderSystem.bindImageTexture(useExt, imageUnit, textureID.getAsInt(), 0, false, 0, GL42C.GL_READ_WRITE, internalFormat);
 	}
 }
