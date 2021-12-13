@@ -86,15 +86,15 @@ public class TriforcePatcher {
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasTex()) {
-				transformations.define("gl_MultiTexCoord0", "vec4(vaUV0, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 vaUV0;");
+				transformations.define("gl_MultiTexCoord0", "vec4(iris_UV0, 0.0, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 iris_UV0;");
 			} else {
 				transformations.define("gl_MultiTexCoord0", "vec4(0.5, 0.5, 0.0, 1.0)");
 			}
 
 			if (inputs.hasLight()) {
-				transformations.define("gl_MultiTexCoord1", "vec4(vaUV2, 0.0, 1.0)");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 vaUV2;");
+				transformations.define("gl_MultiTexCoord1", "vec4(iris_UV2, 0.0, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 iris_UV2;");
 			} else {
 				transformations.define("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
 			}
@@ -112,7 +112,7 @@ public class TriforcePatcher {
 			transformations.define("gl_Color", "(iris_Color * iris_ColorModulator)");
 
 			if (type == ShaderType.VERTEX) {
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 vaColor;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 iris_Color;");
 			}
 		} else {
 			transformations.define("gl_Color", "iris_ColorModulator");
@@ -121,12 +121,12 @@ public class TriforcePatcher {
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasNormal()) {
 				if (!inputs.isNewLines()) {
-					transformations.define("gl_Normal", "vaNormal");
+					transformations.define("gl_Normal", "iris_Normal");
 				} else {
 					transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 				}
 
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 vaNormal;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 iris_Normal;");
 			} else {
 				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
@@ -167,7 +167,7 @@ public class TriforcePatcher {
 		if (type == ShaderType.VERTEX) {
 			if (inputs.isNewLines()) {
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec3 iris_vertex_offset = vec3(0.0);");
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(vaPosition + iris_vertex_offset, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(iris_Position + iris_vertex_offset, 1.0)");
 
 				if (transformations.contains("irisMain")) {
 					throw new IllegalStateException("Shader already contains \"irisMain\"???");
@@ -202,7 +202,7 @@ public class TriforcePatcher {
 							"}\n" +
 							"\n" +
 							"void main() {\n" +
-							"    iris_vertex_offset = vaNormal;\n" +
+							"    iris_vertex_offset = iris_Normal;\n" +
 							"    irisMain();\n" +
 							"    vec4 linePosEnd = gl_Position;\n" +
 							"    gl_Position = vec4(0.0);\n" +
@@ -214,10 +214,10 @@ public class TriforcePatcher {
 							"    iris_widen_lines(linePosStart, linePosEnd);\n" +
 							"}");
 			} else {
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(vaPosition, 1.0)");
+				transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_Vertex vec4(iris_Position, 1.0)");
 			}
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 vaPosition;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 iris_Position;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 

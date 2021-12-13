@@ -78,9 +78,9 @@ public class MixinShaderInstance {
 	}
 
 	@Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/shaders/Uniform;glBindAttribLocation(IILjava/lang/CharSequence;)V"))
-	public void redirectBindAttributeLocation(int i, int j, CharSequence charSequence) {
+	public void iris$redirectBindAttributeLocation(int i, int j, CharSequence charSequence) {
 		if (((Object) this) instanceof ExtendedShader && Arrays.asList("Position", "Color", "Normal", "UV0", "UV1", "UV2").contains(charSequence)) {
-			Uniform.glBindAttribLocation(i, j, "va" + charSequence);
+			Uniform.glBindAttribLocation(i, j, "iris_" + charSequence);
 		} else {
 			Uniform.glBindAttribLocation(i, j, charSequence);
 		}
