@@ -4,13 +4,16 @@ Once you have written a changelog for a new release, have all branches merged pr
 release sufficiently, follow these steps to publish that new release to the public.
 
 1. Change the Iris version in `gradle.properties` on the `trunk`, `1.17`, and `1.18` branch.
-2. Change the Sodium version in `gradle.properties` on the `1.16.x/iris`, the `1.17.x/iris`, and the `1.18.x/iris`
-   branch, if needed. This is needed if you update the Sodium fork with new code changes at all without a corresponding
-   update to upstream Sodium.
-3. Push those version bump commits to GitHub.
-4. Go to the Actions tab on the Iris repository, and click the build-release workflow. Run the workflow manually on the
-   `trunk`, `1.17`, and `1.18` branch.
-5. Once complete, download the build-artifacts for each branch. For each version:
+2. Push those version bump commits to GitHub.
+3. Go to the Releases tab on the Iris repository, click `Draft a new release`.
+    1. Create a tag relevant to the release version and branch
+    2. Target the relevant branch
+    3. Create a Release title, relevant to the branch and release version
+    4. Paste in the relevant changelog from [here](docs/changelogs)
+    5. Release
+    6. Repeat for other versions
+4. Once the action has run, builds are now posted across CurseForge, GitHub and Modrinth
+5. Once Published, download the build-artifacts for each branch. For each version:
     1. Take out the iris-and-sodium JAR that does not contain a -dev or -sources suffix.
     2. Upload that JAR to Modrinth, CurseForge, and GitHub Releases. Remember to attach a proper changelog.
     3. Place that JAR into a previously-empty folder named `mods`.
