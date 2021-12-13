@@ -179,9 +179,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
-					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets,
-					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
-					programs, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
+					programs.getPackDirectives(), programs);
 			createShadowMapRenderer = () -> {};
 		};
 
