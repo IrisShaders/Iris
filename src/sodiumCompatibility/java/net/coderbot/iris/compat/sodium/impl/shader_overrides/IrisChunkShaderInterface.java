@@ -7,6 +7,7 @@ import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
@@ -30,6 +31,7 @@ public class IrisChunkShaderInterface {
 	private final IrisShaderFogComponent fogShaderComponent;
 	private final ProgramUniforms irisProgramUniforms;
 	private final ProgramSamplers irisProgramSamplers;
+	private final ProgramImages irisProgramImages;
 
 	public IrisChunkShaderInterface(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
 									boolean isShadowPass, BlendModeOverride blendModeOverride) {
@@ -45,6 +47,7 @@ public class IrisChunkShaderInterface {
 		this.irisProgramUniforms = pipeline.initUniforms(handle);
 		this.irisProgramSamplers
 				= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
+		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
 	}
 
 	public void setup() {
@@ -61,6 +64,7 @@ public class IrisChunkShaderInterface {
 		fogShaderComponent.setup();
 		irisProgramUniforms.update();
 		irisProgramSamplers.update();
+		irisProgramImages.update();
 	}
 
 	public void restore() {

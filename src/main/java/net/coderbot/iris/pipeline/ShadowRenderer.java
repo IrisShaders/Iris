@@ -19,6 +19,8 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.ExtendedShader;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
@@ -88,7 +90,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 
-	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives, ProgramSet programSet) {
+	public ShadowRenderer(CoreWorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives, RenderTargets gbufferRenderTargets) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -127,14 +129,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		if (shadow != null) {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// Also assume voxelization if image load / store is detected.
-			this.packHasVoxelization = shadow.getGeometrySource().isPresent() || shadowProgram.getActiveImages() > 0;
+			this.packHasVoxelization = shadow.getGeometrySource().isPresent() || IrisImages.hasShadowImages(((ExtendedShader) pipeline.getShadowTerrainCutout())) || IrisImages.hasRenderTargetImages(((ExtendedShader) pipeline.getShadowTerrainCutout()), gbufferRenderTargets);
 			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
 		} else {
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
 
-		ProgramSource[] composite = programSet.getComposite();
+		ProgramSource[] composite = shadow.getParent().getComposite();
 
 		if (composite.length > 0) {
 			String fsh = composite[0].getFragmentSource().orElse("");

@@ -18,6 +18,7 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -178,8 +179,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		ImmutableSet<Integer> flippedBeforeTerrain = ImmutableSet.of();
 
 		createShadowMapRenderer = () -> {
-			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
-					programs.getPackDirectives(), programs);
+			shadowMapRenderer = new ShadowRenderer((CoreWorldRenderingPipeline) this, programs.getShadow().orElse(null),
+					programs.getPackDirectives(), renderTargets);
 			createShadowMapRenderer = () -> {};
 		};
 

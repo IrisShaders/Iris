@@ -10,7 +10,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.*;
 
 import net.minecraft.SharedConstants;
@@ -148,7 +150,7 @@ public class StandardMacros {
 		String[] extensions = new String[numExtensions];
 
 		for (int i = 0; i < numExtensions; i++) {
-			extensions[i] = RenderSystem.getString(GL30C.GL_EXTENSIONS, i);
+			extensions[i] = IrisRenderSystem.getStringi(GL30C.GL_EXTENSIONS, i);
 		}
 
 		// TODO(21w10a): unified way of getting extensions on the core and compatibility profile?

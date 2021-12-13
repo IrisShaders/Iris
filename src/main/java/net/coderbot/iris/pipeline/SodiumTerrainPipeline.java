@@ -58,7 +58,7 @@ public class SodiumTerrainPipeline {
 	private final IntFunction<ProgramImages> createShadowImages;
 
 	public SodiumTerrainPipeline(WorldRenderingPipeline parent, ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
-								 IntFunction<ProgramSamplers> createShadowSamplers, IntFunction<ProgramImages> createTerrainImages, IntSupplier<ProgramImages> createShadowImages,
+								 IntFunction<ProgramSamplers> createShadowSamplers, IntFunction<ProgramImages> createTerrainImages, IntFunction<ProgramImages> createShadowImages,
 								 RenderTargets targets,
 								 ImmutableSet<Integer> flippedBeforeTranslucent,
 								 ImmutableSet<Integer> flippedAfterTranslucent, GlFramebuffer shadowFramebuffer) {

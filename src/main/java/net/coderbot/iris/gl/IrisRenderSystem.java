@@ -153,21 +153,8 @@ public class IrisRenderSystem {
 		}
 	}
 
-	// These functions are deprecated and unavailable in the core profile.
-
-	@Deprecated
-	public static void setupProjectionMatrix(float[] matrix) {
+	public static String getStringi(int glExtensions, int index) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.pushMatrix();
-		GL20.glLoadMatrixf(matrix);
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
-	}
-
-	@Deprecated
-	public static void restoreProjectionMatrix() {
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.popMatrix();
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+		return GL30C.glGetStringi(glExtensions, index);
 	}
 }
