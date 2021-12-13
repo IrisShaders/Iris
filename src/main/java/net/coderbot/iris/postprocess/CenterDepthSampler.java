@@ -1,5 +1,6 @@
 package net.coderbot.iris.postprocess;
 
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -38,7 +39,7 @@ public class CenterDepthSampler {
 		float[] depthValue = new float[1];
 		// Read a single pixel from the depth buffer
 		// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
-		GL11C.glReadPixels(
+		IrisRenderSystem.readPixels(
 			renderTargets.getCurrentWidth() / 2, renderTargets.getCurrentHeight() / 2, 1, 1,
 			GL11C.GL_DEPTH_COMPONENT, GL11C.GL_FLOAT, depthValue
 		);

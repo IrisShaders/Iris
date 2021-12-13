@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.GlResource;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.Arrays;
@@ -22,12 +23,12 @@ public class GlFramebuffer extends GlResource {
 
 	public void addDepthAttachment(int texture) {
 		bind();
-		GL30C.glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
+		GlStateManager._glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
 	}
 
 	public void addColorAttachment(int index, int texture) {
 		bind();
-		GL30C.glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0 + index, GL30C.GL_TEXTURE_2D, texture, 0);
+		GlStateManager._glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0 + index, GL30C.GL_TEXTURE_2D, texture, 0);
 		attachments.put(index, texture);
 	}
 
@@ -50,13 +51,13 @@ public class GlFramebuffer extends GlResource {
 			glBuffers[index++] = GL30C.GL_COLOR_ATTACHMENT0 + buffer;
 		}
 
-		GL30C.glDrawBuffers(glBuffers);
+		IrisRenderSystem.drawBuffers(glBuffers);
 	}
 
 	public void readBuffer(int buffer) {
 		bind();
 
-		GL30C.glReadBuffer(GL30C.GL_COLOR_ATTACHMENT0 + buffer);
+		IrisRenderSystem.readBuffer(GL30C.GL_COLOR_ATTACHMENT0 + buffer);
 	}
 
 	public int getColorAttachment(int index) {

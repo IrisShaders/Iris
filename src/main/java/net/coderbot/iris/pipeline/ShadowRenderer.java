@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -12,6 +13,7 @@ import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -58,7 +60,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -222,7 +223,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private void configureDepthSampler(int glTextureId, PackShadowDirectives.DepthSamplingSettings settings) {
 		if (settings.getHardwareFiltering()) {
 			// We have to do this or else shadow hardware filtering breaks entirely!
-			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
+			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
 		}
 
 		configureSampler(glTextureId, settings);
@@ -236,11 +237,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		if (!settings.getNearest()) {
 			// Make sure that things are smoothed
-			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
 		} else {
-			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_NEAREST);
-			GL20C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_NEAREST);
+			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_NEAREST);
+			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_NEAREST);
 		}
 	}
 
@@ -257,8 +258,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private void setupMipmappingForBoundTexture(int filteringMode) {
-		GL30C.glGenerateMipmap(GL20C.GL_TEXTURE_2D);
-		GL30C.glTexParameteri(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
+		IrisRenderSystem.generateMipmaps(GL20C.GL_TEXTURE_2D);
+		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
 	}
 
 	// TODO: Don't just copy this from ShaderPipeline
@@ -301,14 +302,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private static void setupAttribute(Program program, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = GL20.glGetAttribLocation(program.getProgramId(), name);
+		int location = IrisRenderSystem.getAttribLocation(program.getProgramId(), name);
 
 		if (location != -1) {
 			if (location != expectedLocation) {
 				throw new IllegalStateException();
 			}
 
-			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
+			IrisRenderSystem.vertexAttrib4f(location, v0, v1, v2, v3);
 		}
 	}
 
@@ -410,10 +411,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.viewport(0, 0, resolution, resolution);
 
 		// Set up our orthographic projection matrix and load it into the legacy matrix stack
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.pushMatrix();
-		GL11.glLoadMatrixf(orthoMatrix);
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+		IrisRenderSystem.setupProjectionMatrix(orthoMatrix);
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
@@ -430,9 +428,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.enableCull();
 
 		// Make sure to unload the projection matrix
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.popMatrix();
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+		IrisRenderSystem.restoreProjectionMatrix();
 
 		// Restore the old viewport
 		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
@@ -445,7 +441,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// This is needed for the shadowtex0 / shadowtex1 split.
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 		RenderSystem.bindTexture(0);
 	}
 

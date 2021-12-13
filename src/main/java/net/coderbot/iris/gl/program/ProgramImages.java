@@ -1,6 +1,8 @@
 package net.coderbot.iris.gl.program;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.image.ImageBinding;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.image.ImageLimits;
@@ -23,7 +25,7 @@ public class ProgramImages {
 	public void update() {
 		if (initializer != null) {
 			for (GlUniform1iCall call : initializer) {
-				GL20C.glUniform1i(call.getLocation(), call.getValue());
+				IrisRenderSystem.uniform1i(call.getLocation(), call.getValue());
 			}
 
 			initializer = null;
@@ -59,12 +61,12 @@ public class ProgramImages {
 
 		@Override
 		public boolean hasImage(String name) {
-			return GL20C.glGetUniformLocation(program, name) != -1;
+			return GlStateManager._glGetUniformLocation(program, name) != -1;
 		}
 
 		@Override
 		public void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name) {
-			int location = GL20C.glGetUniformLocation(program, name);
+			int location = GlStateManager._glGetUniformLocation(program, name);
 
 			if (location == -1) {
 				return;

@@ -5,12 +5,12 @@ import com.mojang.math.Matrix4f;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderFogComponent;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL20C;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
@@ -92,7 +92,7 @@ public class IrisChunkProgram extends ChunkProgram {
 
             matrix.store(buffer);
 
-            GL20C.glUniformMatrix4fv(location, false, buffer);
+            IrisRenderSystem.uniformMatrix4fv(location, false, buffer);
         }
     }
 }

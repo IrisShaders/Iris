@@ -1,8 +1,8 @@
 package net.coderbot.iris.gl.program;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.ProgramManager;
 import net.coderbot.iris.gl.GlResource;
-import org.lwjgl.opengl.GL20C;
 
 public final class Program extends GlResource {
 	private final ProgramUniforms uniforms;
@@ -31,7 +31,7 @@ public final class Program extends GlResource {
 	}
 
 	public void destroyInternal() {
-		GL20C.glDeleteProgram(getGlId());
+		GlStateManager.glDeleteProgram(getGlId());
 	}
 
 	/**
