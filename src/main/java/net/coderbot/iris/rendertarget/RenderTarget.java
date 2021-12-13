@@ -69,6 +69,10 @@ public class RenderTarget {
 		resizeCurrentlyBoundTexture(width, height);
 	}
 
+	public InternalTextureFormat getInternalFormat() {
+		return internalFormat;
+	}
+
 	public int getMainTexture() {
 		requireValid();
 

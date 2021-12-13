@@ -12,6 +12,7 @@ public class RenderTargets {
 	private final RenderTarget[] targets;
 	private final DepthTexture depthTexture;
 	private final DepthTexture noTranslucents;
+	private final DepthTexture noHand;
 
 	private final List<GlFramebuffer> ownedFramebuffers;
 
@@ -28,11 +29,14 @@ public class RenderTargets {
 
 		renderTargets.forEach((index, settings) -> {
 			// TODO: Handle mipmapping?
-			targets[index] = net.coderbot.iris.rendertarget.RenderTarget.builder().setDimensions(width, height).setInternalFormat(settings.getRequestedFormat()).build();
+			targets[index] = net.coderbot.iris.rendertarget.RenderTarget.builder().setDimensions(width, height)
+					.setInternalFormat(settings.getInternalFormat())
+					.setPixelFormat(settings.getInternalFormat().getPixelFormat()).build();
 		});
 
 		this.depthTexture = new DepthTexture(width, height);
 		this.noTranslucents = new DepthTexture(width, height);
+		this.noHand = new DepthTexture(width, height);
 
 		this.cachedWidth = width;
 		this.cachedHeight = height;
@@ -55,6 +59,7 @@ public class RenderTargets {
 
 		depthTexture.destroy();
 		noTranslucents.destroy();
+		noHand.destroy();
 	}
 
 	public int getRenderTargetCount() {
@@ -73,6 +78,10 @@ public class RenderTargets {
 		return noTranslucents;
 	}
 
+	public DepthTexture getDepthTextureNoHand() {
+		return noHand;
+	}
+
 	public void resizeIfNeeded(int newWidth, int newHeight) {
 		if (newWidth == cachedWidth && newHeight == cachedHeight) {
 			// No resize needed
@@ -88,6 +97,7 @@ public class RenderTargets {
 
 		depthTexture.resize(newWidth, newHeight);
 		noTranslucents.resize(newWidth, newHeight);
+		noHand.resize(newWidth, newHeight);
 
 		fullClearRequired = true;
 	}
@@ -145,7 +155,11 @@ public class RenderTargets {
 			stageWritesToMain = invert(ImmutableSet.of(), drawBuffers);
 		}
 
-		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToMain, drawBuffers);
+		return createColorFramebufferWithDepth(stageWritesToMain, drawBuffers);
+	}
+
+	public GlFramebuffer createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
+		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
 		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
 

@@ -1,11 +1,11 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.IrisLogging;
-import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -29,11 +29,21 @@ public class SodiumTerrainPipeline {
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
 
+	private final WorldRenderingPipeline parent;
+
 	private final IntFunction<ProgramSamplers> createTerrainSamplers;
 	private final IntFunction<ProgramSamplers> createShadowSamplers;
 
-	public SodiumTerrainPipeline(ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
-								 IntFunction<ProgramSamplers> createShadowSamplers) {
+	private final IntFunction<ProgramImages> createTerrainImages;
+	private final IntFunction<ProgramImages> createShadowImages;
+
+	public SodiumTerrainPipeline(WorldRenderingPipeline parent,
+								 ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
+								 IntFunction<ProgramSamplers> createShadowSamplers,
+								 IntFunction<ProgramImages> createTerrainImages,
+								 IntFunction<ProgramImages> createShadowImages) {
+		this.parent = Objects.requireNonNull(parent);
+
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 		Optional<ProgramSource> shadowSource = programSet.getShadow();
@@ -84,6 +94,8 @@ public class SodiumTerrainPipeline {
 
 		this.createTerrainSamplers = createTerrainSamplers;
 		this.createShadowSamplers = createShadowSamplers;
+		this.createTerrainImages = createTerrainImages;
+		this.createShadowImages = createShadowImages;
 	}
 
 	private static String transformVertexShader(String base) {
@@ -106,11 +118,6 @@ public class SodiumTerrainPipeline {
 			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
-
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
 		transformations.define("gl_Vertex", "vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)");
 		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "a_LightCoord");
@@ -150,11 +157,6 @@ public class SodiumTerrainPipeline {
 		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
-
-		// NB: This is needed on macOS or else the driver will refuse to compile most packs making use of these
-		// constants.
-		ProgramBuilder.MACRO_CONSTANTS.getDefineStrings().forEach(defineString ->
-				transformations.injectLine(Transformations.InjectionPoint.DEFINES, defineString + "\n"));
 
 		if (IrisLogging.ENABLE_SPAM) {
 			System.out.println("Final patched fragment source:");
@@ -203,8 +205,7 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), ((DeferredWorldRenderingPipeline) pipeline).getUpdateNotifier());
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), parent.getFrameUpdateNotifier());
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();
@@ -216,6 +217,14 @@ public class SodiumTerrainPipeline {
 
 	public ProgramSamplers initShadowSamplers(int programId) {
 		return createShadowSamplers.apply(programId);
+	}
+
+	public ProgramImages initTerrainImages(int programId) {
+		return createTerrainImages.apply(programId);
+	}
+
+	public ProgramImages initShadowImages(int programId) {
+		return createShadowImages.apply(programId);
 	}
 
 	/*public void bindFramebuffer() {

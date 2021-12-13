@@ -76,6 +76,11 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 		return targets.getColorTextureId(1);
 	}
 
+	@Override
+	public ShadowRenderTargets getRenderTargets() {
+		return targets;
+	}
+
 	public void destroy() {
 		this.targets.destroy();
 	}

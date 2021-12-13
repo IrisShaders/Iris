@@ -8,7 +8,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 archivesBaseName = project.archives_base_name
-version = "${project.mod_version}+${getVersionMetadata()}"
+version = "${project.mod_version}${getVersionMetadata()}"
 group = project.maven_group
 
 
@@ -31,6 +31,27 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
 	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+
+	// Preprocessing library used on shaders
+	modImplementation "org.anarres:jcpp:1.4.14"
+	include "org.anarres:jcpp:1.4.14"
+	include 'org.slf4j:slf4j-api:1.7.12'
+}
+
+if (project.sodium_compatibility == "true") {
+	repositories {
+		maven {
+			name = "Modrinth"
+			url = "https://api.modrinth.com/maven"
+			content {
+				includeGroup "maven.modrinth"
+			}
+		}
+	}
+
+	dependencies {
+		modImplementation "maven.modrinth:sodium:" + project.sodium_version
+	}
 }
 
 test {
@@ -39,10 +60,10 @@ test {
 }
 
 def includeFabricApiModule(String moduleName) {
-	Object dependency = fabricApi.module(moduleName, project.fabric_version);
+	Object dependency = fabricApi.module(moduleName, project.fabric_version)
 
-	dependencies.modImplementation(dependency);
-	dependencies.include(dependency);
+	dependencies.modImplementation(dependency)
+	dependencies.include(dependency)
 }
 
 processResources {
@@ -50,6 +71,12 @@ processResources {
 
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
+
+		if (project.sodium_compatibility != "true") {
+			filter {
+				String line -> return line.replace("mixins.iris.compat.sodium.json", "empty.json")
+			}
+		}
 	}
 }
 
@@ -65,7 +92,7 @@ tasks.withType(JavaCompile).configureEach {
 	// We'll use that if it's available, but otherwise we'll use the older option.
 	def targetVersion = 8
 	if (JavaVersion.current().isJava9Compatible()) {
-		it.options.release = targetVersion
+		it.options.release.set(targetVersion)
 	}
 
 	// Enable this if you want to see deprecation warnings
@@ -97,6 +124,17 @@ sourceSets {
 		}
 	}
 
+	if (project.sodium_compatibility == "true") {
+		// A source set for the code needed to implement sodium compatibility.
+		sodiumCompatibility {
+			java {
+				compileClasspath += main.compileClasspath
+				compileClasspath += main.output
+				compileClasspath += vendored.output
+			}
+		}
+	}
+
 	// The main source code of Iris.
 	main {
 		java {
@@ -106,6 +144,10 @@ sourceSets {
 			// Vendored sources are available at compilation time and runtime.
 			compileClasspath += vendored.output
 			runtimeClasspath += vendored.output
+
+			if (project.sodium_compatibility == "true") {
+				runtimeClasspath += sourceSets.sodiumCompatibility.output
+			}
 		}
 	}
 
@@ -138,27 +180,16 @@ jar {
 
 	// Vendored sources are included in the resulting JAR file.
 	from sourceSets.vendored.output
-}
 
-// To build iris bundled with sodium, just run the task `gradle bundleWithSodium`.
-// Currently requires iris to have been built normally first.
-// You must have a Sodium jar in your mavenLocal repository.
-tasks.register('bundleWithSodium')
-
-bundleWithSodium {
-	finalizedBy build
-	doFirst {
-		project.dependencies {
-			// include sodium jar if bundling with sodium
-			include "me.jellysquid.mods:sodium-fabric:0.2.0+IRIS4+"
+	if (project.sodium_compatibility == "true") {
+		from (sourceSets.sodiumCompatibility.output) {
+			it.filesMatching("*refmap.json") {
+				FileCopyDetails details -> {
+					details.name("iris-sodium-compat-refmap.json")
+				}
+			}
 		}
-		archivesBaseName = archivesBaseName.replace("iris", "iris-and-sodium")
 	}
-}
-
-repositories {
-	// for the Sodium dependency we want to bundle
-	mavenLocal()
 }
 
 // configure the maven publication
@@ -188,10 +219,13 @@ runClient {
 
 def getVersionMetadata() {
 	def build_id = System.getenv("GITHUB_RUN_NUMBER")
+	def workflow_id = System.getenv("GITHUB_WORKFLOW")
 
 	// CI builds only
-	if (build_id != null) {
-		return "build.${build_id}"
+	if (workflow_id == "build-release") {
+		return ""
+	} else if (build_id != null) {
+		return "+build.${build_id}"
 	}
 
 	if (grgit != null) {
@@ -203,6 +237,6 @@ def getVersionMetadata() {
 			id += "-dirty"
 		}
 
-		return "rev.${id}"
+		return "+rev.${id}"
 	}
 }

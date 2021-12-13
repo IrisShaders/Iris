@@ -29,5 +29,8 @@
   "options.iris.shadowDistance.disabled": "Yer current Glass eye has already set a height for t'shadow mast; yee cannot change it.",
 
   "pack.iris.select.title": "Select",
-  "pack.iris.list.label": "+ Drop yer Glass eye files in this ole window t' add yer Glass eyes"
+  "pack.iris.list.label": "+ Drop yer Glass eye files in this ole window t' add yer Glass eyes",
+  "iris.sodium.failure.download": "Download Sodium",
+  "iris.sodium.failure.reason.notFound": "Iris needs e' Sodium for smooth sailin', but Sodium ain't found. Find the Sodium, add it to t'mods, and open the game.",
+  "iris.sodium.failure.reason.incompatible": "Iris needs e' Sodium for smooth sailin', but the one here ain't it. Find t'correct Sodium, add it to t'mods, throw overboard t'old one, and open the game."
 }
