@@ -64,10 +64,10 @@ public abstract class MixinDebugScreenOverlay {
 
 		if (!Iris.isSodiumInstalled() && Iris.getCurrentPack().isPresent()) {
 			messages.add(1, ChatFormatting.YELLOW + "[Iris] Sodium isn't installed; you will have poor performance.");
-			messages.add(2, ChatFormatting.YELLOW + "[Iris] Install the compatible Sodium fork if you want to run benchmarks or get higher FPS!");
+			messages.add(2, ChatFormatting.YELLOW + "[Iris] Install Sodium if you want to run benchmarks or get higher FPS!");
 		}
 
-		Iris.getPipelineManager().getPipeline().addDebugText(messages);
+		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.addDebugText(messages));
 	}
 
 	// stackoverflow.com/a/3758880

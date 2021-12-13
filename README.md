@@ -37,9 +37,9 @@ These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achi
 
 ## What's the current state of development?
 
-Iris has public releases for 1.16 and 1.17 that work with custom versions of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
+Iris has public releases for 1.16.5, 1.17.1, and 1.18 that work with the official releases of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
 
-Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris. Though a [fork of Sodium](https://github.com/IrisShaders/sodium-fabric) is still required, it's my intent that it will be unnecessary in the future. Official downloads of Iris include this modified version of Sodium for performance.
+Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris.
 
 
 ## How can I help?
@@ -53,7 +53,7 @@ Compatibility with Sodium is an ongoing project. I've been chatting with JellySq
 
 Iris doesn't support Forge. This is for a few reasons:
 
-* My time is limited, and properly supporting all the mods available for Forge (as well as Forge itself) is a huge amount of work. When people ask for Forge support, they aren't asking just for Iris to run on Forge, they are also asking for it to be compatible out of the box with their kitchen sink modpack that contains over 300 mods. As a result, properly supporting Forge would require me to divert large amounts precious time into fixing tedious compatibility issues and bugs, time that could instead be spent making the Fabric version of Iris better.
+* My time is limited, and properly supporting all the mods available for Forge (as well as Forge itself) is a huge amount of work. When people ask for Forge support, they aren't asking just for Iris to run on Forge, they are also asking for it to be compatible out of the box with their kitchen sink modpack that contains over 300 mods. As a result, properly supporting Forge would require me to divert large amounts of precious time into fixing tedious compatibility issues and bugs, time that could instead be spent making the Fabric version of Iris better.
 * The Forge toolchain isn't really designed to play nice with mods like Iris that need to make many patches to the game code. It's possible, but Fabric & Quilt are just *better* for mods like Iris. It's no coincidence that the emergence of Fabric and the initial emergence of OptiFine replacements happened at around the same time.
 * Sodium, which Iris depends on to achieve its great performance, has no official Forge version. It's a long story, but in short: the lead developers of Forge were incredibly hostile to JellySquid when she developed for Forge, and since then have made no credible attempts to repair relations or even admit wrongdoing.
 

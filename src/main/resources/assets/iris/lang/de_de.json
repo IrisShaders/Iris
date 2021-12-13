@@ -8,7 +8,9 @@
   "iris.shaders.reloaded.failure": "Neuladen der Shader fehlgeschlagen! Grund: %s",
   "iris.shaders.toggled.failure": "Umschalten der Shader fehlgeschlagen! Grund: %s",
   "iris.sodium.failure.title": "Iris konnte nicht geladen werden!",
-  "iris.sodium.failure.reason": "Sodium befindet sich in deinem Mods-Ordner, wird aber von Iris mitgeliefert. Bitte schließe das Spiel und entferne Sodium aus deinen Mods-Ordner.",
+  "iris.sodium.failure.download": "Sodium herunterladen",
+  "iris.sodium.failure.reason.notFound": "Iris erfordert Sodium für optimale Leistung, aber Sodium ist nicht installiert. Bitte lade Sodium herunter, füge es deinem Mods-Ordner hinzu und starte das Spiel neu.",
+  "iris.sodium.failure.reason.incompatible": "Iris erfordert Sodium für optimale Leistung, aber es wurde eine inkompatible Version gefunden. Bitte lade die passende Version von Sodium herunter, füge sie deinem Mods-Ordner hinzu, entferne die falsche Version und starte das Spiel neu.",
 
   "options.iris.apply": "Anwenden",
   "options.iris.refresh": "Aktualisieren",
@@ -25,8 +27,9 @@
   "options.iris.shaders.disabled": "Shader: Deaktiviert",
   "options.iris.shaders.enabled": "Shader: Aktiviert",
   "options.iris.shadowDistance": "Max. Schattendistanz",
-  "options.iris.shadowDistance.enabled": "Erlaubt es dir, die maximale Distanz für Schatten zu ändern. Gelände und Objekte die weiter entfernt sind als die eingestellte Distanz werden keine Schatten werfen. Das Senken der Distanz kann die Leistung erheblich verbessern.",
+  "options.iris.shadowDistance.enabled": "Erlaubt es dir, die maximale Distanz für Schatten zu ändern. Gelände und Objekte, die weiter entfernt sind als die eingestellte Distanz, werden keine Schatten werfen. Das Senken der Distanz kann die Leistung erheblich verbessern.",
   "options.iris.shadowDistance.disabled": "Dein aktuelles Shaderpaket hat bereits eine Distanz für Schatten gesetzt; du kannst sie nicht ändern.",
+  "options.iris.shadowDistance.sodium_tooltip": "Die Distanz für Schatten bestimmt, wie weit das Gelände entfernt sein darf, um keinen Schatten mehr zu werfen. Bei geringeren Distanzen werden weniger Schatten berechnet, was die Bildrate verbessert. Diese Option kann nicht geändert werden bei Paketen, die explizit eine Distanz für Schatten vorgeben. Die tatsächliche Distanz für Schatten wird von der Einstellung \"Sichtweite\" begrenzt.",
 
   "pack.iris.select.title": "Auswählen",
   "pack.iris.list.label": "+ Um Shaderpakete hinzuzufügen, ziehe sie in dieses Fenster hinein"

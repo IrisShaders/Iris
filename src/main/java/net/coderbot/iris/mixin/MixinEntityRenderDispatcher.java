@@ -2,6 +2,7 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,7 +24,9 @@ public class MixinEntityRenderDispatcher {
 	private static void iris$maybeSuppressEntityShadow(PoseStack poseStack, MultiBufferSource bufferSource,
 													   Entity entity, float opacity, float tickDelta, LevelReader level,
 													   float radius, CallbackInfo ci) {
-		if (Iris.getPipelineManager().getPipeline().shouldDisableVanillaEntityShadows()) {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null && pipeline.shouldDisableVanillaEntityShadows()) {
 			ci.cancel();
 		}
 	}

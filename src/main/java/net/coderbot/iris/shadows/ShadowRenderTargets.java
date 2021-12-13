@@ -11,12 +11,14 @@ import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL20C;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class ShadowRenderTargets {
 	// TODO: Make this match the value of GL_MAX_DRAW_BUFFERS (or whatever property name it is)
 	public static int MAX_SHADOW_RENDER_TARGETS = 8;
 
 	private final int[] targets;
+	private final InternalTextureFormat[] formats;
 
 	private final DepthTexture depthTexture;
 	private final DepthTexture noTranslucents;
@@ -30,6 +32,8 @@ public class ShadowRenderTargets {
 			throw new IllegalStateException("Too many shadow render targets, requested " + formats.length +
 					" but only " + MAX_SHADOW_RENDER_TARGETS + " are allowed.");
 		}
+
+		this.formats = Arrays.copyOf(formats, formats.length);
 
 		int[] drawBuffers = new int[formats.length];
 
@@ -76,8 +80,16 @@ public class ShadowRenderTargets {
 		return noTranslucents;
 	}
 
+	public int getNumColorTextures() {
+		return targets.length;
+	}
+
 	public int getColorTextureId(int index) {
 		return targets[index];
+	}
+
+	public InternalTextureFormat getColorTextureFormat(int index) {
+		return formats[index];
 	}
 
 	public void destroy() {

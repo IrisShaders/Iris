@@ -1,17 +1,17 @@
 package net.coderbot.iris.uniforms;
 
-import java.util.Map;
 import java.util.function.IntSupplier;
 
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 
 public final class IdMapUniforms {
 
@@ -19,8 +19,6 @@ public final class IdMapUniforms {
 	}
 
 	public static void addIdMapUniforms(DynamicUniformHolder uniforms, IdMap idMap) {
-		Map<BlockState, Integer> blockIdMap = idMap.getBlockProperties();
-
 		uniforms
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId",
 				new HeldItemSupplier(InteractionHand.MAIN_HAND, idMap.getItemIdMap()))
@@ -40,9 +38,9 @@ public final class IdMapUniforms {
 	 */
 	private static class HeldItemSupplier implements IntSupplier {
 		private final InteractionHand hand;
-		private final Map<ResourceLocation, Integer> itemIdMap;
+		private final Object2IntFunction<NamespacedId> itemIdMap;
 
-		HeldItemSupplier(InteractionHand hand, Map<ResourceLocation, Integer> itemIdMap) {
+		HeldItemSupplier(InteractionHand hand, Object2IntFunction<NamespacedId> itemIdMap) {
 			this.hand = hand;
 			this.itemIdMap = itemIdMap;
 		}
@@ -57,7 +55,7 @@ public final class IdMapUniforms {
 			ItemStack heldStack = Minecraft.getInstance().player.getItemInHand(hand);
 			ResourceLocation heldItemId = Registry.ITEM.getKey(heldStack.getItem());
 
-			return itemIdMap.getOrDefault(heldItemId, -1);
+			return itemIdMap.applyAsInt(new NamespacedId(heldItemId.getNamespace(), heldItemId.getPath()));
 		}
 	}
 }

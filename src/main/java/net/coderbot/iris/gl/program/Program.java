@@ -7,12 +7,14 @@ import org.lwjgl.opengl.GL20C;
 public final class Program extends GlResource {
 	private final ProgramUniforms uniforms;
 	private final ProgramSamplers samplers;
+	private final ProgramImages images;
 
-	Program(int program, ProgramUniforms uniforms, ProgramSamplers samplers) {
+	Program(int program, ProgramUniforms uniforms, ProgramSamplers samplers, ProgramImages images) {
 		super(program);
 
 		this.uniforms = uniforms;
 		this.samplers = samplers;
+		this.images = images;
 	}
 
 	public void use() {
@@ -20,6 +22,7 @@ public final class Program extends GlResource {
 
 		uniforms.update();
 		samplers.update();
+		images.update();
 	}
 
 	public static void unbind() {
@@ -38,5 +41,9 @@ public final class Program extends GlResource {
 	@Deprecated
 	public int getProgramId() {
 		return getGlId();
+	}
+
+	public int getActiveImages() {
+		return images.getActiveImages();
 	}
 }
