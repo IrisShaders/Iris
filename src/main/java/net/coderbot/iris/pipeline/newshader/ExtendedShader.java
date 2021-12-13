@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageBinding;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.GlUniform1iCall;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -36,10 +37,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	BlendModeOverride blendModeOverride;
 	HashMap<String, IntSupplier> dynamicSamplers;
 	private final boolean intensitySwizzle;
-	private final List<ImageBinding> images;
-	private final List<GlUniform1iCall> calls;
-	private int nextImageUnit;
-	private final int maxImageUnits;
+	private final ProgramImages.Builder imageBuilder;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
@@ -56,9 +54,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.blendModeOverride = blendModeOverride;
 		this.dynamicSamplers = new HashMap<>();
 		this.parent = parent;
-		this.images = new ArrayList<>();
-		this.calls = new ArrayList<>();
-		this.maxImageUnits = IrisRenderSystem.getMaxImageUnits();
+		this.imageBuilder = ProgramImages.builder(programId);
 
 		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
 		this.intensitySwizzle = getName().contains("intensity");
@@ -86,18 +82,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 		super.apply();
 		uniforms.update();
-
-		if (calls != null) {
-			for (GlUniform1iCall call : calls) {
-				IrisRenderSystem.uniform1i(call.getLocation(), call.getValue());
-			}
-
-			calls.clear();
-		}
-
-		for (ImageBinding imageBinding : images) {
-			imageBinding.update();
-		}
+		imageBuilder.build().update();
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
@@ -183,30 +168,11 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 	@Override
 	public boolean hasImage(String name) {
-		return GlStateManager._glGetUniformLocation(this.getId(), name) != -1;
+		return imageBuilder.hasImage(name);
 	}
 
 	@Override
 	public void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name) {
-		int location = GlStateManager._glGetUniformLocation(this.getId(), name);
-
-		if (location == -1) {
-			return;
-		}
-
-		if (nextImageUnit >= maxImageUnits) {
-			if (maxImageUnits == 0) {
-				throw new IllegalStateException("Image units are not supported on this platform, but a shader" +
-						" program attempted to reference " + name + ".");
-			} else {
-				throw new IllegalStateException("No more available texture units while activating image " + name + "." +
-						" Only " + maxImageUnits + " image units are available.");
-			}
-		}
-
-		images.add(new ImageBinding(nextImageUnit, internalFormat.getGlFormat(), textureID));
-		calls.add(new GlUniform1iCall(location, nextImageUnit));
-
-		nextImageUnit += 1;
+		imageBuilder.addTextureImage(textureID, internalFormat, name);
 	}
 }
