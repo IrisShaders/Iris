@@ -30,17 +30,17 @@ This method is recommended for users who want to play with **Iris shaders only, 
    Java is required to run the installer. If your system doesn't have Java installed, download and install Java from [Adoptium Java downloads](https://adoptium.net/).
    If you are using Windows and are still unable to run the installer, try using [Jarfix](https://johann.loefflmann.net/en/software/jarfix/index.html).
 5. The following window should open:   
-   ![installer](docs/guide-resources/installer.png)
+   ![installer](guide-resources/installer.png)
 6. Under the "Select game version" dropdown, select your preferred Minecraft version.
 7. Click Install.
 8. If you get the following prompt:  
-   ![launcherprompt](docs/guide-resources/launcherprompt.png)  
+   ![launcherprompt](guide-resources/launcherprompt.png)  
    Select **Microsoft Store / Xbox** if you have updated to the new launcher. Otherwise, select **Standalone (Win32)**.
 8. You should see the button say "Installation succeeded!" next to the full progress bar:  
-   ![success](docs/guide-resources/success.png)
+   ![success](guide-resources/success.png)
 9. Close the installer.
 10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):  
-    ![profile](docs/guide-resources/profile.png)  
+    ![profile](guide-resources/profile.png)  
     Play the game with this profile selected to run Iris Shaders!
 
 ### For use with other Fabric mods
@@ -50,14 +50,14 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
 
 1. Follow steps 1 to 5 under the [For standalone use](#for-standalone-use) section.
 2. **Check "Install as Fabric mod"**:  
-   ![check](docs/guide-resources/check.png)
+   ![check](guide-resources/check.png)
 3. Follow steps 6 to 9 under the [For standalone use](#for-standalone-use) section.
 4. Place your other Fabric mods in the mods folder. The location of the mods folder depends on your operating system:
     - Windows: `%APPDATA%\.minecraft\mods`  
     - Linux: `~/.minecraft/mods`  
     - MacOS: `~/Library/Application Support/minecraft/mods`
 5. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):  
-   ![fabricprofile](docs/guide-resources/fabricprofile.png)  
+   ![fabricprofile](guide-resources/fabricprofile.png)  
    Play the game with this profile selected to run the game with Iris Shaders and the rest of your Fabric mods!
     
 ### Manual installation
@@ -72,11 +72,11 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    Java is required to run the installer. If your system doesn't have Java installed, download and install Java from [Adoptium Java downloads](https://adoptium.net/).
    If you are using Windows and are still unable to run the installer, try using [Jarfix](https://johann.loefflmann.net/en/software/jarfix/index.html).
 5. The following window should open:  
-   ![fabricinstaller](docs/guide-resources/fabricinstaller.png)
+   ![fabricinstaller](guide-resources/fabricinstaller.png)
 5. Under the "Minecraft Version" dropdown, select your preferred Minecraft version.
 6. Click Install.
 7. You should get the following prompt:  
-   ![fabricsuccess](docs/guide-resources/fabricsuccess.png)  
+   ![fabricsuccess](guide-resources/fabricsuccess.png)  
    Click OK and close the installer.
 8. Download Iris and Sodium from your website of choice:
     - Iris Shaders: [Curseforge](https://www.curseforge.com/minecraft/mc-mods/irisshaders), [Modrinth](https://modrinth.com/mod/iris)  
@@ -86,27 +86,27 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
     - Linux: `~/.minecraft/mods`  
     - MacOS: `~/Library/Application Support/minecraft/mods`
 10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):  
-    ![fabricprofile](docs/guide-resources/fabricprofile.png)  
+    ![fabricprofile](guide-resources/fabricprofile.png)  
     Play the game with this profile selected to run the game with Iris Shaders and the rest of your Fabric mods!
     
 ## Using Iris
 
 After you install Iris using one of the methods described in the [Installing Iris](#installing-iris) section, make sure that it is properly installed by going into the Minecraft video settings. The video settings menu should look like this:  
 
-![videosettings](docs/guide-resources/videosettings.png)
+![videosettings](guide-resources/videosettings.png)
 
 You probably noticed that the menu is completely different. It is a reworked video settings menu provided by Sodium. In the **General** and **Quality** tab, you can find all the usual settings from vanilla Minecraft which you can change to fit your preferences. The settings in the Performance and Advanced tabs should not be modified in most cases.
 
 Shader packs are managed in the **Shader packs** tab. The shader pack menu should look like this:  
 
-![shaderpacksmenu](docs/guide-resources/shaderpacksmenu.png)
+![shaderpacksmenu](guide-resources/shaderpacksmenu.png)
 
 This menu shows shader packs which are in the shader packs folder. You can add new shader packs by dragging and dropping them into this menu, or by clicking the "Open Shader Pack Folder..." button and adding the shader packs into the opened folder. To select a shader pack, click on "Shaders: Disabled" to enable them. After that, select the shader pack you want to enable by clicking on it, then enable the selected shader by clicking the Apply button. After setting up your shaders, click Done to go back to the video settings menu.
 
 After configuring the video settings, you can now load your world and play Minecraft with shaders! While in game, you can use **keyboard shortcuts** which allow you to quickly manage your shaders:  
 
 - Pressing "**O**" opens up the shader packs menu with a transparent background, so you can see changes happen in real time:  
-  ![menuingame](docs/guide-resources/menuingame.jpg)
+  ![menuingame](guide-resources/menuingame.jpg)
 - Pressing "**K**" toggles shaders on and off.
 - Pressing "**R**" reloads the currently active shader pack.
 
