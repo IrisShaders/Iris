@@ -112,18 +112,16 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		//       relative to the player camera, not the shadow camera, so we can't rely on chunks being properly
 		//       sorted in the shadow pass.
 		//
+		//	On 1.17, this is handled for us by ExtendedShader.
 		// - https://github.com/IrisShaders/Iris/issues/483
 		// - https://github.com/IrisShaders/Iris/issues/987
 
 		if (shadow != null) {
-			this.shouldDisableBlend = shadow.getDirectives().getBlendModeOverride() == null;
-
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// TODO: Check for image load / store too once supported.
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
 			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
 		} else {
-			this.shouldDisableBlend = true;
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
@@ -312,10 +310,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
-		if (shouldDisableBlend) {
-			BlendModeOverride.OFF.apply();
-		}
-
 		Minecraft client = Minecraft.getInstance();
 
 		levelRenderer.getLevel().getProfiler().popPush("shadows");
