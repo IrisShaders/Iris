@@ -1,0 +1,28 @@
+{
+  "iris.shaders.reloaded": "旣重載影！",
+  "iris.shaders.toggled": "用以%s之影！",
+  "iris.keybind.reload": "重載影",
+  "iris.keybind.shaderPackSelection": "擇影囊之幕",
+  "iris.keybind.toggleShaders": "影之啟閉",
+  "iris.keybinds": "Iris",
+  "iris.shaders.reloaded.failure": "以%s故，弗能重載影！",
+  "iris.shaders.toggled.failure": "以%s故，弗能用影！",
+
+  "options.iris.apply": "然",
+  "options.iris.refresh": "重整",
+  "options.iris.openShaderPackFolder": "啟影囊之資料夾……",
+  "options.iris.refreshShaderPacks": "重載影囊",
+  "options.iris.shaderPackSelection": "影囊……",
+  "options.iris.shaderPackSelection.title": "影囊",
+  "options.iris.shaderPackSelection.addedPack": "旣添影囊 \"%s\"",
+  "options.iris.shaderPackSelection.addedPacks": "旣添影囊 %s ",
+  "options.iris.shaderPackSelection.failedAdd": "非可行之影囊",
+  "options.iris.shaderPackSelection.failedAddSingle": "「%s」者，非可行之影囊也",
+  "options.iris.shaderPackSelection.copyError": "弗能添新影囊 \"%s\"",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 旣存於影囊資料夾中！",
+  "options.iris.shaders.disabled": "影：關",
+  "options.iris.shaders.enabled": "影：開",
+
+  "pack.iris.select.title": "擇",
+  "pack.iris.list.label": "曳影囊於此"
+}

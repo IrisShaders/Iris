@@ -25,20 +25,11 @@ public class AlphaTest {
 				indentation + "}\n";
 	}
 
-	public void setup() {
-		// TODO(21w10a): Replace alpha test
-		throw new IllegalStateException("Cannot setup alpha state on core profile");
-		/*GlStateManager.enableAlphaTest();
-		GlStateManager.alphaFunc(function.getGlId(), reference);*/
+	public AlphaTestFunction getFunction() {
+		return function;
 	}
 
-	public static void teardown() {
-		// TODO(21w10a): Replace alpha test
-		throw new IllegalStateException("Cannot teardown alpha state on core profile");
-	}
-
-	@Override
-	public String toString() {
-		return "AlphaTestOverride { " + function + " " + reference + " }";
+	public float getReference() {
+		return reference;
 	}
 }

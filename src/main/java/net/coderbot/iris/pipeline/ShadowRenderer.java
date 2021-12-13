@@ -62,7 +62,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
 
-	private final boolean shouldDisableBlend;
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
