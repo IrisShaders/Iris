@@ -407,38 +407,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		loadedShaders.add(extendedShader);
 
-		// TODO: waterShadowEnabled?
-
-		// TODO: initialize shadowMapRenderer as needed, finish refactor!!!!
-		// TODO: Don't render shadows if they aren't used by the pack.
-		// TODO: Pay close attention, should try to unify stuff too.
-
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
-		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
-
-		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(extendedShader, customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
-
-		// TODO: All samplers added here need to be mirrored in NewShaderTests. Possible way to bypass this?
-		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
-		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
-
-		// TODO: IrisSamplers.addLevelSamplers(builder, normals, specular);
-		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getNormals()::getId, "normals");
-		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getSpecular()::getId, "specular");
-
-		IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
-		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
-
-		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-			createShadowMapRenderer.run();
-			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
-		}
-
-		if (IrisImages.hasShadowImages(extendedShader)) {
-			IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
-		}
+		addGbufferOrShadowSamplers(extendedShader, flipped, false);
 
 		return extendedShader;
 	}
@@ -458,39 +430,43 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		loadedShaders.add(extendedShader);
 
-		// TODO: waterShadowEnabled?
-		// TODO: Audit these render targets...
+		ImmutableSet<Integer> flippedSet = ImmutableSet.of();
+		Supplier<ImmutableSet<Integer>> flipped = () -> flippedSet;
 
-		extendedShader.addIrisSampler("normals", this.customTextureManager.getNormals().getId());
-		extendedShader.addIrisSampler("specular", this.customTextureManager.getSpecular().getId());
-		extendedShader.addIrisSampler("shadow", this.shadowMapRenderer.getDepthTextureId());
-		extendedShader.addIrisSampler("watershadow", this.shadowMapRenderer.getDepthTextureId());
-		extendedShader.addIrisSampler("shadowtex0", this.shadowMapRenderer.getDepthTextureId());
-		extendedShader.addIrisSampler("shadowtex1", this.shadowMapRenderer.getDepthTextureNoTranslucentsId());
-		extendedShader.addIrisSampler("depthtex0", this.renderTargets.getDepthTexture().getTextureId());
-		extendedShader.addIrisSampler("depthtex1", this.renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		extendedShader.addIrisSampler("noisetex", this.customTextureManager.getNoiseTexture().getAsInt());
-		extendedShader.addIrisSampler("shadowcolor", this.shadowMapRenderer.getColorTexture0Id());
-		extendedShader.addIrisSampler("shadowcolor0", this.shadowMapRenderer.getColorTexture0Id());
-		extendedShader.addIrisSampler("shadowcolor1", this.shadowMapRenderer.getColorTexture1Id());
-
-		// TODO: colortex8 to 15
-		for (int i = 0; i < 8; i++) {
-			// TODO: This should be "alt" for programs executing after deferred.
-			extendedShader.addIrisSampler("colortex" + i, this.renderTargets.get(i).getMainTexture());
-		}
-
-		for (int i = 1; i <= 4; i++) {
-			// TODO: This should be "alt" for programs executing after deferred.
-
-			// gaux1 -> colortex4, gaux2 -> colortex5, gaux3 -> colortex6, gaux4 -> colortex7
-			extendedShader.addIrisSampler("gaux" + i, this.renderTargets.get(i + 3).getMainTexture());
-		}
-
-		IrisImages.addRenderTargetImages(extendedShader, () -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent, renderTargets);
-		IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
+		addGbufferOrShadowSamplers(extendedShader, flipped, true);
 
 		return extendedShader;
+	}
+
+	private void addGbufferOrShadowSamplers(ExtendedShader extendedShader, Supplier<ImmutableSet<Integer>> flipped,
+											boolean isShadowPass) {
+		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+
+		ProgramSamplers.CustomTextureSamplerInterceptor samplerHolder =
+				ProgramSamplers.customTextureSamplerInterceptor(extendedShader,
+						customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
+
+		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false);
+		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
+
+		// TODO: IrisSamplers.addLevelSamplers(builder, normals, specular);
+		samplerHolder.addDynamicSampler(customTextureManager.getNormals()::getId, "normals");
+		samplerHolder.addDynamicSampler(customTextureManager.getSpecular()::getId, "specular");
+
+		IrisSamplers.addWorldDepthSamplers(samplerHolder, this.renderTargets);
+		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
+
+		if (isShadowPass || IrisSamplers.hasShadowSamplers(samplerHolder)) {
+			if (!isShadowPass) {
+				createShadowMapRenderer.run();
+			}
+
+			IrisSamplers.addShadowSamplers(samplerHolder, shadowMapRenderer);
+		}
+
+		if (isShadowPass || IrisImages.hasShadowImages(extendedShader)) {
+			IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
+		}
 	}
 
 	@SafeVarargs
