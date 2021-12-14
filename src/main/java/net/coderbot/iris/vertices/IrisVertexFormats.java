@@ -19,7 +19,6 @@ public class IrisVertexFormats {
 
 		ImmutableMap.Builder<String, VertexFormatElement> elements = ImmutableMap.builder();
 
-		// TODO(21w10a): Audit this
 		elements.put("Position", DefaultVertexFormat.ELEMENT_POSITION);
 		elements.put("Color", DefaultVertexFormat.ELEMENT_COLOR);
 		elements.put("UV0", DefaultVertexFormat.ELEMENT_UV);
