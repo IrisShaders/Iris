@@ -254,13 +254,15 @@ public class CompositeRenderer {
 		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
 
-		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
-		try {
-			Files.write(debugOutDir.resolve(source.getName() + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
-			Files.write(debugOutDir.resolve(source.getName() + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
-		} catch (IOException e) {
-			Iris.logger.warn("Failed to write debug patched shader source", e);
+			try {
+				Files.write(debugOutDir.resolve(source.getName() + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
+				Files.write(debugOutDir.resolve(source.getName() + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+			} catch (IOException e) {
+				Iris.logger.warn("Failed to write debug patched shader source", e);
+			}
 		}
 
 		return builder.build();

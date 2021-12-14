@@ -131,19 +131,21 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
-		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
-		if (Files.exists(debugOutDir)) {
-			Files.list(debugOutDir).forEach(path -> {
-				try {
-					Files.delete(path);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			});
+			if (Files.exists(debugOutDir)) {
+				Files.list(debugOutDir).forEach(path -> {
+					try {
+						Files.delete(path);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				});
+			}
+
+			Files.createDirectories(debugOutDir);
 		}
-
-		Files.createDirectories(debugOutDir);
 
 		this.shouldRenderClouds = programSet.getPackDirectives().areCloudsEnabled();
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
