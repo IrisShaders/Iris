@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -22,7 +21,7 @@ public class IrisChunkShaderInterface {
 	@Nullable
 	private final GlUniformMatrix4f uniformProjectionMatrix;
 	@Nullable
-	private final GlUniformFloat3v uniformRegionOffset;
+	private final GlUniformMatrix4f uniformModelViewProjectionMatrix;
 	@Nullable
 	private final GlUniformMatrix4f uniformNormalMatrix;
 	@Nullable
@@ -38,7 +37,7 @@ public class IrisChunkShaderInterface {
 									boolean isShadowPass, BlendModeOverride blendModeOverride) {
 		this.uniformModelViewMatrix = contextExt.bindUniformIfPresent("u_ModelViewMatrix", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("u_ProjectionMatrix", GlUniformMatrix4f::new);
-		this.uniformRegionOffset = contextExt.bindUniformIfPresent("u_RegionOffset", GlUniformFloat3v::new);
+		this.uniformModelViewProjectionMatrix = contextExt.bindUniformIfPresent("u_ModelViewProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("u_NormalMatrix", GlUniformMatrix4f::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 
@@ -91,10 +90,6 @@ public class IrisChunkShaderInterface {
 			normalMatrix.transpose();
 			this.uniformNormalMatrix.set(normalMatrix);
 		}
-	}
-
-	public void setRegionOffset(float x, float y, float z) {
-		this.uniformRegionOffset.set(x, y, z);
 	}
 
 	public void setDrawUniforms(GlMutableBuffer buffer) {
