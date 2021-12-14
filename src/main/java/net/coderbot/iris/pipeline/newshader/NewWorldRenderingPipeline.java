@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -571,7 +572,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// all non-translucent content excluding the hand, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 	}
 
@@ -587,7 +588,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 
 		deferredRenderer.renderAll();

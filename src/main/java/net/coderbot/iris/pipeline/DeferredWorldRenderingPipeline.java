@@ -662,7 +662,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = IrisRenderSystem.getAttribLocation(pass.getProgram().getProgramId(), name);
+		int location = GlStateManager._glGetAttribLocation(pass.getProgram().getProgramId(), name);
 
 		if (location != -1) {
 			if (location != expectedLocation) {

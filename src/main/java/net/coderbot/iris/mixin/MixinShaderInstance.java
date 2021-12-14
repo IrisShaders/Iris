@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.shaders.Uniform;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.pipeline.newshader.ExtendedShader;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +61,7 @@ public class MixinShaderInstance {
 			// https://www.khronos.org/opengl/wiki/Texture#Swizzle_mask
 
 			// TODO: Avoid direct GL calls
-			GL30C.glTexParameteriv(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+			IrisRenderSystem.texParameteriv(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 					new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED });
 		}
 	}

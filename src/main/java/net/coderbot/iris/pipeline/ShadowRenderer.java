@@ -502,7 +502,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		targets.getFramebuffer().bindAsReadBuffer();
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
 		RenderSystem.bindTexture(0);
 
 		levelRenderer.getLevel().getProfiler().popPush("translucent terrain");
