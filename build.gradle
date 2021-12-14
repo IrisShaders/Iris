@@ -8,7 +8,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 archivesBaseName = project.archives_base_name + project.minecraft_version
-version = "${project.mod_version}+${getVersionMetadata()}"
+version = "${project.mod_version}${getVersionMetadata()}"
 group = project.maven_group
 
 loom {
@@ -71,10 +71,10 @@ test {
 }
 
 def includeFabricApiModule(String moduleName) {
-	Object dependency = fabricApi.module(moduleName, project.fabric_version);
+	Object dependency = fabricApi.module(moduleName, project.fabric_version)
 
-	dependencies.modImplementation(dependency);
-	dependencies.include(dependency);
+	dependencies.modImplementation(dependency)
+	dependencies.include(dependency)
 }
 
 processResources {
@@ -103,7 +103,7 @@ tasks.withType(JavaCompile).configureEach {
 	// We'll use that if it's available, but otherwise we'll use the older option.
 	def targetVersion = 8
 	if (JavaVersion.current().isJava9Compatible()) {
-		it.options.release = targetVersion
+		it.options.release.set(targetVersion)
 	}
 
 	// Enable this if you want to see deprecation warnings
@@ -224,10 +224,13 @@ runClient {
 
 def getVersionMetadata() {
 	def build_id = System.getenv("GITHUB_RUN_NUMBER")
+	def workflow_id = System.getenv("GITHUB_WORKFLOW")
 
 	// CI builds only
-	if (build_id != null) {
-		return "build.${build_id}"
+	if (workflow_id == "build-release") {
+		return ""
+	} else if (build_id != null) {
+		return "+build.${build_id}"
 	}
 
 	if (grgit != null) {
@@ -239,6 +242,6 @@ def getVersionMetadata() {
 			id += "-dirty"
 		}
 
-		return "rev.${id}"
+		return "+rev.${id}"
 	}
 }

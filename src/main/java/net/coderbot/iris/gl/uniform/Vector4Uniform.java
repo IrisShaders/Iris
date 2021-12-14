@@ -2,8 +2,8 @@ package net.coderbot.iris.gl.uniform;
 
 import java.util.function.Supplier;
 
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.vendored.joml.Vector4f;
-import org.lwjgl.opengl.GL21;
 
 public class Vector4Uniform extends Uniform {
 	private final Vector4f cachedValue;
@@ -34,7 +34,7 @@ public class Vector4Uniform extends Uniform {
 
 		if (!newValue.equals(cachedValue)) {
 			cachedValue.set(newValue.x(), newValue.y(), newValue.z(), newValue.w());
-			GL21.glUniform4f(location, cachedValue.x(), cachedValue.y(), cachedValue.z(), cachedValue.w());
+			IrisRenderSystem.uniform4f(location, cachedValue.x(), cachedValue.y(), cachedValue.z(), cachedValue.w());
 		}
 	}
 }

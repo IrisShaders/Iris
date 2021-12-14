@@ -3,14 +3,17 @@ package net.coderbot.iris.pipeline;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
 
 import com.google.common.collect.ImmutableSet;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.shader.ShaderType;
@@ -51,8 +54,12 @@ public class SodiumTerrainPipeline {
 	private final IntFunction<ProgramSamplers> createTerrainSamplers;
 	private final IntFunction<ProgramSamplers> createShadowSamplers;
 
+	private final IntFunction<ProgramImages> createTerrainImages;
+	private final IntFunction<ProgramImages> createShadowImages;
+
 	public SodiumTerrainPipeline(WorldRenderingPipeline parent, ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
-								 IntFunction<ProgramSamplers> createShadowSamplers, RenderTargets targets,
+								 IntFunction<ProgramSamplers> createShadowSamplers, IntFunction<ProgramImages> createTerrainImages, IntFunction<ProgramImages> createShadowImages,
+								 RenderTargets targets,
 								 ImmutableSet<Integer> flippedBeforeTranslucent,
 								 ImmutableSet<Integer> flippedAfterTranslucent, GlFramebuffer shadowFramebuffer) {
 		this.parent = Objects.requireNonNull(parent);
@@ -71,6 +78,8 @@ public class SodiumTerrainPipeline {
 
 		this.createTerrainSamplers = createTerrainSamplers;
 		this.createShadowSamplers = createShadowSamplers;
+		this.createTerrainImages = createTerrainImages;
+		this.createShadowImages = createShadowImages;
 	}
 
 	public void patchShaders(ChunkVertexType vertexType) {
@@ -228,6 +237,14 @@ public class SodiumTerrainPipeline {
 
 	public ProgramSamplers initShadowSamplers(int programId) {
 		return createShadowSamplers.apply(programId);
+	}
+
+	public ProgramImages initTerrainImages(int programId) {
+		return createTerrainImages.apply(programId);
+	}
+
+	public ProgramImages initShadowImages(int programId) {
+		return createShadowImages.apply(programId);
 	}
 
 	/*public void bindFramebuffer() {

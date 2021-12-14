@@ -26,8 +26,41 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 	float uSum;
 	float vSum;
 
-	private QuadView currentQuad = new QuadView();
-	private Vector3f normal = new Vector3f();
+	private final QuadView currentQuad = new QuadView();
+	private final Vector3f normal = new Vector3f();
+
+	public void copyQuadAndFlipNormal() {
+		ensureCapacity(4);
+
+		ByteBuffer src = this.byteBuffer.duplicate();
+		ByteBuffer dst = this.byteBuffer.duplicate();
+
+		src.position(this.byteBuffer.position() + this.writeOffset - STRIDE * 4);
+		src.limit(src.position() + STRIDE * 4);
+
+		dst.position(this.byteBuffer.position() + this.writeOffset);
+		dst.limit(dst.position() + STRIDE * 4);
+
+		dst.put(src);
+
+		// Now flip vertex normals
+
+		int packedNormal = this.byteBuffer.getInt(this.writeOffset + 28);
+		int inverted = NormalHelper.invertPackedNormal(packedNormal);
+
+		this.byteBuffer.putInt(this.writeOffset + 28, inverted);
+		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE, inverted);
+		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE * 2, inverted);
+		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE * 3, inverted);
+
+		// We just wrote 4 vertices, advance by 4
+		for (int i = 0; i < 4; i++) {
+			this.advance();
+		}
+
+		// Ensure vertices are flushed
+		this.flush();
+	}
 
 	@Override
 	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light, int chunkId) {
@@ -127,6 +160,18 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			float edge2x = x2 - x0;
 			float edge2y = y2 - y0;
 			float edge2z = z2 - z0;
+
+			// edge2 one element gets inverted
+
+			/*
+			float edge1x = x2 - x3;
+			float edge1y = y2 - y3;
+			float edge1z = z2 - z3;
+
+			float edge2x = x1 - x3;
+			float edge2y = y1 - y3;
+			float edge2z = z1 - z3;
+			 */
 
 			float u0 = XHFPModelVertexType.decodeBlockTexture(buffer.getShort(i + 12 - STRIDE * 3));
 			float v0 = XHFPModelVertexType.decodeBlockTexture(buffer.getShort(i + 14 - STRIDE * 3));

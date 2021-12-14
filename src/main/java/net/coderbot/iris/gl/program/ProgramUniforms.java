@@ -4,7 +4,9 @@ import java.nio.IntBuffer;
 import java.util.*;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.Uniform;
 import net.coderbot.iris.gl.uniform.UniformHolder;
@@ -147,7 +149,7 @@ public class ProgramUniforms {
 
 		@Override
 		public OptionalInt location(String name, UniformType type) {
-			int id = GL20C.glGetUniformLocation(program, name);
+			int id = IrisRenderSystem.getUniformLocation(program, name);
 
 			if (id == -1) {
 				return OptionalInt.empty();
@@ -162,12 +164,12 @@ public class ProgramUniforms {
 		public ProgramUniforms buildUniforms() {
 			// Check for any unsupported uniforms and warn about them so that we can easily figure out what uniforms we
 			// need to add.
-			int activeUniforms = GL20C.glGetProgrami(program, GL20C.GL_ACTIVE_UNIFORMS);
+			int activeUniforms = GlStateManager.glGetProgrami(program, GL20C.GL_ACTIVE_UNIFORMS);
 			IntBuffer sizeBuf = BufferUtils.createIntBuffer(1);
 			IntBuffer typeBuf = BufferUtils.createIntBuffer(1);
 
 			for (int index = 0; index < activeUniforms; index++) {
-				String name = GL20C.glGetActiveUniform(program, index, 128, sizeBuf, typeBuf);
+				String name = IrisRenderSystem.getActiveUniform(program, index, 128, sizeBuf, typeBuf);
 
 				int size = sizeBuf.get(0);
 				int type = typeBuf.get(0);

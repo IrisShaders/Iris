@@ -13,6 +13,7 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -22,6 +23,7 @@ import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -178,9 +180,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null),
-					programSet.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets,
-					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
-					programSet, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
+					programSet.getPackDirectives(), renderTargets);
 			createShadowMapRenderer = () -> {};
 		};
 
@@ -232,6 +232,19 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			return builder.build();
 		};
 
+		IntFunction<ProgramImages> createTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
+			if (IrisImages.hasShadowImages(builder)) {
+				createShadowMapRenderer.run();
+				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
 		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
@@ -245,6 +258,18 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			// Otherwise, this program shouldn't be used at all?
 			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor) && shadowMapRenderer != null) {
 				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
+		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeTerrain, renderTargets);
+
+			if (IrisImages.hasShadowImages(builder) && shadowMapRenderer != null) {
+				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
 			}
 
 			return builder.build();
@@ -360,7 +385,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
-				createShadowTerrainSamplers, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
+				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
 				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
 				null);
 	}
@@ -397,6 +422,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// TODO: All samplers added here need to be mirrored in NewShaderTests. Possible way to bypass this?
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
 
 		// TODO: IrisSamplers.addWorldSamplers(builder, normals, specular);
 		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getNormals()::getId, "normals");
@@ -408,6 +434,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 			createShadowMapRenderer.run();
 			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+		}
+
+		if (IrisImages.hasShadowImages(extendedShader)) {
+			IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
 		}
 
 		return extendedShader;
@@ -456,6 +486,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			// gaux1 -> colortex4, gaux2 -> colortex5, gaux3 -> colortex6, gaux4 -> colortex7
 			extendedShader.addIrisSampler("gaux" + i, this.renderTargets.get(i + 3).getMainTexture());
 		}
+
+		IrisImages.addRenderTargetImages(extendedShader, () -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent, renderTargets);
+		IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
 
 		return extendedShader;
 	}
