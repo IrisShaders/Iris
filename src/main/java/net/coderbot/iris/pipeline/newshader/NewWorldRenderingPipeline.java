@@ -41,7 +41,6 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -310,38 +309,38 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// TODO: Resolve hasColorAttrib based on the vertex format
 		try {
-			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.LINEAR);
+			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.ENABLED);
 			this.basicColor = createShader("gbuffers_basic_color", basicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
 			this.textured = createShader("gbuffers_textured", texturedSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.OFF);
 			this.texturedColor = createShader("gbuffers_textured_color", texturedSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF);
-			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.LINEAR);
+			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.ENABLED);
 			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
 			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_TEX, FogMode.OFF);
 			this.skyTexturedColor = createShader("gbuffers_sky_textured_tex_color", skyTexturedSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF);
-			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL, FogMode.LINEAR);
-			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
-			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
-			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
-			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.handCutout = createShader("gbuffers_hand_cutout", handSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.handTranslucent = createShader("gbuffers_hand_translucent", handTranslucentSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR, FogMode.LINEAR);
-			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.LINEAR);
-			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
-			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
+			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL, FogMode.ENABLED);
+			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
+			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
+			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
+			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.handCutout = createShader("gbuffers_hand_cutout", handSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.handTranslucent = createShader("gbuffers_hand_translucent", handTranslucentSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR, FogMode.ENABLED);
+			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.ENABLED);
+			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.ENABLED);
+			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.ENABLED);
 			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, terrainCutoutAlpha, DefaultVertexFormat.BLOCK, FogMode.OFF);
 			// TODO: block entities text?
-			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.LINEAR);
-			this.textIntensity = createShader("gbuffers_entities_text_intensity", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.LINEAR);
-			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK, FogMode.LINEAR);
-			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.LINEAR);
-			this.lines = createShader("gbuffers_lines", programSet.getGbuffersBasic(), AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL, FogMode.LINEAR);
+			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED);
+			this.textIntensity = createShader("gbuffers_entities_text_intensity", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED);
+			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK, FogMode.ENABLED);
+			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.ENABLED);
+			this.lines = createShader("gbuffers_lines", programSet.getGbuffersBasic(), AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL, FogMode.ENABLED);
 
 			if (translucentSource != terrainSource) {
-				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
+				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
 			} else {
 				this.terrainTranslucent = this.terrainSolid;
 			}
@@ -456,7 +455,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
 		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.LINEAR);
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.ENABLED);
 
 		loadedShaders.add(extendedShader);
 

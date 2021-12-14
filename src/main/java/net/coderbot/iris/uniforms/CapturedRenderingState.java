@@ -12,6 +12,7 @@ public class CapturedRenderingState {
 	private Matrix4f gbufferModelView;
 	private Matrix4f gbufferProjection;
 	private Vector3d fogColor;
+	private float fogDensity;
 	private float tickDelta;
 	private int currentRenderedBlockEntity;
 	private Runnable blockEntityIdListener = null;
@@ -48,6 +49,14 @@ public class CapturedRenderingState {
 
 	public void setFogColor(float red, float green, float blue) {
 		fogColor = new Vector3d(red, green, blue);
+	}
+
+	public float getFogDensity() {
+		return fogDensity;
+	}
+
+	public void setFogDensity(float fogDensity) {
+		this.fogDensity = fogDensity;
 	}
 
 	public void setTickDelta(float tickDelta) {

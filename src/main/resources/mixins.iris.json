@@ -59,8 +59,6 @@
     "texunits.MixinOverlayTexture",
     "texunits.MixinDefaultVertexFormat",
     "statelisteners.BooleanStateAccessor",
-    "statelisteners.GlStateManagerAccessor",
-    "statelisteners.MixinGlStateManager",
     "DimensionTypeAccessor"
   ],
   "injectors": {

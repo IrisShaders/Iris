@@ -28,7 +28,6 @@ public class TriforceCompositePatcher {
 		}
 
 		// TODO: Other fog things
-		// TODO: fogDensity isn't actually implemented!
 
 		// This must be defined and valid in all shader passes, including composite passes.
 		//

@@ -49,7 +49,6 @@ public class TriforceSodiumPatcher {
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 
 		// TODO: Other fog things
-		// TODO: fogDensity isn't actually implemented!
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_FogDensity;\n" +
 				"uniform float u_FogStart;\n" +
 				"uniform float u_FogEnd;\n" +

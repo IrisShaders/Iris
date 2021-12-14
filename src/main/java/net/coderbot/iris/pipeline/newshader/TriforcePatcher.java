@@ -46,7 +46,6 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_TextureMat;");
 
 		// TODO: Other fog things
-		// TODO: fogDensity isn't actually implemented!
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_FogDensity;\n" +
 				"uniform float iris_FogStart;\n" +
 				"uniform float iris_FogEnd;\n" +

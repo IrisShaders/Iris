@@ -58,6 +58,7 @@ public final class CommonUniforms {
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
 		FogUniforms.addFogUniforms(uniforms, fogMode);
+		IrisInternalUniforms.addFogUniforms(uniforms);
 
 		uniforms.uniform4f("entityColor", () -> {
 			if (EntityColorRenderStateShard.currentHurt) {
