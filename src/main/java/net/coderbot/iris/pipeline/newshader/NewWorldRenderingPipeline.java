@@ -307,7 +307,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		this.loadedShaders = new HashSet<>();
 
-		// TODO: Resolve hasColorAttrib based on the vertex format
 		try {
 			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.ENABLED);
 			this.basicColor = createShader("gbuffers_basic_color", basicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
@@ -425,7 +424,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
 
-		// TODO: IrisSamplers.addWorldSamplers(builder, normals, specular);
+		// TODO: IrisSamplers.addLevelSamplers(builder, normals, specular);
 		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getNormals()::getId, "normals");
 		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getSpecular()::getId, "specular");
 
