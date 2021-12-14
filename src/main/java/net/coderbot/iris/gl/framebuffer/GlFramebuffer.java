@@ -3,20 +3,21 @@ package net.coderbot.iris.gl.framebuffer;
 import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL30C;
 
-import java.util.Arrays;
-
 public class GlFramebuffer extends GlResource {
 	private final Int2IntMap attachments;
+	private final int maxDrawBuffers;
+	private final int maxColorAttachments;
 
 	public GlFramebuffer() {
 		super(GlStateManager.glGenFramebuffers());
 
 		this.attachments = new Int2IntArrayMap();
+		this.maxDrawBuffers = GlStateManager._getInteger(GL30C.GL_MAX_DRAW_BUFFERS);
+		this.maxColorAttachments = GlStateManager._getInteger(GL30C.GL_MAX_COLOR_ATTACHMENTS);
 
 		bind();
 	}
@@ -38,14 +39,13 @@ public class GlFramebuffer extends GlResource {
 		int[] glBuffers = new int[buffers.length];
 		int index = 0;
 
-		if (buffers.length > 8) {
-			// TODO: Adjust the limit based on the system
-			throw new IllegalArgumentException("Cannot write to more than 8 draw buffers");
+		if (buffers.length > maxDrawBuffers) {
+			throw new IllegalArgumentException("Cannot write to more than " + maxDrawBuffers + " draw buffers on this GPU");
 		}
 
 		for (int buffer : buffers) {
-			if (buffer >= 8) {
-				throw new IllegalArgumentException("Only 8 color attachments are supported, but an attempt was made to write to a color attachment with index " + buffer);
+			if (buffer >= maxColorAttachments) {
+				throw new IllegalArgumentException("Only " + maxColorAttachments + " color attachments are supported on this GPU, but an attempt was made to write to a color attachment with index " + buffer);
 			}
 
 			glBuffers[index++] = GL30C.GL_COLOR_ATTACHMENT0 + buffer;
