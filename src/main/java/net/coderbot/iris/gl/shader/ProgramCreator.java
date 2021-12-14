@@ -20,7 +20,6 @@ public class ProgramCreator {
 		GlStateManager._glBindAttribLocation(program, 11, "mc_midTexCoord");
 		GlStateManager._glBindAttribLocation(program, 12, "at_tangent");
 
-		// TODO(21w10a): more hardcoding!!!!
 		GlStateManager._glBindAttribLocation(program, 0, "Position");
 		GlStateManager._glBindAttribLocation(program, 1, "UV0");
 

@@ -429,21 +429,7 @@ public class Iris implements ClientModInitializer {
 
 		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
-		// TODO(21w10a): Bring back the old world rendering pipelines
-		/*try {
-			if (internal) {
-				return new InternalWorldRenderingPipeline(programs);
-			} else {
-				return new DeferredWorldRenderingPipeline(programs);
-			}
-		} catch (Exception e) {
-			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
-			// TODO: This should be reverted if a dimension change causes shaders to compile again
-			currentPackName = "(off) [fallback, check your logs for details]";
-
-			return new FixedFunctionWorldRenderingPipeline();
-		}*/
-
+		// We use DeferredWorldRenderingPipeline on 1.16, and NewWorldRendering pipeline on 1.17 when rendering shaders.
 		try {
 			return new NewWorldRenderingPipeline(programs);
 		} catch (Throwable e) {

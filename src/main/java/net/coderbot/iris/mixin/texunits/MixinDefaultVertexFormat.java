@@ -13,7 +13,7 @@ import net.fabricmc.api.Environment;
 @Mixin(DefaultVertexFormat.class)
 @Environment(EnvType.CLIENT)
 public class MixinDefaultVertexFormat {
-	/*TODO(21w10a): Replace texunit hooks
+	/* Unused on 1.17
 	@ModifyConstant(method = "<clinit>", constant = @Constant(intValue = 1), require = 1, slice = @Slice(
 		from = @At(value = "FIELD", target = "Lnet/minecraft/client/render/VertexFormats;TEXTURE_ELEMENT:Lnet/minecraft/client/render/VertexFormatElement;"),
 		to = @At(value = "FIELD", target = "Lnet/minecraft/client/render/VertexFormats;OVERLAY_ELEMENT:Lnet/minecraft/client/render/VertexFormatElement;")
