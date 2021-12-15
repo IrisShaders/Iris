@@ -3,6 +3,7 @@ package net.coderbot.iris.gui.element.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -19,6 +20,7 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 
 	protected final MutableComponent unmodifiedLabel;
 	protected final ShaderPackScreen screen;
+	protected final NavigationController navigation;
 	private final MutableComponent label;
 
 	protected Component trimmedLabel;
@@ -28,10 +30,11 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	private int maxLabelWidth;
 	private int valueSectionWidth;
 
-	protected BaseOptionElementWidget(ShaderPackScreen screen, MutableComponent label) {
+	protected BaseOptionElementWidget(ShaderPackScreen screen, NavigationController navigation, MutableComponent label) {
 		this.label = label.copy().append(DIVIDER);
 		this.unmodifiedLabel = label;
 		this.screen = screen;
+		this.navigation = navigation;
 	}
 
 	protected final void updateRenderParams(int width, int minValueSectionWidth) {
@@ -108,7 +111,7 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	}
 
 	protected void queueValueToPending() {
-		Iris.addPendingShaderPackOption(this.getOptionName(), this.getValue());
+		Iris.getShaderPackOptionQueue().put(this.getOptionName(), this.getValue());
 	}
 
 	protected final Component createTrimmedLabel() {
@@ -146,5 +149,7 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	protected final void onValueChanged() {
 		this.queueValueToPending();
 		this.updateLabels();
+
+		this.navigation.refresh();
 	}
 }

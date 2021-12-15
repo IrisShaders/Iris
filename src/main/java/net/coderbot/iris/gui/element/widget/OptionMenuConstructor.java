@@ -58,15 +58,21 @@ public final class OptionMenuConstructor {
 				new ElementWidgetScreenData(GuiUtil.translateOrDefault(new TextComponent(screen.screenId), "screen." + screen.screenId), true));
 
 		registerWidget(OptionMenuBooleanOptionElement.class, (element, screen, navigation) ->
-				new BooleanElementWidget(screen, element.option, element.values.shouldFlip(element.optionId) != element.option.getDefaultValue()));
+				new BooleanElementWidget(screen, navigation, element.option,
+						element.getPendingOptionValues().isBooleanFlipped(element.optionId),
+						element.getAppliedOptionValues().isBooleanFlipped(element.optionId)));
 
 		registerWidget(OptionMenuStringOptionElement.class, (element, screen, navigation) ->
 				element.slider ?
-					new SliderElementWidget(screen, element.option, element.values.getStringValue(element.optionId).orElse(element.option.getDefaultValue()))
-					: new StringElementWidget(screen, element.option, element.values.getStringValue(element.optionId).orElse(element.option.getDefaultValue())));
+					new SliderElementWidget(screen, navigation, element.option,
+							element.getPendingOptionValues().getStringValue(element.optionId),
+							element.getAppliedOptionValues().getStringValue(element.optionId))
+					: new StringElementWidget(screen, navigation, element.option,
+							element.getPendingOptionValues().getStringValue(element.optionId),
+							element.getAppliedOptionValues().getStringValue(element.optionId)));
 
 		registerWidget(OptionMenuProfileElement.class, (element, screen, navigation) ->
-				new ProfileElementWidget(screen, element.currentProfileName, element.next, element.previous));
+				new ProfileElementWidget(screen, navigation, element.profiles, element.options, element.getPendingOptionValues()));
 
 		registerWidget(OptionMenuLinkElement.class, (element, screen, navigation) ->
 				new LinkElementWidget(navigation, GuiUtil.translateOrDefault(new TextComponent(element.targetScreenId), "screen." + element.targetScreenId), element.targetScreenId));

@@ -17,12 +17,9 @@ public class OptionMenuContainer {
 	private final List<String> usedOptions = new ArrayList<>();
 	private final List<String> unusedOptions = new ArrayList<>(); // To be used when screens contain a "*" element
 	private final Map<List<OptionMenuElement>, Integer> unusedOptionDumpQueue = new HashMap<>(); // Used by screens with "*" element
-
-	private final Optional<String> currentProfile;
 	private final Map<String, Profile> profiles;
 
-	public OptionMenuContainer(ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, Optional<String> currentProfile, Map<String, Profile> profiles) {
-		this.currentProfile = currentProfile;
+	public OptionMenuContainer(ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, Map<String, Profile> profiles) {
 		this.profiles = profiles;
 
 		this.mainScreen = new OptionMenuMainElementScreen(
@@ -59,10 +56,6 @@ public class OptionMenuContainer {
 
 			entry.getKey().addAll(entry.getValue(), elementsToInsert);
 		}
-	}
-
-	public Optional<String> getCurrentProfile() {
-		return currentProfile;
 	}
 
 	public Map<String, Profile> getProfiles() {

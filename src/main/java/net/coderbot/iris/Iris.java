@@ -59,7 +59,7 @@ public class Iris implements ClientModInitializer {
 	private static KeyMapping toggleShadersKeybind;
 	private static KeyMapping shaderpackScreenKeybind;
 
-	private static final Map<String, String> pendingShaderPackOptions = new HashMap<>();
+	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	private static boolean resetShaderPackOptions = false;
 
 	private static String IRIS_VERSION;
@@ -272,8 +272,8 @@ public class Iris implements ClientModInitializer {
 				.map(properties -> (Map<String, String>) (Map) properties)
 				.orElse(new HashMap<>());
 
-		changedConfigs.putAll(pendingShaderPackOptions);
-		clearPendingShaderPackOptions();
+		changedConfigs.putAll(shaderPackOptionQueue);
+		clearShaderPackOptionQueue();
 
 		if (resetShaderPackOptions) {
 			changedConfigs.clear();
@@ -409,16 +409,16 @@ public class Iris implements ClientModInitializer {
 		return false;
 	}
 
-	public static void addPendingShaderPackOption(String key, String value) {
-		pendingShaderPackOptions.put(key, value);
+	public static Map<String, String> getShaderPackOptionQueue() {
+		return shaderPackOptionQueue;
 	}
 
-	public static void addPendingShaderPackOptionsFromProfile(Profile profile) {
-		profile.optionValues.forEach(Iris::addPendingShaderPackOption);
+	public static void queueShaderPackOptionsFromProfile(Profile profile) {
+		profile.optionValues.forEach(getShaderPackOptionQueue()::put);
 	}
 
-	public static void clearPendingShaderPackOptions() {
-		pendingShaderPackOptions.clear();
+	public static void clearShaderPackOptionQueue() {
+		getShaderPackOptionQueue().clear();
 	}
 
 	public static void resetShaderPackOptionsOnNextReload() {

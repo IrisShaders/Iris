@@ -20,7 +20,7 @@ public abstract class OptionMenuElement {
 		}
 		// Profile element
 		if (ELEMENT_PROFILE.equals(elementString)) {
-			return new OptionMenuProfileElement(container.getCurrentProfile(), container.getProfiles());
+			return new OptionMenuProfileElement(container.getProfiles(), shaderPackOptions.getOptionSet(), shaderPackOptions.getOptionValues());
 		}
 		// Link to sub screen element
 		if (elementString.startsWith("[") && elementString.endsWith("]")) {

@@ -3,8 +3,12 @@ package net.coderbot.iris.gui.element.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.Profile;
+import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -14,19 +18,45 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class ProfileElementWidget extends BaseOptionElementWidget {
 	private static final MutableComponent PROFILE_LABEL = new TranslatableComponent("options.iris.profile");
 	private static final MutableComponent PROFILE_CUSTOM = new TranslatableComponent("options.iris.profile.custom").withStyle(ChatFormatting.YELLOW);
-	private static final MutableComponent PROFILE_TOOLTIP = new TranslatableComponent("options.iris.profile.tooltip").withStyle(ChatFormatting.RED);
 
 	private final Profile next;
 	private final Profile previous;
 	private final Component profileLabel;
 
-	public ProfileElementWidget(ShaderPackScreen screen, Optional<String> profileName, Profile next, Profile previous) {
-		super(screen, PROFILE_LABEL);
+	public ProfileElementWidget(ShaderPackScreen screen, NavigationController navigation, Map<String, Profile> profiles, OptionSet options, OptionValues pendingValues) {
+		super(screen, navigation, PROFILE_LABEL);
+
+		Optional<String> profileName = Optional.empty();
+
+		List<String> indexedProfileNames = new ArrayList<>(profiles.keySet());
+
+		Profile next = null;
+		Profile previous = null;
+
+		if (indexedProfileNames.size() > 0) {
+			next = profiles.get(indexedProfileNames.get(0));
+			previous = profiles.get(indexedProfileNames.get(indexedProfileNames.size() - 1));
+
+			for (String name : profiles.keySet()) {
+				if (profiles.get(name).matches(options, pendingValues)) {
+					profileName = Optional.of(name);
+
+					int profileIdx = indexedProfileNames.indexOf(name);
+					next = profiles.get(indexedProfileNames.get(Math.floorMod(profileIdx + 1, indexedProfileNames.size())));
+					previous = profiles.get(indexedProfileNames.get(Math.floorMod(profileIdx - 1, indexedProfileNames.size())));
+
+					break;
+				}
+			}
+		}
 
 		this.next = next;
 		this.previous = previous;
@@ -39,7 +69,6 @@ public class ProfileElementWidget extends BaseOptionElementWidget {
 		this.updateRenderParams(width, width - (Minecraft.getInstance().font.width(PROFILE_LABEL) + 16));
 
 		this.renderOptionWithValue(poseStack, x, y, width, height, hovered);
-		this.renderTooltip(poseStack, PROFILE_TOOLTIP, mouseX, mouseY, hovered);
 	}
 
 	@Override
@@ -81,10 +110,13 @@ public class ProfileElementWidget extends BaseOptionElementWidget {
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == GLFW.GLFW_MOUSE_BUTTON_1 || button == GLFW.GLFW_MOUSE_BUTTON_2) {
-			Iris.addPendingShaderPackOptionsFromProfile(button == GLFW.GLFW_MOUSE_BUTTON_1 ? this.next : this.previous);
-			GuiUtil.playButtonClickSound();
+			Profile toQueue = button == GLFW.GLFW_MOUSE_BUTTON_1 ? this.next : this.previous;
+			if (toQueue != null) {
+				Iris.queueShaderPackOptionsFromProfile(toQueue);
+			}
 
-			this.screen.applyChanges();
+			GuiUtil.playButtonClickSound();
+			this.navigation.refresh();
 
 			return true;
 		}

@@ -2,6 +2,7 @@ package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.BooleanOption;
 import net.minecraft.ChatFormatting;
@@ -14,15 +15,16 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 	private static final Component TEXT_FALSE = new TranslatableComponent("label.iris.false").withStyle(ChatFormatting.RED);
 
 	private final BooleanOption option;
-	private final boolean originalValue;
+	private final boolean appliedValue;
 
 	private boolean value;
 
-	public BooleanElementWidget(ShaderPackScreen screen, BooleanOption option, boolean value) {
-		super(screen, GuiUtil.translateOrDefault(new TextComponent(option.getName()), "option." + option.getName()));
+	public BooleanElementWidget(ShaderPackScreen screen, NavigationController navigation, BooleanOption option, boolean isFlipPending, boolean isFlipApplied) {
+		super(screen, navigation, GuiUtil.translateOrDefault(new TextComponent(option.getName()), "option." + option.getName()));
 		this.option = option;
-		this.originalValue = value;
-		this.value = value;
+
+		this.appliedValue = option.getDefaultValue() != isFlipApplied; // The value currently in use by the shader
+		this.value = option.getDefaultValue() != isFlipPending; // The unapplied value that has been queued (if that is the case)
 	}
 
 	@Override
@@ -50,7 +52,7 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 
 	@Override
 	public boolean isValueOriginal() {
-		return this.value == this.originalValue;
+		return this.value == this.appliedValue;
 	}
 
 	@Override

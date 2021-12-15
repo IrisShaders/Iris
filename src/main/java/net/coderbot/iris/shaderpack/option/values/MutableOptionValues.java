@@ -26,6 +26,22 @@ public class MutableOptionValues implements OptionValues {
 		this.flippedBooleanValues = new HashSet<>();
 		this.stringValues = new HashMap<>();
 
+		this.addAll(values);
+	}
+
+	public OptionSet getOptions() {
+		return options;
+	}
+
+	public Set<String> getFlippedBooleanValues() {
+		return flippedBooleanValues;
+	}
+
+	public Map<String, String> getStringValues() {
+		return stringValues;
+	}
+
+	public void addAll(Map<String, String> values) {
 		options.getBooleanOptions().forEach((name, option) -> {
 			String value = values.get(name);
 			boolean booleanValue;
@@ -68,18 +84,6 @@ public class MutableOptionValues implements OptionValues {
 
 			stringValues.put(name, value);
 		});
-	}
-
-	public OptionSet getOptions() {
-		return options;
-	}
-
-	public Set<String> getFlippedBooleanValues() {
-		return flippedBooleanValues;
-	}
-
-	public Map<String, String> getStringValues() {
-		return stringValues;
 	}
 
 	@Override

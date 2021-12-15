@@ -30,15 +30,17 @@ public class NavigationController {
 			currentScreen = null;
 		}
 
-		if (optionList != null) {
-			optionList.refresh();
-		}
+		this.refresh();
 	}
 
 	public void open(String screen) {
 		currentScreen = screen;
 		history.addLast(screen);
 
+		this.refresh();
+	}
+
+	public void refresh() {
 		if (optionList != null) {
 			optionList.refresh();
 		}

@@ -63,8 +63,7 @@ public final class Profile {
 			if (options.getBooleanOptions().containsKey(option)) {
 				boolean currentValue = options.getBooleanOptions().get(option).getOption().getDefaultValue() != values.isBooleanFlipped(option);
 
-				if (("true".equals(value) && !currentValue) ||
-						("false".equals(value) && currentValue)) {
+				if (!Boolean.toString(currentValue).equals(value)) {
 					return false;
 				}
 			}
