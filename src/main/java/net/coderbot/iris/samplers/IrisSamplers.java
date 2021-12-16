@@ -52,6 +52,8 @@ public class IrisSamplers {
 
 			final String name = "colortex" + i;
 
+			// TODO: How do custom textures interact with aliases?
+
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
 
@@ -67,14 +69,16 @@ public class IrisSamplers {
 		}
 	}
 
-	public static void addNoiseSampler(SamplerHolder samplers, AbstractTexture texture) {
-		samplers.addDynamicSampler(texture::getId, "noisetex");
+	public static void addNoiseSampler(SamplerHolder samplers, IntSupplier sampler) {
+		samplers.addDynamicSampler(sampler, "noisetex");
 	}
 
 	public static boolean hasShadowSamplers(SamplerHolder samplers) {
 		// TODO: Keep this up to date with the actual definitions.
+		// TODO: Don't query image presence using the sampler interface even though the current underlying implementation
+		//       is the same.
 		ImmutableList<String> shadowSamplers = ImmutableList.of("shadowtex0", "shadowtex1", "shadow", "watershadow",
-				"shadowcolor", "shadowcolor0", "shadowcolor1");
+				"shadowcolor", "shadowcolor0", "shadowcolor1", "shadowcolorimg0", "shadowcolorimg1");
 
 		for (String samplerName : shadowSamplers) {
 			if (samplers.hasSampler(samplerName)) {

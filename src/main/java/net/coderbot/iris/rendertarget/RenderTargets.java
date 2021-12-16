@@ -29,7 +29,9 @@ public class RenderTargets {
 
 		renderTargets.forEach((index, settings) -> {
 			// TODO: Handle mipmapping?
-			targets[index] = net.coderbot.iris.rendertarget.RenderTarget.builder().setDimensions(width, height).setInternalFormat(settings.getRequestedFormat()).build();
+			targets[index] = net.coderbot.iris.rendertarget.RenderTarget.builder().setDimensions(width, height)
+					.setInternalFormat(settings.getInternalFormat())
+					.setPixelFormat(settings.getInternalFormat().getPixelFormat()).build();
 		});
 
 		this.depthTexture = new DepthTexture(width, height);
@@ -153,7 +155,11 @@ public class RenderTargets {
 			stageWritesToMain = invert(ImmutableSet.of(), drawBuffers);
 		}
 
-		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToMain, drawBuffers);
+		return createColorFramebufferWithDepth(stageWritesToMain, drawBuffers);
+	}
+
+	public GlFramebuffer createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
+		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
 		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
 

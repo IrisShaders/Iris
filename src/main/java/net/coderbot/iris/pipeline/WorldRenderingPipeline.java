@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import java.util.List;
 import java.util.OptionalInt;
@@ -23,10 +24,13 @@ public interface WorldRenderingPipeline {
 	void destroy();
 
 	SodiumTerrainPipeline getSodiumTerrainPipeline();
+	FrameUpdateNotifier getFrameUpdateNotifier();
 
 	boolean shouldDisableVanillaEntityShadows();
 	boolean shouldDisableDirectionalShading();
 	boolean shouldRenderClouds();
+	boolean shouldRenderUnderwaterOverlay();
+	boolean shouldRenderVignette();
 
 	float getSunPathRotation();
 }

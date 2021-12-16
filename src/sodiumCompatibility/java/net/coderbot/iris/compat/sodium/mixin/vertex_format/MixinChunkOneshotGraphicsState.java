@@ -5,8 +5,12 @@ import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
 import me.jellysquid.mods.sodium.client.gl.buffer.VertexData;
 import me.jellysquid.mods.sodium.client.render.chunk.backends.oneshot.ChunkOneshotGraphicsState;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
+import me.jellysquid.mods.sodium.client.render.chunk.format.DefaultModelVertexFormats;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
+import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -42,7 +46,8 @@ public abstract class MixinChunkOneshotGraphicsState {
                     remap = false,
                     ordinal = 0))
     private GlVertexAttributeBinding[] iris$addAdditionalBindings(GlVertexAttributeBinding[] base) {
-        return ArrayUtils.addAll(base,
+
+        return Iris.isPackActive() ? ArrayUtils.addAll(base,
                 new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
                         vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
                 new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
@@ -51,6 +56,6 @@ public abstract class MixinChunkOneshotGraphicsState {
                         vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
                 new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
                         vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))
-        );
+        ) : base;
     }
 }

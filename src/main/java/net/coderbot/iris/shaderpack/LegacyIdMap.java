@@ -1,88 +1,92 @@
 package net.coderbot.iris.shaderpack;
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
+import com.google.common.collect.ImmutableList;
+import it.unimi.dsi.fastutil.Function;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.coderbot.iris.shaderpack.materialmap.BlockEntry;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 
-// TODO: Don't reference vanilla Minecraft classes, so that the shaderpack loader can be properly isolated from
-//       Minecraft.
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public class LegacyIdMap {
+	private static final ImmutableList<String> COLORS =
+			ImmutableList.of("white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+					"light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black");
 
-	public static void addLegacyValues(Object2IntMap<BlockState> blockIdMap) {
-		add(blockIdMap, 1, Blocks.STONE, Blocks.GRANITE, Blocks.DIORITE, Blocks.ANDESITE);
-		add(blockIdMap, 2, Blocks.GRASS_BLOCK);
-		add(blockIdMap, 4, Blocks.COBBLESTONE);
+	private static final ImmutableList<String> WOOD_TYPES =
+			ImmutableList.of("oak", "birch", "jungle", "spruce", "acacia", "dark_oak");
 
-		add(blockIdMap, 50, Blocks.TORCH);
-		add(blockIdMap, 89, Blocks.GLOWSTONE);
-		add(blockIdMap, 124, Blocks.REDSTONE_LAMP);
+	public static void addLegacyValues(Int2ObjectMap<List<BlockEntry>> blockIdMap) {
+		add(blockIdMap, 1, block("stone"), block("granite"), block("diorite"), block("andesite"));
+		add(blockIdMap, 2, block("grass_block"));
+		add(blockIdMap, 4, block("cobblestone"));
 
-		add(blockIdMap, 12, Blocks.SAND);
-		add(blockIdMap, 24, Blocks.SANDSTONE);
+		add(blockIdMap, 50, block("torch"));
+		add(blockIdMap, 89, block("glowstone"));
+		add(blockIdMap, 124, block("redstone_lamp"));
 
-		add(blockIdMap, 41, Blocks.GOLD_BLOCK);
-		add(blockIdMap, 42, Blocks.IRON_BLOCK);
-		add(blockIdMap, 57, Blocks.DIAMOND_BLOCK);
+		add(blockIdMap, 12, block("sand"));
+		add(blockIdMap, 24, block("sandstone"));
+
+		add(blockIdMap, 41, block("gold_block"));
+		add(blockIdMap, 42, block("iron_block"));
+		add(blockIdMap, 57, block("diamond_block"));
 		// Apparently this is what SEUS v11 expects? Maybe old shadersmod was buggy.
-		add(blockIdMap, -123, Blocks.EMERALD_BLOCK);
+		add(blockIdMap, -123, block("emerald_block"));
 
-		add(blockIdMap, 34, Blocks.WHITE_WOOL, Blocks.ORANGE_WOOL, Blocks.MAGENTA_WOOL,
-				Blocks.LIGHT_BLUE_WOOL, Blocks.YELLOW_WOOL, Blocks.LIME_WOOL,
-				Blocks.PINK_WOOL, Blocks.GRAY_WOOL, Blocks.LIGHT_GRAY_WOOL,
-				Blocks.CYAN_WOOL, Blocks.PURPLE_WOOL, Blocks.BLUE_WOOL,
-				Blocks.BROWN_WOOL, Blocks.GREEN_WOOL, Blocks.RED_WOOL,
-				Blocks.BLACK_WOOL);
+		addMany(blockIdMap, 34, COLORS, color -> block(color + "_wool"));
 
-		add(blockIdMap, 8, Blocks.WATER);
-		add(blockIdMap, 10, Blocks.LAVA);
-		add(blockIdMap, 79, Blocks.ICE);
+		add(blockIdMap, 8, block("water"));
+		add(blockIdMap, 10, block("lava"));
+		add(blockIdMap, 79, block("ice"));
 
-		add(blockIdMap, 18, Blocks.OAK_LEAVES, Blocks.BIRCH_LEAVES, Blocks.JUNGLE_LEAVES, Blocks.SPRUCE_LEAVES,
-				Blocks.ACACIA_LEAVES, Blocks.DARK_OAK_LEAVES);
+		addMany(blockIdMap, 18, WOOD_TYPES, woodType -> block(woodType + "_leaves"));
 
-		add(blockIdMap, 95, Blocks.WHITE_STAINED_GLASS, Blocks.ORANGE_STAINED_GLASS, Blocks.MAGENTA_STAINED_GLASS,
-				Blocks.LIGHT_BLUE_STAINED_GLASS, Blocks.YELLOW_STAINED_GLASS, Blocks.LIME_STAINED_GLASS,
-				Blocks.PINK_STAINED_GLASS, Blocks.GRAY_STAINED_GLASS, Blocks.LIGHT_GRAY_STAINED_GLASS,
-				Blocks.CYAN_STAINED_GLASS, Blocks.PURPLE_STAINED_GLASS, Blocks.BLUE_STAINED_GLASS,
-				Blocks.BROWN_STAINED_GLASS, Blocks.GREEN_STAINED_GLASS, Blocks.RED_STAINED_GLASS,
-				Blocks.BLACK_STAINED_GLASS);
-
-		add(blockIdMap, 160, Blocks.WHITE_STAINED_GLASS_PANE, Blocks.ORANGE_STAINED_GLASS_PANE,
-				Blocks.MAGENTA_STAINED_GLASS_PANE, Blocks.LIGHT_BLUE_STAINED_GLASS_PANE,
-				Blocks.YELLOW_STAINED_GLASS_PANE, Blocks.LIME_STAINED_GLASS_PANE,
-				Blocks.PINK_STAINED_GLASS_PANE, Blocks.GRAY_STAINED_GLASS_PANE,
-				Blocks.LIGHT_GRAY_STAINED_GLASS_PANE, Blocks.CYAN_STAINED_GLASS_PANE,
-				Blocks.PURPLE_STAINED_GLASS_PANE, Blocks.BLUE_STAINED_GLASS_PANE,
-				Blocks.BROWN_STAINED_GLASS_PANE, Blocks.GREEN_STAINED_GLASS_PANE,
-				Blocks.RED_STAINED_GLASS_PANE, Blocks.BLACK_STAINED_GLASS_PANE);
+		addMany(blockIdMap, 94, COLORS, color -> block(color + "_stained_glass"));
+		addMany(blockIdMap, 160, COLORS, color -> block(color + "_stained_glass_pane"));
 
 		// Short grass / bush
-		add(blockIdMap, 31, Blocks.GRASS, Blocks.SEAGRASS, Blocks.SWEET_BERRY_BUSH);
+		add(blockIdMap, 31, block("grass"), block("seagrass"), block("sweet_berry_bush"));
 
 		// Crops (59 = wheat), but we include carrots and potatoes too.
-		add(blockIdMap, 59, Blocks.WHEAT, Blocks.CARROTS, Blocks.POTATOES);
+		add(blockIdMap, 59, block("wheat"), block("carrots"), block("potatoes"));
 
 		// Small flowers
-		add(blockIdMap, 37, Blocks.DANDELION, Blocks.POPPY, Blocks.BLUE_ORCHID, Blocks.ALLIUM, Blocks.AZURE_BLUET,
-				Blocks.RED_TULIP, Blocks.PINK_TULIP, Blocks.WHITE_TULIP, Blocks.ORANGE_TULIP, Blocks.OXEYE_DAISY,
-				Blocks.CORNFLOWER, Blocks.LILY_OF_THE_VALLEY, Blocks.WITHER_ROSE);
+		add(blockIdMap, 37, block("dandelion"), block("poppy"), block("blue_orchid"),
+				block("allium"), block("azure_bluet"), block("red_tulip"), block("pink_tulip"),
+				block("white_tulip"), block("orange_tulip"), block("oxeye_daisy"),
+				block("cornflower"), block("lily_of_the_valley"), block("wither_rose"));
 
 		// Big tall grass / flowers
 		// Also include seagrass here
-		add(blockIdMap, 175, Blocks.SUNFLOWER, Blocks.LILAC, Blocks.TALL_GRASS, Blocks.LARGE_FERN, Blocks.ROSE_BUSH,
-				Blocks.PEONY, Blocks.TALL_SEAGRASS);
+		add(blockIdMap, 175, block("sunflower"), block("lilac"), block("tall_grass"),
+				block("large_fern"), block("rose_bush"), block("peony"), block("tall_seagrass"));
 
 		// Fire
-		add(blockIdMap, 51, Blocks.FIRE);
+		add(blockIdMap, 51, block("fire"));
 
 		// Lily pad
-		add(blockIdMap, 111, Blocks.LILY_PAD);
+		add(blockIdMap, 111, block("lily_pad"));
 	}
 
-	private static void add(Object2IntMap<BlockState> blockIdMap, int id, Block... leaves) {
-		for (Block leaf : leaves) {
-			leaf.getStateDefinition().getPossibleStates().forEach(state -> blockIdMap.put(state, id));
+	private static BlockEntry block(String name) {
+		return new BlockEntry(new NamespacedId("minecraft", name), Collections.emptyMap());
+	}
+
+	private static void addMany(Int2ObjectMap<List<BlockEntry>> blockIdMap, int id, List<String> prefixes, Function<String, BlockEntry> toId) {
+		List<BlockEntry> entries = new ArrayList<>();
+
+		for (String prefix : prefixes) {
+			entries.add(toId.apply(prefix));
 		}
+
+		blockIdMap.put(id, entries);
+	}
+
+	private static void add(Int2ObjectMap<List<BlockEntry>> blockIdMap, int id, BlockEntry... entries) {
+		blockIdMap.put(id, Arrays.asList(entries));
 	}
 }

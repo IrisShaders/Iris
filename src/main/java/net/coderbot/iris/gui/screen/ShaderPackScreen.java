@@ -12,7 +12,6 @@ import net.minecraft.network.chat.TranslatableComponent;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -104,7 +103,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			String fileName = pack.getFileName().toString();
 
 			try {
-				copyShaderPack(pack, fileName);
+				Iris.getShaderpacksDirectoryManager().copyPackIntoDirectory(fileName, pack);
 			} catch (FileAlreadyExistsException e) {
 				this.addedPackDialog = new TranslatableComponent(
 						"options.iris.shaderPackSelection.copyErrorAlreadyExists",
@@ -178,39 +177,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.addedPackDialogTimer = 100;
 	}
 
-	private static void copyShaderPack(Path pack, String name) throws IOException {
-		Path target = Iris.getShaderpacksDirectory().resolve(name);
-
-		// Copy the pack file into the shaderpacks folder.
-		Files.copy(pack, target);
-		// Zip or other archive files will be copied without issue,
-		// however normal folders will require additional handling below.
-
-		// Manually copy the contents of the pack if it is a folder
-		if (Files.isDirectory(pack)) {
-			// Use for loops instead of forEach due to createDirectory throwing an IOException
-			// which requires additional handling when used in a lambda
-
-			// Copy all sub folders, collected as a list in order to prevent issues with non-ordered sets
-			for (Path p : Files.walk(pack).filter(Files::isDirectory).collect(Collectors.toList())) {
-				Path folder = pack.relativize(p);
-
-				if (Files.exists(folder)) {
-					continue;
-				}
-
-				Files.createDirectory(target.resolve(folder));
-			}
-			// Copy all non-folder files
-			for (Path p : Files.walk(pack).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
-				Path file = pack.relativize(p);
-
-				Files.copy(p, target.resolve(file));
-			}
-		}
-
-	}
-
 	@Override
 	public void onClose() {
 		if (!dropChanges) {
@@ -254,6 +220,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void openShaderPackFolder() {
-		Util.getPlatform().openFile(Iris.getShaderpacksDirectory().toFile());
+		Util.getPlatform().openUri(Iris.getShaderpacksDirectoryManager().getDirectoryUri());
 	}
 }

@@ -2,6 +2,7 @@ package net.coderbot.iris.rendertarget;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
@@ -14,8 +15,7 @@ public class FramebufferBlitter {
 		int width = to.width;
 		int height = to.height;
 
-		// TODO: Support OpenGL 2.1?
-		GL30C.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
+		GlStateManager._glBlitFrameBuffer(0, 0, width, height, 0, 0, width, height,
 			GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
 	}
 
@@ -27,7 +27,7 @@ public class FramebufferBlitter {
 		int height = to.height;
 
 		// TODO: Support OpenGL 2.1?
-		GL30C.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
+		IrisRenderSystem.blitFramebuffer(0, 0, width, height, 0, 0, width, height,
 				GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
 	}
 }

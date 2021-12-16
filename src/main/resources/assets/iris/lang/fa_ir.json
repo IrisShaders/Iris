@@ -3,6 +3,12 @@
   "iris.keybind.reload": "بارگیری مجدد shader ها",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "خطا در بارگیری مجدد shader ها ، علت : %s",
+  "iris.sodium.failure.title": "Iris اشکال در بارگذاری",
+  "iris.sodium.failure.reason": "شما Sodium پرونده اجرایی را در پوشه mods بازی خود دارید، اما Iris پرونده اجرایی Sodium را به همراه دارد،‌ لطفا بازی را ببندید و پرونده اجرایی Sodium را از پوشه mods بازی حذف کنید.",
+ "options.iris.shadowDistance": "حداکثر فاصله سایه ها",
+  "options.iris.shadowDistance.enabled": "به شما قابلیت تغییر میزان حداکثر فاصله سایه ها را می‌دهد. موجودات خارج از این فاصله هیچ سایه ای نمی‌اندازند. کم کردن این گزینه می‌تواند تاثیر زیادی در عملکرد بهتر بازی داشته باشد.",
+  "options.iris.shadowDistance.disabled": "Shaderpack انتخابی شما میزان حداکثر فاصله سایه ها را تایین کرده است و شما نمی توانید آن را تغییر دهد.",
+
 
   "options.iris.apply": "اعمال",
   "options.iris.refresh": "تازه سازی",

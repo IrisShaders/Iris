@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import java.util.List;
@@ -85,6 +86,12 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public FrameUpdateNotifier getFrameUpdateNotifier() {
+		// return a dummy notifier
+		return new FrameUpdateNotifier();
+	}
+
+	@Override
 	public boolean shouldDisableVanillaEntityShadows() {
 		return false;
 	}
@@ -97,6 +104,16 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	@Override
 	public boolean shouldRenderClouds() {
 		// Keep clouds enabled
+		return true;
+	}
+
+	@Override
+	public boolean shouldRenderUnderwaterOverlay() {
+		return true;
+	}
+
+	@Override
+	public boolean shouldRenderVignette() {
 		return true;
 	}
 

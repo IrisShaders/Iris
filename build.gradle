@@ -8,7 +8,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 archivesBaseName = project.archives_base_name
-version = "${project.mod_version}+${getVersionMetadata()}"
+version = "${project.mod_version}${getVersionMetadata()}"
 group = project.maven_group
 
 
@@ -31,6 +31,11 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
 	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+
+	// Preprocessing library used on shaders
+	modImplementation "org.anarres:jcpp:1.4.14"
+	include "org.anarres:jcpp:1.4.14"
+	include 'org.slf4j:slf4j-api:1.7.12'
 }
 
 if (project.sodium_compatibility == "true") {
@@ -55,10 +60,10 @@ test {
 }
 
 def includeFabricApiModule(String moduleName) {
-	Object dependency = fabricApi.module(moduleName, project.fabric_version);
+	Object dependency = fabricApi.module(moduleName, project.fabric_version)
 
-	dependencies.modImplementation(dependency);
-	dependencies.include(dependency);
+	dependencies.modImplementation(dependency)
+	dependencies.include(dependency)
 }
 
 processResources {
@@ -87,7 +92,7 @@ tasks.withType(JavaCompile).configureEach {
 	// We'll use that if it's available, but otherwise we'll use the older option.
 	def targetVersion = 8
 	if (JavaVersion.current().isJava9Compatible()) {
-		it.options.release = targetVersion
+		it.options.release.set(targetVersion)
 	}
 
 	// Enable this if you want to see deprecation warnings
@@ -214,10 +219,13 @@ runClient {
 
 def getVersionMetadata() {
 	def build_id = System.getenv("GITHUB_RUN_NUMBER")
+	def workflow_id = System.getenv("GITHUB_WORKFLOW")
 
 	// CI builds only
-	if (build_id != null) {
-		return "build.${build_id}"
+	if (workflow_id == "build-release") {
+		return ""
+	} else if (build_id != null) {
+		return "+build.${build_id}"
 	}
 
 	if (grgit != null) {
@@ -229,6 +237,6 @@ def getVersionMetadata() {
 			id += "-dirty"
 		}
 
-		return "rev.${id}"
+		return "+rev.${id}"
 	}
 }
