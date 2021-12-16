@@ -153,7 +153,7 @@ public class StandardMacros {
 			extensions[i] = IrisRenderSystem.getStringi(GL30C.GL_EXTENSIONS, i);
 		}
 
-		// TODO(21w10a): unified way of getting extensions on the core and compatibility profile?
+		// TODO: unified way of getting extensions on the core and compatibility profile?
 		// String[] extensions = Objects.requireNonNull(GL11.glGetString(GL11.GL_EXTENSIONS)).split("\\s+");
 
 		// TODO note that we do not add extensions based on if the shader uses them and if they are supported

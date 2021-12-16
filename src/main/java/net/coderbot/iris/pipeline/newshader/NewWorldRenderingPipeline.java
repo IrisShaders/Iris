@@ -18,7 +18,12 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.pipeline.*;
+import net.coderbot.iris.pipeline.ClearPass;
+import net.coderbot.iris.pipeline.ClearPassCreator;
+import net.coderbot.iris.pipeline.CustomTextureManager;
+import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -59,19 +64,22 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
-	private boolean destroyed = false;
-
 	private final RenderTargets renderTargets;
 
 	private final ShaderInstance basic;
 	private final ShaderInstance basicColor;
+
 	private final ShaderInstance textured;
 	private final ShaderInstance texturedColor;
+
 	private final ShaderInstance skyBasic;
 	private final ShaderInstance skyBasicColor;
+
 	private final ShaderInstance skyTextured;
 	private final ShaderInstance skyTexturedColor;
+
 	private final ShaderInstance clouds;
+
 	private final ShaderInstance shadowTerrainCutout;
 
 	private final ShaderInstance terrainSolid;
@@ -81,47 +89,46 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShaderInstance entitiesSolid;
 	private final ShaderInstance entitiesCutout;
 	private final ShaderInstance entitiesEyes;
+
 	private final ShaderInstance handCutout;
 	private final ShaderInstance handTranslucent;
+
 	private final ShaderInstance shadowEntitiesCutout;
 	private final ShaderInstance shadowBeaconBeam;
+
 	private final ShaderInstance lightning;
 	private final ShaderInstance leash;
 	private final ShaderInstance particles;
 	private final ShaderInstance weather;
 	private final ShaderInstance crumbling;
+
 	private final ShaderInstance text;
 	private final ShaderInstance textIntensity;
+
 	private final ShaderInstance block;
 	private final ShaderInstance beacon;
 	private final ShaderInstance glint;
 	private final ShaderInstance lines;
-	private final ShaderInstance shadowLines;
 
+	private final ShaderInstance shadowLines;
 	private final ShaderInstance terrainTranslucent;
-	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 
 	private final Set<ShaderInstance> loadedShaders;
-
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
 	private final GlFramebuffer baseline;
 
-	private Runnable createShadowMapRenderer;
-	private ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final FinalPassRenderer finalPassRenderer;
+
 	private final CustomTextureManager customTextureManager;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
-
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
-
-	boolean isBeforeTranslucent;
 
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
@@ -129,6 +136,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean shouldRenderVignette;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
+	boolean isBeforeTranslucent;
+	private boolean destroyed = false;
+
+	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
+	private Runnable createShadowMapRenderer;
+	private ShadowMapRenderer shadowMapRenderer;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
@@ -183,7 +196,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null),
 					programSet.getPackDirectives(), renderTargets);
-			createShadowMapRenderer = () -> {};
+			createShadowMapRenderer = () -> {
+			};
 		};
 
 		BufferFlipper flipper = new BufferFlipper();
@@ -300,7 +314,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		Optional<ProgramSource> damagedBlockSource = first(programSet.getGbuffersDamagedBlock(), terrainSource);
 
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[]{0});
 
 		// Matches OptiFine's default for CUTOUT and CUTOUT_MIPPED.
 		AlphaTest terrainCutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
@@ -378,7 +392,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				this.shadowEntitiesCutout = createShadowShader("shadow_entities_cutout", shadowSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY);
 				this.shadowBeaconBeam = createShadowShader("shadow_beacon_beam", shadowSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK);
 				this.shadowLines = createShadowShader("shadow_lines", shadowSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-			}  catch (RuntimeException e) {
+			} catch (RuntimeException e) {
 				destroyShaders();
 
 				throw e;
@@ -388,7 +402,18 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
 				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
 				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
-				null);
+						null);
+	}
+
+	@SafeVarargs
+	private static <T> Optional<T> first(Optional<T>... candidates) {
+		for (Optional<T> candidate : candidates) {
+			if (candidate.isPresent()) {
+				return candidate;
+			}
+		}
+
+		return Optional.empty();
 	}
 
 	@Nullable
@@ -470,25 +495,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 	}
 
-	@SafeVarargs
-	private static <T> Optional<T> first(Optional<T>... candidates) {
-		for (Optional<T> candidate : candidates) {
-			if (candidate.isPresent()) {
-				return candidate;
-			}
-		}
-
-		return Optional.empty();
+	@Override
+	public WorldRenderingPhase getPhase() {
+		return phase;
 	}
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
 		this.phase = phase;
-	}
-
-	@Override
-	public WorldRenderingPhase getPhase() {
-		return phase;
 	}
 
 	@Override

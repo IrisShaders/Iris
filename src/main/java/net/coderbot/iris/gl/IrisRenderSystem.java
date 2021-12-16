@@ -2,6 +2,7 @@ package net.coderbot.iris.gl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Matrix4f;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
@@ -15,6 +16,8 @@ import java.nio.IntBuffer;
  * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
 public class IrisRenderSystem {
+	private static Matrix4f backupProjection;
+
 	public static void generateMipmaps(int mipmapTarget) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL32C.glGenerateMipmap(mipmapTarget);
@@ -54,7 +57,7 @@ public class IrisRenderSystem {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL32C.glUniform4f(location, v0, v1, v2, v3);
 	}
-	
+
 	public static void texParameteriv(int target, int pname, int[] params) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL32C.glTexParameteriv(target, pname, params);
@@ -117,13 +120,13 @@ public class IrisRenderSystem {
 
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-			if (GL.getCapabilities().OpenGL42) {
-				GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
-			} else {
-				EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
-			}
+		if (GL.getCapabilities().OpenGL42) {
+			GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
+		} else {
+			EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
+		}
 	}
-	
+
 	public static int getMaxImageUnits() {
 		if (GL.getCapabilities().OpenGL42) {
 			return GlStateManager._getInteger(GL42C.GL_MAX_IMAGE_UNITS);
@@ -138,7 +141,7 @@ public class IrisRenderSystem {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		return GL32C.glGetStringi(glExtensions, index);
 	}
-	
+
 	public static int getUniformBlockIndex(int program, String uniformBlockName) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		return GL32C.glGetUniformBlockIndex(program, uniformBlockName);
@@ -147,5 +150,15 @@ public class IrisRenderSystem {
 	public static void uniformBlockBinding(int program, int uniformBlockIndex, int uniformBlockBinding) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL32C.glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
+	}
+
+	public static void setShadowProjection(Matrix4f shadowProjection) {
+		backupProjection = RenderSystem.getProjectionMatrix();
+		RenderSystem.setProjectionMatrix(shadowProjection);
+	}
+
+	public static void restorePlayerProjection() {
+		RenderSystem.setProjectionMatrix(backupProjection);
+		backupProjection = null;
 	}
 }

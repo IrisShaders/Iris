@@ -57,6 +57,9 @@ public class MixinGameRenderer {
 		itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, localPlayer, light);
 	}
 
+
+	//TODO: check cloud phase
+
 	@Inject(method = "getPositionShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isPhase(WorldRenderingPhase.SKY)) {
