@@ -25,7 +25,7 @@ public class MixinShaderInstance {
 	private String lastSamplerName;
 
 	@Unique
-	private final ImmutableSet<String> attributeList = ImmutableSet.of("Position", "Color", "Normal", "UV0", "UV1", "UV2");
+	private static final ImmutableSet<String> ATTRIBUTE_LIST = ImmutableSet.of("Position", "Color", "Normal", "UV0", "UV1", "UV2");
 
 	@Inject(method = "apply",
 			at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.bindTexture (I)V",
@@ -82,7 +82,7 @@ public class MixinShaderInstance {
 
 	@Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/shaders/Uniform;glBindAttribLocation(IILjava/lang/CharSequence;)V"))
 	public void iris$redirectBindAttributeLocation(int i, int j, CharSequence charSequence) {
-		if (((Object) this) instanceof ExtendedShader && attributeList.contains(charSequence)) {
+		if (((Object) this) instanceof ExtendedShader && ATTRIBUTE_LIST.contains(charSequence)) {
 			Uniform.glBindAttribLocation(i, j, "iris_" + charSequence);
 		} else {
 			Uniform.glBindAttribLocation(i, j, charSequence);
