@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -187,13 +188,15 @@ public class MixinLevelRenderer {
 		pipeline.pushProgram(GbufferProgram.WEATHER);
 	}
 
-	@Inject(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", shift = At.Shift.AFTER))
-	private void iris$writeRainAndSnowToDepthBuffer(LightTexture lightTexture, float tickDelta, double d, double e, double g, CallbackInfo callback) {
+	@ModifyArg(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
+	private boolean iris$writeRainAndSnowToDepthBuffer(boolean depthMaskEnabled) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null && pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
-			RenderSystem.depthMask(true);
+			return true;
 		}
+
+		return depthMaskEnabled;
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
