@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin;
 
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.shaders.Uniform;
 import net.coderbot.iris.pipeline.newshader.ExtendedShader;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -15,14 +16,15 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 
 @Mixin(ShaderInstance.class)
 public class MixinShaderInstance {
 	@Unique
 	private String lastSamplerName;
+
+	@Unique
+	private final ImmutableSet<String> attributeList = ImmutableSet.of("Position", "Color", "Normal", "UV0", "UV1", "UV2");
 
 	@Inject(method = "apply",
 			at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.bindTexture (I)V",
@@ -79,7 +81,7 @@ public class MixinShaderInstance {
 
 	@Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/shaders/Uniform;glBindAttribLocation(IILjava/lang/CharSequence;)V"))
 	public void iris$redirectBindAttributeLocation(int i, int j, CharSequence charSequence) {
-		if (((Object) this) instanceof ExtendedShader && Arrays.asList("Position", "Color", "Normal", "UV0", "UV1", "UV2").contains(charSequence)) {
+		if (((Object) this) instanceof ExtendedShader && attributeList.contains(charSequence)) {
 			Uniform.glBindAttribLocation(i, j, "iris_" + charSequence);
 		} else {
 			Uniform.glBindAttribLocation(i, j, charSequence);
