@@ -16,6 +16,7 @@ public class PackDirectives {
 	private boolean areCloudsEnabled;
 	private boolean underwaterOverlay;
 	private boolean vignette;
+	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean oldLighting;
 	private OptionalBoolean shadowCulling;
@@ -37,6 +38,7 @@ public class PackDirectives {
 		areCloudsEnabled = properties.areCloudsEnabled();
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
+		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
@@ -74,6 +76,10 @@ public class PackDirectives {
 
 	public boolean vignette() {
 		return vignette;
+	}
+
+	public boolean rainDepth() {
+		return rainDepth;
 	}
 
 	public boolean shouldUseSeparateAo() {

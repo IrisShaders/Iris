@@ -187,6 +187,15 @@ public class MixinLevelRenderer {
 		pipeline.pushProgram(GbufferProgram.WEATHER);
 	}
 
+	@Inject(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", shift = At.Shift.AFTER))
+	private void iris$writeRainAndSnowToDepthBuffer(LightTexture lightTexture, float tickDelta, double d, double e, double g, CallbackInfo callback) {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null && pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
+			RenderSystem.depthMask(true);
+		}
+	}
+
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
 	private void iris$endWeather(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.WEATHER);
