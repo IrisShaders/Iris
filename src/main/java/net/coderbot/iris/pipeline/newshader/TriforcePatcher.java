@@ -44,8 +44,9 @@ public class TriforcePatcher {
 				"#define gl_Fog iris_Fog");
 
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_FogFragCoord iris_FogFragCoord");
+		transformations.define("gl_FogFragCoord", "iris_FogFragCoord");
 
+		// TODO: This doesn't handle geometry shaders... How do we do that?
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out float iris_FogFragCoord;");
 		} else if (type == ShaderType.FRAGMENT) {
