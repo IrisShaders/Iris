@@ -190,9 +190,7 @@ public class MixinLevelRenderer {
 
 	@ModifyArg(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
 	private boolean iris$writeRainAndSnowToDepthBuffer(boolean depthMaskEnabled) {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-
-		if (pipeline != null && pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
+		if (pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
 			return true;
 		}
 
