@@ -3,12 +3,12 @@ package net.coderbot.iris.pipeline;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntFunction;
-import java.util.function.IntSupplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableSet;
+import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -19,12 +19,13 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
-import net.coderbot.iris.pipeline.newshader.TriforceSodiumPatcher;
+import net.coderbot.iris.pipeline.newshader.TriforcePatcher;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
+import net.minecraft.resources.ResourceLocation;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -112,45 +113,45 @@ public class SodiumTerrainPipeline {
 		});
 
 		if (terrainVertex != null) {
-			terrainVertex = TriforceSodiumPatcher.patch(terrainVertex, ShaderType.VERTEX, null, inputs, vertexType);
+			terrainVertex = TriforcePatcher.patchSodium(terrainVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (translucentVertex != null) {
-			translucentVertex = TriforceSodiumPatcher.patch(translucentVertex, ShaderType.VERTEX, null, inputs, vertexType);
+			translucentVertex = TriforcePatcher.patchSodium(translucentVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (shadowVertex != null) {
-			shadowVertex = TriforceSodiumPatcher.patch(shadowVertex, ShaderType.VERTEX, null, inputs, vertexType);
+			shadowVertex = TriforcePatcher.patchSodium(shadowVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (terrainGeometry != null) {
-			terrainGeometry = TriforceSodiumPatcher.patch(terrainGeometry, ShaderType.GEOMETRY, null, inputs, vertexType);
+			terrainGeometry = TriforcePatcher.patchSodium(terrainGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (translucentGeometry != null) {
-			translucentGeometry = TriforceSodiumPatcher.patch(translucentGeometry, ShaderType.GEOMETRY, null, inputs, vertexType);
+			translucentGeometry = TriforcePatcher.patchSodium(translucentGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (shadowGeometry != null) {
-			shadowGeometry = TriforceSodiumPatcher.patch(shadowGeometry, ShaderType.GEOMETRY, null, inputs, vertexType);
+			shadowGeometry = TriforcePatcher.patchSodium(shadowGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (terrainFragment != null) {
 			String fragment = terrainFragment;
 
-			terrainFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType);
-			terrainCutoutFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType);
+			terrainFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (translucentFragment != null) {
-			translucentFragment = TriforceSodiumPatcher.patch(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType);
+			translucentFragment = TriforcePatcher.patchSodium(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (shadowFragment != null) {
 			String fragment = shadowFragment;
 
-			shadowFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType);
-			shadowCutoutFragment = TriforceSodiumPatcher.patch(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType);
+			shadowFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 	}
 
@@ -225,7 +226,7 @@ public class SodiumTerrainPipeline {
 	public ProgramUniforms initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), parent.getFrameUpdateNotifier(), FogMode.LINEAR);
+		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), parent.getFrameUpdateNotifier(), FogMode.ENABLED);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms.buildUniforms();
@@ -264,5 +265,20 @@ public class SodiumTerrainPipeline {
 		}
 
 		return Optional.empty();
+	}
+
+	public static String parseSodiumImport(String shader) {
+		Pattern IMPORT_PATTERN = Pattern.compile("#import <(?<namespace>.*):(?<path>.*)>");
+		Matcher matcher = IMPORT_PATTERN.matcher(shader);
+
+		if (!matcher.matches()) {
+			throw new IllegalArgumentException("Malformed import statement (expected format: " + IMPORT_PATTERN + ")");
+		}
+
+		String namespace = matcher.group("namespace");
+		String path = matcher.group("path");
+
+		ResourceLocation identifier = new ResourceLocation(namespace, path);
+		return ShaderLoader.getShaderSource(identifier);
 	}
 }

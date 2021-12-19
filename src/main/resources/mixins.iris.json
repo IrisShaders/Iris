@@ -53,14 +53,7 @@
     "shadows.MixinBeaconRenderer",
     "shadows.MixinPreventRebuildNearInShadowPass",
     "shadows.MixinLevelRenderer",
-    "texunits.MixinBufferVertexConsumer",
-    "texunits.MixinGlStateManager",
-    "texunits.MixinLightTexture",
-    "texunits.MixinOverlayTexture",
-    "texunits.MixinDefaultVertexFormat",
     "statelisteners.BooleanStateAccessor",
-    "statelisteners.GlStateManagerAccessor",
-    "statelisteners.MixinGlStateManager",
     "DimensionTypeAccessor"
   ],
   "injectors": {

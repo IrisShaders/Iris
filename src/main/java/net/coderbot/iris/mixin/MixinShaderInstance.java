@@ -1,6 +1,8 @@
 package net.coderbot.iris.mixin;
 
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.shaders.Uniform;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.pipeline.newshader.ExtendedShader;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +23,9 @@ import java.util.Objects;
 public class MixinShaderInstance {
 	@Unique
 	private String lastSamplerName;
+
+	@Unique
+	private static final ImmutableSet<String> ATTRIBUTE_LIST = ImmutableSet.of("Position", "Color", "Normal", "UV0", "UV1", "UV2");
 
 	@Inject(method = "apply",
 			at = @At(value = "INVOKE", target = "com/mojang/blaze3d/systems/RenderSystem.bindTexture (I)V",
@@ -60,7 +65,7 @@ public class MixinShaderInstance {
 			// https://www.khronos.org/opengl/wiki/Texture#Swizzle_mask
 
 			// TODO: Avoid direct GL calls
-			GL30C.glTexParameteriv(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+			IrisRenderSystem.texParameteriv(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 					new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED });
 		}
 	}
@@ -73,5 +78,14 @@ public class MixinShaderInstance {
 		}
 
 		logger.warn(message, arg1, arg2);
+	}
+
+	@Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/shaders/Uniform;glBindAttribLocation(IILjava/lang/CharSequence;)V"))
+	public void iris$redirectBindAttributeLocation(int i, int j, CharSequence charSequence) {
+		if (((Object) this) instanceof ExtendedShader && ATTRIBUTE_LIST.contains(charSequence)) {
+			Uniform.glBindAttribLocation(i, j, "iris_" + charSequence);
+		} else {
+			Uniform.glBindAttribLocation(i, j, charSequence);
+		}
 	}
 }

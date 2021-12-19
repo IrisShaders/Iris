@@ -12,42 +12,39 @@ import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.coderbot.iris.vendored.joml.Vector3d;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
-import net.minecraft.client.renderer.*;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 @Mixin(LevelRenderer.class)
 @Environment(EnvType.CLIENT)
 public class MixinLevelRenderer {
-	@Shadow
-	@Final
-	private Minecraft minecraft;
-	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V";
 	private static final String RENDER = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
 	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FLjava/lang/Runnable;)V";
-	private static final String RENDER_LAYER = "renderLayer(Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/util/math/MatrixStack;DDD)V";
-	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/render/WorldRenderer;renderClouds(Lnet/minecraft/client/util/math/MatrixStack;FDDD)V";
+	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FDDD)V";
 	private static final String RENDER_WEATHER = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V";
-	private static final String RENDER_WORLD_BORDER = "Lnet/minecraft/client/render/WorldRenderer;renderWorldBorder(Lnet/minecraft/client/render/Camera;)V";
+
+	@Shadow
+	@Final
+	private Minecraft minecraft;
 
 	@Unique
 	private HorizonRenderer horizonRenderer = new HorizonRenderer();
-
-	@Unique
-	private boolean skyTextureEnabled;
 
 	@Unique
 	private int previousViewDistance;
@@ -61,7 +58,7 @@ public class MixinLevelRenderer {
 	// all pixels.
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER, remap = false))
 	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
-	                                   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
+									   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									   Matrix4f projection, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid()) {
 			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
@@ -74,7 +71,7 @@ public class MixinLevelRenderer {
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 
-		if(previousViewDistance != minecraft.options.getEffectiveRenderDistance()) {
+		if (previousViewDistance != minecraft.options.getEffectiveRenderDistance()) {
 			horizonRenderer.close();
 			horizonRenderer = new HorizonRenderer();
 			previousViewDistance = minecraft.options.getEffectiveRenderDistance();
@@ -109,16 +106,6 @@ public class MixinLevelRenderer {
 
 	}
 
-	// TODO(21w10a): Restore sky render hooks
-	/*
-	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableTexture()V"))
-	private void iris$renderSky$disableTexture(PoseStack poseStack, float tickDelta, CallbackInfo callback) {
-		if (skyTextureEnabled) {
-			skyTextureEnabled = false;
-			pipeline.pushProgram(GbufferProgram.SKY_BASIC);
-		}
-	}*/
-
 	@Inject(method = RENDER_SKY,
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
 	private void iris$renderSky$drawHorizon(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
@@ -138,30 +125,11 @@ public class MixinLevelRenderer {
 		poseStack.mulPose(Vector3f.ZP.rotationDegrees(pipeline.getSunPathRotation()));
 	}
 
-	/*@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableTexture()V"))
-	private void iris$renderSky$enableTexture(PoseStack poseStack, float tickDelta, CallbackInfo callback) {
-		if (!skyTextureEnabled) {
-			skyTextureEnabled = true;
-			pipeline.popProgram(GbufferProgram.SKY_BASIC);
-		}
-	}*/
-
-	// TODO(21w10a): Deal with render hooks
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
 	private void iris$endSky(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		// After the sky has rendered, there isn't a clear phase.
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}
-
-	/*@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_CLOUDS))
-	private void iris$beginClouds(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.pushProgram(GbufferProgram.CLOUDS);
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))
-	private void iris$endClouds(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.popProgram(GbufferProgram.CLOUDS);
-	}*/
 
 	@Inject(method = "renderClouds", at = @At("HEAD"), cancellable = true)
 	private void iris$maybeRemoveClouds(PoseStack poseStack, Matrix4f matrix4f, float f, double d, double e, double g, CallbackInfo ci) {
@@ -170,51 +138,34 @@ public class MixinLevelRenderer {
 		}
 	}
 
-
-	// TODO(21w10a): Restore render layer hooks
-	/*
-	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
-	private void iris$beginTerrainLayer(RenderType renderType, PoseStack poseStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		if (renderType == RenderType.solid() || renderType == RenderType.cutout() || renderType == RenderType.cutoutMipped()) {
-			pipeline.pushProgram(GbufferProgram.TERRAIN);
-		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
-			pipeline.pushProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
-		} else {
-			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
-		}
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_CLOUDS))
+	private void iris$beginClouds(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
+		pipeline.setPhase(WorldRenderingPhase.CLOUDS);
 	}
-
-	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
-	private void iris$endTerrainLayer(RenderType renderType, PoseStack poseStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		if (renderType == RenderType.solid() || renderType == RenderType.cutout() || renderType == RenderType.cutoutMipped()) {
-			pipeline.popProgram(GbufferProgram.TERRAIN);
-		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
-			pipeline.popProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
-		} else {
-			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
-		}
-	}*/
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_CLOUDS, shift = At.Shift.AFTER))
+	private void iris$endClouds(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
+		// After clouds have rendered, there isn't a clear phase.
+		pipeline.setPhase(WorldRenderingPhase.OTHER);
+	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER))
 	private void iris$beginWeather(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.WEATHER);
 	}
 
+	@ModifyArg(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
+	private boolean iris$writeRainAndSnowToDepthBuffer(boolean depthMaskEnabled) {
+		if (pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
+			return true;
+		}
+
+		return depthMaskEnabled;
+	}
+
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
 	private void iris$endWeather(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.OTHER);
 	}
-
-	// TODO(21w10a): Deal with render hooks
-	/*@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BOUNDS))
-	private void iris$beginWorldBorder(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.pushProgram(GbufferProgram.TEXTURED_LIT);
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BOUNDS, shift = At.Shift.AFTER))
-	private void iris$endWorldBorder(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
-	}*/
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
 	private void iris$beginTranslucents(PoseStack poseStack, float tickDelta, long limitTime,

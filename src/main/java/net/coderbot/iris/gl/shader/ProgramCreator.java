@@ -16,13 +16,13 @@ public class ProgramCreator {
 
 		// TODO: This is *really* hardcoded, we need to refactor this to support external calls
 		// to glBindAttribLocation
-		IrisRenderSystem.bindAttributeLocation(program, 10, "mc_Entity");
-		IrisRenderSystem.bindAttributeLocation(program, 11, "mc_midTexCoord");
-		IrisRenderSystem.bindAttributeLocation(program, 12, "at_tangent");
+		GlStateManager._glBindAttribLocation(program, 10, "mc_Entity");
+		GlStateManager._glBindAttribLocation(program, 11, "mc_midTexCoord");
+		GlStateManager._glBindAttribLocation(program, 12, "at_tangent");
 
-		// TODO(21w10a): more hardcoding!!!!
-		GL20C.glBindAttribLocation(program, 0, "Position");
-		GL20C.glBindAttribLocation(program, 1, "UV0");
+		// TODO: more hardcoding for 1.17
+		GlStateManager._glBindAttribLocation(program, 0, "Position");
+		GlStateManager._glBindAttribLocation(program, 1, "UV0");
 
 		for (GlShader shader : shaders) {
 			GlStateManager.glAttachShader(program, shader.getHandle());

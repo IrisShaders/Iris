@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -17,7 +18,12 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.pipeline.*;
+import net.coderbot.iris.pipeline.ClearPass;
+import net.coderbot.iris.pipeline.ClearPassCreator;
+import net.coderbot.iris.pipeline.CustomTextureManager;
+import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -41,7 +47,6 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -59,19 +64,22 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
-	private boolean destroyed = false;
-
 	private final RenderTargets renderTargets;
 
 	private final ShaderInstance basic;
 	private final ShaderInstance basicColor;
+
 	private final ShaderInstance textured;
 	private final ShaderInstance texturedColor;
+
 	private final ShaderInstance skyBasic;
 	private final ShaderInstance skyBasicColor;
+
 	private final ShaderInstance skyTextured;
 	private final ShaderInstance skyTexturedColor;
+
 	private final ShaderInstance clouds;
+
 	private final ShaderInstance shadowTerrainCutout;
 
 	private final ShaderInstance terrainSolid;
@@ -81,73 +89,82 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShaderInstance entitiesSolid;
 	private final ShaderInstance entitiesCutout;
 	private final ShaderInstance entitiesEyes;
+
 	private final ShaderInstance handCutout;
 	private final ShaderInstance handTranslucent;
+
 	private final ShaderInstance shadowEntitiesCutout;
 	private final ShaderInstance shadowBeaconBeam;
+
 	private final ShaderInstance lightning;
 	private final ShaderInstance leash;
 	private final ShaderInstance particles;
 	private final ShaderInstance weather;
 	private final ShaderInstance crumbling;
+
 	private final ShaderInstance text;
 	private final ShaderInstance textIntensity;
+
 	private final ShaderInstance block;
 	private final ShaderInstance beacon;
 	private final ShaderInstance glint;
 	private final ShaderInstance lines;
-	private final ShaderInstance shadowLines;
 
+	private final ShaderInstance shadowLines;
 	private final ShaderInstance terrainTranslucent;
-	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 
 	private final Set<ShaderInstance> loadedShaders;
-
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
 	private final GlFramebuffer baseline;
 
-	private Runnable createShadowMapRenderer;
-	private ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final FinalPassRenderer finalPassRenderer;
+
 	private final CustomTextureManager customTextureManager;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
-
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
-	boolean isBeforeTranslucent;
-
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
+	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
+	boolean isBeforeTranslucent;
+	private boolean destroyed = false;
+
+	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
+	private Runnable createShadowMapRenderer;
+	private ShadowMapRenderer shadowMapRenderer;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
-		final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
-		if (Files.exists(debugOutDir)) {
-			Files.list(debugOutDir).forEach(path -> {
-				try {
-					Files.delete(path);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			});
+			if (Files.exists(debugOutDir)) {
+				Files.list(debugOutDir).forEach(path -> {
+					try {
+						Files.delete(path);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				});
+			}
+
+			Files.createDirectories(debugOutDir);
 		}
-
-		Files.createDirectories(debugOutDir);
 
 		this.shouldRenderClouds = programSet.getPackDirectives().areCloudsEnabled();
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
+		this.shouldWriteRainAndSnowToDepthBuffer = programSet.getPackDirectives().rainDepth();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -181,7 +198,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null),
 					programSet.getPackDirectives(), renderTargets);
-			createShadowMapRenderer = () -> {};
+			createShadowMapRenderer = () -> {
+			};
 		};
 
 		BufferFlipper flipper = new BufferFlipper();
@@ -298,7 +316,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		Optional<ProgramSource> damagedBlockSource = first(programSet.getGbuffersDamagedBlock(), terrainSource);
 
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[]{0});
 
 		// Matches OptiFine's default for CUTOUT and CUTOUT_MIPPED.
 		AlphaTest terrainCutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
@@ -306,40 +324,39 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		this.loadedShaders = new HashSet<>();
 
-		// TODO: Resolve hasColorAttrib based on the vertex format
 		try {
-			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.LINEAR);
+			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.ENABLED);
 			this.basicColor = createShader("gbuffers_basic_color", basicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
 			this.textured = createShader("gbuffers_textured", texturedSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.OFF);
 			this.texturedColor = createShader("gbuffers_textured_color", texturedSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF);
-			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.LINEAR);
+			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.ENABLED);
 			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
 			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_TEX, FogMode.OFF);
 			this.skyTexturedColor = createShader("gbuffers_sky_textured_tex_color", skyTexturedSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF);
-			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL, FogMode.LINEAR);
-			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
-			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
-			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
-			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.handCutout = createShader("gbuffers_hand_cutout", handSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.handTranslucent = createShader("gbuffers_hand_translucent", handTranslucentSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR, FogMode.LINEAR);
-			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.LINEAR);
-			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
-			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.LINEAR);
+			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL, FogMode.ENABLED);
+			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
+			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
+			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
+			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.handCutout = createShader("gbuffers_hand_cutout", handSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.handTranslucent = createShader("gbuffers_hand_translucent", handTranslucentSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR, FogMode.ENABLED);
+			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.ENABLED);
+			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.ENABLED);
+			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.ENABLED);
 			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, terrainCutoutAlpha, DefaultVertexFormat.BLOCK, FogMode.OFF);
 			// TODO: block entities text?
-			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.LINEAR);
-			this.textIntensity = createShader("gbuffers_entities_text_intensity", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.LINEAR);
-			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.LINEAR);
-			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK, FogMode.LINEAR);
-			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.LINEAR);
-			this.lines = createShader("gbuffers_lines", programSet.getGbuffersBasic(), AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL, FogMode.LINEAR);
+			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED);
+			this.textIntensity = createShader("gbuffers_entities_text_intensity", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED);
+			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
+			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK, FogMode.ENABLED);
+			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.ENABLED);
+			this.lines = createShader("gbuffers_lines", programSet.getGbuffersBasic(), AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL, FogMode.ENABLED);
 
 			if (translucentSource != terrainSource) {
-				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.LINEAR);
+				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
 			} else {
 				this.terrainTranslucent = this.terrainSolid;
 			}
@@ -377,7 +394,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				this.shadowEntitiesCutout = createShadowShader("shadow_entities_cutout", shadowSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY);
 				this.shadowBeaconBeam = createShadowShader("shadow_beacon_beam", shadowSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK);
 				this.shadowLines = createShadowShader("shadow_lines", shadowSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-			}  catch (RuntimeException e) {
+			} catch (RuntimeException e) {
 				destroyShaders();
 
 				throw e;
@@ -387,7 +404,18 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
 				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
 				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
-				null);
+						null);
+	}
+
+	@SafeVarargs
+	private static <T> Optional<T> first(Optional<T>... candidates) {
+		for (Optional<T> candidate : candidates) {
+			if (candidate.isPresent()) {
+				return candidate;
+			}
+		}
+
+		return Optional.empty();
 	}
 
 	@Nullable
@@ -407,38 +435,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		loadedShaders.add(extendedShader);
 
-		// TODO: waterShadowEnabled?
-
-		// TODO: initialize shadowMapRenderer as needed, finish refactor!!!!
-		// TODO: Don't render shadows if they aren't used by the pack.
-		// TODO: Pay close attention, should try to unify stuff too.
-
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
 
-		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
-
-		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(extendedShader, customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
-
-		// TODO: All samplers added here need to be mirrored in NewShaderTests. Possible way to bypass this?
-		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
-		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
-
-		// TODO: IrisSamplers.addWorldSamplers(builder, normals, specular);
-		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getNormals()::getId, "normals");
-		customTextureSamplerInterceptor.addDynamicSampler(customTextureManager.getSpecular()::getId, "specular");
-
-		IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
-		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
-
-		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-			createShadowMapRenderer.run();
-			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
-		}
-
-		if (IrisImages.hasShadowImages(extendedShader)) {
-			IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
-		}
+		addGbufferOrShadowSamplers(extendedShader, flipped, false);
 
 		return extendedShader;
 	}
@@ -454,64 +454,57 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
 		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.LINEAR);
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.ENABLED);
 
 		loadedShaders.add(extendedShader);
 
-		// TODO: waterShadowEnabled?
-		// TODO: Audit these render targets...
+		ImmutableSet<Integer> flippedSet = ImmutableSet.of();
+		Supplier<ImmutableSet<Integer>> flipped = () -> flippedSet;
 
-		extendedShader.addIrisSampler("normals", this.customTextureManager.getNormals().getId());
-		extendedShader.addIrisSampler("specular", this.customTextureManager.getSpecular().getId());
-		extendedShader.addIrisSampler("shadow", this.shadowMapRenderer.getDepthTextureId());
-		extendedShader.addIrisSampler("watershadow", this.shadowMapRenderer.getDepthTextureId());
-		extendedShader.addIrisSampler("shadowtex0", this.shadowMapRenderer.getDepthTextureId());
-		extendedShader.addIrisSampler("shadowtex1", this.shadowMapRenderer.getDepthTextureNoTranslucentsId());
-		extendedShader.addIrisSampler("depthtex0", this.renderTargets.getDepthTexture().getTextureId());
-		extendedShader.addIrisSampler("depthtex1", this.renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		extendedShader.addIrisSampler("noisetex", this.customTextureManager.getNoiseTexture().getAsInt());
-		extendedShader.addIrisSampler("shadowcolor", this.shadowMapRenderer.getColorTexture0Id());
-		extendedShader.addIrisSampler("shadowcolor0", this.shadowMapRenderer.getColorTexture0Id());
-		extendedShader.addIrisSampler("shadowcolor1", this.shadowMapRenderer.getColorTexture1Id());
-
-		// TODO: colortex8 to 15
-		for (int i = 0; i < 8; i++) {
-			// TODO: This should be "alt" for programs executing after deferred.
-			extendedShader.addIrisSampler("colortex" + i, this.renderTargets.get(i).getMainTexture());
-		}
-
-		for (int i = 1; i <= 4; i++) {
-			// TODO: This should be "alt" for programs executing after deferred.
-
-			// gaux1 -> colortex4, gaux2 -> colortex5, gaux3 -> colortex6, gaux4 -> colortex7
-			extendedShader.addIrisSampler("gaux" + i, this.renderTargets.get(i + 3).getMainTexture());
-		}
-
-		IrisImages.addRenderTargetImages(extendedShader, () -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent, renderTargets);
-		IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
+		addGbufferOrShadowSamplers(extendedShader, flipped, true);
 
 		return extendedShader;
 	}
 
-	@SafeVarargs
-	private static <T> Optional<T> first(Optional<T>... candidates) {
-		for (Optional<T> candidate : candidates) {
-			if (candidate.isPresent()) {
-				return candidate;
+	private void addGbufferOrShadowSamplers(ExtendedShader extendedShader, Supplier<ImmutableSet<Integer>> flipped,
+											boolean isShadowPass) {
+		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+
+		ProgramSamplers.CustomTextureSamplerInterceptor samplerHolder =
+				ProgramSamplers.customTextureSamplerInterceptor(extendedShader,
+						customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
+
+		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false);
+		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
+
+		// TODO: IrisSamplers.addLevelSamplers(builder, normals, specular);
+		samplerHolder.addDynamicSampler(customTextureManager.getNormals()::getId, "normals");
+		samplerHolder.addDynamicSampler(customTextureManager.getSpecular()::getId, "specular");
+
+		IrisSamplers.addWorldDepthSamplers(samplerHolder, this.renderTargets);
+		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
+
+		if (isShadowPass || IrisSamplers.hasShadowSamplers(samplerHolder)) {
+			if (!isShadowPass) {
+				createShadowMapRenderer.run();
 			}
+
+			IrisSamplers.addShadowSamplers(samplerHolder, shadowMapRenderer);
 		}
 
-		return Optional.empty();
-	}
-
-	@Override
-	public void setPhase(WorldRenderingPhase phase) {
-		this.phase = phase;
+		if (isShadowPass || IrisImages.hasShadowImages(extendedShader)) {
+			IrisImages.addShadowColorImages(extendedShader, shadowMapRenderer);
+		}
 	}
 
 	@Override
 	public WorldRenderingPhase getPhase() {
 		return phase;
+	}
+
+	@Override
+	public void setPhase(WorldRenderingPhase phase) {
+		this.phase = phase;
 	}
 
 	@Override
@@ -595,7 +588,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// all non-translucent content excluding the hand, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 	}
 
@@ -611,7 +604,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 
 		deferredRenderer.renderAll();
@@ -659,6 +652,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldRenderVignette() {
 		return shouldRenderVignette;
+	}
+
+	@Override
+	public boolean shouldWriteRainAndSnowToDepthBuffer() {
+		return shouldWriteRainAndSnowToDepthBuffer;
 	}
 
 	@Override
