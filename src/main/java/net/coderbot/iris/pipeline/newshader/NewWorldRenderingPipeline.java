@@ -134,6 +134,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
+	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 	boolean isBeforeTranslucent;
@@ -163,6 +164,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderClouds = programSet.getPackDirectives().areCloudsEnabled();
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
+		this.shouldWriteRainAndSnowToDepthBuffer = programSet.getPackDirectives().rainDepth();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -650,6 +652,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldRenderVignette() {
 		return shouldRenderVignette;
+	}
+
+	@Override
+	public boolean shouldWriteRainAndSnowToDepthBuffer() {
+		return shouldWriteRainAndSnowToDepthBuffer;
 	}
 
 	@Override
