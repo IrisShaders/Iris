@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.shaderpack.parsing.ParsedString;
@@ -59,7 +60,7 @@ public final class OptionAnnotatedSource {
 	private final ImmutableMap<Integer, StringOption> stringOptions;
 
 	/**
-	 * Optional diagnostic messages for each line. The parser may notice that though a shader pack 
+	 * Optional diagnostic messages for each line. The parser may notice that though a shader pack
 	 * author may have intended for a line to be a valid option, Iris might have ignored it due to
 	 * a syntax error or some other issue.
 	 *
@@ -73,9 +74,9 @@ public final class OptionAnnotatedSource {
 	 * option to one of the lines it was referenced on.
 	 *
 	 * References to boolean #define options that happen in plain #if directives are not analyzed
-	 * for the purposes of determining whether a boolean #define option is referenced or not, to 
+	 * for the purposes of determining whether a boolean #define option is referenced or not, to
 	 * match OptiFine behavior. Though this might have originally been an oversight, shader packs
-	 * now anticipate this behavior, so it must be replicated here. Since it would be complex to 
+	 * now anticipate this behavior, so it must be replicated here. Since it would be complex to
 	 * fully parse #if directives, this also makes the code simpler.
 	 *
 	 * Note that for the purposes of "confirming" a boolean #define option, it does not matter
@@ -88,41 +89,41 @@ public final class OptionAnnotatedSource {
 	private final ImmutableMap<String, IntList> booleanDefineReferences;
 
 	private static final ImmutableSet<String> VALID_CONST_OPTION_NAMES = ImmutableSet.of(
-		"shadowMapResolution",
-		"shadowDistance",
-		"shadowDistanceRenderMul",
-		"shadowIntervalSize",
-		"generateShadowMipmap",
-		"generateShadowColorMipmap",
-		"shadowHardwareFiltering",
-		"shadowHardwareFiltering0",
-		"shadowHardwareFiltering1",
-		"shadowtex0Mipmap",
-		"shadowtexMipmap",
-		"shadowtex1Mipmap",
-		"shadowcolor0Mipmap",
-		"shadowColor0Mipmap",
-		"shadowcolor1Mipmap",
-		"shadowColor1Mipmap",
-		"shadowtex0Nearest",
-		"shadowtexNearest",
-		"shadow0MinMagNearest",
-		"shadowtex1Nearest",
-		"shadow1MinMagNearest",
-		"shadowcolor0Nearest",
-		"shadowColor0Nearest",
-		"shadowColor0MinMagNearest",
-		"shadowcolor1Nearest",
-		"shadowColor1Nearest",
-		"shadowColor1MinMagNearest",
-		"wetnessHalflife",
-		"drynessHalflife",
-		"eyeBrightnessHalflife",
-		"centerDepthHalflife",
-		"sunPathRotation",
-		"ambientOcclusionLevel",
-		"superSamplingLevel",
-		"noiseTextureResolution"
+			"shadowMapResolution",
+			"shadowDistance",
+			"shadowDistanceRenderMul",
+			"shadowIntervalSize",
+			"generateShadowMipmap",
+			"generateShadowColorMipmap",
+			"shadowHardwareFiltering",
+			"shadowHardwareFiltering0",
+			"shadowHardwareFiltering1",
+			"shadowtex0Mipmap",
+			"shadowtexMipmap",
+			"shadowtex1Mipmap",
+			"shadowcolor0Mipmap",
+			"shadowColor0Mipmap",
+			"shadowcolor1Mipmap",
+			"shadowColor1Mipmap",
+			"shadowtex0Nearest",
+			"shadowtexNearest",
+			"shadow0MinMagNearest",
+			"shadowtex1Nearest",
+			"shadow1MinMagNearest",
+			"shadowcolor0Nearest",
+			"shadowColor0Nearest",
+			"shadowColor0MinMagNearest",
+			"shadowcolor1Nearest",
+			"shadowColor1Nearest",
+			"shadowColor1MinMagNearest",
+			"wetnessHalflife",
+			"drynessHalflife",
+			"eyeBrightnessHalflife",
+			"centerDepthHalflife",
+			"sunPathRotation",
+			"ambientOcclusionLevel",
+			"superSamplingLevel",
+			"noiseTextureResolution"
 	);
 
 	public OptionAnnotatedSource(final String source) {
@@ -153,9 +154,9 @@ public final class OptionAnnotatedSource {
 	private static void parseLine(AnnotationsBuilder builder, int index, String lineText) {
 		// Check to see if this line contains anything of interest before we try to parse it.
 		if (!lineText.contains("#define")
-			&& !lineText.contains("const")
-			&& !lineText.contains("#ifdef")
-			&& !lineText.contains("#ifndef")) {
+				&& !lineText.contains("const")
+				&& !lineText.contains("#ifdef")
+				&& !lineText.contains("#ifndef")) {
 			// Nothing of interest.
 			return;
 		}
@@ -306,14 +307,14 @@ public final class OptionAnnotatedSource {
 		if (!line.takeLiteral("#define")) {
 			builder.diagnostics.put(index,
 					"This line contains an occurrence of \"#define\" " +
-					"but it wasn't in a place we expected, ignoring it.");
+							"but it wasn't in a place we expected, ignoring it.");
 			return;
 		}
 
 		if (!line.takeSomeWhitespace()) {
 			builder.diagnostics.put(index,
 					"This line properly starts with a #define statement but doesn't have " +
-					"any whitespace characters after the #define.");
+							"any whitespace characters after the #define.");
 			return;
 		}
 
@@ -322,7 +323,7 @@ public final class OptionAnnotatedSource {
 		if (name == null) {
 			builder.diagnostics.put(index,
 					"Invalid syntax after #define directive. " +
-					"No alphanumeric or underscore characters detected.");
+							"No alphanumeric or underscore characters detected.");
 			return;
 		}
 
@@ -337,7 +338,7 @@ public final class OptionAnnotatedSource {
 
 		if (line.takeComments()) {
 			// Note that this is a bare comment, we don't need to look for the allowed values part.
-			// Obviously that part isn't necessary since boolean options only have two possible 
+			// Obviously that part isn't necessary since boolean options only have two possible
 			// values (true and false)
 			String comment = line.takeRest().trim();
 
@@ -346,16 +347,16 @@ public final class OptionAnnotatedSource {
 		} else if (!tookWhitespace) {
 			// Invalid syntax.
 			builder.diagnostics.put(index,
-				"Invalid syntax after #define directive. Only alphanumeric or underscore " +
-				"characters are allowed in option names.");
+					"Invalid syntax after #define directive. Only alphanumeric or underscore " +
+							"characters are allowed in option names.");
 
 			return;
 		}
 
 		if (hasLeadingComment) {
 			builder.diagnostics.put(index,
-				"Ignoring potential non-boolean #define option since it has a leading comment. " +
-				"Leading comments (//) are only allowed on boolean #define options.");
+					"Ignoring potential non-boolean #define option since it has a leading comment. " +
+							"Leading comments (//) are only allowed on boolean #define options.");
 			return;
 		}
 
@@ -363,7 +364,7 @@ public final class OptionAnnotatedSource {
 
 		if (value == null) {
 			builder.diagnostics.put(index, "Ignoring this #define directive because it doesn't appear to be a boolean #define, " +
-				"and its potential value wasn't a valid number or a valid word.");
+					"and its potential value wasn't a valid number or a valid word.");
 			return;
 		}
 
@@ -374,15 +375,15 @@ public final class OptionAnnotatedSource {
 			return;
 		} else if (!tookWhitespace) {
 			builder.diagnostics.put(index,
-				"Invalid syntax after value #define directive. " +
-				"Invalid characters after number or word.");
+					"Invalid syntax after value #define directive. " +
+							"Invalid characters after number or word.");
 			return;
 		}
 
 		if (!line.takeComments()) {
 			builder.diagnostics.put(index,
-				"Invalid syntax after value #define directive. " +
-				"Only comments may come after the value.");
+					"Invalid syntax after value #define directive. " +
+							"Only comments may come after the value.");
 			return;
 		}
 
@@ -393,7 +394,7 @@ public final class OptionAnnotatedSource {
 		if (option.getAllowedValues().size() == 1) {
 			// Some shader packs have "#define PI 3.14" and that shouldn't be parsed as a config option.
 			builder.diagnostics.put(index,
-				"Ignoring this #define because it only has one allowed value - the default value.");
+					"Ignoring this #define because it only has one allowed value - the default value.");
 			return;
 		}
 
@@ -404,7 +405,7 @@ public final class OptionAnnotatedSource {
 		SHADOWS // Whether shadows are enabled
 		// Whether shadows are enabled
 		Whether shadows are enabled
-			
+
 
 
 		#define OPTION 0.5 // A test option
@@ -467,16 +468,17 @@ public final class OptionAnnotatedSource {
 		BooleanOption booleanOption = booleanOptions.get(index);
 
 		if (booleanOption != null) {
-			if (values.isBooleanFlipped(booleanOption.getName())) {
-				if (booleanOption.getType() == OptionType.DEFINE) {
-					return flipBooleanDefine(existing);
-				} else if (booleanOption.getType() == OptionType.CONST) {
-					return editConst(existing, Boolean.toString(booleanOption.getDefaultValue()), Boolean.toString(!booleanOption.getDefaultValue()));
+			OptionalBoolean value = values.getBooleanValue(booleanOption.getName());
+			if (booleanOption.getType() == OptionType.DEFINE) {
+				return setValue(existing, value, booleanOption.getDefaultValue());
+			} else if (booleanOption.getType() == OptionType.CONST) {
+				if (value != OptionalBoolean.DEFAULT) {
+					return editConst(existing, Boolean.toString(booleanOption.getDefaultValue()), Boolean.toString(value.orElse(booleanOption.getDefaultValue())));
 				} else {
-					throw new AssertionError("Unknown option type " + booleanOption.getType());
+					return existing;
 				}
 			} else {
-				return existing;
+				throw new AssertionError("Unknown option type " + booleanOption.getType());
 			}
 		}
 
@@ -526,11 +528,13 @@ public final class OptionAnnotatedSource {
 		return parsed.takeRest();
 	}
 
-	private static String flipBooleanDefine(String line) {
-		if (hasLeadingComment(line)) {
+	private static String setValue(String line, OptionalBoolean newValue, boolean defaultValue) {
+		if (hasLeadingComment(line) && newValue.orElse(defaultValue)) {
 			return removeLeadingComment(line);
-		} else {
+		} else if (!newValue.orElse(defaultValue)) {
 			return "//" + line;
+		} else {
+			return line;
 		}
 	}
 
