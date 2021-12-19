@@ -25,6 +25,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -149,6 +151,15 @@ public class MixinLevelRenderer {
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER))
 	private void iris$beginWeather(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo callback) {
 		pipeline.setPhase(WorldRenderingPhase.WEATHER);
+	}
+
+	@ModifyArg(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
+	private boolean iris$writeRainAndSnowToDepthBuffer(boolean depthMaskEnabled) {
+		if (pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
+			return true;
+		}
+
+		return depthMaskEnabled;
 	}
 
 	@Inject(method = RENDER, at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
