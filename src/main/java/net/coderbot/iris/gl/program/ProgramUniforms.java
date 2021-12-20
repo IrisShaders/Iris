@@ -162,7 +162,7 @@ public class ProgramUniforms {
 
 			if (!locations.containsKey(id) && !uniformNames.containsKey(name)) {
 				locations.put(id, name);
-				externalUniformNames.put(name, type);
+				uniformNames.put(name, type);
 			} else {
 				Iris.logger.warn("[" + this.name + "] Duplicate uniform: " + type.toString().toLowerCase() + " " + name);
 
@@ -262,11 +262,7 @@ public class ProgramUniforms {
 
 		@Override
 		public UniformHolder externallyManagedUniform(String name, UniformType type) {
-			if (!externalUniformNames.containsKey(name)) {
-				externalUniformNames.put(name, type);
-			} else {
-				Iris.logger.warn("[" + this.name + "] Duplicate uniform: " + type.toString().toLowerCase() + " " + name);
-			}
+			externalUniformNames.put(name, type);
 
 			return this;
 		}
