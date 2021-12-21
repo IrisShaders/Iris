@@ -104,4 +104,8 @@ public enum ShaderKey {
 	public boolean isBeaconBeam() {
 		return this == BEACON || this == SHADOW_BEACON_BEAM;
 	}
+
+	public boolean isFullbright() {
+		return isBeaconBeam() || this == ENTITIES_EYES;
+	}
 }
