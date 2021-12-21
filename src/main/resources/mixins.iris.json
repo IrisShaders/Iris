@@ -15,6 +15,7 @@
     "MixinEntityRenderDispatcher",
     "MixinFogRenderer",
     "MixinGameRenderer",
+    "MixinGameRenderer_NightVisionCompat",
     "MixinScreenEffectRenderer",
     "MixinGlStateManager",
     "MixinGlStateManager_AmdCrashFix",
