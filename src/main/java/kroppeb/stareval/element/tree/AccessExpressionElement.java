@@ -1,12 +1,12 @@
 package kroppeb.stareval.element.tree;
 
-import kroppeb.stareval.element.AccessibleExpression;
+import kroppeb.stareval.element.AccessibleExpressionElement;
 
-public class AccessExpression implements AccessibleExpression {
-	private final AccessibleExpression base;
+public class AccessExpressionElement implements AccessibleExpressionElement {
+	private final AccessibleExpressionElement base;
 	private final String index;
 
-	public AccessExpression(AccessibleExpression base, String index) {
+	public AccessExpressionElement(AccessibleExpressionElement base, String index) {
 		this.base = base;
 		this.index = index;
 	}

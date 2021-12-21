@@ -1,10 +1,10 @@
 package kroppeb.stareval.element;
 
-public interface Expression extends Element {
+public interface ExpressionElement extends Element {
 	@Override
 	String toString();
 
-	default Expression simplify() {
+	default ExpressionElement simplify() {
 		return this;
 	}
 }

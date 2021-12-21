@@ -1,7 +1,7 @@
 package kroppeb.stareval.parser;
 
 import kroppeb.stareval.exception.ParseException;
-import kroppeb.stareval.element.Expression;
+import kroppeb.stareval.element.ExpressionElement;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class ParserTest {
-	private static Expression parse(String string) throws ParseException {
+	private static ExpressionElement parse(String string) throws ParseException {
 		return Parser.parse(string, IrisParserOptions.options);
 	}
 
@@ -37,8 +37,8 @@ class ParserTest {
 	@ParameterizedTest
 	@CsvFileSource(resources = "/fullyEquivalent.csv", delimiter = ';')
 	void checkOrderOfOperationsParse(String input1, String input2) throws ParseException {
-		Expression exp1 = parse(input1);
-		Expression exp2 = parse(input2);
+		ExpressionElement exp1 = parse(input1);
+		ExpressionElement exp2 = parse(input2);
 		assertEquals(exp1.simplify().toString(), exp2.simplify().toString());
 	}
 }

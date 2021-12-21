@@ -1,13 +1,13 @@
 package kroppeb.stareval.element.tree;
 
-import kroppeb.stareval.element.Expression;
+import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.parser.UnaryOp;
 
-public class UnaryExpression implements Expression {
+public class UnaryExpressionElement implements ExpressionElement {
 	private final UnaryOp op;
-	private Expression inner;
+	private ExpressionElement inner;
 
-	public UnaryExpression(UnaryOp op, Expression inner) {
+	public UnaryExpressionElement(UnaryOp op, ExpressionElement inner) {
 		this.op = op;
 		this.inner = inner;
 	}
@@ -18,7 +18,7 @@ public class UnaryExpression implements Expression {
 	}
 
 	@Override
-	public Expression simplify() {
+	public ExpressionElement simplify() {
 		this.inner = this.inner.simplify();
 		return this;
 	}

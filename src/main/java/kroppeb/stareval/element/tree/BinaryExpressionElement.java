@@ -1,14 +1,14 @@
 package kroppeb.stareval.element.tree;
 
-import kroppeb.stareval.element.Expression;
+import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.parser.BinaryOp;
 
-public class BinaryExpression implements Expression {
+public class BinaryExpressionElement implements ExpressionElement {
 	private final BinaryOp op;
-	private Expression left;
-	private Expression right;
+	private ExpressionElement left;
+	private ExpressionElement right;
 
-	public BinaryExpression(BinaryOp op, Expression left, Expression right) {
+	public BinaryExpressionElement(BinaryOp op, ExpressionElement left, ExpressionElement right) {
 		this.op = op;
 		this.left = left;
 		this.right = right;
@@ -20,7 +20,7 @@ public class BinaryExpression implements Expression {
 	}
 
 	@Override
-	public Expression simplify() {
+	public ExpressionElement simplify() {
 		this.left = this.left.simplify();
 		this.right = this.right.simplify();
 		return this;

@@ -1,14 +1,14 @@
 package kroppeb.stareval.element.tree;
 
-import kroppeb.stareval.element.Expression;
+import kroppeb.stareval.element.ExpressionElement;
 
 import java.util.List;
 
-public class FunctionCall implements Expression {
+public class FunctionCall implements ExpressionElement {
 	private final String id;
-	private final List<Expression> args;
+	private final List<ExpressionElement> args;
 
-	public FunctionCall(String id, List<Expression> args) {
+	public FunctionCall(String id, List<ExpressionElement> args) {
 		this.id = id;
 		this.args = args;
 	}
@@ -19,7 +19,7 @@ public class FunctionCall implements Expression {
 	}
 
 	@Override
-	public Expression simplify() {
+	public ExpressionElement simplify() {
 		for (int i = 0; i < this.args.size(); i++) {
 			this.args.set(i, this.args.get(i).simplify());
 		}
