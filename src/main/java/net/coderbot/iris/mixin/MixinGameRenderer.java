@@ -187,10 +187,25 @@ public class MixinGameRenderer {
 			"getRendertypeEntityTranslucentShader",
 			"getRendertypeEntityTranslucentCullShader",
 			"getRendertypeItemEntityTranslucentCullShader",
-			"getRendertypeArmorCutoutNoCullShader",
-			"getRendertypeEnergySwirlShader"
+			"getRendertypeArmorCutoutNoCullShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+		} else if (isRenderingWorld()) {
+			override(ShaderKey.ENTITIES_CUTOUT_DIFFUSE, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRendertypeEnergySwirlShader"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEnergySwirlShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
@@ -220,8 +235,23 @@ public class MixinGameRenderer {
 
 	@Inject(method = {
 			"getRendertypeEntitySolidShader",
-			"getRendertypeWaterMaskShader",
 			"getRendertypeEntityNoOutlineShader",
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntitySolidDiffuseShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+		} else if (isRenderingWorld()) {
+			override(ShaderKey.ENTITIES_SOLID_DIFFUSE, cir);
+		}
+	}
+
+	@Inject(method = {
+			"getRendertypeWaterMaskShader",
 			"getRendertypeEntityShadowShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntitySolidShader(CallbackInfoReturnable<ShaderInstance> cir) {

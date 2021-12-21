@@ -336,10 +336,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, new int[] {0});
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, new int[] {0});
 
-		// TODO: entityLighting
 		FallbackShader shader = NewShaderTests.createFallback(name, beforeTranslucent, afterTranslucent,
 				key.getAlphaTest(), key.getVertexFormat(), null, this, key.getFogMode(),
-				false, key.isIntensity());
+				key.hasDiffuseLighting(), key.isIntensity());
 
 		loadedShaders.add(shader);
 

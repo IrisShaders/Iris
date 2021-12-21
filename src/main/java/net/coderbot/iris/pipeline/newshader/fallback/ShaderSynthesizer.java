@@ -81,13 +81,13 @@ public class ShaderSynthesizer {
 						"    lightDir1 = normalize(lightDir1);\n" +
 						"    float light0 = max(0.0, dot(lightDir0, normal));\n" +
 						"    float light1 = max(0.0, dot(lightDir1, normal));\n" +
-						"    float lightAccum = min(1.0, (light0 + light1) * MINECRAFT_LIGHT_POWER + MINECRAFT_AMBIENT_LIGHT);\n" +
+						"    float lightAccum = min(1.0, (light0 + light1) * 0.6 + 0.4);\n" +
 						"    return vec4(color.rgb * lightAccum, color.a);\n" +
 						"}\n");
 
 				shader.append("in vec3 Normal;\n");
 
-				main.append("    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color);\n");
+				main.append("    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color * ColorModulator);\n");
 			} else if (inputs.isNewLines()) {
 				shader.append("in vec3 Normal;\n");
 				main.append("    vertexColor = Color * ColorModulator;\n");
