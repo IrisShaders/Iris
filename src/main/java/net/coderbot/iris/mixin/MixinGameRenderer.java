@@ -245,7 +245,7 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getRenderTypeEntityDecalShader
+	// TODO: getRenderTypeEntityDecalShader (uses entity diffuse lighting)
 	// TODO: getRenderTypeEntityAlphaShader (weird alpha test behavior!!!)
 
 	// NOTE: getRenderTypeOutlineShader should not be overriden.

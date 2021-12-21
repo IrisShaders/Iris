@@ -18,6 +18,7 @@ import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.*;
+import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -120,7 +121,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
-	boolean isBeforeTranslucent;
+	public boolean isBeforeTranslucent;
 
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
@@ -390,10 +391,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				null);
 	}
 
-	@Nullable
 	private ShaderInstance createShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
 		if (!source.isPresent()) {
-			return null;
+			return createFallbackShader(name, fallbackAlpha, vertexFormat, fogMode);
 		}
 
 		return createShader(name, source.get(), fallbackAlpha, vertexFormat, fogMode);
@@ -413,6 +413,19 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		addGbufferOrShadowSamplers(extendedShader, flipped, false);
 
 		return extendedShader;
+	}
+
+	private ShaderInstance createFallbackShader(String name, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
+		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, new int[] {0});
+		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, new int[] {0});
+
+		// TODO: entityLighting and intensityTex, as well as OFF for the shadow pass.
+		FallbackShader shader = NewShaderTests.createFallback(name, beforeTranslucent, afterTranslucent,
+				fallbackAlpha, vertexFormat, null, this, fogMode, false, false);
+
+		loadedShaders.add(shader);
+
+		return shader;
 	}
 
 	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
