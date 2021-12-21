@@ -5,7 +5,8 @@ import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
 public class ShaderSynthesizer {
-	public static String vsh(boolean hasChunkOffset, ShaderAttributeInputs inputs, FogMode fogMode, boolean entityLighting) {
+	public static String vsh(boolean hasChunkOffset, ShaderAttributeInputs inputs, FogMode fogMode,
+							 boolean entityLighting, boolean beacomBeam) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
@@ -120,7 +121,7 @@ public class ShaderSynthesizer {
 		}
 
 		// Fog
-		if (fogMode == FogMode.ENABLED) {
+		if (fogMode == FogMode.ENABLED && !beacomBeam) {
 			shader.append("out float vertexDistance;\n");
 
 			main.append("    vertexDistance = length((ModelViewMat * vec4(");
@@ -146,7 +147,8 @@ public class ShaderSynthesizer {
 		return shader.toString();
 	}
 
-	public static String fsh(ShaderAttributeInputs inputs, FogMode fogMode, AlphaTest alphaTest, boolean intensityTex) {
+	public static String fsh(ShaderAttributeInputs inputs, FogMode fogMode, AlphaTest alphaTest, boolean intensityTex,
+							 boolean beacomBeam) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
@@ -187,7 +189,16 @@ public class ShaderSynthesizer {
 			shader.append("uniform vec4 FogColor;\n");
 			shader.append("uniform float FogStart;\n");
 			shader.append("uniform float FogEnd;\n");
-			shader.append("in float vertexDistance;\n");
+
+			if (!beacomBeam) {
+				// Use vertex distances, close enough
+				shader.append("in float vertexDistance;\n");
+				main.append("float fragmentDistance = vertexDistance;\n");
+			} else {
+				// Use fragment distances since beam vertices are very far apart
+				shader.append("uniform mat4 ProjMat;\n");
+				main.append("float fragmentDistance = -ProjMat[3].z / ((gl_FragCoord.z) * -2.0 + 1.0 - ProjMat[2].z);\n");
+			}
 
 			// These are custom Iris uniforms implemented in FallbackShader.
 			shader.append("uniform float FogDensity = 1.0;\n");
@@ -195,10 +206,10 @@ public class ShaderSynthesizer {
 
 			main.append("    float fogFactor;\n");
 			main.append("    if (FogIsExp2 == 1) {\n");
-			main.append("        float x = vertexDistance * FogDensity;\n");
+			main.append("        float x = fragmentDistance * FogDensity;\n");
 			main.append("        fogFactor = exp(-x * x);\n");
 			main.append("    } else {\n");
-			main.append("        fogFactor = (FogEnd - vertexDistance) / (FogEnd - FogStart);\n");
+			main.append("        fogFactor = (FogEnd - fragmentDistance) / (FogEnd - FogStart);\n");
 			main.append("    }\n");
 
 			main.append("    fogFactor = clamp(fogFactor, 0.0, 1.0);\n");

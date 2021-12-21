@@ -130,8 +130,8 @@ public class NewShaderTests {
 										boolean intensityTex, boolean isBeacon) throws IOException {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isBeacon);
 
-		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting);
-		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex);
+		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting, isBeacon);
+		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isBeacon);
 
 		String shaderJsonString = "{\n" +
 				"    \"blend\": {\n" +
