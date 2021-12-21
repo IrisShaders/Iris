@@ -100,4 +100,8 @@ public enum ShaderKey {
 		return this == ENTITIES_CUTOUT_DIFFUSE || this == ENTITIES_SOLID_DIFFUSE || this == BLOCK_ENTITY_DIFFUSE
 				|| this == HAND_CUTOUT_DIFFUSE || this == HAND_WATER_DIFFUSE;
 	}
+
+	public boolean isBeaconBeam() {
+		return this == BEACON || this == SHADOW_BEACON_BEAM;
+	}
 }

@@ -32,11 +32,11 @@ public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode) throws IOException {
+										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isBeacon) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
 
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isBeacon);
 		String vertex = TriforcePatcher.patch(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs);
 		String fragment = TriforcePatcher.patch(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs);
 
@@ -127,8 +127,8 @@ public class NewShaderTests {
 										GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
 										VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 										NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
-												boolean intensityTex) throws IOException {
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat);
+										boolean intensityTex, boolean isBeacon) throws IOException {
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isBeacon);
 
 		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting);
 		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex);

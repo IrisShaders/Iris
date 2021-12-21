@@ -254,7 +254,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			try {
 				if (key.isShadow()) {
 					if (shadowMapRenderer != null) {
-						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()), key.getAlphaTest(), key.getVertexFormat());
+						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()),
+								key.getAlphaTest(), key.getVertexFormat(), key.isBeaconBeam());
 					} else {
 						return null;
 					}
@@ -313,14 +314,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			return createFallbackShader(name, key);
 		}
 
-		return createShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode());
+		return createShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(), key.isBeaconBeam());
 	}
 
-	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
+	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
+										VertexFormat vertexFormat, FogMode fogMode, boolean isBeacon) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, fogMode);
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent,
+				baseline, fallbackAlpha, vertexFormat, updateNotifier, this, fogMode, isBeacon);
 
 		loadedShaders.add(extendedShader);
 
@@ -338,25 +341,28 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		FallbackShader shader = NewShaderTests.createFallback(name, beforeTranslucent, afterTranslucent,
 				key.getAlphaTest(), key.getVertexFormat(), null, this, key.getFogMode(),
-				key.hasDiffuseLighting(), key.isIntensity());
+				key.hasDiffuseLighting(), key.isIntensity(), key.isBeaconBeam());
 
 		loadedShaders.add(shader);
 
 		return shader;
 	}
 
-	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
+	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha,
+											  VertexFormat vertexFormat, boolean isBeacon) throws IOException {
 		if (!source.isPresent()) {
 			return null;
 		}
 
-		return createShadowShader(name, source.get(), fallbackAlpha, vertexFormat);
+		return createShadowShader(name, source.get(), fallbackAlpha, vertexFormat, isBeacon);
 	}
 
-	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
+	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
+											  VertexFormat vertexFormat, boolean isBeacon) throws IOException {
 		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.ENABLED);
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
+				fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.ENABLED, isBeacon);
 
 		loadedShaders.add(extendedShader);
 
