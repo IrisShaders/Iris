@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ProgramImages;
@@ -254,8 +255,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			try {
 				if (key.isShadow()) {
 					if (shadowMapRenderer != null) {
-						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()),
-								key.getAlphaTest(), key.getVertexFormat(), key.isBeaconBeam(), key.isFullbright());
+						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()), key);
 					} else {
 						return null;
 					}
@@ -350,13 +350,25 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return shader;
 	}
 
-	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha,
-											  VertexFormat vertexFormat, boolean isBeacon, boolean isFullbright) throws IOException {
+	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
 		if (!source.isPresent()) {
-			return null;
+			return createFallbackShadowShader(name, key);
 		}
 
-		return createShadowShader(name, source.get(), fallbackAlpha, vertexFormat, isBeacon, isFullbright);
+		return createShadowShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.isBeaconBeam(),
+				key.isFullbright());
+	}
+
+	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
+		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
+
+		FallbackShader shader = NewShaderTests.createFallback(name, framebuffer, framebuffer,
+				key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
+				key.hasDiffuseLighting(), key.isIntensity(), key.isBeaconBeam(), key.isFullbright());
+
+		loadedShaders.add(shader);
+
+		return shader;
 	}
 
 	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha,

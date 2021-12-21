@@ -42,7 +42,7 @@ public class SodiumTerrainPipeline {
 	String shadowFragment;
 	String shadowCutoutFragment;
 	GlFramebuffer shadowFramebuffer;
-	BlendModeOverride shadowBlendOverride;
+	BlendModeOverride shadowBlendOverride = BlendModeOverride.OFF;
 
 	ProgramSet programSet;
 
