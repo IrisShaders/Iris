@@ -1,7 +1,9 @@
 package net.coderbot.iris.postprocess;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20C;
 
@@ -31,23 +33,27 @@ public class FullScreenQuadRenderer {
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
+		// scale the quad from [0, 1] to [-1, 1]
+		RenderSystem.translatef(-1.0F, -1.0F, 0.0F);
+		RenderSystem.scalef(2.0F, 2.0F, 0.0F);
+
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
 		
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
-		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, quadBuffer);
+		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, quadBuffer);
 		DefaultVertexFormat.POSITION_TEX.setupBufferState(0L);
 	}
 
 	public void renderQuad() {
-		GL20C.glDrawArrays(GL20C.GL_TRIANGLE_STRIP, 0, 4);
+		GlStateManager._drawArrays(GL20C.GL_TRIANGLE_STRIP, 0, 4);
 	}
 
 	public static void end() {
 		DefaultVertexFormat.POSITION_TEX.clearBufferState();
-		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
+		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
 
 		RenderSystem.enableDepthTest();
 
@@ -66,21 +72,21 @@ public class FullScreenQuadRenderer {
 			1.0F, 1.0F, 0.0F,
 			1.0F, 1.0F,
 			// Vertex 1: Top left corner
-			-1.0F, 1.0F, 0.0F,
+			0.0F, 1.0F, 0.0F,
 			0.0F, 1.0F,
 			// Vertex 2: Bottom right corner
-			1.0F, -1.0F, 0.0F,
+			1.0F, 0.0F, 0.0F,
 			1.0F, 0.0F,
 			// Vertex 3: Bottom left corner
-			-1.0F, -1.0F, 0.0F,
+			0.0F, 0.0F, 0.0F,
 			0.0F, 0.0F
 		};
 
-		int buffer = GL20C.glGenBuffers();
+		int buffer = GlStateManager._glGenBuffers();
 
-		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, buffer);
-		GL20C.glBufferData(GL20C.GL_ARRAY_BUFFER, vertices, GL20C.GL_STATIC_DRAW);
-		GL20C.glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
+		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, buffer);
+		IrisRenderSystem.bufferData(GL20C.GL_ARRAY_BUFFER, vertices, GL20C.GL_STATIC_DRAW);
+		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
 
 		return buffer;
 	}

@@ -9,10 +9,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlUtil;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL20C;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
@@ -94,7 +93,7 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L705-L707">Optifine Doc for GLSL Version</a>
 	 */
 	public static String getGlVersion(int name) {
-		String info = GL20.glGetString(name);
+		String info = GlStateManager._getString(name);
 
 		Matcher matcher = SEMVER_PATTERN.matcher(Objects.requireNonNull(info));
 
@@ -143,7 +142,7 @@ public class StandardMacros {
 	 * @return list of activated extensions prefixed with "MC_"
 	 */
 	public static List<String> getGlExtensions() {
-		String[] extensions = Objects.requireNonNull(GL11.glGetString(GL11.GL_EXTENSIONS)).split("\\s+");
+		String[] extensions = Objects.requireNonNull(GlStateManager._getString(GL11.GL_EXTENSIONS)).split("\\s+");
 
 		// TODO note that we do not add extensions based on if the shader uses them and if they are supported
 		// see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
@@ -172,7 +171,7 @@ public class StandardMacros {
 	 * @return graphics driver prefixed with "MC_GL_RENDERER_"
 	 */
 	public static String getRenderer() {
-		String renderer = Objects.requireNonNull(GL11.glGetString(GL11C.GL_RENDERER)).toLowerCase(Locale.ROOT);
+		String renderer = Objects.requireNonNull(GlUtil.getRenderer()).toLowerCase(Locale.ROOT);
 		if (renderer.startsWith("amd")) {
 			return "MC_GL_RENDERER_RADEON";
 		} else if (renderer.startsWith("ati")) {
@@ -205,7 +204,7 @@ public class StandardMacros {
 	 * @return the graphics card prefixed with "MC_GL_VENDOR_"
 	 */
 	public static String getVendor() {
-		String vendor = Objects.requireNonNull(GL11.glGetString(GL11C.GL_VENDOR)).toLowerCase(Locale.ROOT);
+		String vendor = Objects.requireNonNull(GlUtil.getVendor()).toLowerCase(Locale.ROOT);
 		if (vendor.startsWith("ati")) {
 			return "MC_GL_VENDOR_ATI";
 		} else if (vendor.startsWith("intel")) {

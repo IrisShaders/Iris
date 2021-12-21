@@ -2,7 +2,9 @@
 
 package net.coderbot.iris.gl.shader;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.GlResource;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
@@ -28,17 +30,17 @@ public class GlShader extends GlResource {
     private static int createShader(ShaderType type, String name, String src, ShaderConstants constants) {
 		src = processShader(src, constants);
 
-		int handle = GL20C.glCreateShader(type.id);
+		int handle = GlStateManager.glCreateShader(type.id);
 		ShaderWorkarounds.safeShaderSource(handle, src);
-		GL20C.glCompileShader(handle);
+		GlStateManager.glCompileShader(handle);
 
-		String log = GL20C.glGetShaderInfoLog(handle);
+		String log = IrisRenderSystem.getShaderInfoLog(handle);
 
 		if (!log.isEmpty()) {
 			LOGGER.warn("Shader compilation log for " + name + ": " + log);
 		}
 
-		int result = GL20C.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
+		int result = GlStateManager.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
 
 		if (result != GL20C.GL_TRUE) {
 			throw new RuntimeException("Shader compilation failed, see log for details");
@@ -51,7 +53,7 @@ public class GlShader extends GlResource {
      * Adds an additional list of defines to the top of a GLSL shader file just after the version declaration. This
      * allows for ghetto shader specialization.
      */
-    private static String processShader(String src, ShaderConstants constants) {
+    public static String processShader(String src, ShaderConstants constants) {
         StringBuilder builder = new StringBuilder(src.length());
         boolean patched = false;
 
@@ -90,6 +92,6 @@ public class GlShader extends GlResource {
 
     @Override
 	protected void destroyInternal() {
-		GL20C.glDeleteShader(this.getGlId());
+		GlStateManager.glDeleteShader(this.getGlId());
 	}
 }

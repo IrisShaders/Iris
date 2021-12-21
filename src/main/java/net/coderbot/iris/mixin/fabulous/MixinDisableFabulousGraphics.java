@@ -32,7 +32,7 @@ public class MixinDisableFabulousGraphics {
 	private void iris$disableFabulousGraphics() {
 		Options options = Minecraft.getInstance().options;
 
-		if (Iris.getIrisConfig().areShadersEnabled()) {
+		if (!Iris.getIrisConfig().areShadersEnabled()) {
 			// Nothing to do here, shaders are disabled.
 			return;
 		}

@@ -50,7 +50,8 @@ public class CustomUniformFixedInputUniformsHolder {
 			value.update();
 		}
 	}
-public Collection<CachedUniform> getAll() {
+
+	public Collection<CachedUniform> getAll() {
 		return this.inputVariables.values();
 	}
 
@@ -92,60 +93,45 @@ public Collection<CachedUniform> getAll() {
 		}
 
 		@Override
-		public Builder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2> value) {
-			Vector2f held = new Vector2f();
-			return this.put(name, new Float2VectorCachedUniform(name, updateFrequency, () -> {
-				Vec2 vec = value.get();
-				held.set(vec.x, vec.y);
-				return held;
-			}));
+		public Builder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2f> value) {
+			return this.put(name, new Float2VectorCachedUniform(name, updateFrequency, value));
 		}
 
 		@Override
-		public Builder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec2> value) {
-			Vector2i held = new Vector2i();
-			return this.put(name, new Int2VectorCachedUniform(name, updateFrequency, () ->{
-				Vec2 vec = value.get();
-				held.set((int)vec.x, (int)vec.y);
-				return held;
-			}));
+		public Builder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2i> value) {
+			return this.put(name, new Int2VectorCachedUniform(name, updateFrequency, value));
 		}
 
 		@Override
-		public Builder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Vector3f> value) {
+		public Builder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value) {
+			return this.put(name, new Float3VectorCachedUniform(name, updateFrequency, value));
+		}
+
+		@Override
+		public Builder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
 			Vector3f held = new Vector3f();
 			return this.put(name, new Float3VectorCachedUniform(name, updateFrequency, () -> {
-				com.mojang.math.Vector3f vec = value.get();
+				Vector4f vec = value.get();
 				held.set(vec.x(), vec.y(), vec.z());
 				return held;
 			}));
 		}
 
 		@Override
-		public Builder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Vector4f> value) {
+		public UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3d> value) {
 			Vector3f held = new Vector3f();
 			return this.put(name, new Float3VectorCachedUniform(name, updateFrequency, () -> {
-				com.mojang.math.Vector4f vec = value.get();
+				Vector3d vec = value.get();
 				held.set(vec.x(), vec.y(), vec.z());
 				return held;
 			}));
 		}
 
 		@Override
-		public UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vec3> value) {
-			Vector3f held = new Vector3f();
-			return this.put(name, new Float3VectorCachedUniform(name, updateFrequency, () -> {
-				Vec3 vec = value.get();
-				held.set(vec.x(), vec.y(), vec.z());
-				return held;
-			}));
-		}
-
-		@Override
-		public UniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Vector4f> value) {
+		public UniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
 			Vector4f held = new Vector4f();
 			return this.put(name, new Float4VectorCachedUniform(name, updateFrequency, () -> {
-				com.mojang.math.Vector4f vec = value.get();
+				Vector4f vec = value.get();
 				held.set(vec.x(), vec.y(), vec.z(), vec.w());
 				return held;
 			}));

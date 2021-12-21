@@ -4,9 +4,12 @@
   "version": "${version}",
 
   "name": "Iris",
-  "description": "A new shaders mod for Minecraft intended to be compatible with existing ShadersMod/Optifine shaders",
+  "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
   "authors": [
-    "coderbot"
+    "coderbot",
+    "IMS212",
+    "Justsnoopy30",
+    "FoundationGames"
   ],
   "contact": {
     "homepage": "https://github.com/IrisShaders/Iris",
@@ -35,14 +38,15 @@
     "mixins.iris.vertexformat.json",
     "mixins.iris.bettermipmaps.json",
     "mixins.iris.compat.indigo.json",
+    "mixins.iris.compat.sodium.json",
     "mixins.iris.compat.indium.json"
   ],
 
   "accessWidener" : "iris.accesswidener",
 
   "depends": {
-    "fabricloader": ">=0.7.4",
-    "minecraft": "1.16.x",
+    "fabricloader": ">=0.12.3",
+    "minecraft": "1.16.5",
     "fabric-resource-loader-v0": ">=0.3.2",
     "fabric-key-binding-api-v1": ">=1.0.1"
   },

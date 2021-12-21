@@ -8,18 +8,23 @@ import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.renderer.*;
-import net.minecraft.world.phys.Vec3;
+
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -75,6 +80,7 @@ public class MixinLevelRenderer {
 	// render their waypoint beams.
 	@Inject(method = RENDER_LEVEL, at = @At(value = "RETURN", shift = At.Shift.BEFORE))
 	private void iris$endLevelRender(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
+		HandRenderer.INSTANCE.renderTranslucent(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeLevelRendering();
 		pipeline = null;
@@ -111,7 +117,7 @@ public class MixinLevelRenderer {
 	private void iris$renderSky$drawHorizon(PoseStack poseStack, float tickDelta, CallbackInfo callback) {
 		RenderSystem.depthMask(false);
 
-		Vec3 fogColor = CapturedRenderingState.INSTANCE.getFogColor();
+		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
 		RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
 
 		new HorizonRenderer().renderHorizon(poseStack);
@@ -182,6 +188,15 @@ public class MixinLevelRenderer {
 		pipeline.pushProgram(GbufferProgram.WEATHER);
 	}
 
+	@ModifyArg(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
+	private boolean iris$writeRainAndSnowToDepthBuffer(boolean depthMaskEnabled) {
+		if (pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
+			return true;
+		}
+
+		return depthMaskEnabled;
+	}
+
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
 	private void iris$endWeather(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.WEATHER);
@@ -197,18 +212,13 @@ public class MixinLevelRenderer {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
 	}
 
-	@Inject(method = "renderSnowAndRain", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;defaultAlphaFunc()V", shift = At.Shift.AFTER))
-	private void iris$applyWeatherOverrides(LightTexture manager, float f, double d, double e, double g, CallbackInfo ci) {
-		// TODO: This is a temporary workaround for https://github.com/IrisShaders/Iris/issues/219
-		pipeline.pushProgram(GbufferProgram.WEATHER);
-		pipeline.popProgram(GbufferProgram.WEATHER);
-	}
-
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
 	private void iris$beginTranslucents(PoseStack poseStack, float tickDelta, long limitTime,
 										boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
 										LightTexture lightTexture, Matrix4f projection,
 										CallbackInfo ci) {
+		pipeline.beginHand();
+		HandRenderer.INSTANCE.renderSolid(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
