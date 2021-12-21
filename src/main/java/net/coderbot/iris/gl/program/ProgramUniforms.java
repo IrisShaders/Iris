@@ -1,8 +1,5 @@
 package net.coderbot.iris.gl.program;
 
-import java.nio.IntBuffer;
-import java.util.*;
-
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
@@ -17,6 +14,14 @@ import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL20C;
+
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.OptionalInt;
 
 public class ProgramUniforms {
 	private static ProgramUniforms active;
@@ -149,7 +154,7 @@ public class ProgramUniforms {
 
 		@Override
 		public OptionalInt location(String name, UniformType type) {
-			int id = IrisRenderSystem.getUniformLocation(program, name);
+			int id = GlStateManager._glGetUniformLocation(program, name);
 
 			if (id == -1) {
 				return OptionalInt.empty();

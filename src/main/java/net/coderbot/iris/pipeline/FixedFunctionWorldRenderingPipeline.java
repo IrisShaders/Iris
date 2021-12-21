@@ -118,6 +118,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public boolean shouldWriteRainAndSnowToDepthBuffer() {
+		return false;
+	}
+
+	@Override
 	public float getSunPathRotation() {
 		// No sun tilt
 		return 0;

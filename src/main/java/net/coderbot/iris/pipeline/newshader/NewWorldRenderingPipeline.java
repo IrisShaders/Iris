@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -18,7 +19,12 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.pipeline.*;
+import net.coderbot.iris.pipeline.ClearPass;
+import net.coderbot.iris.pipeline.ClearPassCreator;
+import net.coderbot.iris.pipeline.CustomTextureManager;
+import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
@@ -63,28 +69,23 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
-	private boolean destroyed = false;
-
 	private final RenderTargets renderTargets;
 	private final ShaderMap shaderMap;
 
 	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 
 	private final Set<ShaderInstance> loadedShaders;
-
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
 	private final GlFramebuffer baseline;
 
-	private Runnable createShadowMapRenderer;
-	private ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
 	private final FinalPassRenderer finalPassRenderer;
+
 	private final CustomTextureManager customTextureManager;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
-
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
@@ -96,8 +97,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
+	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
+	private boolean destroyed = false;
+
+	private Runnable createShadowMapRenderer;
+	private ShadowMapRenderer shadowMapRenderer;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
@@ -119,6 +125,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderClouds = programSet.getPackDirectives().areCloudsEnabled();
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
+		this.shouldWriteRainAndSnowToDepthBuffer = programSet.getPackDirectives().rainDepth();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -152,7 +159,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programSet.getShadow().orElse(null),
 					programSet.getPackDirectives(), renderTargets);
-			createShadowMapRenderer = () -> {};
+			createShadowMapRenderer = () -> {
+			};
 		};
 
 		BufferFlipper flipper = new BufferFlipper();
@@ -308,7 +316,18 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
 				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
 				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
-				null);
+						null);
+	}
+
+	@SafeVarargs
+	private static <T> Optional<T> first(Optional<T>... candidates) {
+		for (Optional<T> candidate : candidates) {
+			if (candidate.isPresent()) {
+				return candidate;
+			}
+		}
+
+		return Optional.empty();
 	}
 
 	private ShaderInstance createShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
@@ -421,25 +440,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 	}
 
-	@SafeVarargs
-	private static <T> Optional<T> first(Optional<T>... candidates) {
-		for (Optional<T> candidate : candidates) {
-			if (candidate.isPresent()) {
-				return candidate;
-			}
-		}
-
-		return Optional.empty();
+	@Override
+	public WorldRenderingPhase getPhase() {
+		return phase;
 	}
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
 		this.phase = phase;
-	}
-
-	@Override
-	public WorldRenderingPhase getPhase() {
-		return phase;
 	}
 
 	@Override
@@ -523,7 +531,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// all non-translucent content excluding the hand, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 	}
 
@@ -539,7 +547,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 
 		deferredRenderer.renderAll();
@@ -587,6 +595,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldRenderVignette() {
 		return shouldRenderVignette;
+	}
+
+	@Override
+	public boolean shouldWriteRainAndSnowToDepthBuffer() {
+		return shouldWriteRainAndSnowToDepthBuffer;
 	}
 
 	@Override

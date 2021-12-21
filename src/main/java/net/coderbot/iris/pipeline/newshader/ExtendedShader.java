@@ -1,6 +1,8 @@
 package net.coderbot.iris.pipeline.newshader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.shaders.Uniform;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -14,14 +16,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
-import com.mojang.blaze3d.shaders.Uniform;
-import com.mojang.blaze3d.vertex.VertexFormat;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
 public class ExtendedShader extends ShaderInstance implements SamplerHolder, ImageHolder {
+	private final boolean intensitySwizzle;
+	private final ProgramImages.Builder imageBuilder;
 	NewWorldRenderingPipeline parent;
 	ProgramUniforms uniforms;
 	GlFramebuffer writingToBeforeTranslucent;
@@ -29,8 +32,6 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	GlFramebuffer baseline;
 	BlendModeOverride blendModeOverride;
 	HashMap<String, IntSupplier> dynamicSamplers;
-	private final boolean intensitySwizzle;
-	private final ProgramImages.Builder imageBuilder;
 	private ProgramImages currentImages;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {

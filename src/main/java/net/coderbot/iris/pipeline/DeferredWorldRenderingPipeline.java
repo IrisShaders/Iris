@@ -124,6 +124,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
+	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
@@ -138,6 +139,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
 		this.shouldRenderUnderwaterOverlay = programs.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programs.getPackDirectives().vignette();
+		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -481,6 +483,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public boolean shouldWriteRainAndSnowToDepthBuffer() {
+		return shouldWriteRainAndSnowToDepthBuffer;
+	}
+
+	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
 	}
@@ -662,7 +669,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = IrisRenderSystem.getAttribLocation(pass.getProgram().getProgramId(), name);
+		int location = GlStateManager._glGetAttribLocation(pass.getProgram().getProgramId(), name);
 
 		if (location != -1) {
 			if (location != expectedLocation) {
