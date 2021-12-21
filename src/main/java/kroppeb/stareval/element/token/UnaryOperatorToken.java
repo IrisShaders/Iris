@@ -1,7 +1,7 @@
 package kroppeb.stareval.element.token;
 
-import kroppeb.stareval.element.PriorityOperatorElement;
 import kroppeb.stareval.element.ExpressionElement;
+import kroppeb.stareval.element.PriorityOperatorElement;
 import kroppeb.stareval.element.tree.UnaryExpressionElement;
 import kroppeb.stareval.parser.UnaryOp;
 

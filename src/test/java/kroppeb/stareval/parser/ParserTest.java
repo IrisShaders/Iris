@@ -1,6 +1,5 @@
 package kroppeb.stareval.parser;
 
-import kroppeb.stareval.element.Element;
 import kroppeb.stareval.exception.ParseException;
 import kroppeb.stareval.element.ExpressionElement;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,8 +37,8 @@ class ParserTest {
 	@ParameterizedTest
 	@CsvFileSource(resources = "/fullyEquivalent.csv", delimiter = ';')
 	void checkOrderOfOperationsParse(String input1, String input2) throws ParseException {
-		Element exp1 = parse(input1);
-		Element exp2 = parse(input2);
-		assertEquals(exp1.toString(), exp2.toString());
+		ExpressionElement exp1 = parse(input1);
+		ExpressionElement exp2 = parse(input2);
+		assertEquals(exp1.simplify().toString(), exp2.simplify().toString());
 	}
 }

@@ -1,8 +1,8 @@
 package kroppeb.stareval.element.tree.partial;
 
+import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.element.PriorityOperatorElement;
 import kroppeb.stareval.element.tree.BinaryExpressionElement;
-import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.parser.BinaryOp;
 
 public class PartialBinaryExpression extends PartialExpression implements PriorityOperatorElement {

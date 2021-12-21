@@ -1,9 +1,9 @@
 package kroppeb.stareval.parser;
 
+import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.exception.ParseException;
 import kroppeb.stareval.exception.UnexpectedCharacterException;
 import kroppeb.stareval.exception.UnexpectedEndingException;
-import kroppeb.stareval.element.ExpressionElement;
 
 class Tokenizer {
 	private Tokenizer() {
