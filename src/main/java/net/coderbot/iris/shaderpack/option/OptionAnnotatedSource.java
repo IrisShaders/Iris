@@ -470,9 +470,10 @@ public final class OptionAnnotatedSource {
 		if (booleanOption != null) {
 			OptionalBoolean value = values.getBooleanValue(booleanOption.getName());
 			if (booleanOption.getType() == OptionType.DEFINE) {
-				return setValue(existing, value, booleanOption.getDefaultValue());
+				return setBooleanDefineValue(existing, value, booleanOption.getDefaultValue());
 			} else if (booleanOption.getType() == OptionType.CONST) {
 				if (value != OptionalBoolean.DEFAULT) {
+					// Value will never be default here, but we're using orElse just to get a normal boolean out of it.
 					return editConst(existing, Boolean.toString(booleanOption.getDefaultValue()), Boolean.toString(value.orElse(booleanOption.getDefaultValue())));
 				} else {
 					return existing;
@@ -528,7 +529,7 @@ public final class OptionAnnotatedSource {
 		return parsed.takeRest();
 	}
 
-	private static String setValue(String line, OptionalBoolean newValue, boolean defaultValue) {
+	private static String setBooleanDefineValue(String line, OptionalBoolean newValue, boolean defaultValue) {
 		if (hasLeadingComment(line) && newValue.orElse(defaultValue)) {
 			return removeLeadingComment(line);
 		} else if (!newValue.orElse(defaultValue)) {
