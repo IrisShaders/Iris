@@ -47,6 +47,8 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 	private void iris$begin(BlockRenderPass pass, CallbackInfo ci) {
 		this.override = irisChunkProgramOverrides.getProgramOverride(pass, this.vertexType);
 
+		irisChunkProgramOverrides.bindFramebuffer(pass);
+
 		if (this.override == null) {
 			return;
 		}
@@ -65,19 +67,14 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 
 		override.bind();
 		override.getInterface().setup();
-
-		// TODO: Fallback framebuffers
-		irisChunkProgramOverrides.bindFramebuffer(pass);
 	}
 
     @Inject(method = "end", at = @At("HEAD"), remap = false, cancellable = true)
     private void iris$onEnd(CallbackInfo ci) {
         ProgramUniforms.clearActiveUniforms();
+		irisChunkProgramOverrides.unbindFramebuffer();
 
         if (override != null) {
-        	// TODO: Fallback framebuffer handling
-			irisChunkProgramOverrides.unbindFramebuffer();
-
 			override.getInterface().restore();
 			override.unbind();
 			override = null;
