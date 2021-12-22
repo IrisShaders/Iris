@@ -223,7 +223,7 @@ public class Parser {
 
 		if (top instanceof IdToken) {
 			this.pop();
-			this.push(new FunctionCall(((IdToken) top).id, args.tokens));
+			this.push(new FunctionCall(((IdToken) top).getId(), args.tokens));
 		} else {
 			if (args.tokens.isEmpty()) {
 				throw new MissingTokenException("Encountered empty brackets that aren't a call", index);
