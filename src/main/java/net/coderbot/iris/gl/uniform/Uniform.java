@@ -4,11 +4,11 @@ public abstract class Uniform {
 	protected final int location;
 	protected final ValueUpdateNotifier notifier;
 
-	public Uniform(int location) {
+	Uniform(int location) {
 		this(location, null);
 	}
 
-	public Uniform(int location, ValueUpdateNotifier notifier) {
+	Uniform(int location, ValueUpdateNotifier notifier) {
 		this.location = location;
 		this.notifier = notifier;
 	}
