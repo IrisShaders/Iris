@@ -13,11 +13,11 @@ public class UnaryExpressionElement implements ExpressionElement {
 	}
 
 	public UnaryOp getOp() {
-		return this.op;
+		return op;
 	}
 
 	public ExpressionElement getInner() {
-		return this.inner;
+		return inner;
 	}
 
 	@Override

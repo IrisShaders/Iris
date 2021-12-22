@@ -10,7 +10,7 @@ public class NumberToken extends Token implements ExpressionElement {
 	}
 
 	public String getNumber() {
-		return this.number;
+		return number;
 	}
 
 	@Override

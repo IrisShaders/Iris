@@ -10,7 +10,7 @@ public class IdToken extends Token implements AccessibleExpressionElement {
 	}
 
 	public String getId() {
-		return this.id;
+		return id;
 	}
 
 	@Override
