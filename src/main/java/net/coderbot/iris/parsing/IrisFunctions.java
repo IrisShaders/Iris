@@ -46,8 +46,8 @@ import java.util.function.Consumer;
  * #   in(x, val1, val2, ...)                         Check if a value equals one of several values
  */
 public class IrisFunctions {
-	final static FunctionResolver.Builder builder = new FunctionResolver.Builder();
-	final public static FunctionResolver functions;
+	static final FunctionResolver.Builder builder = new FunctionResolver.Builder();
+	public static final FunctionResolver functions;
 	
 	static {
 		{
