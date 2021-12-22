@@ -4,6 +4,8 @@ import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
+import net.coderbot.iris.pipeline.newshader.fallback.ShaderSynthesizer;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -30,11 +32,12 @@ public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode) throws IOException {
+										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isBeacon,
+										boolean isFullbright) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
 
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 		String vertex = TriforcePatcher.patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs);
 		String fragment = TriforcePatcher.patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs);
 
@@ -119,6 +122,69 @@ public class NewShaderTests {
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 		}, parent);
+	}
+
+	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
+										GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
+										VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
+										NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
+										boolean intensityTex, boolean isBeacon, boolean isFullbright) throws IOException {
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+
+		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting, isBeacon);
+		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isBeacon);
+
+		String shaderJsonString = "{\n" +
+				"    \"blend\": {\n" +
+				"        \"func\": \"add\",\n" +
+				"        \"srcrgb\": \"srcalpha\",\n" +
+				"        \"dstrgb\": \"1-srcalpha\"\n" +
+				"    },\n" +
+				"    \"vertex\": \"" + name + "\",\n" +
+				"    \"fragment\": \"" + name + "\",\n" +
+				"    \"attributes\": [\n" +
+				"        \"Position\",\n" +
+				"        \"Color\",\n" +
+				"        \"UV0\",\n" +
+				"        \"UV1\",\n" +
+				"        \"UV2\",\n" +
+				"        \"Normal\"\n" +
+				"    ],\n" +
+				"    \"samplers\": [\n" +
+				"        { \"name\": \"Sampler0\" },\n" +
+				"        { \"name\": \"Sampler1\" },\n" +
+				"        { \"name\": \"Sampler2\" }\n" +
+				"    ],\n" +
+				"    \"uniforms\": [\n" +
+				"        { \"name\": \"TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+				"        { \"name\": \"ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+				"        { \"name\": \"ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+				"        { \"name\": \"ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
+				"        { \"name\": \"ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
+				"        { \"name\": \"Light0_Direction\", \"type\": \"float\", \"count\": 3, \"values\": [0.0, 0.0, 0.0] },\n" +
+				"        { \"name\": \"Light1_Direction\", \"type\": \"float\", \"count\": 3, \"values\": [0.0, 0.0, 0.0] },\n" +
+				"        { \"name\": \"FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
+				"        { \"name\": \"FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+				"        { \"name\": \"FogDensity\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+				"        { \"name\": \"FogIsExp2\", \"type\": \"int\", \"count\": 1, \"values\": [ 0 ] },\n" +
+				"        { \"name\": \"LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+				"        { \"name\": \"ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
+				"        { \"name\": \"FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
+				"    ]\n" +
+				"}";
+
+		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, fragment);
+
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+
+			Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
+			Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+			Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
+		}
+
+		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
+				writingToAfterTranslucent, blendModeOverride, parent);
 	}
 
 	private static class IrisProgramResourceFactory implements ResourceProvider {

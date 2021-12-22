@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -223,6 +224,33 @@ public class ProgramSet {
 
 	public Optional<ProgramSource> getGbuffersHand() {
 		return gbuffersHand.requireValid();
+	}
+
+	public Optional<ProgramSource> get(ProgramId programId) {
+		switch (programId) {
+			case Shadow: return getShadow();
+			case Basic: return getGbuffersBasic();
+			//case Line: return Optional.empty();
+			case Textured: return getGbuffersTextured();
+			case TexturedLit: return getGbuffersTexturedLit();
+			case SkyBasic: return getGbuffersSkyBasic();
+			case SkyTextured: return getGbuffersSkyTextured();
+			case Clouds: return getGbuffersClouds();
+			case Terrain: return getGbuffersTerrain();
+			case DamagedBlock: return getGbuffersDamagedBlock();
+			case Block: return getGbuffersBlock();
+			case BeaconBeam: return getGbuffersBeaconBeam();
+			case Entities: return getGbuffersEntities();
+			case EntitiesGlowing: return getGbuffersEntitiesGlowing();
+			case ArmorGlint: return getGbuffersGlint();
+			case SpiderEyes: return getGbuffersEntityEyes();
+			case Hand: return getGbuffersHand();
+			case Weather: return getGbuffersWeather();
+			case Water: return getGbuffersWater();
+			case HandWater: return getGbuffersHandWater();
+			case Final: return getCompositeFinal();
+			default: return Optional.empty();
+		}
 	}
 
 	public ProgramSource[] getDeferred() {

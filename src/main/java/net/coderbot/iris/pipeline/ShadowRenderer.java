@@ -17,9 +17,7 @@ import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
-import net.coderbot.iris.pipeline.newshader.ExtendedShader;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -71,7 +69,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
 	private final OptionalBoolean packCullingState;
-	private final boolean packHasVoxelization;
+	public boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
 	private final float sunPathRotation;
 	private final RenderBuffers buffers;
@@ -122,8 +120,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		if (shadow != null) {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
-			// Also assume voxelization if image load / store is detected.
-			this.packHasVoxelization = shadow.getGeometrySource().isPresent() || IrisImages.hasShadowImages(((ExtendedShader) pipeline.getShadowTerrainCutout())) || IrisImages.hasRenderTargetImages(((ExtendedShader) pipeline.getShadowTerrainCutout()), gbufferRenderTargets);
+			// Also assume voxelization if image load / store is detected (set elsewhere)
+			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
 			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
 		} else {
 			this.packHasVoxelization = false;

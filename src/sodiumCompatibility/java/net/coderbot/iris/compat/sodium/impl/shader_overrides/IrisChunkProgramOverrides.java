@@ -242,8 +242,12 @@ public class IrisChunkProgramOverrides {
 	}
 
 	public void unbindFramebuffer() {
-		// TODO: Bind the framebuffer to whatever fallback is specified by SodiumTerrainPipeline.
-		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
+
+		if (pipeline != null) {
+			// TODO: Bind the framebuffer to whatever fallback is specified by SodiumTerrainPipeline.
+			Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+		}
 	}
 
     public void deleteShaders() {

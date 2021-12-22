@@ -12,8 +12,9 @@ import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
-import net.coderbot.iris.gl.blending.AlphaTestFunction;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
@@ -24,6 +25,7 @@ import net.coderbot.iris.pipeline.CustomTextureManager;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -32,8 +34,10 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ProgramFallbackResolver;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
@@ -57,6 +61,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -65,53 +70,9 @@ import java.util.function.Supplier;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
 	private final RenderTargets renderTargets;
+	private final ShaderMap shaderMap;
 
-	private final ShaderInstance basic;
-	private final ShaderInstance basicColor;
-
-	private final ShaderInstance textured;
-	private final ShaderInstance texturedColor;
-
-	private final ShaderInstance skyBasic;
-	private final ShaderInstance skyBasicColor;
-
-	private final ShaderInstance skyTextured;
-	private final ShaderInstance skyTexturedColor;
-
-	private final ShaderInstance clouds;
-
-	private final ShaderInstance shadowTerrainCutout;
-
-	private final ShaderInstance terrainSolid;
-	private final ShaderInstance terrainCutout;
-	private final ShaderInstance terrainCutoutMipped;
-
-	private final ShaderInstance entitiesSolid;
-	private final ShaderInstance entitiesCutout;
-	private final ShaderInstance entitiesEyes;
-
-	private final ShaderInstance handCutout;
-	private final ShaderInstance handTranslucent;
-
-	private final ShaderInstance shadowEntitiesCutout;
-	private final ShaderInstance shadowBeaconBeam;
-
-	private final ShaderInstance lightning;
-	private final ShaderInstance leash;
-	private final ShaderInstance particles;
-	private final ShaderInstance weather;
-	private final ShaderInstance crumbling;
-
-	private final ShaderInstance text;
-	private final ShaderInstance textIntensity;
-
-	private final ShaderInstance block;
-	private final ShaderInstance beacon;
-	private final ShaderInstance glint;
-	private final ShaderInstance lines;
-
-	private final ShaderInstance shadowLines;
-	private final ShaderInstance terrainTranslucent;
+	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 
 	private final Set<ShaderInstance> loadedShaders;
 	private final ImmutableList<ClearPass> clearPassesFull;
@@ -130,6 +91,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ImmutableSet<Integer> flippedBeforeTranslucent;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
+	public boolean isBeforeTranslucent;
+
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
@@ -137,10 +100,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
-	boolean isBeforeTranslucent;
 	private boolean destroyed = false;
 
-	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
 	private Runnable createShadowMapRenderer;
 	private ShadowMapRenderer shadowMapRenderer;
 
@@ -293,78 +254,30 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			return builder.build();
 		};
 
-		Optional<ProgramSource> basicSource = programSet.getGbuffersBasic();
-		Optional<ProgramSource> texturedSource = first(programSet.getGbuffersTextured(), basicSource);
-
-		Optional<ProgramSource> skyTexturedSource = first(programSet.getGbuffersSkyTextured(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> skyBasicSource = first(programSet.getGbuffersSkyBasic(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> cloudsSource = first(programSet.getGbuffersClouds(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-
-		Optional<ProgramSource> particleSource = first(programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> weatherSource = first(programSet.getGbuffersWeather(), particleSource);
-		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
-		Optional<ProgramSource> shadowSource = programSet.getShadow();
-		Optional<ProgramSource> blockSource = first(programSet.getGbuffersBlock(), terrainSource);
-		Optional<ProgramSource> beaconSource = first(programSet.getGbuffersBeaconBeam(), programSet.getGbuffersTextured());
-
-		Optional<ProgramSource> entitiesSource = first(programSet.getGbuffersEntities(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> entityEyesSource = first(programSet.getGbuffersEntityEyes(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> handSource = first(programSet.getGbuffersHand(), particleSource);
-		Optional<ProgramSource> handTranslucentSource = first(programSet.getGbuffersHandWater(), handSource);
-		Optional<ProgramSource> glintSource = first(programSet.getGbuffersGlint(), programSet.getGbuffersTextured());
-
-		Optional<ProgramSource> damagedBlockSource = first(programSet.getGbuffersDamagedBlock(), terrainSource);
-
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[]{0});
-
-		// Matches OptiFine's default for CUTOUT and CUTOUT_MIPPED.
-		AlphaTest terrainCutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
-		AlphaTest nonZeroAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.0001F);
-
+		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 		this.loadedShaders = new HashSet<>();
 
-		try {
-			this.basic = createShader("gbuffers_basic", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.ENABLED);
-			this.basicColor = createShader("gbuffers_basic_color", basicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
-			this.textured = createShader("gbuffers_textured", texturedSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.OFF);
-			this.texturedColor = createShader("gbuffers_textured_color", texturedSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF);
-			this.skyBasic = createShader("gbuffers_sky_basic", skyBasicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION, FogMode.ENABLED);
-			this.skyBasicColor = createShader("gbuffers_sky_basic_color", skyBasicSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF);
-			this.skyTextured = createShader("gbuffers_sky_textured", skyTexturedSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_TEX, FogMode.OFF);
-			this.skyTexturedColor = createShader("gbuffers_sky_textured_tex_color", skyTexturedSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF);
-			this.clouds = createShader("gbuffers_clouds", cloudsSource, terrainCutoutAlpha, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL, FogMode.ENABLED);
-			this.terrainSolid = createShader("gbuffers_terrain_solid", terrainSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
-			this.terrainCutout = createShader("gbuffers_terrain_cutout", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
-			this.terrainCutoutMipped = createShader("gbuffers_terrain_cutout_mipped", terrainSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
-			this.entitiesSolid = createShader("gbuffers_entities_solid", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
-			this.entitiesCutout = createShader("gbuffers_entities_cutout", entitiesSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
-			this.entitiesEyes = createShader("gbuffers_spidereyes", entityEyesSource, nonZeroAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
-			this.handCutout = createShader("gbuffers_hand_cutout", handSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
-			this.handTranslucent = createShader("gbuffers_hand_translucent", handTranslucentSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
-			this.lightning = createShader("gbuffers_lightning", entitiesSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR, FogMode.ENABLED);
-			this.leash = createShader("gbuffers_leash", basicSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.ENABLED);
-			this.particles = createShader("gbuffers_particles", particleSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.ENABLED);
-			this.weather = createShader("gbuffers_weather", weatherSource, terrainCutoutAlpha, DefaultVertexFormat.PARTICLE, FogMode.ENABLED);
-			this.crumbling = createShader("gbuffers_damagedblock", damagedBlockSource, terrainCutoutAlpha, DefaultVertexFormat.BLOCK, FogMode.OFF);
-			// TODO: block entities text?
-			this.text = createShader("gbuffers_entities_text", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED);
-			this.textIntensity = createShader("gbuffers_entities_text_intensity", entitiesSource, nonZeroAlpha, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED);
-			this.block = createShader("gbuffers_block", blockSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY, FogMode.ENABLED);
-			this.beacon = createShader("gbuffers_beaconbeam", beaconSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK, FogMode.ENABLED);
-			this.glint = createShader("gbuffers_glint", glintSource, nonZeroAlpha, DefaultVertexFormat.POSITION_TEX, FogMode.ENABLED);
-			this.lines = createShader("gbuffers_lines", programSet.getGbuffersBasic(), AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL, FogMode.ENABLED);
+		ProgramFallbackResolver resolver = new ProgramFallbackResolver(programSet);
 
-			if (translucentSource != terrainSource) {
-				this.terrainTranslucent = createShader("gbuffers_translucent", translucentSource, AlphaTest.ALWAYS, IrisVertexFormats.TERRAIN, FogMode.ENABLED);
-			} else {
-				this.terrainTranslucent = this.terrainSolid;
+		this.shaderMap = new ShaderMap(key -> {
+			try {
+				if (key.isShadow()) {
+					if (shadowMapRenderer != null) {
+						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()), key);
+					} else {
+						return null;
+					}
+				} else {
+					return createShader(key.getName(), resolver.resolve(key.getProgram()), key);
+				}
+			} catch (IOException e) {
+				destroyShaders();
+				throw new RuntimeException(e);
+			} catch (RuntimeException e) {
+				destroyShaders();
+				throw e;
 			}
-		} catch (RuntimeException e) {
-			destroyShaders();
-
-			throw e;
-		}
+		});
 
 		BlockRenderingSettings.INSTANCE.setBlockStateIds(
 				BlockMaterialMapping.createBlockStateIdMap(programSet.getPack().getIdMap().getBlockProperties()));
@@ -383,24 +296,23 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			// Fallback just in case.
 			// TODO: Can we remove this?
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programSet.getPackDirectives().getShadowDirectives().getResolution());
-			this.shadowTerrainCutout = null;
-			this.shadowEntitiesCutout = null;
-			this.shadowBeaconBeam = null;
-			this.shadowLines = null;
 		} else {
-			try {
-				// TODO: Shadow programs should have access to different samplers.
-				this.shadowTerrainCutout = createShadowShader("shadow_terrain_cutout", shadowSource, terrainCutoutAlpha, IrisVertexFormats.TERRAIN);
-				this.shadowEntitiesCutout = createShadowShader("shadow_entities_cutout", shadowSource, terrainCutoutAlpha, DefaultVertexFormat.NEW_ENTITY);
-				this.shadowBeaconBeam = createShadowShader("shadow_beacon_beam", shadowSource, AlphaTest.ALWAYS, DefaultVertexFormat.BLOCK);
-				this.shadowLines = createShadowShader("shadow_lines", shadowSource, AlphaTest.ALWAYS, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-			} catch (RuntimeException e) {
-				destroyShaders();
+			ShaderInstance shader = shaderMap.getShader(ShaderKey.SHADOW_TERRAIN_CUTOUT);
 
-				throw e;
+			if (shader instanceof ExtendedShader && shadowMapRenderer instanceof ShadowRenderer) {
+				// Assume voxelization if image load / store is detected in the shadow program.
+				// We have to do this here to avoid a circular reference in setting up shaders.
+				// This code should probably be cleaned up later.
+				ImageHolder holder = ((ExtendedShader) getShaderMap().getShader(ShaderKey.SHADOW_TERRAIN_CUTOUT));
+
+				((ShadowRenderer) shadowMapRenderer).packHasVoxelization
+						|= IrisImages.hasShadowImages(holder)
+						|| IrisImages.hasRenderTargetImages(holder, renderTargets);
 			}
 		}
 
+		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
+		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
 				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedBeforeTranslucent, flippedAfterTranslucent,
 				shadowMapRenderer instanceof ShadowRenderer ? ((ShadowRenderer) shadowMapRenderer).getFramebuffer() :
@@ -418,20 +330,23 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return Optional.empty();
 	}
 
-	@Nullable
-	private ShaderInstance createShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
+	private ShaderInstance createShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
 		if (!source.isPresent()) {
-			return null;
+			return createFallbackShader(name, key);
 		}
 
-		return createShader(name, source.get(), fallbackAlpha, vertexFormat, fogMode);
+		return createShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
+				key.isBeaconBeam(), key.isFullbright());
 	}
 
-	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat, FogMode fogMode) throws IOException {
+	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
+										VertexFormat vertexFormat, FogMode fogMode, boolean isBeacon,
+										boolean isFullbright) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, fogMode);
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent,
+				baseline, fallbackAlpha, vertexFormat, updateNotifier, this, fogMode, isBeacon, isFullbright);
 
 		loadedShaders.add(extendedShader);
 
@@ -443,18 +358,46 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return extendedShader;
 	}
 
-	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
-		if (!source.isPresent()) {
-			return null;
-		}
+	private ShaderInstance createFallbackShader(String name, ShaderKey key) throws IOException {
+		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, new int[] {0});
+		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, new int[] {0});
 
-		return createShadowShader(name, source.get(), fallbackAlpha, vertexFormat);
+		FallbackShader shader = NewShaderTests.createFallback(name, beforeTranslucent, afterTranslucent,
+				key.getAlphaTest(), key.getVertexFormat(), null, this, key.getFogMode(),
+				key.hasDiffuseLighting(), key.isIntensity(), key.isBeaconBeam(), key.isFullbright());
+
+		loadedShaders.add(shader);
+
+		return shader;
 	}
 
-	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha, VertexFormat vertexFormat) throws IOException {
+	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
+		if (!source.isPresent()) {
+			return createFallbackShadowShader(name, key);
+		}
+
+		return createShadowShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.isBeaconBeam(),
+				key.isFullbright());
+	}
+
+	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
 		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline, fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.ENABLED);
+		FallbackShader shader = NewShaderTests.createFallback(name, framebuffer, framebuffer,
+				key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
+				key.hasDiffuseLighting(), key.isIntensity(), key.isBeaconBeam(), key.isFullbright());
+
+		loadedShaders.add(shader);
+
+		return shader;
+	}
+
+	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
+											  VertexFormat vertexFormat, boolean isBeacon, boolean isFullbright) throws IOException {
+		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
+
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
+				fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.ENABLED, isBeacon, isFullbright);
 
 		loadedShaders.add(extendedShader);
 
@@ -665,168 +608,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public ShaderInstance getBasic() {
-		return basic;
-	}
-
-	@Override
-	public ShaderInstance getBasicColor() {
-		return basicColor;
-	}
-
-	@Override
-	public ShaderInstance getTextured() {
-		return textured;
-	}
-
-	@Override
-	public ShaderInstance getTexturedColor() {
-		return texturedColor;
-	}
-
-	@Override
-	public ShaderInstance getSkyBasic() {
-		return skyBasic;
-	}
-
-	@Override
-	public ShaderInstance getSkyBasicColor() {
-		return skyBasicColor;
-	}
-
-	@Override
-	public ShaderInstance getSkyTextured() {
-		return skyTextured;
-	}
-
-	@Override
-	public ShaderInstance getSkyTexturedColor() {
-		return skyTexturedColor;
-	}
-
-	@Override
-	public ShaderInstance getClouds() {
-		return clouds;
-	}
-
-	@Override
-	public ShaderInstance getTerrain() {
-		return terrainSolid;
-	}
-
-	@Override
-	public ShaderInstance getTerrainCutout() {
-		return terrainCutout;
-	}
-
-	@Override
-	public ShaderInstance getTerrainCutoutMipped() {
-		return terrainCutoutMipped;
-	}
-
-	@Override
-	public ShaderInstance getEntitiesCutout() {
-		return entitiesCutout;
-	}
-
-	@Override
-	public ShaderInstance getEntitiesEyes() {
-		return entitiesEyes;
-	}
-
-	@Override
-	public ShaderInstance getHandCutout() {
-		return handCutout;
-	}
-
-	@Override
-	public ShaderInstance getHandTranslucent() {
-		return handTranslucent;
-	}
-
-	@Override
-	public ShaderInstance getLeash() {
-		return leash;
-	}
-
-	@Override
-	public ShaderInstance getLightning() {
-		return lightning;
-	}
-
-	@Override
-	public ShaderInstance getParticles() {
-		return particles;
-	}
-
-	@Override
-	public ShaderInstance getWeather() {
-		return weather;
-	}
-
-	@Override
-	public ShaderInstance getCrumbling() {
-		return crumbling;
-	}
-
-	@Override
-	public ShaderInstance getText() {
-		return text;
-	}
-
-	@Override
-	public ShaderInstance getTextIntensity() {
-		return textIntensity;
-	}
-
-	@Override
-	public ShaderInstance getBlock() {
-		return block;
-	}
-
-	@Override
-	public ShaderInstance getBeacon() {
-		return beacon;
-	}
-
-	@Override
-	public ShaderInstance getEntitiesSolid() {
-		return entitiesSolid;
-	}
-
-	@Override
-	public ShaderInstance getShadowTerrainCutout() {
-		return shadowTerrainCutout;
-	}
-
-	@Override
-	public ShaderInstance getShadowEntitiesCutout() {
-		return shadowEntitiesCutout;
-	}
-
-	@Override
-	public ShaderInstance getShadowBeaconBeam() {
-		return shadowEntitiesCutout;
-	}
-
-	@Override
-	public ShaderInstance getTranslucent() {
-		return terrainTranslucent;
-	}
-
-	@Override
-	public ShaderInstance getGlint() {
-		return glint;
-	}
-
-	@Override
-	public ShaderInstance getLines() {
-		return lines;
-	}
-
-	@Override
-	public ShaderInstance getShadowLines() {
-		return shadowLines;
+	public ShaderMap getShaderMap() {
+		return shaderMap;
 	}
 
 	private void destroyShaders() {

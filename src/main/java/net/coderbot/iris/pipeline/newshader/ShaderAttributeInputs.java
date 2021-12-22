@@ -11,7 +11,7 @@ public class ShaderAttributeInputs {
 	private boolean normal;
 	private boolean newLines;
 
-	public ShaderAttributeInputs(VertexFormat format) {
+	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright) {
 		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL) {
 			newLines = true;
 		}
@@ -29,7 +29,7 @@ public class ShaderAttributeInputs {
 				overlay = true;
 			}
 
-			if ("UV2".equals(name)) {
+			if ("UV2".equals(name) && !isFullbright) {
 				light = true;
 			}
 

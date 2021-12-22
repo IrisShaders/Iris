@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.shaders.Uniform;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.pipeline.newshader.ExtendedShader;
+import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.ARBTextureSwizzle;
@@ -73,7 +74,7 @@ public class MixinShaderInstance {
 	@Redirect(method = "updateLocations",
 			at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", remap = false))
 	private void iris$redirectLogSpam(Logger logger, String message, Object arg1, Object arg2) {
-		if (((Object) this) instanceof ExtendedShader) {
+		if (((Object) this) instanceof ExtendedShader || ((Object) this) instanceof FallbackShader) {
 			return;
 		}
 
