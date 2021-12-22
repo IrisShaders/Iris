@@ -26,7 +26,11 @@ public abstract class CachedUniform implements VariableExpression {
 	}
 	
 	public void update() {
-		this.changed = doUpdate();
+		doUpdate();
+		// TODO: Works around a logic error / architectural flaw - there's no way to
+		//       know when a uniform has been uploaded to all programs, so we can never
+		//       safely change this to false with the current design.
+		this.changed = true;
 	}
 	
 	protected abstract boolean doUpdate();
