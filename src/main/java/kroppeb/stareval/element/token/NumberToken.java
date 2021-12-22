@@ -9,6 +9,10 @@ public class NumberToken extends Token implements ExpressionElement {
 		this.number = number;
 	}
 
+	public String getNumber() {
+		return number;
+	}
+
 	@Override
 	public String toString() {
 		return "Number{" + this.number + "}";
