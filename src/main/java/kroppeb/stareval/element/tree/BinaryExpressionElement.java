@@ -18,11 +18,4 @@ public class BinaryExpressionElement implements ExpressionElement {
 	public String toString() {
 		return "BinaryExpr{ {" + this.left + "} " + this.op + " {" + this.right + "} }";
 	}
-
-	@Override
-	public ExpressionElement simplify() {
-		this.left = this.left.simplify();
-		this.right = this.right.simplify();
-		return this;
-	}
 }

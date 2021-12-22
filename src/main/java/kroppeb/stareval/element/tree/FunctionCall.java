@@ -17,13 +17,4 @@ public class FunctionCall implements ExpressionElement {
 	public String toString() {
 		return "FunctionCall{" + this.id + " {" + this.args + "} }";
 	}
-
-	@Override
-	public ExpressionElement simplify() {
-		for (int i = 0; i < this.args.size(); i++) {
-			this.args.set(i, this.args.get(i).simplify());
-		}
-
-		return this;
-	}
 }

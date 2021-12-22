@@ -16,10 +16,4 @@ public class UnaryExpressionElement implements ExpressionElement {
 	public String toString() {
 		return "UnaryExpr{" + this.op + " {" + this.inner + "} }";
 	}
-
-	@Override
-	public ExpressionElement simplify() {
-		this.inner = this.inner.simplify();
-		return this;
-	}
 }
