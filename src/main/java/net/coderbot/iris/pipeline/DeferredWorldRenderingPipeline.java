@@ -323,7 +323,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
-				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages);
+				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, customUniforms);
 
 		// first optimization pass
 		this.customUniforms.optimise();

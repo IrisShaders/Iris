@@ -15,6 +15,7 @@ import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -30,6 +31,7 @@ public class SodiumTerrainPipeline {
 	ProgramSet programSet;
 
 	private final WorldRenderingPipeline parent;
+	private final CustomUniforms customUniforms;
 
 	private final IntFunction<ProgramSamplers> createTerrainSamplers;
 	private final IntFunction<ProgramSamplers> createShadowSamplers;
@@ -41,8 +43,10 @@ public class SodiumTerrainPipeline {
 								 ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
 								 IntFunction<ProgramSamplers> createShadowSamplers,
 								 IntFunction<ProgramImages> createTerrainImages,
-								 IntFunction<ProgramImages> createShadowImages) {
+								 IntFunction<ProgramImages> createShadowImages,
+								 CustomUniforms customUniforms) {
 		this.parent = Objects.requireNonNull(parent);
+		this.customUniforms = customUniforms;
 
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
@@ -202,13 +206,15 @@ public class SodiumTerrainPipeline {
 		return Optional.ofNullable(shadowFragment);
 	}
 
-	public ProgramUniforms initUniforms(int programId) {
+	public ProgramUniforms.Builder initUniforms(int programId) {
 		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
 
-		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), parent.getFrameUpdateNotifier());
+		CommonUniforms.addDynamicUniforms(uniforms);
+		customUniforms.assignTo(uniforms);
+
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
-		return uniforms.buildUniforms();
+		return uniforms;
 	}
 
 	public ProgramSamplers initTerrainSamplers(int programId) {
@@ -225,6 +231,10 @@ public class SodiumTerrainPipeline {
 
 	public ProgramImages initShadowImages(int programId) {
 		return createShadowImages.apply(programId);
+	}
+
+	public CustomUniforms getCustomUniforms() {
+		return customUniforms;
 	}
 
 	/*public void bindFramebuffer() {

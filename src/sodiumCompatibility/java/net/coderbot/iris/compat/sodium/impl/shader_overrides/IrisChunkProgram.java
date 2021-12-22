@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
@@ -29,15 +30,18 @@ public class IrisChunkProgram extends ChunkProgram {
 	@Nullable
 	private final ProgramImages irisProgramImages;
 
+	private final CustomUniforms customUniforms;
+
     public IrisChunkProgram(RenderDevice owner, ResourceLocation name, int handle,
 							@Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers,
-							@Nullable ProgramImages irisProgramImages) {
+							@Nullable ProgramImages irisProgramImages, CustomUniforms customUniforms) {
         super(owner, name, handle, ChunkShaderFogComponent.None::new);
         this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
         this.uNormalMatrix = this.getUniformLocation("u_NormalMatrix");
         this.irisProgramUniforms = irisProgramUniforms;
         this.irisProgramSamplers = irisProgramSamplers;
 		this.irisProgramImages = irisProgramImages;
+		this.customUniforms = customUniforms;
     }
 
     public void setup(PoseStack poseStack, float modelScale, float textureScale) {
@@ -54,6 +58,8 @@ public class IrisChunkProgram extends ChunkProgram {
 		if (irisProgramImages != null) {
 			irisProgramImages.update();
 		}
+
+		customUniforms.push(this);
 
         Matrix4f modelViewMatrix = poseStack.last().pose();
         Matrix4f normalMatrix = poseStack.last().pose().copy();

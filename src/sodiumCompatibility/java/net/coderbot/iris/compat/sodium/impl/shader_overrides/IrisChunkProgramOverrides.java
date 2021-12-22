@@ -139,7 +139,7 @@ public class IrisChunkProgramOverrides {
                     .bindAttribute("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
                     .bindAttribute("d_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
                     .build((program, name) -> {
-                        ProgramUniforms uniforms = pipeline.initUniforms(name);
+                        ProgramUniforms.Builder uniforms = pipeline.initUniforms(name);
                         ProgramSamplers samplers;
 						ProgramImages images;
 
@@ -151,7 +151,13 @@ public class IrisChunkProgramOverrides {
 							images = pipeline.initTerrainImages(name);
                         }
 
-                        return new IrisChunkProgram(device, program, name, uniforms, samplers, images);
+                        IrisChunkProgram chunkProgram =
+								new IrisChunkProgram(device, program, name, uniforms.buildUniforms(), samplers, images,
+										pipeline.getCustomUniforms());
+
+						pipeline.getCustomUniforms().mapholderToPass(uniforms, chunkProgram);
+
+						return chunkProgram;
                     });
         } finally {
             vertShader.delete();
