@@ -5,11 +5,19 @@ import kroppeb.stareval.parser.UnaryOp;
 
 public class UnaryExpressionElement implements ExpressionElement {
 	private final UnaryOp op;
-	private ExpressionElement inner;
+	private final ExpressionElement inner;
 
 	public UnaryExpressionElement(UnaryOp op, ExpressionElement inner) {
 		this.op = op;
 		this.inner = inner;
+	}
+
+	public UnaryOp getOp() {
+		return op;
+	}
+
+	public ExpressionElement getInner() {
+		return inner;
 	}
 
 	@Override
