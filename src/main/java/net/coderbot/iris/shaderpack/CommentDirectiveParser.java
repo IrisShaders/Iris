@@ -59,7 +59,7 @@ public class CommentDirectiveParser {
 		return Optional.of(new CommentDirective(CommentDirective.Type.valueOf(needle), haystack, indexOfPrefix));
 	}
 
-	// Test code for directive net.coderbot.iris.parsing. It's a bit homegrown but it works.
+	// Test code for directive parsing. It's a bit homegrown but it works.
 	@SuppressWarnings("unused")
 	private static class Tests {
 		private static <T> void test(String name, T expected, Supplier<T> testCase) {
