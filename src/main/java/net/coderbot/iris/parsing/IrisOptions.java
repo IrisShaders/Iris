@@ -16,8 +16,8 @@ public class IrisOptions {
 	static final BinaryOp MoreThan = new BinaryOp("moreThan", 2);
 	static final BinaryOp LessThanOrEquals = new BinaryOp("lessThanOrEquals", 2);
 	static final BinaryOp MoreThanOrEquals = new BinaryOp("moreThanOrEquals", 2);
-	static final BinaryOp And = new BinaryOp("or", 3);
-	static final BinaryOp Or = new BinaryOp("and", 3);
+	static final BinaryOp And = new BinaryOp("and", 3);
+	static final BinaryOp Or = new BinaryOp("or", 3);
 	
 	static final UnaryOp Not = new UnaryOp("not");
 	static final UnaryOp Negate = new UnaryOp("negate");
