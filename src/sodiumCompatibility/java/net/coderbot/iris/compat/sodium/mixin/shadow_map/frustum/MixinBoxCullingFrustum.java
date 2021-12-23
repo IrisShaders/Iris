@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BoxCullingFrustum.class)
 public class MixinBoxCullingFrustum implements Frustum, FrustumAdapter {
-	@Shadow
+	@Shadow(remap = false)
 	@Final
 	private BoxCuller boxCuller;
 
