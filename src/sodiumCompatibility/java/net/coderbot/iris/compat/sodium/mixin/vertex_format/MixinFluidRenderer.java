@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.Slice;
  */
 @Mixin(FluidRenderer.class)
 public class MixinFluidRenderer {
+	@SuppressWarnings("mapping")
 	@Redirect(method = "render",
 			at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/model/IndexBufferBuilder.add" +
 					"(ILme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadWinding;)V",
@@ -36,6 +37,7 @@ public class MixinFluidRenderer {
 		iris$addIndicesFixNormals(indices, vertexStart, winding, buffers);
 	}
 
+	@SuppressWarnings("mapping")
 	@Redirect(method = "render",
 			at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/model/IndexBufferBuilder.add" +
 					"(ILme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadWinding;)V",

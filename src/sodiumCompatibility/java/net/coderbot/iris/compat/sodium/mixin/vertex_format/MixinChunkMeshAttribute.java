@@ -16,8 +16,7 @@ import org.spongepowered.asm.mixin.Shadow;
  */
 @Mixin(ChunkMeshAttribute.class)
 public class MixinChunkMeshAttribute {
-	// Ignore any warnings about not finding the target for this field.
-	// It's a synthetic field, so Mixin doesn't see it.
+	@SuppressWarnings("target")
     @Shadow(remap = false)
     @Final
     @Mutable
