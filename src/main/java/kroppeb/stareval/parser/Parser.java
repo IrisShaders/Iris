@@ -1,17 +1,17 @@
 package kroppeb.stareval.parser;
 
-import kroppeb.stareval.element.AccessibleExpression;
+import kroppeb.stareval.element.AccessibleExpressionElement;
 import kroppeb.stareval.element.Element;
-import kroppeb.stareval.element.Expression;
+import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.element.PriorityOperatorElement;
 import kroppeb.stareval.element.token.BinaryOperatorToken;
 import kroppeb.stareval.element.token.IdToken;
 import kroppeb.stareval.element.token.NumberToken;
 import kroppeb.stareval.element.token.UnaryOperatorToken;
-import kroppeb.stareval.element.tree.AccessExpression;
-import kroppeb.stareval.element.tree.BinaryExpression;
+import kroppeb.stareval.element.tree.AccessExpressionElement;
+import kroppeb.stareval.element.tree.BinaryExpressionElement;
 import kroppeb.stareval.element.tree.FunctionCall;
-import kroppeb.stareval.element.tree.UnaryExpression;
+import kroppeb.stareval.element.tree.UnaryExpressionElement;
 import kroppeb.stareval.element.tree.partial.PartialBinaryExpression;
 import kroppeb.stareval.element.tree.partial.UnfinishedArgsExpression;
 import kroppeb.stareval.exception.MissingTokenException;
@@ -84,7 +84,7 @@ public class Parser {
 	 * @throws ClassCastException if the top is not an expression
 	 * @see #expressionReducePop(int)
 	 */
-	private Expression expressionReducePop() {
+	private ExpressionElement expressionReducePop() {
 		return this.expressionReducePop(Integer.MAX_VALUE);
 	}
 
@@ -92,14 +92,14 @@ public class Parser {
 	 * Pops an expression after trying to reduce the stack.
 	 * Executes following reduce steps:
 	 * <ul>
-	 *     <li>{@link PriorityOperatorElement}, {@link Expression} => {@link Expression}
+	 *     <li>{@link PriorityOperatorElement}, {@link ExpressionElement} => {@link ExpressionElement}
 	 *     as long as the {@code priority} of the {@link PriorityOperatorElement} is stricter than the given priority</li>
 	 * </ul>
 	 *
 	 * @throws ClassCastException if the top is not an expression
 	 */
-	private Expression expressionReducePop(int priority) {
-		Expression token = (Expression) this.pop();
+	private ExpressionElement expressionReducePop(int priority) {
+		ExpressionElement token = (ExpressionElement) this.pop();
 
 		while (!this.stack.isEmpty()) {
 			Element x = this.peek();
@@ -129,7 +129,7 @@ public class Parser {
 		// UnfinishedArgs Expression (commaReduce)
 		// => UnfinishedArgs
 
-		Expression expr = this.expressionReducePop();
+		ExpressionElement expr = this.expressionReducePop();
 		Element args = this.peek();
 
 		if (args == null) {
@@ -155,15 +155,15 @@ public class Parser {
 	}
 
 	boolean canReadAccess() {
-		return this.peek() instanceof AccessibleExpression;
+		return this.peek() instanceof AccessibleExpressionElement;
 	}
 
 	/**
 	 * Assumes `canReadAccess` has returned true
 	 */
 	void visitAccess(String access) {
-		AccessibleExpression pop = (AccessibleExpression) this.pop();
-		this.push(new AccessExpression(pop, access));
+		AccessibleExpressionElement pop = (AccessibleExpressionElement) this.pop();
+		this.push(new AccessExpressionElement(pop, access));
 	}
 
 	void visitNumber(String numberString) {
@@ -175,7 +175,7 @@ public class Parser {
 	}
 
 	void visitComma(int index) throws ParseException {
-		if (this.peek() instanceof Expression) {
+		if (this.peek() instanceof ExpressionElement) {
 			this.commaReduce(index);
 		} else {
 			throw new UnexpectedTokenException("Expected an expression before a comma ','", index);
@@ -188,7 +188,7 @@ public class Parser {
 	 * <ul>
 	 *     <li>{@link IdToken} {@link UnfinishedArgsExpression}, {@link #expressionReducePop} => {@link FunctionCall}</li>
 	 *     <li>{@link IdToken} {@link UnfinishedArgsExpression} => {@link FunctionCall}</li>
-	 *     <li>{@link UnfinishedArgsExpression}, {@link #expressionReducePop} => {@link Expression}</li>
+	 *     <li>{@link UnfinishedArgsExpression}, {@link #expressionReducePop} => {@link ExpressionElement}</li>
 	 * </ul>
 	 *
 	 * @param index the current reader index, for exception throwing.
@@ -198,7 +198,7 @@ public class Parser {
 		// ( ... )
 		// UnfinishedArgsExpression Expression? (callReduce)
 
-		boolean expressionOnTop = this.peek() instanceof Expression;
+		boolean expressionOnTop = this.peek() instanceof ExpressionElement;
 		if (expressionOnTop) {
 			this.commaReduce(index);
 		}
@@ -223,7 +223,7 @@ public class Parser {
 
 		if (top instanceof IdToken) {
 			this.pop();
-			this.push(new FunctionCall(((IdToken) top).id, args.tokens));
+			this.push(new FunctionCall(((IdToken) top).getId(), args.tokens));
 		} else {
 			if (args.tokens.isEmpty()) {
 				throw new MissingTokenException("Encountered empty brackets that aren't a call", index);
@@ -238,25 +238,25 @@ public class Parser {
 	}
 
 	boolean canReadBinaryOp() {
-		return this.peek() instanceof Expression;
+		return this.peek() instanceof ExpressionElement;
 	}
 
 	/**
 	 * Executes following reduce steps:
 	 * <ul>
-	 *     <li>{@link Expression} | {@link BinaryOperatorToken} => {@link PartialBinaryExpression}</li>
-	 *     <li>{@link UnaryOperatorToken}, {@link Expression} | {@link BinaryOperatorToken} => {@link UnaryExpression} | {@link BinaryOperatorToken}</li>
+	 *     <li>{@link ExpressionElement} | {@link BinaryOperatorToken} => {@link PartialBinaryExpression}</li>
+	 *     <li>{@link UnaryOperatorToken}, {@link ExpressionElement} | {@link BinaryOperatorToken} => {@link UnaryExpressionElement} | {@link BinaryOperatorToken}</li>
 	 *     <li>
-	 *         {@link PartialBinaryExpression}, {@link Expression} | {@link BinaryOperatorToken} <br/>
+	 *         {@link PartialBinaryExpression}, {@link ExpressionElement} | {@link BinaryOperatorToken} <br/>
 	 *         where the operator on the stack has a higher or equal priority to the one being added, the 3 items on the
-	 *         stack get popped, merged to a {@link BinaryExpression} and placed on the stack.
+	 *         stack get popped, merged to a {@link BinaryExpressionElement} and placed on the stack.
 	 *         The new token is then pushed again.
 	 *     </li>
 	 * </ul>
 	 */
 	void visitBinaryOperator(BinaryOp binaryOp) {
 		// reduce the expressions to the needed priority level
-		Expression left = this.expressionReducePop(binaryOp.getPriority());
+		ExpressionElement left = this.expressionReducePop(binaryOp.getPriority());
 		// stack[ {'a', '*'}, 'b'], token = '+' -> stack[], left = {'a', '*', 'b'}
 		//                                      -> stack[{{'a', '*', 'b'}, '+'}]
 		// stack[ {'a', '+'}, 'b'], token = '+' -> stack[], left = {'a', '+', 'b'}
@@ -274,10 +274,10 @@ public class Parser {
 		this.push(new UnaryOperatorToken(unaryOp));
 	}
 
-	Expression getFinal(int endIndex) throws ParseException {
+	ExpressionElement getFinal(int endIndex) throws ParseException {
 		if (!this.stack.isEmpty()) {
-			if (this.peek() instanceof Expression) {
-				Expression result = this.expressionReducePop();
+			if (this.peek() instanceof ExpressionElement) {
+				ExpressionElement result = this.expressionReducePop();
 
 				if (this.stack.isEmpty()) {
 					return result;
@@ -309,7 +309,7 @@ public class Parser {
 		}
 	}
 
-	public static Expression parse(String input, ParserOptions options) throws ParseException {
+	public static ExpressionElement parse(String input, ParserOptions options) throws ParseException {
 		return Tokenizer.parse(input, options);
 	}
 }

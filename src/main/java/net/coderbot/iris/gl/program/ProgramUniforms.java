@@ -1,5 +1,13 @@
 package net.coderbot.iris.gl.program;
 
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.OptionalInt;
+
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
@@ -160,8 +168,14 @@ public class ProgramUniforms {
 				return OptionalInt.empty();
 			}
 
-			locations.put(id, name);
-			uniformNames.put(name, type);
+			if (!locations.containsKey(id) && !uniformNames.containsKey(name)) {
+				locations.put(id, name);
+				uniformNames.put(name, type);
+			} else {
+				Iris.logger.warn("[" + this.name + "] Duplicate uniform: " + type.toString().toLowerCase() + " " + name);
+
+				return OptionalInt.empty();
+			}
 
 			return OptionalInt.of(id);
 		}
@@ -262,6 +276,7 @@ public class ProgramUniforms {
 		@Override
 		public UniformHolder externallyManagedUniform(String name, UniformType type) {
 			externalUniformNames.put(name, type);
+
 			return this;
 		}
 	}

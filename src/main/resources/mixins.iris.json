@@ -16,6 +16,7 @@
     "MixinTheEndPortalRenderer",
     "MixinEntityRenderDispatcher",
     "MixinGameRenderer",
+    "MixinGameRenderer_NightVisionCompat",
     "MixinProgram",
     "MixinScreenEffectRenderer",
     "MixinGlStateManager",

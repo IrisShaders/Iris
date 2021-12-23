@@ -177,17 +177,24 @@ public final class CommonUniforms {
 		if (cameraEntity instanceof LivingEntity) {
 			LivingEntity livingEntity = (LivingEntity) cameraEntity;
 
-			// See MixinGameRenderer#iris$safecheckNightvisionStrength.
-			//
-			// We modify the behavior of getNightVisionScale so that it's safe for us to call it even on entities that
-			// don't have the effect, allowing us to pick up modified night vision strength values from mods like Origins.
-			//
-			// See: https://github.com/apace100/apoli/blob/320b0ef547fbbf703de7154f60909d30366f6500/src/main/java/io/github/apace100/apoli/mixin/GameRendererMixin.java#L153
-			float nightVisionStrength =
-					GameRenderer.getNightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+			try {
+				// See MixinGameRenderer#iris$safecheckNightvisionStrength.
+				//
+				// We modify the behavior of getNightVisionScale so that it's safe for us to call it even on entities
+				// that don't have the effect, allowing us to pick up modified night vision strength values from mods
+				// like Origins.
+				//
+				// See: https://github.com/apace100/apoli/blob/320b0ef547fbbf703de7154f60909d30366f6500/src/main/java/io/github/apace100/apoli/mixin/GameRendererMixin.java#L153
+				float nightVisionStrength =
+						GameRenderer.getNightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 
-			if (nightVisionStrength > 0) {
-				return nightVisionStrength;
+				if (nightVisionStrength > 0) {
+					return nightVisionStrength;
+				}
+			} catch (NullPointerException e) {
+				// If our injection didn't get applied, a NullPointerException will occur from calling that method if
+				// the entity doesn't currently have night vision. This isn't pretty but it's functional.
+				return 0.0F;
 			}
 		}
 
