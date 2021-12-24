@@ -168,7 +168,8 @@ public class ProgramUniforms {
 				return OptionalInt.empty();
 			}
 
-			if (!locations.containsKey(id) && !uniformNames.containsKey(name)) {
+			// TODO: Temporary hack until custom uniforms are merged.
+			if ((!locations.containsKey(id) && !uniformNames.containsKey(name)) || name.equals("framemod8")) {
 				locations.put(id, name);
 				uniformNames.put(name, type);
 			} else {
