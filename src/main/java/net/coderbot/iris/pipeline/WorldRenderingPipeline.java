@@ -37,4 +37,6 @@ public interface WorldRenderingPipeline {
 	boolean shouldWriteRainAndSnowToDepthBuffer();
 
 	float getSunPathRotation();
+
+	RenderStages getStage();
 }

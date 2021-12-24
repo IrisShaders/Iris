@@ -1,6 +1,7 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.RenderStages;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -9,6 +10,8 @@ import net.minecraft.client.renderer.RenderType;
 public class GbufferPrograms {
 	private static boolean entities;
 	private static boolean blockEntities;
+
+	public static Runnable renderStageListener = null;
 
 	/**
 	 * Uses additional information to choose a more specific (and appropriate) GbufferProgram.
@@ -93,6 +96,18 @@ public class GbufferPrograms {
 		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setStage(stage));
 	}
 
+	public static int getRenderStage() {
+		if (Iris.getPipelineManager().getPipeline().isPresent()) {
+			return Iris.getPipelineManager().getPipelineNullable().getStage().ordinal();
+		}
+
+		return RenderStages.MC_RENDER_STAGE_NONE.ordinal();
+	}
+
+	public static ValueUpdateNotifier getRenderStageNotifier() {
+		return listener -> renderStageListener = listener;
+	}
+
 	public static RenderStages refineStage(RenderType renderType) {
 		if (renderType == RenderType.solid()) {
 			return RenderStages.MC_RENDER_STAGE_TERRAIN_SOLID;
@@ -100,6 +115,10 @@ public class GbufferPrograms {
 			return RenderStages.MC_RENDER_STAGE_TERRAIN_CUTOUT;
 		} else if (renderType == RenderType.cutoutMipped()) {
 			return RenderStages.MC_RENDER_STAGE_TERRAIN_CUTOUT_MIPPED;
+		} else if (renderType == RenderType.translucent()) {
+			return RenderStages.MC_RENDER_STAGE_TERRAIN_TRANSLUCENT;
+		} else if (renderType == RenderType.tripwire()) {
+			return RenderStages.MC_RENDER_STAGE_TRIPWIRE;
 		} else {
 			throw new IllegalStateException("Tried to refine an unknown render stage: " + renderType.toString());
 		}

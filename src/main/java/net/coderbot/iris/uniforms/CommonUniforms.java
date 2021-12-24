@@ -8,6 +8,7 @@ import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
 import net.coderbot.iris.samplers.TextureAtlasTracker;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -81,6 +82,9 @@ public final class CommonUniforms {
 
 			return new Vector2i((int) atlasSize.x, (int) atlasSize.y);
 		}, StateUpdateNotifiers.atlasTextureNotifier);
+
+		uniforms.uniform1i("renderStage", GbufferPrograms::getRenderStage,
+				GbufferPrograms.getRenderStageNotifier());
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}

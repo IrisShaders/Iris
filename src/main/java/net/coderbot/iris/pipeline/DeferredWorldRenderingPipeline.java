@@ -18,6 +18,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
@@ -327,11 +328,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public void setStage(RenderStages stage) {
-		this.currentStage = stage;
-	}
-
-	@Override
 	public void pushProgram(GbufferProgram program) {
 		checkWorld();
 
@@ -502,6 +498,19 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
+	}
+
+	@Override
+	public RenderStages getStage() {
+		return currentStage;
+	}
+
+	@Override
+	public void setStage(RenderStages stage) {
+		this.currentStage = stage;
+		if (GbufferPrograms.renderStageListener != null) {
+			GbufferPrograms.renderStageListener.run();
+		}
 	}
 
 	private void beginPass(Pass pass) {

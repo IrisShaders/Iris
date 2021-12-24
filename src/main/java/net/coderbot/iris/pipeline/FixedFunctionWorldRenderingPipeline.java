@@ -132,4 +132,9 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 		// No sun tilt
 		return 0;
 	}
+
+	@Override
+	public RenderStages getStage() {
+		return RenderStages.MC_RENDER_STAGE_NONE;
+	}
 }

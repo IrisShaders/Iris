@@ -186,12 +186,12 @@ public class MixinLevelRenderer {
 	private void iris$beginTerrainLayer(RenderType renderType, PoseStack poseStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		if (renderType == RenderType.solid() || renderType == RenderType.cutout() || renderType == RenderType.cutoutMipped()) {
 			pipeline.pushProgram(GbufferProgram.TERRAIN);
-			pipeline.setStage(GbufferPrograms.refineStage(renderType));
 		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
 			pipeline.pushProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
 			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
 		}
+		pipeline.setStage(GbufferPrograms.refineStage(renderType));
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
@@ -203,6 +203,7 @@ public class MixinLevelRenderer {
 		} else {
 			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
 		}
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_NONE);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER))
@@ -227,11 +228,29 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BOUNDS))
 	private void iris$beginWorldBorder(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.TEXTURED_LIT);
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_WORLD_BORDER);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BOUNDS, shift = At.Shift.AFTER))
 	private void iris$endWorldBorder(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_NONE);
+	}
+
+	// This injection may seem ambiguous, however it will immediately get overriden by the translucent stage accordingly where we don't want it.
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType;lines()Lnet/minecraft/client/renderer/RenderType;"))
+	private void iris$setOutlineRenderStage(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_OUTLINE);
+	}
+
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", shift = At.Shift.AFTER))
+	private void iris$resetOutlineRenderStage(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_NONE);
+	}
+
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderDebug(Lnet/minecraft/client/Camera;)V"))
+	private void iris$setDebugRenderStage(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_DEBUG);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))

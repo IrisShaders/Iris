@@ -31,6 +31,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		.define("MC_SHADOW_QUALITY", "1.0")
 		.defineAll(StandardMacros.getIrisDefines())
 		.defineAll(StandardMacros.getGlExtensions())
+		.defineAll(StandardMacros.getRenderStages())
 		.build();
 
 	private final int program;
