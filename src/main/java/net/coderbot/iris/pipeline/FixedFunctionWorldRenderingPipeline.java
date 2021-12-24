@@ -60,6 +60,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public void setStage(RenderStages stage) {
+
+	}
+
+	@Override
 	public void pushProgram(GbufferProgram program) {
 		// stub: nothing to do here
 	}

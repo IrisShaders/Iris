@@ -2,8 +2,10 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.pipeline.RenderStages;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,6 +31,7 @@ public class MixinParticleEngine {
 											 LightTexture lightTexture, Camera camera, float f,
 											 CallbackInfo ci) {
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
+		GbufferPrograms.setRenderStage(RenderStages.MC_RENDER_STAGE_PARTICLES);
 	}
 
 	@Inject(method = RENDER, at = @At("RETURN"))

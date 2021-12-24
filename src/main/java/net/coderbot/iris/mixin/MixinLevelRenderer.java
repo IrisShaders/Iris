@@ -8,7 +8,9 @@ import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.HandRenderer;
+import net.coderbot.iris.pipeline.RenderStages;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
@@ -95,6 +97,7 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY))
 	private void iris$beginSky(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.pushProgram(GbufferProgram.SKY_TEXTURED);
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_SKY);
 		skyTextureEnabled = true;
 	}
 
@@ -109,6 +112,7 @@ public class MixinLevelRenderer {
 		if (skyTextureEnabled) {
 			skyTextureEnabled = false;
 			pipeline.pushProgram(GbufferProgram.SKY_BASIC);
+			pipeline.setStage(RenderStages.MC_RENDER_STAGE_NONE);
 		}
 	}
 
@@ -131,17 +135,34 @@ public class MixinLevelRenderer {
 		poseStack.mulPose(Vector3f.ZP.rotationDegrees(pipeline.getSunPathRotation()));
 	}
 
+	@Inject(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;SUN_LOCATION:Lnet/minecraft/resources/ResourceLocation;"))
+	private void iris$setSunRenderStage(PoseStack poseStack, float f, CallbackInfo ci) {
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_SUN);
+	}
+
+	@Inject(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;MOON_LOCATION:Lnet/minecraft/resources/ResourceLocation;"))
+	private void iris$setMoonRenderStage(PoseStack poseStack, float f, CallbackInfo ci) {
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_MOON);
+	}
+
+	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getStarBrightness(F)F"))
+	private void iris$setStarRenderStage(PoseStack poseStack, float f, CallbackInfo ci) {
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_STARS);
+	}
+
 	@Inject(method = RENDER_SKY, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableTexture()V"))
 	private void iris$renderSky$enableTexture(PoseStack poseStack, float tickDelta, CallbackInfo callback) {
 		if (!skyTextureEnabled) {
 			skyTextureEnabled = true;
 			pipeline.popProgram(GbufferProgram.SKY_BASIC);
+			pipeline.setStage(RenderStages.MC_RENDER_STAGE_SKY);
 		}
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY, shift = At.Shift.AFTER))
 	private void iris$endSky(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo ci) {
 		pipeline.popProgram(GbufferProgram.SKY_TEXTURED);
+		pipeline.setStage(RenderStages.MC_RENDER_STAGE_NONE);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_CLOUDS))
@@ -165,6 +186,7 @@ public class MixinLevelRenderer {
 	private void iris$beginTerrainLayer(RenderType renderType, PoseStack poseStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
 		if (renderType == RenderType.solid() || renderType == RenderType.cutout() || renderType == RenderType.cutoutMipped()) {
 			pipeline.pushProgram(GbufferProgram.TERRAIN);
+			pipeline.setStage(GbufferPrograms.refineStage(renderType));
 		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
 			pipeline.pushProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {

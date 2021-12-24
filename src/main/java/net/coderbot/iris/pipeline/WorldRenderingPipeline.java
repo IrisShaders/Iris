@@ -18,6 +18,9 @@ public interface WorldRenderingPipeline {
 	void beginHand();
 
 	void beginTranslucents();
+
+	void setStage(RenderStages stage);
+
 	void pushProgram(GbufferProgram program);
 	void popProgram(GbufferProgram program);
 	void finalizeLevelRendering();

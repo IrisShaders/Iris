@@ -133,6 +133,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private static final ResourceLocation WATER_IDENTIFIER = new ResourceLocation("minecraft", "water");
 
+	private RenderStages currentStage;
+
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
@@ -311,6 +313,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
 				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages);
+
+		this.currentStage = RenderStages.MC_RENDER_STAGE_NONE;
 	}
 
 	private void checkWorld() {
@@ -323,6 +327,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public void setStage(RenderStages stage) {
+		this.currentStage = stage;
+	}
+
+	@Override
 	public void pushProgram(GbufferProgram program) {
 		checkWorld();
 
@@ -331,6 +340,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return;
 		}
 
+		if (program.getStage() != null) {
+			this.currentStage = program.getStage();
+		}
 		programStack.add(program);
 		useProgram(program);
 		programStackLog.add("push:" + program);
@@ -643,6 +655,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		// Destroy custom textures and the static samplers (normals, specular, and noise)
 		customTextureManager.destroy();
+
+		this.currentStage = RenderStages.MC_RENDER_STAGE_NONE;
 	}
 
 	private static void destroyPasses(List<Pass> passes) {
@@ -705,6 +719,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		for (ClearPass clearPass : passes) {
 			clearPass.execute(fogColor);
 		}
+
+		this.currentStage = RenderStages.MC_RENDER_STAGE_NONE;
 	}
 
 	@Override
@@ -814,6 +830,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		isRenderingWorld = false;
+		this.currentStage = RenderStages.MC_RENDER_STAGE_NONE;
 		programStackLog.clear();
 
 		compositeRenderer.renderAll();

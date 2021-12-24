@@ -2,7 +2,9 @@ package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.HandRenderer;
+import net.coderbot.iris.pipeline.RenderStages;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.minecraft.client.renderer.RenderType;
 
 public class GbufferPrograms {
 	private static boolean entities;
@@ -84,6 +86,22 @@ public class GbufferPrograms {
 
 		if (pipeline != null) {
 			pipeline.popProgram(program);
+		}
+	}
+
+	public static void setRenderStage(RenderStages stage) {
+		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setStage(stage));
+	}
+
+	public static RenderStages refineStage(RenderType renderType) {
+		if (renderType == RenderType.solid()) {
+			return RenderStages.MC_RENDER_STAGE_TERRAIN_SOLID;
+		} else if (renderType == RenderType.cutout()) {
+			return RenderStages.MC_RENDER_STAGE_TERRAIN_CUTOUT;
+		} else if (renderType == RenderType.cutoutMipped()) {
+			return RenderStages.MC_RENDER_STAGE_TERRAIN_CUTOUT_MIPPED;
+		} else {
+			throw new IllegalStateException("Tried to refine an unknown render stage: " + renderType.toString());
 		}
 	}
 }
