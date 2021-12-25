@@ -18,8 +18,8 @@ Here's what's changed since 1.1.3:
 - 🗣 A number of translations have been updated and tweaked
 - 🩹 Patched a number of other minor bugs, crashes, and issues
 
-Known potential issues:
+Known potential issues since 1.1.3:
 
-- SEUS PTGI HRR Test 3 is currently incompatible.
+❌ SEUS PTGI HRR Test 3 is currently incompatible.
 
 A more detailed changelog is available for those interested: <https://github.com/IrisShaders/Iris/blob/trunk/docs/changelogs/1.1.4/full.md>
