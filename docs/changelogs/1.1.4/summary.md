@@ -2,7 +2,7 @@
 
 ---
 
-Iris version 1.1.3 for Minecraft 1.16.5, Minecraft 1.17.1, and Minecraft 1.18.1 has been released!
+Iris version 1.1.4 for Minecraft 1.16.5, Minecraft 1.17.1, and Minecraft 1.18.1 has been released!
 
 This release was jointly developed by coderbot and IMS, and also contains contributions from maximum#8760. It also contains many other smaller (but still important) contributions from many other people!
 
