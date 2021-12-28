@@ -3,17 +3,17 @@ package net.coderbot.iris.gui.element;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
@@ -22,6 +22,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	private static final Component SHADERS_ENABLED_LABEL = new TranslatableComponent("options.iris.shaders.enabled");
 
 	private final TopButtonRowEntry topButtonRow;
+	private ShaderPackEntry applied = null;
 
 	public ShaderPackSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
@@ -54,16 +55,18 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			// Not translating this since it's going to be seen very rarely,
 			// We're just trying to get more information on a seemingly untraceable bug:
 			// - https://github.com/IrisShaders/Iris/issues/785
-			this.addEntry(new LabelEntry(new TextComponent("")));
-			this.addEntry(new LabelEntry(new TextComponent("There was an error reading your shaderpacks directory")
-					.withStyle(ChatFormatting.RED, ChatFormatting.BOLD)));
-			this.addEntry(new LabelEntry(new TextComponent("")));
-			this.addEntry(new LabelEntry(new TextComponent("Check your logs for more information.")));
-			this.addEntry(new LabelEntry(new TextComponent("Please file an issue report including a log file.")));
-			this.addEntry(new LabelEntry(new TextComponent("If you are able to identify the file causing this, " +
-					"please include it in your report as well.")));
-			this.addEntry(new LabelEntry(new TextComponent("Note that this might be an issue with folder " +
-					"permissions; ensure those are correct first.")));
+			this.addLabelEntries(
+					TextComponent.EMPTY,
+					new TextComponent("There was an error reading your shaderpacks directory")
+							.withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+					TextComponent.EMPTY,
+					new TextComponent("Check your logs for more information."),
+					new TextComponent("Please file an issue report including a log file."),
+					new TextComponent("If you are able to identify the file causing this, " +
+											 "please include it in your report as well."),
+					new TextComponent("Note that this might be an issue with folder " +
+											 "permissions; ensure those are correct first.")
+			);
 
 			return;
 		}
@@ -78,22 +81,29 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		for (String name : names) {
 			index++;
-			addEntry(index, name);
+			addPackEntry(index, name);
 		}
 
-		this.addEntry(new LabelEntry(PACK_LIST_LABEL));
+		this.addLabelEntries(PACK_LIST_LABEL);
 	}
 
-	public void addEntry(int index, String name) {
+	public void addPackEntry(int index, String name) {
 		ShaderPackEntry entry = new ShaderPackEntry(index, this, name);
 
 		Iris.getIrisConfig().getShaderPackName().ifPresent(currentPackName -> {
 			if (name.equals(currentPackName)) {
 				setSelected(entry);
+				setApplied(entry);
 			}
 		});
 
 		this.addEntry(entry);
+	}
+
+	public void addLabelEntries(Component ... lines) {
+		for (Component text : lines) {
+			this.addEntry(new LabelEntry(text));
+		}
 	}
 
 	public void select(String name) {
@@ -106,6 +116,14 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 				return;
 			}
 		}
+	}
+
+	public void setApplied(ShaderPackEntry entry) {
+		this.applied = entry;
+	}
+
+	public ShaderPackEntry getApplied() {
+		return this.applied;
 	}
 
 	public TopButtonRowEntry getTopButtonRow() {
@@ -125,6 +143,10 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			this.packName = packName;
 			this.list = list;
 			this.index = index;
+		}
+
+		public boolean isApplied() {
+			return list.getApplied() == this;
 		}
 
 		public boolean isSelected() {
@@ -153,7 +175,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 				text = text.withStyle(ChatFormatting.BOLD);
 			}
 
-			if (this.isSelected()) {
+			if (this.isApplied()) {
 				color = 0xFFF263;
 			}
 
@@ -190,6 +212,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	}
 
 	public static class TopButtonRowEntry extends BaseEntry {
+		private static final Component REFRESH_SHADER_PACKS_LABEL = new TranslatableComponent("options.iris.refreshShaderPacks").withStyle(style -> style.withColor(TextColor.fromRgb(0x99ceff)));
 		private static final int REFRESH_BUTTON_WIDTH = 18;
 
 		private final ShaderPackSelectionList list;
@@ -221,6 +244,12 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			// Draw enabled/disabled text
 			Component label = this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
 			drawCenteredString(poseStack, Minecraft.getInstance().font, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
+
+			if (refreshButtonHovered) {
+				ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() ->
+						GuiUtil.drawTextPanel(Minecraft.getInstance().font, poseStack, REFRESH_SHADER_PACKS_LABEL,
+								(mouseX - 8) - Minecraft.getInstance().font.width(REFRESH_SHADER_PACKS_LABEL), mouseY - 16));
+			}
 		}
 
 		@Override
