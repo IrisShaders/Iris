@@ -10,15 +10,15 @@ import java.util.List;
 import java.util.Set;
 
 public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
-	private boolean invalidSodium;
+	private boolean validSodiumVersion = false;
 
 	@Override
 	public void onLoad(String mixinPackage) {
 		if (FabricLoader.getInstance().isModLoaded("sodium") && FabricLoader.getInstance().getModContainer("sodium").orElseThrow(NullPointerException::new).getMetadata().getVersion().getFriendlyString().startsWith(Iris.SODIUM_VERSION)) {
-			invalidSodium = true;
+			validSodiumVersion = true;
 		} else {
 			Iris.logger.error("Invalid/missing version of Sodium detected, disabling compatibility mixins!");
-			invalidSodium = false;
+			validSodiumVersion = false;
 		}
 	}
 
@@ -29,7 +29,7 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-		return invalidSodium;
+		return validSodiumVersion;
 	}
 
 	@Override
