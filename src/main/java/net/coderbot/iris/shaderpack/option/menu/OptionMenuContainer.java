@@ -1,13 +1,16 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
-import net.coderbot.iris.Iris;
-
 import com.google.common.collect.Lists;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.ShaderProperties;
-import net.coderbot.iris.shaderpack.option.Profile;
+import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class OptionMenuContainer {
 	public final OptionMenuElementScreen mainScreen;
@@ -17,9 +20,9 @@ public class OptionMenuContainer {
 	private final List<String> usedOptions = new ArrayList<>();
 	private final List<String> unusedOptions = new ArrayList<>(); // To be used when screens contain a "*" element
 	private final Map<List<OptionMenuElement>, Integer> unusedOptionDumpQueue = new HashMap<>(); // Used by screens with "*" element
-	private final Map<String, Profile> profiles;
+	private final ProfileSet profiles;
 
-	public OptionMenuContainer(ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, Map<String, Profile> profiles) {
+	public OptionMenuContainer(ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, ProfileSet profiles) {
 		this.profiles = profiles;
 
 		this.mainScreen = new OptionMenuMainElementScreen(
@@ -58,7 +61,7 @@ public class OptionMenuContainer {
 		}
 	}
 
-	public Map<String, Profile> getProfiles() {
+	public ProfileSet getProfiles() {
 		return profiles;
 	}
 

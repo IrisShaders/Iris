@@ -48,16 +48,12 @@ public class ShaderPackOptions {
 		this.optionSet = setBuilder.build();
 		this.optionValues = new MutableOptionValues(optionSet, changedConfigs);
 
-		LinkedHashMap<String, Profile> profiles = new LinkedHashMap<>();
-
-		for (String name : shaderProperties.getProfiles().keySet()) {
-			Profile profile = Profile.parse(name, shaderProperties.getProfiles());
-			profiles.put(name, profile);
-
-			if (profile.matches(optionSet, optionValues)) {
-				// TODO: disable programs
-			}
-		}
+		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles());
+		/*
+		profiles.scan(optionSet, optionValues).current.ifPresent(profile -> profile.disabledPrograms.forEach(program -> {
+			// TODO: disable programs
+		}));
+		 */
 
 		this.includes = graph.map(path -> allAnnotations.get(path).asTransform(optionValues));
 		this.menuContainer = new OptionMenuContainer(shaderProperties, this, profiles);
