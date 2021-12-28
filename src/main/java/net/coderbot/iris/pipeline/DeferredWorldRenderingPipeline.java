@@ -756,6 +756,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		this.shadowMapRenderer.renderShadows(levelRenderer, playerCamera);
+
+		prepareRenderer.renderAll();
 	}
 
 	@Override
@@ -795,8 +797,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		// Get ready for world rendering
 		prepareRenderTargets();
-
-		prepareRenderer.renderAll();
 
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.
