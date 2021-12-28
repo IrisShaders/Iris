@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 
 import java.util.ArrayList;
@@ -49,7 +50,18 @@ public class ProgramSet {
 		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, shaderProperties);
 		this.pack = pack;
 
-		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties);
+		// Note: Ensure that blending is properly overridden during the shadow pass. By default, blending is disabled
+		//       in the shadow pass. Shader packs expect this for colored shadows from stained glass and nether portals
+		//       to work properly.
+		//
+		// Note: Enabling blending in the shadow pass results in weird results since translucency sorting happens
+		//       relative to the player camera, not the shadow camera, so we can't rely on chunks being properly
+		//       sorted in the shadow pass.
+		//
+		// - https://github.com/IrisShaders/Iris/issues/483
+		// - https://github.com/IrisShaders/Iris/issues/987
+		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties,
+				BlendModeOverride.OFF);
 
 		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties);
 		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
@@ -244,6 +256,13 @@ public class ProgramSet {
 	private static ProgramSource readProgramSource(AbsolutePackPath directory,
 												   Function<AbsolutePackPath, String> sourceProvider, String program,
 												   ProgramSet programSet, ShaderProperties properties) {
+		return readProgramSource(directory, sourceProvider, program, programSet, properties, null);
+	}
+
+	private static ProgramSource readProgramSource(AbsolutePackPath directory,
+												   Function<AbsolutePackPath, String> sourceProvider, String program,
+												   ProgramSet programSet, ShaderProperties properties,
+												   BlendModeOverride defaultBlendModeOverride) {
 		AbsolutePackPath vertexPath = directory.resolve(program + ".vsh");
 		String vertexSource = sourceProvider.apply(vertexPath);
 
@@ -253,6 +272,7 @@ public class ProgramSet {
 		AbsolutePackPath fragmentPath = directory.resolve(program + ".fsh");
 		String fragmentSource = sourceProvider.apply(fragmentPath);
 
-		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties);
+		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties,
+				defaultBlendModeOverride);
 	}
 }

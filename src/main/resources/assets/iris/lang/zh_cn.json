@@ -7,6 +7,10 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "重新加载光影失败！原因：%s",
   "iris.shaders.toggled.failure": "切换光影失败！原因：%s",
+  "iris.sodium.failure.title": "Iris 加载失败！",
+  "iris.sodium.failure.download": "下载 Sodium",
+  "iris.sodium.failure.reason.notFound": "Iris 需要 Sodium 来提供更好的性能，但 Sodium 还没有安装。请下载 Sodium，并把它放到 mods 文件夹中，然后重新启动游戏。",
+  "iris.sodium.failure.reason.incompatible": "Iris 需要 Sodium 来提供更好的性能，但不兼容已安装的 Sodium 版本。请下载 Sodium 的正确版本，把它放到 mods 文件夹中，移除错误的版本，然后重新启动游戏。",
 
   "options.iris.apply": "应用",
   "options.iris.refresh": "刷新",
@@ -23,8 +27,8 @@
   "options.iris.shaders.disabled": "光影：已禁用",
   "options.iris.shaders.enabled": "光影：已启用",
   "options.iris.shadowDistance": "最大阴影距离",
-  "options.iris.shadowDistance.enabled": "允许您更改阴影的最大距离.超出此距离的地形和实体不会渲染阴影.降低阴影距离可以显着提高性能.",
-  "options.iris.shadowDistance.disabled": "您当前的着色器包已经为阴影设置了渲染距离,您不能改变它.",
+  "options.iris.shadowDistance.enabled": "允许更改阴影的最远距离。超出此距离的地形和实体不会投射阴影。降低阴影距离可以显著提高性能。",
+  "options.iris.shadowDistance.disabled": "当前的光影包已经为阴影设置了渲染距离，你不能改变。",
   
   "pack.iris.select.title": "选择",
   "pack.iris.list.label": "+ 拖放光影包以添加"

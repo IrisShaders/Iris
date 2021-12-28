@@ -2,7 +2,7 @@ package net.coderbot.iris.gl.uniform;
 
 import java.util.function.IntSupplier;
 
-import org.lwjgl.opengl.GL21;
+import net.coderbot.iris.gl.IrisRenderSystem;
 
 public class IntUniform extends Uniform {
 	private int cachedValue;
@@ -33,7 +33,7 @@ public class IntUniform extends Uniform {
 
 		if (cachedValue != newValue) {
 			cachedValue = newValue;
-			GL21.glUniform1i(location, newValue);
+			IrisRenderSystem.uniform1i(location, newValue);
 		}
 	}
 }
