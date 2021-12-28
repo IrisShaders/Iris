@@ -76,12 +76,6 @@ public class MutableOptionValues implements OptionValues {
 			//     GUI. Profiles might specify values for options that aren't in the allowed values
 			//     list, and values typed manually into the config .txt are unchecked.
 
-			if (value.equals(option.getOption().getDefaultValue())) {
-				stringValues.remove(name);
-
-				return;
-			}
-
 			stringValues.put(name, value);
 		});
 	}

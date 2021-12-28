@@ -38,10 +38,10 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 		List<String> values = this.option.getAllowedValues();
 
 		this.appliedValue = appliedValue.orElse(this.option.getDefaultValue()); // The value currently in use by the shader
-		String actualSetValue = pendingValue.orElse(this.appliedValue); // The unapplied value that has been queued (if that is the case)
+		String actualPendingValue = pendingValue.orElse(this.appliedValue); // The unapplied value that has been queued (if that is the case)
 
 		this.valueCount = values.size();
-		this.valueIndex = values.indexOf(actualSetValue);
+		this.valueIndex = values.indexOf(actualPendingValue);
 	}
 
 	@Override

@@ -5,6 +5,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.option.BooleanOption;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuBooleanOptionElement;
 import net.minecraft.ChatFormatting;
@@ -30,13 +31,13 @@ public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBool
 	@Override
 	public void init(ShaderPackScreen screen, NavigationController navigation) {
 		super.init(screen, navigation);
-		boolean flipApplied = this.element.getAppliedOptionValues().isBooleanFlipped(this.option.getName());
-		boolean flipPending = this.element.getPendingOptionValues().isBooleanFlipped(this.option.getName());
+		OptionalBoolean appliedValue = this.element.getAppliedOptionValues().getBooleanValue(this.option.getName());
+		OptionalBoolean pendingValue = this.element.getPendingOptionValues().getBooleanValue(this.option.getName());
 
 		this.setLabel(GuiUtil.translateOrDefault(new TextComponent(this.option.getName()), "option." + this.option.getName()));
 
-		this.appliedValue = this.option.getDefaultValue() != flipApplied; // The value currently in use by the shader
-		this.value = this.option.getDefaultValue() != flipPending; // The unapplied value that has been queued (if that is the case)
+		this.appliedValue = appliedValue.orElse(this.option.getDefaultValue()); // The value currently in use by the shader
+		this.value = pendingValue.orElse(this.appliedValue); // The unapplied value that has been queued (if that is the case)
 	}
 
 	@Override

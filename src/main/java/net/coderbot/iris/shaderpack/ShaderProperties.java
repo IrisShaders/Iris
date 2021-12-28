@@ -1,9 +1,19 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import it.unimi.dsi.fastutil.objects.*;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2FloatMap;
+import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.blending.*;
+import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.blending.AlphaTestFunction;
+import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.BlendMode;
+import net.coderbot.iris.gl.blending.BlendModeFunction;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 import java.util.*;
