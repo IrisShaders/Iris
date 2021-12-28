@@ -7,7 +7,7 @@ import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.Profile;
-import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuProfileElement;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -23,16 +23,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class ProfileElementWidget extends BaseOptionElementWidget {
+public class ProfileElementWidget extends BaseOptionElementWidget<OptionMenuProfileElement> {
 	private static final MutableComponent PROFILE_LABEL = new TranslatableComponent("options.iris.profile");
 	private static final MutableComponent PROFILE_CUSTOM = new TranslatableComponent("options.iris.profile.custom").withStyle(ChatFormatting.YELLOW);
 
-	private final Profile next;
-	private final Profile previous;
-	private final Component profileLabel;
+	private Profile next;
+	private Profile previous;
+	private Component profileLabel;
 
-	public ProfileElementWidget(ShaderPackScreen screen, NavigationController navigation, Map<String, Profile> profiles, OptionSet options, OptionValues pendingValues) {
-		super(screen, navigation, PROFILE_LABEL);
+	public ProfileElementWidget(OptionMenuProfileElement element) {
+		super(element);
+	}
+
+	@Override
+	public void init(ShaderPackScreen screen, NavigationController navigation) {
+		super.init(screen, navigation);
+		this.setLabel(PROFILE_LABEL);
+
+		Map<String, Profile> profiles = this.element.profiles;
+		OptionSet options = this.element.options;
+		OptionValues pendingValues = this.element.getPendingOptionValues();
 
 		Optional<String> profileName = Optional.empty();
 
@@ -82,44 +92,31 @@ public class ProfileElementWidget extends BaseOptionElementWidget {
 	}
 
 	@Override
-	public Optional<Component> getCommentBody() {
-		String key = "profile.comment";
-		return Optional.ofNullable(I18n.exists(key) ? new TranslatableComponent(key) : null);
+	public String getCommentKey() {
+		return "profile.comment";
 	}
 
 	@Override
-	public String getOptionName() {
-		return "";
-	}
+	public boolean applyNextValue() {
+		Iris.queueShaderPackOptionsFromProfile(this.next);
 
-	@Override
-	public String getValue() {
-		return "";
-	}
-
-	@Override
-	protected void queueValueToPending() {
-		// No-op implementation
-	}
-
-	@Override
-	public boolean isValueOriginal() {
 		return true;
 	}
 
 	@Override
-	public boolean mouseClicked(double mx, double my, int button) {
-		if (button == GLFW.GLFW_MOUSE_BUTTON_1 || button == GLFW.GLFW_MOUSE_BUTTON_2) {
-			Profile toQueue = button == GLFW.GLFW_MOUSE_BUTTON_1 ? this.next : this.previous;
-			if (toQueue != null) {
-				Iris.queueShaderPackOptionsFromProfile(toQueue);
-			}
+	public boolean applyPreviousValue() {
+		Iris.queueShaderPackOptionsFromProfile(this.previous);
 
-			GuiUtil.playButtonClickSound();
-			this.navigation.refresh();
+		return true;
+	}
 
-			return true;
-		}
-		return super.mouseClicked(mx, my, button);
+	@Override
+	public boolean applyOriginalValue() {
+		return false; // Resetting options is the way to return to the "default profile"
+	}
+
+	@Override
+	public boolean isValueModified() {
+		return false;
 	}
 }

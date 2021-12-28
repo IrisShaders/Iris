@@ -60,9 +60,13 @@ public class MutableOptionValues implements OptionValues {
 				return;
 			}
 
-			if (booleanValue != option.getOption().getDefaultValue()) {
-				flippedBooleanValues.add(name);
+			if (booleanValue == option.getOption().getDefaultValue()) {
+				flippedBooleanValues.remove(name);
+
+				return;
 			}
+
+			flippedBooleanValues.add(name);
 		});
 
 		options.getStringOptions().forEach((name, option) -> {
@@ -78,7 +82,8 @@ public class MutableOptionValues implements OptionValues {
 			//     list, and values typed manually into the config .txt are unchecked.
 
 			if (value.equals(option.getOption().getDefaultValue())) {
-				// Ignore the value if it's a default.
+				stringValues.remove(name);
+
 				return;
 			}
 

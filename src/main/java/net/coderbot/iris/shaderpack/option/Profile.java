@@ -68,11 +68,7 @@ public final class Profile {
 				}
 			}
 			if (options.getStringOptions().containsKey(option)) {
-				String currentValue = options.getStringOptions().get(option).getOption().getDefaultValue();
-
-				if (values.getStringValue(option).isPresent()) {
-					currentValue = values.getStringValue(option).get();
-				}
+				String currentValue = values.getStringValue(option).orElse(options.getStringOptions().get(option).getOption().getDefaultValue());
 
 				if (!value.equals(currentValue)) {
 					return false;

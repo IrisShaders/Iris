@@ -1,34 +1,43 @@
 package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.StringOption;
-import net.minecraft.client.gui.screens.Screen;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuStringOptionElement;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.Optional;
 
-public class StringElementWidget extends BaseOptionElementWidget {
-	private final StringOption option;
-	private final String appliedValue;
-	private final int valueCount;
+public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStringOptionElement> {
+	protected final StringOption option;
 
-	private int valueIndex;
+	protected String appliedValue;
+	protected int valueCount;
+	protected int valueIndex;
 
-	public StringElementWidget(ShaderPackScreen screen, NavigationController navigation, StringOption option, Optional<String> pendingValue, Optional<String> appliedValue) {
-		super(screen, navigation, GuiUtil.translateOrDefault(new TextComponent(option.getName()), "option." + option.getName()));
+	public StringElementWidget(OptionMenuStringOptionElement element) {
+		super(element);
 
-		this.option = option;
+		this.option = element.option;
+	}
 
-		List<String> values = option.getAllowedValues();
+	@Override
+	public void init(ShaderPackScreen screen, NavigationController navigation) {
+		super.init(screen, navigation);
+		Optional<String> pendingValue = this.element.getPendingOptionValues().getStringValue(this.option.getName());
+		Optional<String> appliedValue = this.element.getAppliedOptionValues().getStringValue(this.option.getName());
 
-		this.appliedValue = appliedValue.orElse(option.getDefaultValue()); // The value currently in use by the shader
+		this.setLabel(GuiUtil.translateOrDefault(new TextComponent(this.option.getName()), "option." + this.option.getName()));
+
+		List<String> values = this.option.getAllowedValues();
+
+		this.appliedValue = appliedValue.orElse(this.option.getDefaultValue()); // The value currently in use by the shader
 		String actualSetValue = pendingValue.orElse(this.appliedValue); // The unapplied value that has been queued (if that is the case)
 
 		this.valueCount = values.size();
@@ -53,15 +62,14 @@ public class StringElementWidget extends BaseOptionElementWidget {
 	protected Component createValueLabel() {
 		return GuiUtil.translateOrDefault(
 				new TextComponent(getValue()).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff))),
-				"value." + option.getName() + "." + getValue());
+				"value." + this.option.getName() + "." + getValue());
 	}
 
 	@Override
-	public String getOptionName() {
-		return this.option.getName();
+	public String getCommentKey() {
+		return "option." + this.option.getName() + ".comment";
 	}
 
-	@Override
 	public String getValue() {
 		if (this.valueIndex < 0) {
 			return this.appliedValue;
@@ -69,25 +77,36 @@ public class StringElementWidget extends BaseOptionElementWidget {
 		return this.option.getAllowedValues().get(this.valueIndex);
 	}
 
-	@Override
-	public boolean isValueOriginal() {
-		return this.appliedValue.equals(this.getValue());
+	protected void queue() {
+		Iris.getShaderPackOptionQueue().put(this.option.getName(), this.getValue());
 	}
 
 	@Override
-	public boolean mouseClicked(double mx, double my, int button) {
-		if (button == GLFW.GLFW_MOUSE_BUTTON_1 || button == GLFW.GLFW_MOUSE_BUTTON_2) {
-			if (Screen.hasShiftDown()) {
-				this.valueIndex = this.option.getAllowedValues().indexOf(this.option.getDefaultValue());
-			} else {
-				this.increment(button == GLFW.GLFW_MOUSE_BUTTON_1 ? 1 : -1);
-			}
-			this.onValueChanged();
+	public boolean applyNextValue() {
+		this.increment(1);
+		this.queue();
 
-			GuiUtil.playButtonClickSound();
+		return true;
+	}
 
-			return true;
-		}
-		return super.mouseClicked(mx, my, button);
+	@Override
+	public boolean applyPreviousValue() {
+		this.increment(-1);
+		this.queue();
+
+		return true;
+	}
+
+	@Override
+	public boolean applyOriginalValue() {
+		this.valueIndex = this.option.getAllowedValues().indexOf(this.option.getDefaultValue());
+		this.queue();
+
+		return true;
+	}
+
+	@Override
+	public boolean isValueModified() {
+		return !this.appliedValue.equals(this.getValue());
 	}
 }

@@ -3,9 +3,18 @@ package net.coderbot.iris.gui.element.widget;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
+import net.coderbot.iris.gui.element.screen.ElementWidgetScreenData;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
-import net.coderbot.iris.shaderpack.option.menu.*;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuBooleanOptionElement;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuElement;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuElementScreen;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuLinkElement;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuMainElementScreen;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuProfileElement;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuStringOptionElement;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuSubElementScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.TextComponent;
 
@@ -29,14 +38,15 @@ public final class OptionMenuConstructor {
 		SCREEN_DATA_CREATORS.put(screen, (ScreenDataProvider<OptionMenuElementScreen>) data);
 	}
 
-	public static AbstractElementWidget createWidget(OptionMenuElement element, ShaderPackScreen screen, NavigationController navigation) {
-		return WIDGET_CREATORS.getOrDefault(element.getClass(), (e, s, n) -> AbstractElementWidget.EMPTY).create(element, screen, navigation);
+	public static AbstractElementWidget<? extends OptionMenuElement> createWidget(OptionMenuElement element) {
+		return WIDGET_CREATORS.getOrDefault(element.getClass(), e -> AbstractElementWidget.EMPTY).create(element);
 	}
 
 	public static ElementWidgetScreenData createScreenData(OptionMenuElementScreen screen) {
 		return SCREEN_DATA_CREATORS.getOrDefault(screen.getClass(), s -> ElementWidgetScreenData.EMPTY).create(screen);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void constructAndApplyToScreen(OptionMenuContainer container, ShaderPackScreen packScreen, ShaderPackOptionList optionList, NavigationController navigation) {
 		OptionMenuElementScreen screen = container.mainScreen;
 
@@ -47,7 +57,11 @@ public final class OptionMenuConstructor {
 		ElementWidgetScreenData data = createScreenData(screen);
 
 		optionList.addHeader(data.heading, data.backButton);
-		optionList.addWidgets(screen.getColumnCount(), screen.elements.stream().map(element -> createWidget(element, packScreen, navigation)).collect(Collectors.toList()));
+		optionList.addWidgets(screen.getColumnCount(), screen.elements.stream().map(element -> {
+			AbstractElementWidget<OptionMenuElement> widget = (AbstractElementWidget<OptionMenuElement>) createWidget(element);
+			widget.init(packScreen, navigation);
+			return widget;
+		}).collect(Collectors.toList()));
 	}
 
 	static {
@@ -57,29 +71,16 @@ public final class OptionMenuConstructor {
 		registerScreen(OptionMenuSubElementScreen.class, screen ->
 				new ElementWidgetScreenData(GuiUtil.translateOrDefault(new TextComponent(screen.screenId), "screen." + screen.screenId), true));
 
-		registerWidget(OptionMenuBooleanOptionElement.class, (element, screen, navigation) ->
-				new BooleanElementWidget(screen, navigation, element.option,
-						element.getPendingOptionValues().isBooleanFlipped(element.optionId),
-						element.getAppliedOptionValues().isBooleanFlipped(element.optionId)));
+		registerWidget(OptionMenuBooleanOptionElement.class, BooleanElementWidget::new);
+		registerWidget(OptionMenuProfileElement.class, ProfileElementWidget::new);
+		registerWidget(OptionMenuLinkElement.class, LinkElementWidget::new);
 
-		registerWidget(OptionMenuStringOptionElement.class, (element, screen, navigation) ->
-				element.slider ?
-					new SliderElementWidget(screen, navigation, element.option,
-							element.getPendingOptionValues().getStringValue(element.optionId),
-							element.getAppliedOptionValues().getStringValue(element.optionId))
-					: new StringElementWidget(screen, navigation, element.option,
-							element.getPendingOptionValues().getStringValue(element.optionId),
-							element.getAppliedOptionValues().getStringValue(element.optionId)));
-
-		registerWidget(OptionMenuProfileElement.class, (element, screen, navigation) ->
-				new ProfileElementWidget(screen, navigation, element.profiles, element.options, element.getPendingOptionValues()));
-
-		registerWidget(OptionMenuLinkElement.class, (element, screen, navigation) ->
-				new LinkElementWidget(navigation, GuiUtil.translateOrDefault(new TextComponent(element.targetScreenId), "screen." + element.targetScreenId), element.targetScreenId));
+		registerWidget(OptionMenuStringOptionElement.class, element ->
+				element.slider ? new SliderElementWidget(element) : new StringElementWidget(element));
 	}
 
 	public interface WidgetProvider<T extends OptionMenuElement> {
-		AbstractElementWidget create(T element, ShaderPackScreen screen, NavigationController navigation);
+		AbstractElementWidget<T> create(T element);
 	}
 
 	public interface ScreenDataProvider<T extends OptionMenuElementScreen> {

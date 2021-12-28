@@ -1,30 +1,42 @@
 package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.BooleanOption;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuBooleanOptionElement;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.*;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 
-public class BooleanElementWidget extends BaseOptionElementWidget {
+public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBooleanOptionElement> {
 	private static final Component TEXT_TRUE = new TranslatableComponent("label.iris.true").withStyle(ChatFormatting.GREEN);
 	private static final Component TEXT_FALSE = new TranslatableComponent("label.iris.false").withStyle(ChatFormatting.RED);
 
 	private final BooleanOption option;
-	private final boolean appliedValue;
 
+	private boolean appliedValue;
 	private boolean value;
 
-	public BooleanElementWidget(ShaderPackScreen screen, NavigationController navigation, BooleanOption option, boolean isFlipPending, boolean isFlipApplied) {
-		super(screen, navigation, GuiUtil.translateOrDefault(new TextComponent(option.getName()), "option." + option.getName()));
-		this.option = option;
+	public BooleanElementWidget(OptionMenuBooleanOptionElement element) {
+		super(element);
 
-		this.appliedValue = option.getDefaultValue() != isFlipApplied; // The value currently in use by the shader
-		this.value = option.getDefaultValue() != isFlipPending; // The unapplied value that has been queued (if that is the case)
+		this.option = element.option;
+	}
+
+	@Override
+	public void init(ShaderPackScreen screen, NavigationController navigation) {
+		super.init(screen, navigation);
+		boolean flipApplied = this.element.getAppliedOptionValues().isBooleanFlipped(this.option.getName());
+		boolean flipPending = this.element.getPendingOptionValues().isBooleanFlipped(this.option.getName());
+
+		this.setLabel(GuiUtil.translateOrDefault(new TextComponent(this.option.getName()), "option." + this.option.getName()));
+
+		this.appliedValue = this.option.getDefaultValue() != flipApplied; // The value currently in use by the shader
+		this.value = this.option.getDefaultValue() != flipPending; // The unapplied value that has been queued (if that is the case)
 	}
 
 	@Override
@@ -41,34 +53,41 @@ public class BooleanElementWidget extends BaseOptionElementWidget {
 	}
 
 	@Override
-	public String getOptionName() {
-		return this.option.getName();
+	public String getCommentKey() {
+		return "option." + this.option.getName() + ".comment";
 	}
 
-	@Override
 	public String getValue() {
 		return Boolean.toString(this.value);
 	}
 
-	@Override
-	public boolean isValueOriginal() {
-		return this.value == this.appliedValue;
+	private void queue() {
+		Iris.getShaderPackOptionQueue().put(this.option.getName(), this.getValue());
 	}
 
 	@Override
-	public boolean mouseClicked(double mx, double my, int button) {
-		if (button == GLFW.GLFW_MOUSE_BUTTON_1 || button == GLFW.GLFW_MOUSE_BUTTON_2) {
-			if (Screen.hasShiftDown()) {
-				this.value = this.option.getDefaultValue();
-			} else {
-				this.value = !this.value;
-			}
-			this.onValueChanged();
+	public boolean applyNextValue() {
+		this.value = !this.value;
+		this.queue();
 
-			GuiUtil.playButtonClickSound();
+		return true;
+	}
 
-			return true;
-		}
-		return super.mouseClicked(mx, my, button);
+	@Override
+	public boolean applyPreviousValue() {
+		return this.applyNextValue();
+	}
+
+	@Override
+	public boolean applyOriginalValue() {
+		this.value = this.appliedValue;
+		this.queue();
+
+		return true;
+	}
+
+	@Override
+	public boolean isValueModified() {
+		return this.value != this.appliedValue;
 	}
 }

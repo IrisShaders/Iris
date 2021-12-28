@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOptionList.BaseEntry> {
+	private final List<AbstractElementWidget<?>> elementWidgets = new ArrayList<>();
 	private final ShaderPackScreen screen;
 	private final NavigationController navigation;
 	private OptionMenuContainer container;
@@ -41,10 +42,14 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 		this.container = pack.getShaderPackOptions().getMenuContainer();
 	}
 
-	public void refresh() {
+	public void rebuild() {
 		this.clearEntries();
 		this.setScrollAmount(0);
 		OptionMenuConstructor.constructAndApplyToScreen(this.container, this.screen, this, navigation);
+	}
+
+	public void refresh() {
+		this.elementWidgets.forEach(widget -> widget.init(this.screen, this.navigation));
 	}
 
 	@Override
@@ -56,10 +61,11 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 		this.addEntry(new HeaderEntry(this.screen, this.navigation, text, backButton));
 	}
 
-	public void addWidgets(int columns, List<AbstractElementWidget> elements) {
-		List<AbstractElementWidget> row = new ArrayList<>();
+	public void addWidgets(int columns, List<AbstractElementWidget<?>> elements) {
+		this.elementWidgets.addAll(elements);
 
-		for (AbstractElementWidget element : elements) {
+		List<AbstractElementWidget<?>> row = new ArrayList<>();
+		for (AbstractElementWidget<?> element : elements) {
 			row.add(element);
 
 			if (row.size() >= columns) {
@@ -206,13 +212,13 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 	}
 
 	public static class ElementRowEntry extends BaseEntry {
-		private final List<AbstractElementWidget> widgets;
+		private final List<AbstractElementWidget<?>> widgets;
 		private final ShaderPackScreen screen;
 
 		private int cachedWidth;
 		private int cachedPosX;
 
-		public ElementRowEntry(ShaderPackScreen screen, NavigationController navigation, List<AbstractElementWidget> widgets) {
+		public ElementRowEntry(ShaderPackScreen screen, NavigationController navigation, List<AbstractElementWidget<?>> widgets) {
 			super(navigation);
 
 			this.screen = screen;
@@ -233,7 +239,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 			float singleWidgetWidth = (float) totalWidthWithoutMargins / widgets.size();
 
 			for (int i = 0; i < widgets.size(); i++) {
-				AbstractElementWidget widget = widgets.get(i);
+				AbstractElementWidget<?> widget = widgets.get(i);
 				boolean widgetHovered = hovered && (getHoveredWidget(mouseX) == i);
 				widget.render(poseStack, x + (int)((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2, mouseX, mouseY, tickDelta, widgetHovered);
 

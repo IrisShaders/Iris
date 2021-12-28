@@ -1,27 +1,29 @@
 package net.coderbot.iris.gui.element.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuElement;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.*;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 
-public abstract class BaseOptionElementWidget extends CommentedElementWidget {
+public abstract class BaseOptionElementWidget<T extends OptionMenuElement> extends CommentedElementWidget<T> {
 	protected static final Component SET_TO_DEFAULT = new TranslatableComponent("options.iris.setToDefault").withStyle(ChatFormatting.GREEN);
 	protected static final Component DIVIDER = new TextComponent(": ");
 
-	protected final MutableComponent unmodifiedLabel;
-	protected final ShaderPackScreen screen;
-	protected final NavigationController navigation;
-	private final MutableComponent label;
+	protected MutableComponent unmodifiedLabel;
+	protected ShaderPackScreen screen;
+	protected NavigationController navigation;
+	private MutableComponent label;
 
 	protected Component trimmedLabel;
 	protected Component valueLabel;
@@ -30,11 +32,21 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	private int maxLabelWidth;
 	private int valueSectionWidth;
 
-	protected BaseOptionElementWidget(ShaderPackScreen screen, NavigationController navigation, MutableComponent label) {
-		this.label = label.copy().append(DIVIDER);
-		this.unmodifiedLabel = label;
+	public BaseOptionElementWidget(T element) {
+		super(element);
+	}
+
+	@Override
+	public void init(ShaderPackScreen screen, NavigationController navigation) {
 		this.screen = screen;
 		this.navigation = navigation;
+		this.valueLabel = null;
+		this.trimmedLabel = null;
+	}
+
+	protected final void setLabel(MutableComponent label) {
+		this.label = label.copy().append(DIVIDER);
+		this.unmodifiedLabel = label;
 	}
 
 	protected final void updateRenderParams(int width, int minValueSectionWidth) {
@@ -92,10 +104,10 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 	}
 
 	protected final void tryRenderTooltip(PoseStack poseStack, int mouseX, int mouseY, boolean hovered) {
-		if (this.isLabelTrimmed && !this.screen.isDisplayingComment()) {
-			renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
-		} else if (Screen.hasShiftDown()) {
+		if (Screen.hasShiftDown()) {
 			renderTooltip(poseStack, SET_TO_DEFAULT, mouseX, mouseY, hovered);
+		} else if (this.isLabelTrimmed && !this.screen.isDisplayingComment()) {
+			renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
 		}
 	}
 
@@ -110,17 +122,13 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 		this.valueLabel = createValueLabel();
 	}
 
-	protected void queueValueToPending() {
-		Iris.getShaderPackOptionQueue().put(this.getOptionName(), this.getValue());
-	}
-
 	protected final Component createTrimmedLabel() {
 		MutableComponent label = GuiUtil.shortenText(
 				Minecraft.getInstance().font,
 				this.label.copy(),
 				this.maxLabelWidth);
 
-		if (!this.isValueOriginal()) {
+		if (this.isValueModified()) {
 			label = label.withStyle(style -> style.withColor(TextColor.fromRgb(0xffc94a)));
 		}
 
@@ -129,11 +137,15 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 
 	protected abstract Component createValueLabel();
 
-	public abstract String getOptionName();
+	public abstract boolean applyNextValue();
 
-	public abstract String getValue();
+	public abstract boolean applyPreviousValue();
 
-	public abstract boolean isValueOriginal();
+	public abstract boolean applyOriginalValue();
+
+	public abstract boolean isValueModified();
+
+	public abstract @Nullable String getCommentKey();
 
 	@Override
 	public Optional<Component> getCommentTitle() {
@@ -142,14 +154,33 @@ public abstract class BaseOptionElementWidget extends CommentedElementWidget {
 
 	@Override
 	public Optional<Component> getCommentBody() {
-		String translation = "option." + getOptionName() + ".comment";
-		return Optional.ofNullable(I18n.exists(translation) ? new TranslatableComponent(translation) : null);
+		return Optional.ofNullable(getCommentKey()).map(key -> I18n.exists(key) ? new TranslatableComponent(key) : null);
 	}
 
-	protected final void onValueChanged() {
-		this.queueValueToPending();
-		this.updateLabels();
+	@Override
+	public boolean mouseClicked(double mx, double my, int button) {
+		if (button == GLFW.GLFW_MOUSE_BUTTON_1 || button == GLFW.GLFW_MOUSE_BUTTON_2) {
+			boolean refresh = false;
 
-		this.navigation.refresh();
+			if (Screen.hasShiftDown()) {
+				refresh = applyOriginalValue();
+			}
+			if (!refresh) {
+				if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
+					refresh = applyNextValue();
+				} else {
+					refresh = applyPreviousValue();
+				}
+			}
+
+			if (refresh) {
+				this.navigation.refresh();
+			}
+
+			GuiUtil.playButtonClickSound();
+
+			return true;
+		}
+		return super.mouseClicked(mx, my, button);
 	}
 }

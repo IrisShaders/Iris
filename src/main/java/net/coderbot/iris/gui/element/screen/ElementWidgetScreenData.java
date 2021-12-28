@@ -1,4 +1,4 @@
-package net.coderbot.iris.gui.element.widget;
+package net.coderbot.iris.gui.element.screen;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;

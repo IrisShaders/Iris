@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuLinkElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.resources.language.I18n;
@@ -15,20 +16,26 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 
-public class LinkElementWidget extends CommentedElementWidget {
+public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElement> {
 	private static final Component ARROW = new TextComponent(">");
 
-	private final NavigationController navigation;
 	private final String targetScreenId;
 	private final MutableComponent label;
 
+	private NavigationController navigation;
 	private MutableComponent trimmedLabel = null;
 	private boolean isLabelTrimmed = false;
 
-	public LinkElementWidget(NavigationController navigation, MutableComponent label, String targetScreenId) {
+	public LinkElementWidget(OptionMenuLinkElement element) {
+		super(element);
+
+		this.targetScreenId = element.targetScreenId;
+		this.label = GuiUtil.translateOrDefault(new TextComponent(element.targetScreenId), "screen." + element.targetScreenId);
+	}
+
+	@Override
+	public void init(ShaderPackScreen screen, NavigationController navigation) {
 		this.navigation = navigation;
-		this.label = label;
-		this.targetScreenId = targetScreenId;
 	}
 
 	@Override
@@ -62,7 +69,7 @@ public class LinkElementWidget extends CommentedElementWidget {
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
-			navigation.open(targetScreenId);
+			this.navigation.open(targetScreenId);
 			GuiUtil.playButtonClickSound();
 
 			return true;
