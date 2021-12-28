@@ -1,12 +1,16 @@
 package kroppeb.stareval.element.token;
 
-import kroppeb.stareval.element.AccessibleExpression;
+import kroppeb.stareval.element.AccessibleExpressionElement;
 
-public class IdToken extends Token implements AccessibleExpression {
-	public final String id;
+public class IdToken extends Token implements AccessibleExpressionElement {
+	private final String id;
 
 	public IdToken(String id) {
 		this.id = id;
+	}
+
+	public String getId() {
+		return id;
 	}
 
 	@Override

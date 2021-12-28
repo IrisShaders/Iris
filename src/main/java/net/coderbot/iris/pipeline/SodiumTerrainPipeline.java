@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.function.IntFunction;
 
 import net.coderbot.iris.IrisLogging;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -33,9 +34,14 @@ public class SodiumTerrainPipeline {
 	private final IntFunction<ProgramSamplers> createTerrainSamplers;
 	private final IntFunction<ProgramSamplers> createShadowSamplers;
 
+	private final IntFunction<ProgramImages> createTerrainImages;
+	private final IntFunction<ProgramImages> createShadowImages;
+
 	public SodiumTerrainPipeline(WorldRenderingPipeline parent,
 								 ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
-								 IntFunction<ProgramSamplers> createShadowSamplers) {
+								 IntFunction<ProgramSamplers> createShadowSamplers,
+								 IntFunction<ProgramImages> createTerrainImages,
+								 IntFunction<ProgramImages> createShadowImages) {
 		this.parent = Objects.requireNonNull(parent);
 
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
@@ -88,6 +94,8 @@ public class SodiumTerrainPipeline {
 
 		this.createTerrainSamplers = createTerrainSamplers;
 		this.createShadowSamplers = createShadowSamplers;
+		this.createTerrainImages = createTerrainImages;
+		this.createShadowImages = createShadowImages;
 	}
 
 	private static String transformVertexShader(String base) {
@@ -209,6 +217,14 @@ public class SodiumTerrainPipeline {
 
 	public ProgramSamplers initShadowSamplers(int programId) {
 		return createShadowSamplers.apply(programId);
+	}
+
+	public ProgramImages initTerrainImages(int programId) {
+		return createTerrainImages.apply(programId);
+	}
+
+	public ProgramImages initShadowImages(int programId) {
+		return createShadowImages.apply(programId);
 	}
 
 	/*public void bindFramebuffer() {

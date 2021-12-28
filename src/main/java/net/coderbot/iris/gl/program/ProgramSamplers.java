@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
@@ -27,7 +28,7 @@ public class ProgramSamplers {
 	public void update() {
 		if (initializer != null) {
 			for (GlUniform1iCall call : initializer) {
-				GL20C.glUniform1i(call.getLocation(), call.getValue());
+				IrisRenderSystem.uniform1i(call.getLocation(), call.getValue());
 			}
 
 			initializer = null;
@@ -95,7 +96,7 @@ public class ProgramSamplers {
 			}
 
 			for (String name : names) {
-				int location = GL20C.glGetUniformLocation(program, name);
+				int location = IrisRenderSystem.getUniformLocation(program, name);
 
 				if (location == -1) {
 					// There's no active sampler with this particular name in the program.
@@ -110,7 +111,7 @@ public class ProgramSamplers {
 
 		@Override
 		public boolean hasSampler(String name) {
-			return GL20C.glGetUniformLocation(program, name) != -1;
+			return IrisRenderSystem.getUniformLocation(program, name) != -1;
 		}
 
 		@Override
@@ -134,7 +135,7 @@ public class ProgramSamplers {
 
 		private boolean addDynamicSampler(IntSupplier sampler, boolean used, String... names) {
 			for (String name : names) {
-				int location = GL20C.glGetUniformLocation(program, name);
+				int location = IrisRenderSystem.getUniformLocation(program, name);
 
 				if (location == -1) {
 					// There's no active sampler with this particular name in the program.

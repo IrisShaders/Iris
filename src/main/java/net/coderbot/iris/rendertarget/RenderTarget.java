@@ -1,8 +1,9 @@
 package net.coderbot.iris.rendertarget;
 
-import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
@@ -18,7 +19,7 @@ public class RenderTarget {
 	private final int mainTexture;
 	private final int altTexture;
 
-	private static final ByteBuffer NULL_BUFFER = null;
+	private static final IntBuffer NULL_BUFFER = null;
 
 	private RenderTarget(Builder builder) {
 		this.isValid = true;
@@ -28,7 +29,7 @@ public class RenderTarget {
 		this.type = builder.type;
 
 		int[] textures = new int[2];
-		GL11C.glGenTextures(textures);
+		GlStateManager._genTextures(textures);
 
 		this.mainTexture = textures[0];
 		this.altTexture = textures[1];
@@ -45,16 +46,16 @@ public class RenderTarget {
 	}
 
 	private void setupCurrentlyBoundTexture(int width, int height) {
-		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
-		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-		GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
+		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
 
 		resizeCurrentlyBoundTexture(width, height);
 	}
 
 	private void resizeCurrentlyBoundTexture(int width, int height) {
-		GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+		GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
 	}
 
 	// Package private, call CompositeRenderTargets#resizeIfNeeded instead.
@@ -66,6 +67,10 @@ public class RenderTarget {
 
 		GlStateManager._bindTexture(altTexture);
 		resizeCurrentlyBoundTexture(width, height);
+	}
+
+	public InternalTextureFormat getInternalFormat() {
+		return internalFormat;
 	}
 
 	public int getMainTexture() {
@@ -84,7 +89,7 @@ public class RenderTarget {
 		requireValid();
 		isValid = false;
 
-		GL11C.glDeleteTextures(new int[]{mainTexture, altTexture});
+		GlStateManager._deleteTextures(new int[]{mainTexture, altTexture});
 	}
 
 	private void requireValid() {

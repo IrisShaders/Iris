@@ -66,25 +66,20 @@ public class CameraUniforms {
 		 * around a chunk border.
 		 */
 		private void updateShift() {
-			double dX;
-			double dZ;
-
-			// If x is out of range, shift so that x is zero again.
-			if (Math.abs(currentCameraPosition.x) > RANGE) {
-				dX = -currentCameraPosition.x;
-			} else {
-				dX = 0.0;
-			}
-
-			// Same thing, but for z.
-			if (Math.abs(currentCameraPosition.z) > RANGE) {
-				dZ = -currentCameraPosition.z;
-			} else {
-				dZ = 0.0;
-			}
+			double dX = getShift(currentCameraPosition.x, RANGE);
+			double dZ = getShift(currentCameraPosition.z, RANGE);
 
 			if (dX != 0.0 || dZ != 0.0) {
 				applyShift(dX, dZ);
+			}
+		}
+
+		private static double getShift(double value, double range) {
+			if (Math.abs(value) > range) {
+				// Only shift by increments of RANGE - this is required for some packs (like SEUS PTGI) to work properly
+				return -(value - (value % RANGE));
+			} else {
+				return 0.0;
 			}
 		}
 

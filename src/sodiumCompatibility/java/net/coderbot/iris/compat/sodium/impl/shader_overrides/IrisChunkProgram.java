@@ -5,11 +5,12 @@ import com.mojang.math.Matrix4f;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderFogComponent;
+import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL20C;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
@@ -25,13 +26,18 @@ public class IrisChunkProgram extends ChunkProgram {
     @Nullable
     private final ProgramSamplers irisProgramSamplers;
 
+	@Nullable
+	private final ProgramImages irisProgramImages;
+
     public IrisChunkProgram(RenderDevice owner, ResourceLocation name, int handle,
-							@Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers) {
+							@Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers,
+							@Nullable ProgramImages irisProgramImages) {
         super(owner, name, handle, ChunkShaderFogComponent.None::new);
         this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
         this.uNormalMatrix = this.getUniformLocation("u_NormalMatrix");
         this.irisProgramUniforms = irisProgramUniforms;
         this.irisProgramSamplers = irisProgramSamplers;
+		this.irisProgramImages = irisProgramImages;
     }
 
     public void setup(PoseStack poseStack, float modelScale, float textureScale) {
@@ -44,6 +50,10 @@ public class IrisChunkProgram extends ChunkProgram {
         if (irisProgramSamplers != null) {
             irisProgramSamplers.update();
         }
+
+		if (irisProgramImages != null) {
+			irisProgramImages.update();
+		}
 
         Matrix4f modelViewMatrix = poseStack.last().pose();
         Matrix4f normalMatrix = poseStack.last().pose().copy();
@@ -82,7 +92,7 @@ public class IrisChunkProgram extends ChunkProgram {
 
             matrix.store(buffer);
 
-            GL20C.glUniformMatrix4fv(location, false, buffer);
+            IrisRenderSystem.uniformMatrix4fv(location, false, buffer);
         }
     }
 }

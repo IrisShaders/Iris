@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -187,6 +188,15 @@ public class MixinLevelRenderer {
 		pipeline.pushProgram(GbufferProgram.WEATHER);
 	}
 
+	@ModifyArg(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
+	private boolean iris$writeRainAndSnowToDepthBuffer(boolean depthMaskEnabled) {
+		if (pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
+			return true;
+		}
+
+		return depthMaskEnabled;
+	}
+
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
 	private void iris$endWeather(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.WEATHER);
@@ -200,13 +210,6 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WORLD_BOUNDS, shift = At.Shift.AFTER))
 	private void iris$endWorldBorder(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.popProgram(GbufferProgram.TEXTURED_LIT);
-	}
-
-	@Inject(method = "renderSnowAndRain", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;defaultAlphaFunc()V", shift = At.Shift.AFTER))
-	private void iris$applyWeatherOverrides(LightTexture manager, float f, double d, double e, double g, CallbackInfo ci) {
-		// TODO: This is a temporary workaround for https://github.com/IrisShaders/Iris/issues/219
-		pipeline.pushProgram(GbufferProgram.WEATHER);
-		pipeline.popProgram(GbufferProgram.WEATHER);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
