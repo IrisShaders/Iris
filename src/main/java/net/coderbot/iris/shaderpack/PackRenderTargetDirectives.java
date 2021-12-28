@@ -137,7 +137,7 @@ public class PackRenderTargetDirectives {
 			this.clearColor = null;
 		}
 
-		public InternalTextureFormat getRequestedFormat() {
+		public InternalTextureFormat getInternalFormat() {
 			return requestedFormat;
 		}
 

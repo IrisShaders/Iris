@@ -1,8 +1,8 @@
 package kroppeb.stareval.element.token;
 
+import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.element.PriorityOperatorElement;
-import kroppeb.stareval.element.Expression;
-import kroppeb.stareval.element.tree.UnaryExpression;
+import kroppeb.stareval.element.tree.UnaryExpressionElement;
 import kroppeb.stareval.parser.UnaryOp;
 
 public class UnaryOperatorToken extends Token implements PriorityOperatorElement {
@@ -23,7 +23,7 @@ public class UnaryOperatorToken extends Token implements PriorityOperatorElement
 	}
 
 	@Override
-	public UnaryExpression resolveWith(Expression right) {
-		return new UnaryExpression(this.op, right);
+	public UnaryExpressionElement resolveWith(ExpressionElement right) {
+		return new UnaryExpressionElement(this.op, right);
 	}
 }

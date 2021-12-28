@@ -1,5 +1,6 @@
 package net.coderbot.iris.samplers;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.texunits.TextureAtlasInterface;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -65,12 +66,12 @@ public class TextureAtlasTracker {
 	 */
 	private void fetchAtlasSizeFromGlState(TextureAtlas atlas) {
 		// Keep track of what texture was bound before
-		int existingGlId = GL20C.glGetInteger(GL20C.GL_TEXTURE_BINDING_2D);
+		int existingGlId = GlStateManager._getInteger(GL20C.GL_TEXTURE_BINDING_2D);
 
 		// Bind this texture and grab the atlas size from it.
 		RenderSystem.bindTexture(atlas.getId());
-		int width = GL20C.glGetTexLevelParameteri(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_WIDTH);
-		int height = GL20C.glGetTexLevelParameteri(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_HEIGHT);
+		int width = GlStateManager._getTexLevelParameter(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_WIDTH);
+		int height = GlStateManager._getTexLevelParameter(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_TEXTURE_HEIGHT);
 
 		TextureAtlasInterface atlasI = (TextureAtlasInterface) atlas;
 		atlasI.setAtlasSize(width, height);

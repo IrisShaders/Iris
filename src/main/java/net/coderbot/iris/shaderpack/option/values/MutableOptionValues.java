@@ -2,6 +2,7 @@ package net.coderbot.iris.shaderpack.option.values;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.option.OptionSet;
 
 import java.util.HashMap;
@@ -12,18 +13,18 @@ import java.util.Set;
 
 public class MutableOptionValues implements OptionValues {
 	private final OptionSet options;
-	private final Set<String> flippedBooleanValues;
+	private final Map<String, Boolean> booleanValues;
 	private final Map<String, String> stringValues;
 
-	MutableOptionValues(OptionSet options, Set<String> flippedBooleanValues, Map<String, String> stringValues) {
+	MutableOptionValues(OptionSet options, Map<String, Boolean> flippedBooleanValues, Map<String, String> stringValues) {
 		this.options = options;
-		this.flippedBooleanValues = flippedBooleanValues;
+		this.booleanValues = flippedBooleanValues;
 		this.stringValues = stringValues;
 	}
 
 	public MutableOptionValues(OptionSet options, Map<String, String> values) {
 		this.options = options;
-		this.flippedBooleanValues = new HashSet<>();
+		this.booleanValues = new HashMap<>();
 		this.stringValues = new HashMap<>();
 
 		this.addAll(values);
@@ -33,8 +34,8 @@ public class MutableOptionValues implements OptionValues {
 		return options;
 	}
 
-	public Set<String> getFlippedBooleanValues() {
-		return flippedBooleanValues;
+	public Map<String, Boolean> getBooleanValues() {
+		return booleanValues;
 	}
 
 	public Map<String, String> getStringValues() {
@@ -44,29 +45,23 @@ public class MutableOptionValues implements OptionValues {
 	public void addAll(Map<String, String> values) {
 		options.getBooleanOptions().forEach((name, option) -> {
 			String value = values.get(name);
-			boolean booleanValue;
+			OptionalBoolean booleanValue;
 
 			if (value == null) {
 				return;
 			}
 
 			if (value.equals("false")) {
-				booleanValue = false;
+				booleanValue = OptionalBoolean.FALSE;
 			} else if (value.equals("true")) {
-				booleanValue = true;
+				booleanValue = OptionalBoolean.TRUE;
 			} else {
 				// Invalid value specified, ignore it
 				// TODO: Diagnostic message?
-				return;
+				booleanValue = OptionalBoolean.DEFAULT;
 			}
 
-			if (booleanValue == option.getOption().getDefaultValue()) {
-				flippedBooleanValues.remove(name);
-
-				return;
-			}
-
-			flippedBooleanValues.add(name);
+			booleanValues.put(name, booleanValue.orElse(option.getOption().getDefaultValue()));
 		});
 
 		options.getStringOptions().forEach((name, option) -> {
@@ -81,19 +76,17 @@ public class MutableOptionValues implements OptionValues {
 			//     GUI. Profiles might specify values for options that aren't in the allowed values
 			//     list, and values typed manually into the config .txt are unchecked.
 
-			if (value.equals(option.getOption().getDefaultValue())) {
-				stringValues.remove(name);
-
-				return;
-			}
-
 			stringValues.put(name, value);
 		});
 	}
 
 	@Override
-	public boolean isBooleanFlipped(String name) {
-		return flippedBooleanValues.contains(name);
+	public OptionalBoolean getBooleanValue(String name) {
+		if (booleanValues.containsKey(name)) {
+			return booleanValues.get(name) ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
+		} else {
+			return OptionalBoolean.DEFAULT;
+		}
 	}
 
 	@Override
@@ -103,12 +96,12 @@ public class MutableOptionValues implements OptionValues {
 
 	@Override
 	public MutableOptionValues mutableCopy() {
-		return new MutableOptionValues(options, new HashSet<>(flippedBooleanValues), new HashMap<>(stringValues));
+		return new MutableOptionValues(options, new HashMap<>(booleanValues), new HashMap<>(stringValues));
 	}
 
 	@Override
 	public ImmutableOptionValues toImmutable() {
-		return new ImmutableOptionValues(options, ImmutableSet.copyOf(flippedBooleanValues),
+		return new ImmutableOptionValues(options, ImmutableMap.copyOf(booleanValues),
 				ImmutableMap.copyOf(stringValues));
 	}
 }

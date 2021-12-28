@@ -9,11 +9,13 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -22,6 +24,7 @@ import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -39,7 +42,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -122,6 +124,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
+	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
@@ -136,6 +139,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
 		this.shouldRenderUnderwaterOverlay = programs.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programs.getPackDirectives().vignette();
+		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -231,6 +235,19 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return builder.build();
 		};
 
+		IntFunction<ProgramImages> createTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
+			if (IrisImages.hasShadowImages(builder)) {
+				createShadowMapRenderer.run();
+				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
 		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
@@ -243,6 +260,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// Otherwise, this program shouldn't be used at all?
 			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor) && shadowMapRenderer != null) {
 				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+			}
+
+			return builder.build();
+		};
+
+		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeTerrain, renderTargets);
+
+			if (IrisImages.hasShadowImages(builder) && shadowMapRenderer != null) {
+				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
 			}
 
 			return builder.build();
@@ -280,7 +309,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
 
-		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers, createShadowTerrainSamplers);
+		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
+				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages);
 	}
 
 	private void checkWorld() {
@@ -453,6 +483,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public boolean shouldWriteRainAndSnowToDepthBuffer() {
+		return shouldWriteRainAndSnowToDepthBuffer;
+	}
+
+	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
 	}
@@ -490,6 +525,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
 
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+		IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
 		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
 		IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
@@ -497,6 +534,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 			createShadowMapRenderer.run();
 			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRenderer);
+			IrisImages.addShadowColorImages(builder, shadowMapRenderer);
 		}
 
 		GlFramebuffer framebufferBeforeTranslucents =
@@ -543,10 +581,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 			program.use();
 
-			// TODO: Render layers will likely override alpha testing state, we'll need to implement a similar system
-			//       as we have for blend mode overrides.
 			if (alphaTestOverride != null) {
-				alphaTestOverride.setup();
+				alphaTestOverride.apply();
+			} else {
+				// Previous program on the stack might have applied an override
+				AlphaTestOverride.restore();
 			}
 
 			if (blendModeOverride != null) {
@@ -559,7 +598,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		public void stopUsing() {
 			if (alphaTestOverride != null) {
-				AlphaTestOverride.teardown();
+				AlphaTestOverride.restore();
 			}
 
 			if (blendModeOverride != null) {
@@ -630,14 +669,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = GL20.glGetAttribLocation(pass.getProgram().getProgramId(), name);
+		int location = IrisRenderSystem.getAttribLocation(pass.getProgram().getProgramId(), name);
 
 		if (location != -1) {
 			if (location != expectedLocation) {
 				throw new IllegalStateException();
 			}
 
-			GL20.glVertexAttrib4f(location, v0, v1, v2, v3);
+			IrisRenderSystem.vertexAttrib4f(location, v0, v1, v2, v3);
 		}
 	}
 
@@ -674,7 +713,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// all non-translucent content without the hand, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 	}
 
@@ -686,7 +725,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// all non-translucent content, as required.
 		baseline.bindAsReadBuffer();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		GL20C.glCopyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 
 		deferredRenderer.renderAll();

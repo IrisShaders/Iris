@@ -1,9 +1,11 @@
 package net.coderbot.iris.shaderpack.option.values;
 
+import net.coderbot.iris.shaderpack.OptionalBoolean;
+
 import java.util.Optional;
 
 public interface OptionValues {
-	boolean isBooleanFlipped(String name);
+	OptionalBoolean getBooleanValue(String name);
 	Optional<String> getStringValue(String name);
 
 	MutableOptionValues mutableCopy();
