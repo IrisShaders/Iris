@@ -105,6 +105,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer baseline;
 
 	private Runnable createShadowMapRenderer;
+	private final CompositeRenderer prepareRenderer;
 	private ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
@@ -198,6 +199,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			createShadowMapRenderer.run();
 			return shadowMapRenderer;
 		};
+
+		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
+				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()),
+				programs.getPackDirectives().getExplicitFlips("prepare_pre"));
 
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
@@ -789,6 +795,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		// Get ready for world rendering
 		prepareRenderTargets();
+
+		prepareRenderer.renderAll();
 
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.
