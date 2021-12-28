@@ -37,7 +37,7 @@ public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
 	// The recommended version of Sodium for use with Iris
-	private static final String SODIUM_VERSION = "0.2.0";
+	public static final String SODIUM_VERSION = "0.2.0+build.4";
 	public static final String SODIUM_DOWNLOAD_LINK = "https://www.curseforge.com/minecraft/mc-mods/sodium/files/3488820";
 
 	private static Path shaderpacksDirectory;
