@@ -93,10 +93,10 @@ public class ShadowRenderTargets {
 	}
 
 	public void destroy() {
-		framebuffer.destroy();
+		framebuffer.delete();
 
 		GlStateManager._deleteTextures(targets);
-		depthTexture.destroy();
-		noTranslucents.destroy();
+		depthTexture.delete();
+		noTranslucents.delete();
 	}
 }

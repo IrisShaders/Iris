@@ -134,7 +134,7 @@ public class CompositeRenderer {
 		float viewportScale;
 
 		private void destroy() {
-			this.program.destroy();
+			this.program();
 		}
 	}
 

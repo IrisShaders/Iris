@@ -5,7 +5,7 @@ import java.util.Random;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.gl.GlResource;
+import net.coderbot.iris.gl.GlObject;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.texture.TextureUploadHelper;
 import org.lwjgl.opengl.GL11C;
@@ -16,13 +16,14 @@ import org.lwjgl.opengl.GL20C;
  * An extremely simple noise texture. Each color channel contains a uniform random value from 0 to 255. Essentially just
  * dumps an array of random bytes into a texture and calls it a day, literally could not be any simpler than that.
  */
-public class NoiseTexture extends GlResource {
+public class NoiseTexture extends GlObject {
 	int width;
 	int height;
 
 	public NoiseTexture(int width, int height) {
-		super(GlStateManager._genTexture());
-		GlStateManager._bindTexture(getGlId());
+		int texture = GlStateManager._genTexture();
+
+		GlStateManager._bindTexture(texture);
 
 		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
 		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
@@ -36,13 +37,15 @@ public class NoiseTexture extends GlResource {
 		resize(width, height);
 
 		GlStateManager._bindTexture(0);
+
+		this.setHandle(texture);
 	}
 
 	void resize(int width, int height) {
 		this.width = width;
 		this.height = height;
 
-		GlStateManager._bindTexture(getGlId());
+		GlStateManager._bindTexture(this.handle());
 
 		ByteBuffer pixels = generateNoise();
 
@@ -69,11 +72,12 @@ public class NoiseTexture extends GlResource {
 	}
 
 	public int getTextureId() {
-		return getGlId();
+		return this.handle();
 	}
 
-	@Override
-	protected void destroyInternal() {
-		GlStateManager._deleteTexture(getGlId());
+	public void delete() {
+		GlStateManager._deleteTexture(this.handle());
+
+		this.invalidateHandle();
 	}
 }

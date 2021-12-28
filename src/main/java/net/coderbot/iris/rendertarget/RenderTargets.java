@@ -50,16 +50,16 @@ public class RenderTargets {
 
 	public void destroy() {
 		for (GlFramebuffer owned : ownedFramebuffers) {
-			owned.destroy();
+			owned.delete();
 		}
 
 		for (net.coderbot.iris.rendertarget.RenderTarget target : targets) {
 			target.destroy();
 		}
 
-		depthTexture.destroy();
-		noTranslucents.destroy();
-		noHand.destroy();
+		depthTexture.delete();
+		noTranslucents.delete();
+		noHand.delete();
 	}
 
 	public int getRenderTargetCount() {
