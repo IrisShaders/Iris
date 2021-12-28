@@ -11,48 +11,15 @@ import java.util.Map;
 
 public final class Profile {
 	public final String name;
+	public final int precedence; // Used for prioritizing during matching
 	public final Map<String, String> optionValues;
 	public final List<String> disabledPrograms;
 
 	private Profile(String name, Map<String, String> optionValues, List<String> disabledPrograms) {
 		this.name = name;
 		this.optionValues = optionValues;
+		this.precedence = optionValues.size();
 		this.disabledPrograms = disabledPrograms;
-	}
-
-	public static Profile parse(String name, Map<String, List<String>> tree) throws IllegalArgumentException {
-		Builder builder = new Builder(name);
-		List<String> options = tree.get(name);
-
-		if (options == null) {
-			throw new IllegalArgumentException("Profile \"" + name + "\" does not exist!");
-		}
-
-		for (String option : options) {
-			if (option.startsWith("!program.")) {
-				builder.disableProgram(option.substring("!program.".length()));
-			} else if (option.startsWith("profile.")) {
-				String dependency = option.substring("profile.".length());
-
-				if (name.equals(dependency)) {
-					throw new IllegalArgumentException("Error parsing profile \"" + name + "\", tries to include itself!");
-				}
-
-				builder.addAll(parse(dependency, tree));
-			} else if (option.startsWith("!")) {
-				builder.option(option.substring(1), "false");
-			} else if (option.contains("=")) {
-				int splitPoint = option.indexOf("=");
-				builder.option(option.substring(0, splitPoint), option.substring(splitPoint + 1));
-			} else if (option.contains(":")) {
-				int splitPoint = option.indexOf(":");
-				builder.option(option.substring(0, splitPoint), option.substring(splitPoint + 1));
-			} else {
-				builder.option(option, "true");
-			}
-		}
-
-		return builder.build();
 	}
 
 	public boolean matches(OptionSet options, OptionValues values) {

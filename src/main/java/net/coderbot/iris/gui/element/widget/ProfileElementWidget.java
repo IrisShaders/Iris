@@ -7,20 +7,16 @@ import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.Profile;
+import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuProfileElement;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
-import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class ProfileElementWidget extends BaseOptionElementWidget<OptionMenuProfileElement> {
@@ -40,36 +36,15 @@ public class ProfileElementWidget extends BaseOptionElementWidget<OptionMenuProf
 		super.init(screen, navigation);
 		this.setLabel(PROFILE_LABEL);
 
-		Map<String, Profile> profiles = this.element.profiles;
+		ProfileSet profiles = this.element.profiles;
 		OptionSet options = this.element.options;
 		OptionValues pendingValues = this.element.getPendingOptionValues();
 
-		Optional<String> profileName = Optional.empty();
+		ProfileSet.ProfileResult result = profiles.scan(options, pendingValues);
 
-		List<String> indexedProfileNames = new ArrayList<>(profiles.keySet());
-
-		Profile next = null;
-		Profile previous = null;
-
-		if (indexedProfileNames.size() > 0) {
-			next = profiles.get(indexedProfileNames.get(0));
-			previous = profiles.get(indexedProfileNames.get(indexedProfileNames.size() - 1));
-
-			for (String name : profiles.keySet()) {
-				if (profiles.get(name).matches(options, pendingValues)) {
-					profileName = Optional.of(name);
-
-					int profileIdx = indexedProfileNames.indexOf(name);
-					next = profiles.get(indexedProfileNames.get(Math.floorMod(profileIdx + 1, indexedProfileNames.size())));
-					previous = profiles.get(indexedProfileNames.get(Math.floorMod(profileIdx - 1, indexedProfileNames.size())));
-
-					break;
-				}
-			}
-		}
-
-		this.next = next;
-		this.previous = previous;
+		this.next = result.next;
+		this.previous = result.previous;
+		Optional<String> profileName = result.current.map(p -> p.name);
 
 		this.profileLabel = profileName.map(name -> GuiUtil.translateOrDefault(new TextComponent(name), "profile." + name)).orElse(PROFILE_CUSTOM);
 	}
@@ -98,6 +73,10 @@ public class ProfileElementWidget extends BaseOptionElementWidget<OptionMenuProf
 
 	@Override
 	public boolean applyNextValue() {
+		if (this.next == null) {
+			return false;
+		}
+
 		Iris.queueShaderPackOptionsFromProfile(this.next);
 
 		return true;
@@ -105,6 +84,10 @@ public class ProfileElementWidget extends BaseOptionElementWidget<OptionMenuProf
 
 	@Override
 	public boolean applyPreviousValue() {
+		if (this.previous == null) {
+			return false;
+		}
+
 		Iris.queueShaderPackOptionsFromProfile(this.previous);
 
 		return true;

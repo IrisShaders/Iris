@@ -1,15 +1,12 @@
 package net.coderbot.iris.shaderpack.option.values;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.option.OptionSet;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 public class MutableOptionValues implements OptionValues {
 	private final OptionSet options;
@@ -61,7 +58,13 @@ public class MutableOptionValues implements OptionValues {
 				booleanValue = OptionalBoolean.DEFAULT;
 			}
 
-			booleanValues.put(name, booleanValue.orElse(option.getOption().getDefaultValue()));
+			boolean actualValue = booleanValue.orElse(option.getOption().getDefaultValue());
+
+			if (actualValue == option.getOption().getDefaultValue()) {
+				booleanValues.remove(name);
+			}
+
+			booleanValues.put(name, actualValue);
 		});
 
 		options.getStringOptions().forEach((name, option) -> {
@@ -75,6 +78,10 @@ public class MutableOptionValues implements OptionValues {
 			//     behavior, the allowed values is only used when the user is changing options in the
 			//     GUI. Profiles might specify values for options that aren't in the allowed values
 			//     list, and values typed manually into the config .txt are unchecked.
+
+			if (value.equals(option.getOption().getDefaultValue())) {
+				stringValues.remove(name);
+			}
 
 			stringValues.put(name, value);
 		});

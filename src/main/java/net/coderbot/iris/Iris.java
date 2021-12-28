@@ -414,7 +414,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static void queueShaderPackOptionsFromProfile(Profile profile) {
-		profile.optionValues.forEach(getShaderPackOptionQueue()::put);
+		getShaderPackOptionQueue().putAll(profile.optionValues);
 	}
 
 	public static void clearShaderPackOptionQueue() {
