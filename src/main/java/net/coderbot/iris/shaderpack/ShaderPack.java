@@ -21,6 +21,7 @@ import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.apache.logging.log4j.Level;
@@ -68,9 +69,7 @@ public class ShaderPack {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
-			.map(ShaderProperties::new)
-			.orElseGet(ShaderProperties::empty);
+
 
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
@@ -91,8 +90,14 @@ public class ShaderPack {
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
 		// Discover, merge, and apply shader pack options
-		this.shaderPackOptions = new ShaderPackOptions(shaderProperties, graph, changedConfigs);
+		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
+
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties", this.shaderPackOptions)
+				.map(ShaderProperties::new)
+				.orElseGet(ShaderProperties::empty);
+
+		this.shaderPackOptions.createContainer(shaderProperties);
 
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
@@ -173,13 +178,24 @@ public class ShaderPack {
 	}
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
-	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
+	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, fileContents);
+		StringBuffer buffer = new StringBuffer(fileContents);
+
+
+		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
+			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
+
+			if (trueValue) {
+				buffer.insert(0, "#define " + string + "\n");
+			}
+		});
+
+		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, buffer.toString());
 
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new OrderBackedProperties();
