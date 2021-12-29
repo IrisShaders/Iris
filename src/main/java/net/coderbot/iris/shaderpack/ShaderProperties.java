@@ -14,8 +14,13 @@ import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
+import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import org.apache.logging.log4j.Level;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -67,8 +72,32 @@ public class ShaderProperties {
 	}
 
 	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
-	public ShaderProperties(Properties properties) {
-		properties.forEach((keyObject, valueObject) -> {
+	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions) {
+		List<String> values = new ArrayList<>();
+
+		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
+			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
+
+			if (trueValue) {
+				values.add(string);
+			}
+		});
+
+		String preprocessedContents = PropertiesPreprocessor.process(values, contents);
+
+		Properties preprocessed = new OrderBackedProperties();
+		Properties original = new OrderBackedProperties();
+		try {
+			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
+			//     so we don't need to do the UTF-8 workaround here.
+			preprocessed.load(new StringReader(preprocessedContents));
+			original.load(new StringReader(contents));
+		} catch (IOException e) {
+			Iris.logger.error("Error loading shaders.properties!", e);
+			Iris.logger.catching(Level.ERROR, e);
+		}
+
+		preprocessed.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
 			String value = (String) valueObject;
 
@@ -102,16 +131,6 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
-
-			// Defining "sliders" multiple times in the properties file will only result in
-			// the last definition being used, should be tested if behavior matches OptiFine
-			handleWhitespacedListDirective(key, value, "sliders", sliders -> sliderOptions = sliders);
-			handlePrefixedWhitespacedListDirective("profile.", key, value, profiles::put);
-			handleWhitespacedListDirective(key, value, "screen", options -> mainScreenOptions = options);
-			handlePrefixedWhitespacedListDirective("screen.", key, value, subScreenOptions::put);
-			handleIntDirective(key, value, "screen.columns", columns -> mainScreenColumnCount = columns);
-			handleAffixedIntDirective("screen.", ".columns", key, value, subScreenColumnCount::put);
-
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
 			// TODO: Custom uniforms
 
@@ -219,6 +238,20 @@ public class ShaderProperties {
 
 			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
+		});
+
+		original.forEach((keyObject, valueObject) -> {
+			String key = (String) keyObject;
+			String value = (String) valueObject;
+
+			// Defining "sliders" multiple times in the properties file will only result in
+			// the last definition being used, should be tested if behavior matches OptiFine
+			handleWhitespacedListDirective(key, value, "sliders", sliders -> sliderOptions = sliders);
+			handlePrefixedWhitespacedListDirective("profile.", key, value, profiles::put);
+			handleWhitespacedListDirective(key, value, "screen", options -> mainScreenOptions = options);
+			handlePrefixedWhitespacedListDirective("screen.", key, value, subScreenOptions::put);
+			handleIntDirective(key, value, "screen.columns", columns -> mainScreenColumnCount = columns);
+			handleAffixedIntDirective("screen.", ".columns", key, value, subScreenColumnCount::put);
 		});
 	}
 

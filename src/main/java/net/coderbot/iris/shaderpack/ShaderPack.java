@@ -93,8 +93,8 @@ public class ShaderPack {
 		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
 
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties", this.shaderPackOptions)
-				.map(ShaderProperties::new)
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+				.map(source -> new ShaderProperties(source, shaderPackOptions))
 				.orElseGet(ShaderProperties::empty);
 
 		this.shaderPackOptions.createContainer(shaderProperties);
@@ -178,39 +178,13 @@ public class ShaderPack {
 	}
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
-	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions) {
+	private static Optional<String> loadProperties(Path shaderPath, String name) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
-		StringBuffer buffer = new StringBuffer(fileContents);
-
-
-		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
-			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
-
-			if (trueValue) {
-				buffer.insert(0, "#define " + string + "\n");
-			}
-		});
-
-		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, buffer.toString());
-
-		StringReader propertiesReader = new StringReader(processed);
-		Properties properties = new OrderBackedProperties();
-		try {
-			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
-			//     so we don't need to do the UTF-8 workaround here.
-			properties.load(propertiesReader);
-		} catch (IOException e) {
-			Iris.logger.error("Error loading " + name + " at " + shaderPath);
-			Iris.logger.catching(Level.ERROR, e);
-
-			return Optional.empty();
-		}
-
-		return Optional.of(properties);
+		return Optional.of(fileContents);
 	}
 
 	// TODO: Implement raw texture data types

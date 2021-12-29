@@ -86,7 +86,7 @@ public class IdMap {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, fileContents);
+		String processed = PropertiesPreprocessor.process(Collections.emptyList(), fileContents);
 
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
