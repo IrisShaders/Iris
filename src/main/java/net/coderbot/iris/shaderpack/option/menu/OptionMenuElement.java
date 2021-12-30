@@ -19,8 +19,10 @@ public abstract class OptionMenuElement {
 			return EMPTY;
 		}
 		// Profile element
+		// NB: We don't want to add a profile element if there aren't profiles, even if it's requested. TODO: add this to diagnostics? (lp)
 		if (ELEMENT_PROFILE.equals(elementString)) {
-			return new OptionMenuProfileElement(container.getProfiles(), shaderPackOptions.getOptionSet(), shaderPackOptions.getOptionValues());
+			// null indicates that the element should be forgotten (not treated as empty)
+			return container.getProfiles().size() > 0 ? new OptionMenuProfileElement(container.getProfiles(), shaderPackOptions.getOptionSet(), shaderPackOptions.getOptionValues()) : null;
 		}
 		// Link to sub screen element
 		if (elementString.startsWith("[") && elementString.endsWith("]")) {

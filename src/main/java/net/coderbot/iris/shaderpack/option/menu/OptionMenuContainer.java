@@ -45,10 +45,12 @@ public class OptionMenuContainer {
 			for (String optionId : unusedOptionsCopy) {
 				try {
 					OptionMenuElement element = OptionMenuElement.create(optionId, this, shaderProperties, shaderPackOptions);
-					elementsToInsert.add(element);
+					if (element != null) {
+						elementsToInsert.add(element);
 
-					if (element instanceof OptionMenuOptionElement) {
-						this.notifyOptionAdded(optionId, (OptionMenuOptionElement) element);
+						if (element instanceof OptionMenuOptionElement) {
+							this.notifyOptionAdded(optionId, (OptionMenuOptionElement) element);
+						}
 					}
 				} catch (IllegalArgumentException error) {
 					Iris.logger.warn(error);

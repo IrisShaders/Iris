@@ -109,6 +109,10 @@ public class ProfileSet {
 		return builder.build();
 	}
 
+	public int size() {
+		return sortedProfiles.size();
+	}
+
 	public static class ProfileResult {
 		public final Optional<Profile> current;
 		public final Profile next;
