@@ -2,6 +2,9 @@ package net.coderbot.iris.pipeline.newshader;
 
 import java.util.Optional;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
@@ -29,6 +32,8 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
  * not valid GLSL code. Directives like #if will mess it up.
  */
 public class TransformPatcher extends TriforcePatcher {
+  private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
+
   /*
    * if glsl-transformer is used for everything, then there is no common, just
    * three managers that share some but not all transformations
@@ -73,7 +78,7 @@ public class TransformPatcher extends TriforcePatcher {
         }
         profile = "core";
 
-        replaceNode(versionStatement, "#version " + version + " " + profile, GLSLParser::versionStatement);
+        replaceNode(versionStatement, "#version " + version + " " + profile + "\n", GLSLParser::versionStatement);
       }
     });
 
@@ -102,9 +107,11 @@ public class TransformPatcher extends TriforcePatcher {
 
   @Override
   String patchCommon(String input, ShaderType type) {
-    System.out.println(input);
+    // int index = input.indexOf("#version");
+    // LOGGER.debug(input.substring(index, index + 100).trim());
     input = commonManager.transform(input);
-    System.out.println(input);
+    // index = input.indexOf("#version");
+    // LOGGER.debug(input.substring(index, index + 100).trim());
 
     return super.patchCommon(input, type);
   }
@@ -112,5 +119,6 @@ public class TransformPatcher extends TriforcePatcher {
   @Override
   void fixVersion(Transformations transformations) {
     // do nothing because this patcher does itself
+    // super.fixVersion(transformations);
   }
 }

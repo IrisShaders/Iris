@@ -12,10 +12,6 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
 public class TriforcePatcher implements Patcher {
 	/**
 	 * Patches the shader string without using triforce's transform system.
-	 * 
-	 * @param input The input string to patch
-	 * @param type The type of the shader being patched
-	 * @return The patched shader string
 	 */
 	String patchCommon(String input, ShaderType type) {
 		return input;
@@ -119,7 +115,7 @@ public class TriforcePatcher implements Patcher {
 	}
 
 	public String patchVanilla(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
-source = patchCommon(source, type);
+		source = patchCommon(source, type);
 
 		StringTransformations transformations = new StringTransformations(source);
 
@@ -283,6 +279,8 @@ source = patchCommon(source, type);
 	}
 
 	public String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
+		source = patchCommon(source, type);
+
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type);
@@ -381,6 +379,8 @@ source = patchCommon(source, type);
 	}
 
 	public String patchComposite(String source, ShaderType type) {
+		source = patchCommon(source, type);
+		
 		StringTransformations transformations = new StringTransformations(source);
 		patchCommon(transformations, type);
 
