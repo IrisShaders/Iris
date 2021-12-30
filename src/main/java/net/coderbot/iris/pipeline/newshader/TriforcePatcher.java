@@ -9,8 +9,19 @@ import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransform
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
-public class TriforcePatcher {
-	public static void patchCommon(StringTransformations transformations, ShaderType type) {
+public class TriforcePatcher implements Patcher {
+	/**
+	 * Patches the shader string without using triforce's transform system.
+	 * 
+	 * @param input The input string to patch
+	 * @param type The type of the shader being patched
+	 * @return The patched shader string
+	 */
+	String patchCommon(String input, ShaderType type) {
+		return input;
+	}
+
+	void patchCommon(StringTransformations transformations, ShaderType type) {
 		// TODO: Only do the NewLines patches if the source code isn't from gbuffers_lines
 
 		if (transformations.contains("moj_import")) {
@@ -107,7 +118,9 @@ public class TriforcePatcher {
 		//System.out.println(transformations.toString());
 	}
 
-	public static String patchVanilla(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
+	public String patchVanilla(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
+source = patchCommon(source, type);
+
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type);
@@ -269,7 +282,7 @@ public class TriforcePatcher {
 		return transformations.toString();
 	}
 
-	public static String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
+	public String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type);
@@ -367,7 +380,7 @@ public class TriforcePatcher {
 		return transformations.toString();
 	}
 
-	public static String patchComposite(String source, ShaderType type) {
+	public String patchComposite(String source, ShaderType type) {
 		StringTransformations transformations = new StringTransformations(source);
 		patchCommon(transformations, type);
 
@@ -419,7 +432,7 @@ public class TriforcePatcher {
 		return transformations.toString();
 	}
 
-	private static void addAlphaTest(StringTransformations transformations, ShaderType type, AlphaTest alpha) {
+	void addAlphaTest(StringTransformations transformations, ShaderType type, AlphaTest alpha) {
 		if (type == ShaderType.FRAGMENT) {
 			if (transformations.contains("irisMain")) {
 				throw new IllegalStateException("Shader already contains \"irisMain\"???");
@@ -436,7 +449,7 @@ public class TriforcePatcher {
 		}
 	}
 
-	private static void fixVersion(Transformations transformations) {
+	void fixVersion(Transformations transformations) {
 		String prefix = transformations.getPrefix();
 		int split = prefix.indexOf("#version");
 		String beforeVersion = prefix.substring(0, split);
