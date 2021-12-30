@@ -16,6 +16,17 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
  * The transform patcher uses glsl-transformer to do shader transformation. It
  * delegates the things it doesn't do itself to TriforcePatcher by either not
  * overwriting methods or calling them itself.
+ * 
+ * NOTE: A separate TransformationManager should be created for each ShaderType.
+ * That makes each of them more efficient as they don't need to run unnecessary
+ * transformation phases.
+ * 
+ * TODO: good examples for more complex transformation in triforce patcher?
+ * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
+ * replacements that account for whitespace like the one for gl_TextureMatrix
+ * 
+ * TODO: how are defines handled? glsl-transformer can't deal with code that is
+ * not valid GLSL code. Directives like #if will mess it up.
  */
 public class TransformPatcher extends TriforcePatcher {
   /*
