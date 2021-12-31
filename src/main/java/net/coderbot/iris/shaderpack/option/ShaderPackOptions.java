@@ -48,7 +48,7 @@ public class ShaderPackOptions {
 		this.optionSet = setBuilder.build();
 		this.optionValues = new MutableOptionValues(optionSet, changedConfigs);
 
-		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles());
+		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.getOptionSet());
 		/*
 		profiles.scan(optionSet, optionValues).current.ifPresent(profile -> profile.disabledPrograms.forEach(program -> {
 			// TODO: disable programs

@@ -1,5 +1,7 @@
 package net.coderbot.iris.shaderpack.option;
 
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +33,9 @@ public class ProfileSet {
 			}
 		}
 
-		sorted.forEach(p -> System.out.println(p + ":" + p.precedence));
+		if (IrisLogging.ENABLE_SPAM) {
+			sorted.forEach(p -> System.out.println(p.name + ":" + p.precedence));
+		}
 
 		this.sortedProfiles = sorted;
 		this.orderedProfiles = orderedProfiles;
@@ -63,17 +67,17 @@ public class ProfileSet {
 		return new ProfileResult(null, next, prev);
 	}
 
-	public static ProfileSet fromTree(Map<String, List<String>> tree) {
+	public static ProfileSet fromTree(Map<String, List<String>> tree, OptionSet optionSet) {
 		LinkedHashMap<String, Profile> profiles = new LinkedHashMap<>();
 
 		for (String name : tree.keySet()) {
-			profiles.put(name, parse(name, new ArrayList<>(), tree));
+			profiles.put(name, parse(name, new ArrayList<>(), tree, optionSet));
 		}
 
 		return new ProfileSet(profiles);
 	}
 
-	private static Profile parse(String name, List<String> parents, Map<String, List<String>> tree) throws IllegalArgumentException {
+	private static Profile parse(String name, List<String> parents, Map<String, List<String>> tree, OptionSet optionSet) throws IllegalArgumentException {
 		Profile.Builder builder = new Profile.Builder(name);
 		List<String> options = tree.get(name);
 
@@ -92,7 +96,7 @@ public class ProfileSet {
 				}
 
 				parents.add(dependency);
-				builder.addAll(parse(dependency, parents, tree));
+				builder.addAll(parse(dependency, parents, tree, optionSet));
 			} else if (option.startsWith("!")) {
 				builder.option(option.substring(1), "false");
 			} else if (option.contains("=")) {
@@ -101,8 +105,10 @@ public class ProfileSet {
 			} else if (option.contains(":")) {
 				int splitPoint = option.indexOf(":");
 				builder.option(option.substring(0, splitPoint), option.substring(splitPoint + 1));
-			} else {
+			} else if (optionSet.isBooleanOption(option)) {
 				builder.option(option, "true");
+			} else {
+				Iris.logger.warn("Invalid pack option: " + option);
 			}
 		}
 
