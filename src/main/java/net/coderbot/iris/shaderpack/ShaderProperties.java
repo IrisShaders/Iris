@@ -91,8 +91,6 @@ public class ShaderProperties {
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
 		try {
-			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
-			//     so we don't need to do the UTF-8 workaround here.
 			preprocessed.load(new StringReader(preprocessedContents));
 			original.load(new StringReader(contents));
 		} catch (IOException e) {
