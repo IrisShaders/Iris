@@ -1,9 +1,6 @@
 package net.coderbot.iris.shaderpack;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -91,15 +88,12 @@ public class IdMap {
 
 		String processed = PropertiesPreprocessor.preprocessSource(Collections.emptyList(), Collections.emptyMap(), fileContents);
 
-		InputStream processedStream = new ByteArrayInputStream(processed.getBytes(StandardCharsets.ISO_8859_1));
+		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
 		try {
 			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
-			//     so we don't need to do the UTF-8 workaround here, however Java 18 and higher are set to use UTF-8 as the default CharSet so we're doing this to be careful.
-			// TODO: Is JCPP changing the encoding?
-			properties.load(processedStream);
-			// this doesn't do anything, but we'll just be safe
-			processedStream.close();
+			//     so we don't need to do the UTF-8 workaround here.
+			properties.load(propertiesReader);
 		} catch (IOException e) {
 			Iris.logger.error("Error loading " + name + " at " + shaderPath, e);
 
