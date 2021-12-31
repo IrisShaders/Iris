@@ -120,7 +120,7 @@ public class ShaderProperties {
 
 			handlePassDirective("alphaTest.", key, value, pass -> {
 				if ("off".equals(value)) {
-					alphaTestOverrides.put(pass, new AlphaTestOverride.Off());
+					alphaTestOverrides.put(pass, AlphaTestOverride.OFF);
 					return;
 				}
 
@@ -149,7 +149,7 @@ public class ShaderProperties {
 					return;
 				}
 
-				alphaTestOverrides.put(pass, new AlphaTestOverride(function.get(), reference));
+				alphaTestOverrides.put(pass, new AlphaTestOverride(new AlphaTest(function.get(), reference)));
 			});
 
 			handlePassDirective("blend.", key, value, pass -> {

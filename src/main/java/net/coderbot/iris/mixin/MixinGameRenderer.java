@@ -46,4 +46,5 @@ public class MixinGameRenderer {
 
 		itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, localPlayer, light);
 	}
+
 }

@@ -4,8 +4,8 @@ import com.mojang.math.Matrix4f;
 import java.nio.FloatBuffer;
 import java.util.function.Supplier;
 
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL21;
 
 public class MatrixUniform extends Uniform {
 	private FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
@@ -29,7 +29,7 @@ public class MatrixUniform extends Uniform {
 			cachedValue.store(buffer);
 			buffer.rewind();
 
-			GL21.glUniformMatrix4fv(location, false, buffer);
+			IrisRenderSystem.uniformMatrix4fv(location, false, buffer);
 		}
 	}
 }
