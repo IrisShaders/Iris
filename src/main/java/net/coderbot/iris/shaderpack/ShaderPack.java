@@ -11,10 +11,12 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ShaderConstants;
+import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
@@ -24,6 +26,8 @@ import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,6 +56,8 @@ public class ShaderPack {
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
 	private final OptionMenuContainer menuContainer;
+
+	private final ProfileSet.ProfileResult profile;
 
 	public ShaderPack(Path root) throws IOException {
 		this(root, Collections.emptyMap());
@@ -104,6 +110,14 @@ public class ShaderPack {
 		 */
 
 		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
+
+		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
+
+		Optional<String> profileNameMap = this.profile.current.map(p -> p.name);
+
+		String profileName = profileNameMap.map(name -> GuiUtil.translateOrDefault(new TextComponent(name), "profile." + name)).orElse(GuiUtil.translateOrDefault(new TextComponent("Custom"), "options.iris.profile.custom")).getString();
+
+		Iris.logger.info("Profile: " + profileName + " (" + this.shaderPackOptions.getOptionValues().getOptionsChanged() + " options changed)");
 
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
