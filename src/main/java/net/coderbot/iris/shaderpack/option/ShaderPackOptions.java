@@ -18,7 +18,6 @@ public class ShaderPackOptions {
 	private final OptionSet optionSet;
 	private final OptionValues optionValues;
 	private final IncludeGraph includes;
-	private OptionMenuContainer menuContainer;
 
 	public ShaderPackOptions(IncludeGraph graph, Map<String, String> changedConfigs) {
 		Map<AbsolutePackPath, OptionAnnotatedSource> allAnnotations = new HashMap<>();
@@ -60,20 +59,5 @@ public class ShaderPackOptions {
 
 	public IncludeGraph getIncludes() {
 		return includes;
-	}
-
-	public OptionMenuContainer getMenuContainer() {
-		return menuContainer;
-	}
-
-	public void createContainer(ShaderProperties shaderProperties) {
-		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles());
-		/*
-		profiles.scan(optionSet, optionValues).current.ifPresent(profile -> profile.disabledPrograms.forEach(program -> {
-			// TODO: disable programs
-		}));
-		 */
-
-		this.menuContainer = new OptionMenuContainer(shaderProperties, this, profiles);
 	}
 }

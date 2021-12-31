@@ -15,7 +15,9 @@ import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
@@ -49,6 +51,7 @@ public class ShaderPack {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
+	private final OptionMenuContainer menuContainer;
 
 	public ShaderPack(Path root) throws IOException {
 		this(root, Collections.emptyMap());
@@ -65,7 +68,6 @@ public class ShaderPack {
 	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
-
 
 
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
@@ -94,7 +96,14 @@ public class ShaderPack {
 				.map(source -> new ShaderProperties(source, shaderPackOptions))
 				.orElseGet(ShaderProperties::empty);
 
-		this.shaderPackOptions.createContainer(shaderProperties);
+		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles());
+		/*
+		profiles.scan(optionSet, optionValues).current.ifPresent(profile -> profile.disabledPrograms.forEach(program -> {
+			// TODO: disable programs
+		}));
+		 */
+
+		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
 
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
@@ -300,5 +309,9 @@ public class ShaderPack {
 
 	public ShaderPackOptions getShaderPackOptions() {
 		return shaderPackOptions;
+	}
+
+	public OptionMenuContainer getMenuContainer() {
+		return menuContainer;
 	}
 }

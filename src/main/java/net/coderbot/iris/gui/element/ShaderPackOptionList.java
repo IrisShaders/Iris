@@ -39,7 +39,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 	}
 
 	public void applyShaderPack(ShaderPack pack) {
-		this.container = pack.getShaderPackOptions().getMenuContainer();
+		this.container = pack.getMenuContainer();
 	}
 
 	public void rebuild() {
