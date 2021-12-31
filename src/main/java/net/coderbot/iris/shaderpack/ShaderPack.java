@@ -113,11 +113,7 @@ public class ShaderPack {
 
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
-		Optional<String> profileNameMap = this.profile.current.map(p -> p.name);
-
-		String profileName = profileNameMap.map(name -> GuiUtil.translateOrDefault(new TextComponent(name), "profile." + name)).orElse(GuiUtil.translateOrDefault(new TextComponent("Custom"), "options.iris.profile.custom")).getString();
-
-		Iris.logger.info("Profile: " + profileName + " (" + this.shaderPackOptions.getOptionValues().getOptionsChanged() + " options changed)");
+		Iris.logger.info(getProfileChangelog());
 
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
@@ -185,6 +181,14 @@ public class ShaderPack {
 
 			customTextureDataMap.put(textureStage, innerCustomTextureDataMap);
 		});
+	}
+
+	public String getProfileChangelog() {
+		Optional<String> profileNameMap = this.profile.current.map(p -> p.name);
+
+		String profileName = profileNameMap.map(name -> GuiUtil.translateOrDefault(new TextComponent(name), "profile." + name)).orElse(GuiUtil.translateOrDefault(new TextComponent("Custom"), "options.iris.profile.custom")).getString();
+
+		return "Profile: " + profileName + " (" + this.shaderPackOptions.getOptionValues().getOptionsChanged() + " options changed)";
 	}
 
 	@Nullable

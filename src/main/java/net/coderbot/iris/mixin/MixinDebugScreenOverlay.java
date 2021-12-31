@@ -47,6 +47,7 @@ public abstract class MixinDebugScreenOverlay {
 
 		if (Iris.getIrisConfig().areShadersEnabled()) {
 			messages.add("[Iris] Shaderpack: " + Iris.getCurrentPackName());
+			Iris.getCurrentPack().ifPresent(pack -> messages.add("[Iris] Profile: " + pack.getProfileChangelog()));
 		} else {
 			messages.add("[Iris] Shaders are disabled");
 		}
