@@ -86,6 +86,7 @@ public class IdMap {
 			return Optional.empty();
 		}
 
+		//TODO: Should we add shader options to the ID map macros?
 		String processed = PropertiesPreprocessor.preprocessSource(Collections.emptyList(), Collections.emptyMap(), fileContents);
 
 		StringReader propertiesReader = new StringReader(processed);
