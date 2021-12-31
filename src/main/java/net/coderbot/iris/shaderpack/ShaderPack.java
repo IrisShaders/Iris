@@ -8,7 +8,6 @@ import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ShaderConstants;
@@ -16,7 +15,9 @@ import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
@@ -29,7 +30,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -51,6 +51,7 @@ public class ShaderPack {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
+	private final OptionMenuContainer menuContainer;
 
 	public ShaderPack(Path root) throws IOException {
 		this(root, Collections.emptyMap());
@@ -68,9 +69,6 @@ public class ShaderPack {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
-			.map(ShaderProperties::new)
-			.orElseGet(ShaderProperties::empty);
 
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
@@ -91,8 +89,21 @@ public class ShaderPack {
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
 		// Discover, merge, and apply shader pack options
-		this.shaderPackOptions = new ShaderPackOptions(shaderProperties, graph, changedConfigs);
+		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
+
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+				.map(source -> new ShaderProperties(source, shaderPackOptions))
+				.orElseGet(ShaderProperties::empty);
+
+		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
+		/*
+		profiles.scan(optionSet, optionValues).current.ifPresent(profile -> profile.disabledPrograms.forEach(program -> {
+			// TODO: disable programs
+		}));
+		 */
+
+		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
 
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
@@ -173,28 +184,13 @@ public class ShaderPack {
 	}
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
-	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
+	private static Optional<String> loadProperties(Path shaderPath, String name) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, fileContents);
-
-		StringReader propertiesReader = new StringReader(processed);
-		Properties properties = new OrderBackedProperties();
-		try {
-			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
-			//     so we don't need to do the UTF-8 workaround here.
-			properties.load(propertiesReader);
-		} catch (IOException e) {
-			Iris.logger.error("Error loading " + name + " at " + shaderPath);
-			Iris.logger.catching(Level.ERROR, e);
-
-			return Optional.empty();
-		}
-
-		return Optional.of(properties);
+		return Optional.of(fileContents);
 	}
 
 	// TODO: Implement raw texture data types
@@ -250,7 +246,8 @@ public class ShaderPack {
 
 	private static String readProperties(Path shaderPath, String name) {
 		try {
-			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.UTF_8);
+			// Property files should be encoded in ISO_8859_1.
+			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.ISO_8859_1);
 		} catch (NoSuchFileException e) {
 			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
 
@@ -313,5 +310,9 @@ public class ShaderPack {
 
 	public ShaderPackOptions getShaderPackOptions() {
 		return shaderPackOptions;
+	}
+
+	public OptionMenuContainer getMenuContainer() {
+		return menuContainer;
 	}
 }

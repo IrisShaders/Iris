@@ -175,7 +175,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		if (Iris.getCurrentPack().isPresent()) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
 
-			this.navigation = new NavigationController(currentPack.getShaderPackOptions().getMenuContainer());
+			this.navigation = new NavigationController(currentPack.getMenuContainer());
 
 			if (this.shaderOptionList != null) {
 				this.shaderOptionList.applyShaderPack(currentPack);

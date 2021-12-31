@@ -86,13 +86,12 @@ public class IdMap {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, fileContents);
+		//TODO: Should we add shader options to the ID map macros?
+		String processed = PropertiesPreprocessor.preprocessSource(Collections.emptyList(), Collections.emptyMap(), fileContents);
 
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
 		try {
-			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
-			//     so we don't need to do the UTF-8 workaround here.
 			properties.load(propertiesReader);
 		} catch (IOException e) {
 			Iris.logger.error("Error loading " + name + " at " + shaderPath, e);
@@ -105,7 +104,8 @@ public class IdMap {
 
 	private static String readProperties(Path shaderPath, String name) {
 		try {
-			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.UTF_8);
+			// ID maps should be encoded in ISO_8859_1.
+			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.ISO_8859_1);
 		} catch (NoSuchFileException e) {
 			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
 
