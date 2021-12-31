@@ -96,7 +96,7 @@ public class ShaderPack {
 				.map(source -> new ShaderProperties(source, shaderPackOptions))
 				.orElseGet(ShaderProperties::empty);
 
-		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles());
+		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
 		/*
 		profiles.scan(optionSet, optionValues).current.ifPresent(profile -> profile.disabledPrograms.forEach(program -> {
 			// TODO: disable programs
