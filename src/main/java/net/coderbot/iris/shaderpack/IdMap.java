@@ -86,7 +86,7 @@ public class IdMap {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.process(Collections.emptyList(), Collections.emptyMap(), fileContents);
+		String processed = PropertiesPreprocessor.preprocessSource(Collections.emptyList(), Collections.emptyMap(), fileContents);
 
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();

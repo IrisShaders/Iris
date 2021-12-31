@@ -86,7 +86,7 @@ public class ShaderProperties {
 
 		shaderPackOptions.getOptionSet().getStringOptions().forEach((name, value) -> stringValues.put(name, shaderPackOptions.getOptionValues().getStringValue(name).orElse(value.getOption().getDefaultValue())));
 
-		String preprocessedContents = PropertiesPreprocessor.process(booleanValues, stringValues, contents);
+		String preprocessedContents = PropertiesPreprocessor.preprocessSource(booleanValues, stringValues, contents);
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();

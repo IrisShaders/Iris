@@ -12,12 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class PropertiesPreprocessor {
-	public static String process(List<String> booleanValues, Map<String, String> stringValues, String source) {
-		source = "#define MC_VERSION " + StandardMacros.getMcVersion() + "\n" + source + "\n";
-
-		return preprocessSource(booleanValues, stringValues, source);
-	}
-
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
 	public static String preprocessSource(List<String> booleanValues, Map<String, String> stringValues, String source) {
 		@SuppressWarnings("resource")
@@ -27,6 +21,7 @@ public class PropertiesPreprocessor {
 			for (String value : booleanValues) {
 				pp.addMacro(value);
 			}
+			pp.addMacro("MC_VERSION", StandardMacros.getMcVersion());
 		} catch (LexerException e) {
 				e.printStackTrace();
 		}
