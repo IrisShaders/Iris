@@ -26,6 +26,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.materialmap.BlockEntry;
 import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 
 /**
@@ -52,14 +53,14 @@ public class IdMap {
 	 */
 	private Map<NamespacedId, BlockRenderType> blockRenderTypeMap;
 
-	IdMap(Path shaderPath) {
-		itemIdMap = loadProperties(shaderPath, "item.properties")
+	IdMap(Path shaderPath, ShaderPackOptions shaderPackOptions) {
+		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions)
 			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
-		entityIdMap = loadProperties(shaderPath, "entity.properties")
+		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions)
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
-		loadProperties(shaderPath, "block.properties").ifPresent(blockProperties -> {
+		loadProperties(shaderPath, "block.properties", shaderPackOptions).ifPresent(blockProperties -> {
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});
@@ -80,14 +81,26 @@ public class IdMap {
 	/**
 	 * Loads properties from a properties file in a shaderpack path
 	 */
-	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
+	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
-		//TODO: Should we add shader options to the ID map macros?
-		String processed = PropertiesPreprocessor.preprocessSource(Collections.emptyList(), Collections.emptyMap(), fileContents);
+		List<String> booleanValues = new ArrayList<>();
+		Map<String, String> stringValues = new HashMap<>();
+
+		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
+			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
+
+			if (trueValue) {
+				booleanValues.add(string);
+			}
+		});
+
+		shaderPackOptions.getOptionSet().getStringOptions().forEach((optionName, value) -> stringValues.put(optionName, shaderPackOptions.getOptionValues().getStringValue(optionName).orElse(value.getOption().getDefaultValue())));
+
+		String processed = PropertiesPreprocessor.preprocessSource(booleanValues, stringValues, fileContents);
 
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
