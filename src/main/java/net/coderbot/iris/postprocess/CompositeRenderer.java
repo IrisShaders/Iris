@@ -8,7 +8,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.IrisRenderSystem;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.Framebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
@@ -84,7 +84,7 @@ public class CompositeRenderer {
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowMapRendererSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
 
-			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
+			Framebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
 			pass.stageReadsFromAlt = flipped;
 			pass.framebuffer = framebuffer;
@@ -127,14 +127,14 @@ public class CompositeRenderer {
 
 	private static final class Pass {
 		Program program;
-		GlFramebuffer framebuffer;
+		Framebuffer framebuffer;
 		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
 		float viewportScale;
 
 		private void destroy() {
-			this.program();
+			this.program.delete();
 		}
 	}
 

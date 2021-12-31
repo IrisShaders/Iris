@@ -12,7 +12,7 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.Framebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
@@ -102,7 +102,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
 
-	private final GlFramebuffer baseline;
+	private final Framebuffer baseline;
 
 	private Runnable createShadowMapRenderer;
 	private ShadowMapRenderer shadowMapRenderer;
@@ -537,9 +537,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			IrisImages.addShadowColorImages(builder, shadowMapRenderer);
 		}
 
-		GlFramebuffer framebufferBeforeTranslucents =
+		Framebuffer framebufferBeforeTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
-		GlFramebuffer framebufferAfterTranslucents =
+		Framebuffer framebufferAfterTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
 		builder.bindAttributeLocation(10, "mc_Entity");
@@ -558,12 +558,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private final class Pass {
 		private final Program program;
-		private final GlFramebuffer framebufferBeforeTranslucents;
-		private final GlFramebuffer framebufferAfterTranslucents;
+		private final Framebuffer framebufferBeforeTranslucents;
+		private final Framebuffer framebufferAfterTranslucents;
 		private final AlphaTestOverride alphaTestOverride;
 		private final BlendModeOverride blendModeOverride;
 
-		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents,
+		private Pass(Program program, Framebuffer framebufferBeforeTranslucents, Framebuffer framebufferAfterTranslucents,
 					 AlphaTestOverride alphaTestOverride, BlendModeOverride blendModeOverride) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
@@ -611,7 +611,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		public void destroy() {
-			this.program.destroy();
+			this.program.delete();
 		}
 	}
 

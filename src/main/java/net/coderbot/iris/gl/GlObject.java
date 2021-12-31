@@ -11,7 +11,7 @@ public abstract class GlObject {
 		this.handle = handle;
 	}
 
-	public final int handle() {
+	public final int getHandle() {
 		this.checkHandle();
 
 		return this.handle;

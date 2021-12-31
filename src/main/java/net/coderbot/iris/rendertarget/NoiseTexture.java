@@ -45,7 +45,7 @@ public class NoiseTexture extends GlObject {
 		this.width = width;
 		this.height = height;
 
-		GlStateManager._bindTexture(this.handle());
+		GlStateManager._bindTexture(getHandle());
 
 		ByteBuffer pixels = generateNoise();
 
@@ -72,11 +72,11 @@ public class NoiseTexture extends GlObject {
 	}
 
 	public int getTextureId() {
-		return this.handle();
+		return getHandle();
 	}
 
 	public void delete() {
-		GlStateManager._deleteTexture(this.handle());
+		GlStateManager._deleteTexture(getHandle());
 
 		this.invalidateHandle();
 	}

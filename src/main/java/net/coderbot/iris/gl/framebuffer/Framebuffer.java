@@ -7,13 +7,15 @@ import net.coderbot.iris.gl.GlObject;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL30C;
 
-public class GlFramebuffer extends GlObject {
+public class Framebuffer extends GlObject {
 	private final Int2IntMap attachments;
 	private final int maxDrawBuffers;
 	private final int maxColorAttachments;
 
-	public GlFramebuffer() {
-		this.setHandle(GlStateManager.glGenFramebuffers());
+	public Framebuffer() {
+		int framebuffer = GlStateManager.glGenFramebuffers();
+
+		this.setHandle(framebuffer);
 
 		this.attachments = new Int2IntArrayMap();
 		this.maxDrawBuffers = GlStateManager._getInteger(GL30C.GL_MAX_DRAW_BUFFERS);
@@ -65,19 +67,19 @@ public class GlFramebuffer extends GlObject {
 	}
 
 	public void bind() {
-		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, this.handle());
+		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, getHandle());
 	}
 
 	public void bindAsReadBuffer() {
-		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, this.handle());
+		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, getHandle());
 	}
 
 	public void bindAsDrawBuffer() {
-		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, this.handle());
+		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, getHandle());
 	}
 
 	public void delete() {
-		GlStateManager._glDeleteFramebuffers(this.handle());
+		GlStateManager._glDeleteFramebuffers(getHandle());
 
 		this.invalidateHandle();
 	}

@@ -26,7 +26,7 @@ public class DepthTexture extends GlObject {
 	}
 
 	void resize(int width, int height) {
-		GlStateManager._bindTexture(this.handle());
+		GlStateManager._bindTexture(getHandle());
 
 		GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_DEPTH_COMPONENT, width, height, 0, GL11C.GL_DEPTH_COMPONENT, GL11C.GL_UNSIGNED_BYTE, null);
 
@@ -34,11 +34,11 @@ public class DepthTexture extends GlObject {
 	}
 
 	public int getTextureId() {
-		return this.handle();
+		return getHandle();
 	}
 
 	public void delete() {
-		GlStateManager._deleteTexture(this.handle());
+		GlStateManager._deleteTexture(getHandle());
 
 		this.invalidateHandle();
 	}

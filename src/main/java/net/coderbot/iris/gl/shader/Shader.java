@@ -31,7 +31,7 @@ public class Shader extends GlObject {
 			LOGGER.warn("Shader compilation log: " + log);
 		}
 
-		int result = GlStateManager.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
+		int result = GL20C.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
 
 		if (result != GL20C.GL_TRUE) {
 			throw new RuntimeException("Shader compilation failed, see log for details");
@@ -74,7 +74,7 @@ public class Shader extends GlObject {
 	}
 
 	public void delete() {
-		GlStateManager.glDeleteShader(this.handle());
+		GlStateManager.glDeleteShader(getHandle());
 
 		this.invalidateHandle();
 	}

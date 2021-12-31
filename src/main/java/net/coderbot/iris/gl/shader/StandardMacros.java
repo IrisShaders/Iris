@@ -17,9 +17,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 
 public class StandardMacros {
-
 	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)(.*)");
-
 
 	/**
 	 * Gets the current mc version String in a 5 digit format

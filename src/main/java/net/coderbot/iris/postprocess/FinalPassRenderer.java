@@ -7,7 +7,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.IrisRenderSystem;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.Framebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
@@ -43,7 +43,7 @@ public class FinalPassRenderer {
 	@Nullable
 	private final Pass finalPass;
 	private final ImmutableList<SwapPass> swapPasses;
-	private final GlFramebuffer baseline;
+	private final Framebuffer baseline;
 	private final IntSupplier noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
@@ -117,12 +117,12 @@ public class FinalPassRenderer {
 		ImmutableSet<Integer> mipmappedBuffers;
 
 		private void destroy() {
-			this.program.destroy();
+			this.program.delete();
 		}
 	}
 
 	private static final class SwapPass {
-		GlFramebuffer from;
+		Framebuffer from;
 		int targetTexture;
 	}
 

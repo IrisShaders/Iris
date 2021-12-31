@@ -753,7 +753,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.targets.destroy();
 
 		if (this.shadowProgram != null) {
-			this.shadowProgram.destroy();
+			this.shadowProgram.delete();
 		}
 	}
 

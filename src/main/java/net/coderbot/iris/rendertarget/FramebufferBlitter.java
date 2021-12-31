@@ -3,12 +3,12 @@ package net.coderbot.iris.rendertarget;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.IrisRenderSystem;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.Framebuffer;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
 
 public class FramebufferBlitter {
-	public static void copyFramebufferContent(GlFramebuffer from, RenderTarget to) {
+	public static void copyFramebufferContent(Framebuffer from, RenderTarget to) {
 		from.bindAsReadBuffer();
 		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, to.frameBufferId);
 
@@ -19,7 +19,7 @@ public class FramebufferBlitter {
 			GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
 	}
 
-	public static void copyDepthBufferContent(GlFramebuffer from, RenderTarget to) {
+	public static void copyDepthBufferContent(Framebuffer from, RenderTarget to) {
 		from.bindAsReadBuffer();
 		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, to.frameBufferId);
 

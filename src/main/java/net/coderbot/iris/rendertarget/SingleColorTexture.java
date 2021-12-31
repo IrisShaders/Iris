@@ -39,7 +39,7 @@ public class SingleColorTexture extends GlObject {
 	}
 
 	public int getTextureId() {
-		return this.handle();
+		return getHandle();
 	}
 
 	public void delete() {

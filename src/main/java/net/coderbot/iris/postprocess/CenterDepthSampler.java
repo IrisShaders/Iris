@@ -1,7 +1,7 @@
 package net.coderbot.iris.postprocess;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.Framebuffer;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL11C;
 
 public class CenterDepthSampler {
 	private final SmoothedFloat centerDepthSmooth;
-	private final GlFramebuffer depthBufferHolder;
+	private final Framebuffer depthBufferHolder;
 	private final RenderTargets renderTargets;
 	private boolean hasFirstSample;
 	private boolean everRetrieved;

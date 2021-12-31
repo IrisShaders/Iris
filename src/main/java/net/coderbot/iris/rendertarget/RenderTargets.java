@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableSet;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.Framebuffer;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 
 public class RenderTargets {
@@ -14,7 +14,7 @@ public class RenderTargets {
 	private final DepthTexture noTranslucents;
 	private final DepthTexture noHand;
 
-	private final List<GlFramebuffer> ownedFramebuffers;
+	private final List<Framebuffer> ownedFramebuffers;
 
 	private int cachedWidth;
 	private int cachedHeight;
@@ -49,7 +49,7 @@ public class RenderTargets {
 	}
 
 	public void destroy() {
-		for (GlFramebuffer owned : ownedFramebuffers) {
+		for (Framebuffer owned : ownedFramebuffers) {
 			owned.delete();
 		}
 
@@ -110,11 +110,11 @@ public class RenderTargets {
 		fullClearRequired = false;
 	}
 
-	public GlFramebuffer createFramebufferWritingToMain(int[] drawBuffers) {
+	public Framebuffer createFramebufferWritingToMain(int[] drawBuffers) {
 		return createFullFramebuffer(false, drawBuffers);
 	}
 
-	public GlFramebuffer createFramebufferWritingToAlt(int[] drawBuffers) {
+	public Framebuffer createFramebufferWritingToAlt(int[] drawBuffers) {
 		return createFullFramebuffer(true, drawBuffers);
 	}
 
@@ -130,21 +130,21 @@ public class RenderTargets {
 		return inverted.build();
 	}
 
-	public GlFramebuffer createGbufferFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
+	public Framebuffer createGbufferFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
 			throw new IllegalArgumentException("Framebuffer must have at least one color buffer");
 		}
 
 		ImmutableSet<Integer> stageWritesToMain = invert(stageWritesToAlt, drawBuffers);
 
-		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToMain, drawBuffers);
+		Framebuffer framebuffer =  createColorFramebuffer(stageWritesToMain, drawBuffers);
 
 		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
 
 		return framebuffer;
 	}
 
-	private GlFramebuffer createFullFramebuffer(boolean clearsAlt, int[] drawBuffers) {
+	private Framebuffer createFullFramebuffer(boolean clearsAlt, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
 			throw new IllegalArgumentException("Framebuffer must have at least one color buffer");
 		}
@@ -158,20 +158,20 @@ public class RenderTargets {
 		return createColorFramebufferWithDepth(stageWritesToMain, drawBuffers);
 	}
 
-	public GlFramebuffer createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
-		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
+	public Framebuffer createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
+		Framebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
 		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
 
 		return framebuffer;
 	}
 
-	public GlFramebuffer createColorFramebuffer(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
+	public Framebuffer createColorFramebuffer(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
 			throw new IllegalArgumentException("Framebuffer must have at least one color buffer");
 		}
 
-		GlFramebuffer framebuffer = new GlFramebuffer();
+		Framebuffer framebuffer = new Framebuffer();
 		ownedFramebuffers.add(framebuffer);
 
 		int[] actualDrawBuffers = new int[drawBuffers.length];
