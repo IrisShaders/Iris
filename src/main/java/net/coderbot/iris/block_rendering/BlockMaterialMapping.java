@@ -64,7 +64,7 @@ public class BlockMaterialMapping {
 			Property<?> property = stateManager.getProperty(key);
 
 			if (property == null) {
-				Iris.logger.warn("Error while parsing the block ID map entry \"" + entry + "\":");
+				Iris.logger.warn("Error while parsing the block ID map entry for \"" + "block." + intId + "\":");
 				Iris.logger.warn("- The block " + resourceLocation + " has no property with the name " + key + ", ignoring!");
 
 				return;
