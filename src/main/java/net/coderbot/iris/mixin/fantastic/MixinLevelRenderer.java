@@ -2,18 +2,21 @@ package net.coderbot.iris.mixin.fantastic;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleEngine;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.renderer.*;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -49,5 +52,17 @@ public class MixinLevelRenderer {
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 
 		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
+		if (Iris.getPipelineManager().getPipeline().isPresent() && Iris.getPipelineManager().getPipelineNullable().shouldRenderParticlesBeforeDeferred()) {
+			// Render translucent particles here as well if the pack requests so
+			minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
+		}
+	}
+
+	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V"))
+	private void iris$renderBeforeDeferred(ParticleEngine instance, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f) {
+		// We don't want to render translucent particles again if we already rendered them earlier!
+		if (Iris.getPipelineManager().getPipeline().isPresent() && !Iris.getPipelineManager().getPipelineNullable().shouldRenderParticlesBeforeDeferred()) {
+			instance.render(poseStack, bufferSource, lightTexture, camera, f);
+		}
 	}
 }
