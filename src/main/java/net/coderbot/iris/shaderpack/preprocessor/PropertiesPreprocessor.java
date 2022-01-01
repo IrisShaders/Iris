@@ -17,18 +17,8 @@ import java.util.Map;
 public class PropertiesPreprocessor {
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
 	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions) {
-		List<String> booleanValues = new ArrayList<>();
-		Map<String, String> stringValues = new HashMap<>();
-
-		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
-			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
-
-			if (trueValue) {
-				booleanValues.add(string);
-			}
-		});
-
-		shaderPackOptions.getOptionSet().getStringOptions().forEach((optionName, value) -> stringValues.put(optionName, shaderPackOptions.getOptionValues().getStringValue(optionName).orElse(value.getOption().getDefaultValue())));
+		List<String> booleanValues = getBooleanValues(shaderPackOptions);
+		Map<String, String> stringValues = getStringValues(shaderPackOptions);
 
 		@SuppressWarnings("resource")
 		final Preprocessor pp = new Preprocessor();
@@ -67,5 +57,27 @@ public class PropertiesPreprocessor {
 		source = builder.toString();
 
 		return source;
+	}
+
+	private static List<String> getBooleanValues(ShaderPackOptions shaderPackOptions) {
+		List<String> booleanValues = new ArrayList<>();
+
+		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
+			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
+
+			if (trueValue) {
+				booleanValues.add(string);
+			}
+		});
+
+		return booleanValues;
+	}
+
+	private static Map<String, String> getStringValues(ShaderPackOptions shaderPackOptions) {
+		Map<String, String> stringValues = new HashMap<>();
+
+		shaderPackOptions.getOptionSet().getStringOptions().forEach((optionName, value) -> stringValues.put(optionName, shaderPackOptions.getOptionValues().getStringValue(optionName).orElse(value.getOption().getDefaultValue())));
+
+		return stringValues;
 	}
 }
