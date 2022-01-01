@@ -157,7 +157,7 @@ public class ShaderPack {
 		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
 				shaderProperties, this);
 
-		this.idMap = new IdMap(root);
+		this.idMap = new IdMap(root, shaderPackOptions);
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {

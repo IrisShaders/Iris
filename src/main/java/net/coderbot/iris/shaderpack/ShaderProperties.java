@@ -73,20 +73,7 @@ public class ShaderProperties {
 
 	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
 	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions) {
-		List<String> booleanValues = new ArrayList<>();
-		Map<String, String> stringValues = new HashMap<>();
-
-		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
-			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
-
-			if (trueValue) {
-				booleanValues.add(string);
-			}
-		});
-
-		shaderPackOptions.getOptionSet().getStringOptions().forEach((name, value) -> stringValues.put(name, shaderPackOptions.getOptionValues().getStringValue(name).orElse(value.getOption().getDefaultValue())));
-
-		String preprocessedContents = PropertiesPreprocessor.preprocessSource(booleanValues, stringValues, contents);
+		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions);
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
