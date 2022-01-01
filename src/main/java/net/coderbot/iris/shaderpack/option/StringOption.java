@@ -2,6 +2,7 @@ package net.coderbot.iris.shaderpack.option;
 
 import com.google.common.collect.ImmutableList;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -23,25 +24,22 @@ public class StringOption extends BaseOption {
 		this.allowedValues = allowedValues;
 	}
 
-	public static StringOption createUncommented(OptionType type, String name, String defaultValue) {
-		return new StringOption(type, name, defaultValue);
-	}
-
+	@Nullable
 	public static StringOption create(OptionType type, String name, String comment, String defaultValue) {
 		if (comment == null) {
-			return new StringOption(type, name, null, defaultValue, ImmutableList.of(defaultValue));
+			return null;
 		}
 
 		int openingBracket = comment.indexOf('[');
 
 		if (openingBracket == -1) {
-			return new StringOption(type, name, comment, defaultValue, ImmutableList.of(defaultValue));
+			return null;
 		}
 
 		int closingBracket = comment.indexOf(']', openingBracket);
 
 		if (closingBracket == -1) {
-			return new StringOption(type, name, comment, defaultValue, ImmutableList.of(defaultValue));
+			return null;
 		}
 
 		String[] allowedValues = comment.substring(openingBracket + 1, closingBracket).split(" ");

@@ -371,7 +371,8 @@ public final class OptionAnnotatedSource {
 		tookWhitespace = line.takeSomeWhitespace();
 
 		if (line.isEnd()) {
-			builder.stringOptions.put(index, StringOption.createUncommented(OptionType.DEFINE, name, value));
+			builder.diagnostics.put(index, "Ignoring this #define because it doesn't have a comment containing" +
+					" a list of allowed values afterwards, but it has a value so is therefore not a boolean.");
 			return;
 		} else if (!tookWhitespace) {
 			builder.diagnostics.put(index,
@@ -391,10 +392,9 @@ public final class OptionAnnotatedSource {
 
 		StringOption option = StringOption.create(OptionType.DEFINE, name, comment, value);
 
-		if (option.getAllowedValues().size() == 1) {
-			// Some shader packs have "#define PI 3.14" and that shouldn't be parsed as a config option.
-			builder.diagnostics.put(index,
-					"Ignoring this #define because it only has one allowed value - the default value.");
+		if (option == null) {
+			builder.diagnostics.put(index, "Ignoring this #define because it is missing an allowed values list" +
+					"in a comment, but is not a boolean define.");
 			return;
 		}
 
