@@ -294,7 +294,14 @@ public final class OptionAnnotatedSource {
 			return;
 		}
 
-		builder.stringOptions.put(index, StringOption.create(OptionType.CONST, name, comment, value));
+		StringOption option = StringOption.create(OptionType.CONST, name, comment, value);
+
+		if (option != null) {
+			builder.stringOptions.put(index, option);
+		} else {
+			builder.diagnostics.put(index, "Ignoring this const option because it is missing an allowed values list" +
+					"in a comment, but is not a boolean const option.");
+		}
 	}
 
 	private static void parseDefineOption(AnnotationsBuilder builder, int index, ParsedString line) {

@@ -27,8 +27,11 @@ public class OptionDiscoverTest {
 
 	@Test
 	void testNonConfigurableConstant() {
+		// TODO: What about "const bool" options???
 		testNoDiscovery("#define PI 3.14 // It's PI.");
 		testNoDiscovery("#define PI 3.14");
+		testNoDiscovery("const int noiseTextureResolution = 512;");
+		testNoDiscovery("const int noiseTextureResolution = 512; // Default noise texture size [");
 	}
 
 	private void testTrivialString(String base, String expectedOptionName, String expectedDefault,
