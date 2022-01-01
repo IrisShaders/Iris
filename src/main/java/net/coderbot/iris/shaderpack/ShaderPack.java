@@ -112,7 +112,16 @@ public class ShaderPack {
 
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
-		this.profileInfo = "Profile: " + getLanguageMap().getTranslations(Locale.getDefault().toString().toLowerCase(Locale.ROOT)).getOrDefault("profile." + getCurrentProfileName(), getCurrentProfileName()) + " (" + getShaderPackOptions().getOptionValues().getOptionsChanged() + " options changed)";
+		{
+			// Note: We always use English for this, because this will only show up in logs & on the debug screen
+			//       so trying to detect / handle the current MC language would just be a little too complex;
+			Map<String, String> translations = getLanguageMap().getTranslations("en_us");
+
+			String profileName = translations.getOrDefault("profile." + getCurrentProfileName(), getCurrentProfileName());
+			int numOptionsChanged = getShaderPackOptions().getOptionValues().getOptionsChanged();
+
+			this.profileInfo = "Profile: " + profileName + " (" + numOptionsChanged + " options changed)";
+		}
 
 		Iris.logger.info(this.profileInfo);
 
