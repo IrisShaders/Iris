@@ -34,6 +34,11 @@ public class ImmutableOptionValues implements OptionValues {
 	}
 
 	@Override
+	public int getOptionsChanged() {
+		return this.stringValues.size() + this.booleanValues.size();
+	}
+
+	@Override
 	public MutableOptionValues mutableCopy() {
 		return new MutableOptionValues(options, new HashMap<>(booleanValues), new HashMap<>(stringValues));
 	}

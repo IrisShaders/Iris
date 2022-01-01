@@ -7,6 +7,7 @@ import java.util.Optional;
 public interface OptionValues {
 	OptionalBoolean getBooleanValue(String name);
 	Optional<String> getStringValue(String name);
+	int getOptionsChanged();
 
 	MutableOptionValues mutableCopy();
 	ImmutableOptionValues toImmutable();

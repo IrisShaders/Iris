@@ -53,6 +53,9 @@ public class ShaderPack {
 	private final ShaderPackOptions shaderPackOptions;
 	private final OptionMenuContainer menuContainer;
 
+	private final ProfileSet.ProfileResult profile;
+	private final String profileInfo;
+
 	public ShaderPack(Path root) throws IOException {
 		this(root, Collections.emptyMap());
 	}
@@ -88,6 +91,8 @@ public class ShaderPack {
 		// Read all files and included files recursively
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
+		this.languageMap = new LanguageMap(root.resolve("lang"));
+
 		// Discover, merge, and apply shader pack options
 		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
@@ -104,6 +109,12 @@ public class ShaderPack {
 		 */
 
 		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
+
+		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
+
+		this.profileInfo = "Profile: " + getLanguageMap().getTranslations(Locale.getDefault().toString().toLowerCase(Locale.ROOT)).getOrDefault("profile." + getCurrentProfileName(), getCurrentProfileName()) + " (" + getShaderPackOptions().getOptionValues().getOptionsChanged() + " options changed)";
+
+		Iris.logger.info(this.profileInfo);
 
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
@@ -147,7 +158,6 @@ public class ShaderPack {
 				shaderProperties, this);
 
 		this.idMap = new IdMap(root, shaderPackOptions);
-		this.languageMap = new LanguageMap(root.resolve("lang"));
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
@@ -171,6 +181,18 @@ public class ShaderPack {
 
 			customTextureDataMap.put(textureStage, innerCustomTextureDataMap);
 		});
+	}
+
+	private String getCurrentProfileName() {
+		if (profile.current.isPresent()) {
+			return profile.current.get().name;
+		} else {
+			return "Custom";
+		}
+	}
+
+	public String getProfileInfo() {
+		return profileInfo;
 	}
 
 	@Nullable
