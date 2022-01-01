@@ -11,12 +11,10 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ShaderConstants;
-import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
-import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
@@ -26,8 +24,6 @@ import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,6 +54,7 @@ public class ShaderPack {
 	private final OptionMenuContainer menuContainer;
 
 	private final ProfileSet.ProfileResult profile;
+	private final String profileInfo;
 
 	public ShaderPack(Path root) throws IOException {
 		this(root, Collections.emptyMap());
@@ -94,6 +91,8 @@ public class ShaderPack {
 		// Read all files and included files recursively
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
+		this.languageMap = new LanguageMap(root.resolve("lang"));
+
 		// Discover, merge, and apply shader pack options
 		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
@@ -113,7 +112,9 @@ public class ShaderPack {
 
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
-		Iris.logger.info(getProfileChangelog());
+		this.profileInfo = "Profile: " + getLanguageMap().getTranslations(Locale.getDefault().toString().toLowerCase(Locale.ROOT)).getOrDefault("profile." + getCurrentProfileName(), getCurrentProfileName()) + " (" + getShaderPackOptions().getOptionValues().getOptionsChanged() + " options changed)";
+
+		Iris.logger.info(this.profileInfo);
 
 		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
@@ -157,7 +158,6 @@ public class ShaderPack {
 				shaderProperties, this);
 
 		this.idMap = new IdMap(root);
-		this.languageMap = new LanguageMap(root.resolve("lang"));
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
@@ -183,12 +183,16 @@ public class ShaderPack {
 		});
 	}
 
-	public String getProfileChangelog() {
-		Optional<String> profileNameMap = this.profile.current.map(p -> p.name);
+	private String getCurrentProfileName() {
+		if (profile.current.isPresent()) {
+			return profile.current.get().name;
+		} else {
+			return "Custom";
+		}
+	}
 
-		String profileName = profileNameMap.map(name -> GuiUtil.translateOrDefault(new TextComponent(name), "profile." + name)).orElse(GuiUtil.translateOrDefault(new TextComponent("Custom"), "options.iris.profile.custom")).getString();
-
-		return "Profile: " + profileName + " (" + this.shaderPackOptions.getOptionValues().getOptionsChanged() + " options changed)";
+	public String getProfileInfo() {
+		return profileInfo;
 	}
 
 	@Nullable
