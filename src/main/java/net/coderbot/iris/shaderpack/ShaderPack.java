@@ -116,8 +116,15 @@ public class ShaderPack {
 			// Note: We always use English for this, because this will only show up in logs & on the debug screen
 			//       so trying to detect / handle the current MC language would just be a little too complex;
 			Map<String, String> translations = getLanguageMap().getTranslations("en_us");
+			String profileName;
+			String internalProfileName = getCurrentProfileName();
 
-			String profileName = translations.getOrDefault("profile." + getCurrentProfileName(), getCurrentProfileName());
+			if (translations != null) {
+				profileName = translations.getOrDefault("profile." + internalProfileName, internalProfileName);
+			} else {
+				profileName = internalProfileName;
+			}
+
 			int numOptionsChanged = getShaderPackOptions().getOptionValues().getOptionsChanged();
 
 			this.profileInfo = "Profile: " + profileName + " (" + numOptionsChanged + " options changed)";
