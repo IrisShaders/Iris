@@ -8,6 +8,8 @@ import java.io.StringReader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.GlObject;
+import net.coderbot.iris.gl.IrisRenderSystem;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
@@ -25,13 +27,13 @@ public class Shader extends GlObject {
 		ShaderWorkarounds.safeShaderSource(handle, src);
 		GL20C.glCompileShader(handle);
 
-		String log = GL20C.glGetShaderInfoLog(handle);
+		String log = IrisRenderSystem.getShaderInfoLog(handle);
 
 		if (!log.isEmpty()) {
 			LOGGER.warn("Shader compilation log: " + log);
 		}
 
-		int result = GL20C.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
+		int result = GlStateManager.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
 
 		if (result != GL20C.GL_TRUE) {
 			throw new RuntimeException("Shader compilation failed, see log for details");
