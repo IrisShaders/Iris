@@ -2,7 +2,16 @@ package net.irisshaders.iris.api.v0;
 
 import net.coderbot.iris.IrisApiV0Impl;
 
+/**
+ * The entry point to the Iris API, major version 0. This is currently the latest
+ * version of the API.
+ *
+ * To access the API, use {@link #getInstance()}.
+ */
 public interface IrisApi {
+	/**
+	 * @since API v0.0
+	 */
 	static IrisApi getInstance() {
 		return IrisApiV0Impl.INSTANCE;
 	}
@@ -51,4 +60,38 @@ public interface IrisApi {
 	 * @since API v0.0
 	 */
 	boolean isRenderingShadowPass();
+
+	/**
+	 * Opens the main Iris GUI screen. It's up to Iris to decide
+	 * what this screen is, but generally this is the shader selection
+	 * screen.
+	 *
+	 * This method takes and returns Objects instead of any concrete
+	 * Minecraft screen class to avoid referencing Minecraft classes.
+	 * Nevertheless, the passed parent must either be null, or an
+	 * object that is a subclass of the appropriate {@code Screen}
+	 * class for the given Minecraft version.
+	 *
+	 * @param parent The parent screen, an instance of the appropriate
+	 *               {@code Screen} class.
+	 * @return A {@code Screen} class for the main Iris GUI screen.
+	 * @since API v0.0
+	 */
+	Object openMainIrisScreenObj(Object parent);
+
+	/**
+	 * Gets the language key of the main screen. Currently, this
+	 * is "options.iris.shaderPackSelection".
+	 *
+	 * @return the language key, for use with {@code TranslatableText}
+	 *        / {@code TranslatableComponent}
+	 * @since API v0.0
+	 */
+	String getMainScreenLanguageKey();
+
+	/**
+	 * Gets a config object that can edit the Iris configuration.
+	 * @since API v0.0
+	 */
+	IrisApiConfig getConfig();
 }
