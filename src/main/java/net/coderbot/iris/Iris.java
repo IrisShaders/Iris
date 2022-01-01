@@ -18,6 +18,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.fabricmc.loader.api.ModContainer;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -502,7 +503,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static boolean isPackActive() {
-		return !(getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline);
+		return IrisApi.getInstance().isShaderPackInUse();
 	}
 
 	public static Path getShaderpacksDirectory() {
