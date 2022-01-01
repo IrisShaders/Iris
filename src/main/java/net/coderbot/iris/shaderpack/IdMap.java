@@ -87,20 +87,7 @@ public class IdMap {
 			return Optional.empty();
 		}
 
-		List<String> booleanValues = new ArrayList<>();
-		Map<String, String> stringValues = new HashMap<>();
-
-		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
-			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
-
-			if (trueValue) {
-				booleanValues.add(string);
-			}
-		});
-
-		shaderPackOptions.getOptionSet().getStringOptions().forEach((optionName, value) -> stringValues.put(optionName, shaderPackOptions.getOptionValues().getStringValue(optionName).orElse(value.getOption().getDefaultValue())));
-
-		String processed = PropertiesPreprocessor.preprocessSource(booleanValues, stringValues, fileContents);
+		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions);
 
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
