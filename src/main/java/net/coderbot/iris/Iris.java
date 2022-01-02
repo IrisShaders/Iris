@@ -11,6 +11,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.coderbot.iris.compat.sodium.AllowedSodiumVersion;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
+import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.shaderpack.DimensionId;
@@ -114,6 +115,11 @@ public class Iris implements ClientModInitializer {
 			Iris.logger.warn("Iris::onRenderSystemInit was called, but Iris::onInitializeClient was not called." +
 					" Is Not Enough Crashes doing something weird? Trying to avoid a crash but this is an odd state.");
 			return;
+		}
+
+		if (irisConfig.isDebugEnabled()) {
+			logger.warn("Debug features enabled, GLSL logging will be more verbose!");
+			GLDebug.setupDebugMessageCallback();
 		}
 
 		// Only load the shader pack when we can access OpenGL
