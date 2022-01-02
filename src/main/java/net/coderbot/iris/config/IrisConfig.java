@@ -22,15 +22,21 @@ public class IrisConfig {
 	private String shaderPackName;
 
 	/**
-	 * Whether or not shaders are used for rendering. False to disable all shader-based rendering, true to enable it.
+	 * Whether shaders are used for rendering. False to disable all shader-based rendering, true to enable it.
 	 */
 	private boolean enableShaders;
+
+	/**
+	 * Whether the Graphics mode was Fabulous before enabling a shaderpack
+	 */
+	private boolean wasFabulous;
 
 	private final Path propertiesPath;
 
 	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;
 		enableShaders = true;
+		wasFabulous = false;
 		this.propertiesPath = propertiesPath;
 	}
 
@@ -92,11 +98,26 @@ public class IrisConfig {
 	}
 
 	/**
+	 * Stores whether fabulous graphics should be restored upon turning shaders off
+	 *
+	 * @param wasFabulous Whether fabulous graphics were enabled prior to turning on shaders
+	 */
+	public void setWasFabulous(boolean wasFabulous) {
+		this.wasFabulous = wasFabulous;
+	}
+
+	/**
+	 * @return a boolean on whether fabulous graphics were enabled prior to turning on shaders
+	 */
+	 public boolean getWasFabulous() {
+		return wasFabulous;
+	 }
+
+	/**
 	 * loads the config file and then populates the string, int, and boolean entries with the parsed entries
 	 *
 	 * @throws IOException if the file cannot be loaded
 	 */
-
 	public void load() throws IOException {
 		if (!Files.exists(propertiesPath)) {
 			return;
