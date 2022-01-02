@@ -151,7 +151,8 @@ public class IdMap {
 				return;
 			}
 
-			for (String part : value.split(" ")) {
+			// Split on any whitespace
+			for (String part : value.split("\\s+")) {
 				if (part.contains("=")) {
 					// Avoid tons of logspam for now
 					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
@@ -191,7 +192,8 @@ public class IdMap {
 
 			List<BlockEntry> entries = new ArrayList<>();
 
-			for (String part : value.split(" ")) {
+			// Split on whitespace groups, not just single spaces
+			for (String part : value.split("\\s+")) {
 				if (part.isEmpty()) {
 					continue;
 				}
@@ -236,7 +238,7 @@ public class IdMap {
 				return;
 			}
 
-			for (String part : value.split(" ")) {
+			for (String part : value.split("\\s+")) {
 				// Note: NamespacedId performs no validation on the content. That will need to be done by whatever is
 				//       converting these things to ResourceLocations.
 				overrides.put(new NamespacedId(part), renderType);
