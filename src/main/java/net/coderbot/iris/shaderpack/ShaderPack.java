@@ -125,9 +125,9 @@ public class ShaderPack {
 				profileName = internalProfileName;
 			}
 
-			int numOptionsChanged = getShaderPackOptions().getOptionValues().getOptionsChanged();
+			int numOptionsChanged = this.profile.current.map(value -> getShaderPackOptions().getOptionValues().getOptionsChanged() - value.optionValues.size()).orElseGet(() -> getShaderPackOptions().getOptionValues().getOptionsChanged());
 
-			this.profileInfo = "Profile: " + profileName + " (" + numOptionsChanged + " options changed)";
+			this.profileInfo = "Profile: " + profileName + " (" + numOptionsChanged + " options changed by user)";
 		}
 
 		Iris.logger.info(this.profileInfo);
