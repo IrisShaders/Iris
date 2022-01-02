@@ -48,6 +48,7 @@ public class ShaderProperties {
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
+	private OptionalBoolean particlesBeforeDeferred = OptionalBoolean.DEFAULT;
 	// TODO: private Map<String, String> optifineVersionRequirements;
 	// TODO: private Set<String> sliderOptions;
 	// TODO: Parse profiles
@@ -104,6 +105,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
+			handleBooleanDirective(key, value, "particles.before.deferred", bool -> particlesBeforeDeferred = bool);
 
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
 			// TODO: Custom uniforms
@@ -343,6 +345,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getShadowCulling() {
 		return shadowCulling;
+	}
+
+	public OptionalBoolean getParticlesBeforeDeferred() {
+		return particlesBeforeDeferred;
 	}
 
 	public Object2ObjectMap<String, AlphaTestOverride> getAlphaTestOverrides() {
