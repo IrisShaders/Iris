@@ -85,6 +85,7 @@ public class ShaderProperties {
 			Iris.logger.catching(Level.ERROR, e);
 		}
 
+		// TODO: JCPP should not be changing the key, otherwise directives may be skipped!
 		preprocessed.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
 			String value = (String) valueObject;
@@ -121,19 +122,6 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
 			// TODO: Custom uniforms
-
-			handlePassDirective("scale.", key, value, pass -> {
-				float scale;
-
-				try {
-					scale = Float.parseFloat(value);
-				} catch (NumberFormatException e) {
-					Iris.logger.error("Unable to parse scale directive for " + pass + ": " + value, e);
-					return;
-				}
-
-				viewportScaleOverrides.put(pass, scale);
-			});
 
 			handlePassDirective("alphaTest.", key, value, pass -> {
 				if ("off".equals(value)) {
@@ -232,6 +220,20 @@ public class ShaderProperties {
 		original.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
 			String value = (String) valueObject;
+
+			// TODO: This is a temporary hack to fix bloom on Sildur's Vibrant.
+			handlePassDirective("scale.", key, value, pass -> {
+				float scale;
+
+				try {
+					scale = Float.parseFloat(value);
+				} catch (NumberFormatException e) {
+					Iris.logger.error("Unable to parse scale directive for " + pass + ": " + value, e);
+					return;
+				}
+
+				viewportScaleOverrides.put(pass, scale);
+			});
 
 			// Defining "sliders" multiple times in the properties file will only result in
 			// the last definition being used, should be tested if behavior matches OptiFine
