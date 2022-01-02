@@ -16,7 +16,8 @@
 
 * [SEUS Renewed](https://www.sonicether.com/seus/)
 
-* [SEUS PTGI](https://www.sonicether.com/seus)
+* [SEUS PTGI E12 / HRR 2.1](https://www.sonicether.com/seus)
+  * SEUS PTGI HRR 3 is not currently supported.
 
 * [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
 
