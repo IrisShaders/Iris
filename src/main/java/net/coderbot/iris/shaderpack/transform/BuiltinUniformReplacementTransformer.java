@@ -16,6 +16,11 @@ public class BuiltinUniformReplacementTransformer {
 
 	public void apply(Transformations transformations) {
 		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both aliases of the lightmap coords
+		if (transformations.contains(NORMALIZED_PLACEHOLDER)) {
+			// Bail out! Not sure what to do here.
+			throw new AssertionError();
+		}
+
 		applyCommonCases(transformations, "gl_MultiTexCoord1");
 		applyCommonCases(transformations, "gl_MultiTexCoord2");
 		applyFallbackCases(transformations);
@@ -28,11 +33,6 @@ public class BuiltinUniformReplacementTransformer {
 		//
 		// These cases are simple and they show up a lot.
 		// They are all different ways of obtaining the normalized lightmap coordinates
-
-		if (transformations.contains(NORMALIZED_PLACEHOLDER)) {
-			// Bail out! Not sure what to do here.
-			throw new AssertionError();
-		}
 
 		transformations.replaceExact(
 			"(gl_TextureMatrix[1]*" + coordName + ").st",
