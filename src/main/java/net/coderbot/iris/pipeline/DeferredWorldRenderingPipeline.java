@@ -718,7 +718,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content without the hand, as required.
-		baseline.bindAsReadBuffer();
+		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
@@ -730,7 +730,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
-		baseline.bindAsReadBuffer();
+		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
