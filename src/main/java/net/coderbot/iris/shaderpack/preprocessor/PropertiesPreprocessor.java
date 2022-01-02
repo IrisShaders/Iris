@@ -17,6 +17,10 @@ import java.util.Map;
 public class PropertiesPreprocessor {
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
 	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions) {
+		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER)) {
+			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
+		}
+
 		List<String> booleanValues = getBooleanValues(shaderPackOptions);
 		Map<String, String> stringValues = getStringValues(shaderPackOptions);
 
