@@ -38,6 +38,10 @@ public class PropertiesPreprocessor {
 				e.printStackTrace();
 			}
 		});
+
+		PropertyCollectingListener listener = new PropertyCollectingListener();
+		source = source.replaceAll("([a-zA-Z]+\\.[a-zA-Z0-9]+)", "#warning IRIS_PASSTHROUGH $1");
+		pp.setListener(listener);
 		pp.addInput(new StringLexerSource(source, true));
 		pp.addFeature(Feature.KEEPCOMMENTS);
 
@@ -56,7 +60,7 @@ public class PropertiesPreprocessor {
 
 		source = builder.toString();
 
-		return source;
+		return listener.collectLines() + source;
 	}
 
 	private static List<String> getBooleanValues(ShaderPackOptions shaderPackOptions) {
