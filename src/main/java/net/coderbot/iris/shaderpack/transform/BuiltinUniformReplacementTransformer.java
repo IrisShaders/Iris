@@ -15,13 +15,15 @@ public class BuiltinUniformReplacementTransformer {
 	}
 
 	public void apply(Transformations transformations) {
-		applyCommonCases(transformations);
+		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both aliases of the lightmap coords
+		applyCommonCases(transformations, "gl_MultiTexCoord1");
+		applyCommonCases(transformations, "gl_MultiTexCoord2");
 		applyFallbackCases(transformations);
 
 		transformations.replaceExact(NORMALIZED_PLACEHOLDER, normalizedLightmapCoords);
 	}
 
-	private void applyCommonCases(Transformations transformations) {
+	private void applyCommonCases(Transformations transformations, String coordName) {
 		// Replace basic common operations
 		//
 		// These cases are simple and they show up a lot.
@@ -33,32 +35,32 @@ public class BuiltinUniformReplacementTransformer {
 		}
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1]*gl_MultiTexCoord1).st",
+			"(gl_TextureMatrix[1]*" + coordName + ").st",
 			NORMALIZED_PLACEHOLDER
 		);
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1] * gl_MultiTexCoord1).st",
+			"(gl_TextureMatrix[1] * " + coordName + ").st",
 			NORMALIZED_PLACEHOLDER
 		);
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1]*gl_MultiTexCoord1).xy",
+			"(gl_TextureMatrix[1] * " + coordName + ").xy",
 			NORMALIZED_PLACEHOLDER
 		);
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1] * gl_MultiTexCoord1).xy",
+			"(gl_TextureMatrix[1] * " + coordName + ").xy",
 			NORMALIZED_PLACEHOLDER
 		);
 
 		transformations.replaceExact(
-			"(gl_TextureMatrix[1] * gl_MultiTexCoord1).s",
+			"(gl_TextureMatrix[1] * " + coordName + ").s",
 			NORMALIZED_PLACEHOLDER + ".s"
 		);
 
 		transformations.replaceExact(
-			"gl_TextureMatrix[1] * gl_MultiTexCoord1",
+			"gl_TextureMatrix[1] * " + coordName,
 			"vec4(" + NORMALIZED_PLACEHOLDER + ", 0.0, 1.0)"
 		);
 
@@ -68,7 +70,7 @@ public class BuiltinUniformReplacementTransformer {
 		//
 		// This code shows up in Sildur's shaderpacks.
 		transformations.replaceExact(
-			"gl_MultiTexCoord1.xy/255.0",
+			coordName + ".xy/255.0",
 			NORMALIZED_PLACEHOLDER
 		);
 	}
@@ -78,6 +80,11 @@ public class BuiltinUniformReplacementTransformer {
 		transformations.replaceExact(
 			"gl_MultiTexCoord1",
 			"vec4(" + NORMALIZED_PLACEHOLDER + " * 255.0, 0.0, 1.0)"
+		);
+
+		transformations.replaceExact(
+				"gl_MultiTexCoord2",
+				"vec4(" + NORMALIZED_PLACEHOLDER + " * 255.0, 0.0, 1.0)"
 		);
 
 		// If there are references to the fallback lightmap texture matrix, then make it available to the shader program.
