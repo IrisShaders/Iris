@@ -2,6 +2,7 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.blending.BlendModeStorage;
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -9,6 +10,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager_BlendOverride {
+	private static Runnable blendFuncListener;
+
 	@Inject(method = "_disableBlend", at = @At("HEAD"), cancellable = true)
 	private static void iris$blendDisableLock(CallbackInfo ci) {
 		if (BlendModeStorage.isBlendLocked()) {
@@ -31,6 +34,10 @@ public class MixinGlStateManager_BlendOverride {
 			BlendModeStorage.deferBlendFunc(srcFactor, dstFactor, srcFactor, dstFactor);
 			ci.cancel();
 		}
+
+		if (blendFuncListener != null) {
+			blendFuncListener.run();
+		}
 	}
 
 	@Inject(method = "_blendFuncSeparate", at = @At("HEAD"), cancellable = true)
@@ -39,5 +46,13 @@ public class MixinGlStateManager_BlendOverride {
 			BlendModeStorage.deferBlendFunc(srcRgb, dstRgb, srcAlpha, dstAlpha);
 			ci.cancel();
 		}
+
+		if (blendFuncListener != null) {
+			blendFuncListener.run();
+		}
+	}
+
+	static {
+		StateUpdateNotifiers.blendFuncNotifier = listener -> blendFuncListener = listener;
 	}
 }
