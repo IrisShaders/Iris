@@ -44,7 +44,7 @@ dependencies {
 	modImplementation "org.anarres:jcpp:1.4.14"
 	include "org.anarres:jcpp:1.4.14"
 	include 'org.slf4j:slf4j-api:1.7.12'
-	modImplementation "io.github.douira:glsl-transformer:0.6.0"
+	modImplementation "io.github.douira:glsl-transformer:0.7.0"
 }
 
 if (project.sodium_compatibility == "true") {
