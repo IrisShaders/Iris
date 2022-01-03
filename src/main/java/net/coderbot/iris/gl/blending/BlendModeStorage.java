@@ -58,5 +58,4 @@ public class BlendModeStorage {
 		GlStateManager._blendFuncSeparate(originalBlend.getSrcRgb(), originalBlend.getDstRgb(),
 				originalBlend.getSrcAlpha(), originalBlend.getDstAlpha());
 	}
-
 }
