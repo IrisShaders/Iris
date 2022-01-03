@@ -6,7 +6,10 @@ import java.util.Optional;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.coderbot.iris.compat.sodium.AllowedSodiumVersion;
+import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.*;
@@ -16,6 +19,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.fabricmc.loader.api.ModContainer;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -37,8 +41,6 @@ import net.fabricmc.loader.api.FabricLoader;
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
-	// The recommended version of Sodium for use with Iris
-	private static final String SODIUM_VERSION = "0.4.0-alpha5";
 	public static final String SODIUM_DOWNLOAD_LINK = "https://www.curseforge.com/minecraft/mc-mods/sodium/files/3542074";
 
 	private static Path shaderpacksDirectory;
@@ -70,7 +72,7 @@ public class Iris implements ClientModInitializer {
 
 					// This makes it so that if we don't have the right version of Sodium, it will show the user a
 					// nice warning, and prevent them from playing the game with a wrong version of Sodium.
-					if (!versionString.startsWith(SODIUM_VERSION)) {
+					if (!SodiumVersionCheck.isAllowedVersion(versionString)) {
 						sodiumInvalid = true;
 					}
 				}
@@ -496,7 +498,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static boolean isPackActive() {
-		return !(getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline);
+		return IrisApi.getInstance().isShaderPackInUse();
 	}
 
 	public static Path getShaderpacksDirectory() {

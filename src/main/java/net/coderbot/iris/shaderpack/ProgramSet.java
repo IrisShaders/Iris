@@ -98,7 +98,7 @@ public class ProgramSet {
 	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
 											 Function<AbsolutePackPath, String> sourceProvider, String name,
 											 ShaderProperties shaderProperties) {
-		ProgramSource[] programs = new ProgramSource[16];
+		ProgramSource[] programs = new ProgramSource[99];
 
 		for (int i = 0; i < programs.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
