@@ -1,14 +1,16 @@
 package net.coderbot.iris.shaderpack.option;
 
 import com.google.common.collect.ImmutableMap;
-import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
-import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A helper class that dispatches all the heavy lifting needed to discover, merge, and apply shader pack options to
@@ -18,9 +20,8 @@ public class ShaderPackOptions {
 	private final OptionSet optionSet;
 	private final OptionValues optionValues;
 	private final IncludeGraph includes;
-	private final OptionMenuContainer menuContainer;
 
-	public ShaderPackOptions(ShaderProperties shaderProperties, IncludeGraph graph, Map<String, String> changedConfigs) {
+	public ShaderPackOptions(IncludeGraph graph, Map<String, String> changedConfigs) {
 		Map<AbsolutePackPath, OptionAnnotatedSource> allAnnotations = new HashMap<>();
 		OptionSet.Builder setBuilder = OptionSet.builder();
 
@@ -48,15 +49,7 @@ public class ShaderPackOptions {
 		this.optionSet = setBuilder.build();
 		this.optionValues = new MutableOptionValues(optionSet, changedConfigs);
 
-		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles());
-		/*
-		profiles.scan(optionSet, optionValues).current.ifPresent(profile -> profile.disabledPrograms.forEach(program -> {
-			// TODO: disable programs
-		}));
-		 */
-
 		this.includes = graph.map(path -> allAnnotations.get(path).asTransform(optionValues));
-		this.menuContainer = new OptionMenuContainer(shaderProperties, this, profiles);
 	}
 
 	public OptionSet getOptionSet() {
@@ -69,9 +62,5 @@ public class ShaderPackOptions {
 
 	public IncludeGraph getIncludes() {
 		return includes;
-	}
-
-	public OptionMenuContainer getMenuContainer() {
-		return menuContainer;
 	}
 }

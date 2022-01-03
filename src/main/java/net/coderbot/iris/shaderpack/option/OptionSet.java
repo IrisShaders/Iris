@@ -23,6 +23,10 @@ public class OptionSet {
 		return this.stringOptions;
 	}
 
+	public boolean isBooleanOption(String name) {
+		return booleanOptions.containsKey(name);
+	}
+
 	public static Builder builder() {
 		return new Builder();
 	}

@@ -27,10 +27,12 @@ public class OptionMenuElementScreen {
 			try {
 				OptionMenuElement element = OptionMenuElement.create(elementString, container, shaderProperties, shaderPackOptions);
 
-				this.elements.add(element);
+				if (element != null) {
+					this.elements.add(element);
 
-				if (element instanceof OptionMenuOptionElement) {
-					container.notifyOptionAdded(elementString, (OptionMenuOptionElement) element);
+					if (element instanceof OptionMenuOptionElement) {
+						container.notifyOptionAdded(elementString, (OptionMenuOptionElement) element);
+					}
 				}
 			} catch (IllegalArgumentException error) {
 				Iris.logger.warn(error.getMessage());

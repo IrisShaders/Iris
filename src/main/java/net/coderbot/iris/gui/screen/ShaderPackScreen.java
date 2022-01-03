@@ -175,7 +175,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		if (Iris.getCurrentPack().isPresent()) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
 
-			this.navigation = new NavigationController(currentPack.getShaderPackOptions().getMenuContainer());
+			this.navigation = new NavigationController(currentPack.getMenuContainer());
 
 			if (this.shaderOptionList != null) {
 				this.shaderOptionList.applyShaderPack(currentPack);
@@ -365,14 +365,20 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.hoveredElement = widget;
 
 			if (widget instanceof CommentedElementWidget) {
-				this.hoveredElementCommentTitle = ((CommentedElementWidget) widget).getCommentTitle();
+				this.hoveredElementCommentTitle = ((CommentedElementWidget<?>) widget).getCommentTitle();
 
-				Optional<Component> commentBody = ((CommentedElementWidget) widget).getCommentBody();
+				Optional<Component> commentBody = ((CommentedElementWidget<?>) widget).getCommentBody();
 				if (!commentBody.isPresent()) {
 					this.hoveredElementCommentBody.clear();
 				} else {
-					// Split comment body into lines by separator "."
-					List<MutableComponent> splitByPeriods = Arrays.stream(commentBody.get().getString().split("[.][ ]*")).map(TextComponent::new).collect(Collectors.toList());
+					String rawCommentBody = commentBody.get().getString();
+
+					// Strip any trailing "."s
+					if (rawCommentBody.endsWith(".")) {
+						rawCommentBody = rawCommentBody.substring(0, rawCommentBody.length() - 1);
+					}
+					// Split comment body into lines by separator ". "
+					List<MutableComponent> splitByPeriods = Arrays.stream(rawCommentBody.split("\\. [ ]*")).map(TextComponent::new).collect(Collectors.toList());
 					// Line wrap
 					this.hoveredElementCommentBody = new ArrayList<>();
 					for (MutableComponent text : splitByPeriods) {
