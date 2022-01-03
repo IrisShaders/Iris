@@ -54,6 +54,21 @@ if (project.sodium_compatibility == "true") {
 	}
 }
 
+if (project.use_databreaker == "true") {
+	repositories {
+		maven {
+			name = "Gegy's Maven"
+			url = "https://maven.gegy.dev/"
+		}
+	}
+
+	dependencies {
+		modRuntime ("supercoder79:databreaker:0.2.7") {
+			exclude module: "fabric-loader"
+		}
+	}
+}
+
 test {
 	// Use JUnit 5 Platform for tests
 	useJUnitPlatform()
