@@ -11,6 +11,7 @@ import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
+import io.github.douira.glsl_transformer.transform.WalkPhase;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -80,6 +81,12 @@ public class TransformPatcher extends TriforcePatcher {
 
         replaceNode(versionStatement, "#version " + version + " " + profile + "\n", GLSLParser::versionStatement);
       }
+    });
+
+    // TODO: detection of moj_import and iris_ uses: see a subclass of FindTerminals in glsl-transformer
+
+    Transformation detectDisallowed = new Transformation(new WalkPhase() {
+      //TODO with a FindTerminals subclass
     });
 
     commonManager.registerTransformation(fixVersion);
