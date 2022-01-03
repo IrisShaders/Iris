@@ -1,12 +1,11 @@
 package net.coderbot.iris.mixin.fabulous;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.fantastic.FabulousInterface;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -16,24 +15,44 @@ import net.minecraft.client.Options;
 import net.minecraft.client.renderer.LevelRenderer;
 
 @Environment(EnvType.CLIENT)
-@Mixin(Minecraft.class)
-public class MixinDisableFabulousGraphics {
-	/**
-	 * @author IMS
-	 * @reason return Fancy over Fabulous if shaders are enabled
-	 */
-	@Overwrite
-	public static boolean useShaderTransparency() {
-		return Minecraft.getInstance().options.graphicsMode.getId() >= GraphicsStatus.FABULOUS.getId() && !Iris.isPackActive();
+@Mixin(LevelRenderer.class)
+public class MixinDisableFabulousGraphics implements FabulousInterface {
+	private boolean wasFabulous;
+
+	@Inject(method = "onResourceManagerReload", at = @At("HEAD"))
+	private void iris$disableFabulousGraphicsOnResourceReload(CallbackInfo ci) {
+		iris$disableFabulousGraphics();
 	}
 
-	// This field is used for the F3 screen.
-	@Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/GraphicsStatus;toString()Ljava/lang/String;"))
-	public String changeFpsString(GraphicsStatus instance) {
-		if (instance == GraphicsStatus.FABULOUS && Iris.isPackActive()) {
-			return "fancy";
-		} else {
-			return instance.toString();
+	// This method is called whenever the user tries to change the graphics mode.
+	// We can still revert / intercept the change at the head of the method.
+	@Inject(method = "allChanged", at = @At("HEAD"))
+	private void iris$disableFabulousGraphicsOnLevelRendererReload(CallbackInfo ci) {
+		iris$disableFabulousGraphics();
+	}
+
+	@Unique
+	private void iris$disableFabulousGraphics() {
+		Options options = Minecraft.getInstance().options;
+
+		if (!Iris.getIrisConfig().areShadersEnabled()) {
+			// Nothing to do here, shaders are disabled.
+			if (this.wasFabulous) {
+				options.graphicsMode = GraphicsStatus.FABULOUS;
+				this.wasFabulous = false;
+			}
+			return;
 		}
+
+		if (options.graphicsMode == GraphicsStatus.FABULOUS) {
+			// Disable fabulous graphics when shaders are enabled.
+			options.graphicsMode = GraphicsStatus.FANCY;
+			this.wasFabulous = true;
+		}
+	}
+
+	@Override
+	public boolean wasFabulous() {
+		return wasFabulous;
 	}
 }
