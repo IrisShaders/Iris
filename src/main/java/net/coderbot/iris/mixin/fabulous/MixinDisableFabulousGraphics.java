@@ -17,6 +17,9 @@ import net.minecraft.client.renderer.LevelRenderer;
 @Environment(EnvType.CLIENT)
 @Mixin(LevelRenderer.class)
 public class MixinDisableFabulousGraphics {
+
+	private static boolean wasFabulous;
+
 	@Inject(method = "onResourceManagerReload", at = @At("HEAD"))
 	private void iris$disableFabulousGraphicsOnResourceReload(CallbackInfo ci) {
 		iris$disableFabulousGraphics();
@@ -53,7 +56,7 @@ public class MixinDisableFabulousGraphics {
 			// Disable fabulous graphics when shaders are enabled.
 			options.graphicsMode = GraphicsStatus.FANCY;
 			// Store the fact that fabulous graphics were on
-			Iris.getIrisConfig().setWasFabulous(true);
+			wasFabulous = true;
 		}
 	}
 
@@ -67,10 +70,10 @@ public class MixinDisableFabulousGraphics {
 		}
 
 		// If fabulous graphics were on, restore this
-		if (Iris.getIrisConfig().getWasFabulous()) {
+		if (wasFabulous) {
 			options.graphicsMode = GraphicsStatus.FABULOUS;
 			// Fabulous graphics were restored, so we can set this to false for the next check
-			Iris.getIrisConfig().setWasFabulous(false);
+			wasFabulous = false;
 		}
 	}
 }

@@ -26,17 +26,12 @@ public class IrisConfig {
 	 */
 	private boolean enableShaders;
 
-	/**
-	 * Whether the Graphics mode was Fabulous before enabling a shaderpack
-	 */
-	private boolean wasFabulous;
 
 	private final Path propertiesPath;
 
 	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;
 		enableShaders = true;
-		wasFabulous = false;
 		this.propertiesPath = propertiesPath;
 	}
 
@@ -96,22 +91,6 @@ public class IrisConfig {
 	public void setShadersEnabled(boolean enabled) {
 		this.enableShaders = enabled;
 	}
-
-	/**
-	 * Stores whether fabulous graphics should be restored upon turning shaders off
-	 *
-	 * @param wasFabulous Whether fabulous graphics were enabled prior to turning on shaders
-	 */
-	public void setWasFabulous(boolean wasFabulous) {
-		this.wasFabulous = wasFabulous;
-	}
-
-	/**
-	 * @return a boolean on whether fabulous graphics were enabled prior to turning on shaders
-	 */
-	 public boolean getWasFabulous() {
-		return wasFabulous;
-	 }
 
 	/**
 	 * loads the config file and then populates the string, int, and boolean entries with the parsed entries
