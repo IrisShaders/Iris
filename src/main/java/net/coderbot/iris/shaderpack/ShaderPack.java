@@ -24,6 +24,7 @@ import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -102,11 +103,11 @@ public class ShaderPack {
 				.orElseGet(ShaderProperties::empty);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
-		/*
-		profiles.scan(optionSet, optionValues).current.ifPresent(profile -> profile.disabledPrograms.forEach(program -> {
-			// TODO: disable programs
-		}));
-		 */
+
+		// Get programs that should be disabled from the detected profile
+		List<String> disabledPrograms = new ArrayList<>();
+		profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues()).current
+				.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
 
 		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
 
@@ -137,6 +138,16 @@ public class ShaderPack {
 
 		// Set up our source provider for creating ProgramSets
 		Function<AbsolutePackPath, String> sourceProvider = (path) -> {
+			String pathString = path.getPathString();
+			// Removes the first "/" in the path if present, and the file
+			// extension in order to represent the path as its program name
+			String programString = pathString.substring(pathString.indexOf("/") == 0 ? 1 : 0, pathString.lastIndexOf("."));
+
+			// Return an empty program source if the program is disabled by the current profile
+			if (disabledPrograms.contains(programString)) {
+				return null;
+			}
+
 			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
 
 			if (lines == null) {
