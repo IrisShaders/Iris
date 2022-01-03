@@ -2,7 +2,6 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.blending.BlendModeStorage;
-import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
