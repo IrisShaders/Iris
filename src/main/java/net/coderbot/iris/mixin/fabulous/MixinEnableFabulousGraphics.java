@@ -25,7 +25,7 @@ public class MixinEnableFabulousGraphics {
 		}
 	}
 
-	@Inject(method = "save", at = @At("TAIL"))
+	@Inject(method = "save", at = @At("RETURN"))
 	private void afterSave(CallbackInfo ci) {
 		if (((FabulousInterface) this.minecraft.levelRenderer).wasFabulous()) {
 			this.graphicsMode = GraphicsStatus.FANCY;
