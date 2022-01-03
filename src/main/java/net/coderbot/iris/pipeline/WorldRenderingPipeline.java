@@ -37,6 +37,7 @@ public interface WorldRenderingPipeline {
 	boolean shouldRenderUnderwaterOverlay();
 	boolean shouldRenderVignette();
 	boolean shouldWriteRainAndSnowToDepthBuffer();
+	boolean shouldRenderParticlesBeforeDeferred();
 
 	float getSunPathRotation();
 }
