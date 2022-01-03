@@ -98,6 +98,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
+	private final boolean shouldRenderParticlesBeforeDeferred;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 	private boolean destroyed = false;
@@ -126,6 +127,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
 		this.shouldWriteRainAndSnowToDepthBuffer = programSet.getPackDirectives().rainDepth();
+		this.shouldRenderParticlesBeforeDeferred = programSet.getPackDirectives().areParticlesBeforeDeferred();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -529,7 +531,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content excluding the hand, as required.
-		baseline.bindAsReadBuffer();
+		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
@@ -545,7 +547,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
-		baseline.bindAsReadBuffer();
+		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
@@ -600,6 +602,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldWriteRainAndSnowToDepthBuffer() {
 		return shouldWriteRainAndSnowToDepthBuffer;
+	}
+
+	@Override
+	public boolean shouldRenderParticlesBeforeDeferred() {
+		return shouldRenderParticlesBeforeDeferred;
 	}
 
 	@Override

@@ -41,7 +41,7 @@ import net.fabricmc.loader.api.FabricLoader;
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
-	public static final String SODIUM_DOWNLOAD_LINK = "https://www.curseforge.com/minecraft/mc-mods/sodium/files/3488820";
+	public static final String SODIUM_DOWNLOAD_LINK = "https://www.curseforge.com/minecraft/mc-mods/sodium/files/3535040";
 
 	private static Path shaderpacksDirectory;
 	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
