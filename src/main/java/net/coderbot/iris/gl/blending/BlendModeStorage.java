@@ -1,6 +1,7 @@
 package net.coderbot.iris.gl.blending;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 
@@ -8,6 +9,7 @@ public class BlendModeStorage {
 	private static boolean originalBlendEnable;
 	private static BlendMode originalBlend;
 	private static boolean blendLocked;
+	private static Runnable blendFuncListener;
 
 	public static boolean isBlendLocked() {
 		return blendLocked;
@@ -32,6 +34,10 @@ public class BlendModeStorage {
 		}
 
 		blendLocked = true;
+
+		if (blendFuncListener != null) {
+			blendFuncListener.run();
+		}
 	}
 
 	public static void deferBlendModeToggle(boolean enabled) {
@@ -57,5 +63,13 @@ public class BlendModeStorage {
 
 		GlStateManager._blendFuncSeparate(originalBlend.getSrcRgb(), originalBlend.getDstRgb(),
 				originalBlend.getSrcAlpha(), originalBlend.getDstAlpha());
+
+		if (blendFuncListener != null) {
+			blendFuncListener.run();
+		}
+	}
+
+	static {
+		StateUpdateNotifiers.blendFuncNotifier = listener -> blendFuncListener = listener;
 	}
 }
