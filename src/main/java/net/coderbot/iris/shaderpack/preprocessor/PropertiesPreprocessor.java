@@ -9,6 +9,9 @@ import org.anarres.cpp.Preprocessor;
 import org.anarres.cpp.StringLexerSource;
 import org.anarres.cpp.Token;
 
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +49,12 @@ public class PropertiesPreprocessor {
 		PropertyCollectingListener listener = new PropertyCollectingListener();
 		source = source.replaceAll("([a-zA-Z]+\\.[a-zA-Z0-9]+)", "#warning IRIS_PASSTHROUGH $1");
 		pp.setListener(listener);
+
+		// Not super efficient, but this removes trailing whitespace on lines, fixing an issue with whitespace after
+		// line continuations (see PreprocessorTest#testWeirdPropertiesLineContinuation)
+		// Required for Voyager Shader
+		source = Arrays.stream(source.split("\\R")).map(String::trim).collect(Collectors.joining("\n"));
+
 		pp.addInput(new StringLexerSource(source, true));
 		pp.addFeature(Feature.KEEPCOMMENTS);
 

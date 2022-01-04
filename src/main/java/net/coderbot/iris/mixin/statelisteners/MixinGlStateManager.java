@@ -13,6 +13,7 @@ public class MixinGlStateManager {
 	private static Runnable fogToggleListener;
 	private static Runnable fogModeListener;
 	private static Runnable fogDensityListener;
+	private static Runnable blendFuncListener;
 
 	@Inject(method = { "_enableFog", "_disableFog()V" }, at = @At("RETURN"))
 	private static void iris$onFogToggle(CallbackInfo ci) {
@@ -35,9 +36,24 @@ public class MixinGlStateManager {
 		}
 	}
 
+	@Inject(method = "_blendFunc", at = @At("RETURN"))
+	private static void iris$onBlendFunc(int srcRgb, int dstRgb, CallbackInfo ci) {
+		if (blendFuncListener != null) {
+			blendFuncListener.run();
+		}
+	}
+
+	@Inject(method = "_blendFuncSeparate", at = @At("RETURN"))
+	private static void iris$onBlendFuncSeparate(int srcRgb, int dstRgb, int srcAlpha, int dstAlpha, CallbackInfo ci) {
+		if (blendFuncListener != null) {
+			blendFuncListener.run();
+		}
+	}
+
 	static {
 		StateUpdateNotifiers.fogToggleNotifier = listener -> fogToggleListener = listener;
 		StateUpdateNotifiers.fogModeNotifier = listener -> fogModeListener = listener;
 		StateUpdateNotifiers.fogDensityNotifier = listener -> fogDensityListener = listener;
+		StateUpdateNotifiers.blendFuncNotifier = listener -> blendFuncListener = listener;
 	}
 }

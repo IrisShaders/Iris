@@ -1,10 +1,10 @@
 package net.coderbot.iris.shaderpack.loading;
 
 public enum ProgramArrayId {
-	ShadowComposite(ProgramGroup.ShadowComposite, 16),
-	Prepare(ProgramGroup.Prepare, 16),
-	Deferred(ProgramGroup.Deferred, 16),
-	Composite(ProgramGroup.Composite, 16),
+	ShadowComposite(ProgramGroup.ShadowComposite, 99),
+	Prepare(ProgramGroup.Prepare, 99),
+	Deferred(ProgramGroup.Deferred, 99),
+	Composite(ProgramGroup.Composite, 99),
 	;
 
 	private final ProgramGroup group;

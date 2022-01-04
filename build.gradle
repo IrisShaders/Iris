@@ -184,9 +184,7 @@ jar {
 	if (project.sodium_compatibility == "true") {
 		from (sourceSets.sodiumCompatibility.output) {
 			it.filesMatching("*refmap.json") {
-				FileCopyDetails details -> {
-					details.name("iris-sodium-compat-refmap.json")
-				}
+				FileCopyDetails details -> details.name("iris-sodium-compat-refmap.json")
 			}
 		}
 	}
