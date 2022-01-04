@@ -35,6 +35,7 @@
     "MixinTitleScreen",
     "MixinTntMinecartRenderer",
     "MixinClientLanguage",
+    "MixinMaxFpsCrashFix",
     "MixinTweakFarPlane",
     "MixinLevelRenderer",
     "MixinUniform",
