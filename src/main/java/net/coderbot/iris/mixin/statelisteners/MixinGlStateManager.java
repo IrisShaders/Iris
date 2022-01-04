@@ -12,14 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinGlStateManager {
 	private static Runnable blendFuncListener;
 
-	@Inject(method = "_blendFunc", at = @At("RETURN"))
+	@Inject(method = "_blendFunc", at = @At("RETURN"), remap = false)
 	private static void iris$onBlendFunc(int srcRgb, int dstRgb, CallbackInfo ci) {
 		if (blendFuncListener != null) {
 			blendFuncListener.run();
 		}
 	}
 
-	@Inject(method = "_blendFuncSeparate", at = @At("RETURN"))
+	@Inject(method = "_blendFuncSeparate", at = @At("RETURN"), remap = false)
 	private static void iris$onBlendFuncSeparate(int srcRgb, int dstRgb, int srcAlpha, int dstAlpha, CallbackInfo ci) {
 		if (blendFuncListener != null) {
 			blendFuncListener.run();

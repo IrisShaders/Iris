@@ -55,6 +55,7 @@
     "shadows.MixinPreventRebuildNearInShadowPass",
     "shadows.MixinLevelRenderer",
     "statelisteners.BooleanStateAccessor",
+    "statelisteners.MixinGlStateManager",
     "DimensionTypeAccessor"
   ],
   "injectors": {
