@@ -114,7 +114,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 
-	private final ImmutableSet<Integer> flippedBeforeShadow;
+	private final ImmutableSet<Integer> flippedAfterPrepare;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
@@ -180,11 +180,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
-		ImmutableSet<Integer> flippedAfterPrepare = ImmutableSet.of();
+		ImmutableSet<Integer> flippedBeforeShadow = ImmutableSet.of();
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
-					programs.getPackDirectives(), () -> flippedAfterPrepare, renderTargets,
+					programs.getPackDirectives(), () -> flippedBeforeShadow, renderTargets,
 					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
 					programs, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 			createShadowMapRenderer = () -> {};
@@ -194,7 +194,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
 
-		flippedBeforeShadow = flipper.snapshot();
+		flippedAfterPrepare = flipper.snapshot();
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
@@ -223,7 +223,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				this.compositeRenderer.getFlippedAtLeastOnceFinal());
 
 		Supplier<ImmutableSet<Integer>> flipped =
-				() -> isBeforeTranslucent ? flippedBeforeShadow : flippedAfterTranslucent;
+				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
 		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
@@ -259,7 +259,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeShadow, renderTargets, false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedAfterPrepare, renderTargets, false);
 			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -275,7 +275,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
 			ProgramImages.Builder builder = ProgramImages.builder(programId);
 
-			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeShadow, renderTargets);
+			IrisImages.addRenderTargetImages(builder, () -> flippedAfterPrepare, renderTargets);
 
 			if (IrisImages.hasShadowImages(builder) && shadowMapRenderer != null) {
 				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
@@ -530,7 +530,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 
 		Supplier<ImmutableSet<Integer>> flipped =
-				() -> isBeforeTranslucent ? flippedBeforeShadow : flippedAfterTranslucent;
+				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
 		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
@@ -550,7 +550,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		GlFramebuffer framebufferBeforeTranslucents =
-				renderTargets.createGbufferFramebuffer(flippedBeforeShadow, source.getDirectives().getDrawBuffers());
+				renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
 		GlFramebuffer framebufferAfterTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
