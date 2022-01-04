@@ -81,6 +81,8 @@ public class SliderElementWidget extends StringElementWidget {
 		mouseDown = false;
 
 		this.queue();
+		this.navigation.refresh();
+
 		GuiUtil.playButtonClickSound();
 	}
 
@@ -88,7 +90,9 @@ public class SliderElementWidget extends StringElementWidget {
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
 			if (Screen.hasShiftDown()) {
-				this.applyOriginalValue();
+				if (this.applyOriginalValue()) {
+					this.navigation.refresh();
+				}
 				GuiUtil.playButtonClickSound();
 
 				return true;
