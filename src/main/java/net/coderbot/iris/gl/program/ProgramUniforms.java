@@ -303,6 +303,8 @@ public class ProgramUniforms {
 			typeName = "vec2";
 		} else if (type == GL20C.GL_INT_VEC2) {
 			typeName = "vec2i";
+		} else if (type == GL20C.GL_INT_VEC4) {
+			typeName = "vec4i";
 		} else if (type == GL20C.GL_SAMPLER_3D) {
 			typeName = "sampler3D";
 		} else if (type == GL20C.GL_SAMPLER_2D) {
@@ -330,7 +332,7 @@ public class ProgramUniforms {
 		} else if (type == GL20C.GL_FLOAT_VEC4) {
 			return UniformType.VEC4;
 		} else if (type == GL20C.GL_INT_VEC4) {
-			return null;
+			return UniformType.VEC4I;
 		} else if (type == GL20C.GL_FLOAT_MAT3) {
 			return null;
 		} else if (type == GL20C.GL_FLOAT_VEC3) {

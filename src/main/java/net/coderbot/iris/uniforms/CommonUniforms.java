@@ -3,6 +3,7 @@ package net.coderbot.iris.uniforms;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
@@ -19,6 +20,7 @@ import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.Vector4i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -83,6 +85,12 @@ public final class CommonUniforms {
 
 			return new Vector2i((int) atlasSize.x, (int) atlasSize.y);
 		}, StateUpdateNotifiers.atlasTextureNotifier);
+
+		uniforms.uniform4i("blendFunc", () -> {
+			GlStateManager.BlendState blend = net.coderbot.iris.mixin.GlStateManagerAccessor.getBLEND();
+
+			return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
+		}, StateUpdateNotifiers.blendFuncNotifier);
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}

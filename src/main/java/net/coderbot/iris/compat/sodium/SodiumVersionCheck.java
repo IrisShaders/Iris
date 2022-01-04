@@ -5,10 +5,10 @@ import com.google.common.collect.ImmutableList;
 public class SodiumVersionCheck {
 	// The allowed versions of Sodium for use with Iris
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
-			// Official 0.2.0
+			// Official 0.4.0-alpha5
 			AllowedSodiumVersion.exact("0.4.0-alpha5+build.9"),
 
-			// ReplayMod's existing compatible forked 0.2.0 version
+			// ReplayMod's existing compatible forked 0.4.0-alpha5 version
 			AllowedSodiumVersion.prefix("0.4.0-alpha5+rev.76d0e6e"),
 
 			// For future use by ReplayMod
