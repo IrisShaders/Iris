@@ -69,6 +69,11 @@ public class IrisRenderSystem {
         GL30C.glUniform4f(location, v0, v1, v2, v3);
 	}
 
+	public static void uniform4i(int location, int v0, int v1, int v2, int v3) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glUniform4i(location, v0, v1, v2, v3);
+	}
+
 	public static int getAttribLocation(int programId, String name) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		return GL30C.glGetAttribLocation(programId, name);

@@ -7,8 +7,11 @@ import me.jellysquid.mods.sodium.client.gui.options.control.ControlValueFormatte
 import me.jellysquid.mods.sodium.client.gui.options.control.CyclingControl;
 import me.jellysquid.mods.sodium.client.gui.options.control.SliderControl;
 import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.Options;
+
+import java.io.IOException;
 
 public class IrisSodiumOptions {
     public static OptionImpl<Options, Integer> createMaxShadowDistanceSlider(MinecraftOptionsStorage vanillaOpts) {
@@ -18,7 +21,14 @@ public class IrisSodiumOptions {
                         "rendered, improving frame rates. This option cannot be changed on packs which explicitly specify a shadow render distance. The actual shadow render distance is capped by the " +
                         "View Distance setting.")
                 .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantity("Chunks")))
-                .setBinding((options, value) -> IrisVideoSettings.shadowDistance = value,
+                .setBinding((options, value) -> {
+							IrisVideoSettings.shadowDistance = value;
+							try {
+								Iris.getIrisConfig().save();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						},
                         options -> IrisVideoSettings.getOverriddenShadowDistance(IrisVideoSettings.shadowDistance))
                 .setImpact(OptionImpact.HIGH)
                 .setEnabled(true)

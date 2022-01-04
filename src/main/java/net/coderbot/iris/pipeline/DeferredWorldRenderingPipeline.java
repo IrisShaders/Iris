@@ -126,6 +126,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
+	private final boolean shouldRenderParticlesBeforeDeferred;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
@@ -141,6 +142,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.shouldRenderUnderwaterOverlay = programs.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programs.getPackDirectives().vignette();
 		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
+		this.shouldRenderParticlesBeforeDeferred = programs.getPackDirectives().areParticlesBeforeDeferred();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -494,6 +496,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public boolean shouldRenderParticlesBeforeDeferred() {
+		return shouldRenderParticlesBeforeDeferred;
+	}
+
+	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
 	}
@@ -717,7 +724,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content without the hand, as required.
-		baseline.bindAsReadBuffer();
+		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
@@ -729,7 +736,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
-		baseline.bindAsReadBuffer();
+		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
