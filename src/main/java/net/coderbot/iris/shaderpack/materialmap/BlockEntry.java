@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class BlockEntry {
 	private final NamespacedId id;
@@ -95,5 +96,18 @@ public class BlockEntry {
 
 	public Map<String, String> getPropertyPredicates() {
 		return propertyPredicates;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		BlockEntry that = (BlockEntry) o;
+		return Objects.equals(id, that.id) && Objects.equals(propertyPredicates, that.propertyPredicates);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, propertyPredicates);
 	}
 }

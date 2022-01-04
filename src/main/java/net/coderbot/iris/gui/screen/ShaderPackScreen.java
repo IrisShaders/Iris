@@ -9,6 +9,7 @@ import net.coderbot.iris.gui.element.ShaderPackSelectionList;
 import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
 import net.coderbot.iris.gui.element.widget.CommentedElementWidget;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.gui.components.Button;
@@ -332,21 +333,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}
 
 		Iris.getIrisConfig().setShaderPackName(name);
-		Iris.getIrisConfig().setShadersEnabled(this.shaderPackList.getTopButtonRow().shadersEnabled);
 
-		try {
-			Iris.getIrisConfig().save();
-		} catch (IOException e) {
-			Iris.logger.error("Error saving configuration file!");
-			Iris.logger.catching(e);
-		}
-
-		try {
-			Iris.reload();
-		} catch (IOException e) {
-			Iris.logger.error("Error reloading shader pack while applying changes!");
-			Iris.logger.catching(e);
-		}
+		boolean enabled = this.shaderPackList.getTopButtonRow().shadersEnabled;
+		IrisApi.getInstance().getConfig().setShadersEnabledAndApply(enabled);
 
 		refreshForChangedPack();
 	}

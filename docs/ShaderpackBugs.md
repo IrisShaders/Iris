@@ -18,6 +18,9 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
 
 ## Sildur's Vibrant Shaders v1.29
 
+* Weird black spots and red/green/yellow lines on Sildur's Vibrant at very specific large window resolutions
+  (windowed mode on a 3440x1440 monitor for example)
+    * Diagnosis: Not attempted
 * Enchantment glints have z-fighting in the nether and end
     * Diagnosis: In the nether and end, `gbuffers_armor_glint` uses a series of matrix multiplications, but
       `gbuffers_textured` uses ftransform. The matrix multiplications introduce precision errors compared to ftransform

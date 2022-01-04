@@ -19,6 +19,7 @@ public class PackDirectives {
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean oldLighting;
+	private boolean particlesBeforeDeferred;
 	private OptionalBoolean shadowCulling;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 
@@ -43,6 +44,7 @@ public class PackDirectives {
 		oldLighting = properties.getOldLighting().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
 		shadowCulling = properties.getShadowCulling();
+		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -52,6 +54,7 @@ public class PackDirectives {
 		oldLighting = directives.oldLighting;
 		explicitFlips = directives.explicitFlips;
 		shadowCulling = directives.shadowCulling;
+		particlesBeforeDeferred = directives.particlesBeforeDeferred;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -88,6 +91,10 @@ public class PackDirectives {
 
 	public boolean isOldLighting() {
 		return oldLighting;
+	}
+
+	public boolean areParticlesBeforeDeferred() {
+		return particlesBeforeDeferred;
 	}
 
 	public OptionalBoolean getCullingState() {

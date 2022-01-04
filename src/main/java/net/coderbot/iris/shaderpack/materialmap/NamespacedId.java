@@ -50,4 +50,12 @@ public class NamespacedId {
 	public int hashCode() {
 		return Objects.hash(namespace, name);
 	}
+
+	@Override
+	public String toString() {
+		return "NamespacedId{" +
+				"namespace='" + namespace + '\'' +
+				", name='" + name + '\'' +
+				'}';
+	}
 }
