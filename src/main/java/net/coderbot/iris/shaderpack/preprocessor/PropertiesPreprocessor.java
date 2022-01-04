@@ -29,7 +29,6 @@ public class PropertiesPreprocessor {
 
 		@SuppressWarnings("resource")
 		final Preprocessor pp = new Preprocessor();
-		pp.setListener(new PropertiesCommentListener());
 		try {
 			for (String value : booleanValues) {
 				pp.addMacro(value);
@@ -46,23 +45,44 @@ public class PropertiesPreprocessor {
 			}
 		});
 
+		return process(pp, source);
+	}
+
+	public static String preprocessSource(String source) {
+		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER)) {
+			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
+		}
+
+		Preprocessor preprocessor = new Preprocessor();
+
+		try {
+			preprocessor.addMacro("MC_VERSION", StandardMacros.getMcVersion());
+		} catch (LexerException e) {
+			e.printStackTrace();
+		}
+
+		return process(preprocessor, source);
+	}
+
+	private static String process(Preprocessor preprocessor, String source) {
+		preprocessor.setListener(new PropertiesCommentListener());
 		PropertyCollectingListener listener = new PropertyCollectingListener();
 		source = source.replaceAll("([a-zA-Z]+\\.[a-zA-Z0-9]+)", "#warning IRIS_PASSTHROUGH $1");
-		pp.setListener(listener);
+		preprocessor.setListener(listener);
 
 		// Not super efficient, but this removes trailing whitespace on lines, fixing an issue with whitespace after
 		// line continuations (see PreprocessorTest#testWeirdPropertiesLineContinuation)
 		// Required for Voyager Shader
 		source = Arrays.stream(source.split("\\R")).map(String::trim).collect(Collectors.joining("\n"));
 
-		pp.addInput(new StringLexerSource(source, true));
-		pp.addFeature(Feature.KEEPCOMMENTS);
+		preprocessor.addInput(new StringLexerSource(source, true));
+		preprocessor.addFeature(Feature.KEEPCOMMENTS);
 
 		final StringBuilder builder = new StringBuilder();
 
 		try {
 			for (;;) {
-				final Token tok = pp.token();
+				final Token tok = preprocessor.token();
 				if (tok == null) break;
 				if (tok.getType() == Token.EOF) break;
 				builder.append(tok.getText());
