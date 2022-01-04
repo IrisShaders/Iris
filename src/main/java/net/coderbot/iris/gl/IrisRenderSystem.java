@@ -59,7 +59,7 @@ public class IrisRenderSystem {
 	}
 
 	public static void uniform4i(int location, int v0, int v1, int v2, int v3) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniform4i(location, v0, v1, v2, v3);
 	}
 
