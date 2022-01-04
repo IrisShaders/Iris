@@ -17,7 +17,8 @@ public abstract class MixinMaxFpsCrashFix {
 	@Redirect(
 		method = "load",
 		at = @At(value = "INVOKE", target = "Ljava/lang/Integer;parseInt(Ljava/lang/String;)I"),
-		slice = @Slice(from = @At(value = "CONSTANT", args = "stringValue=maxFps"), to = @At(value = "CONSTANT", args = "stringValue=difficulty"))
+		slice = @Slice(from = @At(value = "CONSTANT", args = "stringValue=maxFps"), to = @At(value = "CONSTANT", args = "stringValue=difficulty")),
+		allow = 1
 	)
 	private int iris$resetFramerateLimit(String string) {
 		int original = Integer.parseInt(string);
