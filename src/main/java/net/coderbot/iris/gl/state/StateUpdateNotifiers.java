@@ -7,5 +7,6 @@ import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
  * fog-related values.
  */
 public class StateUpdateNotifiers {
+	public static ValueUpdateNotifier blendFuncNotifier;
 	public static ValueUpdateNotifier atlasTextureNotifier;
 }
