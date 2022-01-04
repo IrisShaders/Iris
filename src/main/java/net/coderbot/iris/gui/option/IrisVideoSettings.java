@@ -27,7 +27,6 @@ public class IrisVideoSettings {
 				.orElse(true);
 	}
 
-	// TODO: Add a Sodium video settings button too.
 	public static final ProgressOption RENDER_DISTANCE = new ShadowDistanceOption("options.iris.shadowDistance", 0.0D, 32.0D, 1.0F, (gameOptions) -> {
 		return (double) getOverriddenShadowDistance(shadowDistance);
 	}, (gameOptions, viewDistance) -> {
