@@ -1,14 +1,21 @@
 package net.coderbot.iris;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.coderbot.iris.compat.sodium.AllowedSodiumVersion;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
