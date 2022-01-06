@@ -15,6 +15,8 @@
   "options.iris.apply": "套用",
   "options.iris.refresh": "重新整理",
   "options.iris.openShaderPackFolder": "開啟光影包資料夾……",
+  "options.iris.shaderPackSettings": "光影包設定……",
+  "options.iris.shaderPackList": "光影包清單……",
   "options.iris.refreshShaderPacks": "重新整理",
   "options.iris.shaderPackSelection": "光影包……",
   "options.iris.shaderPackSelection.title": "光影包",
@@ -26,10 +28,21 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 已存在於光影包資料夾中！",
   "options.iris.shaders.disabled": "光影：已停用",
   "options.iris.shaders.enabled": "光影：已啟用",
+  "options.iris.back": "返回",
+  "options.iris.reset": "重設",
+  "options.iris.reset.tooltip": "重設所有選項後套用？",
+  "options.iris.reset.tooltip.holdShift": "按住 SHIFT 後點擊以重設",
+  "options.iris.setToDefault": "將選項設為預設？",
+  "options.iris.profile": "Profile",
+  "options.iris.profile.custom": "自訂",
   "options.iris.shadowDistance": "最大陰影距離",
   "options.iris.shadowDistance.enabled": "能讓您變更陰影的最大距離。超出此距離的地形和實體將不會有陰影。調低陰影距離能顯著提升效能。",
   "options.iris.shadowDistance.disabled": "您無法變更目前光影包所設定的陰影顯示距離。",
 
   "pack.iris.select.title": "選擇",
-  "pack.iris.list.label": "+ 將光影包拖曳至此"
+  "pack.iris.configure.title": "Configure",
+  "pack.iris.list.label": "+ 將光影包拖曳至此以新增",
+
+  "label.iris.true": "開啟",
+  "label.iris.false": "關閉"
 }
