@@ -20,10 +20,10 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 			return SodiumVersionCheck.isAllowedVersion(version);
 		}).orElse(false);
 
-		//if (!validSodiumVersion) {
+		if (!validSodiumVersion) {
 			// We can't use Iris' logger here due to classloading issues.
 			System.err.println("[Iris] Invalid/missing version of Sodium detected, disabling compatibility mixins!");
-		//}
+		}
 	}
 
 	@Override
