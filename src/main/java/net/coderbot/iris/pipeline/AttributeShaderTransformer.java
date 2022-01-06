@@ -6,8 +6,8 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class AttributeShaderTransformer {
 	public static String patch(String source, ShaderType type) {
-		if (source == null) {
-			return null;
+		if (source.contains("iris_")) {
+			throw new IllegalStateException("Shader is attempting to exploit internal Iris code!");
 		}
 
 		StringTransformations transformations = new StringTransformations(source);
@@ -15,8 +15,8 @@ public class AttributeShaderTransformer {
 		//Add entity color -> overlay color attribute support.
 		// TODO: We don't handle the geometry shader here.
 		if (type == ShaderType.VERTEX) {
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D overlay;");
-			transformations.replaceExact("uniform vec4 entityColor;", "");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D iris_overlay;");
+			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "varying vec4 entityColor;");
 			if (transformations.contains("irisMain")) {
 				throw new IllegalStateException("Shader already contains \"irisMain\"???");
@@ -26,13 +26,13 @@ public class AttributeShaderTransformer {
 			// end.
 			transformations.replaceExact("main", "irisMain");
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
-					"	vec4 overlayColor = texture2D(overlay, (gl_TextureMatrix[2] * gl_MultiTexCoord2).xy);\n" +
+					"	vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[2] * gl_MultiTexCoord2).xy);\n" +
 					"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
 					"\n" +
 					"    irisMain();\n" +
 					"}");
 		} else {
-			transformations.replaceExact("uniform vec4 entityColor;", "varying vec4 entityColor;");
+			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "varying vec4 entityColor;");
 		}
 
 		return transformations.toString();
