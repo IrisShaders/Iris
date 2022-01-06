@@ -8,6 +8,8 @@ import org.anarres.cpp.StringLexerSource;
 import org.anarres.cpp.Token;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class PropertiesPreprocessor {
 	public static String process(Path rootPath, Path shaderPath, String source) {
@@ -21,6 +23,12 @@ public class PropertiesPreprocessor {
 		@SuppressWarnings("resource")
 		final Preprocessor pp = new Preprocessor();
 		pp.setListener(new PropertiesCommentListener());
+
+		// Not super efficient, but this removes trailing whitespace on lines, fixing an issue with whitespace after
+		// line continuations (see PreprocessorTest#testWeirdPropertiesLineContinuation)
+		// Required for Voyager Shader
+		source = Arrays.stream(source.split("\\R")).map(String::trim).collect(Collectors.joining("\n"));
+
 		pp.addInput(new StringLexerSource(source, true));
 		pp.addFeature(Feature.KEEPCOMMENTS);
 

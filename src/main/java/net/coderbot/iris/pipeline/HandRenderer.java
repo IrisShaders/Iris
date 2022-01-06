@@ -6,6 +6,7 @@ import com.mojang.math.Matrix4f;
 import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.coderbot.iris.mixin.GameRendererAccessor;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
@@ -67,7 +68,7 @@ public class HandRenderer {
 	}
 
 	public void renderSolid(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if (!canRender(camera, gameRenderer) || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
+		if (!canRender(camera, gameRenderer) || !IrisApi.getInstance().isShaderPackInUse()) {
 			return;
 		}
 
@@ -97,7 +98,7 @@ public class HandRenderer {
 	}
 
 	public void renderTranslucent(PoseStack poseStack, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if (!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || pipeline instanceof FixedFunctionWorldRenderingPipeline) {
+		if (!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || !IrisApi.getInstance().isShaderPackInUse()) {
 			return;
 		}
 
