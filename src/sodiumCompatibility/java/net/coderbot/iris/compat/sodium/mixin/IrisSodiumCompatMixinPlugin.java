@@ -1,6 +1,5 @@
 package net.coderbot.iris.compat.sodium.mixin;
 
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
@@ -21,9 +20,10 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 			return SodiumVersionCheck.isAllowedVersion(version);
 		}).orElse(false);
 
-		if (!validSodiumVersion) {
-			Iris.logger.error("Invalid/missing version of Sodium detected, disabling compatibility mixins!");
-		}
+		//if (!validSodiumVersion) {
+			// We can't use Iris' logger here due to classloading issues.
+			System.err.println("[Iris] Invalid/missing version of Sodium detected, disabling compatibility mixins!");
+		//}
 	}
 
 	@Override
