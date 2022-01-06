@@ -61,7 +61,9 @@ public class MutableOptionValues implements OptionValues {
 			boolean actualValue = booleanValue.orElse(option.getOption().getDefaultValue());
 
 			if (actualValue == option.getOption().getDefaultValue()) {
+				// Just set it to default by removing it from the map
 				booleanValues.remove(name);
+				return;
 			}
 
 			booleanValues.put(name, actualValue);
@@ -81,6 +83,7 @@ public class MutableOptionValues implements OptionValues {
 
 			if (value.equals(option.getOption().getDefaultValue())) {
 				stringValues.remove(name);
+				return;
 			}
 
 			stringValues.put(name, value);
