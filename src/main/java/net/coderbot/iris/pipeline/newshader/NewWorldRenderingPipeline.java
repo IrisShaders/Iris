@@ -581,7 +581,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public boolean shouldDisableVanillaEntityShadows() {
-		return true;
+		// OptiFine seems to disable vanilla shadows when the shaderpack uses shadow mapping?
+		return shadowMapRenderer instanceof ShadowRenderer;
 	}
 
 	@Override
