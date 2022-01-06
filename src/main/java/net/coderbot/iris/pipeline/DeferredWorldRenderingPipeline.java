@@ -17,6 +17,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.postprocess.BufferFlipper;
@@ -513,10 +514,19 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
 		ProgramBuilder builder;
+		String vertex = source.getVertexSource().orElse(null);
+		String geometry = source.getGeometrySource().orElse(null);
+		String fragment = source.getFragmentSource().orElse(null);
+
+		if (source.getName().contains("entities")) {
+			// TODO: is there a better place to put this?
+			vertex = AttributeShaderTransformer.patch(source.getVertexSource().orElse(null), ShaderType.VERTEX);
+			fragment = AttributeShaderTransformer.patch(source.getFragmentSource().orElse(null), ShaderType.FRAGMENT);
+		}
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
+				fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);

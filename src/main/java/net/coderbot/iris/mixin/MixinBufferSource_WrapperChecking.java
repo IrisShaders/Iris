@@ -4,7 +4,6 @@ import java.util.Set;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.layer.EntityColorRenderStateShard;
 import net.coderbot.iris.layer.InnerWrappedRenderType;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.mixin.rendertype.RenderStateShardAccessor;
@@ -21,18 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinBufferSource_WrapperChecking {
 	@Unique
 	private final Set<String> unwrapped = new ObjectOpenHashSet<>();
-
-	@ModifyVariable(method = "getBuffer", at = @At("HEAD"))
-	private RenderType unwrapBufferIfNeeded(RenderType renderType) {
-		// Ensure that entity color wrapped render layers do not take effect when entity batching is inoperable.
-		if (renderType instanceof InnerWrappedRenderType) {
-			if (((InnerWrappedRenderType) renderType).getExtra() instanceof EntityColorRenderStateShard) {
-				return ((InnerWrappedRenderType) renderType).unwrap();
-			}
-		}
-
-		return renderType;
-	}
 
 	@Inject(method = "endBatch(Lnet/minecraft/client/renderer/RenderType;)V", at = @At("HEAD"))
 	private void iris$beginDraw(RenderType renderType, CallbackInfo ci) {

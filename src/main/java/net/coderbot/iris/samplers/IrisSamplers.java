@@ -115,6 +115,7 @@ public class IrisSamplers {
 	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
+		samplers.addExternalSampler(TextureUnit.OVERLAY.getSamplerId(), "overlay");
 		samplers.addDynamicSampler(normals::getId, "normals");
 		samplers.addDynamicSampler(specular::getId, "specular");
 	}
