@@ -459,9 +459,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	@Override
 	public boolean shouldDisableVanillaEntityShadows() {
-		// TODO: Don't hardcode this for Sildur's
 		// OptiFine seems to disable vanilla shadows when the shaderpack uses shadow mapping?
-		return true;
+		return shadowMapRenderer instanceof ShadowRenderer;
 	}
 
 	@Override
