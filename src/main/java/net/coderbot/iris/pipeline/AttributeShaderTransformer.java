@@ -27,8 +27,7 @@ public class AttributeShaderTransformer {
 			transformations.replaceExact("main", "irisMain");
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
 					"	vec4 overlayColor = texture2D(overlay, (gl_TextureMatrix[2] * gl_MultiTexCoord2).xy);\n" +
-					"	overlayColor.a = 1.0 - overlayColor.a;\n" +
-					"	entityColor = overlayColor;\n" +
+					"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
 					"\n" +
 					"    irisMain();\n" +
 					"}");
