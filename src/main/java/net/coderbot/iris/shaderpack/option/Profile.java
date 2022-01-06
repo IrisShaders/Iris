@@ -28,14 +28,14 @@ public final class Profile {
 			String value = entry.getValue();
 
 			if (options.getBooleanOptions().containsKey(option)) {
-				boolean currentValue = values.getBooleanValue(option).orElse(options.getBooleanOptions().get(option).getOption().getDefaultValue());
+				boolean currentValue = values.getBooleanValueOrDefault(option);
 
 				if (!Boolean.toString(currentValue).equals(value)) {
 					return false;
 				}
 			}
 			if (options.getStringOptions().containsKey(option)) {
-				String currentValue = values.getStringValue(option).orElse(options.getStringOptions().get(option).getOption().getDefaultValue());
+				String currentValue = values.getStringValueOrDefault(option);
 
 				if (!value.equals(currentValue)) {
 					return false;
