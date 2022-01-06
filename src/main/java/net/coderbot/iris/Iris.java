@@ -1,14 +1,21 @@
 package net.coderbot.iris;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.coderbot.iris.compat.sodium.AllowedSodiumVersion;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
@@ -17,6 +24,7 @@ import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.fabricmc.loader.api.ModContainer;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -60,6 +68,9 @@ public class Iris implements ClientModInitializer {
 	private static KeyMapping reloadKeybind;
 	private static KeyMapping toggleShadersKeybind;
 	private static KeyMapping shaderpackScreenKeybind;
+
+	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
+	private static boolean resetShaderPackOptions = false;
 
 	private static String IRIS_VERSION;
 
@@ -213,9 +224,11 @@ public class Iris implements ClientModInitializer {
 
 	private static boolean loadExternalShaderpack(String name) {
 		Path shaderPackRoot;
+		Path shaderPackConfigTxt;
 
 		try {
 			shaderPackRoot = getShaderpacksDirectory().resolve(name);
+			shaderPackConfigTxt = getShaderpacksDirectory().resolve(name + ".txt");
 		} catch (InvalidPathException e) {
 			logger.error("Failed to load the shaderpack \"{}\" because it contains invalid characters in its path", name);
 
@@ -265,8 +278,24 @@ public class Iris implements ClientModInitializer {
 			return false;
 		}
 
+		Map<String, String> changedConfigs = loadConfigProperties(shaderPackConfigTxt)
+				.map(properties -> (Map<String, String>) (Map) properties)
+				.orElse(new HashMap<>());
+
+		changedConfigs.putAll(shaderPackOptionQueue);
+		clearShaderPackOptionQueue();
+
+		if (resetShaderPackOptions) {
+			changedConfigs.clear();
+		}
+		resetShaderPackOptions = false;
+
+		Properties configsToSave = new Properties();
+		configsToSave.putAll(changedConfigs);
+		saveConfigProperties(shaderPackConfigTxt, configsToSave);
+
 		try {
-			currentPack = new ShaderPack(shaderPackPath);
+			currentPack = new ShaderPack(shaderPackPath, changedConfigs);
 		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
 			logger.catching(e);
@@ -331,6 +360,29 @@ public class Iris implements ClientModInitializer {
 		logger.info("Shaders are disabled");
 	}
 
+	private static Optional<Properties> loadConfigProperties(Path path) {
+		Properties properties = new Properties();
+
+		try {
+			// NB: config properties are specified to be encoded with ISO-8859-1 by OptiFine,
+			//     so we don't need to do the UTF-8 workaround here.
+			properties.load(Files.newInputStream(path));
+		} catch (IOException e) {
+			// TODO: Better error handling
+			return Optional.empty();
+		}
+
+		return Optional.of(properties);
+	}
+
+	private static void saveConfigProperties(Path path, Properties properties) {
+		try {
+			properties.store(Files.newOutputStream(path), null);
+		} catch (IOException e) {
+			// TODO: Better error handling
+		}
+	}
+
 	public static boolean isValidShaderpack(Path pack) {
 		if (Files.isDirectory(pack)) {
 			// Sometimes the shaderpack directory itself can be
@@ -365,6 +417,22 @@ public class Iris implements ClientModInitializer {
 		}
 
 		return false;
+	}
+
+	public static Map<String, String> getShaderPackOptionQueue() {
+		return shaderPackOptionQueue;
+	}
+
+	public static void queueShaderPackOptionsFromProfile(Profile profile) {
+		getShaderPackOptionQueue().putAll(profile.optionValues);
+	}
+
+	public static void clearShaderPackOptionQueue() {
+		getShaderPackOptionQueue().clear();
+	}
+
+	public static void resetShaderPackOptionsOnNextReload() {
+		resetShaderPackOptions = true;
 	}
 
 	public static void reload() throws IOException {
