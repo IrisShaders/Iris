@@ -50,19 +50,20 @@ public class ProfileSet {
 			return new ProfileResult(null, null, null);
 		}
 
-		Profile next = sortedProfiles.get(0);
-		Profile prev = sortedProfiles.get(sortedProfiles.size() - 1);
-
 		for (int i = 0; i < sortedProfiles.size(); i++) {
 			Profile current = sortedProfiles.get(i);
 
 			if (current.matches(options, values)) {
-				next = sortedProfiles.get(Math.floorMod(i + 1, sortedProfiles.size()));
-				prev = sortedProfiles.get(Math.floorMod(i - 1, sortedProfiles.size()));
+				Profile next = sortedProfiles.get(Math.floorMod(i + 1, sortedProfiles.size()));
+				Profile prev = sortedProfiles.get(Math.floorMod(i - 1, sortedProfiles.size()));
 
 				return new ProfileResult(current, next, prev);
 			}
 		}
+
+		// Default return if no profiles matched
+		Profile next = sortedProfiles.get(0);
+		Profile prev = sortedProfiles.get(sortedProfiles.size() - 1);
 
 		return new ProfileResult(null, next, prev);
 	}
