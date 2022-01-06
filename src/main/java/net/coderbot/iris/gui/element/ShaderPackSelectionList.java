@@ -271,7 +271,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		// Appears to be some accessibility thing
 		@Override
 		public Component getNarration() {
-			return new TranslatableComponent("narration.button", this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
+			return new TranslatableComponent("narration.button", this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
 		}
 
 		@Override

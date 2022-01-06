@@ -129,8 +129,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		int topCenter = this.width / 2 - 76;
 		boolean inWorld = this.minecraft.level != null;
 
-		this.children.remove(this.shaderPackList);
-		this.children.remove(this.shaderOptionList);
+		this.removeWidget(this.shaderPackList);
+		this.removeWidget(this.shaderOptionList);
 
 		this.shaderPackList = new ShaderPackSelectionList(this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
 
@@ -158,7 +158,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		if (optionMenuOpen && shaderOptionList != null) {
 			this.addRenderableWidget(shaderOptionList);
 		} else {
-			this.addRenderableWidgetd(shaderPackList);
+			this.addRenderableWidget(shaderPackList);
 		}
 
 		this.addRenderableWidget(new Button(bottomCenter + 104, this.height - 27, 100, 20,
