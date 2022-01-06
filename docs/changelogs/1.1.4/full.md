@@ -37,7 +37,7 @@ Shader configuration is also in the final testing & bug fixing phases, meaning t
 - Bumped the number of potential composite/deferred programs up to 99
 - Added support for the `blendMode` uniform (IMS)
 - Fixed some log spam during the preprocessing of .properties files (credit to Justsnoopy30)
-- Fixed glowing entities not having a hurt flash with shaders enabled (coderbot)
+- Fixed entity shadows not appearing on packs without shadowmap shadows (IMS)
 - Fixed Max Shadow Distance resetting after each boot (NoComment1105)
 - Work around a vanilla crash due to OptiFine setting maxFps to 0 in options.txt in some cases.
 
