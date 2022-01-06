@@ -93,7 +93,8 @@ public class ProfileSet {
 				String dependency = option.substring("profile.".length());
 
 				if (parents.contains(dependency)) {
-					throw new IllegalArgumentException("Error parsing profile \"" + name + "\", recursively included by: "+String.join(", ", parents));
+					throw new IllegalArgumentException("Error parsing profile \"" + name
+							+ "\", recursively included by: " + String.join(", ", parents));
 				}
 
 				parents.add(dependency);
