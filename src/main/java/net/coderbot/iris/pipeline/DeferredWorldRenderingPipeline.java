@@ -91,9 +91,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass entities;
 	@Nullable
+	private final Pass entityNoOverlay;
+	@Nullable
 	private final Pass blockEntities;
 	@Nullable
 	private final Pass hand;
+	@Nullable
+	private final Pass handNoOverlay;
 	@Nullable
 	private final Pass handTranslucent;
 	@Nullable
@@ -102,6 +106,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final Pass glint;
 	@Nullable
 	private final Pass eyes;
+	@Nullable
+	private final Pass eyesNoOverlay;
 
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
@@ -284,8 +290,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		};
 
 		this.basic = programs.getGbuffersBasic().map(this::createEntityPass).orElse(null);
-		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
-		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
+		this.textured = programs.getGbuffersTextured().map(this::createEntityPass).orElse(basic);
+		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createEntityPass).orElse(textured);
 		this.skyBasic = programs.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
 		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
 		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
@@ -295,12 +301,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
 		this.entities = programs.getGbuffersEntities().map(this::createEntityPass).orElse(texturedLit);
+		this.entityNoOverlay = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
 		this.hand = programs.getGbuffersHand().map(this::createEntityPass).orElse(texturedLit);
+		this.handNoOverlay = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
 		this.handTranslucent = programs.getGbuffersHandWater().map(this::createEntityPass).orElse(hand);
 		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createEntityPass).orElse(entities);
 		this.glint = programs.getGbuffersGlint().map(this::createEntityPass).orElse(textured);
 		this.eyes = programs.getGbuffersEntityEyes().map(this::createEntityPass).orElse(textured);
+		this.eyesNoOverlay = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
@@ -404,12 +413,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				return beaconBeam;
 			case ENTITIES:
 				return entities;
+			case ENTITY_NO_OVERLAY:
+				return entityNoOverlay;
 			case BLOCK_ENTITIES:
 				return blockEntities;
 			case ENTITIES_GLOWING:
 				return glowingEntities;
 			case EYES:
 				return eyes;
+			case EYES_NO_OVERLAY:
+				return eyesNoOverlay;
 			case ARMOR_GLINT:
 				return glint;
 			case CLOUDS:
@@ -426,6 +439,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				return weather;
 			case HAND:
 				return hand;
+			case HAND_NO_OVERLAY:
+				return handNoOverlay;
 			case HAND_TRANSLUCENT:
 				return handTranslucent;
 			default:
