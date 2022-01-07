@@ -194,8 +194,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
 
-		flippedAfterPrepare = flipper.snapshot();
-
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
 			return shadowMapRenderer;
@@ -205,6 +203,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()),
 				programs.getPackDirectives().getExplicitFlips("prepare_pre"));
+
+		flippedAfterPrepare = flipper.snapshot();
 
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
