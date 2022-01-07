@@ -73,6 +73,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass texturedLit;
 	@Nullable
+	private final Pass basicOverlay;
+	@Nullable
+	private final Pass texturedOverlay;
+	@Nullable
+	private final Pass texturedLitOverlay;
+	@Nullable
 	private final Pass skyBasic;
 	@Nullable
 	private final Pass skyTextured;
@@ -203,7 +209,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		BufferFlipper flipper = new BufferFlipper();
 
 		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
-
+Overlay
 		flippedBeforeTranslucent = flipper.snapshot();
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
@@ -289,9 +295,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			return builder.build();
 		};
 
-		this.basic = programs.getGbuffersBasic().map(this::createEntityPass).orElse(null);
-		this.textured = programs.getGbuffersTextured().map(this::createEntityPass).orElse(basic);
-		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createEntityPass).orElse(textured);
+		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
+		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
+		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
+		this.basicOverlay = programs.getGbuffersBasic().map(this::createEntityPass).orElse(null);
+		this.texturedOverlay = programs.getGbuffersTextured().map(this::createEntityPass).orElse(basicOverlay);
+		this.texturedLitOverlay = programs.getGbuffersTexturedLit().map(this::createEntityPass).orElse(texturedOverlay);
 		this.skyBasic = programs.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
 		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
 		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
@@ -300,15 +309,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.damagedBlock = programs.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
 		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
-		this.entities = programs.getGbuffersEntities().map(this::createEntityPass).orElse(texturedLit);
+		this.entities = programs.getGbuffersEntities().map(this::createEntityPass).orElse(texturedLitOverlay);
 		this.entityNoOverlay = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
-		this.hand = programs.getGbuffersHand().map(this::createEntityPass).orElse(texturedLit);
+		this.hand = programs.getGbuffersHand().map(this::createEntityPass).orElse(texturedLitOverlay);
 		this.handNoOverlay = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
 		this.handTranslucent = programs.getGbuffersHandWater().map(this::createEntityPass).orElse(hand);
 		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createEntityPass).orElse(entities);
-		this.glint = programs.getGbuffersGlint().map(this::createEntityPass).orElse(textured);
-		this.eyes = programs.getGbuffersEntityEyes().map(this::createEntityPass).orElse(textured);
+		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
+		this.eyes = programs.getGbuffersEntityEyes().map(this::createEntityPass).orElse(texturedOverlay);
 		this.eyesNoOverlay = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
