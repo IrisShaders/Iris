@@ -9,9 +9,9 @@ public class SmoothedVec2f implements Supplier<Vector2f> {
 	private final SmoothedFloat x;
 	private final SmoothedFloat y;
 
-	public SmoothedVec2f(float halfLife, Supplier<Vector2i> unsmoothed, FrameUpdateNotifier updateNotifier) {
-		x = new SmoothedFloat(halfLife, () -> unsmoothed.get().x, updateNotifier);
-		y = new SmoothedFloat(halfLife, () -> unsmoothed.get().y, updateNotifier);
+	public SmoothedVec2f(float halfLifeUp, float halfLifeDown, Supplier<Vector2i> unsmoothed, FrameUpdateNotifier updateNotifier) {
+		x = new SmoothedFloat(halfLifeUp, halfLifeDown, () -> unsmoothed.get().x, updateNotifier);
+		y = new SmoothedFloat(halfLifeUp, halfLifeDown, () -> unsmoothed.get().y, updateNotifier);
 	}
 
 	@Override
