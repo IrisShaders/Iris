@@ -1,40 +1,47 @@
 # FAQ
 
-> Q. Why doesn't the Iris Installer work?
+## Table of Contents
 
-A. You need java, please get it from: [Adoptium.net](https://adoptium.net/?variant=openjdk17&jvmVariant=hotspot)
+- Why doesn't the Iris Installer work?
+- How can I configure my shaders?
+- Why is (insert shader) not working?
+- How do I disable my shaders?
+- I added Iris, why is my game crashing?
+- What shaders have been tested and are working with Iris?
+- Will (insert feature) part of OptiFine be added to iris?
 
-> Q. How can I configure my shaders?
+## Why doesn't the Iris Installer work?
 
-A. [#663](https://github.com/IrisShaders/Iris/issues/663)
+You need java, please get it from: [Adoptium.net](https://adoptium.net/?variant=openjdk17&jvmVariant=hotspot)
 
-> Q. Why is (insert shader) not working?
+## How can I configure my shaders?
 
-A. That shader likely isn't supported currently, but should be in the future. See the list of supported shaders [here](./supportedshaders.md)
+[#663](https://github.com/IrisShaders/Iris/issues/663)
 
-> Q. How do I disable my shaders?
+## Why is (insert shader) not working?
 
-A. Press K to disable shaders without using the GUI.
+That shader likely isn't supported currently, but should be in the future. See the list of supported shaders [here](./supportedshaders.md)
 
-> Q. I added Iris, why is my game crashing?
+## How do I disable my shaders?
 
-A. There are a few possible reasons:
+Press K to disable shaders without using the GUI.
 
-• You're using an outdated version of Indium, Sodium Extras or Better Sodium Menu.
+## I added Iris, why is my game crashing?
 
-• You're using an unsupported shader pack.
+There are a few possible reasons:
 
-• You're using macOS, which has limited support.
+- You're using an outdated version of Indium, Sodium Extras or Better Sodium Menu.
+- You're using an unsupported shader pack.
+- You're using macOS, which has limited support.
+- You may have an incompatible mod installed.
 
-• You may have an incompatible mod installed.
+## What shaders have been tested and are working with Iris?
 
-> Q. What shaders have been tested and are working with Iris?
+See [this](./supportedshaders.md) document for the list
 
-A. See [this](./supportedshaders.md) document for the list
+## Will (insert feature) part of OptiFine be added to iris?
 
-> Q. Will (insert feature) part of OptiFine be added to iris?
-
-A. Iris is specifically a shaders mod. Other features are not planned for Iris. However, many other wonderful mods have been made by the fabric modding community which cover many of the features of OptiFine.
+Iris is specifically a shaders mod. Other features are not planned for Iris. However, many other wonderful mods have been made by the fabric modding community which cover many of the features of OptiFine.
 
 The following is a short list, more alternatives can be found through further research, the list is alphabetical.
 

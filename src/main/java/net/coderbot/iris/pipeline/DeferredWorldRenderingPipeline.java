@@ -121,6 +121,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer baseline;
 
 	private Runnable createShadowMapRenderer;
+	private final CompositeRenderer prepareRenderer;
 	private ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
@@ -129,7 +130,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 
-	private final ImmutableSet<Integer> flippedBeforeTranslucent;
+	private final ImmutableSet<Integer> flippedAfterPrepare;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
@@ -195,12 +196,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
-		// TODO: Change this once earlier passes are implemented.
-		ImmutableSet<Integer> flippedBeforeTerrain = ImmutableSet.of();
+		ImmutableSet<Integer> flippedBeforeShadow = ImmutableSet.of();
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
-					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets,
+					programs.getPackDirectives(), () -> flippedBeforeShadow, renderTargets,
 					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
 					programs, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 			createShadowMapRenderer = () -> {};
@@ -209,13 +209,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		BufferFlipper flipper = new BufferFlipper();
 
 		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
-Overlay
-		flippedBeforeTranslucent = flipper.snapshot();
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
 			return shadowMapRenderer;
 		};
+
+		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
+				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()),
+				programs.getPackDirectives().getExplicitFlips("prepare_pre"));
+
+		flippedAfterPrepare = flipper.snapshot();
 
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
@@ -234,7 +239,7 @@ Overlay
 				this.compositeRenderer.getFlippedAtLeastOnceFinal());
 
 		Supplier<ImmutableSet<Integer>> flipped =
-				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
+				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
 		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
@@ -270,7 +275,7 @@ Overlay
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeTerrain, renderTargets, false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedAfterPrepare, renderTargets, false);
 			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -286,7 +291,7 @@ Overlay
 		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
 			ProgramImages.Builder builder = ProgramImages.builder(programId);
 
-			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeTerrain, renderTargets);
+			IrisImages.addRenderTargetImages(builder, () -> flippedAfterPrepare, renderTargets);
 
 			if (IrisImages.hasShadowImages(builder) && shadowMapRenderer != null) {
 				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
@@ -487,9 +492,8 @@ Overlay
 
 	@Override
 	public boolean shouldDisableVanillaEntityShadows() {
-		// TODO: Don't hardcode this for Sildur's
 		// OptiFine seems to disable vanilla shadows when the shaderpack uses shadow mapping?
-		return true;
+		return shadowMapRenderer instanceof ShadowRenderer;
 	}
 
 	@Override
@@ -573,7 +577,7 @@ Overlay
 		CommonUniforms.addCommonUniforms(builder, map, packDirectives, updateNotifier);
 
 		Supplier<ImmutableSet<Integer>> flipped =
-				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
+				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
 		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
@@ -593,7 +597,7 @@ Overlay
 		}
 
 		GlFramebuffer framebufferBeforeTranslucents =
-				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, programDirectives.getDrawBuffers());
+				renderTargets.createGbufferFramebuffer(flippedAfterPrepare, programDirectives.getDrawBuffers());
 		GlFramebuffer framebufferAfterTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, programDirectives.getDrawBuffers());
 
@@ -805,6 +809,8 @@ Overlay
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		this.shadowMapRenderer.renderShadows(levelRenderer, playerCamera);
+
+		prepareRenderer.renderAll();
 	}
 
 	@Override
