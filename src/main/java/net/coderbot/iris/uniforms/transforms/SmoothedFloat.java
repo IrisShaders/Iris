@@ -18,11 +18,6 @@ public class SmoothedFloat implements FloatSupplier {
 	private static final double LN_OF_2 = Math.log(2.0);
 
 	/**
-	 * The decay constant, k (as used in e^(-kt))
-	 */
-	private float decayConstant;
-
-	/**
 	 * The input sequence of unsmoothed values
 	 */
 	private final FloatSupplier unsmoothed;
@@ -38,9 +33,15 @@ public class SmoothedFloat implements FloatSupplier {
 	 */
 	private boolean hasInitialValue;
 
-	private float halfLifeUp;
+	/**
+	 * The decay constant upward, k (as used in e^(-kt))
+	 */
+	private final float decayConstantUp;
 
-	private float halfLifeDown;
+	/**
+	 * The decay constant downward, k (as used in e^(-kt))
+	 */
+	private final float decayConstantDown;
 
 	/**
 	 * Creates a new SmoothedFloat with a given half life.
@@ -53,8 +54,8 @@ public class SmoothedFloat implements FloatSupplier {
 	public SmoothedFloat(float halfLifeUp, float halfLifeDown, FloatSupplier unsmoothed, FrameUpdateNotifier updateNotifier) {
 		// Half life is measured in units of 10ths of a second, or 2 ticks
 		// For example, a half life of value of 2.0 is 4 ticks or 0.2 seconds
-		this.halfLifeUp = (halfLifeUp * 0.1F);
-		this.halfLifeDown = (halfLifeDown * 0.1F);
+		this.decayConstantUp = computeDecay(halfLifeUp * 0.1F);
+		this.decayConstantDown = computeDecay(halfLifeDown * 0.1F);
 
 		this.unsmoothed = unsmoothed;
 
@@ -77,31 +78,29 @@ public class SmoothedFloat implements FloatSupplier {
 			return;
 		}
 
-		// xₜ
-		float newValue = unsmoothed.getAsFloat();
-
-		computeDecay(newValue > this.accumulator ? halfLifeUp : halfLifeDown);
-
 		// Implements the basic variant of exponential smoothing
 		// https://en.wikipedia.org/wiki/Exponential_smoothing#Basic_(simple)_exponential_smoothing_(Holt_linear)
+
+		// xₜ
+		float newValue = unsmoothed.getAsFloat();
 
 		// 𝚫t
 		float lastFrameTime = SystemTimeUniforms.TIMER.getLastFrameTime();
 
 		// Compute the smoothing factor based on our
 		// α = 1 - e^(-𝚫t/τ) = 1 - e^(-k𝚫t)
-		float smoothingFactor = 1.0f - exponentialDecayFactor(this.decayConstant, lastFrameTime);
+		float smoothingFactor = 1.0f - exponentialDecayFactor(newValue > this.accumulator ? this.decayConstantUp : decayConstantDown, lastFrameTime);
 
 		// sₜ = αxₜ + (1 - α)sₜ₋₁
 		accumulator = lerp(accumulator, newValue, smoothingFactor);
 	}
 
-	private void computeDecay(float halfLife) {
+	private float computeDecay(float halfLife) {
 		// Compute the decay constant from the half life
 		// https://en.wikipedia.org/wiki/Exponential_decay#Measuring_rates_of_decay
 		// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
 		// k = 1 / τ
-		this.decayConstant = (float) (1.0f / (halfLife / LN_OF_2));
+		return (float) (1.0f / (halfLife / LN_OF_2));
 	}
 
 	/**
