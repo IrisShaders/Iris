@@ -31,13 +31,15 @@ public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBool
 	@Override
 	public void init(ShaderPackScreen screen, NavigationController navigation) {
 		super.init(screen, navigation);
-		OptionalBoolean appliedValue = this.element.getAppliedOptionValues().getBooleanValue(this.option.getName());
-		OptionalBoolean pendingValue = this.element.getPendingOptionValues().getBooleanValue(this.option.getName());
+
+		// The value currently in use by the shader pack
+		this.appliedValue = this.element.getAppliedOptionValues().getBooleanValueOrDefault(this.option.getName());
+
+		// The yet-to-be-applied value that has been queued (if that is the case)
+		// Might be equal to the applied value
+		this.value = this.element.getPendingOptionValues().getBooleanValueOrDefault(this.option.getName());
 
 		this.setLabel(GuiUtil.translateOrDefault(new TextComponent(this.option.getName()), "option." + this.option.getName()));
-
-		this.appliedValue = appliedValue.orElse(this.option.getDefaultValue()); // The value currently in use by the shader
-		this.value = pendingValue.orElse(this.appliedValue); // The unapplied value that has been queued (if that is the case)
 	}
 
 	@Override
