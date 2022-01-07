@@ -20,7 +20,7 @@ public class SmoothedFloat implements FloatSupplier {
 	/**
 	 * The decay constant, k (as used in e^(-kt))
 	 */
-	private final float decayConstant;
+	private float decayConstant;
 
 	/**
 	 * The input sequence of unsmoothed values
@@ -38,25 +38,23 @@ public class SmoothedFloat implements FloatSupplier {
 	 */
 	private boolean hasInitialValue;
 
+	private float halfLifeUp;
+
+	private float halfLifeDown;
+
 	/**
 	 * Creates a new SmoothedFloat with a given half life.
 	 *
-	 * @param halfLife   the half life in the exponential decay, in deciseconds (1/10th of a second) / 2 ticks.
+	 * @param halfLifeUp   the half life in the exponential decay, in deciseconds (1/10th of a second) / 2 ticks.
 	 *                   For example, a half life of value of 2.0 is 4 ticks or 0.2 seconds
 	 * @param unsmoothed the input sequence of unsmoothed values to be smoothed. {@code unsmoothed.getAsFloat()} will be
 	 *                   called exactly once for every time {@code smoothed.getAsFloat()} is called.
 	 */
-	public SmoothedFloat(float halfLife, FloatSupplier unsmoothed, FrameUpdateNotifier updateNotifier) {
+	public SmoothedFloat(float halfLifeUp, float halfLifeDown, FloatSupplier unsmoothed, FrameUpdateNotifier updateNotifier) {
 		// Half life is measured in units of 10ths of a second, or 2 ticks
 		// For example, a half life of value of 2.0 is 4 ticks or 0.2 seconds
-		halfLife *= 0.1f;
-
-		// Compute the decay constant from the half life
-		// https://en.wikipedia.org/wiki/Exponential_decay#Measuring_rates_of_decay
-		// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
-		double timeConstant = halfLife / LN_OF_2;
-		// k = 1 / τ
-		this.decayConstant = (float) (1.0f / timeConstant);
+		this.halfLifeUp = (halfLifeUp * 0.1F);
+		this.halfLifeDown = (halfLifeDown * 0.1F);
 
 		this.unsmoothed = unsmoothed;
 
@@ -78,6 +76,13 @@ public class SmoothedFloat implements FloatSupplier {
 
 			return;
 		}
+
+		// Compute the decay constant from the half life
+		// https://en.wikipedia.org/wiki/Exponential_decay#Measuring_rates_of_decay
+		// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
+		double timeConstant = (this.unsmoothed.getAsFloat() > this.accumulator ? halfLifeUp : halfLifeDown) / LN_OF_2;
+		// k = 1 / τ
+		this.decayConstant = (float) (1.0f / timeConstant);
 
 		// Implements the basic variant of exponential smoothing
 		// https://en.wikipedia.org/wiki/Exponential_smoothing#Basic_(simple)_exponential_smoothing_(Holt_linear)
