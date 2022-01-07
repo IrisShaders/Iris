@@ -100,7 +100,7 @@ public class PropertiesPreprocessor {
 		List<String> booleanValues = new ArrayList<>();
 
 		shaderPackOptions.getOptionSet().getBooleanOptions().forEach((string, value) -> {
-			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValue(string).orElse(value.getOption().getDefaultValue());
+			boolean trueValue = shaderPackOptions.getOptionValues().getBooleanValueOrDefault(string);
 
 			if (trueValue) {
 				booleanValues.add(string);
@@ -113,7 +113,8 @@ public class PropertiesPreprocessor {
 	private static Map<String, String> getStringValues(ShaderPackOptions shaderPackOptions) {
 		Map<String, String> stringValues = new HashMap<>();
 
-		shaderPackOptions.getOptionSet().getStringOptions().forEach((optionName, value) -> stringValues.put(optionName, shaderPackOptions.getOptionValues().getStringValue(optionName).orElse(value.getOption().getDefaultValue())));
+		shaderPackOptions.getOptionSet().getStringOptions().forEach(
+				(optionName, value) -> stringValues.put(optionName, shaderPackOptions.getOptionValues().getStringValueOrDefault(optionName)));
 
 		return stringValues;
 	}

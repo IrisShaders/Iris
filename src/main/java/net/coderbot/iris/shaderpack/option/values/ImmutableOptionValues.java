@@ -47,4 +47,9 @@ public class ImmutableOptionValues implements OptionValues {
 	public ImmutableOptionValues toImmutable() {
 		return this;
 	}
+
+	@Override
+	public OptionSet getOptionSet() {
+		return options;
+	}
 }

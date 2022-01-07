@@ -30,15 +30,17 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 	@Override
 	public void init(ShaderPackScreen screen, NavigationController navigation) {
 		super.init(screen, navigation);
-		Optional<String> pendingValue = this.element.getPendingOptionValues().getStringValue(this.option.getName());
-		Optional<String> appliedValue = this.element.getAppliedOptionValues().getStringValue(this.option.getName());
+
+		// The yet-to-be-applied value that has been queued (if that is the case)
+		// Might be equal to the applied value
+		String actualPendingValue = this.element.getPendingOptionValues().getStringValueOrDefault(this.option.getName());
+
+		// The value currently in use by the shader pack
+		this.appliedValue = this.element.getAppliedOptionValues().getStringValueOrDefault(this.option.getName());
 
 		this.setLabel(GuiUtil.translateOrDefault(new TextComponent(this.option.getName()), "option." + this.option.getName()));
 
 		List<String> values = this.option.getAllowedValues();
-
-		this.appliedValue = appliedValue.orElse(this.option.getDefaultValue()); // The value currently in use by the shader
-		String actualPendingValue = pendingValue.orElse(this.appliedValue); // The unapplied value that has been queued (if that is the case)
 
 		this.valueCount = values.size();
 		this.valueIndex = values.indexOf(actualPendingValue);
