@@ -102,7 +102,12 @@ public class AbsolutePackPath {
 		return Objects.hash(path);
 	}
 
+	@Override
 	public String toString() {
-		return "AbsolutePackPath {" + path + "}";
+		return "AbsolutePackPath {" + getPathString() + "}";
+	}
+
+	public String getPathString() {
+		return path;
 	}
 }
