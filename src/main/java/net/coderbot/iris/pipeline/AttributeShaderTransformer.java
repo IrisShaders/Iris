@@ -31,7 +31,12 @@ public class AttributeShaderTransformer {
 					"\n" +
 					"    irisMain();\n" +
 					"}");
-		} else {
+		} else if (type == ShaderType.GEOMETRY) {
+			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "in vec4 entityColor[];");
+			transformations.replaceExact("entityColor", "entityColor[0]");
+			// TODO: this is terrible and will not catch false positives!
+			transformations.replaceExact("entityColor[0][];", "entityColor[];");
+		} else if (type == ShaderType.FRAGMENT) {
 			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "varying vec4 entityColor;");
 		}
 
