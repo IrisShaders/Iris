@@ -33,14 +33,14 @@
   "options.iris.reset.tooltip": "重設所有選項後套用？",
   "options.iris.reset.tooltip.holdShift": "按住 SHIFT 後點擊以重設",
   "options.iris.setToDefault": "將選項設為預設？",
-  "options.iris.profile": "Profile",
+  "options.iris.profile": "設定檔",
   "options.iris.profile.custom": "自訂",
   "options.iris.shadowDistance": "最大陰影距離",
   "options.iris.shadowDistance.enabled": "能讓您變更陰影的最大距離。超出此距離的地形和實體將不會有陰影。調低陰影距離能顯著提升效能。",
   "options.iris.shadowDistance.disabled": "您無法變更目前光影包所設定的陰影顯示距離。",
 
   "pack.iris.select.title": "選擇",
-  "pack.iris.configure.title": "Configure",
+  "pack.iris.configure.title": "設定",
   "pack.iris.list.label": "+ 將光影包拖曳至此以新增",
 
   "label.iris.true": "開啟",
