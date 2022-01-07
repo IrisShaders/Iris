@@ -80,12 +80,7 @@ public class SmoothedFloat implements FloatSupplier {
 		// xₜ
 		float newValue = unsmoothed.getAsFloat();
 
-		// Compute the decay constant from the half life
-		// https://en.wikipedia.org/wiki/Exponential_decay#Measuring_rates_of_decay
-		// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
-		double timeConstant = (newValue > this.accumulator ? halfLifeUp : halfLifeDown) / LN_OF_2;
-		// k = 1 / τ
-		this.decayConstant = (float) (1.0f / timeConstant);
+		computeDecay(newValue > this.accumulator ? halfLifeUp : halfLifeDown);
 
 		// Implements the basic variant of exponential smoothing
 		// https://en.wikipedia.org/wiki/Exponential_smoothing#Basic_(simple)_exponential_smoothing_(Holt_linear)
@@ -99,6 +94,14 @@ public class SmoothedFloat implements FloatSupplier {
 
 		// sₜ = αxₜ + (1 - α)sₜ₋₁
 		accumulator = lerp(accumulator, newValue, smoothingFactor);
+	}
+
+	private void computeDecay(float halfLife) {
+		// Compute the decay constant from the half life
+		// https://en.wikipedia.org/wiki/Exponential_decay#Measuring_rates_of_decay
+		// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
+		// k = 1 / τ
+		this.decayConstant = (float) (1.0f / (halfLife / LN_OF_2));
 	}
 
 	/**
