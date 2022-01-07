@@ -8,6 +8,7 @@ import org.anarres.cpp.LexerException;
 import org.anarres.cpp.Preprocessor;
 import org.anarres.cpp.StringLexerSource;
 import org.anarres.cpp.Token;
+import org.lwjgl.opengl.GL20C;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -33,7 +34,20 @@ public class PropertiesPreprocessor {
 			for (String value : booleanValues) {
 				pp.addMacro(value);
 			}
+			pp.addMacro(StandardMacros.getOsString());
 			pp.addMacro("MC_VERSION", StandardMacros.getMcVersion());
+			pp.addMacro("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION));
+			pp.addMacro("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION));
+			pp.addMacro(StandardMacros.getRenderer());
+			pp.addMacro(StandardMacros.getVendor());
+			pp.addMacro("MC_RENDER_QUALITY", "1.0");
+			pp.addMacro("MC_SHADOW_QUALITY", "1.0");
+			for (String define : StandardMacros.getIrisDefines()) {
+				pp.addMacro(define);
+			}
+			for (String extension : StandardMacros.getGlExtensions()) {
+				pp.addMacro(extension);
+			}
 		} catch (LexerException e) {
 				e.printStackTrace();
 		}
