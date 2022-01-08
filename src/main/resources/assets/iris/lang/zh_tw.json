@@ -30,7 +30,7 @@
   "options.iris.shaders.enabled": "光影：已啟用",
   "options.iris.back": "返回",
   "options.iris.reset": "重設",
-  "options.iris.reset.tooltip": "重設所有選項後套用？",
+  "options.iris.reset.tooltip": "是否重設所有選項並套用？",
   "options.iris.reset.tooltip.holdShift": "按住 SHIFT 後點擊以重設",
   "options.iris.setToDefault": "將選項設為預設？",
   "options.iris.profile": "設定檔",
