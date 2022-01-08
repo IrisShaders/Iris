@@ -6,6 +6,7 @@ import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,21 +18,15 @@ public class ProfileSet {
 	private final List<Profile> sortedProfiles; // The order that profiles should be scanned through
 
 	public ProfileSet(LinkedHashMap<String, Profile> orderedProfiles) {
-		List<Profile> sorted = new ArrayList<>();
+		List<Profile> sorted = new ArrayList<>(orderedProfiles.values());
 
-		for (Profile profile : orderedProfiles.values()) {
-			for (int i = 0; i < sorted.size(); i++) {
-				if (profile.precedence > sorted.get(i).precedence) {
-					sorted.add(i, profile);
+		Comparator<Profile> lowToHigh = Comparator.comparing(p -> p.precedence);
+		Comparator<Profile> highToLow = lowToHigh.reversed();
 
-					break;
-				}
-			}
-
-			if (!sorted.contains(profile)) {
-				sorted.add(profile);
-			}
-		}
+		// Compare profiles with many constraints (high precedence) first before comparing ones with
+		// few constraints, needed for accurate matching when one profile contains an additional constraint
+		// to another profile but is otherwise the same;
+		sorted.sort(highToLow);
 
 		if (IrisLogging.ENABLE_SPAM) {
 			sorted.forEach(p -> System.out.println(p.name + ":" + p.precedence));
