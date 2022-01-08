@@ -61,7 +61,7 @@ public class SodiumTerrainPipeline {
 	public SodiumTerrainPipeline(WorldRenderingPipeline parent, ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
 								 IntFunction<ProgramSamplers> createShadowSamplers, IntFunction<ProgramImages> createTerrainImages, IntFunction<ProgramImages> createShadowImages,
 								 RenderTargets targets,
-								 ImmutableSet<Integer> flippedBeforeTranslucent,
+								 ImmutableSet<Integer> flippedAfterPrepare,
 								 ImmutableSet<Integer> flippedAfterTranslucent, GlFramebuffer shadowFramebuffer) {
 		this.parent = Objects.requireNonNull(parent);
 
@@ -71,14 +71,14 @@ public class SodiumTerrainPipeline {
 		this.programSet = programSet;
 		this.shadowFramebuffer = shadowFramebuffer;
 
-		terrainSource.ifPresent(sources -> terrainFramebuffer = targets.createGbufferFramebuffer(flippedBeforeTranslucent,
+		terrainSource.ifPresent(sources -> terrainFramebuffer = targets.createGbufferFramebuffer(flippedAfterPrepare,
 				sources.getDirectives().getDrawBuffers()));
 
 		translucentSource.ifPresent(sources -> translucentFramebuffer = targets.createGbufferFramebuffer(flippedAfterTranslucent,
 				sources.getDirectives().getDrawBuffers()));
 
 		if (terrainFramebuffer == null) {
-			terrainFramebuffer = targets.createGbufferFramebuffer(flippedBeforeTranslucent, new int[] {0});
+			terrainFramebuffer = targets.createGbufferFramebuffer(flippedAfterPrepare, new int[] {0});
 		}
 
 		if (translucentFramebuffer == null) {

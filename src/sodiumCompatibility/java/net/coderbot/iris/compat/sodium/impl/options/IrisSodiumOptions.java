@@ -7,11 +7,14 @@ import me.jellysquid.mods.sodium.client.gui.options.control.ControlValueFormatte
 import me.jellysquid.mods.sodium.client.gui.options.control.CyclingControl;
 import me.jellysquid.mods.sodium.client.gui.options.control.SliderControl;
 import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+
+import java.io.IOException;
 
 public class IrisSodiumOptions {
     public static OptionImpl<Options, Integer> createMaxShadowDistanceSlider(MinecraftOptionsStorage vanillaOpts) {
@@ -19,8 +22,15 @@ public class IrisSodiumOptions {
                 .setName(new TranslatableComponent("options.iris.shadowDistance"))
                 .setTooltip(new TranslatableComponent("options.iris.shadowDistance.sodium_tooltip"))
                 .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantityOrDisabled("Chunks", "Disabled")))
-                .setBinding((options, value) -> IrisVideoSettings.shadowDistance = value,
-                        options -> IrisVideoSettings.getOverriddenShadowDistance(IrisVideoSettings.shadowDistance))
+				.setBinding((options, value) -> {
+						IrisVideoSettings.shadowDistance = value;
+						try {
+							Iris.getIrisConfig().save();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					},
+					options -> IrisVideoSettings.getOverriddenShadowDistance(IrisVideoSettings.shadowDistance))
                 .setImpact(OptionImpact.HIGH)
                 .setEnabled(true)
                 .build();

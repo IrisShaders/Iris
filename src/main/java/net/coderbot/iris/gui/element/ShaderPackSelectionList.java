@@ -3,14 +3,17 @@ package net.coderbot.iris.gui.element;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+
 import java.util.Collection;
 
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
@@ -18,19 +21,18 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	private static final Component SHADERS_DISABLED_LABEL = new TranslatableComponent("options.iris.shaders.disabled");
 	private static final Component SHADERS_ENABLED_LABEL = new TranslatableComponent("options.iris.shaders.enabled");
 
-	private final EnableShadersButtonEntry enableShadersButton = new EnableShadersButtonEntry(Iris.getIrisConfig().areShadersEnabled());
+	private final TopButtonRowEntry topButtonRow;
+	private ShaderPackEntry applied = null;
 
 	public ShaderPackSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
+		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
 
 		refresh();
 	}
 
 	@Override
 	public int getRowWidth() {
-		// Temporarily set to only reach a width of up to 312 in order to fit in with
-		// the width of the array of buttons at the bottom of the GUI. May be changed
-		// in the future if this widget is made to occupy half the screen.
 		return Math.min(308, width - 50);
 	}
 
@@ -53,46 +55,55 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			// Not translating this since it's going to be seen very rarely,
 			// We're just trying to get more information on a seemingly untraceable bug:
 			// - https://github.com/IrisShaders/Iris/issues/785
-			this.addEntry(new LabelEntry(new TextComponent("")));
-			this.addEntry(new LabelEntry(new TextComponent("There was an error reading your shaderpacks directory")
-					.withStyle(ChatFormatting.RED, ChatFormatting.BOLD)));
-			this.addEntry(new LabelEntry(new TextComponent("")));
-			this.addEntry(new LabelEntry(new TextComponent("Check your logs for more information.")));
-			this.addEntry(new LabelEntry(new TextComponent("Please file an issue report including a log file.")));
-			this.addEntry(new LabelEntry(new TextComponent("If you are able to identify the file causing this, " +
-					"please include it in your report as well.")));
-			this.addEntry(new LabelEntry(new TextComponent("Note that this might be an issue with folder " +
-					"permissions; ensure those are correct first.")));
+			this.addLabelEntries(
+					TextComponent.EMPTY,
+					new TextComponent("There was an error reading your shaderpacks directory")
+							.withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+					TextComponent.EMPTY,
+					new TextComponent("Check your logs for more information."),
+					new TextComponent("Please file an issue report including a log file."),
+					new TextComponent("If you are able to identify the file causing this, " +
+											 "please include it in your report as well."),
+					new TextComponent("Note that this might be an issue with folder " +
+											 "permissions; ensure those are correct first.")
+			);
 
 			return;
 		}
 
-		if (names.size() > 0) {
-			// Only add the enable / disable shaders button if the user has added a shader pack. Otherwise, the button
-			// doesn't really make sense.
-			this.addEntry(enableShadersButton);
-		}
+		this.addEntry(topButtonRow);
+
+		// Only show the enable / disable shaders button if the user has added a shader pack. Otherwise, the button
+		// doesn't really make sense.
+		topButtonRow.showEnableShadersButton = names.size() > 0;
 
 		int index = 0;
 
 		for (String name : names) {
 			index++;
-			addEntry(index, name);
+			addPackEntry(index, name);
 		}
 
-		this.addEntry(new LabelEntry(PACK_LIST_LABEL));
+		this.addLabelEntries(PACK_LIST_LABEL);
 	}
 
-	public void addEntry(int index, String name) {
+	public void addPackEntry(int index, String name) {
 		ShaderPackEntry entry = new ShaderPackEntry(index, this, name);
 
 		Iris.getIrisConfig().getShaderPackName().ifPresent(currentPackName -> {
 			if (name.equals(currentPackName)) {
 				setSelected(entry);
+				setApplied(entry);
 			}
 		});
 
 		this.addEntry(entry);
+	}
+
+	public void addLabelEntries(Component ... lines) {
+		for (Component text : lines) {
+			this.addEntry(new LabelEntry(text));
+		}
 	}
 
 	public void select(String name) {
@@ -107,8 +118,16 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 	}
 
-	public EnableShadersButtonEntry getEnableShadersButton() {
-		return enableShadersButton;
+	public void setApplied(ShaderPackEntry entry) {
+		this.applied = entry;
+	}
+
+	public ShaderPackEntry getApplied() {
+		return this.applied;
+	}
+
+	public TopButtonRowEntry getTopButtonRow() {
+		return topButtonRow;
 	}
 
 	public static abstract class BaseEntry extends ObjectSelectionList.Entry<BaseEntry> {
@@ -124,6 +143,10 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			this.packName = packName;
 			this.list = list;
 			this.index = index;
+		}
+
+		public boolean isApplied() {
+			return list.getApplied() == this;
 		}
 
 		public boolean isSelected() {
@@ -146,7 +169,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			int color = 0xFFFFFF;
 			String name = packName;
 
-			boolean shadersEnabled = list.getEnableShadersButton().enabled;
+			boolean shadersEnabled = list.getTopButtonRow().shadersEnabled;
 
 			if (font.width(new TextComponent(name).withStyle(ChatFormatting.BOLD)) > this.list.getRowWidth() - 3) {
 				name = font.plainSubstrByWidth(name, this.list.getRowWidth() - 8) + "...";
@@ -158,7 +181,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 				text = text.withStyle(ChatFormatting.BOLD);
 			}
 
-			if (this.isSelected()) {
+			if (this.isApplied()) {
 				color = 0xFFF263;
 			}
 
@@ -171,7 +194,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (list.getEnableShadersButton().enabled && !this.isSelected() && button == 0) {
+			if (list.getTopButtonRow().shadersEnabled && !this.isSelected() && button == 0) {
 				this.list.select(this.index);
 
 				return true;
@@ -200,37 +223,75 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 	}
 
-	public static class EnableShadersButtonEntry extends BaseEntry {
-		public boolean enabled;
+	public static class TopButtonRowEntry extends BaseEntry {
+		private static final Component REFRESH_SHADER_PACKS_LABEL = new TranslatableComponent("options.iris.refreshShaderPacks").withStyle(style -> style.withColor(TextColor.fromRgb(0x99ceff)));
+		private static final int REFRESH_BUTTON_WIDTH = 18;
 
-		public EnableShadersButtonEntry(boolean enabled) {
-			this.enabled = enabled;
+		private final ShaderPackSelectionList list;
+
+		public boolean showEnableShadersButton = true;
+		public boolean shadersEnabled;
+		private int cachedButtonDivisionX;
+
+		public TopButtonRowEntry(ShaderPackSelectionList list, boolean shadersEnabled) {
+			this.list = list;
+			this.shadersEnabled = shadersEnabled;
 		}
 
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+
+			// Cache the x position dividing the enable/disable and refresh button
+			this.cachedButtonDivisionX = (x + entryWidth) - (REFRESH_BUTTON_WIDTH + 3);
+
+			if (showEnableShadersButton) {
+				// Draw enable/disable button
+				GuiUtil.bindIrisWidgetsTexture();
+				GuiUtil.drawButton(poseStack, x - 2, y - 3, (entryWidth - REFRESH_BUTTON_WIDTH) - 1, 18, hovered && mouseX < cachedButtonDivisionX, false);
+
+				// Draw enabled/disabled text
+				Component label = this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
+				drawCenteredString(poseStack, Minecraft.getInstance().font, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
+			}
+
+			boolean refreshButtonHovered = hovered && mouseX > cachedButtonDivisionX;
+
+			// Draw refresh button
 			GuiUtil.bindIrisWidgetsTexture();
+			GuiUtil.drawButton(poseStack, (x + entryWidth) - (REFRESH_BUTTON_WIDTH + 2), y - 3, REFRESH_BUTTON_WIDTH, 18, refreshButtonHovered, false);
+			GuiUtil.Icon.REFRESH.draw(poseStack, ((x + entryWidth) - REFRESH_BUTTON_WIDTH) + 2, y + 1);
 
-			GuiUtil.drawButton(poseStack, x - 2, y - 3, entryWidth, 18, hovered, false);
-
-			Component label = this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
-
-			drawCenteredString(poseStack, Minecraft.getInstance().font, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
+			if (refreshButtonHovered) {
+				ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() ->
+						GuiUtil.drawTextPanel(Minecraft.getInstance().font, poseStack, REFRESH_SHADER_PACKS_LABEL,
+								(mouseX - 8) - Minecraft.getInstance().font.width(REFRESH_SHADER_PACKS_LABEL), mouseY - 16));
+			}
 		}
 
 		// Appears to be some accessibility thing
 		@Override
 		public Component getNarration() {
-			return new TranslatableComponent("narration.button", this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
+			return new TranslatableComponent("narration.button", this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
 		}
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
 			if (button == 0) {
-				this.enabled = !this.enabled;
-				GuiUtil.playButtonClickSound();
+				if (mouseX < this.cachedButtonDivisionX) {
+					if (this.showEnableShadersButton) {
+						// Enable/Disable button pressed
+						this.shadersEnabled = !this.shadersEnabled;
 
-				return true;
+						GuiUtil.playButtonClickSound();
+						return true;
+					}
+				} else {
+					// Refresh button pressed
+					this.list.refresh();
+
+					GuiUtil.playButtonClickSound();
+					return true;
+				}
 			}
 
 			return super.mouseClicked(mouseX, mouseY, button);

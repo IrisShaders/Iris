@@ -3,6 +3,7 @@ package net.coderbot.iris.uniforms;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
@@ -19,6 +20,7 @@ import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.Vector4i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -84,6 +86,12 @@ public final class CommonUniforms {
 			return new Vector2i((int) atlasSize.x, (int) atlasSize.y);
 		}, StateUpdateNotifiers.atlasTextureNotifier);
 
+		uniforms.uniform4i("blendFunc", () -> {
+			GlStateManager.BlendState blend = net.coderbot.iris.mixin.GlStateManagerAccessor.getBLEND();
+
+			return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
+		}, StateUpdateNotifiers.blendFuncNotifier);
+
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
 
@@ -91,7 +99,7 @@ public final class CommonUniforms {
 		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 
 		// TODO: Parse the value of const float eyeBrightnessHalflife from the shaderpack's fragment shader configuration
-		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier);
+		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(10.0f, 10.0f, CommonUniforms::getEyeBrightness, updateNotifier);
 
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
@@ -110,9 +118,8 @@ public final class CommonUniforms {
 			})
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			// TODO: Parse the value of const float wetnessHalfLife and const float drynessHalfLife from the shaderpack's fragment shader configuration
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
-			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
-			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor);
+			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, 600f, CommonUniforms::getRainStrength, updateNotifier))
+			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
 	}
 
 	private static Vector3d getSkyColor() {

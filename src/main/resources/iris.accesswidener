@@ -4,3 +4,4 @@ accessible  class   com/mojang/blaze3d/platform/GlStateManager$TextureState
 accessible  class   net/minecraft/client/renderer/RenderStateShard$TransparencyStateShard
 accessible  class   net/minecraft/client/renderer/RenderType$CompositeState
 accessible  class   net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
+accessible  class   net/minecraft/client/Options$FieldAccess

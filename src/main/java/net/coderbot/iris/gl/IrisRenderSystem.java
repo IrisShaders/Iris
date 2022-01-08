@@ -58,6 +58,11 @@ public class IrisRenderSystem {
 		GL32C.glUniform4f(location, v0, v1, v2, v3);
 	}
 
+	public static void uniform4i(int location, int v0, int v1, int v2, int v3) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glUniform4i(location, v0, v1, v2, v3);
+	}
+
 	public static void texParameteriv(int target, int pname, int[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glTexParameteriv(target, pname, params);

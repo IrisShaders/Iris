@@ -1,32 +1,12 @@
 package net.coderbot.iris.shaderpack;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
-import net.coderbot.iris.shaderpack.texture.CustomTextureData;
-import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
-import net.coderbot.iris.shaderpack.texture.TextureStage;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.function.Function;
-
-import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.shader.GlShader;
@@ -35,11 +15,32 @@ import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.option.ProfileSet;
+import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
+import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
+import net.coderbot.iris.shaderpack.texture.CustomTextureData;
+import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
 
 public class ShaderPack {
 	private static final Gson GSON = new Gson();
@@ -54,6 +55,15 @@ public class ShaderPack {
 	private final LanguageMap languageMap;
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
+	private final ShaderPackOptions shaderPackOptions;
+	private final OptionMenuContainer menuContainer;
+
+	private final ProfileSet.ProfileResult profile;
+	private final String profileInfo;
+
+	public ShaderPack(Path root) throws IOException {
+		this(root, Collections.emptyMap());
+	}
 
 	/**
 	 * Reads a shader pack from the disk.
@@ -63,13 +73,10 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root) throws IOException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
-			.map(ShaderProperties::new)
-			.orElseGet(ShaderProperties::empty);
 
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
@@ -86,15 +93,64 @@ public class ShaderPack {
 		boolean hasEnd = ShaderPackSourceNames.findPresentSources(starts, root,
 				AbsolutePackPath.fromAbsolutePath("/world1"), potentialFileNames);
 
+		// Read all files and included files recursively
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
-		// TODO: Discover shader options
-		// TODO: Merge shader options
-		// TODO: Apply shader options
+		this.languageMap = new LanguageMap(root.resolve("lang"));
 
+		// Discover, merge, and apply shader pack options
+		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
+		graph = this.shaderPackOptions.getIncludes();
+
+		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+				.map(source -> new ShaderProperties(source, shaderPackOptions))
+				.orElseGet(ShaderProperties::empty);
+
+		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
+
+		// Get programs that should be disabled from the detected profile
+		List<String> disabledPrograms = new ArrayList<>();
+		profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues()).current
+				.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
+
+		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
+
+		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
+
+		{
+			// Note: We always use English for this, because this will only show up in logs & on the debug screen
+			//       so trying to detect / handle the current MC language would just be a little too complex;
+			Map<String, String> translations = getLanguageMap().getTranslations("en_us");
+			String profileName;
+			String internalProfileName = getCurrentProfileName();
+
+			if (translations != null) {
+				profileName = translations.getOrDefault("profile." + internalProfileName, internalProfileName);
+			} else {
+				profileName = internalProfileName;
+			}
+
+			// TODO: show the options changed in relation to the current profile, and not just total.
+			this.profileInfo = "Profile: " + profileName + " (" + getShaderPackOptions().getOptionValues().getOptionsChanged() + " options changed)";
+		}
+
+		Iris.logger.info(this.profileInfo);
+
+		// Prepare our include processor
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
 
+		// Set up our source provider for creating ProgramSets
 		Function<AbsolutePackPath, String> sourceProvider = (path) -> {
+			String pathString = path.getPathString();
+			// Removes the first "/" in the path if present, and the file
+			// extension in order to represent the path as its program name
+			String programString = pathString.substring(pathString.indexOf("/") == 0 ? 1 : 0, pathString.lastIndexOf("."));
+
+			// Return an empty program source if the program is disabled by the current profile
+			if (disabledPrograms.contains(programString)) {
+				return null;
+			}
+
 			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
 
 			if (lines == null) {
@@ -131,8 +187,7 @@ public class ShaderPack {
 		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
 				shaderProperties, this);
 
-		this.idMap = new IdMap(root);
-		this.languageMap = new LanguageMap(root.resolve("lang"));
+		this.idMap = new IdMap(root, shaderPackOptions);
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
@@ -158,6 +213,18 @@ public class ShaderPack {
 		});
 	}
 
+	private String getCurrentProfileName() {
+		if (profile.current.isPresent()) {
+			return profile.current.get().name;
+		} else {
+			return "Custom";
+		}
+	}
+
+	public String getProfileInfo() {
+		return profileInfo;
+	}
+
 	@Nullable
 	private static ProgramSet loadOverrides(boolean has, AbsolutePackPath path, Function<AbsolutePackPath, String> sourceProvider,
 											ShaderProperties shaderProperties, ShaderPack pack) {
@@ -169,28 +236,13 @@ public class ShaderPack {
 	}
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
-	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
+	private static Optional<String> loadProperties(Path shaderPath, String name) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, fileContents);
-
-		StringReader propertiesReader = new StringReader(processed);
-		Properties properties = new Properties();
-		try {
-			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
-			//     so we don't need to do the UTF-8 workaround here.
-			properties.load(propertiesReader);
-		} catch (IOException e) {
-			Iris.logger.error("Error loading " + name + " at " + shaderPath);
-			Iris.logger.catching(Level.ERROR, e);
-
-			return Optional.empty();
-		}
-
-		return Optional.of(properties);
+		return Optional.of(fileContents);
 	}
 
 	// TODO: Implement raw texture data types
@@ -246,7 +298,8 @@ public class ShaderPack {
 
 	private static String readProperties(Path shaderPath, String name) {
 		try {
-			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.UTF_8);
+			// Property files should be encoded in ISO_8859_1.
+			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.ISO_8859_1);
 		} catch (NoSuchFileException e) {
 			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
 
@@ -305,5 +358,13 @@ public class ShaderPack {
 
 	public LanguageMap getLanguageMap() {
 		return languageMap;
+	}
+
+	public ShaderPackOptions getShaderPackOptions() {
+		return shaderPackOptions;
+	}
+
+	public OptionMenuContainer getMenuContainer() {
+		return menuContainer;
 	}
 }

@@ -10,7 +10,6 @@
     "GlStateManagerAccessor",
     "LevelRendererAccessor",
     "MixinBlockStateBehavior",
-    "MixinBufferSource_WrapperChecking",
     "MixinFogRenderer",
     "MixinDebugScreenOverlay",
     "MixinTheEndPortalRenderer",
@@ -35,6 +34,7 @@
     "MixinTitleScreen",
     "MixinTntMinecartRenderer",
     "MixinClientLanguage",
+    "MixinMaxFpsCrashFix",
     "MixinTweakFarPlane",
     "MixinLevelRenderer",
     "MixinUniform",
@@ -55,6 +55,7 @@
     "shadows.MixinPreventRebuildNearInShadowPass",
     "shadows.MixinLevelRenderer",
     "statelisteners.BooleanStateAccessor",
+    "statelisteners.MixinGlStateManager",
     "DimensionTypeAccessor"
   ],
   "injectors": {

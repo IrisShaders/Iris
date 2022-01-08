@@ -18,7 +18,7 @@ public class CenterDepthSampler {
 		// NB: This will always be one frame behind compared to the current frame.
 		// That's probably for the best, since it can help avoid some pipeline stalls.
 		// We're still going to get stalls, though.
-		centerDepthSmooth = new SmoothedFloat(1.0f, this::sampleCenterDepth, updateNotifier);
+		centerDepthSmooth = new SmoothedFloat(1.0f, 1.0f, this::sampleCenterDepth, updateNotifier);
 
 		// Prior to OpenGL 4.1, all framebuffers must have at least 1 color target.
 		depthBufferHolder = renderTargets.createFramebufferWritingToMain(new int[] {0});
