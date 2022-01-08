@@ -169,7 +169,11 @@ public final class GuiUtil {
 	public static class Icon {
 		public static final Icon SEARCH = new Icon(0, 0, 7, 8);
 		public static final Icon CLOSE = new Icon(7, 0, 5, 6);
-		public static final Icon REFRESH = new Icon(12, 0, 11, 11);
+		public static final Icon REFRESH = new Icon(12, 0, 10, 10);
+		public static final Icon EXPORT = new Icon(22, 0, 7, 8);
+		public static final Icon EXPORT_COLORED = new Icon(29, 0, 7, 8);
+		public static final Icon IMPORT = new Icon(22, 8, 7, 8);
+		public static final Icon IMPORT_COLORED = new Icon(29, 8, 7, 8);
 
 		private final int u;
 		private final int v;
@@ -199,6 +203,14 @@ public final class GuiUtil {
 
 			// Draw the texture to the screen
 			GuiComponent.blit(poseStack, x, y, u, v, width, height, 256, 256);
+		}
+
+		public int getWidth() {
+			return width;
+		}
+
+		public int getHeight() {
+			return height;
 		}
 	}
 }

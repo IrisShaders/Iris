@@ -1,6 +1,7 @@
 package net.coderbot.iris;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
@@ -21,10 +22,13 @@ import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.shaderpack.DimensionId;
+import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.fabricmc.loader.api.ModContainer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
@@ -69,6 +73,9 @@ public class Iris implements ClientModInitializer {
 	private static KeyMapping shaderpackScreenKeybind;
 
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
+	// Flag variable used when reloading
+	// Used in favor of queueDefaultShaderPackOptionValues() for resetting as the
+	// behavior is more concrete and therefore is more likely to repair a user's issues
 	private static boolean resetShaderPackOptions = false;
 
 	private static String IRIS_VERSION;
@@ -375,8 +382,8 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private static void saveConfigProperties(Path path, Properties properties) {
-		try {
-			properties.store(Files.newOutputStream(path), null);
+		try (OutputStream out = Files.newOutputStream(path)) {
+			properties.store(out, null);
 		} catch (IOException e) {
 			// TODO: Better error handling
 		}
@@ -424,6 +431,34 @@ public class Iris implements ClientModInitializer {
 
 	public static void queueShaderPackOptionsFromProfile(Profile profile) {
 		getShaderPackOptionQueue().putAll(profile.optionValues);
+	}
+
+	public static void queueShaderPackOptionsFromProperties(Properties properties) {
+		queueDefaultShaderPackOptionValues();
+
+		properties.stringPropertyNames().forEach(key ->
+				getShaderPackOptionQueue().put(key, properties.getProperty(key)));
+	}
+
+	// Used in favor of resetShaderPackOptions as the aforementioned requires the pack to be reloaded
+	public static void queueDefaultShaderPackOptionValues() {
+		clearShaderPackOptionQueue();
+
+		getCurrentPack().ifPresent(pack -> {
+			OptionSet options = pack.getShaderPackOptions().getOptionSet();
+			OptionValues values = pack.getShaderPackOptions().getOptionValues();
+
+			options.getStringOptions().forEach((key, mOpt) -> {
+				if (values.getStringValue(key).isPresent()) {
+					getShaderPackOptionQueue().put(key, mOpt.getOption().getDefaultValue());
+				}
+			});
+			options.getBooleanOptions().forEach((key, mOpt) -> {
+				if (values.getBooleanValue(key) != OptionalBoolean.DEFAULT) {
+					getShaderPackOptionQueue().put(key, Boolean.toString(mOpt.getOption().getDefaultValue()));
+				}
+			});
+		});
 	}
 
 	public static void clearShaderPackOptionQueue() {
