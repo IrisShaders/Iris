@@ -15,6 +15,8 @@
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
   "options.iris.openShaderPackFolder": "Открыть папку c шейдерами...",
+  "options.iris.shaderPackSettings": "Настройки шейдеров...",
+  "options.iris.shaderPackList": "Список шейдеров...",
   "options.iris.refreshShaderPacks": "Обновить список шейдеров",
   "options.iris.shaderPackSelection": "Пакеты шейдеров...",
   "options.iris.shaderPackSelection.title": "Пакеты шейдеров",
@@ -26,10 +28,22 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
   "options.iris.shaders.disabled": "Шейдеры: Выключены",
   "options.iris.shaders.enabled": "Шейдеры: Включены",
+  "options.iris.back": "Назад",
+  "options.iris.reset": "Сбросить",
+  "options.iris.reset.tooltip": "Сбросить ВСЕ параметры и применить?",
+  "options.iris.reset.tooltip.holdShift": "Удерживайте SHIFT и нажмите, чтобы сбросить",
+  "options.iris.setToDefault": "Установить параметр по умолчанию?",
+  "options.iris.profile": "Профиль",
+  "options.iris.profile.custom": "Пользовательский",
   "options.iris.shadowDistance": "Максимальное расстояние для теней",
   "options.iris.shadowDistance.enabled": "Позволяет вам изменить максимальное расстояние для теней. Блоки и существа за этим расстоянием не будут иметь теней. Снижая этот параметр, вы можете кардинально улучшить производительность.",
   "options.iris.shadowDistance.disabled": "Ваши текущие шейдеры уже установили своё расстояние для теней; вы не сможете её изменить.",
+  "options.iris.shadowDistance.sodium_tooltip": "Расстояние рендеринга теней определяет, насколько дальняя местность потенциально может быть визуализирована при проходе теней. Меньшие расстояния означают, что будет отображаться меньше ландшафта, что улучшит частоту кадров. Этот параметр нельзя изменить для пакетов, в которых явно указано расстояние рендеринга теней. Фактическое расстояние рендеринга теней ограничено дальностью прорисовки.",
   
   "pack.iris.select.title": "Выберите",
-  "pack.iris.list.label": "+ Перетащите шейдер для добавления"
+  "pack.iris.configure.title": "Настроить",
+  "pack.iris.list.label": "+ Перетащите шейдер для добавления",
+  
+  "label.iris.true": "Вкл",
+  "label.iris.false": "Выкл"
 }
