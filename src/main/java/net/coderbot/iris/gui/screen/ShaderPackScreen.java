@@ -21,6 +21,7 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -228,6 +229,24 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
+	public boolean keyPressed(int key, int j, int k) {
+		if (key == GLFW.GLFW_KEY_ESCAPE) {
+			if (this.navigation != null && this.navigation.hasHistory()) {
+				this.navigation.back();
+
+				return true;
+			} else if (this.optionMenuOpen) {
+				this.optionMenuOpen = false;
+				this.init();
+
+				return true;
+			}
+		}
+
+		return super.keyPressed(key, j, k);
+	}
+
+	@Override
 	public void onFilesDrop(List<Path> paths) {
 		if (this.optionMenuOpen) {
 			onOptionMenuFilesDrop(paths);
@@ -320,7 +339,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	public void onOptionMenuFilesDrop(List<Path> paths) {
 		// If more than one option file has been dragged, display an error
 		// as only one option file should be imported at a time
-		if (paths.size() > 1) {
+		if (paths.size() != 1) {
 			this.notificationDialog = new TranslatableComponent(
 					"options.iris.shaderPackOptions.tooManyFiles"
 			).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);

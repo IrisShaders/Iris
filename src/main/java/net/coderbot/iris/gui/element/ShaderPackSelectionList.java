@@ -254,7 +254,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-			this.buttons.setWidth(this.enableDisableButton, (entryWidth - 3) - REFRESH_BUTTON_WIDTH);
+			this.buttons.setWidth(this.enableDisableButton, (entryWidth - 1) - REFRESH_BUTTON_WIDTH);
 			this.enableDisableButton.centerX = x + (int)(entryWidth * 0.5);
 
 			this.buttons.render(poseStack, x - 2, y - 3, 18, mouseX, mouseY, tickDelta, hovered);

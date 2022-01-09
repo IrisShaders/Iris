@@ -239,13 +239,30 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 		private boolean importSettingsButtonClicked(IrisElementRow.IconButtonElement button) {
 			GuiUtil.playButtonClickSound();
 
-			Optional<Path> path = FileDialogUtil.fileSelectDialog(
+			// Invalid state to be in
+			if (!Iris.getCurrentPack().isPresent()) {
+				return false;
+			}
+
+			final ShaderPackScreen originalScreen = this.screen; // Also used to prevent invalid state
+
+			FileDialogUtil.fileSelectDialog(
 					FileDialogUtil.DialogType.OPEN, "Import Shader Settings from File",
-					Iris.getShaderpacksDirectory(), new String[] {"*.txt"}, "Shader Pack Settings (.txt)");
+					Iris.getShaderpacksDirectory().resolve(Iris.getCurrentPackName() + ".txt"),
+					 "Shader Pack Settings (.txt)", "*.txt")
+			.whenComplete((path, err) -> {
+				if (err != null) {
+					Iris.logger.error("Error selecting shader settings from file", err);
 
-			path.ifPresent(this.screen::importPackOptions);
+					return;
+				}
 
-			return path.isPresent();
+				if (Minecraft.getInstance().screen == originalScreen) {
+					path.ifPresent(originalScreen::importPackOptions);
+				}
+			});
+
+			return true;
 		}
 
 		private boolean exportSettingsButtonClicked(IrisElementRow.IconButtonElement button) {
@@ -256,31 +273,39 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 				return false;
 			}
 
-			Optional<Path> path = FileDialogUtil.fileSelectDialog(
+			FileDialogUtil.fileSelectDialog(
 					FileDialogUtil.DialogType.SAVE, "Export Shader Settings to File",
-					Paths.get(Iris.getCurrentPackName() + ".txt"), new String[] {"*.txt"}, "Shader Pack Settings (.txt)");
+					Iris.getShaderpacksDirectory().resolve(Iris.getCurrentPackName() + ".txt"),
+					"Shader Pack Settings (.txt)", "*.txt")
+			.whenComplete((path, err) -> {
+				if (err != null) {
+					Iris.logger.error("Error selecting file to export shader settings", err);
 
-			path.ifPresent(p -> {
-				Properties toSave = new Properties();
-
-				// Dirty way of getting the currently applied settings as a Properties, directly
-				// opens and copies out of the saved settings file if it is present
-				Path sourceTxtPath = Iris.getShaderpacksDirectory().resolve(Iris.getCurrentPackName() + ".txt");
-				if (Files.exists(sourceTxtPath)) {
-					try (InputStream in = Files.newInputStream(sourceTxtPath)) {
-						toSave.load(in);
-					} catch (IOException ignored) {}
+					return;
 				}
 
-				// Save properties to user determined file
-				try (OutputStream out = Files.newOutputStream(p)) {
-					toSave.store(out, null);
-				} catch (IOException e) {
-					Iris.logger.error("Error saving properties to \"" + p + "\"", e);
-				}
+				path.ifPresent(p -> {
+					Properties toSave = new Properties();
+
+					// Dirty way of getting the currently applied settings as a Properties, directly
+					// opens and copies out of the saved settings file if it is present
+					Path sourceTxtPath = Iris.getShaderpacksDirectory().resolve(Iris.getCurrentPackName() + ".txt");
+					if (Files.exists(sourceTxtPath)) {
+						try (InputStream in = Files.newInputStream(sourceTxtPath)) {
+							toSave.load(in);
+						} catch (IOException ignored) {}
+					}
+
+					// Save properties to user determined file
+					try (OutputStream out = Files.newOutputStream(p)) {
+						toSave.store(out, null);
+					} catch (IOException e) {
+						Iris.logger.error("Error saving properties to \"" + p + "\"", e);
+					}
+				});
 			});
 
-			return path.isPresent();
+			return true;
 		}
 	}
 

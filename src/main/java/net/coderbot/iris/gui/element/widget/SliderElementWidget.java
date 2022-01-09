@@ -103,7 +103,7 @@ public class SliderElementWidget extends StringElementWidget {
 
 			return true;
 		}
-		return super.mouseClicked(mx, my, button);
+		return false;
 	}
 
 	@Override
