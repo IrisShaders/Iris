@@ -16,10 +16,16 @@ public class PackShadowDirectives {
 	private boolean explicitRenderDistance;
 	private float intervalSize;
 
+	private boolean shouldRenderTerrain;
+	private boolean shouldRenderTranslucent;
+	private boolean shouldRenderEntities;
+	private boolean shouldRenderBlockEntities;
+	private OptionalBoolean cullingState;
+
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
 	private final ImmutableList<SamplingSettings> colorSamplingSettings;
 
-	public PackShadowDirectives() {
+	public PackShadowDirectives(boolean terrain, boolean translucent, boolean entities, boolean blockEntities, OptionalBoolean culling) {
 		// By default, the shadow map has a resolution of 1024x1024. It's recommended to increase this for better
 		// quality.
 		this.resolution = 1024;
@@ -57,6 +63,12 @@ public class PackShadowDirectives {
 		// moon move, or when the player camera moves into a different grid cell.
 		this.intervalSize = 2.0f;
 
+		this.shouldRenderTerrain = terrain;
+		this.shouldRenderTranslucent = translucent;
+		this.shouldRenderEntities = entities;
+		this.shouldRenderBlockEntities = blockEntities;
+		this.cullingState = culling;
+
 		this.depthSamplingSettings = ImmutableList.of(new DepthSamplingSettings(), new DepthSamplingSettings());
 
 		ImmutableList.Builder<SamplingSettings> colorSamplingSettings = ImmutableList.builder();
@@ -90,6 +102,26 @@ public class PackShadowDirectives {
 
 	public float getIntervalSize() {
 		return intervalSize;
+	}
+
+	public boolean shouldRenderTerrain() {
+		return shouldRenderTerrain;
+	}
+
+	public boolean shouldRenderTranslucent() {
+		return shouldRenderTranslucent;
+	}
+
+	public boolean shouldRenderEntities() {
+		return shouldRenderEntities;
+	}
+
+	public boolean shouldRenderBlockEntities() {
+		return shouldRenderBlockEntities;
+	}
+
+	public OptionalBoolean getCullingState() {
+		return cullingState;
 	}
 
 	public ImmutableList<DepthSamplingSettings> getDepthSamplingSettings() {
