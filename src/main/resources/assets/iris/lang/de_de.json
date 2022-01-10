@@ -15,6 +15,8 @@
   "options.iris.apply": "Anwenden",
   "options.iris.refresh": "Aktualisieren",
   "options.iris.openShaderPackFolder": "Shaderpaket-Ordner öffnen ...",
+  "options.iris.shaderPackSettings": "Shaderpaket-Einstellungen...",
+  "options.iris.shaderPackList": "Shaderpaket-Auswahl...",
   "options.iris.refreshShaderPacks": "Shaderpakete aktualisieren",
   "options.iris.shaderPackSelection": "Shaderpakete ...",
   "options.iris.shaderPackSelection.title": "Shaderpakete",
@@ -26,11 +28,22 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" befindet sich bereits im Shaderpaket-Ordner!",
   "options.iris.shaders.disabled": "Shader: Deaktiviert",
   "options.iris.shaders.enabled": "Shader: Aktiviert",
+  "options.iris.back": "Zurück",
+  "options.iris.reset": "Zurücksetzen",
+  "options.iris.reset.tooltip": "Setze ALLE Einstellungen zurück und wende diese an?",
+  "options.iris.reset.tooltip.holdShift": "Halte SHIFT und klicke um zurückzusetzen",
+  "options.iris.setToDefault": "Setze Einstellung zurück auf Standardwert?",
+  "options.iris.profile": "Profil",
+  "options.iris.profile.custom": "Benutzerdefiniert",
   "options.iris.shadowDistance": "Max. Schattendistanz",
   "options.iris.shadowDistance.enabled": "Erlaubt es dir, die maximale Distanz für Schatten zu ändern. Gelände und Objekte, die weiter entfernt sind als die eingestellte Distanz, werden keine Schatten werfen. Das Senken der Distanz kann die Leistung erheblich verbessern.",
   "options.iris.shadowDistance.disabled": "Dein aktuelles Shaderpaket hat bereits eine Distanz für Schatten gesetzt; du kannst sie nicht ändern.",
   "options.iris.shadowDistance.sodium_tooltip": "Die Distanz für Schatten bestimmt, wie weit das Gelände entfernt sein darf, um keinen Schatten mehr zu werfen. Bei geringeren Distanzen werden weniger Schatten berechnet, was die Bildrate verbessert. Diese Option kann nicht geändert werden bei Paketen, die explizit eine Distanz für Schatten vorgeben. Die tatsächliche Distanz für Schatten wird von der Einstellung \"Sichtweite\" begrenzt.",
 
   "pack.iris.select.title": "Auswählen",
-  "pack.iris.list.label": "+ Um Shaderpakete hinzuzufügen, ziehe sie in dieses Fenster hinein"
+  "pack.iris.configure.title": "Configure",
+  "pack.iris.list.label": "+ Um Shaderpakete hinzuzufügen, ziehe sie in dieses Fenster hinein",
+
+  "label.iris.true": "An",
+  "label.iris.false": "Aus"
 }
