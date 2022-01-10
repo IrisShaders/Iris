@@ -553,9 +553,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		GlFramebuffer framebufferAfterTranslucents =
 				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
-		builder.bindAttributeLocation(10, "mc_Entity");
-		builder.bindAttributeLocation(11, "mc_midTexCoord");
-		builder.bindAttributeLocation(12, "at_tangent");
+		builder.bindAttributeLocation(11, "mc_Entity");
+		builder.bindAttributeLocation(12, "mc_midTexCoord");
+		builder.bindAttributeLocation(13, "at_tangent");
 
 		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
 
@@ -674,9 +674,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	private static void setupAttributeDefaults(Pass pass) {
-		setupAttribute(pass, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
-		setupAttribute(pass, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
-		setupAttribute(pass, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
+		setupAttribute(pass, "mc_Entity", 11, -1.0F, -1.0F, -1.0F, -1.0F);
+		setupAttribute(pass, "mc_midTexCoord", 12, 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(pass, "at_tangent", 13, 1.0F, 0.0F, 0.0F, 1.0F);
 	}
 
 	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
