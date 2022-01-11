@@ -195,7 +195,6 @@ public class MixinLevelRenderer {
 
 	@Inject(method = RENDER_LAYER, at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderType renderType, PoseStack poseStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
-		pipeline.setPhase(GbufferPrograms.refinePhase(renderType));
 		if (renderType == RenderType.solid() || renderType == RenderType.cutout() || renderType == RenderType.cutoutMipped()) {
 			pipeline.pushProgram(GbufferProgram.TERRAIN);
 		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
@@ -203,10 +202,12 @@ public class MixinLevelRenderer {
 		} else {
 			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
 		}
+		pipeline.setPhase(GbufferPrograms.refinePhase(renderType));
 	}
 
 	@Inject(method = RENDER_LAYER, at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderType renderType, PoseStack poseStack, double cameraX, double cameraY, double cameraZ, CallbackInfo callback) {
+		pipeline.setPhase(WorldRenderingPhase.NONE);
 		if (renderType == RenderType.solid() || renderType == RenderType.cutout() || renderType == RenderType.cutoutMipped()) {
 			pipeline.popProgram(GbufferProgram.TERRAIN);
 		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
@@ -214,7 +215,6 @@ public class MixinLevelRenderer {
 		} else {
 			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
 		}
-		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER))
