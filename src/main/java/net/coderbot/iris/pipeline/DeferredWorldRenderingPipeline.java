@@ -788,6 +788,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginLevelRendering() {
 		isRenderingWorld = true;
 		isBeforeTranslucent = true;
+		phase = WorldRenderingPhase.NONE;
 		HandRenderer.INSTANCE.getBufferSource().resetDrawCalls();
 
 		checkWorld();
@@ -830,6 +831,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		isRenderingWorld = false;
+		phase = WorldRenderingPhase.NONE;
 		programStackLog.clear();
 
 		compositeRenderer.renderAll();
