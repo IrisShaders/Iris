@@ -74,6 +74,8 @@ public class HandRenderer {
 
 		ACTIVE = true;
 
+		pipeline.setPhase(WorldRenderingPhase.HAND_SOLID);
+
 		poseStack.pushPose();
 
 		Minecraft.getInstance().getProfiler().push("iris_hand");
@@ -94,6 +96,8 @@ public class HandRenderer {
 
 		renderingSolid = false;
 
+		pipeline.setPhase(WorldRenderingPhase.NONE);
+
 		ACTIVE = false;
 	}
 
@@ -103,6 +107,8 @@ public class HandRenderer {
 		}
 
 		ACTIVE = true;
+
+		pipeline.setPhase(WorldRenderingPhase.HAND_TRANSLUCENT);
 
 		poseStack.pushPose();
 
@@ -119,6 +125,8 @@ public class HandRenderer {
 		gameRenderer.resetProjectionMatrix(CapturedRenderingState.INSTANCE.getGbufferProjection());
 
 		bufferSource.endBatch();
+
+		pipeline.setPhase(WorldRenderingPhase.NONE);
 
 		ACTIVE = false;
 	}

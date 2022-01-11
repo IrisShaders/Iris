@@ -1,12 +1,16 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.pipeline.HandRenderer;
+import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.minecraft.client.renderer.RenderType;
 
 public class GbufferPrograms {
 	private static boolean entities;
 	private static boolean blockEntities;
+	private static Runnable phaseChangeListener;
 
 	/**
 	 * Uses additional information to choose a more specific (and appropriate) GbufferProgram.
@@ -31,6 +35,7 @@ public class GbufferPrograms {
 					+ entities + ", blockEntities = " + blockEntities);
 		}
 
+		setPhase(WorldRenderingPhase.ENTITIES);
 		entities = true;
 	}
 
@@ -43,15 +48,18 @@ public class GbufferPrograms {
 			throw new IllegalStateException("GbufferPrograms in weird state, tried to call endEntities when entities = false");
 		}
 
+		setPhase(WorldRenderingPhase.NONE);
 		entities = false;
 	}
 
 	public static void beginBlockEntities() {
+
 		if (entities || blockEntities) {
 			throw new IllegalStateException("GbufferPrograms in weird state, tried to call beginBlockEntities when entities = "
 					+ entities + ", blockEntities = " + blockEntities);
 		}
 
+		setPhase(WorldRenderingPhase.BLOCK_ENTITIES);
 		blockEntities = true;
 	}
 
@@ -64,6 +72,7 @@ public class GbufferPrograms {
 			throw new IllegalStateException("GbufferPrograms in weird state, tried to call endBlockEntities when blockEntities = false");
 		}
 
+		setPhase(WorldRenderingPhase.NONE);
 		blockEntities = false;
 	}
 
@@ -84,6 +93,50 @@ public class GbufferPrograms {
 
 		if (pipeline != null) {
 			pipeline.popProgram(program);
+		}
+	}
+
+	public static WorldRenderingPhase getCurrentPhase() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null) {
+			return pipeline.getPhase();
+		} else {
+			return WorldRenderingPhase.NONE;
+		}
+	}
+
+	public static void setPhase(WorldRenderingPhase phase) {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null) {
+			pipeline.setPhase(phase);
+		}
+	}
+
+	public static void runPhaseChangeNotifier() {
+		if (phaseChangeListener != null) {
+			phaseChangeListener.run();
+		}
+	}
+
+	static {
+		StateUpdateNotifiers.phaseChangeNotifier = listener -> phaseChangeListener = listener;
+	}
+
+	public static WorldRenderingPhase refinePhase(RenderType renderType) {
+		if (renderType == RenderType.solid()) {
+			return WorldRenderingPhase.TERRAIN_SOLID;
+		} else if (renderType == RenderType.cutout()) {
+			return WorldRenderingPhase.TERRAIN_CUTOUT;
+		} else if (renderType == RenderType.cutoutMipped()) {
+			return WorldRenderingPhase.TERRAIN_CUTOUT_MIPPED;
+		} else if (renderType == RenderType.translucent()) {
+			return WorldRenderingPhase.TERRAIN_TRANSLUCENT;
+		} else if (renderType == RenderType.tripwire()) {
+			return WorldRenderingPhase.TRIPWIRE;
+		} else {
+				throw new IllegalStateException("Illegal render type!");
 		}
 	}
 }
