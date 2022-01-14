@@ -1,7 +1,7 @@
-package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
+package net.coderbot.iris.compat.sodium.mixin.shader_types;
 
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
-import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisShaderTypes;
+import me.jellysquid.mods.sodium.opengl.shader.ShaderType;
+import net.coderbot.iris.compat.sodium.impl.shader_types.IrisShaderTypes;
 import org.apache.commons.lang3.ArrayUtils;
 import org.lwjgl.opengl.GL32C;
 import org.spongepowered.asm.mixin.Final;
