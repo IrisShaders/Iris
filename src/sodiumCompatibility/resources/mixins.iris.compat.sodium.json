@@ -10,8 +10,8 @@
     "conformVisibility": true
   },
   "client": [
-    "block_id.MixinChunkBuildBuffers",
-    "block_id.MixinChunkRenderRebuildTask",
+    "block_id.MixinTerrainBuildBuffers",
+    "block_id.MixinTerrainBuildTask",
     "directional_shading.MixinFlatLightPipeline",
     "directional_shading.MixinSmoothLightPipeline",
     "options.MixinOptionImpl",
