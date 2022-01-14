@@ -36,6 +36,17 @@ public abstract class MixinRegionChunkRenderer implements ShaderChunkRendererExt
 		}
 	}
 
+	@Redirect(method = "render",
+			at = @At(value = "INVOKE",
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface;setModelViewMatrix(Lorg/joml/Matrix4f;)V"), remap = false)
+	private void iris$setModelViewMatrix(ChunkShaderInterface itf, Matrix4f matrix) {
+		if (itf != null) {
+			itf.setModelViewMatrix(matrix);
+		} else {
+			iris$getOverride().getInterface().setModelViewMatrix(matrix);
+		}
+	}
+
 	@Redirect(method = "render", remap = false,
 			at = @At(value = "INVOKE",
 					target = "me/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface.setDrawUniforms (Lme/jellysquid/mods/sodium/client/gl/buffer/GlMutableBuffer;)V"))
@@ -49,12 +60,12 @@ public abstract class MixinRegionChunkRenderer implements ShaderChunkRendererExt
 
 	@Redirect(method = "setModelMatrixUniforms",
 			at = @At(value = "INVOKE",
-					target = "Lme/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface;setModelViewMatrix(Lorg/joml/Matrix4f;)V"), remap = false)
-	private void iris$setModelViewMatrix(ChunkShaderInterface itf, Matrix4f matrix) {
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface;setRegionOffset(FFF)V"), remap = false)
+	private void iris$setRegionOffset(ChunkShaderInterface itf, float x, float y, float z) {
 		if (itf != null) {
-			itf.setModelViewMatrix(matrix);
+			itf.setRegionOffset(x, y, z);
 		} else {
-			iris$getOverride().getInterface().setModelViewMatrix(matrix);
+			iris$getOverride().getInterface().setRegionOffset(x, y, z);
 		}
 	}
 }
