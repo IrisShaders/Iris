@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.shadow_map.frustum;
 
-import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
-import me.jellysquid.mods.sodium.client.util.frustum.FrustumAdapter;
+import me.jellysquid.mods.sodium.interop.vanilla.math.frustum.Frustum;
+import me.jellysquid.mods.sodium.interop.vanilla.math.frustum.FrustumAdapter;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import org.spongepowered.asm.mixin.Mixin;
 
