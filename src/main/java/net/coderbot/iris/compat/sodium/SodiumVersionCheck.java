@@ -6,13 +6,10 @@ public class SodiumVersionCheck {
 	// The allowed versions of Sodium for use with Iris
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
 			// Official 0.4.0-alpha5
-			AllowedSodiumVersion.exact("0.4.0-alpha5+build.9"),
+			AllowedSodiumVersion.exact("0.4.0-alpha6+build.14"),
 
-			// ReplayMod's existing compatible forked 0.4.0-alpha5 version
-			AllowedSodiumVersion.prefix("0.4.0-alpha5+rev.76d0e6e"),
-
-			// For future use by ReplayMod
-			AllowedSodiumVersion.prefix("0.4.0-alpha5+replaymod")
+			// For use by ReplayMod
+			AllowedSodiumVersion.prefix("0.4.0-alpha6+replaymod")
 	);
 
 	public static boolean isAllowedVersion(String sodiumVersion) {

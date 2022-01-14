@@ -8,7 +8,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 archivesBaseName = project.archives_base_name + project.minecraft_version
-version = "${project.mod_version}${getVersionMetadata()}"
+version = "${project.mod_version}"
 group = project.maven_group
 
 loom {
