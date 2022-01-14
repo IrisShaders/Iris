@@ -10,6 +10,7 @@
     "conformVisibility": true
   },
   "client": [
+    "better_mipmaps.MixinDefaultRenderPasses",
     "block_id.MixinTerrainBuildBuffers",
     "block_id.MixinTerrainBuildTask",
     "directional_shading.MixinFlatLightPipeline",
