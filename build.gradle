@@ -58,7 +58,12 @@ if (project.sodium_compatibility == "true") {
 	}
 
 	dependencies {
-		modImplementation "maven.modrinth:sodium:" + project.sodium_version
+		if (project.custom_sodium_jar == "true") {
+			modImplementation files("custom_sodium/" + project.sodium_version)
+		} else {
+			modImplementation "maven.modrinth:sodium:" + project.sodium_version
+		}
+
 		implementation "org.joml:joml:1.10.2"
 		modImplementation fabricApi.module("fabric-rendering-data-attachment-v1", project.fabric_version)
 		modImplementation fabricApi.module("fabric-rendering-fluids-v1", project.fabric_version)

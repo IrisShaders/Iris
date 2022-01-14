@@ -1,3 +1,6 @@
+# custom sodium versions
+custom_sodium/
+
 # gradle
 
 .gradle/
