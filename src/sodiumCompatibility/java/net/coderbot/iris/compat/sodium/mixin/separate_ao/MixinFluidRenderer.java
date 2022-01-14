@@ -1,8 +1,8 @@
 package net.coderbot.iris.compat.sodium.mixin.separate_ao;
 
-import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
-import me.jellysquid.mods.sodium.client.render.pipeline.FluidRenderer;
-import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
+import me.jellysquid.mods.sodium.render.chunk.compile.buffers.ChunkMeshBuilder;
+import me.jellysquid.mods.sodium.render.terrain.FluidRenderer;
+import me.jellysquid.mods.sodium.util.packed.ColorABGR;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -24,13 +24,15 @@ public class MixinFluidRenderer {
 
     @Inject(method = "render", remap = false, at = @At("HEAD"))
     private void iris$cacheSeparateAoSetting(BlockAndTintGetter world, FluidState fluidState, BlockPos pos,
-											 BlockPos offset, ChunkModelBuilder buffers,
+											 BlockPos offset, ChunkMeshBuilder buffers,
 											 CallbackInfoReturnable<Boolean> cir) {
         this.useSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
     }
 
     @Redirect(method = "calculateQuadColors", remap = false,
-            at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/util/color/ColorABGR.mul (IF)I", remap = false))
+			at = @At(value = "INVOKE",
+					target = "me/jellysquid/mods/sodium/util/packed/ColorABGR.mul (IF)I",
+					remap = false))
     private int iris$applySeparateAo(int color, float ao) {
         if (useSeparateAo) {
             color &= 0x00FFFFFF;

@@ -1,8 +1,8 @@
 package net.coderbot.iris.compat.sodium.mixin.separate_ao;
 
-import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
-import me.jellysquid.mods.sodium.client.render.pipeline.BlockRenderer;
-import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
+import me.jellysquid.mods.sodium.render.chunk.compile.buffers.ChunkMeshBuilder;
+import me.jellysquid.mods.sodium.render.terrain.BlockRenderer;
+import me.jellysquid.mods.sodium.util.packed.ColorABGR;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
@@ -26,14 +26,14 @@ public class MixinBlockRenderer {
 
     @Inject(method = "renderModel", remap = false, at = @At("HEAD"))
     private void renderModel(BlockAndTintGetter world, BlockState state, BlockPos pos, BlockPos origin,
-							 BakedModel model, ChunkModelBuilder buffers, boolean cull, long seed,
+							 BakedModel model, ChunkMeshBuilder buffers, boolean cull, long seed,
 							 CallbackInfoReturnable<Boolean> cir) {
         this.useSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
     }
 
     @Redirect(method = "renderQuad", remap = false,
             at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/client/util/color/ColorABGR.mul (IF)I",
+                    target = "me/jellysquid/mods/sodium/util/packed/ColorABGR.mul (IF)I",
                     remap = false))
     private int iris$applySeparateAo(int color, float ao) {
         if (useSeparateAo) {
