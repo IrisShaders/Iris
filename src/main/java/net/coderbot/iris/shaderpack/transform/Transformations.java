@@ -9,8 +9,19 @@ public interface Transformations {
 	void define(String key, String value);
 
 	enum InjectionPoint {
+		/**
+		 * in glsl-transformer: InjectionLocation.BEFORE_DIRECTIVES (but only roughly)
+		 */
 		DEFINES,
+
+		/**
+		 * in glsl-transformer: InjectionLocation.BEFORE_DECLARATIONS
+		 */
 		BEFORE_CODE,
+
+		/**
+		 * in glsl-transformer: InjectionLocation.BEFORE_EOF
+		 */
 		END
 	}
 }
