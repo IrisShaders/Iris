@@ -12,4 +12,5 @@ public class StateUpdateNotifiers {
 	public static ValueUpdateNotifier fogDensityNotifier;
 	public static ValueUpdateNotifier blendFuncNotifier;
 	public static ValueUpdateNotifier atlasTextureNotifier;
+	public static ValueUpdateNotifier phaseChangeNotifier;
 }

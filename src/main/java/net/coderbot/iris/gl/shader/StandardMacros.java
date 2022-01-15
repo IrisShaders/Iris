@@ -2,8 +2,10 @@ package net.coderbot.iris.gl.shader;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
+import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.SharedConstants;
@@ -217,5 +220,13 @@ public class StandardMacros {
 			return "MC_GL_VENDOR_XORG";
 		}
 		return "MC_GL_VENDOR_OTHER";
+	}
+
+	public static Map<String, String> getRenderStages() {
+		Map<String, String> stages = new HashMap<>();
+		for (WorldRenderingPhase phase : WorldRenderingPhase.values()) {
+			stages.put("MC_RENDER_STAGE_" + phase.name(), String.valueOf(phase.ordinal()));
+		}
+		return stages;
 	}
 }
