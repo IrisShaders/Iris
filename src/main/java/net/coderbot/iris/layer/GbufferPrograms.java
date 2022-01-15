@@ -15,7 +15,7 @@ public class GbufferPrograms {
 	/**
 	 * Uses additional information to choose a more specific (and appropriate) GbufferProgram.
 	 */
-	private static GbufferProgram refine(GbufferProgram program) {
+	private static GbufferProgram refine(GbufferProgram program, boolean push) {
 		if (program == GbufferProgram.ENTITIES || program == GbufferProgram.TERRAIN || program == GbufferProgram.TRANSLUCENT_TERRAIN) {
 			if (HandRenderer.INSTANCE.isActive()) {
 				return HandRenderer.INSTANCE.isRenderingSolid() ? GbufferProgram.HAND : GbufferProgram.HAND_TRANSLUCENT;
@@ -26,7 +26,29 @@ public class GbufferPrograms {
 			}
 		}
 
+		if (program == GbufferProgram.DAMAGED_BLOCKS) {
+			setPhase(push ? WorldRenderingPhase.DESTROY : WorldRenderingPhase.NONE);
+		} else if (program == GbufferProgram.LINES) {
+			setPhase(push ? WorldRenderingPhase.OUTLINE : WorldRenderingPhase.NONE);
+		}
+
 		return program;
+	}
+
+	public static WorldRenderingPhase refineTerrainPhase(RenderType renderType) {
+		if (renderType == RenderType.solid()) {
+			return WorldRenderingPhase.TERRAIN_SOLID;
+		} else if (renderType == RenderType.cutout()) {
+			return WorldRenderingPhase.TERRAIN_CUTOUT;
+		} else if (renderType == RenderType.cutoutMipped()) {
+			return WorldRenderingPhase.TERRAIN_CUTOUT_MIPPED;
+		} else if (renderType == RenderType.translucent()) {
+			return WorldRenderingPhase.TERRAIN_TRANSLUCENT;
+		} else if (renderType == RenderType.tripwire()) {
+			return WorldRenderingPhase.TRIPWIRE;
+		} else {
+			throw new IllegalStateException("Illegal render type!");
+		}
 	}
 
 	public static void beginEntities() {
@@ -77,7 +99,7 @@ public class GbufferPrograms {
 	}
 
 	public static void push(GbufferProgram program) {
-		program = refine(program);
+		program = refine(program, true);
 
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -87,7 +109,7 @@ public class GbufferPrograms {
 	}
 
 	public static void pop(GbufferProgram program) {
-		program = refine(program);
+		program = refine(program, false);
 
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -122,21 +144,5 @@ public class GbufferPrograms {
 
 	static {
 		StateUpdateNotifiers.phaseChangeNotifier = listener -> phaseChangeListener = listener;
-	}
-
-	public static WorldRenderingPhase refinePhase(RenderType renderType) {
-		if (renderType == RenderType.solid()) {
-			return WorldRenderingPhase.TERRAIN_SOLID;
-		} else if (renderType == RenderType.cutout()) {
-			return WorldRenderingPhase.TERRAIN_CUTOUT;
-		} else if (renderType == RenderType.cutoutMipped()) {
-			return WorldRenderingPhase.TERRAIN_CUTOUT_MIPPED;
-		} else if (renderType == RenderType.translucent()) {
-			return WorldRenderingPhase.TERRAIN_TRANSLUCENT;
-		} else if (renderType == RenderType.tripwire()) {
-			return WorldRenderingPhase.TRIPWIRE;
-		} else {
-				throw new IllegalStateException("Illegal render type!");
-		}
 	}
 }

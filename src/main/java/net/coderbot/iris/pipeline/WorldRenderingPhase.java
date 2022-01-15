@@ -1,6 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-// TODO: Implement this! Right now, this is just here as a stub so packs depending on the macros compile.
 public enum WorldRenderingPhase {
 	NONE,
 	SKY,

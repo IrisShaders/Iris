@@ -404,6 +404,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				return damagedBlock;
 			case BASIC:
 				return basic;
+			case LINES:
+				return basic;
 			case BEACON_BEAM:
 				return beaconBeam;
 			case ENTITIES:
