@@ -63,7 +63,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_BASIC, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowBasic
@@ -74,7 +74,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionColorShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_BASIC_COLOR, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowBasicColor
@@ -87,7 +87,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionTexShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_TEXTURED, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowTextured
@@ -98,7 +98,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionTexColorShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_TEXTURED_COLOR, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowTexturedColor
@@ -371,6 +371,25 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_LINES, cir);
 		} else if (isRenderingWorld()) {
 			override(ShaderKey.LINES, cir);
+		}
+	}
+
+	private static boolean isSky() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null) {
+			switch (pipeline.getPhase()) {
+				case SKY:
+				case SUNSET:
+				case SUN:
+				case STARS:
+				case VOID:
+				case MOON:
+					return true;
+				default: return false;
+			}
+		} else {
+			return false;
 		}
 	}
 
