@@ -2,12 +2,16 @@ package net.coderbot.iris.pipeline.newshader;
 
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
+import io.github.douira.glsl_transformer.core.SearchTerminals;
+import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
@@ -25,12 +29,11 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
  * That makes each of them more efficient as they don't need to run unnecessary
  * transformation phases.
  * 
+ * The only directives that glsl-transformer will see are #defines which are ok.
+ * 
  * TODO: good examples for more complex transformation in triforce patcher?
  * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
  * replacements that account for whitespace like the one for gl_TextureMatrix
- * 
- * TODO: how are defines handled? glsl-transformer can't deal with code that is
- * not valid GLSL code. Directives like #if will mess it up.
  */
 public class TransformPatcher extends TriforcePatcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
@@ -48,6 +51,15 @@ public class TransformPatcher extends TriforcePatcher {
   private static TransformationManager commonManager = new TransformationManager();
 
   static {
+    Transformation detectReserved = new Transformation(
+        new SearchTerminals(SearchTerminals.IDENTIFIER,
+            ImmutableSet.of(
+                ThrowTarget.fromMessage(
+                    "moj_import", "Iris shader programs may not use moj_import directives."),
+                ThrowTarget.fromMessage(
+                    "iris_",
+                    "Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))));
+
     Transformation fixVersion = new Transformation(new RunPhase() {
       /**
        * This largely replicates the behavior of
@@ -83,12 +95,9 @@ public class TransformPatcher extends TriforcePatcher {
       }
     });
 
-    // TODO: detection of moj_import and iris_ uses: see a subclass of FindTerminals in glsl-transformer
+    
 
-    Transformation detectDisallowed = new Transformation(new WalkPhase() {
-      //TODO with a FindTerminals subclass
-    });
-
+    commonManager.registerTransformation(detectReserved);
     commonManager.registerTransformation(fixVersion);
   }
 
