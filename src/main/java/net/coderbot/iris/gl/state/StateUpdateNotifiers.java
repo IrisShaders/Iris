@@ -9,4 +9,5 @@ import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 public class StateUpdateNotifiers {
 	public static ValueUpdateNotifier blendFuncNotifier;
 	public static ValueUpdateNotifier atlasTextureNotifier;
+	public static ValueUpdateNotifier phaseChangeNotifier;
 }

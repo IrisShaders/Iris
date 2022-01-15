@@ -35,6 +35,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 					.define("MC_SHADOW_QUALITY", "1.0")
 					.defineAll(StandardMacros.getIrisDefines())
 					.defineAll(StandardMacros.getGlExtensions())
+					.defineAll(StandardMacros.getRenderStages())
 					.build();
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to initialize StandardMacros!", e);
