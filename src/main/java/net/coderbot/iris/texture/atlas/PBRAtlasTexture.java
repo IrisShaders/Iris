@@ -51,9 +51,9 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	public void reload(TextureAtlas.Preparations preparations) {
 		int glId = getId();
-		TextureAtlasPreparationsAccessor dataAccessor = (TextureAtlasPreparationsAccessor) preparations;
-		int maxLevel = dataAccessor.getMipLevel();
-		TextureUtil.prepareImage(glId, maxLevel, dataAccessor.getWidth(), dataAccessor.getHeight());
+		TextureAtlasPreparationsAccessor preparationsAccessor = (TextureAtlasPreparationsAccessor) preparations;
+		int maxLevel = preparationsAccessor.getMipLevel();
+		TextureUtil.prepareImage(glId, maxLevel, preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
 
 		int defaultValue = type.getDefaultValue();
 		if (defaultValue != 0) {
@@ -72,7 +72,9 @@ public class PBRAtlasTexture extends AbstractTexture {
 			}
 		}
 
-		TextureSaveUtil.saveTextures("atlases", id.getPath().replaceAll("/", "_"), getId(), dataAccessor.getMipLevel(), dataAccessor.getWidth(), dataAccessor.getHeight());
+		if (Boolean.parseBoolean(System.getProperty("iris.pbr.debug"))) {
+			TextureSaveUtil.saveTextures("atlas", id.getPath().replaceAll("/", "_"), getId(), preparationsAccessor.getMipLevel(), preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
+		}
 	}
 
 	@Override
