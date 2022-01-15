@@ -24,6 +24,7 @@ import net.coderbot.iris.pipeline.ClearPassCreator;
 import net.coderbot.iris.pipeline.CustomTextureManager;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.postprocess.BufferFlipper;
@@ -72,7 +73,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final RenderTargets renderTargets;
 	private final ShaderMap shaderMap;
 
-	private WorldRenderingPhase phase = WorldRenderingPhase.NOT_RENDERING_WORLD;
+	private WorldRenderingPhase phase = WorldRenderingPhase.NONE;
 
 	private final Set<ShaderInstance> loadedShaders;
 	private final ImmutableList<ClearPass> clearPassesFull;
@@ -103,6 +104,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 	private boolean destroyed = false;
+	private boolean isRenderingWorld;
 
 	private Runnable createShadowMapRenderer;
 	private ShadowMapRenderer shadowMapRenderer;
@@ -459,6 +461,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void beginLevelRendering() {
+		isRenderingWorld = true;
+
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
@@ -582,6 +586,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void finalizeLevelRendering() {
+		isRenderingWorld = false;
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 	}
@@ -674,6 +679,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		shadowMapRenderer.destroy();
 		renderTargets.destroy();
+	}
+
+	@Override
+	public boolean isRenderingWorld() {
+		return isRenderingWorld;
 	}
 
 	@Override

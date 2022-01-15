@@ -477,7 +477,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		EntityRenderDispatcher dispatcher = levelRenderer.getEntityRenderDispatcher();
 
 		if (shouldRenderEntities) {
-			renderedShadowEntities = renderEntities(levelRenderer, entityShadowFrustum, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+			renderedShadowEntities = renderEntities(levelRenderer, dispatcher, bufferSource, modelView, tickDelta, entityShadowFrustum, cameraX, cameraY, cameraZ);
 		}
 
 		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
@@ -617,7 +617,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private String getBlockEntitiesDebugString() {
-		return shouldRenderBlockEntities ? renderedShadowBlockEntities + "" : ""; // TODO: + "/" + MinecraftClient.getInstance().world.blockEntities.size();
+		return shouldRenderBlockEntities ? renderedShadowBlockEntities + "" : "disabled by pack"; // TODO: + "/" + MinecraftClient.getInstance().world.blockEntities.size();
 	}
 
 	@Override
