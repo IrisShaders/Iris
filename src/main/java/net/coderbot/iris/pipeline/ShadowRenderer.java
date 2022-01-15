@@ -681,7 +681,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
 		messages.add("[Iris] Shadow Distance: " + debugStringShadowDistance);
 		messages.add("[Iris] Shadow Culling: " + debugStringShadowCulling);
-		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain + (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
+		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain
+				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[Iris] Shadow Block Entities: " + getBlockEntitiesDebugString());
 
