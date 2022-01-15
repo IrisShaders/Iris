@@ -330,6 +330,7 @@ public class TriforcePatcher implements Patcher {
 			transformations.define("VERT_POS_SCALE", String.valueOf(positionScale));
 			transformations.define("VERT_POS_OFFSET", String.valueOf(positionOffset));
 			transformations.define("VERT_TEX_SCALE", String.valueOf(textureScale));
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 u_RegionOffset;");
 
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"));
@@ -350,7 +351,7 @@ public class TriforcePatcher implements Patcher {
 					"	irisMain();\n" +
 					"}");
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(_draw_translation + _vert_position, 1.0); }");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(u_RegionOffset + _draw_translation + _vert_position, 1.0); }");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		} else {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
