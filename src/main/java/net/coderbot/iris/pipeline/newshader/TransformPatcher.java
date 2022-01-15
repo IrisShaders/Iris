@@ -2,7 +2,9 @@ package net.coderbot.iris.pipeline.newshader;
 
 import java.util.Optional;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Table;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,12 +12,13 @@ import org.apache.logging.log4j.Logger;
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
+import io.github.douira.glsl_transformer.core.ReplaceTerminals;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
-import io.github.douira.glsl_transformer.transform.WalkPhase;
+import io.github.douira.glsl_transformer.transform.TransformationPhase;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -35,22 +38,22 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
  * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
  * replacements that account for whitespace like the one for gl_TextureMatrix
  */
-public class TransformPatcher extends TriforcePatcher {
+public class TransformPatcher implements Patcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 
-  /*
-   * if glsl-transformer is used for everything, then there is no common, just
-   * three managers that share some but not all transformations
-   * private static TransformationManager vanillaManager = new
-   * TransformationManager();
-   * private static TransformationManager sodiumManager = new
-   * TransformationManager();
-   * private static TransformationManager compositeManager = new
-   * TransformationManager();
-   */
-  private static TransformationManager commonManager = new TransformationManager();
+  private Table<Patch, ShaderType, TransformationManager> managers = HashBasedTable.create(
+      Patch.values().length,
+      ShaderType.values().length);
 
-  static {
+  private static enum Patch {
+    VANILLA, SODIUM, COMPOSITE
+  }
+
+  public TransformPatcher() {
+    // PREV TODO: Only do the NewLines patches if the source code isn't from
+    // gbuffers_lines
+
+    // setup the transformations and even loose phases if necessary
     Transformation detectReserved = new Transformation(
         new SearchTerminals(SearchTerminals.IDENTIFIER,
             ImmutableSet.of(
@@ -95,46 +98,116 @@ public class TransformPatcher extends TriforcePatcher {
       }
     });
 
-    
+    /**
+     * PREV NOTE:
+     * This must be defined and valid in all shader passes, including composite
+     * passes. A shader that relies on this behavior is SEUS v11 - it reads
+     * gl_Fog.color and breaks if it is not properly defined.
+     */
+    TransformationPhase sharedFogSetup = new RunPhase() {
+      @Override
+      protected void run(TranslationUnitContext ctx) {
+        injectExternalDeclaration(
+            "uniform float iris_FogDensity;", InjectionPoint.BEFORE_DECLARATIONS);
+        injectExternalDeclaration(
+            "uniform float iris_FogStart;", InjectionPoint.BEFORE_DECLARATIONS);
+        injectExternalDeclaration(
+            "uniform float iris_FogEnd;", InjectionPoint.BEFORE_DECLARATIONS);
+        injectExternalDeclaration(
+            "uniform vec4 iris_FogColor;", InjectionPoint.BEFORE_DECLARATIONS);
+        injectExternalDeclaration(
+            "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };",
+            InjectionPoint.BEFORE_DECLARATIONS);
+        injectExternalDeclaration(
+            "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));",
+            InjectionPoint.BEFORE_DECLARATIONS);
+      }
+    };
 
-    commonManager.registerTransformation(detectReserved);
-    commonManager.registerTransformation(fixVersion);
+    // PREV TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
+    // TODO: update to use new glsl-transformer features to make this compact
+    ReplaceTerminals wrapFogFragCoord = new ReplaceTerminals(ReplaceTerminals.IDENTIFIER);
+    wrapFogFragCoord.addReplacementTerminal("gl_FogFragCoord", "iris_FogFragCoord");
+
+    // PREV TODO: This doesn't handle geometry shaders... How do we do that?
+    TransformationPhase injectOutFogFragCoord = new RunPhase() {
+      @Override
+      protected void run(TranslationUnitContext ctx) {
+        injectExternalDeclaration(
+            "out float iris_FogFragCoord;", InjectionPoint.BEFORE_DECLARATIONS);
+      };
+    };
+
+    TransformationPhase injectInFogFragCoord = new RunPhase() {
+      @Override
+      protected void run(TranslationUnitContext ctx) {
+        injectExternalDeclaration(
+            "in float iris_FogFragCoord;", InjectionPoint.BEFORE_DECLARATIONS);
+      };
+    };
+
+    /**
+     * PREV TODO: This is incorrect and is just the bare minimum needed for SEUS v11
+     * & Renewed to compile. It works because they don't actually use gl_FrontColor
+     * even though they write to it.
+     */
+    // TODO: use glsl-transformer core wrapping transformation for this
+    TransformationPhase frontColorInjection = new RunPhase() {
+      @Override
+      protected void run(TranslationUnitContext ctx) {
+        injectExternalDeclaration(
+            "vec4 iris_FrontColor;", InjectionPoint.BEFORE_DECLARATIONS);
+      };
+    };
+    ReplaceTerminals wrapFrontColor = new ReplaceTerminals(ReplaceTerminals.IDENTIFIER);
+    wrapFogFragCoord.addReplacementTerminal("gl_FrontColor", "iris_FrontColor");
+
+    // compose the transformations and phases into the managers
+    for (Patch patch : Patch.values()) {
+      for (ShaderType type : ShaderType.values()) {
+        TransformationManager manager = new TransformationManager();
+        managers.put(patch, type, manager);
+
+        manager.registerTransformation(detectReserved);
+        manager.registerTransformation(fixVersion);
+
+        Transformation commonInjections = new Transformation();
+        manager.registerTransformation(commonInjections);
+
+        //TODO: use addConcurrentPhase to make this more compact
+        commonInjections.addPhase(0, sharedFogSetup);
+        commonInjections.addPhase(0, wrapFogFragCoord);
+        if (type == ShaderType.VERTEX) {
+          commonInjections.addPhase(0, injectInFogFragCoord);
+        } else if (type == ShaderType.FRAGMENT) {
+          commonInjections.addPhase(0, injectOutFogFragCoord);
+        }
+        if (type == ShaderType.VERTEX) {
+          commonInjections.addPhase(0, frontColorInjection);
+          commonInjections.addPhase(0, wrapFrontColor);
+        }
+        
+        //TODO: the rest of the patchCommon things
+      }
+    }
   }
 
   @Override
   public String patchVanilla(
       String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
       ShaderAttributeInputs inputs) {
-    return super.patchVanilla(source, type, alpha, hasChunkOffset, inputs);
+    return managers.get(Patch.VANILLA, type).transform(source);
   }
 
   @Override
   public String patchSodium(
       String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs,
       float positionScale, float positionOffset, float textureScale) {
-    return super.patchSodium(
-        source, type, alpha, inputs, positionScale, positionOffset, textureScale);
+    return null;
   }
 
   @Override
   public String patchComposite(String source, ShaderType type) {
-    return super.patchComposite(source, type);
-  }
-
-  @Override
-  String patchCommon(String input, ShaderType type) {
-    // int index = input.indexOf("#version");
-    // LOGGER.debug(input.substring(index, index + 100).trim());
-    input = commonManager.transform(input);
-    // index = input.indexOf("#version");
-    // LOGGER.debug(input.substring(index, index + 100).trim());
-
-    return super.patchCommon(input, type);
-  }
-
-  @Override
-  void fixVersion(Transformations transformations) {
-    // do nothing because this patcher does itself
-    // super.fixVersion(transformations);
+    return null;
   }
 }
