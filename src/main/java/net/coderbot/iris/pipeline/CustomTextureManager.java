@@ -9,10 +9,13 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.texture.atlas.PBRAtlasHolder;
+import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 
@@ -25,8 +28,7 @@ import java.util.function.IntSupplier;
 public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
 	private final IntSupplier noise;
-	private final NativeImageBackedSingleColorTexture normals;
-	private final NativeImageBackedSingleColorTexture specular;
+	private final PBRAtlasHolder holder;
 
 	/**
 	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
@@ -70,11 +72,7 @@ public class CustomTextureManager {
 		});
 
 		// Create some placeholder PBR textures for now
-		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
-		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
-
-		ownedTextures.add(normals);
-		ownedTextures.add(specular);
+		holder = ((TextureAtlasExtension) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getPBRAtlasHolder();
 	}
 
 	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
@@ -115,12 +113,12 @@ public class CustomTextureManager {
 		return noise;
 	}
 
-	public NativeImageBackedSingleColorTexture getNormals() {
-		return normals;
+	public AbstractTexture getNormals() {
+		return holder.getOrCreateNormalAtlas();
 	}
 
-	public NativeImageBackedSingleColorTexture getSpecular() {
-		return specular;
+	public AbstractTexture getSpecular() {
+		return holder.getOrCreateSpecularAtlas();
 	}
 
 	public void destroy() {

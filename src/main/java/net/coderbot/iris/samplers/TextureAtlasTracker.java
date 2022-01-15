@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.texunits.TextureAtlasInterface;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec2;
 import org.lwjgl.opengl.GL20C;
 
@@ -53,6 +54,17 @@ public class TextureAtlasTracker {
 		}
 
 		return size;
+	}
+
+	public ResourceLocation getAtlasLocation(int id) {
+		TextureAtlas atlas = atlases.get(id);
+		ResourceLocation location = null;
+
+		if (atlas != null) {
+			location = atlas.location();
+		}
+
+		return location;
 	}
 
 	public void trackDeleteTextures(int id) {

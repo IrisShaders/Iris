@@ -35,6 +35,7 @@
     "iris-batched-entity-rendering.mixins.json",
     "mixins.iris.yeetphysicsmod.json",
     "mixins.iris.fantastic.json",
+    "mixins.iris.pbr.json",
     "mixins.iris.vertexformat.json",
     "mixins.iris.bettermipmaps.json",
     "mixins.iris.compat.indigo.json",
