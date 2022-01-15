@@ -25,7 +25,7 @@ public class PackShadowDirectives {
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
 	private final ImmutableList<SamplingSettings> colorSamplingSettings;
 
-	public PackShadowDirectives(boolean terrain, boolean translucent, boolean entities, boolean blockEntities, OptionalBoolean culling) {
+	public PackShadowDirectives(ShaderProperties properties) {
 		// By default, the shadow map has a resolution of 1024x1024. It's recommended to increase this for better
 		// quality.
 		this.resolution = 1024;
@@ -63,11 +63,11 @@ public class PackShadowDirectives {
 		// moon move, or when the player camera moves into a different grid cell.
 		this.intervalSize = 2.0f;
 
-		this.shouldRenderTerrain = terrain;
-		this.shouldRenderTranslucent = translucent;
-		this.shouldRenderEntities = entities;
-		this.shouldRenderBlockEntities = blockEntities;
-		this.cullingState = culling;
+		this.shouldRenderTerrain = properties.getShadowTerrain().orElse(true);
+		this.shouldRenderTranslucent = properties.getShadowTranslucent().orElse(true);
+		this.shouldRenderEntities = properties.getShadowEntities().orElse(true);
+		this.shouldRenderBlockEntities = properties.getShadowBlockEntities().orElse(true);
+		this.cullingState = properties.getShadowCulling();
 
 		this.depthSamplingSettings = ImmutableList.of(new DepthSamplingSettings(), new DepthSamplingSettings());
 
@@ -78,6 +78,22 @@ public class PackShadowDirectives {
 		}
 
 		this.colorSamplingSettings = colorSamplingSettings.build();
+	}
+
+	public PackShadowDirectives(PackShadowDirectives shadowDirectives) {
+		this.resolution = shadowDirectives.resolution;
+		this.fov = shadowDirectives.fov;
+		this.distance = shadowDirectives.distance;
+		this.distanceRenderMul = shadowDirectives.distanceRenderMul;
+		this.explicitRenderDistance = shadowDirectives.explicitRenderDistance;
+		this.intervalSize = shadowDirectives.intervalSize;
+		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain;
+		this.shouldRenderTranslucent = shadowDirectives.shouldRenderTranslucent;
+		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities;
+		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities;
+		this.cullingState = shadowDirectives.cullingState;
+		this.depthSamplingSettings = shadowDirectives.depthSamplingSettings;
+		this.colorSamplingSettings = shadowDirectives.colorSamplingSettings;
 	}
 
 	public int getResolution() {

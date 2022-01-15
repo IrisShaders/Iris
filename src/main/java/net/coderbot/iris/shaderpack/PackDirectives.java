@@ -34,7 +34,7 @@ public class PackDirectives {
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
-		this(supportedRenderTargets, new PackShadowDirectives(properties.getShadowTerrain().orElse(true), properties.getShadowTranslucent().orElse(true), properties.getShadowEntities().orElse(true), properties.getShadowBlockEntities().orElse(true), properties.getShadowCulling()));
+		this(supportedRenderTargets, new PackShadowDirectives(properties));
 		areCloudsEnabled = properties.areCloudsEnabled();
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
@@ -46,7 +46,7 @@ public class PackDirectives {
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
-		this(supportedRenderTargets, new PackShadowDirectives(directives.getShadowDirectives().shouldRenderTerrain(), directives.getShadowDirectives().shouldRenderTranslucent(), directives.getShadowDirectives().shouldRenderEntities(), directives.getShadowDirectives().shouldRenderBlockEntities(), directives.getShadowDirectives().getCullingState()));
+		this(supportedRenderTargets, new PackShadowDirectives(directives.getShadowDirectives()));
 		areCloudsEnabled = directives.areCloudsEnabled();
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
