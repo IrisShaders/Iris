@@ -71,6 +71,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final OptionalBoolean packCullingState;
 	public boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
+	private final boolean shouldRenderTerrain;
+	private final boolean shouldRenderTranslucent;
+	private final boolean shouldRenderEntities;
+	private final boolean shouldRenderBlockEntities;
 	private final float sunPathRotation;
 	private final RenderBuffers buffers;
 	private final RenderBuffersExt RenderBuffersExt;
@@ -91,6 +95,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.renderDistanceMultiplier = shadowDirectives.getDistanceRenderMul();
 		this.resolution = shadowDirectives.getResolution();
 		this.intervalSize = shadowDirectives.getIntervalSize();
+		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain();
+		this.shouldRenderTranslucent = shadowDirectives.shouldRenderTranslucent();
+		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities();
+		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities();
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
 
@@ -122,7 +130,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// Also assume voxelization if image load / store is detected (set elsewhere)
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
-			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
+			this.packCullingState = shadowDirectives.getCullingState();
 		} else {
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
@@ -430,10 +438,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// TODO: Better way of preventing light from leaking into places where it shouldn't
 		RenderSystem.disableCull();
 
-		// Render all opaque terrain
-		levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
-		levelRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
-		levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+		// Render all opaque terrain unless pack requests not to
+		if (shouldRenderTerrain) {
+			levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+			levelRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+			levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+		}
 
 		// TODO: Restore entity & block entity rendering
 
@@ -466,11 +476,15 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		MultiBufferSource.BufferSource bufferSource = buffers.bufferSource();
 		EntityRenderDispatcher dispatcher = levelRenderer.getEntityRenderDispatcher();
 
-		renderedShadowEntities = renderEntities(levelRenderer, dispatcher, bufferSource, modelView, tickDelta, entityShadowFrustum, cameraX, cameraY, cameraZ);
+		if (shouldRenderEntities) {
+			renderedShadowEntities = renderEntities(levelRenderer, entityShadowFrustum, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+		}
 
 		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
 
-		renderedShadowBlockEntities = renderBlockEntities(modelView, tickDelta, cameraX, cameraY, cameraZ, bufferSource);
+		if (shouldRenderBlockEntities) {
+			renderedShadowBlockEntities = renderBlockEntities(modelView, tickDelta, cameraX, cameraY, cameraZ, bufferSource);
+		}
 
 		levelRenderer.getLevel().getProfiler().popPush("draw entities");
 
@@ -486,7 +500,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
-		levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+		if (shouldRenderTranslucent) {
+			levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+		}
 		// Note: Apparently tripwire isn't rendered in the shadow pass.
 		// levelRenderer.invokeRenderLayer(RenderLayer.getTripwire(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
 
@@ -585,22 +601,23 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
 		messages.add("[Iris] Shadow Distance: " + debugStringShadowDistance);
 		messages.add("[Iris] Shadow Culling: " + debugStringShadowCulling);
-		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain);
+		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain
+				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[Iris] Shadow Block Entities: " + getBlockEntitiesDebugString());
 
-		if (buffers instanceof DrawCallTrackingRenderBuffers) {
+		if (buffers instanceof DrawCallTrackingRenderBuffers && shouldRenderEntities) {
 			DrawCallTrackingRenderBuffers drawCallTracker = (DrawCallTrackingRenderBuffers) buffers;
 			messages.add("[Iris] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
 		}
 	}
 
 	private String getEntitiesDebugString() {
-		return renderedShadowEntities + "/" + Minecraft.getInstance().level.getEntityCount();
+		return shouldRenderEntities ? (renderedShadowEntities + "/" + Minecraft.getInstance().level.getEntityCount()) : "disabled by pack";
 	}
 
 	private String getBlockEntitiesDebugString() {
-		return renderedShadowBlockEntities + ""; // TODO: + "/" + MinecraftClient.getInstance().world.blockEntities.size();
+		return shouldRenderBlockEntities ? renderedShadowBlockEntities + "" : ""; // TODO: + "/" + MinecraftClient.getInstance().world.blockEntities.size();
 	}
 
 	@Override
