@@ -6,9 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
-import net.coderbot.iris.texture.atlas.TextureAtlasSpriteExtension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,9 +19,12 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.PngInfo;
 import com.mojang.datafixers.util.Pair;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.texture.PBRType;
 import net.coderbot.iris.texture.atlas.PBRAtlasHolder;
 import net.coderbot.iris.texture.atlas.PBRSpriteHolder;
+import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
+import net.coderbot.iris.texture.atlas.TextureAtlasSpriteExtension;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -133,26 +133,32 @@ public abstract class TextureAtlasMixin extends AbstractTexture implements Textu
 	@Override
 	public void releaseId() {
 		super.releaseId();
-	}
-
-	@Override
-	public void close() {
-		super.close();
-	}
-
-	@Inject(method = "clearTextureData", at = @At("TAIL"))
-	private void onTailClearGlId(CallbackInfo ci) {
 		if (pbrHolder != null) {
 			pbrHolder.releaseIds();
 		}
 	}
 
-	//@Inject(method = "clearTextureData", at = @At("TAIL"), remap = false)
-	private void onTailClose(CallbackInfo ci) {
+	@Override
+	public void close() {
+		super.close();
 		if (pbrHolder != null) {
 			pbrHolder.close();
 		}
 	}
+
+//	@Inject(method = "releaseId()V", at = @At("TAIL"))
+//	private void onTailReleaseId(CallbackInfo ci) {
+//		if (pbrHolder != null) {
+//			pbrHolder.releaseIds();
+//		}
+//	}
+//
+//	@Inject(method = "close()V", at = @At("TAIL"), remap = false)
+//	private void onTailClose(CallbackInfo ci) {
+//		if (pbrHolder != null) {
+//			pbrHolder.close();
+//		}
+//	}
 
 	@Override
 	public boolean hasPBRSpriteHolder() {
