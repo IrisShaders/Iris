@@ -29,6 +29,8 @@ public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
 	private final IntSupplier noise;
 	private final PBRAtlasHolder holder;
+	private final NativeImageBackedSingleColorTexture normals;
+	private final NativeImageBackedSingleColorTexture specular;
 
 	/**
 	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
@@ -71,8 +73,15 @@ public class CustomTextureManager {
 			return texture::getId;
 		});
 
-		// Create some placeholder PBR textures for now
+		// Create some placeholder PBR textures if some of the PBR textures are missing
+		// TODO: This should not be the block atlas, but rather the currently active atlas!
 		holder = ((TextureAtlasExtension) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getPBRAtlasHolder();
+
+		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
+		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
+
+		ownedTextures.add(normals);
+		ownedTextures.add(specular);
 	}
 
 	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
@@ -114,11 +123,11 @@ public class CustomTextureManager {
 	}
 
 	public AbstractTexture getNormals() {
-		return holder.getOrCreateNormalAtlas();
+		return holder != null ? holder.getOrCreateNormalAtlas() : normals;
 	}
 
 	public AbstractTexture getSpecular() {
-		return holder.getOrCreateSpecularAtlas();
+		return specular != null ? holder.getOrCreateSpecularAtlas() : specular;
 	}
 
 	public void destroy() {
