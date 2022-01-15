@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
+import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
 import net.coderbot.iris.samplers.TextureAtlasTracker;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -87,7 +88,11 @@ public final class CommonUniforms {
 		uniforms.uniform4i("blendFunc", () -> {
 			GlStateManager.BlendState blend = net.coderbot.iris.mixin.GlStateManagerAccessor.getBLEND();
 
-			return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
+			if (((BooleanStateAccessor) blend.mode).isEnabled()) {
+				return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
+			} else {
+				return new Vector4i(0, 0, 0, 0);
+			}
 		}, StateUpdateNotifiers.blendFuncNotifier);
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
