@@ -40,7 +40,7 @@ public abstract class TextureAtlasMixin extends AbstractTexture implements Textu
 	@Unique
 	private PBRAtlasHolder pbrHolder;
 
-	@Inject(method = "prepareToStitch(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/stream/Stream;Lnet/minecraft/util/profiling/ProfilerFiller;I)Lnet/minecraft/client/renderer/texture/TextureAtlas$Preparations;", at = @At(value = "INVOKE_STRING", target = "popPush(Ljava/lang/String;)V", args = "ldc=loading"))
+	@Inject(method = "prepareToStitch(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/stream/Stream;Lnet/minecraft/util/profiling/ProfilerFiller;I)Lnet/minecraft/client/renderer/texture/TextureAtlas$Preparations;", at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V", args = "ldc=loading"))
 	private void beforeLoadingSprites(ResourceManager resourceManager, Stream<ResourceLocation> spriteIds, ProfilerFiller profiler, int mipLevel, CallbackInfoReturnable<TextureAtlas.Preparations> cir) {
 		if (pbrHolder != null) {
 			pbrHolder.clear();
