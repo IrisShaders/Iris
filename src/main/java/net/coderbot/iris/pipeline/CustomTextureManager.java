@@ -127,7 +127,7 @@ public class CustomTextureManager {
 	}
 
 	public AbstractTexture getSpecular() {
-		return specular != null ? holder.getOrCreateSpecularAtlas() : specular;
+		return holder != null ? holder.getOrCreateSpecularAtlas() : specular;
 	}
 
 	public void destroy() {
