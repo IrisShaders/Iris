@@ -10,7 +10,7 @@ public class NativeImageBackedSingleColorTexture extends DynamicTexture {
 	}
 
 	public NativeImageBackedSingleColorTexture(int rgba) {
-		this(rgba & 0xFF, rgba >> 8 & 0xFF, rgba >> 16 & 0xFF, rgba >> 24 & 0xFF);
+		this(rgba >> 24 & 0xFF, rgba >> 16 & 0xFF, rgba >> 8 & 0xFF, rgba & 0xFF);
 	}
 
 	private static NativeImage create(int color) {
