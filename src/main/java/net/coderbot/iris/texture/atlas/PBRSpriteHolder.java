@@ -1,15 +1,19 @@
 package net.coderbot.iris.texture.atlas;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 
 public class PBRSpriteHolder {
 	protected TextureAtlasSprite normalSprite;
 	protected TextureAtlasSprite specularSprite;
 
+	@Nullable
 	public TextureAtlasSprite getNormalSprite() {
 		return normalSprite;
 	}
 
+	@Nullable
 	public TextureAtlasSprite getSpecularSprite() {
 		return specularSprite;
 	}
@@ -20,16 +24,6 @@ public class PBRSpriteHolder {
 
 	public void setSpecularSprite(TextureAtlasSprite sprite) {
 		specularSprite = sprite;
-	}
-
-	// TODO: won't work with Sodium
-	public void tickAnimation() {
-		if (normalSprite != null) {
-			normalSprite.cycleFrames();
-		}
-		if (specularSprite != null) {
-			specularSprite.cycleFrames();
-		}
 	}
 
 	public void close() {

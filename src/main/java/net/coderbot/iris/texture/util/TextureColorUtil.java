@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 public class TextureColorUtil {
 	private static int colorFillFBO = -1;
 
-	public static void fillWithColor(int textureId, int maxLevel, int color) {
+	public static void fillWithColor(int textureId, int maxLevel, int rgba) {
 		if (colorFillFBO == -1) {
 			colorFillFBO = GlStateManager.glGenFramebuffers();
 		}
@@ -24,10 +24,10 @@ public class TextureColorUtil {
 
 		GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, colorFillFBO);
 		GlStateManager._clearColor(
-				(color >> 24 & 0xFF) / 255.0f,
-				(color >> 16 & 0xFF) / 255.0f,
-				(color >> 8 & 0xFF) / 255.0f,
-				(color & 0xFF) / 255.0f
+				(rgba >> 24 & 0xFF) / 255.0f,
+				(rgba >> 16 & 0xFF) / 255.0f,
+				(rgba >> 8 & 0xFF) / 255.0f,
+				(rgba & 0xFF) / 255.0f
 		);
 		GlStateManager._bindTexture(textureId);
 		for (int level = 0; level <= maxLevel; ++level) {

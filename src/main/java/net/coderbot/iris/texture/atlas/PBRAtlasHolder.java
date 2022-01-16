@@ -1,5 +1,7 @@
 package net.coderbot.iris.texture.atlas;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.coderbot.iris.texture.PBRType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 
@@ -20,6 +22,16 @@ public class PBRAtlasHolder {
 		return specularAtlas != null;
 	}
 
+	@Nullable
+	public PBRAtlasTexture getNormalAtlas() {
+		return normalAtlas;
+	}
+
+	@Nullable
+	public PBRAtlasTexture getSpecularAtlas() {
+		return specularAtlas;
+	}
+
 	public PBRAtlasTexture getOrCreateNormalAtlas() {
 		if (normalAtlas == null) {
 			normalAtlas = new PBRAtlasTexture(atlas, PBRType.NORMAL);
@@ -34,12 +46,30 @@ public class PBRAtlasHolder {
 		return specularAtlas;
 	}
 
+	public void clear() {
+		if (normalAtlas != null) {
+			normalAtlas.clear();
+		}
+		if (specularAtlas != null) {
+			specularAtlas.clear();
+		}
+	}
+
 	public void reload(TextureAtlas.Preparations preparations) {
 		if (normalAtlas != null) {
 			normalAtlas.reload(preparations);
 		}
 		if (specularAtlas != null) {
 			specularAtlas.reload(preparations);
+		}
+	}
+
+	public void cycleAnimationFrames() {
+		if (normalAtlas != null) {
+			normalAtlas.cycleAnimationFrames();
+		}
+		if (specularAtlas != null) {
+			specularAtlas.cycleAnimationFrames();
 		}
 	}
 

@@ -1,14 +1,16 @@
 package net.coderbot.iris.texture.atlas;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.blaze3d.platform.TextureUtil;
 
-import net.coderbot.iris.texture.PBRType;
 import net.coderbot.iris.mixin.pbr.TextureAtlasPreparationsAccessor;
+import net.coderbot.iris.texture.PBRType;
 import net.coderbot.iris.texture.util.TextureColorUtil;
 import net.coderbot.iris.texture.util.TextureSaveUtil;
 import net.minecraft.CrashReport;
@@ -25,6 +27,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 	protected final PBRType type;
 	protected final ResourceLocation id;
 	protected final Map<ResourceLocation, TextureAtlasSprite> sprites = new HashMap<>();
+	protected final Set<TextureAtlasSprite> animatedSprites = new HashSet<>();
 
 	public PBRAtlasTexture(TextureAtlas atlasTexture, PBRType type) {
 		this.atlasTexture = atlasTexture;
@@ -42,11 +45,19 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	public void addSprite(TextureAtlasSprite sprite) {
 		sprites.put(sprite.getName(), sprite);
+		if (sprite.isAnimation()) {
+			animatedSprites.add(sprite);
+		}
 	}
 
 	@Nullable
 	public TextureAtlasSprite getSprite(ResourceLocation id) {
 		return sprites.get(id);
+	}
+
+	public void clear() {
+		sprites.clear();
+		animatedSprites.clear();
 	}
 
 	public void reload(TextureAtlas.Preparations preparations) {
@@ -63,8 +74,8 @@ public class PBRAtlasTexture extends AbstractTexture {
 		for (TextureAtlasSprite sprite : sprites.values()) {
 			try {
 				sprite.uploadFirstFrame();
-			} catch (Throwable var7) {
-				CrashReport crashReport = CrashReport.forThrowable(var7, "Stitching texture atlas");
+			} catch (Throwable throwable) {
+				CrashReport crashReport = CrashReport.forThrowable(throwable, "Stitching texture atlas");
 				CrashReportCategory crashReportCategory = crashReport.addCategory("Texture being stitched together");
 				crashReportCategory.setDetail("Atlas path", id);
 				crashReportCategory.setDetail("Sprite", sprite);
@@ -74,6 +85,13 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 		if (Boolean.parseBoolean(System.getProperty("iris.pbr.debug"))) {
 			TextureSaveUtil.saveTextures("atlas", id.getPath().replaceAll("/", "_"), glId, preparationsAccessor.getMipLevel(), preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
+		}
+	}
+
+	public void cycleAnimationFrames() {
+		bind();
+		for (TextureAtlasSprite sprite : animatedSprites) {
+			sprite.cycleFrames();
 		}
 	}
 

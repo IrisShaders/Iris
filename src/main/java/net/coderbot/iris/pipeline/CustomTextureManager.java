@@ -1,5 +1,11 @@
 package net.coderbot.iris.pipeline;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.IntSupplier;
+
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
@@ -9,6 +15,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.texture.PBRType;
 import net.coderbot.iris.texture.atlas.PBRAtlasHolder;
 import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
 import net.minecraft.ResourceLocationException;
@@ -19,18 +26,12 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.IntSupplier;
-
 public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
 	private final IntSupplier noise;
 	private final PBRAtlasHolder holder;
-	private final NativeImageBackedSingleColorTexture normals;
-	private final NativeImageBackedSingleColorTexture specular;
+	private final NativeImageBackedSingleColorTexture defaultNormalMap;
+	private final NativeImageBackedSingleColorTexture defaultSpecularMap;
 
 	/**
 	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
@@ -77,11 +78,11 @@ public class CustomTextureManager {
 		// TODO: This should not be the block atlas, but rather the currently active atlas!
 		holder = ((TextureAtlasExtension) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getPBRAtlasHolder();
 
-		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
-		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
+		defaultNormalMap = new NativeImageBackedSingleColorTexture(PBRType.NORMAL.getDefaultValue());
+		defaultSpecularMap = new NativeImageBackedSingleColorTexture(PBRType.SPECULAR.getDefaultValue());
 
-		ownedTextures.add(normals);
-		ownedTextures.add(specular);
+		ownedTextures.add(defaultNormalMap);
+		ownedTextures.add(defaultSpecularMap);
 	}
 
 	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
@@ -123,11 +124,11 @@ public class CustomTextureManager {
 	}
 
 	public AbstractTexture getNormals() {
-		return holder != null && holder.hasNormalAtlas() ? holder.getOrCreateNormalAtlas() : normals;
+		return holder != null && holder.hasNormalAtlas() ? holder.getNormalAtlas() : defaultNormalMap;
 	}
 
 	public AbstractTexture getSpecular() {
-		return holder != null && holder.hasSpecularAtlas() ? holder.getOrCreateSpecularAtlas() : specular;
+		return holder != null && holder.hasSpecularAtlas() ? holder.getSpecularAtlas() : defaultSpecularMap;
 	}
 
 	public void destroy() {

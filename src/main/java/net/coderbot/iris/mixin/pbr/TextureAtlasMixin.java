@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.stream.Stream;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -32,11 +33,19 @@ import net.minecraft.client.resources.metadata.animation.AnimationMetadataSectio
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
 
 @Mixin(TextureAtlas.class)
 public abstract class TextureAtlasMixin extends AbstractTexture implements TextureAtlasExtension {
 	@Unique
 	private PBRAtlasHolder pbrHolder;
+
+	@Inject(method = "prepareToStitch(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/stream/Stream;Lnet/minecraft/util/profiling/ProfilerFiller;I)Lnet/minecraft/client/renderer/texture/TextureAtlas$Preparations;", at = @At(value = "INVOKE_STRING", target = "popPush(Ljava/lang/String;)V", args = "ldc=loading"))
+	private void beforeLoadingSprites(ResourceManager resourceManager, Stream<ResourceLocation> spriteIds, ProfilerFiller profiler, int mipLevel, CallbackInfoReturnable<TextureAtlas.Preparations> cir) {
+		if (pbrHolder != null) {
+			pbrHolder.clear();
+		}
+	}
 
 	@Inject(method = "load(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite$Info;IIIII)Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;", at = @At(value = "RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void onReturnLoad(ResourceManager resourceManager, TextureAtlasSprite.Info spriteInfo, int atlasWidth, int atlasHeight, int maxLevel, int x, int y, CallbackInfoReturnable<TextureAtlasSprite> cir, ResourceLocation imageLocation) {
@@ -127,6 +136,13 @@ public abstract class TextureAtlasMixin extends AbstractTexture implements Textu
 		if (pbrHolder != null) {
 			pbrHolder.reload(preparations);
 			GlStateManager._bindTexture(getId()); // Restore state
+		}
+	}
+
+	@Inject(method = "cycleAnimationFrames()V", at = @At("TAIL"))
+	private void onTailCycleAnimationFrames(CallbackInfo ci) {
+		if (pbrHolder != null) {
+			pbrHolder.cycleAnimationFrames();
 		}
 	}
 

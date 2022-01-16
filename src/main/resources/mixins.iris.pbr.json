@@ -2,12 +2,11 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.coderbot.iris.mixin.pbr",
-  "compatibilityLevel": "JAVA_16",
+  "compatibilityLevel": "JAVA_8",
   "client": [
     "TextureAtlasMixin",
     "TextureAtlasPreparationsAccessor",
     "TextureAtlasSpriteAccessor",
-    "TextureAtlasSpriteAnimatedTextureMixin",
     "TextureAtlasSpriteMixin"
   ],
   "injectors": {
