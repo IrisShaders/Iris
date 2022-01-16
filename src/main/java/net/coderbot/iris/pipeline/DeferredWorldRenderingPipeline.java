@@ -33,6 +33,8 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
+import net.coderbot.iris.texunits.TextureUnit;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -40,6 +42,7 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
@@ -231,7 +234,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
-			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor);
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -261,7 +264,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedAfterPrepare, renderTargets, false);
-			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor);
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
 			// Only initialize these samplers if the shadow map renderer exists.
@@ -543,7 +546,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 		IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
 
-		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
+		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor);
 		IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -859,6 +862,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void setPhase(WorldRenderingPhase phase) {
 		this.phase = phase;
 		GbufferPrograms.runPhaseChangeNotifier();
+	}
+
+	@Override
+	public void setAtlas(TextureAtlas atlas) {
+		if (atlas != null) {
+			this.customTextureManager.setAtlas(((TextureAtlasExtension) atlas).getPBRAtlasHolder());
+			RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
+			RenderSystem.bindTexture(this.customTextureManager.getNormals().getId());
+			RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
+			RenderSystem.bindTexture(this.customTextureManager.getSpecular().getId());
+			RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+		}
 	}
 
 	private boolean isRenderingShadow = false;

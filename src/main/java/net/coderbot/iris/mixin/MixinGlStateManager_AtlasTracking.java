@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.samplers.TextureAtlasTracker;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +30,7 @@ public class MixinGlStateManager_AtlasTracking {
 	private static void iris$onBindTexture(int id, CallbackInfo ci) {
 		if (activeTexture == 0 && atlasTextureListener != null) {
 			atlasTextureListener.run();
+			Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setAtlas(TextureAtlasTracker.INSTANCE.getAtlas(id)));
 		}
 	}
 

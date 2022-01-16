@@ -290,7 +290,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, gbufferRenderTargets, false);
 		IrisImages.addRenderTargetImages(builder, flipped, gbufferRenderTargets);
 
-		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular);
+		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noise);
 
 		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, this);

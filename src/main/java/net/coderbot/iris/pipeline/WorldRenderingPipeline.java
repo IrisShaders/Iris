@@ -4,6 +4,8 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+
 import java.util.List;
 import java.util.OptionalInt;
 
@@ -16,8 +18,9 @@ public interface WorldRenderingPipeline {
 	WorldRenderingPhase getPhase();
 
 	void setPhase(WorldRenderingPhase phase);
+	void setAtlas(TextureAtlas atlas);
 
-    void beginShadowRender();
+	void beginShadowRender();
 	void endShadowRender();
 
 	void beginHand();

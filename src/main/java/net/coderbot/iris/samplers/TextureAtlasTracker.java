@@ -56,15 +56,8 @@ public class TextureAtlasTracker {
 		return size;
 	}
 
-	public ResourceLocation getAtlasLocation(int id) {
-		TextureAtlas atlas = atlases.get(id);
-		ResourceLocation location = null;
-
-		if (atlas != null) {
-			location = atlas.location();
-		}
-
-		return location;
+	public TextureAtlas getAtlas(int id) {
+		return atlases.get(id);
 	}
 
 	public void trackDeleteTextures(int id) {

@@ -16,7 +16,9 @@ public class IrisSamplers {
 	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
 		TextureUnit.TERRAIN.getSamplerId(),
 		TextureUnit.LIGHTMAP.getSamplerId(),
-		TextureUnit.OVERLAY.getSamplerId()
+		TextureUnit.OVERLAY.getSamplerId(),
+		TextureUnit.NORMALS.getSamplerId(),
+		TextureUnit.SPECULAR.getSamplerId()
 	);
 
 	// TODO: In composite programs, there shouldn't be any reserved textures.
@@ -112,11 +114,11 @@ public class IrisSamplers {
 		return usesShadows;
 	}
 
-	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
+	public static void addLevelSamplers(SamplerHolder samplers) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
-		samplers.addDynamicSampler(normals::getId, "normals");
-		samplers.addDynamicSampler(specular::getId, "specular");
+		samplers.addExternalSampler(TextureUnit.NORMALS.getSamplerId(), "normals");
+		samplers.addExternalSampler(TextureUnit.SPECULAR.getSamplerId(), "specular");
 	}
 
 	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {

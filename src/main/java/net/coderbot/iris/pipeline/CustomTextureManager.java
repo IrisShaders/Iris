@@ -29,7 +29,7 @@ import net.minecraft.resources.ResourceLocation;
 public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
 	private final IntSupplier noise;
-	private final PBRAtlasHolder holder;
+	private PBRAtlasHolder holder;
 	private final NativeImageBackedSingleColorTexture defaultNormalMap;
 	private final NativeImageBackedSingleColorTexture defaultSpecularMap;
 
@@ -117,6 +117,10 @@ public class CustomTextureManager {
 
 	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> getCustomTextureIdMap() {
 		return customTextureIdMap;
+	}
+
+	public void setAtlas(PBRAtlasHolder holder) {
+		this.holder = holder;
 	}
 
 	public IntSupplier getNoiseTexture() {
