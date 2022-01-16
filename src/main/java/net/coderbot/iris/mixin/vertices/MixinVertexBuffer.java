@@ -27,6 +27,12 @@ public class MixinVertexBuffer {
 			//
 			// Needless to say, that is not good if you don't like access violation crashes!
 			this.format = IrisVertexFormats.TERRAIN;
+		} else if (format == DefaultVertexFormat.NEW_ENTITY) {
+			// We have to fix the vertex format here, or else the vertex count will be calculated wrongly and too many
+			// vertices will be drawn.
+			//
+			// Needless to say, that is not good if you don't like access violation crashes!
+			this.format = IrisVertexFormats.ENTITY;
 		}
 	}
 }
