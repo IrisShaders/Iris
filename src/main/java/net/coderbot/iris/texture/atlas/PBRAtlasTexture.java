@@ -73,7 +73,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 		}
 
 		if (Boolean.parseBoolean(System.getProperty("iris.pbr.debug"))) {
-			TextureSaveUtil.saveTextures("atlas", id.getPath().replaceAll("/", "_"), getId(), preparationsAccessor.getMipLevel(), preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
+			TextureSaveUtil.saveTextures("atlas", id.getPath().replaceAll("/", "_"), glId, preparationsAccessor.getMipLevel(), preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
 		}
 	}
 

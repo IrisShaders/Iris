@@ -123,11 +123,11 @@ public class CustomTextureManager {
 	}
 
 	public AbstractTexture getNormals() {
-		return holder != null ? holder.getOrCreateNormalAtlas() : normals;
+		return holder != null && holder.hasNormalAtlas() ? holder.getOrCreateNormalAtlas() : normals;
 	}
 
 	public AbstractTexture getSpecular() {
-		return holder != null ? holder.getOrCreateSpecularAtlas() : specular;
+		return holder != null && holder.hasSpecularAtlas() ? holder.getOrCreateSpecularAtlas() : specular;
 	}
 
 	public void destroy() {

@@ -110,14 +110,14 @@ public abstract class TextureAtlasMixin extends AbstractTexture implements Textu
 			PBRSpriteHolder pbrSpriteHolder = ((TextureAtlasSpriteExtension) sprite).getOrCreatePBRSpriteHolder();
 
 			switch (pbrType) {
-				case NORMAL: {
+			case NORMAL:
 				pbrHolder.getOrCreateNormalAtlas().addSprite(pbrSprite);
 				pbrSpriteHolder.setNormalSprite(pbrSprite);
-			}
-				case SPECULAR: {
+				break;
+			case SPECULAR:
 				pbrHolder.getOrCreateSpecularAtlas().addSprite(pbrSprite);
 				pbrSpriteHolder.setSpecularSprite(pbrSprite);
-			}
+				break;
 			}
 		}
 	}
