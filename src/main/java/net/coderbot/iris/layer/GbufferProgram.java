@@ -22,5 +22,6 @@ public enum GbufferProgram {
 	HAND,
 	HAND_NO_OVERLAY,
 	HAND_TRANSLUCENT,
+	LINES,
 	WEATHER
 }

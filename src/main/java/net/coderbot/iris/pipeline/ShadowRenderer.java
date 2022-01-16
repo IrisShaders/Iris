@@ -89,6 +89,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
+	private final boolean shouldRenderTerrain;
+	private final boolean shouldRenderTranslucent;
+	private final boolean shouldRenderEntities;
+	private final boolean shouldRenderBlockEntities;
 	private final float sunPathRotation;
 
 	private final RenderBuffers buffers;
@@ -124,6 +128,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.renderDistanceMultiplier = shadowDirectives.getDistanceRenderMul();
 		this.resolution = shadowDirectives.getResolution();
 		this.intervalSize = shadowDirectives.getIntervalSize();
+		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain();
+		this.shouldRenderTranslucent = shadowDirectives.shouldRenderTranslucent();
+		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities();
+		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities();
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
 
@@ -155,7 +163,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// Also assume voxelization if image load / store is detected.
 			this.packHasVoxelization = shadow.getGeometrySource().isPresent() || shadowProgram.getActiveImages() > 0;
-			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
+			this.packCullingState = shadowDirectives.getCullingState();
 		} else {
 			this.shadowProgram = null;
 			this.blendModeOverride = BlendModeOverride.OFF;
@@ -572,10 +580,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		setupGlState(orthoMatrix);
 
-		// Render all opaque terrain
-		levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ);
-		levelRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ);
-		levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ);
+		// Render all opaque terrain unless pack requests not to
+		if (shouldRenderTerrain) {
+			levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ);
+			levelRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ);
+			levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ);
+		}
 
 		// Reset our shader program in case Sodium overrode it.
 		//
@@ -608,9 +618,13 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		MultiBufferSource.BufferSource bufferSource = buffers.bufferSource();
 
-		renderEntities(levelRenderer, entityShadowFrustum, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+		if (shouldRenderEntities) {
+			renderEntities(levelRenderer, entityShadowFrustum, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+		}
 
-		renderBlockEntities(bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+		if (shouldRenderBlockEntities) {
+			renderBlockEntities(bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+		}
 
 		profiler.popPush("draw entities");
 
@@ -626,7 +640,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// TODO: Prevent these calls from scheduling translucent sorting...
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
-		levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ);
+		if (shouldRenderTranslucent) {
+			levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ);
+		}
 		// Note: Apparently tripwire isn't rendered in the shadow pass.
 		// worldRenderer.invokeRenderType(RenderType.getTripwire(), modelView, cameraX, cameraY, cameraZ);
 
@@ -669,11 +685,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
 		messages.add("[Iris] Shadow Distance: " + debugStringShadowDistance);
 		messages.add("[Iris] Shadow Culling: " + debugStringShadowCulling);
-		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain);
+		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain
+				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[Iris] Shadow Block Entities: " + getBlockEntitiesDebugString());
 
-		if (buffers instanceof DrawCallTrackingRenderBuffers) {
+		if (buffers instanceof DrawCallTrackingRenderBuffers && shouldRenderEntities) {
 			DrawCallTrackingRenderBuffers drawCallTracker = (DrawCallTrackingRenderBuffers) buffers;
 			messages.add("[Iris] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
 		}
@@ -689,11 +706,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private String getEntitiesDebugString() {
-		return renderedShadowEntities + "/" + Minecraft.getInstance().level.getEntityCount();
+		return shouldRenderEntities ? (renderedShadowEntities + "/" + Minecraft.getInstance().level.getEntityCount()) : "disabled by pack";
 	}
 
 	private String getBlockEntitiesDebugString() {
-		return renderedShadowBlockEntities + "/" + Minecraft.getInstance().level.blockEntityList.size();
+		return shouldRenderBlockEntities ? (renderedShadowBlockEntities + "/" + Minecraft.getInstance().level.blockEntityList.size()) : "disabled by pack";
 	}
 
 	private static ClientLevel getLevel() {

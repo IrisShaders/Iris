@@ -83,7 +83,7 @@ public class MixinRenderType {
 		TRIPWIRE = wrap("iris:tripwire", TRIPWIRE, GbufferProgram.TRANSLUCENT_TERRAIN);
 		// TODO: figure out how to assign to RenderType.LINES
 		// We cannot use @Shadow easily because the type of the field is a package-private class
-		iris$LINES = wrap("iris:lines", RenderType.LINES, GbufferProgram.BASIC);
+		iris$LINES = wrap("iris:lines", RenderType.LINES, GbufferProgram.LINES);
 
 		// TODO: SOLID / CUTOUT_MIPPED / CUTOUT are used for falling blocks and blocks being pushed by pistons
 		// Should they still be rendered in terrain?

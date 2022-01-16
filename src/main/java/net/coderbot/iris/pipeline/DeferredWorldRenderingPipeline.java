@@ -19,6 +19,7 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
@@ -149,7 +150,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final List<GbufferProgram> programStack = new ArrayList<>();
 	private final List<String> programStackLog = new ArrayList<>();
 
-	private static final ResourceLocation WATER_IDENTIFIER = new ResourceLocation("minecraft", "water");
+	private WorldRenderingPhase phase;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -338,6 +339,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
 
+		this.phase = WorldRenderingPhase.NONE;
+
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
 				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages);
 	}
@@ -422,6 +425,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			case DAMAGED_BLOCKS:
 				return damagedBlock;
 			case BASIC:
+				return basic;
+			case LINES:
 				return basic;
 			case BEACON_BEAM:
 				return beaconBeam;
@@ -833,6 +838,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginLevelRendering() {
 		isRenderingWorld = true;
 		isBeforeTranslucent = true;
+		phase = WorldRenderingPhase.NONE;
 		HandRenderer.INSTANCE.getBufferSource().resetDrawCalls();
 
 		checkWorld();
@@ -875,6 +881,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		isRenderingWorld = false;
+		phase = WorldRenderingPhase.NONE;
 		programStackLog.clear();
 
 		compositeRenderer.renderAll();
@@ -889,6 +896,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public FrameUpdateNotifier getFrameUpdateNotifier() {
 		return updateNotifier;
+	}
+
+	@Override
+	public WorldRenderingPhase getPhase() {
+		return phase;
+	}
+
+	@Override
+	public void setPhase(WorldRenderingPhase phase) {
+		this.phase = phase;
+		GbufferPrograms.runPhaseChangeNotifier();
 	}
 
 	private boolean isRenderingShadow = false;
