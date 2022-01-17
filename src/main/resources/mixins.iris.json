@@ -19,7 +19,7 @@
     "MixinScreenEffectRenderer",
     "MixinGlStateManager",
     "MixinGlStateManager_AmdCrashFix",
-    "MixinGlStateManager_AtlasTracking",
+    "MixinGlStateManager_TextureTracking",
     "MixinGlStateManager_AlphaTestOverride",
     "MixinGlStateManager_BlendOverride",
     "MixinItemInHandRenderer",

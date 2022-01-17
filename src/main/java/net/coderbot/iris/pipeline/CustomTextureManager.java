@@ -1,11 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.IntSupplier;
-
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
@@ -15,6 +9,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.texture.PBRSimpleTextureHolder;
 import net.coderbot.iris.texture.PBRType;
 import net.coderbot.iris.texture.atlas.PBRAtlasHolder;
 import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
@@ -26,10 +21,17 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.IntSupplier;
+
 public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
 	private final IntSupplier noise;
-	private PBRAtlasHolder holder;
+	private PBRAtlasHolder atlasHolder;
+	private PBRSimpleTextureHolder simpleTextureHolder;
 	private final NativeImageBackedSingleColorTexture defaultNormalMap;
 	private final NativeImageBackedSingleColorTexture defaultSpecularMap;
 
@@ -76,7 +78,7 @@ public class CustomTextureManager {
 
 		// Create some placeholder PBR textures if some of the PBR textures are missing
 		// TODO: This should not be the block atlas, but rather the currently active atlas!
-		holder = ((TextureAtlasExtension) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getPBRAtlasHolder();
+		atlasHolder = ((TextureAtlasExtension) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getPBRAtlasHolder();
 
 		defaultNormalMap = new NativeImageBackedSingleColorTexture(PBRType.NORMAL.getDefaultValue());
 		defaultSpecularMap = new NativeImageBackedSingleColorTexture(PBRType.SPECULAR.getDefaultValue());
@@ -120,7 +122,11 @@ public class CustomTextureManager {
 	}
 
 	public void setAtlas(PBRAtlasHolder holder) {
-		this.holder = holder;
+		this.atlasHolder = holder;
+	}
+
+	public void setEntityTexture(PBRSimpleTextureHolder holder) {
+		this.simpleTextureHolder = holder;
 	}
 
 	public IntSupplier getNoiseTexture() {
@@ -128,11 +134,25 @@ public class CustomTextureManager {
 	}
 
 	public AbstractTexture getNormals() {
-		return holder != null && holder.hasNormalAtlas() ? holder.getNormalAtlas() : defaultNormalMap;
+		return atlasHolder != null && atlasHolder.hasNormalAtlas() ? atlasHolder.getNormalAtlas() : defaultNormalMap;
+	}
+
+	public AbstractTexture getEntityNormals() {
+		if (simpleTextureHolder != null && simpleTextureHolder.hasNormalTexture()) {
+			return simpleTextureHolder.getNormalTexture();
+		}
+		return defaultNormalMap;
 	}
 
 	public AbstractTexture getSpecular() {
-		return holder != null && holder.hasSpecularAtlas() ? holder.getSpecularAtlas() : defaultSpecularMap;
+		return atlasHolder != null && atlasHolder.hasSpecularAtlas() ? atlasHolder.getSpecularAtlas() : defaultSpecularMap;
+	}
+
+	public AbstractTexture getEntitySpecular() {
+		if (simpleTextureHolder != null && simpleTextureHolder.hasSpecularTexture()) {
+			return simpleTextureHolder.getSpecularTexture();
+		}
+		return defaultSpecularMap;
 	}
 
 	public void destroy() {

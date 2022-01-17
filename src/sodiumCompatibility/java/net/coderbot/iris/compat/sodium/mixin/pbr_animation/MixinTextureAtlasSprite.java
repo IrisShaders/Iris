@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
-import net.coderbot.iris.texture.atlas.PBRSpriteHolder;
+import net.coderbot.iris.texture.atlas.PBRAtlasSpriteHolder;
 import net.coderbot.iris.texture.atlas.TextureAtlasSpriteExtension;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 
@@ -16,7 +16,7 @@ public class MixinTextureAtlasSprite {
 	private void onTailMarkActive(CallbackInfo ci) {
 		TextureAtlasSpriteExtension extension = (TextureAtlasSpriteExtension) this;
 		if (extension.hasPBRSpriteHolder()) {
-			PBRSpriteHolder pbrHolder = extension.getPBRSpriteHolder();
+			PBRAtlasSpriteHolder pbrHolder = extension.getPBRSpriteHolder();
 			TextureAtlasSprite normalSprite = pbrHolder.getNormalSprite();
 			if (normalSprite != null) {
 				SpriteUtil.markSpriteActive(normalSprite);

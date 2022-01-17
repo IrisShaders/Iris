@@ -23,7 +23,7 @@ import com.mojang.datafixers.util.Pair;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.texture.PBRType;
 import net.coderbot.iris.texture.atlas.PBRAtlasHolder;
-import net.coderbot.iris.texture.atlas.PBRSpriteHolder;
+import net.coderbot.iris.texture.atlas.PBRAtlasSpriteHolder;
 import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
 import net.coderbot.iris.texture.atlas.TextureAtlasSpriteExtension;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -116,7 +116,7 @@ public abstract class TextureAtlasMixin extends AbstractTexture implements Textu
 			if (pbrHolder == null) {
 				pbrHolder = new PBRAtlasHolder(self);
 			}
-			PBRSpriteHolder pbrSpriteHolder = ((TextureAtlasSpriteExtension) sprite).getOrCreatePBRSpriteHolder();
+			PBRAtlasSpriteHolder pbrSpriteHolder = ((TextureAtlasSpriteExtension) sprite).getOrCreatePBRSpriteHolder();
 
 			switch (pbrType) {
 			case NORMAL:

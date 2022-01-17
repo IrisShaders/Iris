@@ -33,6 +33,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.texture.SimpleTextureExtension;
 import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -42,8 +43,8 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -872,6 +873,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			RenderSystem.bindTexture(this.customTextureManager.getNormals().getId());
 			RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
 			RenderSystem.bindTexture(this.customTextureManager.getSpecular().getId());
+			RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+		}
+	}
+
+	@Override
+	public void setEntityTexture(SimpleTexture texture) {
+		if (texture != null) {
+			this.customTextureManager.setEntityTexture(((SimpleTextureExtension) texture).getPBRSpriteHolder());
+			RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
+			RenderSystem.bindTexture(this.customTextureManager.getEntityNormals().getId());
+			RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
+			RenderSystem.bindTexture(this.customTextureManager.getEntitySpecular().getId());
 			RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 		}
 	}

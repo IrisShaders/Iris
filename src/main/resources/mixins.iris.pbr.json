@@ -7,7 +7,8 @@
     "TextureAtlasMixin",
     "TextureAtlasPreparationsAccessor",
     "TextureAtlasSpriteAccessor",
-    "TextureAtlasSpriteMixin"
+    "TextureAtlasSpriteMixin",
+    "SimpleTextureMixin"
   ],
   "injectors": {
     "defaultRequire": 1

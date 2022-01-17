@@ -6,7 +6,7 @@ public interface TextureAtlasSpriteExtension {
 	boolean hasPBRSpriteHolder();
 
 	@Nullable
-	PBRSpriteHolder getPBRSpriteHolder();
+	PBRAtlasSpriteHolder getPBRSpriteHolder();
 
-	PBRSpriteHolder getOrCreatePBRSpriteHolder();
+	PBRAtlasSpriteHolder getOrCreatePBRSpriteHolder();
 }

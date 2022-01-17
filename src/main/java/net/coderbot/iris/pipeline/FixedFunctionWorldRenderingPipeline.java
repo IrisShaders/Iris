@@ -7,6 +7,8 @@ import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 
 import java.util.List;
@@ -53,6 +55,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 
 	@Override
 	public void setAtlas(TextureAtlas atlas) {
+
+	}
+
+	@Override
+	public void setEntityTexture(SimpleTexture texture) {
 
 	}
 
