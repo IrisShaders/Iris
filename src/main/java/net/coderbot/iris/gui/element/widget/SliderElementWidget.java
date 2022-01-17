@@ -103,6 +103,8 @@ public class SliderElementWidget extends StringElementWidget {
 
 			return true;
 		}
+
+		// Do not use base widget's button click behavior
 		return false;
 	}
 
