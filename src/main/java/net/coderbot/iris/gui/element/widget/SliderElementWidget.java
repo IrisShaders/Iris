@@ -29,10 +29,10 @@ public class SliderElementWidget extends StringElementWidget {
 			this.renderSlider(poseStack, x, y, width, height, mouseX, mouseY, tickDelta);
 		}
 
-		if (!this.screen.isDisplayingComment()) {
-			renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
-		} else if (Screen.hasShiftDown()) {
+		if (Screen.hasShiftDown()) {
 			renderTooltip(poseStack, SET_TO_DEFAULT, mouseX, mouseY, hovered);
+		} else if (!this.screen.isDisplayingComment()) {
+			renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
 		}
 
 		if (this.mouseDown) {

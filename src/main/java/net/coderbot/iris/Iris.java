@@ -28,6 +28,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
+import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.fabricmc.loader.api.ModContainer;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -284,7 +285,7 @@ public class Iris implements ClientModInitializer {
 			return false;
 		}
 
-		Map<String, String> changedConfigs = loadConfigProperties(shaderPackConfigTxt)
+		Map<String, String> changedConfigs = tryReadConfigProperties(shaderPackConfigTxt)
 				.map(properties -> (Map<String, String>) (Map) properties)
 				.orElse(new HashMap<>());
 
@@ -296,12 +297,17 @@ public class Iris implements ClientModInitializer {
 		}
 		resetShaderPackOptions = false;
 
-		Properties configsToSave = new Properties();
-		configsToSave.putAll(changedConfigs);
-		saveConfigProperties(shaderPackConfigTxt, configsToSave);
-
 		try {
 			currentPack = new ShaderPack(shaderPackPath, changedConfigs);
+
+			MutableOptionValues changedConfigsValues = currentPack.getShaderPackOptions().getOptionValues().mutableCopy();
+
+			// Store changed values from those currently in use by the shader pack
+			Properties configsToSave = new Properties();
+			changedConfigsValues.getBooleanValues().forEach((k, v) -> configsToSave.setProperty(k, Boolean.toString(v)));
+			changedConfigsValues.getStringValues().forEach(configsToSave::setProperty);
+
+			tryUpdateConfigPropertiesFile(shaderPackConfigTxt, configsToSave);
 		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
 			logger.catching(e);
@@ -366,24 +372,37 @@ public class Iris implements ClientModInitializer {
 		logger.info("Shaders are disabled");
 	}
 
-	private static Optional<Properties> loadConfigProperties(Path path) {
+	private static Optional<Properties> tryReadConfigProperties(Path path) {
 		Properties properties = new Properties();
 
-		try {
-			// NB: config properties are specified to be encoded with ISO-8859-1 by OptiFine,
-			//     so we don't need to do the UTF-8 workaround here.
-			properties.load(Files.newInputStream(path));
-		} catch (IOException e) {
-			// TODO: Better error handling
-			return Optional.empty();
+		if (Files.exists(path)) {
+			try {
+				// NB: config properties are specified to be encoded with ISO-8859-1 by OptiFine,
+				//     so we don't need to do the UTF-8 workaround here.
+				properties.load(Files.newInputStream(path));
+			} catch (IOException e) {
+				// TODO: Better error handling
+				return Optional.empty();
+			}
 		}
 
 		return Optional.of(properties);
 	}
 
-	private static void saveConfigProperties(Path path, Properties properties) {
-		try (OutputStream out = Files.newOutputStream(path)) {
-			properties.store(out, null);
+	private static void tryUpdateConfigPropertiesFile(Path path, Properties properties) {
+		try {
+			if (properties.isEmpty()) {
+				// Delete the file or don't create it if there are no changed configs
+				if (Files.exists(path)) {
+					Files.delete(path);
+				}
+
+				return;
+			}
+
+			try (OutputStream out = Files.newOutputStream(path)) {
+				properties.store(out, null);
+			}
 		} catch (IOException e) {
 			// TODO: Better error handling
 		}
