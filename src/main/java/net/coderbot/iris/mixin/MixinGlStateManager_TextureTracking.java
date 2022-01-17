@@ -3,7 +3,7 @@ package net.coderbot.iris.mixin;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
-import net.coderbot.iris.samplers.EntityTextureTracker;
+import net.coderbot.iris.samplers.SimpleTextureTracker;
 import net.coderbot.iris.samplers.TextureAtlasTracker;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,20 +33,20 @@ public class MixinGlStateManager_TextureTracking {
 			atlasTextureListener.run();
 		}
 		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setAtlas(TextureAtlasTracker.INSTANCE.getAtlas(id)));
-		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setEntityTexture(EntityTextureTracker.INSTANCE.getTexture(id)));
+		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setSimpleTexture(SimpleTextureTracker.INSTANCE.getTexture(id)));
 	}
 
 	@Inject(method = "_deleteTexture(I)V", at = @At("HEAD"))
 	private static void iris$onDeleteTexture(int id, CallbackInfo ci) {
 		TextureAtlasTracker.INSTANCE.trackDeleteTextures(id);
-		EntityTextureTracker.INSTANCE.trackDeleteTextures(id);
+		SimpleTextureTracker.INSTANCE.trackDeleteTextures(id);
 	}
 
 	@Inject(method = "_deleteTextures([I)V", at = @At("HEAD"))
 	private static void iris$onDeleteTextures(int[] ids, CallbackInfo ci) {
 		for (int id : ids) {
 			TextureAtlasTracker.INSTANCE.trackDeleteTextures(id);
-			EntityTextureTracker.INSTANCE.trackDeleteTextures(id);
+			SimpleTextureTracker.INSTANCE.trackDeleteTextures(id);
 		}
 	}
 

@@ -1,6 +1,6 @@
 package net.coderbot.iris.mixin.pbr;
 
-import net.coderbot.iris.samplers.EntityTextureTracker;
+import net.coderbot.iris.samplers.SimpleTextureTracker;
 import net.coderbot.iris.texture.PBRSimpleTextureHolder;
 import net.coderbot.iris.texture.PBRType;
 import net.coderbot.iris.texture.SimpleTextureExtension;
@@ -35,8 +35,8 @@ public abstract class SimpleTextureMixin extends AbstractTexture implements Simp
 	public int getId() {
 		int id = super.getId();
 
-		if (isEntityTexture(location) && !isPBRImageLocation(location)) {
-			EntityTextureTracker.INSTANCE.trackTexture(id, (SimpleTexture) (Object) this);
+		if (isSimpleTexture(location) && !isPBRImageLocation(location)) {
+			SimpleTextureTracker.INSTANCE.trackTexture(id, (SimpleTexture) (Object) this);
 		}
 
 		return id;
@@ -45,7 +45,7 @@ public abstract class SimpleTextureMixin extends AbstractTexture implements Simp
 	@Inject(method = "getTextureImage(Lnet/minecraft/server/packs/resources/ResourceManager;)Lnet/minecraft/client/renderer/texture/SimpleTexture$TextureImage;", at = @At(value = "RETURN"))
 	private void onReturnLoad(ResourceManager resourceManager, CallbackInfoReturnable<SimpleTexture.TextureImage> cir) {
 		SimpleTexture.TextureImage textureImage = cir.getReturnValue();
-		if (textureImage == null || !isEntityTexture(location)) {
+		if (textureImage == null || !isSimpleTexture(location)) {
 			return;
 		}
 
@@ -107,8 +107,8 @@ public abstract class SimpleTextureMixin extends AbstractTexture implements Simp
 		}
 	}
 
-	private boolean isEntityTexture(ResourceLocation location) {
-		return location.getPath().startsWith("textures/entity");
+	private boolean isSimpleTexture(ResourceLocation location) {
+		return location.getPath().startsWith("textures/entity") || location.getPath().startsWith("textures/models/armor");
 	}
 
 	private boolean isPBRImageLocation(ResourceLocation location) {

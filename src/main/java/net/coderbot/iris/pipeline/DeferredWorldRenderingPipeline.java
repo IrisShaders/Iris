@@ -190,7 +190,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
 					programs.getPackDirectives(), () -> flippedBeforeShadow, renderTargets,
-					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
+					customTextureManager.getAtlasNormals(), customTextureManager.getAtlasSpecular(), customTextureManager.getNoiseTexture(),
 					programs, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 			createShadowMapRenderer = () -> {};
 		};
@@ -870,21 +870,21 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		if (atlas != null) {
 			this.customTextureManager.setAtlas(((TextureAtlasExtension) atlas).getPBRAtlasHolder());
 			RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
-			RenderSystem.bindTexture(this.customTextureManager.getNormals().getId());
+			RenderSystem.bindTexture(this.customTextureManager.getAtlasNormals().getId());
 			RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
-			RenderSystem.bindTexture(this.customTextureManager.getSpecular().getId());
+			RenderSystem.bindTexture(this.customTextureManager.getAtlasSpecular().getId());
 			RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 		}
 	}
 
 	@Override
-	public void setEntityTexture(SimpleTexture texture) {
+	public void setSimpleTexture(SimpleTexture texture) {
 		if (texture != null) {
-			this.customTextureManager.setEntityTexture(((SimpleTextureExtension) texture).getPBRSpriteHolder());
+			this.customTextureManager.setSimpleTexture(((SimpleTextureExtension) texture).getPBRSpriteHolder());
 			RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
-			RenderSystem.bindTexture(this.customTextureManager.getEntityNormals().getId());
+			RenderSystem.bindTexture(this.customTextureManager.getSimpleNormals().getId());
 			RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
-			RenderSystem.bindTexture(this.customTextureManager.getEntitySpecular().getId());
+			RenderSystem.bindTexture(this.customTextureManager.getSimpleSpecular().getId());
 			RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 		}
 	}

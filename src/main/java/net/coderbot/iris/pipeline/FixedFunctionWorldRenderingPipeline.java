@@ -59,7 +59,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void setEntityTexture(SimpleTexture texture) {
+	public void setSimpleTexture(SimpleTexture texture) {
 
 	}
 

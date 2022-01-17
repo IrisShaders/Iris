@@ -125,7 +125,7 @@ public class CustomTextureManager {
 		this.atlasHolder = holder;
 	}
 
-	public void setEntityTexture(PBRSimpleTextureHolder holder) {
+	public void setSimpleTexture(PBRSimpleTextureHolder holder) {
 		this.simpleTextureHolder = holder;
 	}
 
@@ -133,22 +133,22 @@ public class CustomTextureManager {
 		return noise;
 	}
 
-	public AbstractTexture getNormals() {
+	public AbstractTexture getAtlasNormals() {
 		return atlasHolder != null && atlasHolder.hasNormalAtlas() ? atlasHolder.getNormalAtlas() : defaultNormalMap;
 	}
 
-	public AbstractTexture getEntityNormals() {
+	public AbstractTexture getSimpleNormals() {
 		if (simpleTextureHolder != null && simpleTextureHolder.hasNormalTexture()) {
 			return simpleTextureHolder.getNormalTexture();
 		}
 		return defaultNormalMap;
 	}
 
-	public AbstractTexture getSpecular() {
+	public AbstractTexture getAtlasSpecular() {
 		return atlasHolder != null && atlasHolder.hasSpecularAtlas() ? atlasHolder.getSpecularAtlas() : defaultSpecularMap;
 	}
 
-	public AbstractTexture getEntitySpecular() {
+	public AbstractTexture getSimpleSpecular() {
 		if (simpleTextureHolder != null && simpleTextureHolder.hasSpecularTexture()) {
 			return simpleTextureHolder.getSpecularTexture();
 		}

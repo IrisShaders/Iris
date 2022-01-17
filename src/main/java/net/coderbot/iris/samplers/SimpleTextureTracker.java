@@ -4,12 +4,12 @@ import net.minecraft.client.renderer.texture.SimpleTexture;
 
 import java.util.WeakHashMap;
 
-public class EntityTextureTracker {
-	public static final EntityTextureTracker INSTANCE = new EntityTextureTracker();
+public class SimpleTextureTracker {
+	public static final SimpleTextureTracker INSTANCE = new SimpleTextureTracker();
 
 	private final WeakHashMap<Integer, SimpleTexture> textures;
 
-	private EntityTextureTracker() {
+	private SimpleTextureTracker() {
 		textures = new WeakHashMap<>();
 	}
 
