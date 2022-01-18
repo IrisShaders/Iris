@@ -1,11 +1,4 @@
-# Iris 1.1.3 Preliminary Changelog (Full)
-
-WIP, up-to-date as of:
-
-- 1.16.x: https://github.com/IrisShaders/Iris/commit/91ac46ab59e67d8e77e416cc16429473c19f0a36
-- 1.17.x: https://github.com/IrisShaders/Iris/commit/65fc9ce3fd122bcf28400f1811b525240a4ca27d
-
----
+# Iris 1.1.3 Changelog (Full)
 
 This release includes significant changes to the project organization of Iris, as well as fixes for some rendering bugs in the shader packs supported by Iris, especially when using manually-edited shader configuration.
 
