@@ -17,7 +17,7 @@
   "options.iris.openShaderPackFolder": "Shader-Ordner öffnen ...",
   "options.iris.shaderPackSettings": "Shader-Einstellungen ...",
   "options.iris.shaderPackList": "Shader-Liste ...",
-  "options.iris.refreshShaderPacks": "Shader-Liste aktualisieren",
+  "options.iris.refreshShaderPacks": "Shader/Liste aktualisieren",
   "options.iris.shaderPackSelection": "Shaderpakete ...",
   "options.iris.shaderPackSelection.title": "Shaderpakete",
   "options.iris.shaderPackSelection.addedPack": "Shaderpaket \"%s\" hinzugefügt",
