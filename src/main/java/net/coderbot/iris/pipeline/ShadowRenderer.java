@@ -21,6 +21,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
@@ -86,7 +87,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 
-	public ShadowRenderer(CoreWorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives, RenderTargets gbufferRenderTargets) {
+	public ShadowRenderer(CoreWorldRenderingPipeline pipeline, ProgramSet set, PackDirectives directives, RenderTargets gbufferRenderTargets) {
 		this.pipeline = pipeline;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -126,17 +127,17 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// - https://github.com/IrisShaders/Iris/issues/483
 		// - https://github.com/IrisShaders/Iris/issues/987
 
-		if (shadow != null) {
+		if (set.getShadow().isPresent()) {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// Also assume voxelization if image load / store is detected (set elsewhere)
-			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
+			this.packHasVoxelization = set.getShadow().get().getGeometrySource().isPresent();
 			this.packCullingState = shadowDirectives.getCullingState();
 		} else {
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
 
-		ProgramSource[] composite = shadow.getParent().getComposite();
+		ProgramSource[] composite = set.getComposite();
 
 		if (composite.length > 0) {
 			String fsh = composite[0].getFragmentSource().orElse("");
