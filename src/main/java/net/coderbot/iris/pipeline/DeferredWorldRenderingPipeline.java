@@ -184,7 +184,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		ImmutableSet<Integer> flippedBeforeShadow = ImmutableSet.of();
 
 		createShadowMapRenderer = () -> {
-			shadowMapRenderer = new ShadowRenderer((CoreWorldRenderingPipeline) this, programs.getShadow().orElse(null),
+			shadowMapRenderer = new ShadowRenderer((CoreWorldRenderingPipeline) this, programs,
 					programs.getPackDirectives(), renderTargets);
 			createShadowMapRenderer = () -> {};
 		};
