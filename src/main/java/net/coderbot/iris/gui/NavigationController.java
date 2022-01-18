@@ -52,6 +52,10 @@ public class NavigationController {
 		}
 	}
 
+	public boolean hasHistory() {
+		return this.history.size() > 0;
+	}
+
 	public void setActiveOptionList(ShaderPackOptionList optionList) {
 		this.optionList = optionList;
 	}
