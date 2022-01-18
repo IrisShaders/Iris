@@ -1,4 +1,4 @@
-package net.coderbot.iris.texture;
+package net.coderbot.iris.texture.pbr;
 
 import org.apache.commons.io.FilenameUtils;
 

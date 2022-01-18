@@ -1,17 +1,25 @@
 package net.coderbot.iris.uniforms;
 
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
+
+import java.util.Objects;
+import java.util.function.IntSupplier;
+
 import com.mojang.blaze3d.platform.GlStateManager;
+
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
-import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
-import net.coderbot.iris.samplers.TextureAtlasTracker;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.texture.AtlasInfoGatherer;
+import net.coderbot.iris.texture.TextureTracker;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.coderbot.iris.vendored.joml.Vector2f;
@@ -22,6 +30,8 @@ import net.coderbot.iris.vendored.joml.Vector4i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
@@ -33,14 +43,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.Objects;
-import java.util.function.IntSupplier;
-
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
@@ -81,10 +84,17 @@ public final class CommonUniforms {
 		uniforms.uniform2i("atlasSize", () -> {
 			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
 
-			Vec2 atlasSize = TextureAtlasTracker.INSTANCE.getAtlasSize(glId);
+			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
+			if (texture instanceof TextureAtlas) {
+				TextureAtlas atlas = (TextureAtlas) texture;
+				int width = AtlasInfoGatherer.getWidth(atlas);
+				int height = AtlasInfoGatherer.getHeight(atlas);
 
-			return new Vector2i((int) atlasSize.x, (int) atlasSize.y);
-		}, StateUpdateNotifiers.atlasTextureNotifier);
+				return new Vector2i(width, height);
+			}
+
+			return new Vector2i(0, 0);
+		}, StateUpdateNotifiers.bindTextureNotifier);
 
 		uniforms.uniform4i("blendFunc", () -> {
 			GlStateManager.BlendState blend = net.coderbot.iris.mixin.GlStateManagerAccessor.getBLEND();

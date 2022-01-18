@@ -1,10 +1,25 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL15C;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
@@ -33,8 +48,8 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
-import net.coderbot.iris.texture.SimpleTextureExtension;
-import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
+import net.coderbot.iris.texture.pbr.SimpleTextureExtension;
+import net.coderbot.iris.texture.pbr.TextureAtlasExtension;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -43,21 +58,9 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.OptionalInt;
-import java.util.Set;
-import java.util.function.IntFunction;
-import java.util.function.Supplier;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -866,27 +869,30 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public void setAtlas(TextureAtlas atlas) {
-		if (atlas != null) {
-			this.customTextureManager.setAtlas(((TextureAtlasExtension) atlas).getPBRAtlasHolder());
-			RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
-			RenderSystem.bindTexture(this.customTextureManager.getAtlasNormals().getId());
-			RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
-			RenderSystem.bindTexture(this.customTextureManager.getAtlasSpecular().getId());
-			RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+	public void setBoundTexture(AbstractTexture texture) {
+		if (texture instanceof TextureAtlas) {
+			setAtlas((TextureAtlas) texture);
+		} else if (texture instanceof SimpleTexture) {
+			setSimpleTexture((SimpleTexture) texture);
 		}
 	}
 
-	@Override
-	public void setSimpleTexture(SimpleTexture texture) {
-		if (texture != null) {
-			this.customTextureManager.setSimpleTexture(((SimpleTextureExtension) texture).getPBRSpriteHolder());
-			RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
-			RenderSystem.bindTexture(this.customTextureManager.getSimpleNormals().getId());
-			RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
-			RenderSystem.bindTexture(this.customTextureManager.getSimpleSpecular().getId());
-			RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
-		}
+	private void setAtlas(TextureAtlas atlas) {
+		this.customTextureManager.setAtlas(((TextureAtlasExtension) atlas).getPBRAtlasHolder());
+		RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
+		RenderSystem.bindTexture(this.customTextureManager.getAtlasNormals().getId());
+		RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
+		RenderSystem.bindTexture(this.customTextureManager.getAtlasSpecular().getId());
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+	}
+
+	private void setSimpleTexture(SimpleTexture texture) {
+		this.customTextureManager.setSimpleTexture(((SimpleTextureExtension) texture).getPBRSpriteHolder());
+		RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
+		RenderSystem.bindTexture(this.customTextureManager.getSimpleNormals().getId());
+		RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
+		RenderSystem.bindTexture(this.customTextureManager.getSimpleSpecular().getId());
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 	}
 
 	private boolean isRenderingShadow = false;

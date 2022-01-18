@@ -1,6 +1,10 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.List;
+import java.util.OptionalInt;
+
 import com.mojang.blaze3d.platform.GlStateManager;
+
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -8,11 +12,6 @@ import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.SimpleTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-
-import java.util.List;
-import java.util.OptionalInt;
 
 public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
 	public FixedFunctionWorldRenderingPipeline() {
@@ -54,12 +53,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void setAtlas(TextureAtlas atlas) {
-
-	}
-
-	@Override
-	public void setSimpleTexture(SimpleTexture texture) {
+	public void setBoundTexture(AbstractTexture texture) {
 
 	}
 

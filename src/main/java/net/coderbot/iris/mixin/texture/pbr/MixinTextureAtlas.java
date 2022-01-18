@@ -1,4 +1,4 @@
-package net.coderbot.iris.mixin.pbr;
+package net.coderbot.iris.mixin.texture.pbr;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,11 +21,12 @@ import com.mojang.blaze3d.platform.PngInfo;
 import com.mojang.datafixers.util.Pair;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.texture.PBRType;
-import net.coderbot.iris.texture.atlas.PBRAtlasHolder;
-import net.coderbot.iris.texture.atlas.PBRAtlasSpriteHolder;
-import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
-import net.coderbot.iris.texture.atlas.TextureAtlasSpriteExtension;
+import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
+import net.coderbot.iris.texture.pbr.PBRAtlasHolder;
+import net.coderbot.iris.texture.pbr.PBRAtlasSpriteHolder;
+import net.coderbot.iris.texture.pbr.PBRType;
+import net.coderbot.iris.texture.pbr.TextureAtlasExtension;
+import net.coderbot.iris.texture.pbr.TextureAtlasSpriteExtension;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -36,7 +37,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ProfilerFiller;
 
 @Mixin(TextureAtlas.class)
-public abstract class TextureAtlasMixin extends AbstractTexture implements TextureAtlasExtension {
+public abstract class MixinTextureAtlas extends AbstractTexture implements TextureAtlasExtension {
 	@Unique
 	private PBRAtlasHolder pbrHolder;
 

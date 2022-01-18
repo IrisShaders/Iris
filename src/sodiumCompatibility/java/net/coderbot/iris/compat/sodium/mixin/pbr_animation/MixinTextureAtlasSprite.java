@@ -6,8 +6,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
-import net.coderbot.iris.texture.atlas.PBRAtlasSpriteHolder;
-import net.coderbot.iris.texture.atlas.TextureAtlasSpriteExtension;
+import net.coderbot.iris.texture.pbr.PBRAtlasSpriteHolder;
+import net.coderbot.iris.texture.pbr.TextureAtlasSpriteExtension;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 
 @Mixin(TextureAtlasSprite.class)

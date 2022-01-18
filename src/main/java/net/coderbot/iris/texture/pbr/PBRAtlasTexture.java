@@ -1,4 +1,4 @@
-package net.coderbot.iris.texture.atlas;
+package net.coderbot.iris.texture.pbr;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,8 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.mojang.blaze3d.platform.TextureUtil;
 
-import net.coderbot.iris.mixin.pbr.TextureAtlasPreparationsAccessor;
-import net.coderbot.iris.texture.PBRType;
+import net.coderbot.iris.mixin.texture.pbr.TextureAtlasPreparationsAccessor;
 import net.coderbot.iris.texture.util.TextureColorUtil;
 import net.coderbot.iris.texture.util.TextureSaveUtil;
 import net.minecraft.CrashReport;

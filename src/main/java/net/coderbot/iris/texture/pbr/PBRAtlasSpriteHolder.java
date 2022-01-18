@@ -1,4 +1,4 @@
-package net.coderbot.iris.texture.atlas;
+package net.coderbot.iris.texture.pbr;
 
 import org.jetbrains.annotations.Nullable;
 

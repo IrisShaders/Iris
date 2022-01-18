@@ -1,14 +1,13 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.List;
+import java.util.OptionalInt;
+
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.texture.SimpleTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-
-import java.util.List;
-import java.util.OptionalInt;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 
 public interface WorldRenderingPipeline {
 	void beginLevelRendering();
@@ -19,8 +18,7 @@ public interface WorldRenderingPipeline {
 	WorldRenderingPhase getPhase();
 
 	void setPhase(WorldRenderingPhase phase);
-	void setAtlas(TextureAtlas atlas);
-	void setSimpleTexture(SimpleTexture texture);
+	void setBoundTexture(AbstractTexture texture);
 
 	void beginShadowRender();
 	void endShadowRender();

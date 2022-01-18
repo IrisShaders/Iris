@@ -1,4 +1,4 @@
-package net.coderbot.iris.mixin.pbr;
+package net.coderbot.iris.mixin.texture.pbr;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;

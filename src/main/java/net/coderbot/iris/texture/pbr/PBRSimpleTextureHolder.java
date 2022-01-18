@@ -1,4 +1,4 @@
-package net.coderbot.iris.texture;
+package net.coderbot.iris.texture.pbr;
 
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import org.jetbrains.annotations.Nullable;

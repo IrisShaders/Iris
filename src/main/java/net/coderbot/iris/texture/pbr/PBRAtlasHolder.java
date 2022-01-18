@@ -1,8 +1,7 @@
-package net.coderbot.iris.texture.atlas;
+package net.coderbot.iris.texture.pbr;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.coderbot.iris.texture.PBRType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 
 public class PBRAtlasHolder {

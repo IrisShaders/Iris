@@ -1,5 +1,11 @@
 package net.coderbot.iris.pipeline;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.IntSupplier;
+
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
@@ -9,23 +15,15 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
-import net.coderbot.iris.texture.PBRSimpleTextureHolder;
-import net.coderbot.iris.texture.PBRType;
-import net.coderbot.iris.texture.atlas.PBRAtlasHolder;
-import net.coderbot.iris.texture.atlas.TextureAtlasExtension;
+import net.coderbot.iris.texture.pbr.PBRAtlasHolder;
+import net.coderbot.iris.texture.pbr.PBRSimpleTextureHolder;
+import net.coderbot.iris.texture.pbr.PBRType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.IntSupplier;
 
 public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
@@ -77,9 +75,6 @@ public class CustomTextureManager {
 		});
 
 		// Create some placeholder PBR textures if some of the PBR textures are missing
-		// TODO: This should not be the block atlas, but rather the currently active atlas!
-		atlasHolder = ((TextureAtlasExtension) Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS)).getPBRAtlasHolder();
-
 		defaultNormalMap = new NativeImageBackedSingleColorTexture(PBRType.NORMAL.getDefaultValue());
 		defaultSpecularMap = new NativeImageBackedSingleColorTexture(PBRType.SPECULAR.getDefaultValue());
 
@@ -121,16 +116,16 @@ public class CustomTextureManager {
 		return customTextureIdMap;
 	}
 
+	public IntSupplier getNoiseTexture() {
+		return noise;
+	}
+
 	public void setAtlas(PBRAtlasHolder holder) {
 		this.atlasHolder = holder;
 	}
 
 	public void setSimpleTexture(PBRSimpleTextureHolder holder) {
 		this.simpleTextureHolder = holder;
-	}
-
-	public IntSupplier getNoiseTexture() {
-		return noise;
 	}
 
 	public AbstractTexture getAtlasNormals() {
