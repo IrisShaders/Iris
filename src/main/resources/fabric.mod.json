@@ -54,6 +54,7 @@
     "iris-explorer": "*",
     "originsenhanced": "<=1.3.2",
     "colormatic": "<=3.0.0",
+    "bedrockwaters": "<=1.6.0",
     "batchedentityrendering": "*",
     "canvas": "*",
     "optifabric": "*"
