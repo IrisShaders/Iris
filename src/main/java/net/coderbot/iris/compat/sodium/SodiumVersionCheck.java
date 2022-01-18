@@ -13,7 +13,7 @@ public class SodiumVersionCheck {
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
 			// Official 0.3.4
 			AllowedSodiumVersion.exact("0.3.4+build.13",
-					"https://www.curseforge.com/minecraft/mc-mods/sodium/files/3535040"),
+					"https://www.curseforge.com/minecraft/mc-mods/sodium/files/3605275"),
 
 			// For use by ReplayMod
 			AllowedSodiumVersion.prefix("0.3.4+replaymod")
