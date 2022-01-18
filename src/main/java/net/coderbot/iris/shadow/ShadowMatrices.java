@@ -2,6 +2,7 @@ package net.coderbot.iris.shadow;
 
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
+
 import java.nio.FloatBuffer;
 
 public class ShadowMatrices {
@@ -23,14 +24,14 @@ public class ShadowMatrices {
 		};
 	}
 
-	public static float[] createPerspectiveMatrix(float fov, float aspect) {
-		float i = (float)(1.0D / Math.tan(fov * 0.01745329238474369D / 2.0D));
-		Matrix4f matrix4f = new Matrix4f();
+	public static float[] createPerspectiveMatrix(float fov) {
+		// This converts from degrees to radians.
+		float rad = (float) (1.0f / Math.tan(Math.toRadians(fov) * 0.5f));
 		return new float[] {
 				// column 1
-				i / aspect, 0f, 0f, 0f,
+				rad, 0f, 0f, 0f,
 				// column 2
-				0f, i, 0f, 0f,
+				0f, rad, 0f, 0f,
 				// column 3
 				0f, 0f, (FAR + NEAR) / (NEAR - FAR), -1.0F,
 				// column 4
@@ -116,7 +117,7 @@ public class ShadowMatrices {
 					0.0f, 0.0f, -0.10001954f, 0.0f
 			};
 
-			test("perspective projection fov=90", expected90Proj, createPerspectiveMatrix(90.0f, 1.0f));
+			test("perspective projection fov=90", expected90Proj, createPerspectiveMatrix(90.0f));
 
 			float[] expectedModelViewAtDawn = new float[] {
 					// column 1

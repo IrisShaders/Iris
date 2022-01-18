@@ -512,7 +512,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		float[] projMatrix;
 		if (this.fov != null) {
 			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
-			projMatrix = ShadowMatrices.createPerspectiveMatrix(this.fov, resolution / resolution);
+			projMatrix = ShadowMatrices.createPerspectiveMatrix(this.fov);
 		} else {
 			projMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
 		}
