@@ -31,7 +31,7 @@
   "options.iris.shaderPackOptions.importedSettings": "Shader-Einstellungen aus \"%s\" importiert",
   "options.iris.shaders.disabled": "Shader: Deaktiviert",
   "options.iris.shaders.enabled": "Shader: Aktiviert",
-  "options.iris.shaders.nonePresent": "Shader: Keine Shader vorhanden",
+  "options.iris.shaders.nonePresent": "Shader: Keine vorhanden",
   "options.iris.back": "Zurück",
   "options.iris.reset": "Zurücksetzen",
   "options.iris.reset.tooltip": "ALLE Einstellungen zurücksetzen und anwenden?",
