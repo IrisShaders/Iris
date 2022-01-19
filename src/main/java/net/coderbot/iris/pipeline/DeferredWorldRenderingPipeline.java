@@ -48,8 +48,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
-import net.coderbot.iris.texture.pbr.SimpleTextureExtension;
-import net.coderbot.iris.texture.pbr.TextureAtlasExtension;
+import net.coderbot.iris.texture.pbr.PBRTextureHolder;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -59,8 +58,6 @@ import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.SimpleTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -193,8 +190,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
 					programs.getPackDirectives(), () -> flippedBeforeShadow, renderTargets,
-					customTextureManager.getAtlasNormals(), customTextureManager.getAtlasSpecular(), customTextureManager.getNoiseTexture(),
-					programs, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
+					customTextureManager.getNoiseTexture(), programs,
+					customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 			createShadowMapRenderer = () -> {};
 		};
 
@@ -638,6 +635,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 	}
 
+	@Override
 	public void destroy() {
 		destroyPasses(allPasses);
 
@@ -869,29 +867,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public void setBoundTexture(AbstractTexture texture) {
-		if (texture instanceof TextureAtlas) {
-			setAtlas((TextureAtlas) texture);
-		} else if (texture instanceof SimpleTexture) {
-			setSimpleTexture((SimpleTexture) texture);
+	public void setBoundTexture(AbstractTexture texture, int id) {
+		PBRTextureHolder pbrHolder = null;
+		if (texture instanceof PBRTextureHolder.Provider) {
+			pbrHolder = ((PBRTextureHolder.Provider) texture).getPBRHolder();
 		}
-	}
-
-	private void setAtlas(TextureAtlas atlas) {
-		this.customTextureManager.setAtlas(((TextureAtlasExtension) atlas).getPBRAtlasHolder());
 		RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
-		RenderSystem.bindTexture(this.customTextureManager.getAtlasNormals().getId());
+		RenderSystem.bindTexture((pbrHolder != null && pbrHolder.hasNormalTexture() ? pbrHolder.getNormalTexture() : customTextureManager.getDefaultNormalMap()).getId());
 		RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
-		RenderSystem.bindTexture(this.customTextureManager.getAtlasSpecular().getId());
-		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
-	}
-
-	private void setSimpleTexture(SimpleTexture texture) {
-		this.customTextureManager.setSimpleTexture(((SimpleTextureExtension) texture).getPBRSpriteHolder());
-		RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
-		RenderSystem.bindTexture(this.customTextureManager.getSimpleNormals().getId());
-		RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
-		RenderSystem.bindTexture(this.customTextureManager.getSimpleSpecular().getId());
+		RenderSystem.bindTexture((pbrHolder != null && pbrHolder.hasSpecularTexture() ? pbrHolder.getSpecularTexture() : customTextureManager.getDefaultSpecularMap()).getId());
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 	}
 

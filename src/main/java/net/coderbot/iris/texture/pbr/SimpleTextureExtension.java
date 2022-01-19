@@ -2,9 +2,7 @@ package net.coderbot.iris.texture.pbr;
 
 import org.jetbrains.annotations.Nullable;
 
-public interface SimpleTextureExtension {
-	boolean hasPBRSpriteHolder();
-
+public interface SimpleTextureExtension extends PBRTextureHolder.Provider {
 	@Nullable
-	PBRSimpleTextureHolder getPBRSpriteHolder();
+	PBRSimpleTextureHolder getPBRHolder();
 }

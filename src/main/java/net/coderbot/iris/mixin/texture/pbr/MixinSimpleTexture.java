@@ -43,11 +43,11 @@ public abstract class MixinSimpleTexture extends AbstractTexture implements Simp
 			return;
 		}
 
-		createPBRSprite(location, resourceManager, PBRType.NORMAL);
-		createPBRSprite(location, resourceManager, PBRType.SPECULAR);
+		createPBRTexture(location, resourceManager, PBRType.NORMAL);
+		createPBRTexture(location, resourceManager, PBRType.SPECULAR);
 	}
 
-	private void createPBRSprite(ResourceLocation imageLocation, ResourceManager resourceManager, PBRType pbrType) {
+	private void createPBRTexture(ResourceLocation imageLocation, ResourceManager resourceManager, PBRType pbrType) {
 		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(imageLocation);
 
 		SimpleTexture pbrTexture = new SimpleTexture(pbrImageLocation);
@@ -58,7 +58,7 @@ public abstract class MixinSimpleTexture extends AbstractTexture implements Simp
 			return;
 		}
 
-		createPBRSpriteHolderIfNull();
+		createPBRHolderIfNull();
 
 		switch (pbrType) {
 			case NORMAL:
@@ -80,17 +80,17 @@ public abstract class MixinSimpleTexture extends AbstractTexture implements Simp
 	}
 
 	@Override
-	public boolean hasPBRSpriteHolder() {
+	public boolean hasPBRHolder() {
 		return pbrTextureHolder != null;
 	}
 
 	@Override
 	@Nullable
-	public PBRSimpleTextureHolder getPBRSpriteHolder() {
+	public PBRSimpleTextureHolder getPBRHolder() {
 		return pbrTextureHolder;
 	}
 
-	private void createPBRSpriteHolderIfNull() {
+	private void createPBRHolderIfNull() {
 		if (pbrTextureHolder == null) {
 			pbrTextureHolder = new PBRSimpleTextureHolder();
 		}

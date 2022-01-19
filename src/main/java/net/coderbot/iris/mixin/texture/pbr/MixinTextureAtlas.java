@@ -22,7 +22,7 @@ import com.mojang.datafixers.util.Pair;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
-import net.coderbot.iris.texture.pbr.PBRAtlasHolder;
+import net.coderbot.iris.texture.pbr.PBRAtlasTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRAtlasSpriteHolder;
 import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.texture.pbr.TextureAtlasExtension;
@@ -39,7 +39,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 @Mixin(TextureAtlas.class)
 public abstract class MixinTextureAtlas extends AbstractTexture implements TextureAtlasExtension {
 	@Unique
-	private PBRAtlasHolder pbrHolder;
+	private PBRAtlasTextureHolder pbrHolder;
 
 	@Inject(method = "prepareToStitch(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/stream/Stream;Lnet/minecraft/util/profiling/ProfilerFiller;I)Lnet/minecraft/client/renderer/texture/TextureAtlas$Preparations;", at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V", args = "ldc=loading"))
 	private void beforeLoadingSprites(ResourceManager resourceManager, Stream<ResourceLocation> spriteIds, ProfilerFiller profiler, int mipLevel, CallbackInfoReturnable<TextureAtlas.Preparations> cir) {
@@ -115,17 +115,17 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 
 		if (pbrSprite != null) {
 			if (pbrHolder == null) {
-				pbrHolder = new PBRAtlasHolder(self);
+				pbrHolder = new PBRAtlasTextureHolder(self);
 			}
 			PBRAtlasSpriteHolder pbrSpriteHolder = ((TextureAtlasSpriteExtension) sprite).getOrCreatePBRSpriteHolder();
 
 			switch (pbrType) {
 			case NORMAL:
-				pbrHolder.getOrCreateNormalAtlas().addSprite(pbrSprite);
+				pbrHolder.getOrCreateNormalTexture().addSprite(pbrSprite);
 				pbrSpriteHolder.setNormalSprite(pbrSprite);
 				break;
 			case SPECULAR:
-				pbrHolder.getOrCreateSpecularAtlas().addSprite(pbrSprite);
+				pbrHolder.getOrCreateSpecularTexture().addSprite(pbrSprite);
 				pbrSpriteHolder.setSpecularSprite(pbrSprite);
 				break;
 			}
@@ -178,12 +178,12 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 //	}
 
 	@Override
-	public boolean hasPBRSpriteHolder() {
+	public boolean hasPBRHolder() {
 		return pbrHolder != null;
 	}
 
 	@Override
-	public PBRAtlasHolder getPBRAtlasHolder() {
+	public PBRAtlasTextureHolder getPBRHolder() {
 		return pbrHolder;
 	}
 }

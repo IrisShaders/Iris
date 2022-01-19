@@ -53,7 +53,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void setBoundTexture(AbstractTexture texture) {
+	public void setBoundTexture(AbstractTexture texture, int id) {
 
 	}
 

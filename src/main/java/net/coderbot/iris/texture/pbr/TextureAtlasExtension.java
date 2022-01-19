@@ -2,9 +2,7 @@ package net.coderbot.iris.texture.pbr;
 
 import org.jetbrains.annotations.Nullable;
 
-public interface TextureAtlasExtension {
-	boolean hasPBRSpriteHolder();
-
+public interface TextureAtlasExtension extends PBRTextureHolder.Provider {
 	@Nullable
-	PBRAtlasHolder getPBRAtlasHolder();
+	PBRAtlasTextureHolder getPBRHolder();
 }

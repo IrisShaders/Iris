@@ -4,41 +4,45 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.client.renderer.texture.TextureAtlas;
 
-public class PBRAtlasHolder {
+public class PBRAtlasTextureHolder implements PBRTextureHolder {
 	protected final TextureAtlas atlas;
 	protected PBRAtlasTexture normalAtlas;
 	protected PBRAtlasTexture specularAtlas;
 
-	public PBRAtlasHolder(TextureAtlas atlas) {
+	public PBRAtlasTextureHolder(TextureAtlas atlas) {
 		this.atlas = atlas;
 	}
 
-	public boolean hasNormalAtlas() {
+	@Override
+	public boolean hasNormalTexture() {
 		return normalAtlas != null;
 	}
 
-	public boolean hasSpecularAtlas() {
+	@Override
+	public boolean hasSpecularTexture() {
 		return specularAtlas != null;
 	}
 
+	@Override
 	@Nullable
-	public PBRAtlasTexture getNormalAtlas() {
+	public PBRAtlasTexture getNormalTexture() {
 		return normalAtlas;
 	}
 
+	@Override
 	@Nullable
-	public PBRAtlasTexture getSpecularAtlas() {
+	public PBRAtlasTexture getSpecularTexture() {
 		return specularAtlas;
 	}
 
-	public PBRAtlasTexture getOrCreateNormalAtlas() {
+	public PBRAtlasTexture getOrCreateNormalTexture() {
 		if (normalAtlas == null) {
 			normalAtlas = new PBRAtlasTexture(atlas, PBRType.NORMAL);
 		}
 		return normalAtlas;
 	}
 
-	public PBRAtlasTexture getOrCreateSpecularAtlas() {
+	public PBRAtlasTexture getOrCreateSpecularTexture() {
 		if (specularAtlas == null) {
 			specularAtlas = new PBRAtlasTexture(atlas, PBRType.SPECULAR);
 		}

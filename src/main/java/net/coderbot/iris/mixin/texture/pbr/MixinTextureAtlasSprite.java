@@ -15,14 +15,6 @@ public class MixinTextureAtlasSprite implements TextureAtlasSpriteExtension {
 	@Unique
 	private PBRAtlasSpriteHolder pbrHolder;
 
-//	@Inject(method = "cycleFrames", at = @At("TAIL"))
-//	private void onTailTick(CallbackInfo ci) {
-//		TextureAtlasSpriteExtension extension = (TextureAtlasSpriteExtension) this;
-//		if (extension.hasPBRSpriteHolder()) {
-//			extension.getPBRSpriteHolder().tickAnimation();
-//		}
-//	}
-
 	@Inject(method = "close()V", at = @At("TAIL"), remap = false)
 	private void onTailClose(CallbackInfo ci) {
 		if (pbrHolder != null) {

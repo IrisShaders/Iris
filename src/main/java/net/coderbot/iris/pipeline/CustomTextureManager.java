@@ -15,8 +15,6 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
-import net.coderbot.iris.texture.pbr.PBRAtlasHolder;
-import net.coderbot.iris.texture.pbr.PBRSimpleTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
@@ -28,14 +26,13 @@ import net.minecraft.resources.ResourceLocation;
 public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
 	private final IntSupplier noise;
-	private PBRAtlasHolder atlasHolder;
-	private PBRSimpleTextureHolder simpleTextureHolder;
 	private final NativeImageBackedSingleColorTexture defaultNormalMap;
 	private final NativeImageBackedSingleColorTexture defaultSpecularMap;
 
 	/**
 	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
 	 * leaks.
+	 * Make sure any textures added to this list call releaseId from the close method.
 	 */
 	private final List<AbstractTexture> ownedTextures = new ArrayList<>();
 
@@ -120,33 +117,11 @@ public class CustomTextureManager {
 		return noise;
 	}
 
-	public void setAtlas(PBRAtlasHolder holder) {
-		this.atlasHolder = holder;
-	}
-
-	public void setSimpleTexture(PBRSimpleTextureHolder holder) {
-		this.simpleTextureHolder = holder;
-	}
-
-	public AbstractTexture getAtlasNormals() {
-		return atlasHolder != null && atlasHolder.hasNormalAtlas() ? atlasHolder.getNormalAtlas() : defaultNormalMap;
-	}
-
-	public AbstractTexture getSimpleNormals() {
-		if (simpleTextureHolder != null && simpleTextureHolder.hasNormalTexture()) {
-			return simpleTextureHolder.getNormalTexture();
-		}
+	public NativeImageBackedSingleColorTexture getDefaultNormalMap() {
 		return defaultNormalMap;
 	}
 
-	public AbstractTexture getAtlasSpecular() {
-		return atlasHolder != null && atlasHolder.hasSpecularAtlas() ? atlasHolder.getSpecularAtlas() : defaultSpecularMap;
-	}
-
-	public AbstractTexture getSimpleSpecular() {
-		if (simpleTextureHolder != null && simpleTextureHolder.hasSpecularTexture()) {
-			return simpleTextureHolder.getSpecularTexture();
-		}
+	public NativeImageBackedSingleColorTexture getDefaultSpecularMap() {
 		return defaultSpecularMap;
 	}
 

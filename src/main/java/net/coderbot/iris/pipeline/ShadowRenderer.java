@@ -51,7 +51,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
@@ -95,8 +94,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final RenderBuffersExt renderBuffersExt;
 
 	private final RenderTargets gbufferRenderTargets;
-	private final AbstractTexture normals;
-	private final AbstractTexture specular;
 	private final IntSupplier noise;
 
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
@@ -113,8 +110,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-                          AbstractTexture normals, AbstractTexture specular, IntSupplier noise, ProgramSet programSet,
-													Object2ObjectMap<String, IntSupplier> customTextureIds) {
+                          IntSupplier noise, ProgramSet programSet, Object2ObjectMap<String, IntSupplier> customTextureIds) {
 		this.pipeline = pipeline;
 		this.profiler = Minecraft.getInstance().getProfiler();
 
@@ -145,8 +141,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		});
 
 		this.gbufferRenderTargets = gbufferRenderTargets;
-		this.normals = normals;
-		this.specular = specular;
 		this.noise = noise;
 		this.customTextureIds = customTextureIds;
 

@@ -48,12 +48,7 @@ public class TextureTracker {
 			if (bindTextureListener != null) {
 				bindTextureListener.run();
 			}
-			Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> {
-				AbstractTexture texture = getTexture(id);
-				if (texture != null) {
-					pipeline.setBoundTexture(texture);
-				}
-			});
+			Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setBoundTexture(getTexture(id), id));
 		}
 	}
 
