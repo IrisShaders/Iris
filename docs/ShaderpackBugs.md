@@ -42,6 +42,9 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
       from block entities, the block breaking animation is written to the terrain render target instead of being blended
       with the block entity.
     * Workaround: unknown.
+- Sky is visible through chests if a nether portal is in front of the chest
+    - Diagnosis: The chest pixels get blended with the nether portal pixels and then the combined pixels get blended with the horizon with the nether portal's alpha value
+    - Workaround: none, inherent issue with how Sildur's Vibrant does deferred rendering.
 
 ## Chocapic v4
 
