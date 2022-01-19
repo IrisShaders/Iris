@@ -30,5 +30,5 @@ While shader config might seem like a simple enough request, the reality is that
 - Updated zh_tw.json by @HJ-zhtw in #1173
 - Updated zh_cn translations by @klkq in #1197
 - Updated it_it.json (13 January 2022) by @devpelux in #1191
-- Updated German translation by @Levelowel in #1179
+- Updated German translation by @Levelowel in #1179 and #1215
 - Updated zh_tw.json by @HJ-zhtw in #1208
