@@ -18,10 +18,8 @@ package de.odysseus.ithaka.digraph;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.Stack;
@@ -350,46 +348,5 @@ public class Digraphs {
 		return subgraph;
 	}
 
-	/**
-	 * Create partition graph from a given vertex decomposition.
-	 *
-	 * @param <G>      the type of the component graphs
-	 * @param <P>      the type of the result graph
-	 * @param factory1 used to create the partition graph
-	 * @param factory2 used to create the subgraphs
-	 * @return a de.odysseus.ithaka.digraph of subgraphs of this de.odysseus.ithaka.digraph
-	 */
-	public static <V, G extends Digraph<V>, P extends Digraph<G>> P partition(
-			Digraph<V> digraph,
-			Iterable<Set<V>> sets,
-			DigraphFactory<? extends P> factory1,
-			DigraphFactory<? extends G> factory2) {
-		P partition = factory1.create();
-
-		// map vertices to their component graph
-		Map<V, G> vertex2subgraph = new HashMap<>();
-		for (Set<V> set : sets) {
-			G subgraph = subgraph(digraph, set, factory2);
-			for (V v : subgraph.vertices()) {
-				assert digraph.contains(v) && !vertex2subgraph.containsKey(v);
-				vertex2subgraph.put(v, subgraph);
-			}
-			partition.add(subgraph);
-		}
-		assert vertex2subgraph.size() == digraph.getVertexCount();
-
-		// build component graph
-		for (V v : digraph.vertices()) {
-			G source = vertex2subgraph.get(v);
-			for (V w : digraph.targets(v)) {
-				G target = vertex2subgraph.get(w);
-				if (source != target) {
-					int edgeWeight = partition.get(source, target).orElse(0);
-					edgeWeight += digraph.get(v, w).getAsInt();
-					partition.put(source, target, edgeWeight);
-				}
-			}
-		}
-		return partition;
-	}
+	// a partition method used to be here but it was removed because it was causing issues
 }

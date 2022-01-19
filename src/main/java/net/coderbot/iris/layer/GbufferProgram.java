@@ -19,5 +19,6 @@ public enum GbufferProgram {
 	EYES,
 	HAND,
 	HAND_TRANSLUCENT,
+	LINES,
 	WEATHER
 }

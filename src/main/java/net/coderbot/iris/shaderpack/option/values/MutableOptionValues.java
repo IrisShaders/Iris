@@ -13,10 +13,17 @@ public class MutableOptionValues implements OptionValues {
 	private final Map<String, Boolean> booleanValues;
 	private final Map<String, String> stringValues;
 
-	MutableOptionValues(OptionSet options, Map<String, Boolean> flippedBooleanValues, Map<String, String> stringValues) {
+	MutableOptionValues(OptionSet options, Map<String, Boolean> booleanValues, Map<String, String> stringValues) {
+		Map<String, String> values = new HashMap<>();
+
+		booleanValues.forEach((k, v) -> values.put(k, Boolean.toString(v)));
+		values.putAll(stringValues);
+
 		this.options = options;
-		this.booleanValues = flippedBooleanValues;
-		this.stringValues = stringValues;
+		this.booleanValues = new HashMap<>();
+		this.stringValues = new HashMap<>();
+
+		this.addAll(values);
 	}
 
 	public MutableOptionValues(OptionSet options, Map<String, String> values) {
