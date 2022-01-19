@@ -1,6 +1,6 @@
 {
   "iris.shaders.reloaded": "โหลดแสงเงาใหม่เรียบร้อย",
-  "iris.shaders.toggled": "%sโหมดแสงเงา",
+  "iris.shaders.toggled": "ปรับแสงเงาเป็น %s",
   "iris.keybind.reload": "โหลดแสงเงาใหม่",
   "iris.keybind.shaderPackSelection": "หน้าตัวเลือกแสงเงา",
   "iris.keybind.toggleShaders": "เปิด/ปิดแสงเงา",
