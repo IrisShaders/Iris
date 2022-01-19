@@ -1,6 +1,4 @@
-# Iris 1.2.0 Preliminary Changelog
-
-**note: Iris 1.2.0 is unreleased, this is just an in-progress summary / changelog**
+# Iris 1.2.0 Changelog
 
 Iris 1.2.0 is here for Minecraft 1.16.5 / 1.17.1 / 1.18.1, bringing the long awaited Shader Configuration GUI!
 
