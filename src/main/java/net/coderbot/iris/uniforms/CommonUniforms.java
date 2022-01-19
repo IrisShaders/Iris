@@ -9,6 +9,8 @@ import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.EntityColorRenderStateShard;
+import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
 import net.coderbot.iris.samplers.TextureAtlasTracker;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -87,8 +89,14 @@ public final class CommonUniforms {
 		uniforms.uniform4i("blendFunc", () -> {
 			GlStateManager.BlendState blend = net.coderbot.iris.mixin.GlStateManagerAccessor.getBLEND();
 
-			return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
+			if (((BooleanStateAccessor) blend.mode).isEnabled()) {
+				return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
+			} else {
+				return new Vector4i(0, 0, 0, 0);
+			}
 		}, StateUpdateNotifiers.blendFuncNotifier);
+
+		uniforms.uniform1i("renderStage", () -> GbufferPrograms.getCurrentPhase().ordinal(), StateUpdateNotifiers.phaseChangeNotifier);
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
@@ -97,7 +105,7 @@ public final class CommonUniforms {
 		ExternallyManagedUniforms.addExternallyManagedUniforms116(uniforms);
 
 		// TODO: Parse the value of const float eyeBrightnessHalflife from the shaderpack's fragment shader configuration
-		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier);
+		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(10.0f, 10.0f, CommonUniforms::getEyeBrightness, updateNotifier);
 
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
@@ -116,7 +124,7 @@ public final class CommonUniforms {
 			})
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			// TODO: Parse the value of const float wetnessHalfLife and const float drynessHalfLife from the shaderpack's fragment shader configuration
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
+			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, 600f, CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
 			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor);
 	}

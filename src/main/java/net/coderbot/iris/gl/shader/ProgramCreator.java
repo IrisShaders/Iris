@@ -16,9 +16,9 @@ public class ProgramCreator {
 
 		// TODO: This is *really* hardcoded, we need to refactor this to support external calls
 		// to glBindAttribLocation
-		IrisRenderSystem.bindAttributeLocation(program, 10, "mc_Entity");
-		IrisRenderSystem.bindAttributeLocation(program, 11, "mc_midTexCoord");
-		IrisRenderSystem.bindAttributeLocation(program, 12, "at_tangent");
+		IrisRenderSystem.bindAttributeLocation(program, 11, "mc_Entity");
+		IrisRenderSystem.bindAttributeLocation(program, 12, "mc_midTexCoord");
+		IrisRenderSystem.bindAttributeLocation(program, 13, "at_tangent");
 
 		for (GlShader shader : shaders) {
 			GlStateManager.glAttachShader(program, shader.getHandle());

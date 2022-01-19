@@ -36,7 +36,7 @@ public class CameraUniforms {
 		return JomlConversions.fromVec3(client.gameRenderer.getMainCamera().getPosition());
 	}
 
-	private static class CameraPositionTracker {
+	static class CameraPositionTracker {
 		/**
 		 * Value range of cameraPosition. We want this to be small enough that precision is maintained when we convert
 		 * from a double to a float, but big enough that shifts happen infrequently, since each shift corresponds with
@@ -49,7 +49,7 @@ public class CameraUniforms {
 		private Vector3d currentCameraPosition = new Vector3d();
 		private final Vector3d shift = new Vector3d();
 
-		private CameraPositionTracker(FrameUpdateNotifier notifier) {
+		CameraPositionTracker(FrameUpdateNotifier notifier) {
 			notifier.addListener(this::update);
 		}
 
