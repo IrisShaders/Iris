@@ -30,7 +30,7 @@ Iris, Sodium, Minecraft, and system graphics drivers are all incredibly complex 
   - Intel: HD 4000 and below do not work with Iris on 1.17+. More modern Intel integrated graphics chips might work, but often have issues, and often do not deliver great performance with most shader packs.
 - macOS
   - Deprecated, will not be supported in the future, and we will spend no time investigating current issues. Things might work, things might not work. We're not able to do much since Apple has deprecated support for the industry-standard OpenGL API, which we depend on. M1 is particularly problematic.
-  - In the future, support might be restored thanks to third parties developing compliant OpenGL driver implementations that work on macOS.
+  - In the future, support might be restored thanks to third parties developing compliant OpenGL driver implementations that work on macOS. This project in particular has quite some potential in that area: https://github.com/openglonmetal/MGL
 - Linux
   - Mesa: Fully supported. Some shader packs have issues with Mesa, but most have workarounds. Please ensure you are on the latest version of Mesa before reporting issues.
   - NVIDIA (proprietary drivers): Same as Windows.
@@ -44,4 +44,4 @@ Iris, Sodium, Minecraft, and system graphics drivers are all incredibly complex 
 
 Iris is an open-source project, and we welcome contributions from everyone. Choices of what platforms to support are based on what we're able to accomplish given our developer resources.
 
-What this means is that if someone with relevant development experience wants their platform to be supported, and has the time to contribute bug fixes, contribute to the development of compliant drivers, or otherwise improve support, they're free to do so!
+What this means is that if someone with relevant development experience wants their platform to be supported, and has the time to contribute bug fixes, contribute to the development of compliant drivers, or otherwise improve support, they're free to do so! For example, developers on macOS could investigate helping out with https://github.com/openglonmetal/MGL or similar projects.
