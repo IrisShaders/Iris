@@ -1,7 +1,6 @@
 package net.coderbot.iris.mixin.rendertype;
 
 import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.layer.UseProgramRenderStateShard;
 
@@ -15,13 +14,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
-@Environment(EnvType.CLIENT)
 @Mixin(RenderType.class)
 public class MixinRenderType {
 	@Shadow
