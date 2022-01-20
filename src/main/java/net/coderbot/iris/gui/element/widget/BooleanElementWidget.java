@@ -83,7 +83,7 @@ public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBool
 
 	@Override
 	public boolean applyOriginalValue() {
-		this.value = this.appliedValue;
+		this.value = this.option.getDefaultValue();
 		this.queue();
 
 		return true;
