@@ -23,6 +23,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Final;
 import net.minecraft.client.Options;
 
@@ -41,7 +42,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLevelRenderer {
 	private static final String RENDER = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
-	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FLjava/lang/Runnable;)V";
+	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V";
 	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FDDD)V";
 	private static final String RENDER_WEATHER = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V";
 
@@ -110,9 +111,15 @@ public class MixinLevelRenderer {
 		RenderSystem.setShader(GameRenderer::getPositionShader);
 	}
 
+	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;isChunkCompiled(Lnet/minecraft/core/BlockPos;)Z"))
+	private boolean disableCompileWait(LevelRenderer instance, BlockPos blockPos) {
+		// This causes invisible entities on 21w03a+ without this. TODO find out the cause
+		return true;
+	}
+
 	@Inject(method = RENDER_SKY,
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
-	private void iris$renderSky$drawHorizon(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
+	private void iris$renderSky$drawHorizon(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo callback) {
 		RenderSystem.depthMask(false);
 
 		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
@@ -124,33 +131,33 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;SUN_LOCATION:Lnet/minecraft/resources/ResourceLocation;"))
-	private void iris$setSunRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setSunRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.SUN);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/DimensionSpecialEffects;getSunriseColor(FF)[F"))
-	private void iris$setSunsetRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setSunsetRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.SUNSET);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;MOON_LOCATION:Lnet/minecraft/resources/ResourceLocation;"))
-	private void iris$setMoonRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setMoonRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.MOON);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getStarBrightness(F)F"))
-	private void iris$setStarRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setStarRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.STARS);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
-	private void iris$setVoidRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setVoidRenderStage(PoseStack poseStack, Matrix4f matrix4f, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.VOID);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getTimeOfDay(F)F"),
 			slice = @Slice(from = @At(value = "FIELD", target = "com/mojang/math/Vector3f.YP : Lcom/mojang/math/Vector3f;")))
-	private void iris$renderSky$tiltSun(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
+	private void iris$renderSky$tiltSun(PoseStack poseStack, Matrix4f matrix4f, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		poseStack.mulPose(Vector3f.ZP.rotationDegrees(pipeline.getSunPathRotation()));
 	}
 
