@@ -29,7 +29,6 @@
     "MixinMinecraft_PipelineDestruction",
     "MixinModelViewBobbing",
     "MixinProgram",
-    "MixinRecievingLevelScreen",
     "MixinRenderSystem",
     "MixinScreenEffectRenderer",
     "MixinShaderInstance",

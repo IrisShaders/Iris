@@ -111,12 +111,6 @@ public class MixinLevelRenderer {
 		RenderSystem.setShader(GameRenderer::getPositionShader);
 	}
 
-	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;isChunkCompiled(Lnet/minecraft/core/BlockPos;)Z"))
-	private boolean disableCompileWait(LevelRenderer instance, BlockPos blockPos) {
-		// This causes invisible entities on 21w03a+ without this. TODO find out the cause
-		return true;
-	}
-
 	@Inject(method = RENDER_SKY,
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
 	private void iris$renderSky$drawHorizon(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo callback) {
@@ -199,7 +193,7 @@ public class MixinLevelRenderer {
 		pipeline.setPhase(WorldRenderingPhase.RAIN_SNOW);
 	}
 
-	@ModifyArg(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0))
+	@ModifyArg(method = RENDER_WEATHER, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;depthMask(Z)V", ordinal = 0, remap = false))
 	private boolean iris$writeRainAndSnowToDepthBuffer(boolean depthMaskEnabled) {
 		if (pipeline.shouldWriteRainAndSnowToDepthBuffer()) {
 			return true;
