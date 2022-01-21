@@ -25,12 +25,12 @@ public class ShadowMatrices {
 
 	public static float[] createPerspectiveMatrix(float fov) {
 		// This converts from degrees to radians.
-		float rad = (float) (1.0f / Math.tan(Math.toRadians(fov) * 0.5f));
+		float yScale = (float) (1.0f / Math.tan(Math.toRadians(fov) * 0.5f));
 		return new float[] {
 				// column 1
-				rad, 0f, 0f, 0f,
+				yScale, 0f, 0f, 0f,
 				// column 2
-				0f, rad, 0f, 0f,
+				0f, yScale, 0f, 0f,
 				// column 3
 				0f, 0f, (FAR + NEAR) / (NEAR - FAR), -1.0F,
 				// column 4
