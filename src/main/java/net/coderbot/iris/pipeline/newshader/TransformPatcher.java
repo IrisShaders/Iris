@@ -13,6 +13,8 @@ import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
+import io.github.douira.glsl_transformer.core.WrapIdentifier;
+import io.github.douira.glsl_transformer.core.target.TerminalReplaceTarget;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.Transformation;
@@ -44,27 +46,40 @@ public class TransformPatcher implements Patcher {
     VANILLA, SODIUM, COMPOSITE
   }
 
-  private static class VanillaParameters {
+  private static class Parameters {
+    public final Patch patch;
+    public final ShaderType type;
+
+    public Parameters(Patch patch, ShaderType type) {
+      this.patch = patch;
+      this.type = type;
+    }
+  }
+
+  private static class VanillaParameters extends Parameters {
     public final AlphaTest alpha;
     public final boolean hasChunkOffset;
     public final ShaderAttributeInputs inputs;
 
-    public VanillaParameters(AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
+    public VanillaParameters(Patch patch, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
+        ShaderAttributeInputs inputs) {
+      super(patch, type);
       this.alpha = alpha;
       this.hasChunkOffset = hasChunkOffset;
       this.inputs = inputs;
     }
   }
 
-  private static class SodiumParameters {
+  private static class SodiumParameters extends Parameters {
     public final AlphaTest alpha;
     public final ShaderAttributeInputs inputs;
     public final float positionScale;
     public final float positionOffset;
     public final float textureScale;
 
-    public SodiumParameters(AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale,
-        float positionOffset, float textureScale) {
+    public SodiumParameters(Patch patch, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs,
+        float positionScale, float positionOffset, float textureScale) {
+      super(patch, type);
       this.alpha = alpha;
       this.inputs = inputs;
       this.positionScale = positionScale;
@@ -79,16 +94,18 @@ public class TransformPatcher implements Patcher {
    * run better. The object parameter can be filled with one of the parameter
    * classes and the transformation phases have to do their own casts.
    */
-  private Table<Patch, ShaderType, TransformationManager<Object>> managers = HashBasedTable.create(
+  private Table<Patch, ShaderType, TransformationManager<Parameters>> managers = HashBasedTable.create(
       Patch.values().length,
       ShaderType.values().length);
 
   public TransformPatcher() {
-    // PREV TODO: Only do the NewLines patches if the source code isn't from
-    // gbuffers_lines
+    /**
+     * PREV TODO: Only do the NewLines patches if the source code isn't from
+     * gbuffers_lines
+     */
 
     // setup the transformations and even loose phases if necessary
-    Transformation<Object> detectReserved = new Transformation<>(
+    Transformation<Parameters> detectReserved = new Transformation<>(
         new SearchTerminals<>(SearchTerminals.IDENTIFIER,
             ImmutableSet.of(
                 ThrowTarget.fromMessage(
@@ -97,7 +114,7 @@ public class TransformPatcher implements Patcher {
                     "iris_",
                     "Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))));
 
-    Transformation<Object> fixVersion = new Transformation<>(new RunPhase<Object>() {
+    Transformation<Parameters> fixVersion = new Transformation<>(new RunPhase<Parameters>() {
       /**
        * This largely replicates the behavior of
        * {@link net.coderbot.iris.pipeline.newshader.TriforcePatcher#fixVersion(Transformations)}
@@ -138,120 +155,115 @@ public class TransformPatcher implements Patcher {
      * passes. A shader that relies on this behavior is SEUS v11 - it reads
      * gl_Fog.color and breaks if it is not properly defined.
      */
-    TransformationPhase<Object> sharedFogSetup = new RunPhase<Object>() {
-      @Override
-      protected void run(TranslationUnitContext ctx) {
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogDensity;");
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogStart;");
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogEnd;");
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_FogColor;");
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS,
-            "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };");
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS,
-            "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));");
-      }
-    };
+    // TODO: use terminal wrapper method
+    Transformation<Parameters> wrapFogSetup = new WrapIdentifier<>(
+        "gl_Fog", "iris_Fog",
+        new TerminalReplaceTarget<>("gl_Fog", "iris_Fog"),
+        new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(
+                InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogDensity;");
+            injectExternalDeclaration(
+                InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogStart;");
+            injectExternalDeclaration(
+                InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogEnd;");
+            injectExternalDeclaration(
+                InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_FogColor;");
+            injectExternalDeclaration(
+                InjectionPoint.BEFORE_DECLARATIONS,
+                "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };");
+            injectExternalDeclaration(
+                InjectionPoint.BEFORE_DECLARATIONS,
+                "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));");
+          }
+        });
 
     // PREV TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
-    // TODO: update to use new glsl-transformer features to make this compact
-    SearchTerminals<Object> wrapFogFragCoord = new SearchTerminals<Object>() {
-      {
-        addReplacementTerminal("gl_FogFragCoord", "iris_FogFragCoord");
-      }
-    };
-
-    // PREV TODO: This doesn't handle geometry shaders... How do we do that?
-    TransformationPhase<Object> injectOutFogFragCoord = new RunPhase<Object>() {
-      @Override
-      protected void run(TranslationUnitContext ctx) {
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS, "out float iris_FogFragCoord;");
-      };
-    };
-
-    TransformationPhase<Object> injectInFogFragCoord = new RunPhase<Object>() {
-      @Override
-      protected void run(TranslationUnitContext ctx) {
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS, "in float iris_FogFragCoord;");
-      };
-    };
+    // TODO: use terminal wrapper method
+    Transformation<Parameters> wrapFogFragCoord = new WrapIdentifier<>(
+        "gl_FogFragCoord", "iris_FogFragCoord",
+        new TerminalReplaceTarget<>("gl_FogFragCoord", "iris_FogFragCoord"),
+        new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            // PREV TODO: This doesn't handle geometry shaders... How do we do that?
+            if (getJobParameters().type == ShaderType.VERTEX) {
+              injectExternalDeclaration(
+                  InjectionPoint.BEFORE_DECLARATIONS, "out float iris_FogFragCoord;");
+            } else if (getJobParameters().type == ShaderType.FRAGMENT) {
+              injectExternalDeclaration(
+                  InjectionPoint.BEFORE_DECLARATIONS, "in float iris_FogFragCoord;");
+            }
+          }
+        });
 
     /**
      * PREV TODO: This is incorrect and is just the bare minimum needed for SEUS v11
      * & Renewed to compile. It works because they don't actually use gl_FrontColor
      * even though they write to it.
      */
-    // TODO: use glsl-transformer core wrapping transformation for this
-    TransformationPhase<Object> frontColorInjection = new RunPhase<Object>() {
-      @Override
-      protected void run(TranslationUnitContext ctx) {
-        injectExternalDeclaration(
-            InjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_FrontColor;");
-      };
-    };
+    // TODO: use terminal wrapper method
+    Transformation<Parameters> wrapFrontColor = new WrapIdentifier<>(
+        "gl_FrontColor", "iris_FrontColor",
+        new TerminalReplaceTarget<>("gl_FrontColor", "iris_FrontColor"),
+        new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(
+                InjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_FrontColor;");
+          };
+        });
 
-    // TODO use shorthand method
-    SearchTerminals<Object> wrapFrontColor = new SearchTerminals<Object>() {
-      {
-        addReplacementTerminal("gl_FrontColor", "iris_FrontColor");
-      }
-    };
+    // NOTE: converted up until line 63 of TriforcePatcher (right after frontColor)
 
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
       for (ShaderType type : ShaderType.values()) {
-        TransformationManager<Object> manager = new TransformationManager<>();
+        TransformationManager<Parameters> manager = new TransformationManager<>();
         managers.put(patch, type, manager);
 
         manager.registerTransformation(detectReserved);
         manager.registerTransformation(fixVersion);
+        manager.registerTransformation(wrapFogSetup);
+        manager.registerTransformation(wrapFogFragCoord);
 
-        Transformation<Object> commonInjections = new Transformation<>();
-        manager.registerTransformation(commonInjections);
+        // Transformation<Parameters> commonInjections = new Transformation<>();
+        // manager.registerTransformation(commonInjections);
 
-        // TODO: use addConcurrentPhase to make this more compact
-        commonInjections.addPhase(0, sharedFogSetup);
-        commonInjections.addPhase(0, wrapFogFragCoord);
-        if (type == ShaderType.VERTEX) {
-          commonInjections.addPhase(0, injectInFogFragCoord);
-        } else if (type == ShaderType.FRAGMENT) {
-          commonInjections.addPhase(0, injectOutFogFragCoord);
-        }
-        if (type == ShaderType.VERTEX) {
-          commonInjections.addPhase(0, frontColorInjection);
-          commonInjections.addPhase(0, wrapFrontColor);
+        if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
+          manager.registerTransformation(wrapFogFragCoord);
         }
 
-        // TODO: the rest of the patchCommon things
+        if (type == ShaderType.VERTEX) {
+          manager.registerTransformation(wrapFrontColor);
+        }
       }
     }
+  }
+
+  private String transform(String source, Parameters parameters) {
+    return managers.get(parameters.patch, parameters.type).transform(source, parameters);
   }
 
   @Override
   public String patchVanilla(
       String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
       ShaderAttributeInputs inputs) {
-    return managers.get(Patch.VANILLA, type)
-        .transform(source, new VanillaParameters(alpha, hasChunkOffset, inputs));
+    return transform(source,
+        new VanillaParameters(Patch.VANILLA, type, alpha, hasChunkOffset, inputs));
   }
 
   @Override
   public String patchSodium(
       String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs,
       float positionScale, float positionOffset, float textureScale) {
-    return managers.get(Patch.VANILLA, type)
-        .transform(source, new SodiumParameters(alpha, inputs, positionScale, positionOffset, textureScale));
+    return transform(source,
+        new SodiumParameters(Patch.VANILLA, type, alpha, inputs, positionScale, positionOffset, textureScale));
   }
 
   @Override
   public String patchComposite(String source, ShaderType type) {
-    return managers.get(Patch.VANILLA, type).transform(source, null);
+    return transform(source, new Parameters(Patch.COMPOSITE, type));
   }
 }
