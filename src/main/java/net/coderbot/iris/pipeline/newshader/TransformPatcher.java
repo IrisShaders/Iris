@@ -15,12 +15,10 @@ import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.core.ReplaceTerminals;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
 import io.github.douira.glsl_transformer.core.WrapIdentifier;
-import io.github.douira.glsl_transformer.core.target.TerminalReplaceTarget;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
-import io.github.douira.glsl_transformer.transform.TransformationPhase;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -157,10 +155,8 @@ public class TransformPatcher implements Patcher {
      * passes. A shader that relies on this behavior is SEUS v11 - it reads
      * gl_Fog.color and breaks if it is not properly defined.
      */
-    // TODO: use terminal wrapper method
-    Transformation<Parameters> wrapFogSetup = new WrapIdentifier<>(
+    Transformation<Parameters> wrapFogSetup = WrapIdentifier.fromTerminal(
         "gl_Fog", "iris_Fog",
-        new TerminalReplaceTarget<>("gl_Fog", "iris_Fog"),
         new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
@@ -182,10 +178,8 @@ public class TransformPatcher implements Patcher {
         });
 
     // PREV TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
-    // TODO: use terminal wrapper method
-    Transformation<Parameters> wrapFogFragCoord = new WrapIdentifier<>(
+    Transformation<Parameters> wrapFogFragCoord = WrapIdentifier.fromTerminal(
         "gl_FogFragCoord", "iris_FogFragCoord",
-        new TerminalReplaceTarget<>("gl_FogFragCoord", "iris_FogFragCoord"),
         new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
@@ -205,10 +199,8 @@ public class TransformPatcher implements Patcher {
      * & Renewed to compile. It works because they don't actually use gl_FrontColor
      * even though they write to it.
      */
-    // TODO: use terminal wrapper method
-    Transformation<Parameters> wrapFrontColor = new WrapIdentifier<>(
+    Transformation<Parameters> wrapFrontColor = WrapIdentifier.fromTerminal(
         "gl_FrontColor", "iris_FrontColor",
-        new TerminalReplaceTarget<>("gl_FrontColor", "iris_FrontColor"),
         new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
