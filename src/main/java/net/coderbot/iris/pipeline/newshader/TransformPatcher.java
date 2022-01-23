@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
-import io.github.douira.glsl_transformer.core.ReplaceTerminals;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.transform.RunPhase;
@@ -41,7 +40,7 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
 public class TransformPatcher implements Patcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 
-  private Table<Patch, ShaderType, TransformationManager> managers = HashBasedTable.create(
+  private Table<Patch, ShaderType, TransformationManager<Void>> managers = HashBasedTable.create(
       Patch.values().length,
       ShaderType.values().length);
 
@@ -54,8 +53,8 @@ public class TransformPatcher implements Patcher {
     // gbuffers_lines
 
     // setup the transformations and even loose phases if necessary
-    Transformation detectReserved = new Transformation(
-        new SearchTerminals(SearchTerminals.IDENTIFIER,
+    Transformation<Void> detectReserved = new Transformation<>(
+        new SearchTerminals<>(SearchTerminals.IDENTIFIER,
             ImmutableSet.of(
                 ThrowTarget.fromMessage(
                     "moj_import", "Iris shader programs may not use moj_import directives."),
@@ -63,7 +62,7 @@ public class TransformPatcher implements Patcher {
                     "iris_",
                     "Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))));
 
-    Transformation fixVersion = new Transformation(new RunPhase() {
+    Transformation<Void> fixVersion = new Transformation<>(new RunPhase<Void>() {
       /**
        * This largely replicates the behavior of
        * {@link net.coderbot.iris.pipeline.newshader.TriforcePatcher#fixVersion(Transformations)}
@@ -104,45 +103,45 @@ public class TransformPatcher implements Patcher {
      * passes. A shader that relies on this behavior is SEUS v11 - it reads
      * gl_Fog.color and breaks if it is not properly defined.
      */
-    TransformationPhase sharedFogSetup = new RunPhase() {
+    TransformationPhase<Void> sharedFogSetup = new RunPhase<Void>() {
       @Override
       protected void run(TranslationUnitContext ctx) {
         injectExternalDeclaration(
-            "uniform float iris_FogDensity;", InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogDensity;");
         injectExternalDeclaration(
-            "uniform float iris_FogStart;", InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogStart;");
         injectExternalDeclaration(
-            "uniform float iris_FogEnd;", InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogEnd;");
         injectExternalDeclaration(
-            "uniform vec4 iris_FogColor;", InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_FogColor;");
         injectExternalDeclaration(
-            "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };",
-            InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS,
+            "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };");
         injectExternalDeclaration(
-            "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));",
-            InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS,
+            "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));");
       }
     };
 
     // PREV TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
     // TODO: update to use new glsl-transformer features to make this compact
-    ReplaceTerminals wrapFogFragCoord = new ReplaceTerminals(ReplaceTerminals.IDENTIFIER);
-    wrapFogFragCoord.addReplacementTerminal("gl_FogFragCoord", "iris_FogFragCoord");
+    SearchTerminals<Void> wrapFogFragCoord = SearchTerminals.withReplacementTerminal("gl_FogFragCoord",
+        "iris_FogFragCoord");
 
     // PREV TODO: This doesn't handle geometry shaders... How do we do that?
-    TransformationPhase injectOutFogFragCoord = new RunPhase() {
+    TransformationPhase<Void> injectOutFogFragCoord = new RunPhase<Void>() {
       @Override
       protected void run(TranslationUnitContext ctx) {
         injectExternalDeclaration(
-            "out float iris_FogFragCoord;", InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS, "out float iris_FogFragCoord;");
       };
     };
 
-    TransformationPhase injectInFogFragCoord = new RunPhase() {
+    TransformationPhase<Void> injectInFogFragCoord = new RunPhase<Void>() {
       @Override
       protected void run(TranslationUnitContext ctx) {
         injectExternalDeclaration(
-            "in float iris_FogFragCoord;", InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS, "in float iris_FogFragCoord;");
       };
     };
 
@@ -152,29 +151,28 @@ public class TransformPatcher implements Patcher {
      * even though they write to it.
      */
     // TODO: use glsl-transformer core wrapping transformation for this
-    TransformationPhase frontColorInjection = new RunPhase() {
+    TransformationPhase<Void> frontColorInjection = new RunPhase<Void>() {
       @Override
       protected void run(TranslationUnitContext ctx) {
         injectExternalDeclaration(
-            "vec4 iris_FrontColor;", InjectionPoint.BEFORE_DECLARATIONS);
+            InjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_FrontColor;");
       };
     };
-    ReplaceTerminals wrapFrontColor = new ReplaceTerminals(ReplaceTerminals.IDENTIFIER);
-    wrapFogFragCoord.addReplacementTerminal("gl_FrontColor", "iris_FrontColor");
+    SearchTerminals<Void> wrapFrontColor = SearchTerminals.withReplacementTerminal("gl_FrontColor", "iris_FrontColor");
 
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
       for (ShaderType type : ShaderType.values()) {
-        TransformationManager manager = new TransformationManager();
+        TransformationManager<Void> manager = new TransformationManager<>();
         managers.put(patch, type, manager);
 
         manager.registerTransformation(detectReserved);
         manager.registerTransformation(fixVersion);
 
-        Transformation commonInjections = new Transformation();
+        Transformation<Void> commonInjections = new Transformation<>();
         manager.registerTransformation(commonInjections);
 
-        //TODO: use addConcurrentPhase to make this more compact
+        // TODO: use addConcurrentPhase to make this more compact
         commonInjections.addPhase(0, sharedFogSetup);
         commonInjections.addPhase(0, wrapFogFragCoord);
         if (type == ShaderType.VERTEX) {
@@ -186,8 +184,8 @@ public class TransformPatcher implements Patcher {
           commonInjections.addPhase(0, frontColorInjection);
           commonInjections.addPhase(0, wrapFrontColor);
         }
-        
-        //TODO: the rest of the patchCommon things
+
+        // TODO: the rest of the patchCommon things
       }
     }
   }
