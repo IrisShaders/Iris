@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -43,7 +44,7 @@ public class MixinTitleScreen {
 				(boolean accepted) -> {
 					if (accepted) {
 						try {
-							Util.getPlatform().openUri(new URI(Iris.SODIUM_DOWNLOAD_LINK));
+							Util.getPlatform().openUri(new URI(SodiumVersionCheck.getDownloadLink()));
 						} catch (URISyntaxException e) {
 							throw new IllegalStateException(e);
 						}

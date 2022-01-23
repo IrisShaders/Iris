@@ -8,10 +8,10 @@ import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.ShaderKey;
-import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 
 import net.irisshaders.iris.api.v0.IrisApi;
 import org.spongepowered.asm.mixin.Mixin;
@@ -63,7 +63,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_BASIC, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowBasic
@@ -74,7 +74,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionColorShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_BASIC_COLOR, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowBasicColor
@@ -87,7 +87,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionTexShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_TEXTURED, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowTextured
@@ -98,7 +98,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionTexColorShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_TEXTURED_COLOR, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowTexturedColor
@@ -113,7 +113,7 @@ public class MixinGameRenderer {
 			"getParticleShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideParticleShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if(isPhase(WorldRenderingPhase.WEATHER)) {
+		if(isPhase(WorldRenderingPhase.RAIN_SNOW)) {
 			override(ShaderKey.WEATHER, cir);
 		} else if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(ShaderKey.PARTICLES, cir);
@@ -374,11 +374,30 @@ public class MixinGameRenderer {
 		}
 	}
 
+	private static boolean isSky() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null) {
+			switch (pipeline.getPhase()) {
+				case SKY:
+				case SUNSET:
+				case SUN:
+				case STARS:
+				case VOID:
+				case MOON:
+					return true;
+				default: return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
 	private static boolean isPhase(WorldRenderingPhase phase) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).getPhase() == phase;
+		if (pipeline != null) {
+			return pipeline.getPhase() == phase;
 		} else {
 			return false;
 		}
@@ -388,7 +407,7 @@ public class MixinGameRenderer {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).getPhase() != WorldRenderingPhase.NOT_RENDERING_WORLD;
+			return ((CoreWorldRenderingPipeline) pipeline).isRenderingWorld();
 		} else {
 			return false;
 		}

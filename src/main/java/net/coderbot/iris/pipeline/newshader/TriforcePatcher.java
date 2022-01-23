@@ -81,17 +81,27 @@ public class TriforcePatcher implements Patcher {
 
 		// TODO: Add similar functions for all legacy texture sampling functions
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }");
 
 		if (type == ShaderType.FRAGMENT) {
 			// GLSL 1.50 Specification, Section 8.7:
 			//    In all functions below, the bias parameter is optional for fragment shaders.
 			//    The bias parameter is not accepted in a vertex or geometry shader.
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
 		}
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) { return textureLod(sampler, coord, lod); }");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
+
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");
+
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }");
 
 		//System.out.println(transformations.toString());
 	}

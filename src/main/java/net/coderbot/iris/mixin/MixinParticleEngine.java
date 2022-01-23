@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,6 +29,7 @@ public class MixinParticleEngine {
 	private void iris$beginDrawingParticles(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
 											 LightTexture lightTexture, Camera camera, float f,
 											 CallbackInfo ci) {
+		GbufferPrograms.setPhase(WorldRenderingPhase.PARTICLES);
 		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
 	}
 
@@ -35,6 +37,7 @@ public class MixinParticleEngine {
 	private void iris$finishDrawingParticles(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
 										LightTexture lightTexture, Camera camera, float f,
 										CallbackInfo ci) {
+		GbufferPrograms.setPhase(WorldRenderingPhase.NONE);
 		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 	}
 }

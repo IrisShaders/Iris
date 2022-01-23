@@ -5,7 +5,8 @@ import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 
 public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	ShaderMap getShaderMap();
-	WorldRenderingPhase getPhase();
 	FrameUpdateNotifier getFrameUpdateNotifier();
 	void destroy();
+
+	boolean isRenderingWorld();
 }
