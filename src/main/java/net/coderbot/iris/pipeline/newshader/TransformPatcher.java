@@ -160,19 +160,13 @@ public class TransformPatcher implements Patcher {
         new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
-            injectExternalDeclaration(
-                InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogDensity;");
-            injectExternalDeclaration(
-                InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogStart;");
-            injectExternalDeclaration(
-                InjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_FogEnd;");
-            injectExternalDeclaration(
-                InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_FogColor;");
-            injectExternalDeclaration(
+            injectExternalDeclarations(
                 InjectionPoint.BEFORE_DECLARATIONS,
-                "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };");
-            injectExternalDeclaration(
-                InjectionPoint.BEFORE_DECLARATIONS,
+                "uniform float iris_FogDensity;",
+                "uniform float iris_FogStart;",
+                "uniform float iris_FogEnd;",
+                "uniform vec4 iris_FogColor;",
+                "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };",
                 "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));");
           }
         });
