@@ -103,8 +103,8 @@ public class TransformPatcher implements Patcher {
      */
 
     // setup the transformations and even loose phases if necessary
-    Transformation<Parameters> detectReserved = new Transformation<>(
-        new SearchTerminals<>(SearchTerminals.IDENTIFIER,
+    Transformation<Parameters> detectReserved = new Transformation<Parameters>(
+        new SearchTerminals<Parameters>(SearchTerminals.IDENTIFIER,
             ImmutableSet.of(
                 ThrowTarget.fromMessage(
                     "moj_import", "Iris shader programs may not use moj_import directives."),
@@ -112,7 +112,7 @@ public class TransformPatcher implements Patcher {
                     "iris_",
                     "Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))));
 
-    Transformation<Parameters> fixVersion = new Transformation<>(new RunPhase<Parameters>() {
+    Transformation<Parameters> fixVersion = new Transformation<Parameters>(new RunPhase<Parameters>() {
       /**
        * This largely replicates the behavior of
        * {@link net.coderbot.iris.pipeline.newshader.TriforcePatcher#fixVersion(Transformations)}
@@ -206,7 +206,7 @@ public class TransformPatcher implements Patcher {
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
       for (ShaderType type : ShaderType.values()) {
-        TransformationManager<Parameters> manager = new TransformationManager<>();
+        TransformationManager<Parameters> manager = new TransformationManager<Parameters>();
         managers.put(patch, type, manager);
 
         manager.registerTransformation(detectReserved);
@@ -214,7 +214,7 @@ public class TransformPatcher implements Patcher {
         manager.registerTransformation(wrapFogSetup);
         manager.registerTransformation(wrapFogFragCoord);
 
-        // Transformation<Parameters> commonInjections = new Transformation<>();
+        // Transformation<Parameters> commonInjections = new Transformation<Parameters>();
         // manager.registerTransformation(commonInjections);
 
         if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
