@@ -64,8 +64,9 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
         buffer.putShort(i + 12, u);
         buffer.putShort(i + 14, v);
         buffer.putInt(i + 16, light);
-        // NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
-        // block ID
+		// NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
+		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
+		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
 		// TODO: can we pack this into one short?
 		buffer.putShort(i + 32, materialId);
 		buffer.putShort(i + 34, renderType);
