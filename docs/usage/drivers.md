@@ -7,7 +7,7 @@ Iris, Sodium, Minecraft, and system graphics drivers are all incredibly complex 
 **If your configuration is marked as *❌ Not supported*, we ask that you please do not submit issue reports or make support requests to us.** We have determined that these platforms cannot possibly support Iris well, and chose not to spend time supporting them. Iris might function on these platforms, and might even function well in some limited cases, but we make no guarantees about its behavior, and trying to fix all the issues would be far too time-consuming for us.
 
 - Windows:
-  - Nvidia: ✅ Supported (Minor Sodium compatibility issue on some older Nvidia drivers)
+  - Nvidia: ✅ Supported
   - AMD: ✅* Supported, some issues
   - Intel (2015+, Gen8 and above): ⚠ Partial support
   - Intel (HD 4000 series - HD 4000, HD 4400, etc): ⚠ Only supported on 1.16.5. You cannot apply shaders on 1.17.1+.
