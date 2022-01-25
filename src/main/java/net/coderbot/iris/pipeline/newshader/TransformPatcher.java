@@ -6,6 +6,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Table;
 
+import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,7 +17,11 @@ import io.github.douira.glsl_transformer.core.ReplaceTerminals;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
 import io.github.douira.glsl_transformer.core.WrapIdentifier;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
+import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
+import io.github.douira.glsl_transformer.print.filter.TokenFilter;
+import io.github.douira.glsl_transformer.print.filter.TokenFilter.TokenChannel;
 import io.github.douira.glsl_transformer.transform.RunPhase;
+import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -103,6 +108,17 @@ public class TransformPatcher implements Patcher {
      * PREV TODO: Only do the NewLines patches if the source code isn't from
      * gbuffers_lines
      */
+
+    TokenFilter parseTokenFilter = new ChannelFilter(TokenChannel.PREPROCESSOR) {
+      @Override
+      public boolean isTokenAllowed(Token token) {
+        if (!super.isTokenAllowed(token)) {
+          throw new SemanticException("Unparsed preprocessor directives such as '" + token.getText()
+              + "' may not be present at this stage of shader processing!");
+        }
+        return true;
+      }
+    };
 
     // setup the transformations and even loose phases if necessary
     Transformation<Parameters> detectReserved = new Transformation<Parameters>(
@@ -211,12 +227,15 @@ public class TransformPatcher implements Patcher {
         TransformationManager<Parameters> manager = new TransformationManager<Parameters>();
         managers.put(patch, type, manager);
 
+        manager.setParseTokenFilter(parseTokenFilter);
+
         manager.registerTransformation(detectReserved);
         manager.registerTransformation(fixVersion);
         manager.registerTransformation(wrapFogSetup);
         manager.registerTransformation(wrapFogFragCoord);
 
-        // Transformation<Parameters> commonInjections = new Transformation<Parameters>();
+        // Transformation<Parameters> commonInjections = new
+        // Transformation<Parameters>();
         // manager.registerTransformation(commonInjections);
 
         if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
