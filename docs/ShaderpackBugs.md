@@ -27,14 +27,6 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
 * Weird black spots and red/green/yellow lines on Sildur's Vibrant at very specific large window resolutions
   (windowed mode on a 3440x1440 monitor for example)
     * Diagnosis: Not attempted
-* Enchantment glints have z-fighting in the nether and end
-    * Diagnosis: In the nether and end, `gbuffers_armor_glint` uses a series of matrix multiplications, but
-      `gbuffers_textured` uses ftransform. The matrix multiplications introduce precision errors compared to ftransform
-      that cause the vertex depths to be subtly different, which is enough to cause issues with the glint effect. The
-      glint must have the exact same transformations as the content it's being applied to in order to work properly,
-      otherwise issues like this show up.
-    * Fix: Replace the content of lines 27-29 of gbuffers_armor_glint.vsh with `gl_Position = ftransform();`
-    * Tracking issue: https://github.com/Sildurs-shaders/sildurs-shaders.github.io/issues/158
 * Block breaking animations have weird colors at certain camera angles, and don't show up on chests / other block entities.
     * Diagnosis: No gbuffers_damagedblock program is provided, meaning that gbuffers_terrain is used for rendering block
       breaking animations. This program is not set up to handle translucency, causing the weird colorations due to it
