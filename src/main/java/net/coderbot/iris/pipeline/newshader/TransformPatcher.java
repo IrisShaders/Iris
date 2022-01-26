@@ -23,6 +23,7 @@ import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
+import io.github.douira.glsl_transformer.transform.TransformationPhase;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -217,7 +218,44 @@ public class TransformPatcher implements Patcher {
           };
         });
 
-    // NOTE: converted up until line 63 of TriforcePatcher (right after frontColor)
+    // PREV TODO: Add similar functions for all legacy texture sampling functions
+    Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(new RunPhase<Parameters>() {
+      @Override
+      protected void run(TranslationUnitContext ctx) {
+        injectExternalDeclarations(
+            InjectionPoint.BEFORE_DECLARATIONS,
+            "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
+            "vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
+            "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }",
+            "vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) { return textureLod(sampler, coord, lod); }",
+            "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }",
+            "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }",
+            "vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+            "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+            "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+            "vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }",
+            "vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }");
+      }
+    });
+
+    /**
+     * PREV NOTE:
+     * GLSL 1.50 Specification, Section 8.7:
+     * In all functions below, the bias parameter is optional for fragment shaders.
+     * The bias parameter is not accepted in a vertex or geometry shader.
+     */
+    Transformation<Parameters> injectTextureFunctionsFragment = new Transformation<Parameters>(
+        new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclarations(
+                InjectionPoint.BEFORE_DECLARATIONS,
+                "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
+                "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
+          }
+        });
+
+    // TODO: fragColor/fragData patching, see discord messages
 
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
@@ -232,16 +270,17 @@ public class TransformPatcher implements Patcher {
         manager.registerTransformation(wrapFogSetup);
         manager.registerTransformation(wrapFogFragCoord);
 
-        // Transformation<Parameters> commonInjections = new
-        // Transformation<Parameters>();
-        // manager.registerTransformation(commonInjections);
-
         if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
           manager.registerTransformation(wrapFogFragCoord);
         }
 
         if (type == ShaderType.VERTEX) {
           manager.registerTransformation(wrapFrontColor);
+        }
+
+        manager.registerTransformation(injectTextureFunctions);
+        if (type == ShaderType.FRAGMENT) {
+          manager.registerTransformation(injectTextureFunctionsFragment);
         }
       }
     }
