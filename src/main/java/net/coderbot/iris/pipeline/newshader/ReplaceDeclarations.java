@@ -21,6 +21,9 @@ import io.github.douira.glsl_transformer.tree.ExtendedContext;
 /**
  * The declaration replacement finds layout declarations and replaces all
  * references to them with function calls and other code.
+ * 
+ * NOTE: this class is here because it was in glsl-transformer before but it's
+ * actually not supposed to be part of that so I moved it.
  */
 public class ReplaceDeclarations<T> extends Transformation<T> {
   private static class Declaration {
