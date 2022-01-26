@@ -24,7 +24,6 @@ import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
-import io.github.douira.glsl_transformer.transform.TransformationPhase;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -220,6 +219,18 @@ public class TransformPatcher implements Patcher {
           };
         });
 
+    // TODO: fragColor/fragData patching, see discord messages
+
+    Transformation<Parameters> replaceStorageQualifierVertex = new Transformation<Parameters>(
+        new SearchTerminals<Parameters>() {
+          {
+            addReplacementTerminal("attribute", "in");
+            addReplacementTerminal("varying", "in");
+          }
+        });
+    Transformation<Parameters> replaceStorageQualifierFragment = new Transformation<Parameters>(
+        SearchTerminals.<Parameters>withReplacementTerminal("varying", "in"));
+
     // PREV TODO: Add similar functions for all legacy texture sampling functions
     Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(new RunPhase<Parameters>() {
       @Override
@@ -257,8 +268,6 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-    // TODO: fragColor/fragData patching, see discord messages
-
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
       for (ShaderType type : ShaderType.values()) {
@@ -278,12 +287,15 @@ public class TransformPatcher implements Patcher {
 
         if (type == ShaderType.VERTEX) {
           manager.registerTransformation(wrapFrontColor);
+          manager.registerTransformation(replaceStorageQualifierVertex);
+        }
+
+        if (type == ShaderType.FRAGMENT) {
+          manager.registerTransformation(replaceStorageQualifierFragment);
+          manager.registerTransformation(injectTextureFunctionsFragment);
         }
 
         manager.registerTransformation(injectTextureFunctions);
-        if (type == ShaderType.FRAGMENT) {
-          manager.registerTransformation(injectTextureFunctionsFragment);
-        }
       }
     }
   }
