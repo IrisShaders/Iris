@@ -29,9 +29,17 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 /**
- * The transform patcher uses glsl-transformer to do shader transformation. It
- * delegates the things it doesn't do itself to TriforcePatcher by either not
- * overwriting methods or calling them itself.
+ * The transform patcher (triforce 2) uses glsl-transformer to do shader
+ * transformation.
+ * 
+ * NOTE: This patcher expects the string to not contain any (!) preprocessor
+ * directives. The only allowed ones are #extension and #pragma as they are
+ * considered "parsed" directives. If any other directive appears in the string,
+ * it will throw.
+ * 
+ * TODO: Require the callers of this patcher to have already removed
+ * preprocessor directives. This is probably just a matter of telling JCPC to
+ * remove them.
  * 
  * NOTE: A separate TransformationManager should be created for each ShaderType.
  * That makes each of them more efficient as they don't need to run unnecessary
