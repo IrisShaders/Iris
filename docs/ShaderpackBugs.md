@@ -22,7 +22,7 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
     * Workaround: Replace `TemporalJitterProjPos(gl_Position);` with `// TemporalJitterProjPos(gl_Position);` on line 116 of gbuffers_entities.vsh
     * Confirmation: This bug has been confirmed to be observable in both Iris and OptiFine.
 
-## Sildur's Vibrant Shaders v1.29
+## Sildur's Vibrant Shaders v1.32
 
 * Weird black spots and red/green/yellow lines on Sildur's Vibrant at very specific large window resolutions
   (windowed mode on a 3440x1440 monitor for example)
