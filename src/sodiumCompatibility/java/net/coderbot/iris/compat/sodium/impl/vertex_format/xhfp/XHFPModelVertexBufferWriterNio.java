@@ -95,11 +95,11 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		buffer.putInt(i + 16, XHFPModelVertexType.encodeLightMapTexCoord(light));
 
 		// NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
-		// block ID
+		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
+		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
+		// TODO: can we pack this into one short?
 		buffer.putShort(i + 32, materialId);
 		buffer.putShort(i + 34, renderType);
-		buffer.putShort(i + 36, (short) 0);
-		buffer.putShort(i + 38, (short) 0);
 
 		if (vertexCount == 4) {
 			// TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates

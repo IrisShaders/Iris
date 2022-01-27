@@ -25,7 +25,7 @@ public class XHFPModelVertexType implements ChunkVertexType {
 			.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 20, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, true)
 			.addElement(IrisChunkMeshAttributes.TANGENT, 24, IrisGlVertexAttributeFormat.BYTE, 4, true)
 			.addElement(IrisChunkMeshAttributes.NORMAL, 28, IrisGlVertexAttributeFormat.BYTE, 3, true)
-			.addElement(IrisChunkMeshAttributes.BLOCK_ID, 32, IrisGlVertexAttributeFormat.SHORT, 4, false)
+			.addElement(IrisChunkMeshAttributes.BLOCK_ID, 32, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false)
 			.build();
 
 	private static final int POSITION_MAX_VALUE = 65536;

@@ -1,6 +1,6 @@
 {
   "iris.shaders.reloaded": "Sombreadores recarregados.",
-  "iris.shaders.toggled": "Sombreadores %ss.",
+  "iris.shaders.toggled": "Sombreador alterado para %s.",
   "iris.keybind.reload": "Recarregar sombreadores",
   "iris.keybind.shaderPackSelection": "Seleção de pacotes",
   "iris.keybind.toggleShaders": "Alternar sombreadores",
@@ -14,9 +14,11 @@
 
   "options.iris.apply": "Aplicar",
   "options.iris.refresh": "Atualizar",
-  "options.iris.openShaderPackFolder": "Abrir pasta de pacotes...",
+  "options.iris.openShaderPackFolder": "Pasta de sombreadores",
+  "options.iris.shaderPackSettings": "Configurar sombreador",
+  "options.iris.shaderPackList": "Lista de sombreadores",
   "options.iris.refreshShaderPacks": "Atualizar sombreadores",
-  "options.iris.shaderPackSelection": "Pacotes de sombreadores...",
+  "options.iris.shaderPackSelection": "Pacotes de sombreadores",
   "options.iris.shaderPackSelection.title": "Pacotes de sombreadores",
   "options.iris.shaderPackSelection.addedPack": "Pacote de sombreadores adicionado: \"%s\"",
   "options.iris.shaderPackSelection.addedPacks": "Pacotes de sombreadores adicionados: %s",
@@ -24,12 +26,30 @@
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" não é um pacote de sombreadores válido",
   "options.iris.shaderPackSelection.copyError": "Não foi possível adicionar o pacote de sombreadores \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" já está em sua pasta de pacotes de sombreadores!",
-  "options.iris.shaders.disabled": "Sombreadores: Não",
-  "options.iris.shaders.enabled": "Sombreadores: Sim",
+  "options.iris.shaderPackOptions.tooManyFiles": "Impossível importar multiplas configurações de sombreadores.",
+  "options.iris.shaderPackOptions.failedImport": "Falha ao importar o arquivo de configuração \"%s\"",
+  "options.iris.shaderPackOptions.importedSettings": "Configuração de sombreador \"%s\" importada",
+  "options.iris.shaders.disabled": "Sombreadores desligados",
+  "options.iris.shaders.enabled": "Sombreadores ligados",
+  "options.iris.shaders.nonePresent": "Nenhum sombreador presente",
+  "options.iris.back": "Voltar",
+  "options.iris.reset": "Redefinir",
+  "options.iris.reset.tooltip": "Redefinir TODAS opções e aplicar?",
+  "options.iris.reset.tooltip.holdShift": "Segure o SHIFT e clique em redefinir",
+  "options.iris.importSettings.tooltip": "Importar configurações",
+  "options.iris.exportSettings.tooltip": "Exportar configurações",
+  "options.iris.setToDefault": "Redefinir para o padrão?",
+  "options.iris.profile": "Perfil",
+  "options.iris.profile.custom": "Editado",
   "options.iris.shadowDistance": "Distância máxima de sombras",
   "options.iris.shadowDistance.enabled": "Permite a alteração da distância máxima de sombras. Terrenos e entidades além dessa distância não exibem sombras. Reduzir a distância de sombras pode aumentar muito o desempenho.",
   "options.iris.shadowDistance.disabled": "Seu pacote de sombreadores atual já possui uma distância de renderização para sombras. Não é possível alterá-la.",
-  
+  "options.iris.shadowDistance.sodium_tooltip": "A distância de processamento visual das sombras controla o quão longe o o terreno vai continuar projetando sombras. Distâncias menores significam que terrenos mais distantes serão ignorados no processamento, melhorando a taxa de quadros. Esta opção não pode ser mudada em pacotes de sombreadores que especificam uma um valor para isso. A verdadeira distância de processamento de sombras é limitada à distância de visualização do terreno, na opção \"Distância de Visualização\".",
+
   "pack.iris.select.title": "Selecionar",
-  "pack.iris.list.label": "+ arraste e solte nessa janela para adicionar pacotes de sombreadores"
+  "pack.iris.configure.title": "Configurar",
+  "pack.iris.list.label": "+ arraste e solte nessa janela para adicionar pacotes de sombreadores",
+  
+  "label.iris.true": "Ligado",
+  "label.iris.false": "Desligado"
 }
