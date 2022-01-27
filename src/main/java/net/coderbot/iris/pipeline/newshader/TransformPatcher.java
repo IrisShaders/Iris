@@ -2,10 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.HashBasedTable;
@@ -27,8 +24,8 @@ import io.github.douira.glsl_transformer.core.WrapIdentifier;
 import io.github.douira.glsl_transformer.core.target.HandlerTarget;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
+import io.github.douira.glsl_transformer.print.filter.TokenChannel;
 import io.github.douira.glsl_transformer.print.filter.TokenFilter;
-import io.github.douira.glsl_transformer.print.filter.TokenFilter.TokenChannel;
 import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
@@ -314,14 +311,17 @@ public class TransformPatcher implements Patcher {
 
         // detect use of custom color outputs like
         // "layout (location = 0) out vec4 <IDENTIFIER>"
-        // TODO: what happens when there is no location?
         addPhase(new WalkPhase<Parameters>() {
           ParseTreePattern customColorOutPattern;
+          ParseTreePattern illegalOutPattern;
 
           @Override
           protected void init() {
             customColorOutPattern = compilePattern(
                 "layout (location = 0) out vec4 <name:IDENTIFIER>;",
+                GLSLParser.RULE_externalDeclaration);
+            illegalOutPattern = compilePattern(
+                "out vec4 <name:IDENTIFIER>;",
                 GLSLParser.RULE_externalDeclaration);
           }
 
@@ -353,6 +353,12 @@ public class TransformPatcher implements Patcher {
 
           @Override
           public void enterExternalDeclaration(ExternalDeclarationContext ctx) {
+            ParseTreeMatch illegalMatch = illegalOutPattern.match(ctx);
+            if (illegalMatch.succeeded()) {
+              throw new SemanticException("The declaration with the name '" + illegalMatch.get("name").getText()
+                  + "' is missing a location specifier!");
+            }
+
             ParseTreeMatch match = customColorOutPattern.match(ctx);
             if (match.succeeded()) {
               declaredCustomNames.add(match.get("name").getText());
@@ -417,7 +423,7 @@ public class TransformPatcher implements Patcher {
         // "out vec4 iris_FragColor/iris_FragData[8];"
         // 3. redirect gl_Frag* to the newly created output (replace identifiers)
 
-        // TODO: merge a wrap identifier phase into this one
+        
 
         /**
          * 4. if alpha test is given, apply it with iris_FragColor/iris_FragData[0].
