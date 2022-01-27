@@ -1,21 +1,31 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Table;
 
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
+import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.GLSLParser;
+import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.core.ReplaceTerminals;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
 import io.github.douira.glsl_transformer.core.WrapIdentifier;
+import io.github.douira.glsl_transformer.core.target.HandlerTarget;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
 import io.github.douira.glsl_transformer.print.filter.TokenFilter;
@@ -24,6 +34,8 @@ import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
+import io.github.douira.glsl_transformer.transform.WalkPhase;
+import io.github.douira.glsl_transformer.tree.TreeMember;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -67,6 +79,10 @@ public class TransformPatcher implements Patcher {
       this.patch = patch;
       this.type = type;
     }
+
+    public AlphaTest getAlphaTest() {
+      return null;
+    }
   }
 
   private static class VanillaParameters extends Parameters {
@@ -80,6 +96,11 @@ public class TransformPatcher implements Patcher {
       this.alpha = alpha;
       this.hasChunkOffset = hasChunkOffset;
       this.inputs = inputs;
+    }
+
+    @Override
+    public AlphaTest getAlphaTest() {
+      return alpha;
     }
   }
 
@@ -99,6 +120,15 @@ public class TransformPatcher implements Patcher {
       this.positionOffset = positionOffset;
       this.textureScale = textureScale;
     }
+
+    @Override
+    public AlphaTest getAlphaTest() {
+      return alpha;
+    }
+  }
+
+  private enum FragColorOutput {
+    COLOR, DATA, CUSTOM
   }
 
   /**
@@ -227,7 +257,193 @@ public class TransformPatcher implements Patcher {
           };
         });
 
-    // TODO: fragColor/fragData patching, see discord messages
+    Transformation<Parameters> wrapFragColorOutput = new Transformation<Parameters>() {
+      private FragColorOutput type;
+      private boolean usesFragColor;
+      private boolean usesFragData;
+      private boolean usesCustomPossible;
+      private boolean usesCustom;
+
+      // a list of the declared custom names
+      private Collection<String> declaredCustomNames;
+
+      // the single custom name that has been used in the code
+      private String usedCustomName;
+
+      @Override
+      protected void resetState() {
+        type = null;
+        usesFragColor = false;
+        usesFragData = false;
+        usesCustomPossible = true;
+        usesCustom = false;
+      }
+
+      {
+        /**
+         * 1. detect use of gl_FragColor, gl_FragData or custom color outputs
+         * custom: find which color outputs write to location 0
+         * syntax: out vec4 <IDENTIFIER>; combined with actual use
+         * throw if there is more than one at the same location being used
+         * (multiple declaration at the same location without multiple use is fine)
+         * 1a. throw if more than one of these options is being used
+         */
+
+        // detect use of gl_FragColor
+        addConcurrentPhase(new SearchTerminals<Parameters>(
+            new HandlerTarget<Parameters>("gl_FragColor") {
+              @Override
+              public void handleResult(TreeMember node, String match) {
+                usesFragColor = true;
+              }
+            }));
+
+        // detect use of gl_FragData
+        addConcurrentPhase(new SearchTerminals<Parameters>(
+            new HandlerTarget<Parameters>("gl_FragData") {
+              @Override
+              public void handleResult(TreeMember node, String match) {
+                usesFragData = true;
+              }
+            }) {
+
+          // throw if there more than one of the two integrated methods is being used
+          @Override
+          protected void afterWalk(TranslationUnitContext ctx) {
+            if (usesFragColor && usesFragData) {
+              throw new SemanticException("gl_FragColor and gl_FragData can't be used at the same time!");
+            }
+          }
+        });
+
+        // detect use of custom color outputs like
+        // "layout (location = 0) out vec4 <IDENTIFIER>"
+        // TODO: what happens when there is no location?
+        addPhase(new WalkPhase<Parameters>() {
+          ParseTreePattern customColorOutPattern;
+
+          @Override
+          protected void init() {
+            customColorOutPattern = compilePattern(
+                "layout (location = 0) out vec4 <name:IDENTIFIER>;",
+                GLSLParser.RULE_externalDeclaration);
+          }
+
+          // if it hasn't thrown yet, using custom is still possible.
+          // init the datastructures for custom name detection
+          @Override
+          protected void beforeWalk(TranslationUnitContext ctx) {
+            declaredCustomNames = new ArrayList<>();
+            usedCustomName = null;
+          }
+
+          // always run the before walk to update the possible variable
+          @Override
+          protected boolean isActiveBeforeWalk() {
+            return true;
+          }
+
+          // only run the walk and after walk if using custom is possible at all
+          @Override
+          protected boolean isActive() {
+            return usesCustomPossible;
+          }
+
+          // using custom names is not possible anymore if none are declared
+          @Override
+          protected void afterWalk(TranslationUnitContext ctx) {
+            usesCustomPossible = !declaredCustomNames.isEmpty();
+          }
+
+          @Override
+          public void enterExternalDeclaration(ExternalDeclarationContext ctx) {
+            ParseTreeMatch match = customColorOutPattern.match(ctx);
+            if (match.succeeded()) {
+              declaredCustomNames.add(match.get("name").getText());
+            }
+          }
+        });
+
+        // if we are doing custom, check if any of the declared names are being used
+        // (and if they are being used multiple times)
+        addPhase(new SearchTerminals<Parameters>(
+            declaredCustomNames.stream()
+                .map(name -> new HandlerTarget<Parameters>(name) {
+                  @Override
+                  public void handleResult(TreeMember node, String match) {
+                    // name is being used, make sure it's the only one
+                    if (usedCustomName == null) {
+                      usedCustomName = name;
+                    } else if (usedCustomName != name) {
+                      // a second name is being used, this is illegal
+                      throw new SemanticException(
+                          "More than two custom color output names can't be used as the same time! '" + name + "' and '"
+                              + usedCustomName + "' were used at the same time.");
+                    }
+                  }
+                })
+                .collect(Collectors.toList())) {
+
+          // only run the walk if there are any names to find but run the after walk for
+          // determining the final frag color type
+          @Override
+          protected boolean isActive() {
+            return usesCustomPossible;
+          }
+
+          @Override
+          protected boolean isActiveAfterWalk() {
+            return true;
+          }
+
+          @Override
+          protected void afterWalk(TranslationUnitContext ctx) {
+            // check if any declared custom names were actually used
+            usesCustom = usedCustomName != null;
+
+            // throw if it's being used together with one of the other two methods
+            // we know that only one of the two can be true at this point
+            if (usesCustom && (usesFragColor || usesFragData)) {
+              throw new SemanticException("Custom color outputs can't be used at the same time as "
+                  + (usesFragColor ? "gl_FragColor" : "gl_FragData") + "!");
+            }
+
+            // finally it's clear which one method is being used
+            type = usesFragColor
+                ? FragColorOutput.COLOR
+                : usesFragData
+                    ? FragColorOutput.DATA
+                    : FragColorOutput.CUSTOM;
+          }
+        });
+
+        // 2. wrap their use: create a new output like
+        // "out vec4 iris_FragColor/iris_FragData[8];"
+        // 3. redirect gl_Frag* to the newly created output (replace identifiers)
+
+        // TODO: merge a wrap identifier phase into this one
+
+        /**
+         * 4. if alpha test is given, apply it with iris_FragColor/iris_FragData[0].
+         * use the custom color output at location 0 for the alpha test requires
+         * adjustment
+         * of the alpha test code?
+         **/
+        addPhase(new RunPhase<TransformPatcher.Parameters>() {
+          @Override
+          protected boolean isActive() {
+            return getJobParameters().getAlphaTest() != null;
+          }
+
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            AlphaTest alpha = getJobParameters().getAlphaTest();
+
+            // TODO: handle alpha test
+          }
+        });
+      }
+    };
 
     Transformation<Parameters> replaceStorageQualifierVertex = new Transformation<Parameters>(
         new SearchTerminals<Parameters>() {
@@ -296,9 +512,8 @@ public class TransformPatcher implements Patcher {
         if (type == ShaderType.VERTEX) {
           manager.registerTransformation(wrapFrontColor);
           manager.registerTransformation(replaceStorageQualifierVertex);
-        }
-
-        if (type == ShaderType.FRAGMENT) {
+        } else if (type == ShaderType.FRAGMENT) {
+          manager.registerTransformation(wrapFragColorOutput);
           manager.registerTransformation(replaceStorageQualifierFragment);
           manager.registerTransformation(injectTextureFunctionsFragment);
         }
