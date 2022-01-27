@@ -86,9 +86,11 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    
    The following table shows which version of Sodium you need based on your Minecraft version:
    
-   | Minecraft    | 1.16.5       | 1.17.1       | 1.18.1       |
-   |:------------:|:------------:|:------------:|:------------:|
-   | Sodium       | 1.16.5-0.2.0        | 1.17.1-0.3.4        | 1.18.1-0.4.0-alpha6 |
+   | Minecraft    | Sodium       |
+   |:------------:|:------------:|
+   | 1.16.5       | 1.16.5-0.2.0        |
+   | 1.17.1       | 1.17.1-0.3.4        |
+   | 1.18.1       | 1.18.1-0.4.0-alpha6 |
 9. Place the downloaded files (and optionally your other Fabric mods) into the mods folder. The location of the mods folder depends on  your operating system:
     - Windows: `%APPDATA%\.minecraft\mods`  
     - Linux: `~/.minecraft/mods`  
@@ -109,7 +111,7 @@ Shader packs are managed in the **Shader packs** tab. The shader pack menu shoul
 
 ![shaderpacksmenu](guide-resources/shaderpacksmenu.png)
 
-This menu shows shader packs which are in the shader packs folder. You can add new shader packs by dragging and dropping them into this menu, or by clicking the "Open Shader Pack Folder..." button and adding the shader packs into the opened folder. After adding your shader packs to the shader pack folder, click the ![refreshbutton](guide-resources/refreshbutton.png) button to refresh the list of shaders. To select a shader pack, click on "Shaders: Disabled" to enable them. After that, select the shader pack you want to enable by clicking on it, then enable the selected shader by clicking the Apply button.  
+This menu shows shader packs which are in the shader packs folder. You can add new shader packs by dragging and dropping them into this menu, or by clicking the "Open Shader Pack Folder..." button and adding the shader packs into the opened folder. After adding your shader packs to the shader pack folder, click the refresh button in the top right to refresh the list of shaders. To select a shader pack, click on "Shaders: Disabled" to enable them. After that, select the shader pack you want to enable by clicking on it, then enable the selected shader by clicking the Apply button.  
 
 In the following example, we have successfully enabled Complementary Shaders. Notice how the font of the enabled shader changed to yellow - this is used to indicate that the shader is, in fact, enabled:
 
@@ -178,9 +180,11 @@ If you are using **ANY** of the following mods:
 
 Make sure to download the version that supports your current version of Sodium:
 
-| Sodium       | 1.16.5-0.2.0        | 1.17.1-0.3.4        | 1.18.1-0.4.0-alpha6 |
-| ------------ | ------------ | ------------ | ------------ |
-| Indium       | 1.0.0 for 1.16.5        | 1.0.1 for 1.17.1       | 1.0.2-alpha2 for 1.18.1 |
+| Sodium       | Indium       |
+|:------------:|:------------:|
+| 1.16.5-0.2.0        | 1.0.0 for 1.16.5        |
+| 1.17.1-0.3.4        | 1.0.1 for 1.17.1        |
+| 1.18.1-0.4.0-alpha6 | 1.0.2-alpha2 for 1.18.1 |  
 
 **Keep in mind that this list does not cover all the mods which won't work properly without Indium**. If blocks or items from a certain mod are invisible or are not displaying correctly, or the mod crashes your game, chances are high that the mod requires Indium to work properly with Iris and Sodium.
 
