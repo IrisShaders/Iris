@@ -402,6 +402,7 @@ public class TransformPatcher implements Patcher {
           protected void afterWalk(TranslationUnitContext ctx) {
             // check if any declared custom names were actually used
             usesCustom = usedCustomName != null;
+            usesCustomPossible = usesCustom;
 
             // throw if it's being used together with one of the other two methods
             // we know that only one of the two can be true at this point
@@ -423,7 +424,7 @@ public class TransformPatcher implements Patcher {
         // "out vec4 iris_FragColor/iris_FragData[8];"
         // 3. redirect gl_Frag* to the newly created output (replace identifiers)
 
-        
+        // TODO: use WrapIdentifier but make it extensible and dynamic in glsl-transformer first
 
         /**
          * 4. if alpha test is given, apply it with iris_FragColor/iris_FragData[0].
