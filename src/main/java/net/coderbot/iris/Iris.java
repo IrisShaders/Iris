@@ -60,7 +60,6 @@ public class Iris implements ClientModInitializer {
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
-	private static boolean internal;
 	private static boolean sodiumInvalid;
 	private static boolean sodiumInstalled;
 	private static boolean physicsModInstalled;
@@ -199,33 +198,20 @@ public class Iris implements ClientModInitializer {
 		}
 
 		// Attempt to load an external shaderpack if it is available
-		if (!irisConfig.isInternal()) {
-			Optional<String> externalName = irisConfig.getShaderPackName();
+		Optional<String> externalName = irisConfig.getShaderPackName();
 
-			if (!externalName.isPresent()) {
-				logger.info("Shaders are disabled because no valid shaderpack is selected");
+		if (!externalName.isPresent()) {
+			logger.info("Shaders are disabled because no valid shaderpack is selected");
 
-				setShadersDisabled();
+			setShadersDisabled();
 
-				return;
-			}
+			return;
+		}
 
-			if (!loadExternalShaderpack(externalName.get())) {
-				logger.warn("Falling back to normal rendering without shaders because the external shaderpack could not be loaded");
-				setShadersDisabled();
-				currentPackName = "(off) [fallback, check your logs for errors]";
-			}
-		} else {
-			try {
-				loadInternalShaderpack();
-			} catch (Exception e) {
-				logger.error("Something went terribly wrong, Iris was unable to load the internal shaderpack!");
-				logger.catching(Level.ERROR, e);
-
-				logger.warn("Falling back to normal rendering without shaders because the internal shaderpack could not be loaded");
-				setShadersDisabled();
-				currentPackName = "(off) [fallback, check your logs for errors]";
-			}
+		if (!loadExternalShaderpack(externalName.get())) {
+			logger.warn("Falling back to normal rendering without shaders because the shaderpack could not be loaded");
+			setShadersDisabled();
+			currentPackName = "(off) [fallback, check your logs for errors]";
 		}
 	}
 
@@ -316,7 +302,6 @@ public class Iris implements ClientModInitializer {
 		}
 
 		currentPackName = name;
-		internal = false;
 
 		logger.info("Using shaderpack: " + name);
 
@@ -348,26 +333,9 @@ public class Iris implements ClientModInitializer {
 				.findFirst();
 	}
 
-	private static void loadInternalShaderpack() {
-		Path root = FabricLoader.getInstance().getModContainer("iris")
-				.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
-
-		try {
-			currentPack = new ShaderPack(root.resolve("shaders"));
-		} catch (IOException e) {
-			logger.error("Failed to load internal shaderpack!");
-			throw new RuntimeException("Failed to load internal shaderpack!", e);
-		}
-
-		logger.info("Using internal shaders");
-		currentPackName = "(internal)";
-		internal = true;
-	}
-
 	private static void setShadersDisabled() {
 		currentPack = null;
 		currentPackName = "(off)";
-		internal = false;
 
 		logger.info("Shaders are disabled");
 	}
@@ -555,8 +523,11 @@ public class Iris implements ClientModInitializer {
 		// We use DeferredWorldRenderingPipeline on 1.16, and NewWorldRendering pipeline on 1.17 when rendering shaders.
 		try {
 			return new NewWorldRenderingPipeline(programs);
-		} catch (Throwable e) {
-			Iris.logger.error("Couldn't load NewWorldRenderingPipeline, falling back to vanilla shaders.", e);
+		} catch (Exception e) {
+			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
+			// TODO: This should be reverted if a dimension change causes shaders to compile again
+			currentPackName = "(off) [fallback, check your logs for details]";
+
 			return new FixedFunctionWorldRenderingPipeline();
 		}
 	}
