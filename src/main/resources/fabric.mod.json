@@ -33,7 +33,6 @@
   "mixins": [
     "mixins.iris.json",
     "iris-batched-entity-rendering.mixins.json",
-    "mixins.iris.yeetphysicsmod.json",
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",
     "mixins.iris.bettermipmaps.json",
@@ -58,6 +57,8 @@
     "canvas": "*",
     "optifabric": "*",
     "imm_ptl_core": "*",
-    "immersive_portals": "*"
+    "immersive_portals": "*",
+    "physicsmod": "*",
+    "fadeinchunks": "*"
   }
 }

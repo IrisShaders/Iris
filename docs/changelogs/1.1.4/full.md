@@ -1,12 +1,4 @@
-# Iris 1.1.4 Preliminary Changelog (Full)
-
-WIP, up-to-date as of:
-
-- 1.16.x: https://github.com/IrisShaders/Iris/commit/099883f70c5136646f98cd075caf0960e475692c
-- 1.17.x: https://github.com/IrisShaders/Iris/commit/42503308b214093cecae364dcaf5a7c6ed7e76c5
-- 1.18.x: https://github.com/IrisShaders/Iris/commit/b59d8c182d8edf2a8d68127c1835629d0843653f
-
----
+# Iris 1.1.4 Changelog (Full)
 
 This release mainly focuses on bug fixes, and closes over 50 GitHub issues! It resolves a huge number of bugs, and the Iris experience with supported packs should be substantially improved as a result. Thanks to the many contributors that made this release possible!
 

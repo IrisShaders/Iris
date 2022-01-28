@@ -11,7 +11,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.Program;
@@ -77,8 +76,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final float renderDistanceMultiplier;
 	private final int resolution;
 	private final float intervalSize;
+	private final Float fov;
 	public static Matrix4f MODELVIEW;
-	public static Matrix4f ORTHO;
+	public static Matrix4f PROJECTION;
 
 	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
@@ -135,11 +135,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
 
-		if (shadowDirectives.getFov() != null) {
-			// TODO: Support FOV in the shadow map for legacy shaders
-			Iris.logger.warn("The shaderpack specifies a shadow FOV of " + shadowDirectives.getFov()
-					+ ", but Iris does not currently support perspective projections in the shadow pass.");
-		}
+		this.fov = shadowDirectives.getFov();
 
 		// TODO: Support more than two shadowcolor render targets
 		this.targets = new ShadowRenderTargets(resolution, new InternalTextureFormat[]{
@@ -404,7 +400,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 	}
 
-	private void setupGlState(float[] orthoMatrix) {
+	private void setupGlState(float[] projMatrix) {
 		// Set up the shadow program
 		setupShadowProgram();
 
@@ -421,7 +417,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.viewport(0, 0, resolution, resolution);
 
 		// Set up our orthographic projection matrix and load it into the legacy matrix stack
-		IrisRenderSystem.setupProjectionMatrix(orthoMatrix);
+		IrisRenderSystem.setupProjectionMatrix(projMatrix);
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
@@ -525,10 +521,16 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// Create our camera
 		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
 		MODELVIEW = modelView.last().pose().copy();
-		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+		float[] projMatrix;
+		if (this.fov != null) {
+			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
+			projMatrix = ShadowMatrices.createPerspectiveMatrix(this.fov);
+		} else {
+			projMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+		}
 
-		ORTHO = new Matrix4f();
-		((Matrix4fAccess) (Object) ORTHO).copyFromArray(orthoMatrix);
+		PROJECTION = new Matrix4f();
+		((Matrix4fAccess) (Object) PROJECTION).copyFromArray(projMatrix);
 
 		profiler.push("terrain_setup");
 
@@ -578,7 +580,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
 
-		setupGlState(orthoMatrix);
+		setupGlState(projMatrix);
 
 		// Render all opaque terrain unless pack requests not to
 		if (shouldRenderTerrain) {

@@ -19,7 +19,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
         super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
     }
 
-    private static final int STRIDE = 48;
+    private static final int STRIDE = 36;
 
     int vertexCount = 0;
     float uSum;
@@ -64,12 +64,12 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
         buffer.putShort(i + 12, u);
         buffer.putShort(i + 14, v);
         buffer.putInt(i + 16, light);
-        // NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
-        // block ID
-        buffer.putFloat(i + 32, materialId);
-        buffer.putFloat(i + 36, renderType);
-        buffer.putFloat(i + 40, (short) 0);
-        buffer.putFloat(i + 44, (short) 0);
+		// NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
+		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
+		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
+		// TODO: can we pack this into one short?
+		buffer.putShort(i + 32, materialId);
+		buffer.putShort(i + 34, renderType);
 
         if (vertexCount == 4) {
             // TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates

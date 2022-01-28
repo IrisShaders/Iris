@@ -21,15 +21,19 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,10 +55,10 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private @Nullable NavigationController navigation = null;
 	private Button screenSwitchButton;
 
-	private Component addedPackDialog = null;
-	private int addedPackDialogTimer = 0;
+	private Component notificationDialog = null;
+	private int notificationDialogTimer = 0;
 
-	private @Nullable AbstractElementWidget hoveredElement = null;
+	private @Nullable AbstractElementWidget<?> hoveredElement = null;
 	private Optional<Component> hoveredElementCommentTitle = Optional.empty();
 	private List<FormattedCharSequence> hoveredElementCommentBody = new ArrayList<>();
 	private int hoveredElementCommentTimer = 0;
@@ -88,8 +92,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		drawCenteredString(poseStack, this.font, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
 
-		if (addedPackDialog != null && addedPackDialogTimer > 0) {
-			drawCenteredString(poseStack, this.font, addedPackDialog, (int)(this.width * 0.5), 21, 0xFFFFFF);
+		if (notificationDialog != null && notificationDialogTimer > 0) {
+			drawCenteredString(poseStack, this.font, notificationDialog, (int)(this.width * 0.5), 21, 0xFFFFFF);
 		} else {
 			if (optionMenuOpen) {
 				drawCenteredString(poseStack, this.font, CONFIGURE_TITLE, (int)(this.width * 0.5), 21, 0xFFFFFF);
@@ -213,8 +217,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	public void tick() {
 		super.tick();
 
-		if (this.addedPackDialogTimer > 0) {
-			this.addedPackDialogTimer--;
+		if (this.notificationDialogTimer > 0) {
+			this.notificationDialogTimer--;
 		}
 
 		if (this.hoveredElement != null) {
@@ -225,7 +229,33 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
+	public boolean keyPressed(int key, int j, int k) {
+		if (key == GLFW.GLFW_KEY_ESCAPE) {
+			if (this.navigation != null && this.navigation.hasHistory()) {
+				this.navigation.back();
+
+				return true;
+			} else if (this.optionMenuOpen) {
+				this.optionMenuOpen = false;
+				this.init();
+
+				return true;
+			}
+		}
+
+		return super.keyPressed(key, j, k);
+	}
+
+	@Override
 	public void onFilesDrop(List<Path> paths) {
+		if (this.optionMenuOpen) {
+			onOptionMenuFilesDrop(paths);
+		} else {
+			onPackListFilesDrop(paths);
+		}
+	}
+
+	public void onPackListFilesDrop(List<Path> paths) {
 		List<Path> packs = paths.stream().filter(Iris::isValidShaderpack).collect(Collectors.toList());
 
 		for (Path pack : packs) {
@@ -234,24 +264,24 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			try {
 				Iris.getShaderpacksDirectoryManager().copyPackIntoDirectory(fileName, pack);
 			} catch (FileAlreadyExistsException e) {
-				this.addedPackDialog = new TranslatableComponent(
+				this.notificationDialog = new TranslatableComponent(
 						"options.iris.shaderPackSelection.copyErrorAlreadyExists",
 						fileName
 				).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 
-				this.addedPackDialogTimer = 100;
+				this.notificationDialogTimer = 100;
 				this.shaderPackList.refresh();
 
 				return;
 			} catch (IOException e) {
 				Iris.logger.warn("Error copying dragged shader pack", e);
 
-				this.addedPackDialog = new TranslatableComponent(
+				this.notificationDialog = new TranslatableComponent(
 						"options.iris.shaderPackSelection.copyError",
 						fileName
 				).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 
-				this.addedPackDialogTimer = 100;
+				this.notificationDialogTimer = 100;
 				this.shaderPackList.refresh();
 
 				return;
@@ -269,14 +299,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				// If a single pack could not be added, provide a message with that pack in the file name
 				String fileName = paths.get(0).getFileName().toString();
 
-				this.addedPackDialog = new TranslatableComponent(
+				this.notificationDialog = new TranslatableComponent(
 					"options.iris.shaderPackSelection.failedAddSingle",
 					fileName
 				).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 			} else {
 				// Otherwise, show a generic message.
 
-				this.addedPackDialog = new TranslatableComponent(
+				this.notificationDialog = new TranslatableComponent(
 					"options.iris.shaderPackSelection.failedAdd"
 				).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
 			}
@@ -285,7 +315,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			// In most cases, users will drag a single pack into the selection menu. So, let's special case it.
 			String packName = packs.get(0).getFileName().toString();
 
-			this.addedPackDialog = new TranslatableComponent(
+			this.notificationDialog = new TranslatableComponent(
 					"options.iris.shaderPackSelection.addedPack",
 					packName
 			).withStyle(ChatFormatting.ITALIC, ChatFormatting.YELLOW);
@@ -296,14 +326,58 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		} else {
 			// We also support multiple packs being dragged and dropped at a time. Just show a generic success message
 			// in that case.
-			this.addedPackDialog = new TranslatableComponent(
+			this.notificationDialog = new TranslatableComponent(
 					"options.iris.shaderPackSelection.addedPacks",
 					packs.size()
 			).withStyle(ChatFormatting.ITALIC, ChatFormatting.YELLOW);
 		}
 
 		// Show the relevant message for 5 seconds (100 ticks)
-		this.addedPackDialogTimer = 100;
+		this.notificationDialogTimer = 100;
+	}
+
+	public void onOptionMenuFilesDrop(List<Path> paths) {
+		// If more than one option file has been dragged, display an error
+		// as only one option file should be imported at a time
+		if (paths.size() != 1) {
+			this.notificationDialog = new TranslatableComponent(
+					"options.iris.shaderPackOptions.tooManyFiles"
+			).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
+			this.notificationDialogTimer = 100; // 5 seconds (100 ticks)
+
+			return;
+		}
+
+		this.importPackOptions(paths.get(0));
+	}
+
+	public void importPackOptions(Path settingFile) {
+		try (InputStream in = Files.newInputStream(settingFile)) {
+			Properties properties = new Properties();
+			properties.load(in);
+
+			Iris.queueShaderPackOptionsFromProperties(properties);
+
+			this.notificationDialog = new TranslatableComponent(
+					"options.iris.shaderPackOptions.importedSettings",
+					settingFile.getFileName().toString()
+			).withStyle(ChatFormatting.ITALIC, ChatFormatting.YELLOW);
+			this.notificationDialogTimer = 100; // 5 seconds (100 ticks)
+
+			if (this.navigation != null) {
+				this.navigation.refresh();
+			}
+		} catch (Exception e) {
+			// If the file could not be properly parsed or loaded,
+			// log the error and display a message to the user
+			Iris.logger.error("Error importing shader settings file \""+ settingFile.toString() +"\"", e);
+
+			this.notificationDialog = new TranslatableComponent(
+					"options.iris.shaderPackOptions.failedImport",
+					settingFile.getFileName().toString()
+			).withStyle(ChatFormatting.ITALIC, ChatFormatting.RED);
+			this.notificationDialogTimer = 100; // 5 seconds (100 ticks)
+		}
 	}
 
 	@Override
@@ -358,7 +432,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	// Let the screen know if an element is hovered or not, allowing for accurately updating which element is hovered
-	public void setElementHoveredStatus(AbstractElementWidget widget, boolean hovered) {
+	public void setElementHoveredStatus(AbstractElementWidget<?> widget, boolean hovered) {
 		if (hovered && widget != this.hoveredElement) {
 			this.hoveredElement = widget;
 
