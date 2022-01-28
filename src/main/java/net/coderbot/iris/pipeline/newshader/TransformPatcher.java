@@ -19,10 +19,11 @@ import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
-import io.github.douira.glsl_transformer.core.ReplaceTerminals;
+import io.github.douira.glsl_transformer.ast.StringNode;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
 import io.github.douira.glsl_transformer.core.WrapIdentifier;
 import io.github.douira.glsl_transformer.core.target.HandlerTarget;
+import io.github.douira.glsl_transformer.core.target.ReplaceTarget;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
 import io.github.douira.glsl_transformer.print.filter.TokenChannel;
@@ -254,12 +255,31 @@ public class TransformPatcher implements Patcher {
           };
         });
 
+    // // fixes locations of outs in fragment shaders
+    // Transformation<Parameters> fixFragLayouts = new Transformation<Parameters>()
+    // {
+    // {
+    // // 1. find all the outs and determine their location
+    // addPhase(1, -1, new WalkPhase<Parameters>() {
+
+    // });
+
+    // // 2. check if there is a single non-located out that could receive location
+    // 0
+
+    // // 3. add location 0 to that declaration
+
+    // }
+    // };
+
     Transformation<Parameters> wrapFragColorOutput = new Transformation<Parameters>() {
       private FragColorOutput type;
       private boolean usesFragColor;
       private boolean usesFragData;
       private boolean usesCustomPossible;
       private boolean usesCustom;
+      private String fragColorWrapResult;
+      private String fragColorWrapTarget;
 
       // a list of the declared custom names
       private Collection<String> declaredCustomNames;
@@ -421,6 +441,9 @@ public class TransformPatcher implements Patcher {
                 : usesFragData
                     ? FragColorOutput.DATA
                     : FragColorOutput.CUSTOM;
+
+            fragColorWrapResult = type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData";
+            fragColorWrapTarget = type == FragColorOutput.COLOR ? "gl_FragColor" : "gl_FragData";
           }
         });
 
@@ -428,7 +451,46 @@ public class TransformPatcher implements Patcher {
         // "out vec4 iris_FragColor/iris_FragData[8];"
         // 3. redirect gl_Frag* to the newly created output (replace identifiers)
 
-        // TODO: use WrapIdentifier but make it extensible and dynamic in glsl-transformer first
+        // throw if the replacement target is present already
+        addPhase(new SearchTerminals<Parameters>(new ThrowTarget<Parameters>(null) {
+          @Override
+          public SemanticException getException(TreeMember node, String match) {
+            // TODO: do this better instead of copying from glsl-transformer's
+            // WrapIdentifier
+            return new SemanticException("The wrapper '" + match + "' shouldn't already be present in the code!");
+          }
+
+          @Override
+          public String getNeedle() {
+            return fragColorWrapResult;
+          }
+        }) {
+          @Override
+          protected boolean isActive() {
+            return type == FragColorOutput.COLOR || type == FragColorOutput.DATA;
+          }
+        });
+
+        addPhase(new SearchTerminals<Parameters>(new ReplaceTarget<Parameters>(null) {
+          // TODO: make use of a more extensible TerminalReplaceTarget
+          @Override
+          public TreeMember getReplacement(TreeMember node, String match) {
+            return new StringNode(fragColorWrapResult);
+          };
+
+          @Override
+          public String getNeedle() {
+            return fragColorWrapTarget;
+          }
+        }));
+
+        addPhase(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+                "out vec4 " + (type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData[8]") + ";");
+          }
+        });
 
         /**
          * 4. if alpha test is given, apply it with iris_FragColor/iris_FragData[0].
@@ -499,6 +561,8 @@ public class TransformPatcher implements Patcher {
           }
         });
 
+    // foo =
+
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
       for (ShaderType type : ShaderType.values()) {
@@ -520,12 +584,17 @@ public class TransformPatcher implements Patcher {
           manager.registerTransformation(wrapFrontColor);
           manager.registerTransformation(replaceStorageQualifierVertex);
         } else if (type == ShaderType.FRAGMENT) {
+          // manager.registerTransformation(fixFragLayouts);
           manager.registerTransformation(wrapFragColorOutput);
           manager.registerTransformation(replaceStorageQualifierFragment);
           manager.registerTransformation(injectTextureFunctionsFragment);
         }
 
         manager.registerTransformation(injectTextureFunctions);
+
+        if (patch == Patch.VANILLA) {
+          // manager.registerTransformation(foo);
+        }
       }
     }
   }
