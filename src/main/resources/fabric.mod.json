@@ -58,7 +58,7 @@
     "optifabric": "*",
     "imm_ptl_core": "*",
     "immersive_portals": "*",
-    "physicsmod": "*",
+    "physicsmod": "<2.6.6",
     "fadeinchunks": "*"
   }
 }
