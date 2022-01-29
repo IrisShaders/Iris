@@ -38,6 +38,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
@@ -101,6 +102,9 @@ public final class CommonUniforms {
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
+			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
+			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
+			.uniform4f(ONCE, "entityColor", Vector4f::new)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
 			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {
