@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 public class QuadView {
 	ByteBuffer buffer;
 	int writeOffset;
-	private static final int STRIDE = 48;
+	private static final int STRIDE = 36;
 
 	float x(int index) {
 		return normalizeVertexPositionShortAsFloat(buffer.getShort(writeOffset - STRIDE * (3 - index)));

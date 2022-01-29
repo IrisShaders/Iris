@@ -11,11 +11,11 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-      - name: Set up JDK 16
+      - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
-          java-version: 16
+          java-version: 17
       - name: Cache Gradle packages
         uses: actions/cache@v2
         with:
