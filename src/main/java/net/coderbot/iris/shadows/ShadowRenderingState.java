@@ -7,4 +7,8 @@ public class ShadowRenderingState {
 	public static boolean areShadowsCurrentlyBeingRendered() {
 		return ShadowRenderer.ACTIVE;
 	}
+
+	public static Matrix4f getShadowOrthoMatrix() {
+		return ShadowRenderer.ACTIVE ? ShadowRenderer.PROJECTION.copy() : null;
+	}
 }

@@ -8,7 +8,6 @@ import com.mojang.math.Vector3f;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -18,6 +17,8 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisImages;
+import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -60,13 +61,16 @@ import java.util.List;
 import java.util.Objects;
 
 public class ShadowRenderer implements ShadowMapRenderer {
-	public static Matrix4f MODELVIEW;
 	public static boolean ACTIVE = false;
 	public static List<BlockEntity> visibleBlockEntities;
 	private final float halfPlaneLength;
 	private final float renderDistanceMultiplier;
 	private final int resolution;
 	private final float intervalSize;
+	private final Float fov;
+	public static Matrix4f MODELVIEW;
+	public static Matrix4f PROJECTION;
+
 	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
 	private final OptionalBoolean packCullingState;
@@ -103,10 +107,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
 
-		if (shadowDirectives.getFov() != null) {
-			// TODO: Support FOV in the shadow map for legacy shaders
-			Iris.logger.warn("The shaderpack specifies a shadow FOV of " + shadowDirectives.getFov() + ", but Iris does not currently support perspective projections in the shadow pass.");
-		}
+		this.fov = shadowDirectives.getFov();
 
 		// TODO: Support more than two shadowcolor render targets
 		this.targets = new ShadowRenderTargets(resolution, new InternalTextureFormat[]{
@@ -423,10 +424,18 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		setupShadowViewport();
 
 		// Set up our orthographic projection matrix and load it into RenderSystem
-		float[] orthoMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+		float[] projMatrix;
+		if (this.fov != null) {
+			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
+			projMatrix = ShadowMatrices.createPerspectiveMatrix(this.fov);
+		} else {
+			projMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+		}
 
 		Matrix4f shadowProjection = new Matrix4f();
 		((Matrix4fAccess) (Object) shadowProjection).copyFromArray(orthoMatrix);
+
+		PROJECTION = shadowProjection;
 
 		IrisRenderSystem.setShadowProjection(shadowProjection);
 

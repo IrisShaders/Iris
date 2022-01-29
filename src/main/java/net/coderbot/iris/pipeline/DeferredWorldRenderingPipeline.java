@@ -16,6 +16,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -27,7 +28,10 @@ import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -70,6 +74,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass texturedLit;
 	@Nullable
+	private final Pass basicOverlay;
+	@Nullable
+	private final Pass texturedOverlay;
+	@Nullable
+	private final Pass texturedLitOverlay;
+	@Nullable
 	private final Pass skyBasic;
 	@Nullable
 	private final Pass skyTextured;
@@ -88,9 +98,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass entities;
 	@Nullable
+	private final Pass entityNoOverlay;
+	@Nullable
 	private final Pass blockEntities;
 	@Nullable
 	private final Pass hand;
+	@Nullable
+	private final Pass handNoOverlay;
 	@Nullable
 	private final Pass handTranslucent;
 	@Nullable
@@ -99,6 +113,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final Pass glint;
 	@Nullable
 	private final Pass eyes;
+	@Nullable
+	private final Pass eyesNoOverlay;
 
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
@@ -286,6 +302,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
 		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
+		this.basicOverlay = programs.getGbuffersBasic().map(this::createEntityPass).orElse(null);
+		this.texturedOverlay = programs.getGbuffersTextured().map(this::createEntityPass).orElse(basicOverlay);
+		this.texturedLitOverlay = programs.getGbuffersTexturedLit().map(this::createEntityPass).orElse(texturedOverlay);
 		this.skyBasic = programs.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
 		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
 		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
@@ -294,13 +313,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.damagedBlock = programs.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
 		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
-		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
+		this.entities = programs.getGbuffersEntities().map(this::createEntityPass).orElse(texturedLitOverlay);
+		this.entityNoOverlay = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
-		this.hand = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
-		this.handTranslucent = programs.getGbuffersHandWater().map(this::createPass).orElse(hand);
-		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
+		this.hand = programs.getGbuffersHand().map(this::createEntityPass).orElse(texturedLitOverlay);
+		this.handNoOverlay = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
+		this.handTranslucent = programs.getGbuffersHandWater().map(this::createEntityPass).orElse(hand);
+		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createEntityPass).orElse(entities);
 		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
-		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
+		this.eyes = programs.getGbuffersEntityEyes().map(this::createEntityPass).orElse(texturedOverlay);
+		this.eyesNoOverlay = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
@@ -410,12 +432,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				return beaconBeam;
 			case ENTITIES:
 				return entities;
+			case ENTITY_NO_OVERLAY:
+				return entityNoOverlay;
 			case BLOCK_ENTITIES:
 				return blockEntities;
 			case ENTITIES_GLOWING:
 				return glowingEntities;
 			case EYES:
 				return eyes;
+			case EYES_NO_OVERLAY:
+				return eyesNoOverlay;
 			case ARMOR_GLINT:
 				return glint;
 			case CLOUDS:
@@ -432,6 +458,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				return weather;
 			case HAND:
 				return hand;
+			case HAND_NO_OVERLAY:
+				return handNoOverlay;
 			case HAND_TRANSLUCENT:
 				return handTranslucent;
 			default:
@@ -519,17 +547,39 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private Pass createPass(ProgramSource source) {
 		// TODO: Properly handle empty shaders
-		Objects.requireNonNull(source.getVertexSource());
-		Objects.requireNonNull(source.getFragmentSource());
 		ProgramBuilder builder;
-
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElseThrow(NullPointerException::new), source.getGeometrySource().orElse(null),
+					source.getFragmentSource().orElseThrow(NullPointerException::new), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
+
+		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives());
+	}
+
+	private Pass createEntityPass(ProgramSource source) {
+		// TODO: Properly handle empty shaders
+		String geometry = source.getGeometrySource().orElse(null);
+		String vertex = AttributeShaderTransformer.patch(source.getVertexSource().orElseThrow(NullPointerException::new),
+				ShaderType.VERTEX, geometry != null);
+		String fragment = AttributeShaderTransformer.patch(source.getFragmentSource().orElseThrow(NullPointerException::new),
+				ShaderType.FRAGMENT, geometry != null);
+
+		ProgramBuilder builder;
+		try {
+			builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
+					fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+		} catch (RuntimeException e) {
+			// TODO: Better error handling
+			throw new RuntimeException("Shader compilation failed!", e);
+		}
+
+		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives());
+	}
+
+	private Pass createPassInner(ProgramBuilder builder, IdMap map, ProgramDirectives programDirectives, PackDirectives packDirectives) {
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, null);
 
@@ -554,18 +604,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		GlFramebuffer framebufferBeforeTranslucents =
-				renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
+				renderTargets.createGbufferFramebuffer(flippedAfterPrepare, programDirectives.getDrawBuffers());
 		GlFramebuffer framebufferAfterTranslucents =
-				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
+				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, programDirectives.getDrawBuffers());
 
 		builder.bindAttributeLocation(11, "mc_Entity");
 		builder.bindAttributeLocation(12, "mc_midTexCoord");
 		builder.bindAttributeLocation(13, "at_tangent");
 
-		AlphaTest alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
+		AlphaTest alphaTestOverride = programDirectives.getAlphaTestOverride().orElse(null);
 
 		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				source.getDirectives().getBlendModeOverride());
+				programDirectives.getBlendModeOverride());
 
 		allPasses.add(pass);
 

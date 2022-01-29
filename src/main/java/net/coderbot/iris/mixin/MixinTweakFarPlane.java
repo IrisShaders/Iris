@@ -2,8 +2,6 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.GameRenderer;
 import org.lwjgl.opengl.GL;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,7 +31,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *
  * Fun.
  */
-@Environment(EnvType.CLIENT)
 @Mixin(GameRenderer.class)
 public class MixinTweakFarPlane {
 	@Shadow
