@@ -5,13 +5,7 @@ import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class AttributeShaderTransformer {
-	public static String patch(String source, ShaderType type, boolean hasGeometry) {
-		if (source.contains("iris_")) {
-			throw new IllegalStateException("Shader is attempting to exploit internal Iris code!");
-		}
-
-		StringTransformations transformations = new StringTransformations(source);
-
+	public static StringTransformations patch(StringTransformations transformations, ShaderType type, boolean hasGeometry) {
 		// Add entity color -> overlay color attribute support.
 		if (type == ShaderType.VERTEX) {
 			// delete original declaration (fragile!!! we need glsl-transformer to do this robustly)
@@ -21,7 +15,7 @@ public class AttributeShaderTransformer {
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in this stage. But this is
 			//       needed for the pass-through behavior.
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D iris_overlay;");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "varying vec4 entityColor;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 entityColor;");
 
 			// Create our own main function to wrap the existing main function, so that we can pass through the overlay color at the
 			// end to the geometry or fragment stage.
@@ -30,8 +24,10 @@ public class AttributeShaderTransformer {
 			}
 
 			transformations.replaceExact("main", "irisMain");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 iris_UV1;\n");
+
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
-					"	vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[2] * gl_MultiTexCoord2).xy);\n" +
+					"	vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);\n" +
 					"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
 					"\n" +
 					"    irisMain();\n" +
@@ -63,7 +59,7 @@ public class AttributeShaderTransformer {
 		} else if (type == ShaderType.FRAGMENT) {
 			// replace original declaration (fragile!!! we need glsl-transformer to do this robustly)
 			// if entityColor is not declared as a uniform, we don't make it available
-			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "varying vec4 entityColor;");
+			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "in vec4 entityColor;");
 
 			if (hasGeometry) {
 				// Different output name to avoid a name collision in the goemetry shader.
@@ -71,6 +67,6 @@ public class AttributeShaderTransformer {
 			}
 		}
 
-		return transformations.toString();
+		return transformations;
 	}
 }

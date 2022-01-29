@@ -114,18 +114,18 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 			// "tex" and "texture" are also valid sampler names.
 			super.setSampler("texture", sampler);
 			super.setSampler("tex", sampler);
+		} else if (name.equals("Sampler1")) {
+			name = "iris_overlay";
 		} else if (name.equals("Sampler2")) {
 			name = "lightmap";
 		} else if (name.startsWith("Sampler")) {
-			// We only care about the texture and the lightmap for now from vanilla.
+			// We only care about the texture, lightmap, and overlay for now from vanilla.
 			// All other samplers will be coming from Iris.
 			return;
 		} else {
 			Iris.logger.warn("Iris: didn't recognize the sampler name " + name + " in addSampler, please use addIrisSampler for custom Iris-specific samplers instead.");
 			return;
 		}
-
-		// TODO: Expose Sampler1 (the mob overlay flash)
 
 		super.setSampler(name, sampler);
 	}

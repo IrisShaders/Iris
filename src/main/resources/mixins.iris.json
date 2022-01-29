@@ -33,7 +33,7 @@
     "MixinClientLanguage",
     "MixinMaxFpsCrashFix",
     "MixinTweakFarPlane",
-    "MixinCrashReport",
+    "MixinSystemReport",
     "MixinLevelRenderer",
     "MixinUniform",
     "MixinVertexBuffer",

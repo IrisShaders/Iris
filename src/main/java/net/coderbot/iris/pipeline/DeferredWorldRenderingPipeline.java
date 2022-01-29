@@ -35,6 +35,7 @@ import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -562,10 +563,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private Pass createEntityPass(ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		String geometry = source.getGeometrySource().orElse(null);
-		String vertex = AttributeShaderTransformer.patch(source.getVertexSource().orElseThrow(NullPointerException::new),
-				ShaderType.VERTEX, geometry != null);
-		String fragment = AttributeShaderTransformer.patch(source.getFragmentSource().orElseThrow(NullPointerException::new),
-				ShaderType.FRAGMENT, geometry != null);
+		String vertex = AttributeShaderTransformer.patch(new StringTransformations(source.getVertexSource().orElseThrow(NullPointerException::new)),
+				ShaderType.VERTEX, geometry != null).toString();
+		String fragment = AttributeShaderTransformer.patch(new StringTransformations(source.getVertexSource().orElseThrow(NullPointerException::new)),
+				ShaderType.FRAGMENT, geometry != null).toString();
 
 		ProgramBuilder builder;
 		try {
@@ -581,7 +582,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private Pass createPassInner(ProgramBuilder builder, IdMap map, ProgramDirectives programDirectives, PackDirectives packDirectives) {
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, null);
+		CommonUniforms.addCommonUniforms(builder, map, packDirectives, updateNotifier, null);
 
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;

@@ -69,7 +69,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final float intervalSize;
 	private final Float fov;
 	public static Matrix4f MODELVIEW;
-	public static Matrix4f PROJECTION;
 
 	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
@@ -433,9 +432,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		Matrix4f shadowProjection = new Matrix4f();
-		((Matrix4fAccess) (Object) shadowProjection).copyFromArray(orthoMatrix);
-
-		PROJECTION = shadowProjection;
+		((Matrix4fAccess) (Object) shadowProjection).copyFromArray(projMatrix);
 
 		IrisRenderSystem.setShadowProjection(shadowProjection);
 
