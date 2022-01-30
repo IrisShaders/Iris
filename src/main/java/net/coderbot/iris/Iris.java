@@ -58,7 +58,6 @@ public class Iris implements ClientModInitializer {
 	private static String currentPackName;
 	private static boolean sodiumInvalid;
 	private static boolean sodiumInstalled;
-	private static boolean physicsModInstalled;
 	private static boolean initialized;
 
 	private static PipelineManager pipelineManager;
@@ -95,8 +94,6 @@ public class Iris implements ClientModInitializer {
 				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
 
 		IRIS_VERSION = iris.getMetadata().getVersion().getFriendlyString();
-
-		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
 
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {
@@ -578,10 +575,6 @@ public class Iris implements ClientModInitializer {
   
 	public static boolean isSodiumInstalled() {
 		return sodiumInstalled;
-	}
-
-	public static boolean isPhysicsModInstalled() {
-		return physicsModInstalled;
 	}
 
 	public static boolean isPackActive() {
