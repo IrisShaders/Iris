@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
@@ -391,12 +392,14 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (pack.toString().endsWith(".zip")) {
-			try {
-				FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader());
+			try (FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader())) {
 				Path root = zipSystem.getRootDirectories().iterator().next();
 				return Files.walk(root)
 						.filter(Files::isDirectory)
 						.anyMatch(path -> path.endsWith("shaders"));
+			} catch (ZipError zipError) {
+				// Java 8 seems to throw a ZipError instead of a subclass of IOException
+				Iris.logger.warn("The ZIP at " + pack + " is corrupt");
 			} catch (IOException ignored) {
 				// ignored, not a valid shader pack.
 			}
