@@ -53,6 +53,7 @@ public class NewShaderTests {
 				"        \"Position\",\n" +
 				"        \"Color\",\n" +
 				"        \"UV0\",\n" +
+				"        \"UV1\",\n" +
 				"        \"UV2\",\n" +
 				"        \"Normal\"\n" +
 				"    ],\n" +
@@ -61,6 +62,7 @@ public class NewShaderTests {
 				"        { \"name\": \"gtexture\" },\n" +
 				"        { \"name\": \"texture\" },\n" +
 				"        { \"name\": \"tex\" },\n" +
+				"        { \"name\": \"iris_overlay\" },\n" +
 				"        { \"name\": \"lightmap\" },\n" +
 				"        { \"name\": \"normals\" },\n" +
 				"        { \"name\": \"specular\" },\n" +
