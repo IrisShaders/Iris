@@ -47,6 +47,9 @@ import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.TinyRemapper;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.Repository;
 
 public class Buildscript extends FabricProject {
     static final boolean SODIUM = true;
@@ -91,7 +94,7 @@ public class Buildscript extends FabricProject {
         if (SODIUM) {
             // d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.16.5-0.2.0"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME); // TOOD missing sha1 hash
             try {
-                Path target = getLocalBrachyuraPath().resolve("sodium1.16.5-0.2.0.jar");
+				Path target = getLocalBrachyuraPath().resolve("sodium1.16.5-0.2.0.jar");
                 if (!Files.exists(target)) {
                     try (
                         AtomicFile f = new AtomicFile(target);
@@ -183,6 +186,22 @@ public class Buildscript extends FabricProject {
             throw Util.sneak(e);
         }
     }
+
+	@Override
+	public Path getBuildJarPath() {
+		Repository repository = null;
+		String commitHash = "";
+		try {
+			repository = Git.open(getProjectDir().toFile()).getRepository();
+			commitHash = repository.parseCommit(repository.resolve(Constants.HEAD).toObjectId()).getName().substring(0, 8);
+			repository.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+
+		return getBuildLibsDir().resolve(getModId() + "-" + getVersion() + "-" + commitHash + ".jar");
+	}
 
     @Override
     public IdeProject getIdeProject() {

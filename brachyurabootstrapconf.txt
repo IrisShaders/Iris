@@ -9,6 +9,9 @@ https://github.com/CoolCrabs/brachyura/releases/download/v_a88bbf1dc3304d5be5d3f
 https://github.com/CoolCrabs/brachyura/releases/download/v_a88bbf1dc3304d5be5d3f8790723bfd1c0cd07bb/brachyura-mixin-compile-extensions-0.4-sources.jar	915937729F65FB050A456AC41E97195EF69E6046	brachyura-mixin-compile-extensions-0.4-sources.jar	false
 https://github.com/CoolCrabs/brachyura/releases/download/v_a88bbf1dc3304d5be5d3f8790723bfd1c0cd07bb/trieharder-0.2.0.jar	6F64E056E6412EC7F287CC21B4081C59F1C6A533	trieharder-0.2.0.jar	true
 https://github.com/CoolCrabs/brachyura/releases/download/v_a88bbf1dc3304d5be5d3f8790723bfd1c0cd07bb/trieharder-0.2.0-sources.jar	AC68B3CBE5683194A2DA69C7DE8219597F2430DD	trieharder-0.2.0-sources.jar	false
+https://repo.eclipse.org/content/groups/releases/org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r.jar	a6184d0441ad4a912f73c2f9e14f2fe3826b9306	org.eclipse.jgit-6.0.0.202111291000-r.jar	 true
+https://repo.eclipse.org/content/groups/releases/org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r-sources.jar	81144d5f8866f92fdd93cae624e4f38d6ff92320	org.eclipse.jgit-6.0.0.202111291000-r-sources.jar	false
+https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.35/slf4j-api-1.7.35.jar	517f3a0687490b72d0e56d815e05608a541af802	slf4j-api-1.7.35.jar	true
 https://github.com/CoolCrabs/brachyura/releases/download/v_a88bbf1dc3304d5be5d3f8790723bfd1c0cd07bb/fernutil-0.2.jar	1EE8EA1EC01CC6C2958EBC2578A804DF610F9C0B	fernutil-0.2.jar	true
 https://github.com/CoolCrabs/brachyura/releases/download/v_a88bbf1dc3304d5be5d3f8790723bfd1c0cd07bb/fernutil-0.2-sources.jar	4CB9223A2CD1AF04DB524BCBFC318773947B1B85	fernutil-0.2-sources.jar	false
 https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.2/asm-9.2.jar	81a03f76019c67362299c40e0ba13405f5467bff	asm-9.2.jar	true
