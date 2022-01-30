@@ -37,8 +37,9 @@ If you are using an IDE, make sure to use `java -jar .\brachyura-bootstrap-0.jar
 - Manually restore the JGit dependency by adding the following lines at the end:
 
     ```
-    https://repo.eclipse.org/content/groups/releases//org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r.jar	a6184d0441ad4a912f73c2f9e14f2fe3826b9306	org.eclipse.jgit-6.0.0.202111291000-r.jar	true
-    https://repo.eclipse.org/content/groups/releases//org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r-sources.jar	81144d5f8866f92fdd93cae624e4f38d6ff92320	org.eclipse.jgit-6.0.0.202111291000-r-sources.jar	false
+    https://repo.eclipse.org/content/groups/releases/org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r.jar	a6184d0441ad4a912f73c2f9e14f2fe3826b9306	org.eclipse.jgit-6.0.0.202111291000-r.jar	true
+    https://repo.eclipse.org/content/groups/releases/org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r-sources.jar	81144d5f8866f92fdd93cae624e4f38d6ff92320	org.eclipse.jgit-6.0.0.202111291000-r-sources.jar	false
+    https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.35/slf4j-api-1.7.35.jar	517f3a0687490b72d0e56d815e05608a541af802	slf4j-api-1.7.35.jar	true
     ```
 
 - If you are using an IDE, make sure to use `java -jar .\brachyura-bootstrap-0.jar idea` (substituting `idea` as appropriate for your current IDE) to re-generate the project files for your edits to fully apply.

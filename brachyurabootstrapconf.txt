@@ -35,6 +35,6 @@ https://maven.fabricmc.net/net/fabricmc/access-widener/2.0.0/access-widener-2.0.
 https://maven.fabricmc.net/net/fabricmc/access-widener/2.0.0/access-widener-2.0.0-sources.jar	ee1c9aa4c86471a35e74c8410e9ddf051e53b442	access-widener-2.0.0-sources.jar	false
 https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0.jar	8cc20c07506ec18e0834947b84a864bfc094484e	annotations-23.0.0.jar	true
 https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0-sources.jar	ca5088d615accaabd2aa956b10b236a4e75cfccb	annotations-23.0.0-sources.jar	false
-https://repo.eclipse.org/content/groups/releases/org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r.jar	a6184d0441ad4a912f73c2f9e14f2fe3826b9306	org.eclipse.jgit-6.0.0.202111291000-r.jar	 true
+https://repo.eclipse.org/content/groups/releases/org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r.jar	a6184d0441ad4a912f73c2f9e14f2fe3826b9306	org.eclipse.jgit-6.0.0.202111291000-r.jar	true
 https://repo.eclipse.org/content/groups/releases/org/eclipse/jgit/org.eclipse.jgit/6.0.0.202111291000-r/org.eclipse.jgit-6.0.0.202111291000-r-sources.jar	81144d5f8866f92fdd93cae624e4f38d6ff92320	org.eclipse.jgit-6.0.0.202111291000-r-sources.jar	false
 https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.35/slf4j-api-1.7.35.jar	517f3a0687490b72d0e56d815e05608a541af802	slf4j-api-1.7.35.jar	true
