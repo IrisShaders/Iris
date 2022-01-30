@@ -48,6 +48,7 @@ import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 
@@ -189,18 +190,19 @@ public class Buildscript extends FabricProject {
 
 	@Override
 	public Path getBuildJarPath() {
-		Repository repository = null;
 		String commitHash = "";
+		boolean isDirty = false;
 		try {
-			repository = Git.open(getProjectDir().toFile()).getRepository();
-			commitHash = repository.parseCommit(repository.resolve(Constants.HEAD).toObjectId()).getName().substring(0, 8);
-			repository.close();
-		} catch (IOException e) {
+			Git git = Git.open(getProjectDir().toFile());
+			isDirty = !git.status().call().getUncommittedChanges().isEmpty();
+			commitHash = git.getRepository().parseCommit(git.getRepository().resolve(Constants.HEAD).toObjectId()).getName().substring(0, 8);
+			git.close();
+		} catch (IOException | GitAPIException e) {
 			e.printStackTrace();
 		}
 
 
-		return getBuildLibsDir().resolve(getModId() + "-" + getVersion() + "-" + commitHash + ".jar");
+		return getBuildLibsDir().resolve(getModId() + "-" + getVersion() + "-" + commitHash + (isDirty ? "-dirty" : "") + ".jar");
 	}
 
     @Override
