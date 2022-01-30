@@ -28,21 +28,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * {@code @Overwrite}. Using {@code @Group} allows us to avoid a fragile Mixin plugin.
  */
 @Mixin(value = LevelRenderer.class, priority = 1010)
-public class MixinPreventRebuildNearInShadowPass {
+public abstract class MixinPreventRebuildNearInShadowPass {
 	@Shadow
 	@Final
 	private ObjectArrayList<LevelRenderer.RenderChunkInfo> renderChunksInFrustum;
+
+	@Shadow
+	protected abstract void applyFrustum(Frustum frustum);
 
 	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V";
 
 	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
 	@Inject(method = "setupRender",
-			at = @At(value = "INVOKE_STRING",
-					target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V",
-					args = "ldc=rebuildNear"),
+			at = @At(value = "INVOKE",
+					target = "Ljava/util/concurrent/atomic/AtomicReference;get()Ljava/lang/Object;"),
 			cancellable = true,
 			require = 0)
-	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo callback) {
+	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean bl, boolean bl2, CallbackInfo ci) {
 		if (ShadowRenderer.ACTIVE) {
 			for (LevelRenderer.RenderChunkInfo chunk : this.renderChunksInFrustum) {
 				for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getCompiledChunk().getRenderableBlockEntities()) {
@@ -61,8 +63,7 @@ public class MixinPreventRebuildNearInShadowPass {
 					target = "me/jellysquid/mods/sodium/client/gl/device/RenderDevice.enterManagedCode ()V",
 					remap = false),
 			require = 0)
-	private void iris$cannotInject(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame,
-								   boolean spectator, CallbackInfo callback) {
+	private void iris$cannotInject(Camera camera, Frustum frustum, boolean bl, boolean bl2, CallbackInfo ci) {
 		// Dummy injection just to assert that either Sodium is present, or the vanilla injection passed.
 	}
 }
