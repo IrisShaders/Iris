@@ -22,4 +22,4 @@ jobs:
         key: ${{ runner.os }}-brachyura
         restore-keys: ${{ runner.os }}-brachyura
     - name: Build with Brachyura
-      run: java -jar .\brachyura-bootstrap-0.jar build
+      run: java -jar brachyura-bootstrap-0.jar build
