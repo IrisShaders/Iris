@@ -201,7 +201,6 @@ public class Buildscript extends FabricProject {
 			e.printStackTrace();
 		}
 
-
 		return getBuildLibsDir().resolve(getModId() + "-" + getVersion() + "-" + commitHash + (isDirty ? "-dirty" : "") + ".jar");
 	}
 
