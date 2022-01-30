@@ -1,7 +1,7 @@
-# This workflow will build a Java project with Gradle
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+# This workflow will build a Java project with Brachyra
+# For more information see: docs/development/brachyura.md
 
-name: Java CI with Gradle
+name: Java CI with Brachyura
 
 on: [push, pull_request]
 
@@ -15,13 +15,11 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 17
-    - name: Cache Gradle packages
+    - name: Cache Brachyura directory
       uses: actions/cache@v2
       with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-        restore-keys: ${{ runner.os }}-gradle
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build --stacktrace
+        path: ~/.brachyura
+        key: ${{ runner.os }}-brachyura
+        restore-keys: ${{ runner.os }}-brachyura
+    - name: Build with Brachyura
+      run: java -jar .\brachyura-bootstrap-0.jar build
