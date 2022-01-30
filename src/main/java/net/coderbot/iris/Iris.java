@@ -550,7 +550,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static String getVersion() {
-		if (IRIS_VERSION == null || IRIS_VERSION.contains("${version}")) {
+		if (IRIS_VERSION == null) {
 			return "Version info unknown!";
 		}
 
@@ -561,7 +561,10 @@ public class Iris implements ClientModInitializer {
 		ChatFormatting color;
 		String version = getVersion();
 
-		if (version.endsWith("-dirty") || version.contains("unknown")) {
+		if (version.endsWith("-development_environment")) {
+			color = ChatFormatting.GOLD;
+			version = version.replace("-development_environment", " (Development Environment)");
+		} else if (version.endsWith("-dirty") || version.contains("unknown")) {
 			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
 			color = ChatFormatting.LIGHT_PURPLE;

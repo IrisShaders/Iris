@@ -28,6 +28,8 @@ import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
+import io.github.coolcrabs.brachyura.processing.ProcessingSink;
+import io.github.coolcrabs.brachyura.processing.Processor;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
@@ -189,7 +191,7 @@ public class Buildscript extends FabricProject {
     }
 
 	@Override
-	public Path getBuildJarPath() {
+	public String getVersion() {
 		String commitHash = "";
 		boolean isDirty = false;
 		try {
@@ -201,7 +203,14 @@ public class Buildscript extends FabricProject {
 			e.printStackTrace();
 		}
 
-		return getBuildLibsDir().resolve(getModId() + "-" + getVersion() + "-" + commitHash + (isDirty ? "-dirty" : "") + ".jar");
+		String baseVersion = super.getVersion().replace("-development_environment", "");
+
+		return baseVersion + "-" + commitHash + (isDirty ? "-dirty" : "");
+	}
+
+	@Override
+	public ProcessorChain resourcesProcessingChain() {
+		return new ProcessorChain(super.resourcesProcessingChain(), new FmjVersionFixer(this));
 	}
 
     @Override
