@@ -28,8 +28,6 @@ import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
-import io.github.coolcrabs.brachyura.processing.ProcessingSink;
-import io.github.coolcrabs.brachyura.processing.Processor;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
@@ -52,7 +50,6 @@ import net.fabricmc.tinyremapper.TinyRemapper;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.Repository;
 
 public class Buildscript extends FabricProject {
     static final boolean SODIUM = true;
