@@ -110,7 +110,8 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 			.javaVersion(getJavaVersion())
 			.dependencies(ideDependencies)
 			.sourcePaths(sourcePaths)
-			.resourcePaths(getResourcesDir())
+			// TODO: Audit runRunConfig behavior in BaseJavaProject - mixed references to IdeProject and RunConfig
+			.resourcePaths(paths("resources", false, true))
 			.runConfigs(
 				new IdeProject.RunConfig.RunConfigBuilder()
 					.name("Minecraft Client")
