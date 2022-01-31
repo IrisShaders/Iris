@@ -57,7 +57,8 @@
     "bedrockwaters": "<=1.6.0",
     "batchedentityrendering": "*",
     "canvas": "*",
-    "optifabric": "*"
+    "optifabric": "*",
+    "worldeditcui": "*"
   },
 
   "custom": {
