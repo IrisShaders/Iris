@@ -6,11 +6,15 @@ end_of_line = lf
 insert_final_newline = true
 tab_width = 4
 
+[brachyurabootstrapconf.txt]
+indent_style = tab
+
 [*.gradle]
 indent_style = tab
 
 [*.java]
 indent_style = tab
+ij_continuation_indent_size = 4
 ij_java_class_count_to_use_import_on_demand = 99999
 ij_java_names_count_to_use_import_on_demand = 99999
 
