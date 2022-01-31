@@ -561,9 +561,9 @@ public class Iris implements ClientModInitializer {
 		ChatFormatting color;
 		String version = getVersion();
 
-		if (version.endsWith("-development_environment")) {
+		if (version.endsWith("-development-environment")) {
 			color = ChatFormatting.GOLD;
-			version = version.replace("-development_environment", " (Development Environment)");
+			version = version.replace("-development-environment", " (Development Environment)");
 		} else if (version.endsWith("-dirty") || version.contains("unknown")) {
 			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
