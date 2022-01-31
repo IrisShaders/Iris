@@ -30,7 +30,7 @@ public class MixinFluidRenderer {
 	slice = @Slice(
 			from = @At(value = "INVOKE", target = "net/minecraft/world/level/material/FluidState.shouldRenderBackwardUpFace" +
 					"(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z")
-	))
+	), remap = false)
 	private void iris$fixBackwardUpFaceNormal(IndexBufferBuilder indices, int vertexStart, ModelQuadWinding winding,
 											  BlockAndTintGetter world, FluidState fluidState, BlockPos pos,
 											  BlockPos offset, ChunkModelBuilder buffers) {
@@ -45,7 +45,7 @@ public class MixinFluidRenderer {
 			slice = @Slice(
 					from = @At(value = "FIELD",
 							target = "me/jellysquid/mods/sodium/common/util/DirectionUtil.HORIZONTAL_DIRECTIONS : [Lnet/minecraft/core/Direction;")
-			))
+			), remap = false)
 	private void iris$fixSidewaysInnerFaceNormal(IndexBufferBuilder indices, int vertexStart, ModelQuadWinding winding,
 												 BlockAndTintGetter world, FluidState fluidState, BlockPos pos,
 												 BlockPos offset, ChunkModelBuilder buffers) {
