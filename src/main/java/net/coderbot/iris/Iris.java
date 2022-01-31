@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
@@ -392,12 +393,14 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (pack.toString().endsWith(".zip")) {
-			try {
-				FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader());
+			try (FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader())) {
 				Path root = zipSystem.getRootDirectories().iterator().next();
 				return Files.walk(root)
 						.filter(Files::isDirectory)
 						.anyMatch(path -> path.endsWith("shaders"));
+			} catch (ZipError zipError) {
+				// Java 8 seems to throw a ZipError instead of a subclass of IOException
+				Iris.logger.warn("The ZIP at " + pack + " is corrupt");
 			} catch (IOException ignored) {
 				// ignored, not a valid shader pack.
 			}
@@ -549,7 +552,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static String getVersion() {
-		if (IRIS_VERSION == null || IRIS_VERSION.contains("${version}")) {
+		if (IRIS_VERSION == null) {
 			return "Version info unknown!";
 		}
 
@@ -560,7 +563,10 @@ public class Iris implements ClientModInitializer {
 		ChatFormatting color;
 		String version = getVersion();
 
-		if (version.endsWith("-dirty") || version.contains("unknown")) {
+		if (version.endsWith("-development-environment")) {
+			color = ChatFormatting.GOLD;
+			version = version.replace("-development-environment", " (Development Environment)");
+		} else if (version.endsWith("-dirty") || version.contains("unknown")) {
 			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
 			color = ChatFormatting.LIGHT_PURPLE;
