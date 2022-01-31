@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ProgramManager.class)
 public class MixinProgramManager {
 	@Inject(method = "releaseProgram", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;assertThread(Ljava/util/function/Supplier;)V"))
-	private static void releaseGeometry(Shader shader, CallbackInfo ci) {
+	private static void iris$releaseGeometry(Shader shader, CallbackInfo ci) {
 		if (shader instanceof ExtendedShader && ((ExtendedShader) shader).getGeometry() != null) {
 			((ExtendedShader) shader).getGeometry().close();
 		}

@@ -40,9 +40,7 @@ public class NewShaderTests {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 		String vertex = TriforcePatcher.patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs);
 		String geometry = null;
-		boolean hasGeometry = false;
 		if (source.getGeometrySource().isPresent()) {
-			hasGeometry = true;
 			geometry = TriforcePatcher.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs);
 		}
 		String fragment = TriforcePatcher.patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs);
@@ -121,7 +119,7 @@ public class NewShaderTests {
 
 			Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
 			Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
-			if (hasGeometry) {
+			if (geometry != null) {
 				Files.write(debugOutDir.resolve(name + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
 			}
 			Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
