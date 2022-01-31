@@ -55,7 +55,8 @@
     "originsenhanced": "<=1.3.2",
     "batchedentityrendering": "*",
     "canvas": "*",
-    "optifabric": "*"
+    "optifabric": "*",
+    "worldeditcui": "*"
   },
 
   "custom": {
