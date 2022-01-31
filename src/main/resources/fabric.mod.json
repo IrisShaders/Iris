@@ -58,7 +58,7 @@
     "batchedentityrendering": "*",
     "canvas": "*",
     "optifabric": "*",
-    "worldeditcui": "*"
+    "worldeditcui": "<1.18.1"
   },
 
   "custom": {
