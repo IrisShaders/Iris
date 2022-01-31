@@ -1,24 +1,18 @@
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.fabric.FabricLoader;
 import io.github.coolcrabs.brachyura.fabric.FabricMaven;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
-import io.github.coolcrabs.brachyura.util.AtomicFile;
-import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -66,24 +60,10 @@ public class Buildscript extends MultiSrcDirFabricProject {
         d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.slf4j:slf4j-api:1.7.12"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.8+3cc0f0907d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.5+3cc0f0907d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
-        if (SODIUM) {
-            // d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.16.5-0.2.0"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME); // TOOD missing sha1 hash
-            try {
-				Path target = getLocalBrachyuraPath().resolve("sodium1.16.5-0.2.0.jar");
-                if (!Files.exists(target)) {
-                    try (
-                        AtomicFile f = new AtomicFile(target);
-                        InputStream is = new URL("https://api.modrinth.com/maven/maven/modrinth/sodium/mc1.16.5-0.2.0/sodium-mc1.16.5-0.2.0.jar").openStream();
-                    ) {
-                        Files.copy(is, f.tempPath, StandardCopyOption.REPLACE_EXISTING);
-                        f.commit();
-                    }
-                }
-                d.add(new JavaJarDependency(target, null, null), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-            } catch (Exception e) {
-                Util.sneak(e);
-            }
-        }
+
+		if (SODIUM) {
+			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.16.5-0.2.0"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		}
     }
 
 	@Override
