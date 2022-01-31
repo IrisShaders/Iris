@@ -25,7 +25,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
 
     @Override
     public String getMcVersion() {
-        return "1.17.1";
+        return "1.18.1";
     }
 
     @Override
@@ -58,18 +58,17 @@ public class Buildscript extends MultiSrcDirFabricProject {
     public void getModDependencies(ModDependencyCollector d) {
         d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.slf4j:slf4j-api:1.7.12"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
-        d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.10+f09604ce18"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
-        d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.6+2a2bb57318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+        d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.11+3ac43d9565"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+        d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.8+c8aba2f365"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
 
 		if (SODIUM) {
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.0+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.1.6+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "0.2.1+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.1+b4f4f6cd65"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.4+7242e9d765"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "0.1.18+3ac43d9565"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
-			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.17.1-0.3.4"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.1-0.4.0-alpha6"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
 			d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-
 		}
     }
 
