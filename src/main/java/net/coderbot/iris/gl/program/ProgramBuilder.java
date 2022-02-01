@@ -11,6 +11,8 @@ import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.pipeline.HandRenderer;
+
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
@@ -29,6 +31,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		.define(StandardMacros.getVendor())
 		.define("MC_RENDER_QUALITY", "1.0")
 		.define("MC_SHADOW_QUALITY", "1.0")
+		.define("MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH))
 		.defineAll(StandardMacros.getIrisDefines())
 		.defineAll(StandardMacros.getGlExtensions())
 		.defineAll(StandardMacros.getRenderStages())
