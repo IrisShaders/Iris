@@ -36,7 +36,7 @@ public class FogUniforms {
 				}
 			}, notifier -> {});
 
-			// To keep a stable interface, 0 is defined as cylindrical while 1 is defined as spherical, even if Mojang's index changes.
+			// To keep a stable interface, 0 is defined as spherical while 1 is defined as cylindrical, even if Mojang's index changes.
 			uniforms.uniform1i(PER_FRAME, "fogShape", () -> RenderSystem.getShaderFogShape() == FogShape.CYLINDER ? 1 : 0);
 		}
 
