@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "iris",
-  "version": "${version}",
+  "version": "1.2.1-pre-development-environment",
 
   "name": "Iris",
   "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
@@ -57,7 +57,8 @@
     "bedrockwaters": "<=1.6.0",
     "batchedentityrendering": "*",
     "canvas": "*",
-    "optifabric": "*"
+    "optifabric": "*",
+    "worldeditcui": "<1.18.1"
   },
 
   "custom": {

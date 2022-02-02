@@ -16,21 +16,17 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-      - name: Cache Gradle packages
+      - name: Cache Brachyura directory
         uses: actions/cache@v2
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/loom-cache
-            ~/.gradle/wrapper
-            ~/.m2/repository
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: ${{ runner.os }}-gradle
+            .brachyura
+            ~/.brachyura
+          key: ${{ runner.os }}-brachyura-${{ hashFiles('**/Buildscript.java') }}
+          restore-keys: ${{ runner.os }}-brachyura
 
-      - run: chmod +x gradlew
-
-      - name: Build Release
-        run: ./gradlew build -x test --stacktrace
+      - name: Build with Brachyura
+        run: java -jar brachyura-bootstrap-0.jar build
 
       - name: Upload artifacts to Modrinth, Curseforge and GitHub
         uses: Kir-Antipov/mc-publish@v2.0

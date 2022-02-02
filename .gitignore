@@ -8,6 +8,9 @@ build/
 out/
 classes/
 
+# brachyura
+.brachyura
+
 # idea
 
 .idea/

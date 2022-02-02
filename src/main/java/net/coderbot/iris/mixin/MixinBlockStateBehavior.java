@@ -1,8 +1,6 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
@@ -24,7 +22,6 @@ public abstract class MixinBlockStateBehavior {
 	 * @author IMS
 	 * @reason ambientOcclusionLevel support
 	 */
-	@Environment(EnvType.CLIENT)
 	@Deprecated
 	@Overwrite
 	public float getShadeBrightness(BlockGetter blockGetter, BlockPos blockPos) {

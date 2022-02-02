@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Non-critical mixin config plugin, just disables mixins if Indigo isn't present,
+ * since otherwise the log gets spammed with warnings.
+ */
 public class IrisIndigoCompatMixinPlugin implements IMixinConfigPlugin {
 	@Override
 	public void onLoad(String mixinPackage) {
