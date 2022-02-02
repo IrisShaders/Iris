@@ -12,7 +12,7 @@ public class SodiumVersionCheck {
 	// of pain. So don't forget!
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
 			// Development build for 22w03a
-			AllowedSodiumVersion.exact("0.4.0-alpha6+build.3",
+			AllowedSodiumVersion.exact("0.4.0-alpha6+rev.b1907ca-dirty",
 					"https://www.curseforge.com/minecraft/mc-mods/sodium/files/3605309"),
 
 			// For use by ReplayMod
