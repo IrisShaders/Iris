@@ -19,7 +19,7 @@ public class FogUniforms {
 		if (fogMode == FogMode.OFF) {
 			uniforms.uniform1f(UniformUpdateFrequency.ONCE, "fogDensity", () -> 0.0F);
 			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> 0);
-			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogShape", FogShape.CYLINDER::getIndex);
+			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogShape", () -> 0);
 		} else if (fogMode == FogMode.ENABLED) {
 			uniforms.uniform1f("fogDensity", () -> {
 				// ensure that the minimum value is 0.0
@@ -36,7 +36,8 @@ public class FogUniforms {
 				}
 			}, notifier -> {});
 
-			uniforms.uniform1i(PER_FRAME, "fogShape", RenderSystem.getShaderFogShape()::getIndex);
+			// To keep a stable interface, 0 is defined as cylindrical while 1 is defined as spherical, even if Mojang's index changes.
+			uniforms.uniform1i(PER_FRAME, "fogShape", () -> RenderSystem.getShaderFogShape() == FogShape.CYLINDER ? 0 : 1);
 		}
 
 		uniforms
