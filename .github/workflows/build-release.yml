@@ -19,8 +19,10 @@ jobs:
       - name: Cache Brachyura directory
         uses: actions/cache@v2
         with:
-          path: ~/.brachyura
-          key: ${{ runner.os }}-brachyura
+          path: |
+            .brachyura
+            ~/.brachyura
+          key: ${{ runner.os }}-brachyura-${{ hashFiles('**/Buildscript.java') }}
           restore-keys: ${{ runner.os }}-brachyura
 
       - name: Build with Brachyura

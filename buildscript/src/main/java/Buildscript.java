@@ -110,7 +110,12 @@ public class Buildscript extends MultiSrcDirFabricProject {
 
 		String baseVersion = super.getVersion().replace("-development-environment", "");
 
-		return baseVersion + "-" + commitHash + (isDirty ? "-dirty" : "");
+		return baseVersion + commitHash + (isDirty ? "-dirty" : "");
+	}
+
+	@Override
+	public Path getBuildJarPath() {
+		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + getMcVersion() + "-" + getVersion() + ".jar");
 	}
 
 	@Override

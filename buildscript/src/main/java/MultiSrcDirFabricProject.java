@@ -1,4 +1,5 @@
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.fabric.FabricProject;
 import io.github.coolcrabs.brachyura.ide.IdeProject;
@@ -47,14 +48,34 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 					"-AdefaultObfuscationEnv=brachyura"
 				)
 				.addClasspath(getCompileDependencies());
+
+			List<Path> headerSourceSets = new ArrayList<>();
+
 			for (Path p : paths("java", false, true)) {
 				compilation.addSourceDir(p);
 			}
 			for (Path p : paths("java", true, false)) {
 				compilation.addSourcePathDir(p);
+				headerSourceSets.add(p);
 			}
 			ProcessingSponge compilationOutput = new ProcessingSponge();
-			compilation.compile().getInputs(compilationOutput);
+			JavaCompilationResult compileResult = compilation.compile();
+
+			compileResult.getInputs((in, id) -> {
+				Path srcFile = compileResult.getSourceFile(id);
+
+				if (srcFile != null) {
+					for (Path headerSourceSet : headerSourceSets) {
+						if (srcFile.startsWith(headerSourceSet)) {
+							// Do not write files compiled from the "headers" source set to the final JAR.
+							return;
+						}
+					}
+				}
+
+				compilationOutput.sink(in, id);
+			});
+
 			MemoryMappingTree compmappings = new MemoryMappingTree(true);
 			mappings.get().accept(new MappingSourceNsSwitch(compmappings, Namespaces.NAMED));
 			ProcessingEntry mixinMappings = compilationOutput.popEntry(mixinOut);
