@@ -76,7 +76,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Inject(method = "begin", at = @At("RETURN"))
 	private void iris$afterBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
 		if (extending) {
-			this.format = format == DefaultVertexFormat.NEW_ENTITY ? IrisVertexFormats.ENTITY : IrisVertexFormats.TERRAIN;
+			this.format = (format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY) ? IrisVertexFormats.ENTITY : IrisVertexFormats.TERRAIN;
 			this.currentElement = this.format.getElements().get(0);
 		}
 	}
