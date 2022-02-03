@@ -1,6 +1,5 @@
 package net.coderbot.iris.mixin.vertices;
 
-import net.coderbot.iris.layer.VertexFormatInterface;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
@@ -77,7 +76,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Inject(method = "begin", at = @At("RETURN"))
 	private void iris$afterBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
 		if (extending) {
-			this.format = ((VertexFormatInterface) this.format).hasOverlay() ? IrisVertexFormats.ENTITY : IrisVertexFormats.TERRAIN;
+			this.format = format == DefaultVertexFormat.NEW_ENTITY ? IrisVertexFormats.ENTITY : IrisVertexFormats.TERRAIN;
 			this.currentElement = this.format.getElements().get(0);
 		}
 	}
