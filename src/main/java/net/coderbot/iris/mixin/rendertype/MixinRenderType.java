@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
 import net.coderbot.iris.layer.UseProgramRenderStateShard;
+import net.coderbot.iris.layer.VertexFormatInterface;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -150,7 +151,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypes(ResourceLocation texture, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		cir.setReturnValue(wrap(base, base.format().getElements().contains(DefaultVertexFormat.ELEMENT_UV1) ? GbufferProgram.ENTITIES : GbufferProgram.ENTITY_NO_OVERLAY));
+		cir.setReturnValue(wrap(base, ((VertexFormatInterface) base.format()).hasOverlay() ? GbufferProgram.ENTITIES : GbufferProgram.ENTITY_NO_OVERLAY));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
@@ -161,7 +162,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityRenderTypesZ(ResourceLocation texture, boolean affectsOutline, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		cir.setReturnValue(wrap(base, base.format().getElements().contains(DefaultVertexFormat.ELEMENT_UV1) ? GbufferProgram.ENTITIES : GbufferProgram.ENTITY_NO_OVERLAY));
+		cir.setReturnValue(wrap(base, ((VertexFormatInterface) base.format()).hasOverlay() ? GbufferProgram.ENTITIES : GbufferProgram.ENTITY_NO_OVERLAY));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
@@ -170,7 +171,7 @@ public class MixinRenderType {
 	private static void iris$wrapEntityAlpha(ResourceLocation texture, float alpha, CallbackInfoReturnable<RenderType> cir) {
 		RenderType base = cir.getReturnValue();
 
-		cir.setReturnValue(wrap(base, base.format().getElements().contains(DefaultVertexFormat.ELEMENT_UV1) ? GbufferProgram.ENTITIES : GbufferProgram.ENTITY_NO_OVERLAY));
+		cir.setReturnValue(wrap(base, ((VertexFormatInterface) base.format()).hasOverlay() ? GbufferProgram.ENTITIES : GbufferProgram.ENTITY_NO_OVERLAY));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
@@ -198,7 +199,7 @@ public class MixinRenderType {
 		RenderType base = cir.getReturnValue();
 
 		// TODO: What render type to use for this? It's used by charged creepers and withers.
-		cir.setReturnValue(wrap(base, base.format().getElements().contains(DefaultVertexFormat.ELEMENT_UV1) ? GbufferProgram.ENTITIES : GbufferProgram.ENTITY_NO_OVERLAY));
+		cir.setReturnValue(wrap(base, ((VertexFormatInterface) base.format()).hasOverlay() ? GbufferProgram.ENTITIES : GbufferProgram.ENTITY_NO_OVERLAY));
 	}
 
 	@Inject(at = @At("RETURN"), method = {
