@@ -19,7 +19,7 @@ public class FogUniforms {
 		if (fogMode == FogMode.OFF) {
 			uniforms.uniform1f(UniformUpdateFrequency.ONCE, "fogDensity", () -> 0.0F);
 			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> 0);
-			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogShape", () -> 1);
+			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogShape", () -> -1);
 		} else if (fogMode == FogMode.ENABLED) {
 			uniforms.uniform1f("fogDensity", () -> {
 				// ensure that the minimum value is 0.0
