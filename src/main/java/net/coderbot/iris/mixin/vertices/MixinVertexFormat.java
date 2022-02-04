@@ -20,6 +20,10 @@ public class MixinVertexFormat {
 			IrisVertexFormats.TERRAIN.setupBufferState();
 
 			ci.cancel();
+		} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
+			IrisVertexFormats.ENTITY.setupBufferState(pointer);
+
+			ci.cancel();
 		}
 	}
 
@@ -27,6 +31,10 @@ public class MixinVertexFormat {
 	private void iris$onClearBufferState(CallbackInfo ci) {
 		if ((Object) this == DefaultVertexFormat.BLOCK) {
 			IrisVertexFormats.TERRAIN.clearBufferState();
+
+			ci.cancel();
+		} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
+			IrisVertexFormats.ENTITY.clearBufferState();
 
 			ci.cancel();
 		}
