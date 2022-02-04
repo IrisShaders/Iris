@@ -7,6 +7,7 @@
 * **Visit [our website](https://irisshaders.net) for downloads and pretty screenshots!**
 * Visit [our Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and get support! It's also a great place to get development updates right as they're happening.
 * Visit [my Patreon page](https://www.patreon.com/coderbot) to support the continued development of Iris!
+* Visit [the developer documentation](https://github.com/IrisShaders/Iris/tree/trunk/docs/development) for information on developing, building, and contributing to Iris!
 
 ## FAQ
 

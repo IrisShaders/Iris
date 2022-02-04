@@ -1,11 +1,8 @@
 package net.coderbot.iris.mixin.rendertype;
 
 import org.spongepowered.asm.mixin.Mixin;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.RenderType;
 
-@Environment(EnvType.CLIENT)
 @Mixin(RenderType.class)
 public class MixinFixEyesTranslucency {
 	// Minecraft interprets an alpha value of zero as a signal to disable the alpha test.

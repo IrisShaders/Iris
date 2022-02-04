@@ -43,6 +43,5 @@
     "vertex_format.MixinRegionChunkRenderer",
     "vertex_format.MixinRenderRegionArenas",
     "vertex_format.MixinRenderSectionManager"
-  ],
-  "refmap": "iris-sodium-compat-refmap.json"
+  ]
 }
