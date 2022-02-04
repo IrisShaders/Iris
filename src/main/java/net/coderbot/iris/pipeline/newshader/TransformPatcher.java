@@ -21,10 +21,12 @@ import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.ast.StringNode;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
-import io.github.douira.glsl_transformer.core.WrapIdentifier;
-import io.github.douira.glsl_transformer.core.target.HandlerTarget;
+import io.github.douira.glsl_transformer.core.WrapIdentifierImpl;
+import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ReplaceTarget;
+import io.github.douira.glsl_transformer.core.target.TerminalReplaceTarget;
 import io.github.douira.glsl_transformer.core.target.ThrowTarget;
+import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
 import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
 import io.github.douira.glsl_transformer.print.filter.TokenChannel;
 import io.github.douira.glsl_transformer.print.filter.TokenFilter;
@@ -142,7 +144,7 @@ public class TransformPatcher implements Patcher {
      * gbuffers_lines
      */
 
-    TokenFilter parseTokenFilter = new ChannelFilter(TokenChannel.PREPROCESSOR) {
+    TokenFilter<Parameters> parseTokenFilter = new ChannelFilter<Parameters>(TokenChannel.PREPROCESSOR) {
       @Override
       public boolean isTokenAllowed(Token token) {
         if (!super.isTokenAllowed(token)) {
@@ -157,9 +159,9 @@ public class TransformPatcher implements Patcher {
     Transformation<Parameters> detectReserved = new Transformation<Parameters>(
         new SearchTerminals<Parameters>(SearchTerminals.IDENTIFIER,
             ImmutableSet.of(
-                ThrowTarget.fromMessage(
+                new ThrowTargetImpl<Parameters>(
                     "moj_import", "Iris shader programs may not use moj_import directives."),
-                ThrowTarget.fromMessage(
+                new ThrowTargetImpl<Parameters>(
                     "iris_",
                     "Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))));
 
@@ -204,7 +206,7 @@ public class TransformPatcher implements Patcher {
      * passes. A shader that relies on this behavior is SEUS v11 - it reads
      * gl_Fog.color and breaks if it is not properly defined.
      */
-    Transformation<Parameters> wrapFogSetup = WrapIdentifier.fromTerminal(
+    Transformation<Parameters> wrapFogSetup = WrapIdentifierImpl.fromTerminal(
         "gl_Fog", "iris_Fog",
         new RunPhase<Parameters>() {
           @Override
@@ -221,7 +223,7 @@ public class TransformPatcher implements Patcher {
         });
 
     // PREV TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
-    Transformation<Parameters> wrapFogFragCoord = WrapIdentifier.fromTerminal(
+    Transformation<Parameters> wrapFogFragCoord = WrapIdentifierImpl.fromTerminal(
         "gl_FogFragCoord", "iris_FogFragCoord",
         new RunPhase<Parameters>() {
           @Override
@@ -242,7 +244,7 @@ public class TransformPatcher implements Patcher {
      * & Renewed to compile. It works because they don't actually use gl_FrontColor
      * even though they write to it.
      */
-    Transformation<Parameters> wrapFrontColor = WrapIdentifier.fromTerminal(
+    Transformation<Parameters> wrapFrontColor = WrapIdentifierImpl.fromTerminal(
         "gl_FrontColor", "iris_FrontColor",
         new RunPhase<Parameters>() {
           @Override
@@ -305,7 +307,7 @@ public class TransformPatcher implements Patcher {
 
         // detect use of gl_FragColor
         addConcurrentPhase(new SearchTerminals<Parameters>(
-            new HandlerTarget<Parameters>("gl_FragColor") {
+            new HandlerTargetImpl<Parameters>("gl_FragColor") {
               @Override
               public void handleResult(TreeMember node, String match) {
                 usesFragColor = true;
@@ -314,7 +316,7 @@ public class TransformPatcher implements Patcher {
 
         // detect use of gl_FragData
         addConcurrentPhase(new SearchTerminals<Parameters>(
-            new HandlerTarget<Parameters>("gl_FragData") {
+            new HandlerTargetImpl<Parameters>("gl_FragData") {
               @Override
               public void handleResult(TreeMember node, String match) {
                 usesFragData = true;
@@ -391,7 +393,7 @@ public class TransformPatcher implements Patcher {
         // (and if they are being used multiple times)
         addPhase(new SearchTerminals<Parameters>(
             declaredCustomNames.stream()
-                .map(name -> new HandlerTarget<Parameters>(name) {
+                .map(name -> new HandlerTargetImpl<Parameters>(name) {
                   @Override
                   public void handleResult(TreeMember node, String match) {
                     // name is being used, make sure it's the only one
@@ -449,12 +451,13 @@ public class TransformPatcher implements Patcher {
         // 3. redirect gl_Frag* to the newly created output (replace identifiers)
 
         // throw if the replacement target is present already
-        addPhase(new SearchTerminals<Parameters>(new ThrowTarget<Parameters>(null) {
+        //TODO: use new glsl-transformer features to make this more compact (WrapTarget)
+        addPhase(new SearchTerminals<Parameters>(new ThrowTarget<Parameters>() {
           @Override
-          public SemanticException getException(TreeMember node, String match) {
+          public String getMessage(TreeMember node, String match) {
             // TODO: do this better instead of copying from glsl-transformer's
             // WrapIdentifier
-            return new SemanticException("The wrapper '" + match + "' shouldn't already be present in the code!");
+            return "The wrapper '" + match + "' shouldn't already be present in the code!";
           }
 
           @Override
@@ -468,24 +471,33 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-        addPhase(new SearchTerminals<Parameters>(new ReplaceTarget<Parameters>(null) {
-          // TODO: make use of a more extensible TerminalReplaceTarget
+        addPhase(new SearchTerminals<Parameters>(new TerminalReplaceTarget<Parameters>() {
           @Override
-          public TreeMember getReplacement(TreeMember node, String match) {
-            return new StringNode(fragColorWrapResult);
-          };
+          protected String getTerminalContent() {
+            return fragColorWrapResult;
+          }
 
           @Override
           public String getNeedle() {
             return fragColorWrapTarget;
           }
-        }));
+        }) {
+          @Override
+          protected boolean isActive() {
+            return type == FragColorOutput.COLOR || type == FragColorOutput.DATA;
+          }
+        });
 
         addPhase(new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
             injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
                 "out vec4 " + (type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData[8]") + ";");
+          }
+
+          @Override
+          protected boolean isActive() {
+            return type == FragColorOutput.COLOR || type == FragColorOutput.DATA;
           }
         });
 
