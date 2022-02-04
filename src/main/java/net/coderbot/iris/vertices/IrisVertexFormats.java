@@ -32,15 +32,15 @@ public class IrisVertexFormats {
 		terrainElements.put("at_tangent", TANGENT_ELEMENT);
 
 		entityElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION);
-		terrainElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR);
-		terrainElements.put("UV0", DefaultVertexFormat.ELEMENT_UV);
-		terrainElements.put("UV1", DefaultVertexFormat.ELEMENT_UV1);
-		terrainElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2);
-		terrainElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL);
-		terrainElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING);
-		terrainElements.put("mc_Entity", ENTITY_ELEMENT);
-		terrainElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT);
-		terrainElements.put("at_tangent", TANGENT_ELEMENT);
+		entityElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR);
+		entityElements.put("UV0", DefaultVertexFormat.ELEMENT_UV);
+		entityElements.put("UV1", DefaultVertexFormat.ELEMENT_UV1);
+		entityElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2);
+		entityElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL);
+		entityElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING);
+		entityElements.put("mc_Entity", ENTITY_ELEMENT);
+		entityElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT);
+		entityElements.put("at_tangent", TANGENT_ELEMENT);
 
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());

@@ -21,7 +21,7 @@ public class MixinVertexFormat {
 
 			ci.cancel();
 		} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
-			IrisVertexFormats.ENTITY.setupBufferState(pointer);
+			IrisVertexFormats.ENTITY.setupBufferState();
 
 			ci.cancel();
 		}
