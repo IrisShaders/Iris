@@ -103,8 +103,7 @@ public class ImageScalingUtil {
 	}
 
 	private static int blendChannel(int v0, int v1, int v2, int v3, float w0, float w1, float w2, float w3) {
-//		return Math.round(v0 * w0 + v1 * w1 + v2 * w2 + v3 * w3);
-		return Math.round((float) Math.sqrt(v0*v0 * w0 + v1*v1 * w1 + v2*v2 * w2 + v3*v3 * w3));
+		return Math.round(v0 * w0 + v1 * w1 + v2 * w2 + v3 * w3);
 	}
 
 	private static int blendColor(int c0, int c1, float w0, float w1) {
