@@ -19,13 +19,10 @@ import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
-import io.github.douira.glsl_transformer.ast.StringNode;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
-import io.github.douira.glsl_transformer.core.WrapIdentifierImpl;
+import io.github.douira.glsl_transformer.core.WrapIdentifier;
+import io.github.douira.glsl_transformer.core.WrapIdentifierExternalDeclaration;
 import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
-import io.github.douira.glsl_transformer.core.target.ReplaceTarget;
-import io.github.douira.glsl_transformer.core.target.TerminalReplaceTarget;
-import io.github.douira.glsl_transformer.core.target.ThrowTarget;
 import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
 import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
 import io.github.douira.glsl_transformer.print.filter.TokenChannel;
@@ -206,7 +203,7 @@ public class TransformPatcher implements Patcher {
      * passes. A shader that relies on this behavior is SEUS v11 - it reads
      * gl_Fog.color and breaks if it is not properly defined.
      */
-    Transformation<Parameters> wrapFogSetup = WrapIdentifierImpl.fromTerminal(
+    Transformation<Parameters> wrapFogSetup = WrapIdentifier.fromTerminal(
         "gl_Fog", "iris_Fog",
         new RunPhase<Parameters>() {
           @Override
@@ -223,7 +220,7 @@ public class TransformPatcher implements Patcher {
         });
 
     // PREV TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
-    Transformation<Parameters> wrapFogFragCoord = WrapIdentifierImpl.fromTerminal(
+    Transformation<Parameters> wrapFogFragCoord = WrapIdentifier.fromTerminal(
         "gl_FogFragCoord", "iris_FogFragCoord",
         new RunPhase<Parameters>() {
           @Override
@@ -244,7 +241,7 @@ public class TransformPatcher implements Patcher {
      * & Renewed to compile. It works because they don't actually use gl_FrontColor
      * even though they write to it.
      */
-    Transformation<Parameters> wrapFrontColor = WrapIdentifierImpl.fromTerminal(
+    Transformation<Parameters> wrapFrontColor = WrapIdentifier.fromTerminal(
         "gl_FrontColor", "iris_FrontColor",
         new RunPhase<Parameters>() {
           @Override
@@ -451,52 +448,24 @@ public class TransformPatcher implements Patcher {
         // 3. redirect gl_Frag* to the newly created output (replace identifiers)
 
         // throw if the replacement target is present already
-        //TODO: use new glsl-transformer features to make this more compact (WrapTarget)
-        addPhase(new SearchTerminals<Parameters>(new ThrowTarget<Parameters>() {
+        append(new WrapIdentifierExternalDeclaration<Parameters>() {
           @Override
-          public String getMessage(TreeMember node, String match) {
-            // TODO: do this better instead of copying from glsl-transformer's
-            // WrapIdentifier
-            return "The wrapper '" + match + "' shouldn't already be present in the code!";
+          protected String getInjectionContent() {
+            return "out vec4 " + (type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData[8]") + ";";
           }
 
           @Override
-          public String getNeedle() {
-            return fragColorWrapResult;
-          }
-        }) {
-          @Override
-          protected boolean isActive() {
-            return type == FragColorOutput.COLOR || type == FragColorOutput.DATA;
-          }
-        });
-
-        addPhase(new SearchTerminals<Parameters>(new TerminalReplaceTarget<Parameters>() {
-          @Override
-          protected String getTerminalContent() {
+          protected String getWrapResultDynamic() {
             return fragColorWrapResult;
           }
 
           @Override
-          public String getNeedle() {
+          protected String getWrapTargetDynamic() {
             return fragColorWrapTarget;
           }
-        }) {
-          @Override
-          protected boolean isActive() {
-            return type == FragColorOutput.COLOR || type == FragColorOutput.DATA;
-          }
-        });
-
-        addPhase(new RunPhase<Parameters>() {
-          @Override
-          protected void run(TranslationUnitContext ctx) {
-            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
-                "out vec4 " + (type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData[8]") + ";");
-          }
 
           @Override
-          protected boolean isActive() {
+          protected boolean isActiveDynamic() {
             return type == FragColorOutput.COLOR || type == FragColorOutput.DATA;
           }
         });
