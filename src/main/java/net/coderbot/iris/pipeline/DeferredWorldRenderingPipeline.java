@@ -157,11 +157,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final List<GbufferProgram> programStack = new ArrayList<>();
 	private final List<String> programStackLog = new ArrayList<>();
 
-	private final CustomUniforms customUniforms;
-
 	private WorldRenderingPhase phase;
 	private final CustomUniforms customUniforms;
-
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
