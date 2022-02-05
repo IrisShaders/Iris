@@ -36,6 +36,5 @@
     "vertex_format.MixinGlVertexFormatBuilder",
     "vertex_format.MixinMultidrawChunkRenderBackend",
     "vertex_format.MixinSodiumWorldRenderer"
-  ],
-  "refmap": "iris-sodium-compat-refmap.json"
+  ]
 }

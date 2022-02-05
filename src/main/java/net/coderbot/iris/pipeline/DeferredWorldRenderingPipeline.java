@@ -17,7 +17,9 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
@@ -26,7 +28,10 @@ import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -76,6 +81,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass texturedLit;
 	@Nullable
+	private final Pass basicOverlay;
+	@Nullable
+	private final Pass texturedOverlay;
+	@Nullable
+	private final Pass texturedLitOverlay;
+	@Nullable
 	private final Pass skyBasic;
 	@Nullable
 	private final Pass skyTextured;
@@ -94,9 +105,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Nullable
 	private final Pass entities;
 	@Nullable
+	private final Pass entityNoOverlay;
+	@Nullable
 	private final Pass blockEntities;
 	@Nullable
 	private final Pass hand;
+	@Nullable
+	private final Pass handNoOverlay;
 	@Nullable
 	private final Pass handTranslucent;
 	@Nullable
@@ -105,6 +120,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final Pass glint;
 	@Nullable
 	private final Pass eyes;
+	@Nullable
+	private final Pass eyesNoOverlay;
 
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
@@ -112,6 +129,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final GlFramebuffer baseline;
 
 	private Runnable createShadowMapRenderer;
+	private final CompositeRenderer prepareRenderer;
 	private ShadowMapRenderer shadowMapRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
@@ -120,7 +138,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 
-	private final ImmutableSet<Integer> flippedBeforeTranslucent;
+	private final ImmutableSet<Integer> flippedAfterPrepare;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
@@ -139,9 +157,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final List<GbufferProgram> programStack = new ArrayList<>();
 	private final List<String> programStackLog = new ArrayList<>();
 
-	private static final ResourceLocation WATER_IDENTIFIER = new ResourceLocation("minecraft", "water");
 	private final CustomUniforms customUniforms;
 
+	private WorldRenderingPhase phase;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -188,8 +206,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
-		// TODO: Change this once earlier passes are implemented.
-		ImmutableSet<Integer> flippedBeforeTerrain = ImmutableSet.of();
+		ImmutableSet<Integer> flippedBeforeShadow = ImmutableSet.of();
 
 		this.customUniforms = programs.getPack().customUniforms.build(
 				holder -> CommonUniforms.addNonDynamicUniforms(holder, programs.getPack().getIdMap(), programs.getPackDirectives(), this.updateNotifier)
@@ -197,7 +214,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
-					programs.getPackDirectives(), () -> flippedBeforeTerrain, renderTargets,
+					programs.getPackDirectives(), () -> flippedBeforeShadow, renderTargets,
 					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
 					programs, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()), customUniforms);
 			createShadowMapRenderer = () -> {};
@@ -207,12 +224,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
 
-		flippedBeforeTranslucent = flipper.snapshot();
-
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
 			return shadowMapRenderer;
 		};
+
+		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
+				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()),
+				programs.getPackDirectives().getExplicitFlips("prepare_pre"), customUniforms);
+
+		flippedAfterPrepare = flipper.snapshot();
 
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowMapRendererSupplier,
@@ -231,7 +253,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				this.compositeRenderer.getFlippedAtLeastOnceFinal(), customUniforms);
 
 		Supplier<ImmutableSet<Integer>> flipped =
-				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
+				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
 		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
@@ -267,7 +289,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeTerrain, renderTargets, false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedAfterPrepare, renderTargets, false);
 			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular());
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -283,7 +305,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
 			ProgramImages.Builder builder = ProgramImages.builder(programId);
 
-			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeTerrain, renderTargets);
+			IrisImages.addRenderTargetImages(builder, () -> flippedAfterPrepare, renderTargets);
 
 			if (IrisImages.hasShadowImages(builder) && shadowMapRenderer != null) {
 				IrisImages.addShadowColorImages(builder, shadowMapRenderer);
@@ -295,6 +317,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.basic = programs.getGbuffersBasic().map(this::createPass).orElse(null);
 		this.textured = programs.getGbuffersTextured().map(this::createPass).orElse(basic);
 		this.texturedLit = programs.getGbuffersTexturedLit().map(this::createPass).orElse(textured);
+		this.basicOverlay = programs.getGbuffersBasic().map(this::createEntityPass).orElse(null);
+		this.texturedOverlay = programs.getGbuffersTextured().map(this::createEntityPass).orElse(basicOverlay);
+		this.texturedLitOverlay = programs.getGbuffersTexturedLit().map(this::createEntityPass).orElse(texturedOverlay);
 		this.skyBasic = programs.getGbuffersSkyBasic().map(this::createPass).orElse(basic);
 		this.skyTextured = programs.getGbuffersSkyTextured().map(this::createPass).orElse(textured);
 		this.clouds = programs.getGbuffersClouds().map(this::createPass).orElse(textured);
@@ -303,13 +328,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.damagedBlock = programs.getGbuffersDamagedBlock().map(this::createPass).orElse(terrain);
 		this.weather = programs.getGbuffersWeather().map(this::createPass).orElse(texturedLit);
 		this.beaconBeam = programs.getGbuffersBeaconBeam().map(this::createPass).orElse(textured);
-		this.entities = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
+		this.entities = programs.getGbuffersEntities().map(this::createEntityPass).orElse(texturedLitOverlay);
+		this.entityNoOverlay = programs.getGbuffersEntities().map(this::createPass).orElse(texturedLit);
 		this.blockEntities = programs.getGbuffersBlock().map(this::createPass).orElse(terrain);
-		this.hand = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
-		this.handTranslucent = programs.getGbuffersHandWater().map(this::createPass).orElse(hand);
-		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createPass).orElse(entities);
+		this.hand = programs.getGbuffersHand().map(this::createEntityPass).orElse(texturedLitOverlay);
+		this.handNoOverlay = programs.getGbuffersHand().map(this::createPass).orElse(texturedLit);
+		this.handTranslucent = programs.getGbuffersHandWater().map(this::createEntityPass).orElse(hand);
+		this.glowingEntities = programs.getGbuffersEntitiesGlowing().map(this::createEntityPass).orElse(entities);
 		this.glint = programs.getGbuffersGlint().map(this::createPass).orElse(textured);
-		this.eyes = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
+		this.eyes = programs.getGbuffersEntityEyes().map(this::createEntityPass).orElse(texturedOverlay);
+		this.eyesNoOverlay = programs.getGbuffersEntityEyes().map(this::createPass).orElse(textured);
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
@@ -323,6 +351,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			// TODO: Can we remove this?
 			this.shadowMapRenderer = new EmptyShadowMapRenderer(programs.getPackDirectives().getShadowDirectives().getResolution());
 		}
+
+		this.phase = WorldRenderingPhase.NONE;
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
 				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, customUniforms);
@@ -412,16 +442,22 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				return damagedBlock;
 			case BASIC:
 				return basic;
+			case LINES:
+				return basic;
 			case BEACON_BEAM:
 				return beaconBeam;
 			case ENTITIES:
 				return entities;
+			case ENTITY_NO_OVERLAY:
+				return entityNoOverlay;
 			case BLOCK_ENTITIES:
 				return blockEntities;
 			case ENTITIES_GLOWING:
 				return glowingEntities;
 			case EYES:
 				return eyes;
+			case EYES_NO_OVERLAY:
+				return eyesNoOverlay;
 			case ARMOR_GLINT:
 				return glint;
 			case CLOUDS:
@@ -438,6 +474,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 				return weather;
 			case HAND:
 				return hand;
+			case HAND_NO_OVERLAY:
+				return handNoOverlay;
 			case HAND_TRANSLUCENT:
 				return handTranslucent;
 			default:
@@ -525,23 +563,44 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private Pass createPass(ProgramSource source) {
 		// TODO: Properly handle empty shaders
-		Objects.requireNonNull(source.getVertexSource());
-		Objects.requireNonNull(source.getFragmentSource());
 		ProgramBuilder builder;
-
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-					source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElseThrow(NullPointerException::new), source.getGeometrySource().orElse(null),
+					source.getFragmentSource().orElseThrow(NullPointerException::new), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
 		}
 
+		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives());
+	}
+
+	private Pass createEntityPass(ProgramSource source) {
+		// TODO: Properly handle empty shaders
+		String geometry = source.getGeometrySource().orElse(null);
+		String vertex = AttributeShaderTransformer.patch(source.getVertexSource().orElseThrow(NullPointerException::new),
+				ShaderType.VERTEX, geometry != null);
+		String fragment = AttributeShaderTransformer.patch(source.getFragmentSource().orElseThrow(NullPointerException::new),
+				ShaderType.FRAGMENT, geometry != null);
+
+		ProgramBuilder builder;
+		try {
+			builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
+					fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+		} catch (RuntimeException e) {
+			// TODO: Better error handling
+			throw new RuntimeException("Shader compilation failed!", e);
+		}
+
+		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives());
+	}
+
+	private Pass createPassInner(ProgramBuilder builder, IdMap map, ProgramDirectives programDirectives, PackDirectives packDirectives) {
 		CommonUniforms.addDynamicUniforms(builder);
 		this.customUniforms.assignTo(builder);
 
 		Supplier<ImmutableSet<Integer>> flipped =
-				() -> isBeforeTranslucent ? flippedBeforeTranslucent : flippedAfterTranslucent;
+				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
 		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
@@ -561,24 +620,23 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		GlFramebuffer framebufferBeforeTranslucents =
-				renderTargets.createGbufferFramebuffer(flippedBeforeTranslucent, source.getDirectives().getDrawBuffers());
+				renderTargets.createGbufferFramebuffer(flippedAfterPrepare, programDirectives.getDrawBuffers());
 		GlFramebuffer framebufferAfterTranslucents =
-				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
+				renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, programDirectives.getDrawBuffers());
 
-		builder.bindAttributeLocation(10, "mc_Entity");
-		builder.bindAttributeLocation(11, "mc_midTexCoord");
-		builder.bindAttributeLocation(12, "at_tangent");
+		builder.bindAttributeLocation(11, "mc_Entity");
+		builder.bindAttributeLocation(12, "mc_midTexCoord");
+		builder.bindAttributeLocation(13, "at_tangent");
 
-		AlphaTestOverride alphaTestOverride = source.getDirectives().getAlphaTestOverride().orElse(null);
+		AlphaTestOverride alphaTestOverride = programDirectives.getAlphaTestOverride().orElse(null);
 
 		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				source.getDirectives().getBlendModeOverride());
+				programDirectives.getBlendModeOverride());
 
 		allPasses.add(pass);
 
 		// tell the customUniforms that those locations belong to this pass
 		this.customUniforms.mapholderToPass(builder, pass);
-
 
 		return pass;
 	}
@@ -690,9 +748,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	private static void setupAttributeDefaults(Pass pass) {
-		setupAttribute(pass, "mc_Entity", 10, -1.0F, -1.0F, -1.0F, -1.0F);
-		setupAttribute(pass, "mc_midTexCoord", 11, 0.0F, 0.0F, 0.0F, 0.0F);
-		setupAttribute(pass, "at_tangent", 12, 1.0F, 0.0F, 0.0F, 1.0F);
+		setupAttribute(pass, "mc_Entity", 11, -1.0F, -1.0F, -1.0F, -1.0F);
+		setupAttribute(pass, "mc_midTexCoord", 12, 0.0F, 0.0F, 0.0F, 0.0F);
+		setupAttribute(pass, "at_tangent", 13, 1.0F, 0.0F, 0.0F, 1.0F);
 	}
 
 	private static void setupAttribute(Pass pass, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
@@ -777,6 +835,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		this.shadowMapRenderer.renderShadows(levelRenderer, playerCamera);
+
+		prepareRenderer.renderAll();
 	}
 
 	@Override
@@ -799,6 +859,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginLevelRendering() {
 		isRenderingWorld = true;
 		isBeforeTranslucent = true;
+		phase = WorldRenderingPhase.NONE;
 		HandRenderer.INSTANCE.getBufferSource().resetDrawCalls();
 
 		checkWorld();
@@ -845,6 +906,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 
 		isRenderingWorld = false;
+		phase = WorldRenderingPhase.NONE;
 		programStackLog.clear();
 
 		compositeRenderer.renderAll();
@@ -859,6 +921,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public FrameUpdateNotifier getFrameUpdateNotifier() {
 		return updateNotifier;
+	}
+
+	@Override
+	public WorldRenderingPhase getPhase() {
+		return phase;
+	}
+
+	@Override
+	public void setPhase(WorldRenderingPhase phase) {
+		this.phase = phase;
+		GbufferPrograms.runPhaseChangeNotifier();
 	}
 
 	private boolean isRenderingShadow = false;

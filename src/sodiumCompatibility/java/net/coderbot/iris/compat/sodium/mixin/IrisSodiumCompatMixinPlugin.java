@@ -9,6 +9,11 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Semi-critical mixin config plugin, disables mixins if Sodium isn't present,
+ * since on 1.18+ we have mixins into Iris classes that crash the game instead of just
+ * spamming the log if Sodium isn't present.
+ */
 public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 	private boolean validSodiumVersion = false;
 

@@ -18,6 +18,8 @@ import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
 import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
+import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
@@ -37,6 +39,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -110,32 +113,22 @@ public class ShaderPack {
 				.orElseGet(ShaderProperties::empty);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
+		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
 		// Get programs that should be disabled from the detected profile
 		List<String> disabledPrograms = new ArrayList<>();
-		profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues()).current
-				.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
+		this.profile.current.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
 
 		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
 
-		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
-
 		{
-			// Note: We always use English for this, because this will only show up in logs & on the debug screen
-			//       so trying to detect / handle the current MC language would just be a little too complex;
-			Map<String, String> translations = getLanguageMap().getTranslations("en_us");
-			String profileName;
-			String internalProfileName = getCurrentProfileName();
+			String profileName = getCurrentProfileName();
+			OptionValues profileOptions = new MutableOptionValues(
+					this.shaderPackOptions.getOptionSet(), this.profile.current.map(p -> p.optionValues).orElse(new HashMap<>()));
 
-			if (translations != null) {
-				profileName = translations.getOrDefault("profile." + internalProfileName, internalProfileName);
-			} else {
-				profileName = internalProfileName;
-			}
+			int userOptionsChanged = this.shaderPackOptions.getOptionValues().getOptionsChanged() - profileOptions.getOptionsChanged();
 
-			int numOptionsChanged = this.profile.current.map(value -> getShaderPackOptions().getOptionValues().getOptionsChanged() - value.optionValues.size()).orElseGet(() -> getShaderPackOptions().getOptionValues().getOptionsChanged());
-
-			this.profileInfo = "Profile: " + profileName + " (" + numOptionsChanged + " options changed by user)";
+			this.profileInfo = "Profile: " + profileName + " (+" + userOptionsChanged + " option" + (userOptionsChanged == 1 ? "" : "s") + " changed by user)";
 		}
 
 		Iris.logger.info(this.profileInfo);
@@ -220,11 +213,7 @@ public class ShaderPack {
 	}
 
 	private String getCurrentProfileName() {
-		if (profile.current.isPresent()) {
-			return profile.current.get().name;
-		} else {
-			return "Custom";
-		}
+		return profile.current.map(p -> p.name).orElse("Custom");
 	}
 
 	public String getProfileInfo() {

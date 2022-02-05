@@ -2,6 +2,7 @@ package net.coderbot.iris.gui.element;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gui.FileDialogUtil;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
@@ -16,13 +17,28 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 
 public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOptionList.BaseEntry> {
 	private final List<AbstractElementWidget<?>> elementWidgets = new ArrayList<>();
@@ -102,32 +118,52 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 		public static final MutableComponent RESET_HOLD_SHIFT_TOOLTIP = new TranslatableComponent("options.iris.reset.tooltip.holdShift").withStyle(ChatFormatting.GOLD);
 		public static final MutableComponent RESET_TOOLTIP = new TranslatableComponent("options.iris.reset.tooltip").withStyle(ChatFormatting.RED);
+		public static final MutableComponent IMPORT_TOOLTIP = new TranslatableComponent("options.iris.importSettings.tooltip")
+				.withStyle(style -> style.withColor(TextColor.fromRgb(0x4da6ff)));
+		public static final MutableComponent EXPORT_TOOLTIP = new TranslatableComponent("options.iris.exportSettings.tooltip")
+				.withStyle(style -> style.withColor(TextColor.fromRgb(0xfc7d3d)));
 
-		private static final int SIDE_BUTTON_WIDTH = 42;
-		private static final int SIDE_BUTTON_HEIGHT = 16;
+		private static final int MIN_SIDE_BUTTON_WIDTH = 42;
+		private static final int BUTTON_HEIGHT = 16;
 
 		private final ShaderPackScreen screen;
-		private final boolean hasBackButton;
+		private final @Nullable IrisElementRow backButton;
+		private final IrisElementRow utilityButtons = new IrisElementRow();
+		private final IrisElementRow.TextButtonElement resetButton;
+		private final IrisElementRow.IconButtonElement importButton;
+		private final IrisElementRow.IconButtonElement exportButton;
 		private final Component text;
-
-		private int cachedPosX;
-		private int cachedPosY;
-		private int cachedWidth;
 
 		public HeaderEntry(ShaderPackScreen screen, NavigationController navigation, Component text, boolean hasBackButton) {
 			super(navigation);
 
+			if (hasBackButton) {
+				this.backButton = new IrisElementRow().add(
+						new IrisElementRow.TextButtonElement(BACK_BUTTON_TEXT, this::backButtonClicked),
+						Math.max(MIN_SIDE_BUTTON_WIDTH, Minecraft.getInstance().font.width(BACK_BUTTON_TEXT) + 8)
+				);
+			} else {
+				this.backButton = null;
+			}
+
+			this.resetButton = new IrisElementRow.TextButtonElement(
+					RESET_BUTTON_TEXT_INACTIVE, this::resetButtonClicked);
+			this.importButton = new IrisElementRow.IconButtonElement(
+					GuiUtil.Icon.IMPORT, GuiUtil.Icon.IMPORT_COLORED, this::importSettingsButtonClicked);
+			this.exportButton = new IrisElementRow.IconButtonElement(
+					GuiUtil.Icon.EXPORT, GuiUtil.Icon.EXPORT_COLORED, this::exportSettingsButtonClicked);
+
+			this.utilityButtons
+					.add(this.importButton, 15)
+					.add(this.exportButton, 15)
+					.add(this.resetButton, Math.max(MIN_SIDE_BUTTON_WIDTH, Minecraft.getInstance().font.width(RESET_BUTTON_TEXT_INACTIVE) + 8));
+
 			this.screen = screen;
-			this.hasBackButton = hasBackButton;
 			this.text = text;
 		}
 
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-			this.cachedPosX = x;
-			this.cachedPosY = y;
-			this.cachedWidth = entryWidth;
-
 			// Draw dividing line
 			fill(poseStack, x - 3, (y + entryHeight) - 2, x + entryWidth, (y + entryHeight) - 1, 0x66BEBEBE);
 
@@ -139,66 +175,56 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 			GuiUtil.bindIrisWidgetsTexture();
 
 			// Draw back button if present
-			if (hasBackButton) {
-				GuiUtil.drawButton(poseStack,
-						x, y,
-						SIDE_BUTTON_WIDTH, SIDE_BUTTON_HEIGHT,
-						hovered && mouseX < x + SIDE_BUTTON_WIDTH && mouseY < y + SIDE_BUTTON_HEIGHT,
-						false);
-
-				drawCenteredString(poseStack, font, BACK_BUTTON_TEXT, x + (int)(0.5 * SIDE_BUTTON_WIDTH), y + 4, 0xFFFFFF);
+			if (this.backButton != null) {
+				backButton.render(poseStack, x, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, hovered);
 			}
 
 			boolean shiftDown = Screen.hasShiftDown();
-			boolean resetButtonHovered = hovered && mouseX > (x + (entryWidth - 3)) - SIDE_BUTTON_WIDTH && mouseY < y + SIDE_BUTTON_HEIGHT;
 
-			GuiUtil.bindIrisWidgetsTexture();
+			// Set the appearance of the reset button
+			this.resetButton.disabled = !shiftDown;
+			this.resetButton.text = shiftDown ? RESET_BUTTON_TEXT_ACTIVE : RESET_BUTTON_TEXT_INACTIVE;
 
-			// Draw reset button
-			GuiUtil.drawButton(poseStack,
-					(x + (entryWidth - 3)) - SIDE_BUTTON_WIDTH, y,
-					SIDE_BUTTON_WIDTH, SIDE_BUTTON_HEIGHT,
-					resetButtonHovered,
-					!shiftDown);
+			// Draw the utility buttons
+			this.utilityButtons.renderRightAligned(poseStack, (x + entryWidth) - 3, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, hovered);
 
-			drawCenteredString(poseStack,
-					font,
-					shiftDown ? RESET_BUTTON_TEXT_ACTIVE : RESET_BUTTON_TEXT_INACTIVE,
-					(x + (entryWidth - 3)) - (int)(0.5 * SIDE_BUTTON_WIDTH), y + 4,
-					0xFFFFFF);
-
-			// Draw reset button tooltip
-			if (resetButtonHovered) {
+			// Draw the reset button's tooltip
+			if (this.resetButton.isHovered()) {
 				Component tooltip = shiftDown ? RESET_TOOLTIP : RESET_HOLD_SHIFT_TOOLTIP;
-				ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(
-						font, poseStack, tooltip,
-						mouseX - (font.width(tooltip) + 10), mouseY - 16
-						));
+				queueBottomRightAnchoredTooltip(poseStack, mouseX, mouseY, font, tooltip);
 			}
+			// Draw the import/export button tooltips
+			if (this.importButton.isHovered()) {
+				queueBottomRightAnchoredTooltip(poseStack, mouseX, mouseY, font, IMPORT_TOOLTIP);
+			}
+			if (this.exportButton.isHovered()) {
+				queueBottomRightAnchoredTooltip(poseStack, mouseX, mouseY, font, EXPORT_TOOLTIP);
+			}
+		}
+
+		private void queueBottomRightAnchoredTooltip(PoseStack poseStack, int x, int y, Font font, Component text) {
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(
+					font, poseStack, text,
+					x - (font.width(text) + 10), y - 16
+			));
 		}
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
-				if (hasBackButton && mouseX < cachedPosX + SIDE_BUTTON_WIDTH && mouseY < cachedPosY + SIDE_BUTTON_HEIGHT) {
-					return backButtonClicked(mouseX, mouseY, button);
-				}
-				if (mouseX > (cachedPosX + (cachedWidth - 3)) - SIDE_BUTTON_WIDTH && mouseY < cachedPosY + SIDE_BUTTON_HEIGHT) {
-					return resetButtonClicked(mouseX, mouseY, button);
-				}
-			}
+			boolean backButtonResult = backButton != null && backButton.mouseClicked(mouseX, mouseY, button);
+			boolean utilButtonResult = utilityButtons.mouseClicked(mouseX, mouseY, button);
 
-			return super.mouseClicked(mouseX, mouseY, button);
+			return backButtonResult || utilButtonResult;
 		}
 
-		private boolean backButtonClicked(double mouseX, double mouseY, int button) {
+		private boolean backButtonClicked(IrisElementRow.TextButtonElement button) {
 			this.navigation.back();
 			GuiUtil.playButtonClickSound();
 
 			return true;
 		}
 
-		private boolean resetButtonClicked(double mouseX, double mouseY, int button) {
+		private boolean resetButtonClicked(IrisElementRow.TextButtonElement button) {
 			if (Screen.hasShiftDown()) {
 				Iris.resetShaderPackOptionsOnNextReload();
 				this.screen.applyChanges();
@@ -208,6 +234,78 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 			}
 
 			return false;
+		}
+
+		private boolean importSettingsButtonClicked(IrisElementRow.IconButtonElement button) {
+			GuiUtil.playButtonClickSound();
+
+			// Invalid state to be in
+			if (!Iris.getCurrentPack().isPresent()) {
+				return false;
+			}
+
+			final ShaderPackScreen originalScreen = this.screen; // Also used to prevent invalid state
+
+			FileDialogUtil.fileSelectDialog(
+					FileDialogUtil.DialogType.OPEN, "Import Shader Settings from File",
+					Iris.getShaderpacksDirectory().resolve(Iris.getCurrentPackName() + ".txt"),
+					 "Shader Pack Settings (.txt)", "*.txt")
+			.whenComplete((path, err) -> {
+				if (err != null) {
+					Iris.logger.error("Error selecting shader settings from file", err);
+
+					return;
+				}
+
+				if (Minecraft.getInstance().screen == originalScreen) {
+					path.ifPresent(originalScreen::importPackOptions);
+				}
+			});
+
+			return true;
+		}
+
+		private boolean exportSettingsButtonClicked(IrisElementRow.IconButtonElement button) {
+			GuiUtil.playButtonClickSound();
+
+			// Invalid state to be in
+			if (!Iris.getCurrentPack().isPresent()) {
+				return false;
+			}
+
+			FileDialogUtil.fileSelectDialog(
+					FileDialogUtil.DialogType.SAVE, "Export Shader Settings to File",
+					Iris.getShaderpacksDirectory().resolve(Iris.getCurrentPackName() + ".txt"),
+					"Shader Pack Settings (.txt)", "*.txt")
+			.whenComplete((path, err) -> {
+				if (err != null) {
+					Iris.logger.error("Error selecting file to export shader settings", err);
+
+					return;
+				}
+
+				path.ifPresent(p -> {
+					Properties toSave = new Properties();
+
+					// Dirty way of getting the currently applied settings as a Properties, directly
+					// opens and copies out of the saved settings file if it is present
+					Path sourceTxtPath = Iris.getShaderpacksDirectory().resolve(Iris.getCurrentPackName() + ".txt");
+					if (Files.exists(sourceTxtPath)) {
+						try (InputStream in = Files.newInputStream(sourceTxtPath)) {
+							toSave.load(in);
+						} catch (IOException ignored) {}
+					}
+
+					// Save properties to user determined file
+					try (OutputStream out = Files.newOutputStream(p)) {
+						toSave.store(out, null);
+					} catch (IOException e) {
+						Iris.logger.error("Error saving properties to \"" + p + "\"", e);
+					}
+				});
+			});
+
+			return true;
 		}
 	}
 
