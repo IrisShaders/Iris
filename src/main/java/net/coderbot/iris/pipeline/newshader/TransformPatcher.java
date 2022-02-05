@@ -446,11 +446,12 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-        // 2. wrap their use: create a new output like
-        // "out vec4 iris_FragColor/iris_FragData[8];"
-        // 3. redirect gl_Frag* to the newly created output (replace identifiers)
-
-        // throw if the replacement target is present already
+        /**
+         * 2. wrap their use: create a new output like
+         * "out vec4 iris_FragColor/iris_FragData[8];"
+         * (throw if the replacement target is present already)
+         * 3. redirect gl_Frag* to the newly created output (replace identifiers)
+         */
         append(new WrapIdentifierExternalDeclaration<Parameters>() {
           @Override
           protected String getInjectionContent() {
