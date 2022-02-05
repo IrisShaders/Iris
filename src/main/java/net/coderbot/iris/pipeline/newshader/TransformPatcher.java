@@ -251,23 +251,13 @@ public class TransformPatcher implements Patcher {
           };
         });
 
-    // // fixes locations of outs in fragment shaders
-    // Transformation<Parameters> fixFragLayouts = new Transformation<Parameters>()
-    // {
-    // {
-    // // 1. find all the outs and determine their location
-    // addPhase(1, -1, new WalkPhase<Parameters>() {
+    // TOOD: this is missing for now as it's quite involved
+    // fixes locations of outs in fragment shaders
+    // 1. find all the outs and determine their location
+    // 2. check if there is a single non-located out that could receive location
+    // 3. add location 0 to that declaration
 
-    // });
-
-    // // 2. check if there is a single non-located out that could receive location
-    // 0
-
-    // // 3. add location 0 to that declaration
-
-    // }
-    // };
-
+    //
     Transformation<Parameters> wrapFragColorOutput = new Transformation<Parameters>() {
       private FragColorOutput type;
       private boolean usesFragColor;
