@@ -158,6 +158,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final List<String> programStackLog = new ArrayList<>();
 
 	private final CustomUniforms customUniforms;
+
 	private WorldRenderingPhase phase;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
