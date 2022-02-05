@@ -160,6 +160,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final CustomUniforms customUniforms;
 
 	private WorldRenderingPhase phase;
+	private final CustomUniforms customUniforms;
+
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
