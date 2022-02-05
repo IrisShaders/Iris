@@ -11,7 +11,7 @@ import com.mojang.blaze3d.platform.TextureUtil;
 
 import net.coderbot.iris.mixin.texture.pbr.TextureAtlasPreparationsAccessor;
 import net.coderbot.iris.texture.util.TextureColorUtil;
-import net.coderbot.iris.texture.util.TextureSaveUtil;
+import net.coderbot.iris.texture.util.TextureSavingUtil;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -83,7 +83,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 		}
 
 		if (Boolean.parseBoolean(System.getProperty("iris.pbr.debug"))) {
-			TextureSaveUtil.saveTextures("atlas", id.getPath().replaceAll("/", "_"), glId, preparationsAccessor.getMipLevel(), preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
+			TextureSavingUtil.saveTextures("atlas", id.getPath().replaceAll("/", "_"), glId, maxLevel, preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
 		}
 	}
 

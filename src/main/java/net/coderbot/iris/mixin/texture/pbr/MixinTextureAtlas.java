@@ -1,10 +1,7 @@
 package net.coderbot.iris.mixin.texture.pbr;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.stream.Stream;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,16 +14,16 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.PngInfo;
 import com.mojang.datafixers.util.Pair;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
-import net.coderbot.iris.texture.pbr.PBRAtlasTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRAtlasSpriteHolder;
+import net.coderbot.iris.texture.pbr.PBRAtlasTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.texture.pbr.TextureAtlasExtension;
 import net.coderbot.iris.texture.pbr.TextureAtlasSpriteExtension;
+import net.coderbot.iris.texture.util.ImageScalingUtil;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -71,24 +68,28 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 			Resource resource = resourceManager.getResource(pbrImageLocation);
 
 			try {
-				InputStream inputStream = resource.getInputStream();
-				ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-				byte[] buf = new byte[8192];
-				int length;
-				while ((length = inputStream.read(buf)) > 0) {
-					byteStream.write(buf, 0, length);
+				NativeImage nativeImage = NativeImage.read(resource.getInputStream());
+				if (nativeImage.getWidth() != sprite.getWidth()) {
+					int newWidth = sprite.getWidth();
+					int newHeight = nativeImage.getHeight() * newWidth / nativeImage.getWidth();
+					NativeImage scaledImage;
+					if (newWidth < nativeImage.getWidth() || newWidth % nativeImage.getWidth() != 0) {
+						scaledImage = ImageScalingUtil.scaleBilinear(nativeImage, newWidth, newHeight);
+					} else {
+						scaledImage = ImageScalingUtil.scaleNearestNeighbor(nativeImage, newWidth, newHeight);
+					}
+					nativeImage.close();
+					nativeImage = scaledImage;
 				}
 
-				PngInfo pngInfo = new PngInfo(resource.toString(), new ByteArrayInputStream(byteStream.toByteArray()));
 				AnimationMetadataSection animationMetadata = resource.getMetadata(AnimationMetadataSection.SERIALIZER);
 				if (animationMetadata == null) {
 					animationMetadata = AnimationMetadataSection.EMPTY;
 				}
 
-				Pair<Integer, Integer> pair = animationMetadata.getFrameSize(pngInfo.width, pngInfo.height);
-				TextureAtlasSprite.Info pbrSpriteInfo = new TextureAtlasSprite.Info(pbrSpriteId, pair.getFirst(), pair.getSecond(), animationMetadata);
+				Pair<Integer, Integer> size = animationMetadata.getFrameSize(nativeImage.getWidth(), nativeImage.getHeight());
+				TextureAtlasSprite.Info pbrSpriteInfo = new TextureAtlasSprite.Info(pbrSpriteId, size.getFirst(), size.getSecond(), animationMetadata);
 
-				NativeImage nativeImage = NativeImage.read(new ByteArrayInputStream(byteStream.toByteArray()));
 				pbrSprite = TextureAtlasSpriteAccessor.callInit(self, pbrSpriteInfo, maxLevel, atlasWidth, atlasHeight, x, y, nativeImage);
 			} catch (Throwable t) {
 				if (resource != null) {
