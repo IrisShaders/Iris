@@ -254,13 +254,59 @@ public class TransformPatcher implements Patcher {
           };
         });
 
-    // TOOD: this is missing for now as it's quite involved
-    // fixes locations of outs in fragment shaders
+    // TOOD: this is not implemented yet for now as it's quite involved
+    // fixes locations of outs in fragment shaders (to be called fixFragLayouts)
     // 1. find all the outs and determine their location
     // 2. check if there is a single non-located out that could receive location
     // 3. add location 0 to that declaration
 
-    //
+    Transformation<Parameters> replaceStorageQualifierVertex = new Transformation<Parameters>(
+        new SearchTerminals<Parameters>() {
+          {
+            addReplacementTerminal("attribute", "in");
+            addReplacementTerminal("varying", "in");
+          }
+        });
+    Transformation<Parameters> replaceStorageQualifierFragment = new Transformation<Parameters>(
+        SearchTerminals.<Parameters>withReplacementTerminal("varying", "in"));
+
+    // PREV TODO: Add similar functions for all legacy texture sampling functions
+    Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(new RunPhase<Parameters>() {
+      @Override
+      protected void run(TranslationUnitContext ctx) {
+        injectExternalDeclarations(
+            InjectionPoint.BEFORE_DECLARATIONS,
+            "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
+            "vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
+            "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }",
+            "vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) { return textureLod(sampler, coord, lod); }",
+            "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }",
+            "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }",
+            "vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+            "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+            "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+            "vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }",
+            "vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }");
+      }
+    });
+
+    /**
+     * PREV NOTE:
+     * GLSL 1.50 Specification, Section 8.7:
+     * In all functions below, the bias parameter is optional for fragment shaders.
+     * The bias parameter is not accepted in a vertex or geometry shader.
+     */
+    Transformation<Parameters> injectTextureFunctionsFragment = new Transformation<Parameters>(
+        new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclarations(
+                InjectionPoint.BEFORE_DECLARATIONS,
+                "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
+                "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
+          }
+        });
+
     Transformation<Parameters> wrapFragColorOutput = new Transformation<Parameters>() {
       private FragColorOutput type;
       private boolean usesFragColor;
@@ -470,10 +516,11 @@ public class TransformPatcher implements Patcher {
          * adjustment
          * of the alpha test code?
          **/
-        addPhase(new RunPhase<TransformPatcher.Parameters>() {
+        addPhase(new RunPhase<Parameters>() {
           @Override
           protected boolean isActive() {
-            return getJobParameters().getAlphaTest() != null;
+            Patch patch = getJobParameters().patch;
+            return (patch == Patch.VANILLA || patch == Patch.SODIUM) && getJobParameters().getAlphaTest() != null;
           }
 
           @Override
@@ -486,53 +533,6 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    Transformation<Parameters> replaceStorageQualifierVertex = new Transformation<Parameters>(
-        new SearchTerminals<Parameters>() {
-          {
-            addReplacementTerminal("attribute", "in");
-            addReplacementTerminal("varying", "in");
-          }
-        });
-    Transformation<Parameters> replaceStorageQualifierFragment = new Transformation<Parameters>(
-        SearchTerminals.<Parameters>withReplacementTerminal("varying", "in"));
-
-    // PREV TODO: Add similar functions for all legacy texture sampling functions
-    Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(new RunPhase<Parameters>() {
-      @Override
-      protected void run(TranslationUnitContext ctx) {
-        injectExternalDeclarations(
-            InjectionPoint.BEFORE_DECLARATIONS,
-            "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
-            "vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
-            "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }",
-            "vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) { return textureLod(sampler, coord, lod); }",
-            "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }",
-            "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }",
-            "vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-            "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-            "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-            "vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }",
-            "vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }");
-      }
-    });
-
-    /**
-     * PREV NOTE:
-     * GLSL 1.50 Specification, Section 8.7:
-     * In all functions below, the bias parameter is optional for fragment shaders.
-     * The bias parameter is not accepted in a vertex or geometry shader.
-     */
-    Transformation<Parameters> injectTextureFunctionsFragment = new Transformation<Parameters>(
-        new RunPhase<Parameters>() {
-          @Override
-          protected void run(TranslationUnitContext ctx) {
-            injectExternalDeclarations(
-                InjectionPoint.BEFORE_DECLARATIONS,
-                "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
-                "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
-          }
-        });
-
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
       for (ShaderType type : ShaderType.values()) {
@@ -541,6 +541,7 @@ public class TransformPatcher implements Patcher {
 
         manager.setParseTokenFilter(parseTokenFilter);
 
+        // patchCommon and alpha test
         manager.registerTransformation(detectReserved);
         manager.registerTransformation(fixVersion);
         manager.registerTransformation(wrapFogSetup);
@@ -555,12 +556,31 @@ public class TransformPatcher implements Patcher {
           manager.registerTransformation(replaceStorageQualifierVertex);
         } else if (type == ShaderType.FRAGMENT) {
           // manager.registerTransformation(fixFragLayouts);
-          manager.registerTransformation(wrapFragColorOutput);
           manager.registerTransformation(replaceStorageQualifierFragment);
           manager.registerTransformation(injectTextureFunctionsFragment);
         }
 
         manager.registerTransformation(injectTextureFunctions);
+
+        // is part of patchCommon but also does the alpha test now (addAlphaTest)
+        if (type == ShaderType.FRAGMENT) {
+          manager.registerTransformation(wrapFragColorOutput);
+        }
+
+        //patchVanilla
+        if (patch == Patch.VANILLA) {
+
+        }
+        
+        //patchSodium
+        if (patch == Patch.SODIUM) {
+
+        }
+
+        //patchComposite
+        if (patch == Patch.COMPOSITE) {
+
+        }
       }
     }
   }
