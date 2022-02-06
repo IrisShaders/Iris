@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +17,7 @@ import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
+import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -74,7 +76,14 @@ public class Buildscript extends MultiSrcDirFabricProject {
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.0+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.1.6+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "0.2.1+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-        d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:0.16.0"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+        d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:0.16.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+        /* d.add(new JavaJarDependency(
+            Paths.get(
+                "~/.m2/repository/io/github/douira/glsl-transformer/0.16.0/glsl-transformer-0.16.0.jar"),
+            Paths.get(
+                "~/.m2/repository/io/github/douira/glsl-transformer/0.16.0/glsl-transformer-0.16.0-sources.jar"),
+            new MavenId("io.github.douira:glsl-transformer:0.16.0")),
+            ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ); */
         d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.antlr:antlr4-runtime:4.9.3"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
 
 		if (SODIUM) {
