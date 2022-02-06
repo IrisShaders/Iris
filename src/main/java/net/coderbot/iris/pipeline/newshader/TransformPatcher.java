@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
@@ -31,6 +32,7 @@ import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
+import io.github.douira.glsl_transformer.transform.TransformationPhase.InjectionPoint;
 import io.github.douira.glsl_transformer.transform.WalkPhase;
 import io.github.douira.glsl_transformer.tree.TreeMember;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -509,22 +511,36 @@ public class TransformPatcher implements Patcher {
 
         /**
          * 4. if alpha test is given, apply it with iris_FragColor/iris_FragData[0].
-         * use the custom color output at location 0 for the alpha test requires
-         * adjustment
-         * of the alpha test code?
          **/
-        addPhase(new RunPhase<Parameters>() {
+        append(new WrapIdentifierExternalDeclaration<Parameters>() {
           @Override
-          protected boolean isActive() {
-            Patch patch = getJobParameters().patch;
-            return (patch == Patch.VANILLA || patch == Patch.SODIUM) && getJobParameters().getAlphaTest() != null;
+          protected String getInjectionContent() {
+            // inserts the alpha test, it is not null because it shouldn't be
+            return "void main() { irisMain(); "
+                + getJobParameters().getAlphaTest().toExpression(
+                    type == FragColorOutput.COLOR ? "gl_FragColor.a" : "gl_FragData[0].a", "")
+                + "}";
           }
 
           @Override
-          protected void run(TranslationUnitContext ctx) {
-            AlphaTest alpha = getJobParameters().getAlphaTest();
+          protected InjectionPoint getInjectionLocation() {
+            return InjectionPoint.BEFORE_EOF;
+          }
 
-            // TODO: handle alpha test
+          @Override
+          protected String getWrapResultDynamic() {
+            return "irisMain";
+          }
+
+          @Override
+          protected String getWrapTargetDynamic() {
+            return "main";
+          }
+
+          @Override
+          protected boolean isActiveDynamic() {
+            Patch patch = getJobParameters().patch;
+            return (patch == Patch.VANILLA || patch == Patch.SODIUM) && getJobParameters().getAlphaTest() != null;
           }
         });
       }
@@ -564,17 +580,17 @@ public class TransformPatcher implements Patcher {
           manager.registerTransformation(wrapFragColorOutput);
         }
 
-        //patchVanilla
+        // patchVanilla
         if (patch == Patch.VANILLA) {
 
         }
-        
-        //patchSodium
+
+        // patchSodium
         if (patch == Patch.SODIUM) {
 
         }
 
-        //patchComposite
+        // patchComposite
         if (patch == Patch.COMPOSITE) {
 
         }
