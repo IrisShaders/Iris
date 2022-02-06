@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,6 +14,7 @@ import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
+import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -58,7 +60,14 @@ public class Buildscript extends MultiSrcDirFabricProject {
     public void getModDependencies(ModDependencyCollector d) {
         d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.slf4j:slf4j-api:1.7.12"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
-        d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:0.16.0"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+        d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:0.16.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+        /* d.add(new JavaJarDependency(
+            Paths.get(
+                "~/.m2/repository/io/github/douira/glsl-transformer/0.16.0/glsl-transformer-0.16.0.jar"),
+            Paths.get(
+                "~/.m2/repository/io/github/douira/glsl-transformer/0.16.0/glsl-transformer-0.16.0-sources.jar"),
+            new MavenId("io.github.douira:glsl-transformer:0.16.0")),
+            ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ); */
         d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.antlr:antlr4-runtime:4.9.3"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.11+3ac43d9565"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.8+c8aba2f365"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
