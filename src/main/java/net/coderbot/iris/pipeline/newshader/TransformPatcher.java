@@ -533,8 +533,6 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-    // foo =
-
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
       for (ShaderType type : ShaderType.values()) {
@@ -563,10 +561,6 @@ public class TransformPatcher implements Patcher {
         }
 
         manager.registerTransformation(injectTextureFunctions);
-
-        if (patch == Patch.VANILLA) {
-          // manager.registerTransformation(foo);
-        }
       }
     }
   }
