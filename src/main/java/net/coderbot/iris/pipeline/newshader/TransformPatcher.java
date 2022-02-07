@@ -1,6 +1,5 @@
 package net.coderbot.iris.pipeline.newshader;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
@@ -21,8 +20,11 @@ import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
+import io.github.douira.glsl_transformer.core.SearchTerminalsDynamic;
+import io.github.douira.glsl_transformer.core.SearchTerminalsImpl;
 import io.github.douira.glsl_transformer.core.WrapIdentifier;
 import io.github.douira.glsl_transformer.core.WrapIdentifierExternalDeclaration;
+import io.github.douira.glsl_transformer.core.target.HandlerTarget;
 import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
 import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
@@ -156,7 +158,7 @@ public class TransformPatcher implements Patcher {
 
     // setup the transformations and even loose phases if necessary
     Transformation<Parameters> detectReserved = new Transformation<Parameters>(
-        new SearchTerminals<Parameters>(SearchTerminals.IDENTIFIER,
+        new SearchTerminalsImpl<Parameters>(SearchTerminals.IDENTIFIER,
             ImmutableSet.of(
                 new ThrowTargetImpl<Parameters>(
                     "moj_import", "Iris shader programs may not use moj_import directives."),
@@ -260,14 +262,14 @@ public class TransformPatcher implements Patcher {
     // 3. add location 0 to that declaration
 
     Transformation<Parameters> replaceStorageQualifierVertex = new Transformation<Parameters>(
-        new SearchTerminals<Parameters>() {
+        new SearchTerminalsImpl<Parameters>() {
           {
             addReplacementTerminal("attribute", "in");
             addReplacementTerminal("varying", "in");
           }
         });
     Transformation<Parameters> replaceStorageQualifierFragment = new Transformation<Parameters>(
-        SearchTerminals.<Parameters>withReplacementTerminal("varying", "in"));
+        SearchTerminalsImpl.<Parameters>withReplacementTerminal("varying", "in"));
 
     // PREV TODO: Add similar functions for all legacy texture sampling functions
     Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(new RunPhase<Parameters>() {
@@ -341,7 +343,7 @@ public class TransformPatcher implements Patcher {
          */
 
         // detect use of gl_FragColor
-        addConcurrentPhase(new SearchTerminals<Parameters>(
+        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(
             new HandlerTargetImpl<Parameters>("gl_FragColor") {
               @Override
               public void handleResult(TreeMember node, String match) {
@@ -350,7 +352,7 @@ public class TransformPatcher implements Patcher {
             }));
 
         // detect use of gl_FragData
-        addConcurrentPhase(new SearchTerminals<Parameters>(
+        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(
             new HandlerTargetImpl<Parameters>("gl_FragData") {
               @Override
               public void handleResult(TreeMember node, String match) {
@@ -426,8 +428,10 @@ public class TransformPatcher implements Patcher {
 
         // if we are doing custom, check if any of the declared names are being used
         // (and if they are being used multiple times)
-        addPhase(new SearchTerminals<Parameters>(
-            declaredCustomNames.stream()
+        addPhase(new SearchTerminalsDynamic<Parameters>() {
+          @Override
+          protected Collection<HandlerTarget<Parameters>> getTargetsDynamic() {
+            return declaredCustomNames.stream()
                 .map(name -> new HandlerTargetImpl<Parameters>(name) {
                   @Override
                   public void handleResult(TreeMember node, String match) {
@@ -442,12 +446,18 @@ public class TransformPatcher implements Patcher {
                     }
                   }
                 })
-                .collect(Collectors.toList())) {
+                .collect(Collectors.toList());
+          }
+
+          @Override
+          protected boolean isActiveBeforeWalk() {
+            return true;
+          };
 
           // only run the walk if there are any names to find but run the after walk for
           // determining the final frag color type
           @Override
-          protected boolean isActive() {
+          protected boolean isActiveAtWalk() {
             return usesCustomPossible;
           }
 
