@@ -265,14 +265,18 @@ public class TransformPatcher implements Patcher {
     // 3. add location 0 to that declaration
 
     Transformation<Parameters> replaceStorageQualifierVertex = new Transformation<Parameters>(
-        new SearchTerminalsImpl<Parameters>() {
+        new SearchTerminalsImpl<Parameters>(SearchTerminals.ANY_TYPE) {
           {
             addReplacementTerminal("attribute", "in");
-            addReplacementTerminal("varying", "in");
+            addReplacementTerminal("varying", "out");
           }
         });
     Transformation<Parameters> replaceStorageQualifierFragment = new Transformation<Parameters>(
-        SearchTerminalsImpl.<Parameters>withReplacementTerminal("varying", "in"));
+        new SearchTerminalsImpl<Parameters>(SearchTerminals.ANY_TYPE) {
+          {
+            addReplacementTerminal("varying", "in");
+          }
+        });
 
     // PREV TODO: Add similar functions for all legacy texture sampling functions
     Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(new RunPhase<Parameters>() {
