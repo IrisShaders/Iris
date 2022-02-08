@@ -575,7 +575,10 @@ public class TransformPatcher implements Patcher {
         manager.registerTransformation(detectReserved);
         manager.registerTransformation(fixVersion);
         manager.registerTransformation(wrapFogSetup);
-        manager.registerTransformation(wrapFogFragCoord);
+
+        // TODO:investigate why the duplicate definition of this doesn't cause the throw
+        // target to trigger
+        // manager.registerTransformation(wrapFogFragCoord);
 
         if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
           manager.registerTransformation(wrapFogFragCoord);
