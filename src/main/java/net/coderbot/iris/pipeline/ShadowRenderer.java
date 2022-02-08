@@ -518,6 +518,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		profiler.popPush("shadows");
 		ACTIVE = true;
 
+		RenderBuffers playerBuffers = levelRenderer.getRenderBuffers();
+		levelRenderer.setRenderBuffers(buffers);
+
 		// Create our camera
 		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
 		MODELVIEW = modelView.last().pose().copy();
@@ -677,6 +680,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
+
+		levelRenderer.setRenderBuffers(playerBuffers);
 
 		ACTIVE = false;
 		profiler.popPush("updatechunks");
