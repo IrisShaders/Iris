@@ -76,7 +76,6 @@ public class Buildscript extends MultiSrcDirFabricProject {
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.0+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.1.6+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "0.2.1+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-        d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:0.16.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         /* d.add(new JavaJarDependency(
             Paths.get(
                 "~/.m2/repository/io/github/douira/glsl-transformer/0.16.0/glsl-transformer-0.16.0.jar"),
@@ -84,6 +83,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
                 "~/.m2/repository/io/github/douira/glsl-transformer/0.16.0/glsl-transformer-0.16.0-sources.jar"),
             new MavenId("io.github.douira:glsl-transformer:0.16.0")),
             ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ); */
+        d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:0.17.0"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.antlr:antlr4-runtime:4.9.3"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
 
 		if (SODIUM) {
