@@ -77,6 +77,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final int resolution;
 	private final float intervalSize;
 	private final Float fov;
+	public static Frustum FRUSTUM;
 	public static Matrix4f MODELVIEW;
 	public static Matrix4f PROJECTION;
 
@@ -543,7 +544,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		profiler.push("initialize frustum");
 
-		Frustum frustum = createShadowFrustum();
+		FRUSTUM = createShadowFrustum();
 
 		// Determine the player camera position
 		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
@@ -553,7 +554,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		double cameraZ = cameraPos.z();
 
 		// Center the frustum on the player camera position
-		frustum.prepare(cameraX, cameraY, cameraZ);
+		FRUSTUM.prepare(cameraX, cameraY, cameraZ);
 
 		profiler.pop();
 
@@ -569,7 +570,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		((LevelRenderer) levelRenderer).needsUpdate();
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
-		levelRenderer.invokeSetupRender(playerCamera, frustum, false, levelRenderer.getFrameId(), false);
+		levelRenderer.invokeSetupRender(playerCamera, FRUSTUM, false, levelRenderer.getFrameId(), false);
 
 		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
 		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
@@ -606,7 +607,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
 		// TODO: Make this configurable and disable-able
-		final Frustum entityShadowFrustum = frustum; // createEntityShadowFrustum(modelView);
+		final Frustum entityShadowFrustum = FRUSTUM; // createEntityShadowFrustum(modelView);
 		// entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
 
 		// Render nearby entities
@@ -683,6 +684,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		levelRenderer.setRenderBuffers(playerBuffers);
 
+		FRUSTUM = null;
 		ACTIVE = false;
 		profiler.popPush("updatechunks");
 	}

@@ -2,6 +2,7 @@ package net.coderbot.iris;
 
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -14,7 +15,7 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public int getMinorApiRevision() {
-		return 0;
+		return 1;
 	}
 
 	@Override
@@ -31,6 +32,11 @@ public class IrisApiV0Impl implements IrisApi {
 	@Override
 	public boolean isRenderingShadowPass() {
 		return ShadowRenderingState.areShadowsCurrentlyBeingRendered();
+	}
+
+	@Override
+	public Object getShadowFrustum() {
+		return ShadowRenderer.FRUSTUM;
 	}
 
 	@Override
