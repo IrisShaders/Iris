@@ -24,11 +24,11 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends MultiSrcDirFabricProject {
     static final boolean SODIUM = true;
     static final boolean CUSTOM_SODIUM = true;
-    static final String customSodiumName = "sodium-fabric-mc22w05a-0.4.0-alpha6+rev.b1907ca-dirty.jar";
+    static final String customSodiumName = "sodium-fabric-mc22w06a-0.4.0-alpha6+rev.7bd2b7d.jar";
 
     @Override
     public String getMcVersion() {
-        return "22w05a";
+        return "22w06a";
     }
 
     @Override
