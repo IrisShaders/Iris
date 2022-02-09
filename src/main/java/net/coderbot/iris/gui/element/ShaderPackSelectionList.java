@@ -48,8 +48,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		try {
 			names = Iris.getShaderpacksDirectoryManager().enumerate();
 		} catch (Throwable e) {
-			Iris.logger.error("Error reading files while constructing selection UI");
-			Iris.logger.catching(e);
+			Iris.logger.error("Error reading files while constructing selection UI", e);
 
 			// Not translating this since it's going to be seen very rarely,
 			// We're just trying to get more information on a seemingly untraceable bug:
