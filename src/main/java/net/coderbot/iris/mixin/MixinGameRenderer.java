@@ -133,7 +133,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_SOLID, cir);
 		}
 	}
@@ -143,7 +143,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_CUTOUT_MIPPED, cir);
 		}
 	}
@@ -152,7 +152,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_CUTOUT, cir);
 		}
 	}
@@ -162,7 +162,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
 	}
@@ -174,7 +174,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
 	}
