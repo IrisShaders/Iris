@@ -62,24 +62,6 @@ public interface IrisApi {
 	boolean isRenderingShadowPass();
 
 	/**
-	 * Returns the current shadow frustum, and null if shadows are not being rendered.
-	 *
-	 * <p>Generally, mods won't need to call this function for much.
-	 * Mods should be fine with things being rendered multiple times
-	 * each frame from different camera perspectives. Often, there's
-	 * a better approach to fixing bugs than calling this function.
-	 *
-	 * <p>The major use for this is in Flywheel, where the current frustum is used to cull custom elements.
-	 *
-	 * <p>Naturally, this function can only be non-null if
-	 * {@link #isRenderingShadowPass()} returns true.
-	 *
-	 * @return The current frustum used for shadow rendering, or null if shadows are currently not being rendered.
-	 * @since API v0.1
-	 */
-	Object getShadowFrustum();
-
-	/**
 	 * Opens the main Iris GUI screen. It's up to Iris to decide
 	 * what this screen is, but generally this is the shader selection
 	 * screen.
