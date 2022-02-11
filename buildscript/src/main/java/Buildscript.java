@@ -27,6 +27,11 @@ public class Buildscript extends MultiSrcDirFabricProject {
     public String getMcVersion() {
         return "1.18.1";
     }
+	
+	@Override
+	public int getJavaVersion() {
+		return 17;
+	}
 
     @Override
     public MappingTree createMappings() {
