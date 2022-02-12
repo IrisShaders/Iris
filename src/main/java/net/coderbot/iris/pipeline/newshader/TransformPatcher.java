@@ -729,12 +729,23 @@ public class TransformPatcher implements Patcher {
 
     Transformation<Parameters> wrapModelViewMatrix = new Transformation<Parameters>() {
       {
+        addPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_ModelViewMat")));
         append(WrapIdentifier.fromExpression(
             "gl_NormalMatrix", "gl_ModelViewMatrix", "mat3(transpose(inverse(gl_ModelViewMatrix)))",
             new RunPhase<Parameters>() {
               @Override
               protected void run(TranslationUnitContext ctx) {
+                injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ModelViewMat;");
+                VanillaParameters vanillaParameters = (VanillaParameters) getJobParameters();
 
+                //TODO these, some of the injections in triforce are actually replacements
+                if (vanillaParameters.hasChunkOffset) {
+                  //TODO
+                } else if (vanillaParameters.inputs.isNewLines()) {
+                  //TODO
+                } else {
+                  //TODO
+                }
               }
             }));
       }
@@ -780,6 +791,7 @@ public class TransformPatcher implements Patcher {
             manager.registerTransformation(wrapAttributeInputsVanillaVertex);
           }
           manager.registerTransformation(wrapColorVanilla);
+          manager.registerTransformation(wrapModelViewMatrix);
         }
 
         // patchSodium
