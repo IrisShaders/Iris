@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline.newshader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.HashBasedTable;
@@ -26,7 +27,10 @@ import io.github.douira.glsl_transformer.core.WrapIdentifier;
 import io.github.douira.glsl_transformer.core.WrapIdentifierExternalDeclaration;
 import io.github.douira.glsl_transformer.core.target.HandlerTarget;
 import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
+import io.github.douira.glsl_transformer.core.target.ParsedReplaceTarget;
+import io.github.douira.glsl_transformer.core.target.TerminalReplaceTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
+import io.github.douira.glsl_transformer.core.target.WrapThrowTargetImpl;
 import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
 import io.github.douira.glsl_transformer.print.filter.TokenChannel;
 import io.github.douira.glsl_transformer.print.filter.TokenFilter;
@@ -36,9 +40,12 @@ import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
 import io.github.douira.glsl_transformer.transform.TransformationPhase.InjectionPoint;
 import io.github.douira.glsl_transformer.transform.WalkPhase;
+import io.github.douira.glsl_transformer.tree.ExtendedContext;
 import io.github.douira.glsl_transformer.tree.TreeMember;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.AttributeShaderTransformer;
+import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 /**
@@ -563,6 +570,126 @@ public class TransformPatcher implements Patcher {
       }
     };
 
+    Transformation<Parameters> wrapProjMatrixVanilla = WrapIdentifier.<Parameters>withExternalDeclaration(
+        "gl_ProjectionMatrix", "iris_ProjMat", "iris_ProjMat",
+        InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ProjMat;");
+
+    Transformation<Parameters> replaceExcessMultiTexCoord = new Transformation<Parameters>(
+        new SearchTerminalsImpl<Parameters>(
+            new TerminalReplaceTargetImpl<>("gl_MultiTexCoord", "vec4(0.0, 0.0, 0.0, 1.0)")) {
+          {
+            allowInexactMatches();
+          }
+        });
+
+    Transformation<Parameters> wrapAttributeInputsVanillaVertex = new Transformation<Parameters>() {
+      boolean hasTex;
+      boolean hasLight;
+      boolean hasColor;
+      boolean hasNormalAndIsNotNewLines;
+
+      @Override
+      protected void resetState() {
+        ShaderAttributeInputs attributeInputs = ((VanillaParameters) getJobParameters()).inputs;
+        hasTex = attributeInputs.hasTex();
+        hasLight = attributeInputs.hasLight();
+        hasColor = attributeInputs.hasColor();
+        hasNormalAndIsNotNewLines = attributeInputs.hasNormal() && ! attributeInputs.isNewLines();
+      }
+
+      {
+        addPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV0")) {
+          @Override
+          protected boolean isActive() {
+            return hasTex;
+          }
+        });
+        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV2")) {
+          @Override
+          protected boolean isActive() {
+            return hasLight;
+          }
+        });
+
+        addPhase(new SearchTerminalsImpl<Parameters>() {
+          {
+            addTarget(new ParsedReplaceTarget<Parameters>("gl_MultiTexCoord0") {
+              @Override
+              protected String getNewContent(TreeMember node, String match) {
+                return hasTex ? "vec4(iris_UV0, 0.0, 1.0)" : "vec4(0.5, 0.5, 0.0, 1.0)";
+              }
+
+              @Override
+              protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+                return GLSLParser::expression;
+              }
+            });
+            addTarget(new ParsedReplaceTarget<Parameters>("gl_MultiTexCoord1") {
+              @Override
+              protected String getNewContent(TreeMember node, String match) {
+                return hasLight ? "vec4(iris_UV2, 0.0, 1.0)" : "vec4(240.0, 240.0, 0.0, 1.0)";
+              }
+
+              @Override
+              protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+                return GLSLParser::expression;
+              }
+            });
+            addTarget(new ParsedReplaceTarget<Parameters>("gl_Normal") {
+              @Override
+              protected String getNewContent(TreeMember node, String match) {
+                // the source is a little confusing
+                return hasNormalAndIsNotNewLines ? "vec3(0.0, 0.0, 1.0)" : "iris_Normal";
+              }
+
+              @Override
+              protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+                return GLSLParser::expression;
+              }
+            });
+          }
+        });
+
+        addConcurrentPhase(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec2 iris_UV0;");
+          }
+
+          @Override
+          protected boolean isActive() {
+            return hasTex;
+          }
+        });
+        addConcurrentPhase(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in ivec2 iris_UV2;");
+          }
+
+          @Override
+          protected boolean isActive() {
+            return hasLight;
+          }
+        });
+        addConcurrentPhase(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
+          }
+
+          @Override
+          protected boolean isActive() {
+            return hasNormalAndIsNotNewLines;
+          }
+        });
+
+        append(replaceExcessMultiTexCoord);
+      }
+    };
+
+    //TODO with hasColor and iris_ColorModulator
+
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
       for (ShaderType type : ShaderType.values()) {
@@ -575,10 +702,6 @@ public class TransformPatcher implements Patcher {
         manager.registerTransformation(detectReserved);
         manager.registerTransformation(fixVersion);
         manager.registerTransformation(wrapFogSetup);
-
-        // TODO:investigate why the duplicate definition of this doesn't cause the throw
-        // target to trigger
-        // manager.registerTransformation(wrapFogFragCoord);
 
         if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
           manager.registerTransformation(wrapFogFragCoord);
@@ -602,7 +725,10 @@ public class TransformPatcher implements Patcher {
 
         // patchVanilla
         if (patch == Patch.VANILLA) {
-
+          manager.registerTransformation(wrapProjMatrixVanilla);
+          if (type == ShaderType.VERTEX) {
+            manager.registerTransformation(wrapAttributeInputsVanillaVertex);
+          }
         }
 
         // patchSodium
@@ -626,6 +752,15 @@ public class TransformPatcher implements Patcher {
   public String patchVanilla(
       String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
       ShaderAttributeInputs inputs) {
+    // TODO: get rid of this by merging transformations from
+    // AttributeShaderTransformer into the vanilla managers
+    if (inputs.hasOverlay()) {
+      StringTransformations preTransform = new StringTransformations(source);
+      // PREV TODO: Change this once we implement 1.17 geometry shader support!
+      AttributeShaderTransformer.patch(preTransform, type, false);
+      source = source.toString();
+    }
+
     return transform(source,
         new VanillaParameters(Patch.VANILLA, type, alpha, hasChunkOffset, inputs));
   }
