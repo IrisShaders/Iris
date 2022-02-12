@@ -52,22 +52,23 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
  * transformation.
  * 
+ * A separate TransformationManager is created for each ShaderType.
+ * That makes each of them more efficient as they don't need to run unnecessary
+ * transformation phases.
+ * 
  * NOTE: This patcher expects the string to not contain any (!) preprocessor
  * directives. The only allowed ones are #extension and #pragma as they are
  * considered "parsed" directives. If any other directive appears in the string,
  * it will throw.
  * 
- * TODO: Require the callers of this patcher to have already removed
- * preprocessor directives. This is probably just a matter of telling JCPC to
- * remove them.
- * 
- * NOTE: A separate TransformationManager should be created for each ShaderType.
- * That makes each of them more efficient as they don't need to run unnecessary
- * transformation phases.
+ * TODO: JCPP has to be configured to remove preprocessor directives entirely
  * 
  * TODO: good examples for more complex transformation in triforce patcher?
  * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
  * replacements that account for whitespace like the one for gl_TextureMatrix
+ * 
+ * TODO: use new glsl-transformer features on RunPhase to make all the RunPhase
+ * subclasses much more comapct (just one method call)
  */
 public class TransformPatcher implements Patcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
@@ -683,6 +684,8 @@ public class TransformPatcher implements Patcher {
       }
     };
 
+    // TODO: do iris_LightmapTextureMatrix and iris_TextureMat here
+
     // TODO: in triforce this is confusing because iris_Color is used even when
     // !hasColor in which case it's not defined anywhere
     Transformation<Parameters> wrapColorVanilla = new Transformation<Parameters>() {
@@ -721,6 +724,19 @@ public class TransformPatcher implements Patcher {
             injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_ColorModulator;");
           }
         });
+      }
+    };
+
+    Transformation<Parameters> wrapModelViewMatrix = new Transformation<Parameters>() {
+      {
+        append(WrapIdentifier.fromExpression(
+            "gl_NormalMatrix", "gl_ModelViewMatrix", "mat3(transpose(inverse(gl_ModelViewMatrix)))",
+            new RunPhase<Parameters>() {
+              @Override
+              protected void run(TranslationUnitContext ctx) {
+
+              }
+            }));
       }
     };
 
