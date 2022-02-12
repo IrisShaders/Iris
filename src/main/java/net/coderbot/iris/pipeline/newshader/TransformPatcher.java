@@ -585,7 +585,6 @@ public class TransformPatcher implements Patcher {
     Transformation<Parameters> wrapAttributeInputsVanillaVertex = new Transformation<Parameters>() {
       boolean hasTex;
       boolean hasLight;
-      boolean hasColor;
       boolean hasNormalAndIsNotNewLines;
 
       @Override
@@ -593,8 +592,7 @@ public class TransformPatcher implements Patcher {
         ShaderAttributeInputs attributeInputs = ((VanillaParameters) getJobParameters()).inputs;
         hasTex = attributeInputs.hasTex();
         hasLight = attributeInputs.hasLight();
-        hasColor = attributeInputs.hasColor();
-        hasNormalAndIsNotNewLines = attributeInputs.hasNormal() && ! attributeInputs.isNewLines();
+        hasNormalAndIsNotNewLines = attributeInputs.hasNormal() && !attributeInputs.isNewLines();
       }
 
       {
@@ -688,7 +686,46 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    //TODO with hasColor and iris_ColorModulator
+    // TODO: in triforce this is confusing because iris_Color is used even when
+    // !hasColor in which case it's not defined anywhere
+    Transformation<Parameters> wrapColorVanilla = new Transformation<Parameters>() {
+      boolean hasColor;
+
+      @Override
+      protected void resetState() {
+        ShaderAttributeInputs attributeInputs = ((VanillaParameters) getJobParameters()).inputs;
+        hasColor = attributeInputs.hasColor();
+      }
+
+      {
+        addPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_ColorModulator")));
+        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_Color")) {
+          @Override
+          protected boolean isActive() {
+            return hasColor;
+          }
+        });
+
+        addPhase(new SearchTerminalsImpl<Parameters>(new ParsedReplaceTarget<Parameters>("gl_Color") {
+          @Override
+          protected String getNewContent(TreeMember node, String match) {
+            return hasColor ? "(iris_Color * iris_ColorModulator)" : "iris_ColorModulator";
+          }
+
+          @Override
+          protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+            return GLSLParser::expression;
+          }
+        }));
+
+        addConcurrentPhase(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_ColorModulator;");
+          }
+        });
+      }
+    };
 
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
@@ -729,6 +766,7 @@ public class TransformPatcher implements Patcher {
           if (type == ShaderType.VERTEX) {
             manager.registerTransformation(wrapAttributeInputsVanillaVertex);
           }
+          manager.registerTransformation(wrapColorVanilla);
         }
 
         // patchSodium
