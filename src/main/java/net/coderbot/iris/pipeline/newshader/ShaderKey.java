@@ -110,6 +110,7 @@ public enum ShaderKey {
 	}
 
 	public boolean isFullbright() {
-		return isBeaconBeam() || this == ENTITIES_EYES || this.name().endsWith("_BRIGHT");
+		return isBeaconBeam() || this == ENTITIES_EYES || this == ENTITIES_SOLID_BRIGHT || this == HAND_CUTOUT_BRIGHT
+			|| this == HAND_WATER_BRIGHT || this == BLOCK_ENTITY_BRIGHT;
 	}
 }
