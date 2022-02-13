@@ -8,7 +8,6 @@ import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.layer.EntityColorRenderStateShard;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
@@ -42,6 +41,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
@@ -55,20 +55,6 @@ public final class CommonUniforms {
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
 	public static void addDynamicUniforms(DynamicUniformHolder uniforms) {
 		FogUniforms.addFogUniforms(uniforms);
-
-		uniforms.uniform4f("entityColor", () -> {
-			if (EntityColorRenderStateShard.currentHurt) {
-				return new Vector4f(1.0f, 0.0f, 0.0f, 0.3f);
-			}
-
-			float shade = EntityColorRenderStateShard.currentWhiteFlash;
-
-			if (shade != 0.0f) {
-				return new Vector4f(shade, shade, shade, 0.5f);
-			}
-
-			return new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-		}, EntityColorRenderStateShard.getUpdateNotifier());
 
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
@@ -132,6 +118,9 @@ public final class CommonUniforms {
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
+			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
+			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
+			.uniform4f(ONCE, "entityColor", Vector4f::new)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
 			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {

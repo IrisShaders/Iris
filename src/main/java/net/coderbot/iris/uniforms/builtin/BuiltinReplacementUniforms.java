@@ -4,10 +4,7 @@ import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
-@Environment(EnvType.CLIENT)
 public class BuiltinReplacementUniforms {
 	private static final Matrix4f lightmapTextureMatrix;
 

@@ -5,8 +5,6 @@ import org.lwjgl.opengl.GL15;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.LightTexture;
 
 /**
@@ -14,7 +12,6 @@ import net.minecraft.client.renderer.LightTexture;
  * unit #2.
  */
 @Mixin(LightTexture.class)
-@Environment(EnvType.CLIENT)
 public class MixinLightTexture {
 	@ModifyConstant(method = "turnOffLightLayer", constant = @Constant(intValue = GL15.GL_TEXTURE2), require = 1)
 	private int iris$fixLightmapTextureUnit$disable(int texUnit) {

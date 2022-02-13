@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
@@ -38,18 +39,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
-@Environment(EnvType.CLIENT)
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
 	public static final Logger logger = LogManager.getLogger(MODID);
@@ -59,10 +58,8 @@ public class Iris implements ClientModInitializer {
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
-	private static boolean internal;
 	private static boolean sodiumInvalid;
 	private static boolean sodiumInstalled;
-	private static boolean physicsModInstalled;
 	private static boolean initialized;
 
 	private static PipelineManager pipelineManager;
@@ -99,8 +96,6 @@ public class Iris implements ClientModInitializer {
 				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
 
 		IRIS_VERSION = iris.getMetadata().getVersion().getFriendlyString();
-
-		physicsModInstalled = FabricLoader.getInstance().isModLoaded("physicsmod");
 
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {
@@ -198,33 +193,20 @@ public class Iris implements ClientModInitializer {
 		}
 
 		// Attempt to load an external shaderpack if it is available
-		if (!irisConfig.isInternal()) {
-			Optional<String> externalName = irisConfig.getShaderPackName();
+		Optional<String> externalName = irisConfig.getShaderPackName();
 
-			if (!externalName.isPresent()) {
-				logger.info("Shaders are disabled because no valid shaderpack is selected");
+		if (!externalName.isPresent()) {
+			logger.info("Shaders are disabled because no valid shaderpack is selected");
 
-				setShadersDisabled();
+			setShadersDisabled();
 
-				return;
-			}
+			return;
+		}
 
-			if (!loadExternalShaderpack(externalName.get())) {
-				logger.warn("Falling back to normal rendering without shaders because the external shaderpack could not be loaded");
-				setShadersDisabled();
-				currentPackName = "(off) [fallback, check your logs for errors]";
-			}
-		} else {
-			try {
-				loadInternalShaderpack();
-			} catch (Exception e) {
-				logger.error("Something went terribly wrong, Iris was unable to load the internal shaderpack!");
-				logger.catching(Level.ERROR, e);
-
-				logger.warn("Falling back to normal rendering without shaders because the internal shaderpack could not be loaded");
-				setShadersDisabled();
-				currentPackName = "(off) [fallback, check your logs for errors]";
-			}
+		if (!loadExternalShaderpack(externalName.get())) {
+			logger.warn("Falling back to normal rendering without shaders because the shaderpack could not be loaded");
+			setShadersDisabled();
+			currentPackName = "(off) [fallback, check your logs for errors]";
 		}
 	}
 
@@ -315,7 +297,6 @@ public class Iris implements ClientModInitializer {
 		}
 
 		currentPackName = name;
-		internal = false;
 
 		logger.info("Using shaderpack: " + name);
 
@@ -347,26 +328,9 @@ public class Iris implements ClientModInitializer {
 				.findFirst();
 	}
 
-	private static void loadInternalShaderpack() {
-		Path root = FabricLoader.getInstance().getModContainer("iris")
-				.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPath();
-
-		try {
-			currentPack = new ShaderPack(root.resolve("shaders"));
-		} catch (IOException e) {
-			logger.error("Failed to load internal shaderpack!");
-			throw new RuntimeException("Failed to load internal shaderpack!", e);
-		}
-
-		logger.info("Using internal shaders");
-		currentPackName = "(internal)";
-		internal = true;
-	}
-
 	private static void setShadersDisabled() {
 		currentPack = null;
 		currentPackName = "(off)";
-		internal = false;
 
 		logger.info("Shaders are disabled");
 	}
@@ -429,12 +393,14 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (pack.toString().endsWith(".zip")) {
-			try {
-				FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader());
+			try (FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader())) {
 				Path root = zipSystem.getRootDirectories().iterator().next();
 				return Files.walk(root)
 						.filter(Files::isDirectory)
 						.anyMatch(path -> path.endsWith("shaders"));
+			} catch (ZipError zipError) {
+				// Java 8 seems to throw a ZipError instead of a subclass of IOException
+				Iris.logger.warn("The ZIP at " + pack + " is corrupt");
 			} catch (IOException ignored) {
 				// ignored, not a valid shader pack.
 			}
@@ -526,11 +492,9 @@ public class Iris implements ClientModInitializer {
 		ClientLevel level = Minecraft.getInstance().level;
 
 		if (level != null) {
-			ResourceKey<net.minecraft.world.level.Level> levelRegistryKey = level.dimension();
-
-			if (levelRegistryKey.equals(net.minecraft.world.level.Level.END)) {
+			if (level.dimensionType().effectsLocation().equals(DimensionType.END_EFFECTS) || level.dimension().equals(net.minecraft.world.level.Level.END)) {
 				return DimensionId.END;
-			} else if (levelRegistryKey.equals(net.minecraft.world.level.Level.NETHER)) {
+			} else if (level.dimensionType().effectsLocation().equals(DimensionType.NETHER_EFFECTS) || level.dimension().equals(net.minecraft.world.level.Level.NETHER)) {
 				return DimensionId.NETHER;
 			} else {
 				return DimensionId.OVERWORLD;
@@ -552,11 +516,7 @@ public class Iris implements ClientModInitializer {
 		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
 		try {
-			if (internal) {
-				return new InternalWorldRenderingPipeline(programs);
-			} else {
-				return new DeferredWorldRenderingPipeline(programs);
-			}
+			return new DeferredWorldRenderingPipeline(programs);
 		} catch (Exception e) {
 			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
@@ -589,7 +549,7 @@ public class Iris implements ClientModInitializer {
 	}
 
 	public static String getVersion() {
-		if (IRIS_VERSION == null || IRIS_VERSION.contains("${version}")) {
+		if (IRIS_VERSION == null) {
 			return "Version info unknown!";
 		}
 
@@ -600,7 +560,10 @@ public class Iris implements ClientModInitializer {
 		ChatFormatting color;
 		String version = getVersion();
 
-		if (version.endsWith("-dirty") || version.contains("unknown")) {
+		if (version.endsWith("-development-environment")) {
+			color = ChatFormatting.GOLD;
+			version = version.replace("-development-environment", " (Development Environment)");
+		} else if (version.endsWith("-dirty") || version.contains("unknown")) {
 			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
 			color = ChatFormatting.LIGHT_PURPLE;
@@ -617,10 +580,6 @@ public class Iris implements ClientModInitializer {
   
 	public static boolean isSodiumInstalled() {
 		return sodiumInstalled;
-	}
-
-	public static boolean isPhysicsModInstalled() {
-		return physicsModInstalled;
 	}
 
 	public static boolean isPackActive() {

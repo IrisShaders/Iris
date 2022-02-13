@@ -9,6 +9,6 @@ public class ShadowRenderingState {
 	}
 
 	public static Matrix4f getShadowOrthoMatrix() {
-		return ShadowRenderer.ACTIVE ? ShadowRenderer.ORTHO.copy() : null;
+		return ShadowRenderer.ACTIVE ? ShadowRenderer.PROJECTION.copy() : null;
 	}
 }
