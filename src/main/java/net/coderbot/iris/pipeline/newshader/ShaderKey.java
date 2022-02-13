@@ -26,12 +26,15 @@ public enum ShaderKey {
 	TERRAIN_TRANSLUCENT    (ProgramId.Water,       AlphaTests.OFF,             IrisVertexFormats.TERRAIN,                       FogMode.ENABLED),
 	ENTITIES_SOLID         (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	ENTITIES_SOLID_DIFFUSE (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
+	ENTITIES_SOLID_BRIGHT  (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	ENTITIES_CUTOUT        (ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	ENTITIES_CUTOUT_DIFFUSE(ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	ENTITIES_EYES          (ProgramId.SpiderEyes,  AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	HAND_CUTOUT            (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
+	HAND_CUTOUT_BRIGHT     (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	HAND_CUTOUT_DIFFUSE    (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	HAND_TRANSLUCENT       (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
+	HAND_WATER_BRIGHT      (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	HAND_WATER_DIFFUSE     (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	LIGHTNING              (ProgramId.Entities,    AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,              FogMode.ENABLED),
 	LEASH                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.ENABLED),
@@ -41,6 +44,7 @@ public enum ShaderKey {
 	TEXT                   (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED),
 	TEXT_INTENSITY         (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED),
 	BLOCK_ENTITY           (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
+	BLOCK_ENTITY_BRIGHT    (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	BLOCK_ENTITY_DIFFUSE   (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	BEACON                 (ProgramId.BeaconBeam,  AlphaTests.OFF,             DefaultVertexFormat.BLOCK,                       FogMode.ENABLED),
 	GLINT                  (ProgramId.ArmorGlint,  AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,                FogMode.ENABLED),
@@ -106,6 +110,6 @@ public enum ShaderKey {
 	}
 
 	public boolean isFullbright() {
-		return isBeaconBeam() || this == ENTITIES_EYES;
+		return isBeaconBeam() || this == ENTITIES_EYES || this.name().endsWith("_BRIGHT");
 	}
 }
