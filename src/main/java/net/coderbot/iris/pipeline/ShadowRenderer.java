@@ -105,6 +105,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture specular;
 	private final IntSupplier noise;
 
+	public static List<BlockEntity> visibleBlockEntities;
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 
@@ -500,8 +501,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		int shadowBlockEntities = 0;
 
-		// TODO: Use visibleChunks to cull block entities
-		for (BlockEntity entity : getLevel().blockEntityList) {
+		for (BlockEntity entity : visibleBlockEntities) {
 			modelView.pushPose();
 			BlockPos pos = entity.getBlockPos();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
@@ -528,6 +528,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		profiler.popPush("shadows");
 		ACTIVE = true;
+
+		visibleBlockEntities = new ArrayList<>();
 
 		// Create our camera
 		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
