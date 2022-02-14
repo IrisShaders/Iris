@@ -510,7 +510,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			modelView.pushPose();
 			BlockPos pos = entity.getBlockPos();
 			if (hasEntityFrustum) {
-				if (culler.isCulled(pos.getX() - 1, pos.getY() - 1, pos.getZ() - 1, pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) continue;
+				if (culler.isCulled(pos.getX() - 1, pos.getY() - 1, pos.getZ() - 1, pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) {
+					modelView.popPose();
+					continue;
+				}
 			}
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
 			BlockEntityRenderDispatcher.instance.render(entity, tickDelta, modelView, bufferSource);
