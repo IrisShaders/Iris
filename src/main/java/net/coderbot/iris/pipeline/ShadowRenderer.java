@@ -627,7 +627,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
 		// TODO: Make this configurable and disable-able
 		boolean hasEntityFrustum = false;
-		if (entityShadowDistanceMultiplier == 1.0F) {
+		if (entityShadowDistanceMultiplier == 1.0F || entityShadowDistanceMultiplier < 0.0F) {
 			entityFrustumHolder.setInfo(terrainFrustumHolder.getFrustum(), terrainFrustumHolder.getDistanceInfo(), terrainFrustumHolder.getCullingInfo());
 		} else {
 			hasEntityFrustum = true;
