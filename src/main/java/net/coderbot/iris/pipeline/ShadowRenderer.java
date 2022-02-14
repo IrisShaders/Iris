@@ -496,14 +496,22 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		renderedShadowEntities = shadowEntities;
 	}
 
-	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
+	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum) {
 		profiler.push("build blockentities");
 
 		int shadowBlockEntities = 0;
+		BoxCuller culler = null;
+		if (hasEntityFrustum) {
+			culler = new BoxCuller(halfPlaneLength * (renderDistanceMultiplier * entityShadowDistanceMultiplier));
+			culler.setPosition(cameraX, cameraY, cameraZ);
+		}
 
 		for (BlockEntity entity : visibleBlockEntities) {
 			modelView.pushPose();
 			BlockPos pos = entity.getBlockPos();
+			if (hasEntityFrustum) {
+				if (culler.isCulled(pos.getX() - 1, pos.getY() - 1, pos.getZ() - 1, pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) continue;
+			}
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
 			BlockEntityRenderDispatcher.instance.render(entity, tickDelta, modelView, bufferSource);
 			modelView.popPose();
@@ -616,9 +624,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
 		// TODO: Make this configurable and disable-able
+		boolean hasEntityFrustum = false;
 		if (entityShadowDistanceMultiplier == 1.0F) {
 			entityFrustumHolder.setInfo(terrainFrustumHolder.getFrustum(), terrainFrustumHolder.getDistanceInfo(), terrainFrustumHolder.getCullingInfo());
 		} else {
+			hasEntityFrustum = true;
 			entityFrustumHolder = createShadowFrustum(renderDistanceMultiplier * entityShadowDistanceMultiplier, entityFrustumHolder);
 		}
 		Frustum entityShadowFrustum = entityFrustumHolder.getFrustum();
@@ -643,7 +653,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		if (shouldRenderBlockEntities) {
-			renderBlockEntities(bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+			renderBlockEntities(bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum);
 		}
 
 		profiler.popPush("draw entities");
