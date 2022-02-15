@@ -104,7 +104,21 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getBlockShader, getNewEntityShader
+	// TODO: getBlockShader
+
+	@Inject(method = "getNewEntityShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideNewEntityShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+		} else if (isRenderingWorld()) {
+			override(ShaderKey.ENTITIES_SOLID_BRIGHT, cir);
+		}
+	}
 
 	@Inject(method = {
 			"getParticleShader"
