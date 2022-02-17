@@ -151,10 +151,8 @@ public final class CommonUniforms {
 		if (cameraEntity instanceof LivingEntity) {
 			MobEffectInstance darkness = ((LivingEntity) cameraEntity).getEffect(MobEffects.DARKNESS);
 
-			if (darkness != null) {
-				// Guessing that this is what OF uses, based on how vanilla calculates the fog value in FogRenderer
-				// TODO: Add this to ShaderDoc
-				return Math.min(1.0F, (darkness.getDuration() * client.options.darknessEffectScale) / 20.0F);
+			if (darkness != null && darkness.getFactorData().isPresent()) {
+				return darkness.getFactorData().get().getFactor(CapturedRenderingState.INSTANCE.getTickDelta();
 			}
 		}
 
