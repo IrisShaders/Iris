@@ -100,6 +100,7 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
+			.uniform1f(PER_FRAME, "darkness", CommonUniforms::getDarkness)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(InteractionHand.MAIN_HAND))
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
@@ -138,6 +139,22 @@ public final class CommonUniforms {
 				// Guessing that this is what OF uses, based on how vanilla calculates the fog value in FogRenderer
 				// TODO: Add this to ShaderDoc
 				return Math.min(1.0F, blindness.getDuration() / 20.0F);
+			}
+		}
+
+		return 0.0F;
+	}
+
+	static float getDarkness() {
+		Entity cameraEntity = client.getCameraEntity();
+
+		if (cameraEntity instanceof LivingEntity) {
+			MobEffectInstance darkness = ((LivingEntity) cameraEntity).getEffect(MobEffects.DARKNESS);
+
+			if (darkness != null) {
+				// Guessing that this is what OF uses, based on how vanilla calculates the fog value in FogRenderer
+				// TODO: Add this to ShaderDoc
+				return Math.min(1.0F, (darkness.getDuration() * client.options.darknessEffectScale) / 20.0F);
 			}
 		}
 

@@ -19,8 +19,7 @@ public class MixinFogRenderer {
 	@Shadow private static float fogRed, fogGreen, fogBlue;
 
 	@Inject(method = "setupFog", at = @At("HEAD"))
-	private static void iris$setupLegacyWaterFog(Camera camera, FogRenderer.FogMode fogMode, float f, boolean bl,
-												 CallbackInfo ci) {
+	private static void iris$setupLegacyWaterFog(Camera camera, FogRenderer.FogMode $$1, float $$2, boolean $$3, float $$4, CallbackInfo ci) {
 		if (camera.getFluidInCamera() == FogType.WATER) {
 			Entity entity = camera.getEntity();
 

@@ -30,6 +30,7 @@ public enum ShaderKey {
 	ENTITIES_CUTOUT        (ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	ENTITIES_CUTOUT_DIFFUSE(ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	ENTITIES_EYES          (ProgramId.SpiderEyes,  AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
+	ENTITIES_EYES_TRANS    (ProgramId.SpiderEyes,  AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	HAND_CUTOUT            (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	HAND_CUTOUT_BRIGHT     (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
 	HAND_CUTOUT_DIFFUSE    (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
