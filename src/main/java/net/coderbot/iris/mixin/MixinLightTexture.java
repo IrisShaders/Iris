@@ -18,7 +18,7 @@ public class MixinLightTexture {
 	@Final
 	private Minecraft minecraft;
 
-	@Inject(method = "updateLightTexture", at = @At("HEAD"))
+	@Inject(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getSkyDarken(F)F"))
 	private void resetDarknessValue(float $$0, CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setDarknessLightFactor(0.0F);
 	}
