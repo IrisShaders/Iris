@@ -41,7 +41,6 @@ import net.minecraft.world.phys.Vec3;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
@@ -100,7 +99,8 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
-			.uniform1f(PER_FRAME, "darkness", CommonUniforms::getDarkness)
+			.uniform1f(PER_FRAME, "darknessFactor", CommonUniforms::getDarknessFactor)
+			.uniform1f(PER_FRAME, "darknessScale", CapturedRenderingState.INSTANCE::getDarknessScale)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(InteractionHand.MAIN_HAND))
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
@@ -145,14 +145,14 @@ public final class CommonUniforms {
 		return 0.0F;
 	}
 
-	static float getDarkness() {
+	static float getDarknessFactor() {
 		Entity cameraEntity = client.getCameraEntity();
 
 		if (cameraEntity instanceof LivingEntity) {
 			MobEffectInstance darkness = ((LivingEntity) cameraEntity).getEffect(MobEffects.DARKNESS);
 
 			if (darkness != null && darkness.getFactorData().isPresent()) {
-				return darkness.getFactorData().get().getFactor(CapturedRenderingState.INSTANCE.getTickDelta();
+				return darkness.getFactorData().get().getFactor(CapturedRenderingState.INSTANCE.getTickDelta());
 			}
 		}
 

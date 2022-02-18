@@ -24,7 +24,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends MultiSrcDirFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String customSodiumName = "sodium-fabric-mc1.19_deep_dark_experimental_snapshot-1-0.4.0-alpha6+rev.74b9a6d-dirty.jar";
+	static final String customSodiumName = "sodium-fabric-mc1.19_deep_dark_experimental_snapshot-1-0.4.0-alpha6+build.30.jar";
 
 	@Override
 	public String getMcVersion() {
