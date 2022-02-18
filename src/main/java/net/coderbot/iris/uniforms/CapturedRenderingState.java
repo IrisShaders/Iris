@@ -1,7 +1,6 @@
 package net.coderbot.iris.uniforms;
 
 import com.mojang.math.Matrix4f;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 
 import net.coderbot.iris.vendored.joml.Vector3d;
@@ -14,7 +13,7 @@ public class CapturedRenderingState {
 	private Matrix4f gbufferProjection;
 	private Vector3d fogColor;
 	private float fogDensity;
-	private float darknessScale;
+	private float darknessLightFactor;
 	private float tickDelta;
 	private int currentRenderedBlockEntity;
 	private Runnable blockEntityIdListener = null;
@@ -101,11 +100,11 @@ public class CapturedRenderingState {
 		return currentRenderedEntity;
 	}
 
-	public float getDarknessScale() {
-		return darknessScale;
+	public float getDarknessLightFactor() {
+		return darknessLightFactor;
 	}
 
-    public void setDarknessScale(float scale) {
-		darknessScale = scale;
+    public void setDarknessLightFactor(float factor) {
+		darknessLightFactor = factor;
 	}
 }

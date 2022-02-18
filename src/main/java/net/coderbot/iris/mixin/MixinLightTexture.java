@@ -3,9 +3,6 @@ package net.coderbot.iris.mixin;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,11 +20,11 @@ public class MixinLightTexture {
 
 	@Inject(method = "updateLightTexture", at = @At("HEAD"))
 	private void resetDarknessValue(float $$0, CallbackInfo ci) {
-		CapturedRenderingState.INSTANCE.setDarknessScale(0.0F);
+		CapturedRenderingState.INSTANCE.setDarknessLightFactor(0.0F);
 	}
 
 	@Inject(method = "calculateDarknessScale", at = @At("RETURN"))
 	private void storeDarknessValue(LivingEntity $$0, float $$1, float $$2, CallbackInfoReturnable<Float> cir) {
-		CapturedRenderingState.INSTANCE.setDarknessScale(cir.getReturnValue() * this.minecraft.options.darknessEffectScale);
+		CapturedRenderingState.INSTANCE.setDarknessLightFactor(cir.getReturnValue() * this.minecraft.options.darknessEffectScale);
 	}
 }

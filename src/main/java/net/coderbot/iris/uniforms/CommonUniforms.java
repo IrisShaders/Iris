@@ -100,7 +100,7 @@ public final class CommonUniforms {
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
 			.uniform1f(PER_FRAME, "darknessFactor", CommonUniforms::getDarknessFactor)
-			.uniform1f(PER_FRAME, "darknessScale", CapturedRenderingState.INSTANCE::getDarknessScale)
+			.uniform1f(PER_FRAME, "darknessLightFactor", CapturedRenderingState.INSTANCE::getDarknessLightFactor)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(InteractionHand.MAIN_HAND))
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
