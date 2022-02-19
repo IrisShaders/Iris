@@ -40,8 +40,13 @@ public class Buildscript extends MultiSrcDirFabricProject {
 
     @Override
     public FabricLoader getLoader() {
-        return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.12.12"));
+        return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.13.2"));
     }
+
+	@Override
+	public int getJavaVersion() {
+		return 16;
+	}
 
     @Override
     public Path getSrcDir() {
