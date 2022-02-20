@@ -45,7 +45,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
 
 	@Override
 	public int getJavaVersion() {
-		return 16;
+		return 17;
 	}
 
     @Override
