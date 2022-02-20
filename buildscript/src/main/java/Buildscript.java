@@ -30,7 +30,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
 
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion("1.18.1");
+		return Minecraft.getExperimentalVersion("https://launcher.mojang.com/v1/objects/b1e589c1d6ed73519797214bc796e53f5429ac46/1_19_deep_dark_experimental_snapshot-1.zip");
 	}
 
 	@Override
