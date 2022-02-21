@@ -715,7 +715,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	@Override
 	public void addDebugText(List<String> messages) {
 		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
-		messages.add("[Iris] Shadow Distance: " + terrainFrustumHolder.getDistanceInfo());
 		messages.add("[Iris] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
 		messages.add("[Iris] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
 		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain
