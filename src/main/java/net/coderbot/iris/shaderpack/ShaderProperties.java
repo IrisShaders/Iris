@@ -83,7 +83,6 @@ public class ShaderProperties {
 			original.load(new StringReader(contents));
 		} catch (IOException e) {
 			Iris.logger.error("Error loading shaders.properties!", e);
-			Iris.logger.catching(Level.ERROR, e);
 		}
 
 		preprocessed.forEach((keyObject, valueObject) -> {

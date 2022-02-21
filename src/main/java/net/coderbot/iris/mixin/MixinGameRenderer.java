@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 
 import net.irisshaders.iris.api.v0.IrisApi;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,8 +13,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -25,7 +22,6 @@ import net.minecraft.client.renderer.MultiBufferSource.BufferSource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 @Mixin(GameRenderer.class)
-@Environment(EnvType.CLIENT)
 public class MixinGameRenderer {
 	@Shadow
 	private boolean renderHand;
