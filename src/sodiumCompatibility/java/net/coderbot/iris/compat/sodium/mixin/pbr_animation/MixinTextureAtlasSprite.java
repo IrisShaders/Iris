@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 
 @Mixin(TextureAtlasSprite.class)
 public class MixinTextureAtlasSprite {
-	@Inject(method = "markActive()V", at = @At("TAIL"))
+	@Inject(method = "markActive()V", at = @At("TAIL"), remap = false)
 	private void onTailMarkActive(CallbackInfo ci) {
 		TextureAtlasSpriteExtension extension = (TextureAtlasSpriteExtension) this;
 		if (extension.hasPBRSpriteHolder()) {
