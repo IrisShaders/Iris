@@ -20,9 +20,6 @@ public interface LevelRendererAccessor {
 	@Accessor("entityRenderDispatcher")
 	EntityRenderDispatcher getEntityRenderDispatcher();
 
-	@Accessor("renderChunks")
-	ObjectList<LevelRenderer.RenderChunkInfo> getRenderChunks();
-
 	@Invoker("renderChunkLayer")
 	void invokeRenderChunkLayer(RenderType terrainLayer, PoseStack modelView, double cameraX, double cameraY, double cameraZ, Matrix4f matrix4f);
 

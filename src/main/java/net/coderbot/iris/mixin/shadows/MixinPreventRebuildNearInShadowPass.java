@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinPreventRebuildNearInShadowPass {
 	@Shadow
 	@Final
-	private ObjectList<LevelRenderer.RenderChunkInfo> renderChunks;
+	private ObjectArrayList<LevelRenderer.RenderChunkInfo> renderChunks;
 
 	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
 	@Inject(method = "setupRender",

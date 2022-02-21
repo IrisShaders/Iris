@@ -165,9 +165,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.buffers = new RenderBuffers();
 
 		if (this.buffers instanceof RenderBuffersExt) {
-			this.RenderBuffersExt = (RenderBuffersExt) buffers;
+			this.renderBuffersExt = (RenderBuffersExt) buffers;
 		} else {
-			this.RenderBuffersExt = null;
+			this.renderBuffersExt = null;
 		}
 
 		configureSamplingSettings(shadowDirectives);
@@ -493,8 +493,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		//
 		// Note: We must use a separate BuilderBufferStorage object here, or else very weird things will happen during
 		// rendering.
-		if (RenderBuffersExt != null) {
-			RenderBuffersExt.beginLevelRendering();
+		if (renderBuffersExt != null) {
+			renderBuffersExt.beginLevelRendering();
 		}
 
 		if (buffers instanceof DrawCallTrackingRenderBuffers) {
@@ -511,7 +511,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
 
 		if (shouldRenderBlockEntities) {
-			renderedShadowBlockEntities = renderBlockEntities(modelView, tickDelta, cameraX, cameraY, cameraZ, bufferSource, hasEntityFrustum);
+			renderedShadowBlockEntities = renderBlockEntities(bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum);
 		}
 
 		levelRenderer.getLevel().getProfiler().popPush("draw entities");
@@ -569,7 +569,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private int renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum) {
-		profiler.push("build blockentities");
+		getLevel().getProfiler().push("build blockentities");
 
 		int shadowBlockEntities = 0;
 		BoxCuller culler = null;
@@ -587,14 +587,17 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			}
 			modelView.pushPose();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			BlockEntityRenderDispatcher.instance.render(entity, tickDelta, modelView, bufferSource);
+			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, bufferSource);
 			modelView.popPose();
 
 			shadowBlockEntities++;
 		}
 
+		getLevel().getProfiler().pop();
+
 		return shadowBlockEntities;
 	}
+
 	private int renderEntities(LevelRendererAccessor levelRenderer, EntityRenderDispatcher dispatcher, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, float tickDelta, Frustum frustum, double cameraX, double cameraY, double cameraZ) {
 		levelRenderer.getLevel().getProfiler().push("cull");
 
@@ -619,6 +622,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		for (Entity entity : renderedEntities) {
 			levelRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
 		}
+
+		levelRenderer.getLevel().getProfiler().pop();
 
 		return renderedEntities.size();
 	}
