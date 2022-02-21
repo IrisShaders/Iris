@@ -518,6 +518,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		profiler.popPush("shadows");
 		ACTIVE = true;
 
+		// NB: We store the previous player buffers in order to be able to allow mods rendering entities in the shadow pass (Flywheel) to use the shadow buffers instead.
 		RenderBuffers playerBuffers = levelRenderer.getRenderBuffers();
 		levelRenderer.setRenderBuffers(buffers);
 
