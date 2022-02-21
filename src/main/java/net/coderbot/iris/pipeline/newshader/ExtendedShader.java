@@ -188,11 +188,10 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 	@Override
 	public void attachToProgram() {
-		this.getFragmentProgram().attachToShader(this);
+		super.attachToProgram();
 		if (this.geometry != null) {
 			this.geometry.attachToShader(this);
 		}
-		this.getVertexProgram().attachToShader(this);
 	}
 
 	@Override
