@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(Program.Type.class)
 public class MixinProgramType {
 	@SuppressWarnings("target")
-    @Shadow(remap = false)
+    @Shadow
     @Final
     @Mutable
     private static Program.Type[] $VALUES;
