@@ -49,7 +49,6 @@ public class MixinSodiumWorldRenderer {
     @Unique
     private void iris$ensureStateSwapped() {
         if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			ShadowRenderer.visibleBlockEntities.addAll(this.chunkRenderManager.getVisibleBlockEntities());
 			if (this.chunkRenderManager instanceof SwappableChunkRenderManager) {
                 ((SwappableChunkRenderManager) this.chunkRenderManager).iris$swapVisibilityState();
             }
@@ -57,6 +56,13 @@ public class MixinSodiumWorldRenderer {
             wasRenderingShadows = true;
         }
     }
+
+	@Inject(method = "updateChunks", at = @At("RETURN"))
+	private void iris$captureVisibleBlockEntities(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo ci) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			ShadowRenderer.visibleBlockEntities.addAll(this.chunkRenderManager.getVisibleBlockEntities());
+		}
+	}
 
     @Inject(method = "scheduleTerrainUpdate()V", remap = false,
             at = @At(value = "INVOKE",

@@ -359,12 +359,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			}
 
 			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
-				distanceInfo = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
+				distanceInfo = + Minecraft.getInstance().options.renderDistance * 16
 						+ " blocks (capped by normal render distance)";
 				cullingInfo = "disabled " + reason;
 				return holder.setInfo(new NonCullingFrustum(), distanceInfo, cullingInfo);
 			} else {
-				distanceInfo = "render distance = " + distance + " blocks (set by shader pack)";
+				distanceInfo = distance + " blocks (set by shader pack)";
 				cullingInfo = "distance only " + reason;
 				BoxCuller boxCuller = new BoxCuller(distance);
 				holder.setInfo(new BoxCullingFrustum(boxCuller), distanceInfo, cullingInfo);
@@ -381,11 +381,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			}
 
 			if (distance >= Minecraft.getInstance().options.renderDistance * 16) {
-				distanceInfo = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
+				distanceInfo = Minecraft.getInstance().options.renderDistance * 16
 						+ " blocks (capped by normal render distance)";
 				boxCuller = null;
 			} else {
-				distanceInfo = "render distance = " + distance + " blocks " + setter;
+				distanceInfo = distance + " blocks " + setter;
 
 				if (distance == 0.0) {
 					cullingInfo = "no shadows rendered";
@@ -716,9 +716,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	public void addDebugText(List<String> messages) {
 		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
 		messages.add("[Iris] Shadow Distance: " + terrainFrustumHolder.getDistanceInfo());
-		messages.add("[Iris] Shadow Entity Distance: " + entityFrustumHolder.getDistanceInfo());
-		messages.add("[Iris] Shadow Terrain Culling: " + terrainFrustumHolder.getCullingInfo());
-		messages.add("[Iris] Shadow Entity Culling: " + entityFrustumHolder.getCullingInfo());
+		messages.add("[Iris] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
+		messages.add("[Iris] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
 		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain
 				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
