@@ -10,18 +10,15 @@ Iris, unlike most other Minecraft mods, uses the [Brachyura](https://github.com/
     - If you are using an IDE other than IntelliJ IDEA, you will need to use the appropriate commands instead of `idea`:
       - VS Code:
         ```
-        java -jar brachyura-bootstrap-0.jar buildscript vscode
-        java -jar brachyura-bootstrap-0.jar vscode
+        java -jar brachyura-bootstrap-0.jar jdt
         ```
         In VS Code it's probably helpful to also run the command `Java: Clean Java Language Server Workspace` afterwards.
       - Eclipse:
         ```
-        java -jar brachyura-bootstrap-0.jar buildscript eclipse
-        java -jar brachyura-bootstrap-0.jar eclipse
+        java -jar brachyura-bootstrap-0.jar jdt
         ```
       - Netbeans:
         ```
-        java -jar brachyura-bootstrap-0.jar buildscript netbeans
         java -jar brachyura-bootstrap-0.jar netbeans
         ```
 - Re-open your IDE and allow it to import (or re-import) the project.
