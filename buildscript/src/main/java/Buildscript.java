@@ -13,6 +13,8 @@ import io.github.coolcrabs.brachyura.fabric.FabricMaven;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
+import io.github.coolcrabs.brachyura.minecraft.Minecraft;
+import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
@@ -25,21 +27,26 @@ public class Buildscript extends MultiSrcDirFabricProject {
     static final boolean SODIUM = true;
     static final boolean CUSTOM_SODIUM = true;
     static final String customSodiumName = "sodium-fabric-mc22w06a-0.4.0-alpha6+rev.7bd2b7d.jar";
-
-    @Override
-    public String getMcVersion() {
-        return "22w06a";
-    }
-
-    @Override
+  
+	@Override
+	public VersionMeta createMcVersion() {
+		return Minecraft.getVersion("22w06a");
+	}
+  
+	@Override
     public MappingTree createMappings() {
         return createMojmap();
     }
 
     @Override
     public FabricLoader getLoader() {
-        return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.12.12"));
+        return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.13.2"));
     }
+
+	@Override
+	public int getJavaVersion() {
+		return 17;
+	}
 
     @Override
     public Path getSrcDir() {
@@ -121,7 +128,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
 
 	@Override
 	public Path getBuildJarPath() {
-		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + getMcVersion() + "-" + getVersion() + ".jar");
+		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + createMcVersion().version + "-" + getVersion() + ".jar");
 	}
 
 	@Override
