@@ -2,6 +2,7 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
+import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -18,6 +19,9 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 public interface LevelRendererAccessor {
 	@Accessor("entityRenderDispatcher")
 	EntityRenderDispatcher getEntityRenderDispatcher();
+
+	@Accessor("renderChunks")
+	ObjectList<LevelRenderer.RenderChunkInfo> getRenderChunks();
 
 	@Invoker("renderChunkLayer")
 	void invokeRenderChunkLayer(RenderType terrainLayer, PoseStack modelView, double cameraX, double cameraY, double cameraZ, Matrix4f matrix4f);
