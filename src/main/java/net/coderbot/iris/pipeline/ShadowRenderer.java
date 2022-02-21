@@ -35,6 +35,7 @@ import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
+import net.coderbot.iris.shadows.frustum.FrustumHolder;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
@@ -74,6 +75,7 @@ import java.util.function.Supplier;
 public class ShadowRenderer implements ShadowMapRenderer {
 	private final float halfPlaneLength;
 	private final float renderDistanceMultiplier;
+	private final float entityShadowDistanceMultiplier;
 	private final int resolution;
 	private final float intervalSize;
 	private final Float fov;
@@ -103,13 +105,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AbstractTexture specular;
 	private final IntSupplier noise;
 
+	public static List<BlockEntity> visibleBlockEntities;
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 
 	public static boolean ACTIVE = false;
 	private final String debugStringOverall;
-	private String debugStringShadowDistance = "(unavailable)";
-	private String debugStringShadowCulling = "(unavailable)";
+	private FrustumHolder terrainFrustumHolder;
+	private FrustumHolder entityFrustumHolder;
 	private String debugStringTerrain = "(unavailable)";
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
@@ -126,6 +129,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		this.halfPlaneLength = shadowDirectives.getDistance();
 		this.renderDistanceMultiplier = shadowDirectives.getDistanceRenderMul();
+		this.entityShadowDistanceMultiplier = shadowDirectives.getEntityShadowDistanceMul();
 		this.resolution = shadowDirectives.getResolution();
 		this.intervalSize = shadowDirectives.getIntervalSize();
 		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain();
@@ -134,6 +138,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities();
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
+
+		this.terrainFrustumHolder = new FrustumHolder();
+		this.entityFrustumHolder = new FrustumHolder();
 
 		this.fov = shadowDirectives.getFov();
 
@@ -334,10 +341,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		return modelView;
 	}
 
-	private Frustum createShadowFrustum() {
+	private FrustumHolder createShadowFrustum(float renderMultiplier, FrustumHolder holder) {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
+		String distanceInfo;
+		String cullingInfo;
 		if ((packCullingState == OptionalBoolean.FALSE || packHasVoxelization || packHasIndirectSunBounceGi) && packCullingState != OptionalBoolean.TRUE) {
-			double distance = halfPlaneLength * renderDistanceMultiplier;
+			double distance = halfPlaneLength * renderMultiplier;
 
 			String reason;
 
@@ -350,43 +359,43 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			}
 
 			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
-				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
+				distanceInfo = + Minecraft.getInstance().options.renderDistance * 16
 						+ " blocks (capped by normal render distance)";
-				debugStringShadowCulling = "disabled " + reason;
-				return new NonCullingFrustum();
+				cullingInfo = "disabled " + reason;
+				return holder.setInfo(new NonCullingFrustum(), distanceInfo, cullingInfo);
 			} else {
-				debugStringShadowDistance = "render distance = " + distance + " blocks (set by shader pack)";
-				debugStringShadowCulling = "distance only " + reason;
+				distanceInfo = distance + " blocks (set by shader pack)";
+				cullingInfo = "distance only " + reason;
 				BoxCuller boxCuller = new BoxCuller(distance);
-				return new BoxCullingFrustum(boxCuller);
+				holder.setInfo(new BoxCullingFrustum(boxCuller), distanceInfo, cullingInfo);
 			}
 		} else {
 			BoxCuller boxCuller;
 
-			double distance = halfPlaneLength * renderDistanceMultiplier;
+			double distance = halfPlaneLength * renderMultiplier;
 			String setter = "(set by shader pack)";
 
-			if (renderDistanceMultiplier < 0) {
+			if (renderMultiplier < 0) {
 				distance = IrisVideoSettings.shadowDistance * 16;
 				setter = "(set by user)";
 			}
 
 			if (distance >= Minecraft.getInstance().options.renderDistance * 16) {
-				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
+				distanceInfo = Minecraft.getInstance().options.renderDistance * 16
 						+ " blocks (capped by normal render distance)";
 				boxCuller = null;
 			} else {
-				debugStringShadowDistance = "render distance = " + distance + " blocks " + setter;
+				distanceInfo = distance + " blocks " + setter;
 
 				if (distance == 0.0) {
-					debugStringShadowCulling = "no shadows rendered";
-					return new CullEverythingFrustum();
+					cullingInfo = "no shadows rendered";
+					holder.setInfo(new CullEverythingFrustum(), distanceInfo, cullingInfo);
 				}
 
 				boxCuller = new BoxCuller(distance);
 			}
 
-			debugStringShadowCulling = "Advanced Frustum Culling enabled";
+			cullingInfo = "Advanced Frustum Culling enabled";
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
@@ -395,9 +404,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 			shadowLightVectorFromOrigin.normalize();
 
-			return new AdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
-					CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller);
+			return holder.setInfo(new AdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
+				CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
+
 		}
+
+		return holder;
 	}
 
 	private void setupGlState(float[] projMatrix) {
@@ -484,15 +496,24 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		renderedShadowEntities = shadowEntities;
 	}
 
-	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
+	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum) {
 		profiler.push("build blockentities");
 
 		int shadowBlockEntities = 0;
+		BoxCuller culler = null;
+		if (hasEntityFrustum) {
+			culler = new BoxCuller(halfPlaneLength * (renderDistanceMultiplier * entityShadowDistanceMultiplier));
+			culler.setPosition(cameraX, cameraY, cameraZ);
+		}
 
-		// TODO: Use visibleChunks to cull block entities
-		for (BlockEntity entity : getLevel().blockEntityList) {
-			modelView.pushPose();
+		for (BlockEntity entity : visibleBlockEntities) {
 			BlockPos pos = entity.getBlockPos();
+			if (hasEntityFrustum) {
+				if (culler.isCulled(pos.getX() - 1, pos.getY() - 1, pos.getZ() - 1, pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) {
+					continue;
+				}
+			}
+			modelView.pushPose();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
 			BlockEntityRenderDispatcher.instance.render(entity, tickDelta, modelView, bufferSource);
 			modelView.popPose();
@@ -518,6 +539,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		profiler.popPush("shadows");
 		ACTIVE = true;
 
+		visibleBlockEntities = new ArrayList<>();
+
 		// Create our camera
 		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
 		MODELVIEW = modelView.last().pose().copy();
@@ -540,7 +563,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		profiler.push("initialize frustum");
 
-		Frustum frustum = createShadowFrustum();
+		terrainFrustumHolder = createShadowFrustum(renderDistanceMultiplier, terrainFrustumHolder);
 
 		// Determine the player camera position
 		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
@@ -550,7 +573,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		double cameraZ = cameraPos.z();
 
 		// Center the frustum on the player camera position
-		frustum.prepare(cameraX, cameraY, cameraZ);
+		terrainFrustumHolder.getFrustum().prepare(cameraX, cameraY, cameraZ);
 
 		profiler.pop();
 
@@ -566,7 +589,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		((LevelRenderer) levelRenderer).needsUpdate();
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
-		levelRenderer.invokeSetupRender(playerCamera, frustum, false, levelRenderer.getFrameId(), false);
+		levelRenderer.invokeSetupRender(playerCamera, terrainFrustumHolder.getFrustum(), false, levelRenderer.getFrameId(), false);
 
 		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
 		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
@@ -603,8 +626,15 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
 		// TODO: Make this configurable and disable-able
-		final Frustum entityShadowFrustum = frustum; // createEntityShadowFrustum(modelView);
-		// entityShadowFrustum.setPosition(cameraX, cameraY, cameraZ);
+		boolean hasEntityFrustum = false;
+		if (entityShadowDistanceMultiplier == 1.0F || entityShadowDistanceMultiplier < 0.0F) {
+			entityFrustumHolder.setInfo(terrainFrustumHolder.getFrustum(), terrainFrustumHolder.getDistanceInfo(), terrainFrustumHolder.getCullingInfo());
+		} else {
+			hasEntityFrustum = true;
+			entityFrustumHolder = createShadowFrustum(renderDistanceMultiplier * entityShadowDistanceMultiplier, entityFrustumHolder);
+		}
+		Frustum entityShadowFrustum = entityFrustumHolder.getFrustum();
+		entityShadowFrustum.prepare(cameraX, cameraY, cameraZ);
 
 		// Render nearby entities
 		//
@@ -625,7 +655,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		if (shouldRenderBlockEntities) {
-			renderBlockEntities(bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+			renderBlockEntities(bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum);
 		}
 
 		profiler.popPush("draw entities");
@@ -685,8 +715,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	@Override
 	public void addDebugText(List<String> messages) {
 		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
-		messages.add("[Iris] Shadow Distance: " + debugStringShadowDistance);
-		messages.add("[Iris] Shadow Culling: " + debugStringShadowCulling);
+		messages.add("[Iris] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
+		messages.add("[Iris] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
 		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain
 				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
