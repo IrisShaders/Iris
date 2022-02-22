@@ -13,6 +13,7 @@ public class PackShadowDirectives {
 	private Float fov;
 	private float distance;
 	private float distanceRenderMul;
+	private float entityShadowDistanceMul;
 	private boolean explicitRenderDistance;
 	private float intervalSize;
 
@@ -56,6 +57,7 @@ public class PackShadowDirectives {
 		// whether or not shadows can possibly be cast into the player's view, instead of just checking
 		// the shadow matrices.
 		this.distanceRenderMul = -1.0f;
+		this.entityShadowDistanceMul = 1.0f;
 		this.explicitRenderDistance = false;
 
 		// By default, a shadow interval size of 2 meters is used. This means that the shadow camera will be snapped to
@@ -85,6 +87,7 @@ public class PackShadowDirectives {
 		this.fov = shadowDirectives.fov;
 		this.distance = shadowDirectives.distance;
 		this.distanceRenderMul = shadowDirectives.distanceRenderMul;
+		this.entityShadowDistanceMul = shadowDirectives.entityShadowDistanceMul;
 		this.explicitRenderDistance = shadowDirectives.explicitRenderDistance;
 		this.intervalSize = shadowDirectives.intervalSize;
 		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain;
@@ -110,6 +113,10 @@ public class PackShadowDirectives {
 
 	public float getDistanceRenderMul() {
 		return distanceRenderMul;
+	}
+
+	public float getEntityShadowDistanceMul() {
+		return entityShadowDistanceMul;
 	}
 
 	public boolean isDistanceRenderMulExplicit() {
@@ -157,6 +164,8 @@ public class PackShadowDirectives {
 
 		directives.acceptCommentFloatDirective("SHADOWHPL", distance -> this.distance = distance);
 		directives.acceptConstFloatDirective("shadowDistance", distance -> this.distance = distance);
+
+		directives.acceptConstFloatDirective("entityShadowDistanceMul", distance -> this.entityShadowDistanceMul = distance);
 
 		directives.acceptConstFloatDirective("shadowDistanceRenderMul", distanceRenderMul -> {
 			this.distanceRenderMul = distanceRenderMul;
@@ -272,6 +281,7 @@ public class PackShadowDirectives {
 				", fov=" + fov +
 				", distance=" + distance +
 				", distanceRenderMul=" + distanceRenderMul +
+				", entityDistanceRenderMul=" + entityShadowDistanceMul +
 				", intervalSize=" + intervalSize +
 				", depthSamplingSettings=" + depthSamplingSettings +
 				", colorSamplingSettings=" + colorSamplingSettings +

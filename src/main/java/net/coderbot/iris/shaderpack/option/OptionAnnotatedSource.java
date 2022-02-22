@@ -92,6 +92,7 @@ public final class OptionAnnotatedSource {
 			"shadowMapResolution",
 			"shadowDistance",
 			"shadowDistanceRenderMul",
+			"entityShadowDistanceMul",
 			"shadowIntervalSize",
 			"generateShadowMipmap",
 			"generateShadowColorMipmap",

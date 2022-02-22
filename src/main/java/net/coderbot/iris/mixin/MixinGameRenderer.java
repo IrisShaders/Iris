@@ -1,6 +1,8 @@
 package net.coderbot.iris.mixin;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.coderbot.iris.Iris;
@@ -11,6 +13,7 @@ import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.IrisProgramTypes;
 import net.coderbot.iris.pipeline.newshader.ShaderKey;
 
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -31,6 +34,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
 @Mixin(GameRenderer.class)
@@ -48,12 +52,19 @@ public class MixinGameRenderer {
 	}
 
 	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/player/LocalPlayer;I)V"))
-	private void disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
+	private void iris$disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return;
 		}
 
 		itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, localPlayer, light);
+	}
+
+	@Redirect(method = "reloadShaders", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList()Ljava/util/ArrayList;"))
+	private ArrayList<Program> iris$reloadGeometryShaders() {
+		ArrayList<Program> programs = Lists.newArrayList();
+		programs.addAll(IrisProgramTypes.GEOMETRY.getPrograms().values());
+		return programs;
 	}
 
 	//TODO: check cloud phase
