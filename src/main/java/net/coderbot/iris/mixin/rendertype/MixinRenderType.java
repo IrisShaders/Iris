@@ -1,8 +1,10 @@
 package net.coderbot.iris.mixin.rendertype;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.IrisRenderTypeWrapper;
+import net.coderbot.iris.layer.RenderTypeShardInterface;
 import net.coderbot.iris.layer.UseProgramRenderStateShard;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -18,10 +20,14 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Mixin(RenderType.class)
-public class MixinRenderType {
+public class MixinRenderType extends RenderStateShard implements RenderTypeShardInterface {
 	@Shadow
 	@Final
 	@Mutable
@@ -65,6 +71,18 @@ public class MixinRenderType {
 	@Shadow @Final @Mutable private static RenderType WATER_MASK;
 
 	@Shadow @Final @Mutable private static RenderType TRANSLUCENT_NO_CRUMBLING;
+
+	@Unique
+	private List<RenderStateShard> tempShards;
+
+	public MixinRenderType(String string, Runnable runnable, Runnable runnable2) {
+		super(string, runnable, runnable2);
+	}
+
+	@Inject(method = "<init>", at = @At("TAIL"))
+	private void iris$createShardList(String string, VertexFormat arg, int i, int j, boolean bl, boolean bl2, Runnable runnable, Runnable runnable2, CallbackInfo ci) {
+		this.tempShards = new ArrayList<>();
+	}
 
 	@Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;setAlphaState(Lnet/minecraft/client/renderer/RenderStateShard$AlphaStateShard;)Lnet/minecraft/client/renderer/RenderType$CompositeState$CompositeStateBuilder;"))
 	private static RenderType.CompositeState.CompositeStateBuilder iris$tweakCutoutAlpha(RenderType.CompositeState.CompositeStateBuilder builder, RenderStateShard.AlphaStateShard alpha) {
@@ -238,5 +256,24 @@ public class MixinRenderType {
 		RenderType base = cir.getReturnValue();
 
 		cir.setReturnValue(wrap(base, GbufferProgram.BLOCK_ENTITIES));
+	}
+
+	@Override
+	public RenderType addTemporaryShard(RenderStateShard shard) {
+		this.tempShards.add(shard);
+		return (RenderType) (Object) this;
+	}
+
+	@Override
+	public void setupRenderState() {
+		super.setupRenderState();
+		this.tempShards.forEach(RenderStateShard::setupRenderState);
+	}
+
+	@Override
+	public void clearRenderState() {
+		super.clearRenderState();
+		this.tempShards.forEach(RenderStateShard::clearRenderState);
+		this.tempShards.clear();
 	}
 }

@@ -52,7 +52,7 @@ public class GbufferPrograms {
 	}
 
 	public static void beginEntities() {
-		if (entities || blockEntities) {
+		if (blockEntities) {
 			throw new IllegalStateException("GbufferPrograms in weird state, tried to call beginEntities when entities = "
 					+ entities + ", blockEntities = " + blockEntities);
 		}
@@ -67,7 +67,7 @@ public class GbufferPrograms {
 
 	public static void endEntities() {
 		if (!entities) {
-			throw new IllegalStateException("GbufferPrograms in weird state, tried to call endEntities when entities = false");
+			return;
 		}
 
 		setPhase(WorldRenderingPhase.NONE);
@@ -75,8 +75,7 @@ public class GbufferPrograms {
 	}
 
 	public static void beginBlockEntities() {
-
-		if (entities || blockEntities) {
+		if (entities) {
 			throw new IllegalStateException("GbufferPrograms in weird state, tried to call beginBlockEntities when entities = "
 					+ entities + ", blockEntities = " + blockEntities);
 		}
@@ -91,7 +90,7 @@ public class GbufferPrograms {
 
 	public static void endBlockEntities() {
 		if (!blockEntities) {
-			throw new IllegalStateException("GbufferPrograms in weird state, tried to call endBlockEntities when blockEntities = false");
+			return;
 		}
 
 		setPhase(WorldRenderingPhase.NONE);

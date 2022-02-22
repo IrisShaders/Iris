@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.layer.BlockEntityRenderStateShard;
-import net.coderbot.iris.layer.OuterWrappedRenderType;
+import net.coderbot.iris.layer.RenderTypeShardInterface;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
@@ -54,8 +54,7 @@ public class MixinBlockEntityRenderDispatcher {
 		int intId = blockStateIds.getOrDefault(blockEntity.getBlockState(), -1);
 		RenderStateShard stateShard = BlockEntityRenderStateShard.forId(intId);
 
-		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->
-				new OuterWrappedRenderType("iris:is_block_entity", type, stateShard));
+		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction((type) -> ((RenderTypeShardInterface) type).addTemporaryShard(stateShard));
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))

@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.layer.EntityRenderStateShard;
-import net.coderbot.iris.layer.OuterWrappedRenderType;
+import net.coderbot.iris.layer.RenderTypeShardInterface;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -47,10 +47,9 @@ public class MixinEntityRenderDispatcher {
 		}
 
 		int intId = entityIds.applyAsInt(new NamespacedId(entityId.getNamespace(), entityId.getPath()));
-		RenderStateShard phase = EntityRenderStateShard.forId(intId);
+		RenderStateShard stateShard = EntityRenderStateShard.forId(intId);
 
-		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(layer ->
-				new OuterWrappedRenderType("iris:is_entity", layer, phase));
+		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction((type) -> ((RenderTypeShardInterface) type).addTemporaryShard(stateShard));
 	}
 
 	// Inject before MatrixStack#pop so that our wrapper stack management operations naturally line up
