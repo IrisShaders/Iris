@@ -108,7 +108,6 @@ public class TriforcePatcher {
 	}
 
 	public static String patchVanilla(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
-
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type);

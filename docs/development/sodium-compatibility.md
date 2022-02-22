@@ -10,12 +10,12 @@ Most of the code required for Sodium compatibility is in the sodiumCompatibility
 
 Sometimes it is useful to run Iris without Sodium for development or debugging purposes, such as when updating Iris to a version of Minecraft that doesn't have an available version of Sodium.
 
-To do so, change the sodium_compatbility line in `gradle.properties` to the following:
+To do so, change the SODIUM line in `Buildscript.java` to the following:
 
-```
-sodium_compatibility=false
+```java
+    static final boolean SODIUM = false;
 ```
 
-Then, when running in development (such as with `./gradlew runClient`), you will be able to run Iris without Sodium. Note that doing this is only possible in a development environment.
+Then, when running in development (such as with `./java -jar brachyura-bootstrap-0.jar runMinecraftClient`), you will be able to run Iris without Sodium. Note that doing this is only possible in a development environment.
 
 Note that you shouldn't distribute JARs built with this method without adding a `breaks` clause for Sodium in the `fabric.mod.json`. Iris JARs without Sodium compatibility code will have severe issues when run with official versions of Sodium.
