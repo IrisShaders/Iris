@@ -31,6 +31,8 @@ This update isn't actually released yet, we're just writing this now to keep tra
 - 1.17+: Fixed some cases where Iris would break rendering of non-world things by incorrectly overriding shaders out of world rendering (IMS)
   - Fixes the "Ponder" feature of Create being invisible.
 - 1.17+: Added support for the new_entity shader (IMS)
+- 1.17+: Added support for geometry shaders outside the Sodium pipeline
+  - Fixes entity shadows on SEUS PTGI.
 - Added support for the extended vertex format on entities, block entities, and similar (IMS)
   - Fixes rendering issues with Advanced Materials on BSL, AstraLex, and similar packs
   - Fixes many miscellaneous issues on other older packs
