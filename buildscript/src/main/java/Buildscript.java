@@ -30,7 +30,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
   
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion("22w06a");
+		return Minecraft.getVersion("1.18.2-pre3");
 	}
   
 	@Override
