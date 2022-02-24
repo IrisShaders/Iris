@@ -93,18 +93,19 @@ public class Buildscript extends MultiSrcDirFabricProject {
 	@Override
     public Path[] paths(String subdir, boolean headers, boolean tocompile) {
         List<Path> r = new ArrayList<>();
+        // TODO: this may be broken, somebody how knows what they're doing should fix this
         if (tocompile) {
             Collections.addAll(
                 r,
                 getProjectDir().resolve("src").resolve("main").resolve(subdir),
+                getProjectDir().resolve("src").resolve("headers").resolve(subdir),
                 getProjectDir().resolve("src").resolve("vendored").resolve(subdir));
             if (SODIUM) {
                 r.add(getProjectDir().resolve("src").resolve("sodiumCompatibility").resolve(subdir));
             } else {
                 r.add(getProjectDir().resolve("src").resolve("noSodiumStub").resolve(subdir));
             }
-        }
-        if (headers) {
+        } else if (headers) {
             r.add(getProjectDir().resolve("src").resolve("headers").resolve(subdir));
         }
         r.removeIf(p -> !Files.exists(p));
