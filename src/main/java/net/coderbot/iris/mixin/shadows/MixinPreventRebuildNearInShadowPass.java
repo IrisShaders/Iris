@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin.shadows;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -36,8 +37,6 @@ public abstract class MixinPreventRebuildNearInShadowPass {
 	@Shadow
 	protected abstract void applyFrustum(Frustum frustum);
 
-	private static final String PROFILER_SWAP = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V";
-
 	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
 	@Inject(method = "setupRender",
 			at = @At(value = "INVOKE",
@@ -47,9 +46,7 @@ public abstract class MixinPreventRebuildNearInShadowPass {
 	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean bl, boolean bl2, CallbackInfo ci) {
 		if (ShadowRenderer.ACTIVE) {
 			for (LevelRenderer.RenderChunkInfo chunk : this.renderChunksInFrustum) {
-				for (BlockEntity entity : ((ChunkInfoAccessor) chunk).getChunk().getCompiledChunk().getRenderableBlockEntities()) {
-					ShadowRenderer.visibleBlockEntities.add(entity);
-				}
+				ShadowRenderer.visibleBlockEntities.addAll(((ChunkInfoAccessor) chunk).getChunk().getCompiledChunk().getRenderableBlockEntities());
 			}
 			Minecraft.getInstance().getProfiler().pop();
 			this.applyFrustum(frustum);

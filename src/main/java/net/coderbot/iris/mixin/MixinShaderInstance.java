@@ -2,10 +2,13 @@ package net.coderbot.iris.mixin;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.shaders.Uniform;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.pipeline.newshader.ExtendedShader;
+import net.coderbot.iris.pipeline.newshader.ShaderInstanceInterface;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.server.packs.resources.ResourceProvider;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL20C;
@@ -21,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Objects;
 
 @Mixin(ShaderInstance.class)
-public class MixinShaderInstance {
+public class MixinShaderInstance implements ShaderInstanceInterface {
 	@Unique
 	private String lastSamplerName;
 
@@ -88,5 +91,15 @@ public class MixinShaderInstance {
 		} else {
 			Uniform.glBindAttribLocation(i, j, charSequence);
 		}
+	}
+
+	@Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/GsonHelper;parse(Ljava/io/Reader;)Lcom/google/gson/JsonObject;"))
+	public void iris$setupGeometryShader(ResourceProvider resourceProvider, String string, VertexFormat vertexFormat, CallbackInfo ci) {
+		this.iris$createGeometryShader(resourceProvider, string);
+	}
+
+	@Override
+	public void iris$createGeometryShader(ResourceProvider provider, String name) {
+		//no-op, used for ExtendedShader to call before the super constructor
 	}
 }

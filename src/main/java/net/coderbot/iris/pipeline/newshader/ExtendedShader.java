@@ -1,6 +1,8 @@
 package net.coderbot.iris.pipeline.newshader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.Iris;
@@ -14,6 +16,8 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,7 +26,7 @@ import java.util.HashMap;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
-public class ExtendedShader extends ShaderInstance implements SamplerHolder, ImageHolder {
+public class ExtendedShader extends ShaderInstance implements SamplerHolder, ImageHolder, ShaderInstanceInterface {
 	private final boolean intensitySwizzle;
 	private final ProgramImages.Builder imageBuilder;
 	NewWorldRenderingPipeline parent;
@@ -33,6 +37,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	BlendModeOverride blendModeOverride;
 	HashMap<String, IntSupplier> dynamicSamplers;
 	private ProgramImages currentImages;
+	private Program geometry;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
@@ -179,5 +184,31 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 		// mark for rebuild if needed
 		this.currentImages = null;
+	}
+
+	@Override
+	public void attachToProgram() {
+		super.attachToProgram();
+		if (this.geometry != null) {
+			this.geometry.attachToShader(this);
+		}
+	}
+
+	@Override
+	public void iris$createGeometryShader(ResourceProvider factory, String name) throws IOException {
+		Resource geometry = factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh"));
+		if (geometry != null) {
+			this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.getInputStream(), geometry.getSourceName(), new GlslPreprocessor() {
+				@Nullable
+				@Override
+				public String applyImport(boolean bl, String string) {
+					return null;
+				}
+			});
+		}
+	}
+
+	public Program getGeometry() {
+		return this.geometry;
 	}
 }

@@ -218,9 +218,9 @@ public class CompositeRenderer {
 														   Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
 		String vertex = Patcher.getInstance().patchComposite(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
 
+		String geometry = null;
 		if (source.getGeometrySource().isPresent()) {
-			// TODO(21w10a): support geometry shaders
-			throw new RuntimeException("Geometry shaders are not supported yet.");
+			geometry = TriforcePatcher.patchComposite(source.getGeometrySource().orElseThrow(RuntimeException::new), ShaderType.GEOMETRY);
 		}
 
 		String fragment = Patcher.getInstance().patchComposite(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
@@ -228,7 +228,7 @@ public class CompositeRenderer {
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), vertex, null, fragment,
+			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
 					IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
@@ -258,6 +258,9 @@ public class CompositeRenderer {
 
 			try {
 				Files.write(debugOutDir.resolve(source.getName() + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
+				if (source.getGeometrySource().isPresent()) {
+					Files.write(debugOutDir.resolve(source.getName() + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
+				}
 				Files.write(debugOutDir.resolve(source.getName() + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
 			} catch (IOException e) {
 				Iris.logger.warn("Failed to write debug patched shader source", e);

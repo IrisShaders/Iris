@@ -1,6 +1,8 @@
 package net.coderbot.iris.mixin;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.coderbot.iris.Iris;
@@ -11,6 +13,7 @@ import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.IrisProgramTypes;
 import net.coderbot.iris.pipeline.newshader.ShaderKey;
 
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -31,6 +34,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
 @Mixin(GameRenderer.class)
@@ -48,12 +52,19 @@ public class MixinGameRenderer {
 	}
 
 	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/player/LocalPlayer;I)V"))
-	private void disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
+	private void iris$disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return;
 		}
 
 		itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, localPlayer, light);
+	}
+
+	@Redirect(method = "reloadShaders", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList()Ljava/util/ArrayList;"))
+	private ArrayList<Program> iris$reloadGeometryShaders() {
+		ArrayList<Program> programs = Lists.newArrayList();
+		programs.addAll(IrisProgramTypes.GEOMETRY.getPrograms().values());
+		return programs;
 	}
 
 	//TODO: check cloud phase
@@ -104,7 +115,21 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getBlockShader, getNewEntityShader
+	// TODO: getBlockShader
+
+	@Inject(method = "getNewEntityShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideNewEntityShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+		} else if (isRenderingWorld()) {
+			override(ShaderKey.ENTITIES_SOLID_BRIGHT, cir);
+		}
+	}
 
 	@Inject(method = {
 			"getParticleShader"
@@ -133,7 +158,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_SOLID, cir);
 		}
 	}
@@ -143,7 +168,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_CUTOUT_MIPPED, cir);
 		}
 	}
@@ -152,7 +177,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_CUTOUT, cir);
 		}
 	}
@@ -162,7 +187,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
 	}
@@ -174,7 +199,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
 	}

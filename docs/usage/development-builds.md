@@ -29,5 +29,5 @@ Once you're confident that development builds are right for you, follow these st
     - `1.17`, for Minecraft 1.17.1
     - `1.18`, for Minecraft 1.18.1
     - a different development branch (usually for Minecraft 1.16.5)
-2. Execute a Gradle `build` command in a terminal
+2. Execute a `java -jar brachyura-bootstrap-0.jar build` command in a terminal
 3. Done! Use the JAR file in `build/libs/` as a normal Fabric Mod.

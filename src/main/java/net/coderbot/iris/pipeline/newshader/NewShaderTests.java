@@ -6,14 +6,11 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.pipeline.newshader.fallback.ShaderSynthesizer;
-import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
@@ -39,6 +36,10 @@ public class NewShaderTests {
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 		String vertex = Patcher.getInstance().patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs);
+		String geometry = null;
+		if (source.getGeometrySource().isPresent()) {
+			geometry = Patcher.getInstance().patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs);
+		}
 		String fragment = Patcher.getInstance().patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs);
 
 		StringBuilder shaderJson = new StringBuilder("{\n" +
@@ -108,13 +109,16 @@ public class NewShaderTests {
 
 		String shaderJsonString = shaderJson.toString();
 
-		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, fragment);
+		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, geometry, fragment);
 
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
 			Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
 			Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+			if (geometry != null) {
+				Files.write(debugOutDir.resolve(name + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
+			}
 			Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
 		}
 
@@ -175,7 +179,7 @@ public class NewShaderTests {
 				"    ]\n" +
 				"}";
 
-		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, fragment);
+		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, fragment);
 
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
@@ -192,11 +196,13 @@ public class NewShaderTests {
 	private static class IrisProgramResourceFactory implements ResourceProvider {
 		private final String json;
 		private final String vertex;
+		private final String geometry;
 		private final String fragment;
 
-		public IrisProgramResourceFactory(String json, String vertex, String fragment) {
+		public IrisProgramResourceFactory(String json, String vertex, String geometry, String fragment) {
 			this.json = json;
 			this.vertex = vertex;
+			this.geometry = geometry;
 			this.fragment = fragment;
 		}
 
@@ -208,6 +214,11 @@ public class NewShaderTests {
 				return new StringResource(id, json);
 			} else if (path.endsWith("vsh")) {
 				return new StringResource(id, vertex);
+			} else if (path.endsWith("gsh")) {
+				if (geometry == null) {
+					return null;
+				}
+				return new StringResource(id, geometry);
 			} else if (path.endsWith("fsh")) {
 				return new StringResource(id, fragment);
 			}
