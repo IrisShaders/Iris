@@ -82,7 +82,6 @@ public class Buildscript extends MultiSrcDirFabricProject {
             Collections.addAll(
                 r,
                 getProjectDir().resolve("src").resolve("main").resolve(subdir),
-                getProjectDir().resolve("src").resolve("headers").resolve(subdir),
                 getProjectDir().resolve("src").resolve("vendored").resolve(subdir)
             );
             if (SODIUM) {
