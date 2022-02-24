@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,11 +14,14 @@ import com.google.common.collect.Table;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
 import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
+import org.antlr.v4.runtime.tree.xpath.XPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.GLSLParser;
+import io.github.douira.glsl_transformer.GLSLParser.ExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
+import io.github.douira.glsl_transformer.GLSLParser.PostfixExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
@@ -38,6 +42,7 @@ import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
+import io.github.douira.glsl_transformer.transform.TransformationPhase;
 import io.github.douira.glsl_transformer.transform.TransformationPhase.InjectionPoint;
 import io.github.douira.glsl_transformer.transform.WalkPhase;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
@@ -596,7 +601,7 @@ public class TransformPatcher implements Patcher {
       }
 
       {
-        addPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV0")) {
+        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV0")) {
           @Override
           protected boolean isActive() {
             return hasTex;
@@ -698,7 +703,8 @@ public class TransformPatcher implements Patcher {
       }
 
       {
-        addPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_ColorModulator")));
+        addConcurrentPhase(
+            new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_ColorModulator")));
         addConcurrentPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_Color")) {
           @Override
           protected boolean isActive() {
@@ -727,10 +733,62 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    // TODO: do iris_LightmapTextureMatrix and iris_TextureMat here
-    Transformation<Parameters> replaceTextureMatrices = new Transformation<Parameters>() {
+    // PREV TODO: More solid way to handle texture matrices
+    // TODO: test if this actually works
+    Transformation<Parameters> wrapTextureMatrices = new Transformation<Parameters>() {
+      boolean replacementHappened;
+
+      @Override
+      protected void resetState() {
+        replacementHappened = false;
+      }
+
       {
-        
+        addConcurrentPhase(
+            new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_TextureMat")));
+        addConcurrentPhase(
+            new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_LightmapTextureMatrix")));
+
+        addPhase(new WalkPhase<Parameters>() {
+          ParseTreePattern pattern;
+
+          @Override
+          protected void init() {
+            pattern = compilePattern("gl_TextureMatrix[<index:expression>]", GLSLParser.RULE_expression);
+          }
+
+          @Override
+          public void enterExpression(ExpressionContext ctx) {
+            ParseTreeMatch match = pattern.match(ctx);
+            if (match.succeeded()) {
+              int index = Integer.parseInt(match.get("index").getText());
+              String replacement = null;
+              if (index == 0) {
+                replacement = "iris_TextureMat";
+              }
+              if (index == 1) {
+                replacement = "iris_LightmapTextureMatrix";
+              }
+              if (replacement != null) {
+                replaceNode(ctx, replacement, GLSLParser::expression);
+                replacementHappened = true;
+              }
+            }
+          }
+        });
+
+        addPhase(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_TextureMat;");
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_LightmapTextureMatrix;");
+          }
+
+          @Override
+          protected boolean isActive() {
+            return replacementHappened;
+          }
+        });
       }
     };
 
@@ -798,6 +856,7 @@ public class TransformPatcher implements Patcher {
             manager.registerTransformation(wrapAttributeInputsVanillaVertex);
           }
           manager.registerTransformation(wrapColorVanilla);
+          manager.registerTransformation(wrapTextureMatrices);
           manager.registerTransformation(wrapModelViewMatrix);
         }
 
