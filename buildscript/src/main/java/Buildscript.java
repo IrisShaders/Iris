@@ -82,15 +82,14 @@ public class Buildscript extends MultiSrcDirFabricProject {
             Collections.addAll(
                 r,
                 getProjectDir().resolve("src").resolve("main").resolve(subdir),
-                getProjectDir().resolve("src").resolve("vendored").resolve(subdir)
-            );
+                getProjectDir().resolve("src").resolve("headers").resolve(subdir),
+                getProjectDir().resolve("src").resolve("vendored").resolve(subdir));
             if (SODIUM) {
                 r.add(getProjectDir().resolve("src").resolve("sodiumCompatibility").resolve(subdir));
             } else {
                 r.add(getProjectDir().resolve("src").resolve("noSodiumStub").resolve(subdir));
             }
-        }
-        if (headers) {
+        } else if (headers) {
             r.add(getProjectDir().resolve("src").resolve("headers").resolve(subdir));
         }
         r.removeIf(p -> !Files.exists(p));
