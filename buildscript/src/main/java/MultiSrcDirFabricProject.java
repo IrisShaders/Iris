@@ -53,6 +53,9 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 			for (Path p : paths("java", false)) {
 				compilation.addSourceDir(p);
 			}
+			for (Path p : paths("java", true, true)) {
+				headerSourceSets.add(p);
+			}
 			ProcessingSponge compilationOutput = new ProcessingSponge();
 			JavaCompilationResult compileResult = compilation.compile();
 
