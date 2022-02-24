@@ -14,14 +14,12 @@ import com.google.common.collect.Table;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
 import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
-import org.antlr.v4.runtime.tree.xpath.XPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.ExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
-import io.github.douira.glsl_transformer.GLSLParser.PostfixExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
@@ -32,6 +30,7 @@ import io.github.douira.glsl_transformer.core.WrapIdentifierExternalDeclaration;
 import io.github.douira.glsl_transformer.core.target.HandlerTarget;
 import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ParsedReplaceTarget;
+import io.github.douira.glsl_transformer.core.target.ParsedReplaceTargetImpl;
 import io.github.douira.glsl_transformer.core.target.TerminalReplaceTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
 import io.github.douira.glsl_transformer.core.target.WrapThrowTargetImpl;
@@ -42,7 +41,6 @@ import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
-import io.github.douira.glsl_transformer.transform.TransformationPhase;
 import io.github.douira.glsl_transformer.transform.TransformationPhase.InjectionPoint;
 import io.github.douira.glsl_transformer.transform.WalkPhase;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
@@ -73,7 +71,8 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
  * replacements that account for whitespace like the one for gl_TextureMatrix
  * 
  * TODO: use new glsl-transformer features on RunPhase to make all the RunPhase
- * subclasses much more comapct (just one method call)
+ * subclasses much more comapct (just one method call:
+ * withInjectExternalDeclarations)
  */
 public class TransformPatcher implements Patcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
@@ -733,7 +732,7 @@ public class TransformPatcher implements Patcher {
 
     // PREV TODO: More solid way to handle texture matrices
     // TODO: test if this actually works
-    Transformation<Parameters> wrapTextureMatrices = new Transformation<Parameters>() {
+    Transformation<Parameters> wrapTextureMatricesVanilla = new Transformation<Parameters>() {
       boolean replacementHappened;
 
       @Override
@@ -790,29 +789,126 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    Transformation<Parameters> wrapModelViewMatrix = new Transformation<Parameters>() {
-      {
-        addPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_ModelViewMat")));
-        append(WrapIdentifier.fromExpression(
-            "gl_NormalMatrix", "gl_ModelViewMatrix", "mat3(transpose(inverse(gl_ModelViewMatrix)))",
-            new RunPhase<Parameters>() {
-              @Override
-              protected void run(TranslationUnitContext ctx) {
-                injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ModelViewMat;");
-                VanillaParameters vanillaParameters = (VanillaParameters) getJobParameters();
+    // PREV TODO: Should probably add the normal matrix as a proper uniform that's
+    // computed on the CPU-side of things
+    Transformation<Parameters> wrapModelViewMatrixVanilla = new Transformation<Parameters>() {
+      String modelViewMatrixResult;
+      ModelViewMatrixType type;
 
-                // TODO these, some of the injections in triforce are actually replacements
-                if (vanillaParameters.hasChunkOffset) {
-                  // TODO
-                } else if (vanillaParameters.inputs.isNewLines()) {
-                  // TODO
-                } else {
-                  // TODO
-                }
+      enum ModelViewMatrixType {
+        CHUNK_OFFSET, NEW_LINES, DEFAULT
+      }
+
+      {
+        addPhase(new SearchTerminalsDynamic<Parameters>() {
+          // determine the model view matrix result and what the mode is
+          @Override
+          protected void beforeWalk(TranslationUnitContext ctx) {
+            VanillaParameters vanillaParameters = (VanillaParameters) getJobParameters();
+            if (vanillaParameters.hasChunkOffset) {
+              modelViewMatrixResult = "(iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))";
+              type = ModelViewMatrixType.CHUNK_OFFSET;
+            } else if (vanillaParameters.inputs.isNewLines()) {
+              modelViewMatrixResult = "(iris_VIEW_SCALE * iris_ModelViewMat)";
+              type = ModelViewMatrixType.NEW_LINES;
+            } else {
+              modelViewMatrixResult = "iris_ModelViewMat";
+              type = ModelViewMatrixType.DEFAULT;
+            }
+          }
+
+          // detect pre-existing injection results
+          @Override
+          protected Collection<HandlerTarget<Parameters>> getTargetsDynamic() {
+            Collection<HandlerTarget<Parameters>> targets = new ArrayList<>();
+            targets.add(new WrapThrowTargetImpl<Parameters>("iris_ModelViewMat"));
+
+            if (type == ModelViewMatrixType.CHUNK_OFFSET) {
+              targets.add(new WrapThrowTargetImpl<Parameters>("iris_ChunkOffset"));
+              targets.add(new WrapThrowTargetImpl<Parameters>("_iris_internal_translate"));
+            } else if (type == ModelViewMatrixType.NEW_LINES) {
+              targets.add(new WrapThrowTargetImpl<Parameters>("iris_VIEW_SCALE"));
+              targets.add(new WrapThrowTargetImpl<Parameters>("iris_VIEW_SHRINK"));
+            }
+
+            return targets;
+          }
+        });
+
+        // do variable replacements
+        addPhase(new SearchTerminalsImpl<>(List.of(
+            new ParsedReplaceTarget<>("gl_ModelViewMatrix") {
+              @Override
+              protected String getNewContent(TreeMember node, String match) {
+                return modelViewMatrixResult;
               }
-            }));
+
+              @Override
+              protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+                return GLSLParser::expression;
+              }
+            },
+            new ParsedReplaceTarget<>("gl_NormalMatrix") {
+              @Override
+              protected String getNewContent(TreeMember node, String match) {
+                return "mat3(transpose(inverse(" + modelViewMatrixResult + ")))";
+              }
+
+              @Override
+              protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+                return GLSLParser::expression;
+              }
+            },
+            new ParsedReplaceTarget<>("gl_ModelViewProjectionMatrix") {
+              @Override
+              protected String getNewContent(TreeMember node, String match) {
+                return "(gl_ProjectionMatrix * " + modelViewMatrixResult + ")";
+              }
+
+              @Override
+              protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+                return GLSLParser::expression;
+              }
+            })));
+
+        // do fixed and conditional injections
+        addPhase(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ModelViewMat;");
+
+            if (type == ModelViewMatrixType.CHUNK_OFFSET) {
+              injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform vec3 iris_ChunkOffset;");
+              injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+                  "mat4 _iris_internal_translate(vec3 offset) {\n" +
+                      "    // NB: Column-major order\n" +
+                      "    return mat4(1.0, 0.0, 0.0, 0.0,\n" +
+                      "                0.0, 1.0, 0.0, 0.0,\n" +
+                      "                0.0, 0.0, 1.0, 0.0,\n" +
+                      "                offset.x, offset.y, offset.z, 1.0);\n" +
+                      "}");
+            } else if (type == ModelViewMatrixType.NEW_LINES) {
+              injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+                  "const float iris_VIEW_SHRINK = 1.0 - (1.0 / 256.0);");
+              injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+                  "const mat4 iris_VIEW_SCALE = mat4(\n" +
+                      "    iris_VIEW_SHRINK, 0.0, 0.0, 0.0,\n" +
+                      "    0.0, iris_VIEW_SHRINK, 0.0, 0.0,\n" +
+                      "    0.0, 0.0, iris_VIEW_SHRINK, 0.0,\n" +
+                      "    0.0, 0.0, 0.0, 1.0\n" +
+                      ");");
+            }
+          }
+        });
       }
     };
+
+    Transformation<Parameters> replaceModelViewProjectionVanilla = new Transformation<Parameters>(
+        SearchTerminalsImpl.withReplacementExpression(
+            "gl_ModelViewProjectionMatrix",
+            "(gl_ProjectionMatrix * gl_ModelViewMatrix)"));
+
+    // TODO: continue with vanilla's vertex-specific block (the last one)
 
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
@@ -854,8 +950,9 @@ public class TransformPatcher implements Patcher {
             manager.registerTransformation(wrapAttributeInputsVanillaVertex);
           }
           manager.registerTransformation(wrapColorVanilla);
-          manager.registerTransformation(wrapTextureMatrices);
-          manager.registerTransformation(wrapModelViewMatrix);
+          manager.registerTransformation(wrapTextureMatricesVanilla);
+          manager.registerTransformation(wrapModelViewMatrixVanilla);
+          manager.registerTransformation(replaceModelViewProjectionVanilla);
         }
 
         // patchSodium
