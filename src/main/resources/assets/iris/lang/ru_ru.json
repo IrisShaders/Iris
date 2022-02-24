@@ -11,10 +11,12 @@
   "iris.sodium.failure.download": "Загрузить Sodium",
   "iris.sodium.failure.reason.notFound": "Iris требует Sodium для хорошей производительности, но Sodium не установлен. Пожалуйста, загрузите Sodium, добавьте его в папку с модами и перезапустите игру.",
   "iris.sodium.failure.reason.incompatible": "Iris требует Sodium для хорошей производительности, но ваша версия Sodium несовместима. Пожалуйста, загрузите подходящую версию Sodium, добавьте его в папку с модами, удалите старую версию и перезапустите игру.",
-  
+
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
   "options.iris.openShaderPackFolder": "Открыть папку c шейдерами...",
+  "options.iris.shaderPackSettings": "Настройки шейдеров...",
+  "options.iris.shaderPackList": "Список пакетов шейдеров...",
   "options.iris.refreshShaderPacks": "Обновить список шейдеров",
   "options.iris.shaderPackSelection": "Пакеты шейдеров...",
   "options.iris.shaderPackSelection.title": "Пакеты шейдеров",
@@ -24,12 +26,29 @@
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" не является допустимым пакетом шейдеров",
   "options.iris.shaderPackSelection.copyError": "Не удалось добавить пакет шейдеров \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" уже находится в вашей папке с шейдерами!",
+  "options.iris.shaderPackOptions.tooManyFiles": "Невозможно импортировать несколько файлов Настроек Шейдеров!",
+  "options.iris.shaderPackOptions.failedImport": "Не удалось импортировать настройки из файла \"%s\"",
+  "options.iris.shaderPackOptions.importedSettings": "Настройки успешно импортированы из файла \"%s\"",
   "options.iris.shaders.disabled": "Шейдеры: Выключены",
   "options.iris.shaders.enabled": "Шейдеры: Включены",
+  "options.iris.shaders.nonePresent": "Шейдеры: Нет пакетов шейдеров",
+  "options.iris.back": "Назад",
+  "options.iris.reset": "Сбросить",
+  "options.iris.reset.tooltip": "Сбросить ВСЕ настройки и применить?",
+  "options.iris.reset.tooltip.holdShift": "Зажмите SHIFT и кликните, чтобы сбросить",
+  "options.iris.importSettings.tooltip": "Импортировать настройки из файла",
+  "options.iris.exportSettings.tooltip": "Экспортировать настройки в файл",
+  "options.iris.setToDefault": "Восстановить настройку по умолчанию?",
+  "options.iris.profile": "Профиль",
+  "options.iris.profile.custom": "Пользоват.",
   "options.iris.shadowDistance": "Максимальное расстояние для теней",
   "options.iris.shadowDistance.enabled": "Позволяет вам изменить максимальное расстояние для теней. Блоки и существа за этим расстоянием не будут иметь теней. Снижая этот параметр, вы можете кардинально улучшить производительность.",
   "options.iris.shadowDistance.disabled": "Ваши текущие шейдеры уже установили своё расстояние для теней; вы не сможете её изменить.",
-  
-  "pack.iris.select.title": "Выберите",
-  "pack.iris.list.label": "+ Перетащите шейдер для добавления"
+  "options.iris.shadowDistance.sodium_tooltip": "Расстояние отрисовки тени определяет, насколько удаленная местность потенциально может быть отрисована при прохождении тени. Меньшие расстояния означают, что будет отображаться меньше рельефа местности, что повышает частоту кадров. Этот параметр нельзя изменить в шейдерах, в которых можно изменить расстояние отрисовки тени. Фактическое расстояние отрисовки тени ограничено настройкой Дальности прорисовки",
+  "pack.iris.select.title": "Выбрать",
+  "pack.iris.configure.title": "Настроить",
+  "pack.iris.list.label": "+ Перетащите и Отпустите Пакет Шейдеров, чтобы добавить его",
+
+  "label.iris.true": "Вкл",
+  "label.iris.false": "Выкл"
 }
