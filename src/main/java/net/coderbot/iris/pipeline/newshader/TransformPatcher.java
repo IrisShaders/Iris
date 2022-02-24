@@ -686,8 +686,6 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    // TODO: do iris_LightmapTextureMatrix and iris_TextureMat here
-
     // TODO: in triforce this is confusing because iris_Color is used even when
     // !hasColor in which case it's not defined anywhere
     Transformation<Parameters> wrapColorVanilla = new Transformation<Parameters>() {
@@ -729,6 +727,13 @@ public class TransformPatcher implements Patcher {
       }
     };
 
+    // TODO: do iris_LightmapTextureMatrix and iris_TextureMat here
+    Transformation<Parameters> replaceTextureMatrices = new Transformation<Parameters>() {
+      {
+        
+      }
+    };
+
     Transformation<Parameters> wrapModelViewMatrix = new Transformation<Parameters>() {
       {
         addPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_ModelViewMat")));
@@ -740,13 +745,13 @@ public class TransformPatcher implements Patcher {
                 injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ModelViewMat;");
                 VanillaParameters vanillaParameters = (VanillaParameters) getJobParameters();
 
-                //TODO these, some of the injections in triforce are actually replacements
+                // TODO these, some of the injections in triforce are actually replacements
                 if (vanillaParameters.hasChunkOffset) {
-                  //TODO
+                  // TODO
                 } else if (vanillaParameters.inputs.isNewLines()) {
-                  //TODO
+                  // TODO
                 } else {
-                  //TODO
+                  // TODO
                 }
               }
             }));
