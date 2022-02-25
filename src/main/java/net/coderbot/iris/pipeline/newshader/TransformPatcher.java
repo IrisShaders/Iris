@@ -30,7 +30,6 @@ import io.github.douira.glsl_transformer.core.WrapIdentifierExternalDeclaration;
 import io.github.douira.glsl_transformer.core.target.HandlerTarget;
 import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ParsedReplaceTarget;
-import io.github.douira.glsl_transformer.core.target.ParsedReplaceTargetImpl;
 import io.github.douira.glsl_transformer.core.target.TerminalReplaceTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
 import io.github.douira.glsl_transformer.core.target.WrapThrowTargetImpl;
@@ -69,10 +68,6 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
  * TODO: good examples for more complex transformation in triforce patcher?
  * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
  * replacements that account for whitespace like the one for gl_TextureMatrix
- * 
- * TODO: use new glsl-transformer features on RunPhase to make all the RunPhase
- * subclasses much more comapct (just one method call:
- * withInjectExternalDeclarations)
  */
 public class TransformPatcher implements Patcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
@@ -221,19 +216,13 @@ public class TransformPatcher implements Patcher {
      */
     Transformation<Parameters> wrapFogSetup = WrapIdentifier.fromTerminal(
         "gl_Fog", "iris_Fog",
-        new RunPhase<Parameters>() {
-          @Override
-          protected void run(TranslationUnitContext ctx) {
-            injectExternalDeclarations(
-                InjectionPoint.BEFORE_DECLARATIONS,
-                "uniform float iris_FogDensity;",
-                "uniform float iris_FogStart;",
-                "uniform float iris_FogEnd;",
-                "uniform vec4 iris_FogColor;",
-                "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };",
-                "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));");
-          }
-        });
+        RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+            "uniform float iris_FogDensity;",
+            "uniform float iris_FogStart;",
+            "uniform float iris_FogEnd;",
+            "uniform vec4 iris_FogColor;",
+            "struct iris_FogParameters { vec4 color; float density; float start; float end; float scale; };",
+            "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));"));
 
     // PREV TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
     Transformation<Parameters> wrapFogFragCoord = WrapIdentifier.fromTerminal(
@@ -288,11 +277,8 @@ public class TransformPatcher implements Patcher {
         });
 
     // PREV TODO: Add similar functions for all legacy texture sampling functions
-    Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(new RunPhase<Parameters>() {
-      @Override
-      protected void run(TranslationUnitContext ctx) {
-        injectExternalDeclarations(
-            InjectionPoint.BEFORE_DECLARATIONS,
+    Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(
+        RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
             "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
             "vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
             "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }",
@@ -303,9 +289,7 @@ public class TransformPatcher implements Patcher {
             "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
             "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
             "vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }",
-            "vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }");
-      }
-    });
+            "vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }"));
 
     /**
      * PREV NOTE:
@@ -314,15 +298,10 @@ public class TransformPatcher implements Patcher {
      * The bias parameter is not accepted in a vertex or geometry shader.
      */
     Transformation<Parameters> injectTextureFunctionsFragment = new Transformation<Parameters>(
-        new RunPhase<Parameters>() {
-          @Override
-          protected void run(TranslationUnitContext ctx) {
-            injectExternalDeclarations(
-                InjectionPoint.BEFORE_DECLARATIONS,
-                "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
-                "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
-          }
-        });
+        RunPhase.withInjectExternalDeclarations(
+            InjectionPoint.BEFORE_DECLARATIONS,
+            "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
+            "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }"));
 
     Transformation<Parameters> wrapFragColorOutput = new Transformation<Parameters>() {
       private FragColorOutput type;
