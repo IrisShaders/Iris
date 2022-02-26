@@ -76,13 +76,12 @@ public class Buildscript extends MultiSrcDirFabricProject {
     }
 
 	@Override
-    public Path[] paths(String subdir, boolean headers, boolean tocompile) {
+    public Path[] paths(String subdir, boolean onlyHeaders) {
         List<Path> r = new ArrayList<>();
-        if (tocompile) {
+        if (!onlyHeaders) {
             Collections.addAll(
                 r,
                 getProjectDir().resolve("src").resolve("main").resolve(subdir),
-                getProjectDir().resolve("src").resolve("headers").resolve(subdir),
                 getProjectDir().resolve("src").resolve("vendored").resolve(subdir)
             );
             if (SODIUM) {
@@ -91,9 +90,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
                 r.add(getProjectDir().resolve("src").resolve("noSodiumStub").resolve(subdir));
             }
         }
-        if (headers) {
-            r.add(getProjectDir().resolve("src").resolve("headers").resolve(subdir));
-        }
+        r.add(getProjectDir().resolve("src").resolve("headers").resolve(subdir));
         r.removeIf(p -> !Files.exists(p));
         return r.toArray(new Path[0]);
     }

@@ -7,6 +7,7 @@ classes/
 
 # brachyura
 .brachyura
+*.jfr
 
 # custom sodium
 /custom_sodium/
