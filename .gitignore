@@ -11,6 +11,9 @@ classes/
 # brachyura
 .brachyura
 
+# custom sodium
+/custom_sodium/
+
 # idea
 
 .idea/
