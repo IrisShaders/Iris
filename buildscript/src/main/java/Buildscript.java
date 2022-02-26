@@ -111,7 +111,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
 			e.printStackTrace();
 		}
 
-		String baseVersion = super.getVersion().replace("-development-environment", "");
+		String baseVersion = super.getVersion().replace("development-environment", "");
 
 		return baseVersion + commitHash + (isDirty ? "-dirty" : "");
 	}
