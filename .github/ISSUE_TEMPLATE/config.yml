@@ -1,4 +1,4 @@
-blank_issues_enable: false
+blank_issues_enabled: false
 contact_links:
   - name: Join the Discord for support using Iris!
     url: https://discord.gg/jQJnav2jPu
