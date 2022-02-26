@@ -380,6 +380,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		ACTIVE = true;
 		visibleBlockEntities = new ArrayList<>();
 
+		// NB: We store the previous player buffers in order to be able to allow mods rendering entities in the shadow pass (Flywheel) to use the shadow buffers instead.
+		RenderBuffers playerBuffers = levelRenderer.getRenderBuffers();
+		levelRenderer.setRenderBuffers(buffers);
+
 		visibleBlockEntities = new ArrayList<>();
 
 		// Create our camera
@@ -560,6 +564,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
+
+		levelRenderer.setRenderBuffers(playerBuffers);
 
 		visibleBlockEntities = null;
 		ACTIVE = false;
