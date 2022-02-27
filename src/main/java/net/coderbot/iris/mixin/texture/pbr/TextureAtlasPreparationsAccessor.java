@@ -7,12 +7,12 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 
 @Mixin(TextureAtlas.Preparations.class)
 public interface TextureAtlasPreparationsAccessor {
-	@Accessor("mipLevel")
-	int getMipLevel();
-
 	@Accessor("width")
 	int getWidth();
 
 	@Accessor("height")
 	int getHeight();
+
+	@Accessor("mipLevel")
+	int getMipLevel();
 }

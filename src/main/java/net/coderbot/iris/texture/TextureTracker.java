@@ -6,8 +6,8 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 
 public class TextureTracker {
 	public static final TextureTracker INSTANCE = new TextureTracker();
@@ -28,11 +28,7 @@ public class TextureTracker {
 		if (id >= textures.size()) {
 			textures.size(id + 1);
 		}
-		AbstractTexture oldTexture = textures.set(id, texture);
-		// TODO: find more reliable way to detect when info should be reset
-		if (oldTexture != texture && oldTexture instanceof TextureAtlas && texture instanceof TextureAtlas) {
-			AtlasInfoGatherer.resetInfo((TextureAtlas) texture);
-		}
+		textures.set(id, texture);
 	}
 
 	@Nullable
@@ -48,7 +44,10 @@ public class TextureTracker {
 			if (bindTextureListener != null) {
 				bindTextureListener.run();
 			}
-			Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setBoundTexture(getTexture(id), id));
+			WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+			if (pipeline != null) {
+				pipeline.setBoundTexture(getTexture(id), id);
+			}
 		}
 	}
 
