@@ -30,7 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public abstract class MultiSrcDirFabricProject extends FabricProject {
-	public abstract Path[] paths(String subdir, boolean headers, boolean tocompile);
+	public abstract Path[] paths(String subdir, boolean onlyHeaders);
 
 	@Override
 	public JavaJarDependency build() {
@@ -48,14 +48,10 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 				)
 				.addClasspath(getCompileDependencies());
 
-			List<Path> headerSourceSets = new ArrayList<>();
+			Path[] headerSourceSets = paths("java", true);
 
-			for (Path p : paths("java", false, true)) {
+			for (Path p : paths("java", false)) {
 				compilation.addSourceDir(p);
-			}
-			for (Path p : paths("java", true, false)) {
-				compilation.addSourcePathDir(p);
-				headerSourceSets.add(p);
 			}
 			ProcessingSponge compilationOutput = new ProcessingSponge();
 			JavaCompilationResult compileResult = compilation.compile();
@@ -91,7 +87,7 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 				new RemapperProcessor(TinyRemapper.newRemapper().withMappings(new MappingTreeMappingProvider(compmappings, Namespaces.NAMED, Namespaces.INTERMEDIARY)), getCompileDependencies())
 			).apply(trout, compilationOutput);
 			try (AtomicZipProcessingSink out = new AtomicZipProcessingSink(getBuildJarPath())) {
-				Path[] resources = paths("resources", false, true);
+				Path[] resources = paths("resources", false);
 				DirectoryProcessingSource[] sources = new DirectoryProcessingSource[resources.length];
 				for (int i = 0; i < resources.length; i++) {
 					sources[i] = new DirectoryProcessingSource(resources[i]);
@@ -125,15 +121,15 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 				.root(getProjectDir())
 				.javaVersion(getJavaVersion())
 				.dependencies(ideDependencies)
-				.sourcePaths(paths("java", true, true))
-				.resourcePaths(paths("resources", false, true))
+				.sourcePaths(paths("java", false))
+				.resourcePaths(paths("resources", false))
 				.runConfigs(
 					new IdeModule.RunConfigBuilder()
 						.name("Minecraft Client")
 						.cwd(cwd)
 						.mainClass("net.fabricmc.devlaunchinjector.Main")
 						.classpath(classpath)
-						.resourcePaths(paths("resources", false, true))
+						.resourcePaths(paths("resources", false))
 						.vmArgs(
 							() -> {
 								ArrayList<String> clientArgs = new ArrayList<>(Arrays.asList(
