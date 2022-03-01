@@ -38,8 +38,9 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	HashMap<String, IntSupplier> dynamicSamplers;
 	private ProgramImages currentImages;
 	private Program geometry;
+	private boolean isFullbright;
 
-	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, NewWorldRenderingPipeline parent) throws IOException {
+	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
@@ -56,6 +57,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.parent = parent;
 		this.imageBuilder = ProgramImages.builder(programId);
 		this.currentImages = null;
+		this.isFullbright = isFullbright;
 
 		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
 		this.intensitySwizzle = getName().contains("intensity");
@@ -121,7 +123,8 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 			super.setSampler("tex", sampler);
 		} else if (name.equals("Sampler1")) {
 			name = "iris_overlay";
-		} else if (name.equals("Sampler2")) {
+		} else if (name.equals("Sampler2") && !isFullbright) {
+			// TODO: Should we be providing the lightmap texture even if it's fullbright? Doing this before broke beacon beams on many packs.
 			name = "lightmap";
 		} else if (name.startsWith("Sampler")) {
 			// We only care about the texture, lightmap, and overlay for now from vanilla.
