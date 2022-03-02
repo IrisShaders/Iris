@@ -3,6 +3,7 @@ package net.coderbot.iris.compat.sodium.mixin.shadow_map;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderManager;
+import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableChunkRenderManager;
 import net.minecraft.client.Camera;
@@ -48,13 +49,20 @@ public class MixinSodiumWorldRenderer {
     @Unique
     private void iris$ensureStateSwapped() {
         if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            if (this.chunkRenderManager instanceof SwappableChunkRenderManager) {
+			if (this.chunkRenderManager instanceof SwappableChunkRenderManager) {
                 ((SwappableChunkRenderManager) this.chunkRenderManager).iris$swapVisibilityState();
             }
 
             wasRenderingShadows = true;
         }
     }
+
+	@Inject(method = "updateChunks", at = @At("RETURN"))
+	private void iris$captureVisibleBlockEntities(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo ci) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			ShadowRenderer.visibleBlockEntities.addAll(this.chunkRenderManager.getVisibleBlockEntities());
+		}
+	}
 
     @Inject(method = "scheduleTerrainUpdate()V", remap = false,
             at = @At(value = "INVOKE",

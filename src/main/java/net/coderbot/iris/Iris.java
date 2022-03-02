@@ -39,6 +39,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +51,7 @@ import net.fabricmc.loader.api.FabricLoader;
 
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
-	public static final Logger logger = LogManager.getLogger(MODID);
+	public static final IrisLogging logger = new IrisLogging("Iris");
 
 	private static Path shaderpacksDirectory;
 	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
@@ -102,7 +103,7 @@ public class Iris implements ClientModInitializer {
 			}
 		} catch (IOException e) {
 			logger.warn("Failed to create the shaderpacks directory!");
-			logger.catching(Level.WARN, e);
+			logger.warn("", e);
 		}
 
 		irisConfig = new IrisConfig(FabricLoader.getInstance().getConfigDir().resolve("iris.properties"));
@@ -111,7 +112,7 @@ public class Iris implements ClientModInitializer {
 			irisConfig.initialize();
 		} catch (IOException e) {
 			logger.error("Failed to initialize Iris configuration, default values will be used instead");
-			logger.catching(Level.ERROR, e);
+			logger.error("", e);
 		}
 
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
@@ -239,7 +240,7 @@ public class Iris implements ClientModInitializer {
 				return false;
 			} catch (IOException e) {
 				logger.error("Failed to load the shaderpack \"{}\"!", name);
-				logger.catching(Level.ERROR, e);
+				logger.error("", e);
 
 				return false;
 			}
@@ -290,7 +291,7 @@ public class Iris implements ClientModInitializer {
 			tryUpdateConfigPropertiesFile(shaderPackConfigTxt, configsToSave);
 		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
-			logger.catching(e);
+			logger.error("", e);
 
 			return false;
 		}
@@ -491,11 +492,9 @@ public class Iris implements ClientModInitializer {
 		ClientLevel level = Minecraft.getInstance().level;
 
 		if (level != null) {
-			ResourceKey<net.minecraft.world.level.Level> levelRegistryKey = level.dimension();
-
-			if (levelRegistryKey.equals(net.minecraft.world.level.Level.END)) {
+			if (level.dimensionType().effectsLocation().equals(DimensionType.END_EFFECTS) || level.dimension().equals(net.minecraft.world.level.Level.END)) {
 				return DimensionId.END;
-			} else if (levelRegistryKey.equals(net.minecraft.world.level.Level.NETHER)) {
+			} else if (level.dimensionType().effectsLocation().equals(DimensionType.NETHER_EFFECTS) || level.dimension().equals(net.minecraft.world.level.Level.NETHER)) {
 				return DimensionId.NETHER;
 			} else {
 				return DimensionId.OVERWORLD;
