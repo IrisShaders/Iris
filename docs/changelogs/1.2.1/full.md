@@ -33,6 +33,7 @@
   - Fixes entity shadows on SEUS PTGI.
 - Added support for the extended vertex format on entities, block entities, and similar (IMS)
   - Fixes rendering issues with Advanced Materials on BSL, AstraLex, and similar packs
+  - Fixes block breaking animation with KUDA shaders
   - Fixes many miscellaneous issues on other older packs
 
 ## Translations
