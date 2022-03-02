@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.Program;
@@ -101,6 +102,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final RenderTargets gbufferRenderTargets;
 	private final AbstractTexture normals;
 	private final AbstractTexture specular;
+	private final AbstractTexture whitePixel;
 	private final IntSupplier noise;
 
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
@@ -118,7 +120,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
                           AbstractTexture normals, AbstractTexture specular, IntSupplier noise, ProgramSet programSet,
-													Object2ObjectMap<String, IntSupplier> customTextureIds) {
+						  AbstractTexture whitePixel, Object2ObjectMap<String, IntSupplier> customTextureIds) {
 		this.pipeline = pipeline;
 		this.profiler = Minecraft.getInstance().getProfiler();
 
@@ -148,6 +150,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.normals = normals;
 		this.specular = specular;
 		this.noise = noise;
+		this.whitePixel = whitePixel;
 		this.customTextureIds = customTextureIds;
 
 		if (shadow != null) {
@@ -290,7 +293,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, gbufferRenderTargets, false);
 		IrisImages.addRenderTargetImages(builder, flipped, gbufferRenderTargets);
 
-		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular);
+		// TODO: Proper input availability
+		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular,
+				whitePixel, new InputAvailability(true, true, false));
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noise);
 
 		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, this);
@@ -577,6 +582,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		profiler.popPush("terrain");
 
+		((DeferredWorldRenderingPipeline) pipeline).beginPass(null);
+
 		pipeline.pushProgram(GbufferProgram.NONE);
 		pipeline.beginShadowRender();
 
@@ -673,6 +680,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		// Note: This unbinds the shadow framebuffer
 		pipeline.popProgram(GbufferProgram.NONE);
+
+		((DeferredWorldRenderingPipeline) pipeline).matchPass();
 
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();

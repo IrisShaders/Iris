@@ -50,6 +50,8 @@
     "statelisteners.BooleanStateAccessor",
     "statelisteners.GlStateManagerAccessor",
     "statelisteners.MixinGlStateManager",
+    "state_tracking.MixinGlStateManager",
+    "state_tracking.MixinVertexFormat",
     "texunits.MixinBufferVertexConsumer",
     "texunits.MixinDefaultVertexFormat",
     "texunits.MixinGlStateManager",

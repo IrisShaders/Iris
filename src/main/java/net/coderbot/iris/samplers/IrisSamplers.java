@@ -2,6 +2,7 @@ package net.coderbot.iris.samplers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -112,10 +113,28 @@ public class IrisSamplers {
 		return usesShadows;
 	}
 
-	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
-		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
-		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
-		samplers.addExternalSampler(TextureUnit.OVERLAY.getSamplerId(), "iris_overlay");
+	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular,
+										AbstractTexture whitePixel, InputAvailability availability) {
+		if (availability.texture) {
+			samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
+		} else {
+			// TODO: Rebind unbound sampler IDs instead of hardcoding a list...
+			samplers.addDynamicSampler(whitePixel::getId, "tex", "texture", "gtexture",
+					"gcolor", "colortex0");
+		}
+
+		if (availability.lightmap) {
+			samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
+		} else {
+			samplers.addDynamicSampler(whitePixel::getId, "lightmap");
+		}
+
+		if (availability.overlay) {
+			samplers.addExternalSampler(TextureUnit.OVERLAY.getSamplerId(), "iris_overlay");
+		} else {
+			samplers.addDynamicSampler(whitePixel::getId, "iris_overlay");
+		}
+
 		samplers.addDynamicSampler(normals::getId, "normals");
 		samplers.addDynamicSampler(specular::getId, "specular");
 	}

@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -46,6 +47,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
+
+	}
+
+	@Override
+	public void setInputs(InputAvailability availability) {
 
 	}
 
