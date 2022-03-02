@@ -25,7 +25,6 @@
     "MixinLevelRenderer",
     "MixinMinecraft",
     "MixinModelViewBobbing",
-    "MixinBufferSource_WrapperChecking",
     "MixinParticleEngine",
     "MixinRenderSystem",
     "MixinTextureAtlas",
@@ -40,7 +39,8 @@
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",
     "math.MixinMatrix4f",
-    "rendertype.MixinFixEyesTranslucency",
+    "rendertype.MixinRenderType_FixEyesTranslucency",
+    "rendertype.MixinRenderType_FixTerrainAlpha",
     "rendertype.MixinRenderType",
     "rendertype.RenderStateShardAccessor",
     "rendertype.RenderTypeAccessor",
@@ -51,6 +51,8 @@
     "statelisteners.GlStateManagerAccessor",
     "statelisteners.MixinGlStateManager",
     "state_tracking.MixinGlStateManager",
+    "state_tracking.MixinPostChain",
+    "state_tracking.MixinRenderTarget",
     "state_tracking.MixinVertexFormat"
   ],
   "injectors": {

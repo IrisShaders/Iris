@@ -13,6 +13,7 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.ProgramTable;
 import net.coderbot.iris.gbuffer_overrides.matching.RenderCondition;
+import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -69,7 +70,7 @@ import java.util.function.Supplier;
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
  */
-public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
+public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, RenderTargetStateListener  {
 	private final RenderTargets renderTargets;
 
 	private final ProgramTable<Pass> table;
@@ -442,7 +443,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	public void matchPass() {
-		if (!isRenderingWorld || isRenderingShadow || isRenderingFullScreenPass) {
+		if (!isRenderingWorld || isRenderingShadow || isRenderingFullScreenPass || isPostChain || !isMainBound) {
 			return;
 		}
 
@@ -450,6 +451,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	public void beginPass(Pass pass) {
+		beginPass(pass, true);
+	}
+
+	public void beginPass(Pass pass, boolean allowBindBaseline) {
 		if (current == pass) {
 			return;
 		}
@@ -464,7 +469,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			pass.use();
 		} else {
 			Program.unbind();
-			this.baseline.bind();
+
+			if (allowBindBaseline) {
+				this.baseline.bind();
+			}
 		}
 	}
 
@@ -526,6 +534,51 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
 				programDirectives.getBlendModeOverride());
+	}
+
+	private boolean isPostChain;
+	private boolean isMainBound = true;
+
+	@Override
+	public void beginPostChain() {
+		isPostChain = true;
+
+		beginPass(null);
+	}
+
+	@Override
+	public void endPostChain() {
+		isPostChain = false;
+
+		matchPass();
+	}
+
+	@Override
+	public void setIsMainBound(boolean bound) {
+		isMainBound = bound;
+
+		if (!isRenderingWorld || isRenderingFullScreenPass || isPostChain) {
+			return;
+		}
+
+		if (bound) {
+			if (isRenderingShadow) {
+				// TODO: This is a hack, this should be addressed.
+				((ShadowRenderer) shadowMapRenderer).setupShadowProgram();
+				shadowMapRenderer.getRenderTargets().getFramebuffer().bind();
+				int resolution = ((ShadowRenderer) shadowMapRenderer).resolution;
+				RenderSystem.viewport(0, 0, resolution, resolution);
+			} else {
+				current = null;
+				matchPass();
+			}
+		} else {
+			if (isRenderingShadow) {
+				Program.unbind();
+			} else {
+				beginPass(null, false);
+			}
+		}
 	}
 
 	private final class Pass {
@@ -701,7 +754,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		isRenderingFullScreenPass = false;
 
-		beginPass(current);
 		matchPass();
 	}
 
@@ -743,6 +795,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		isRenderingFullScreenPass = false;
 		isRenderingWorld = true;
 		isBeforeTranslucent = true;
+		isMainBound = true;
+		isPostChain = false;
 		phase = WorldRenderingPhase.NONE;
 		HandRenderer.INSTANCE.getBufferSource().resetDrawCalls();
 
@@ -817,6 +871,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.inputs = availability;
 
 		matchPass();
+	}
+
+	@Override
+	public RenderTargetStateListener getRenderTargetStateListener() {
+		return this;
 	}
 
 	private boolean isRenderingShadow = false;

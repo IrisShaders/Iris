@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
+import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -18,6 +19,7 @@ public interface WorldRenderingPipeline {
 
 	void setPhase(WorldRenderingPhase phase);
 	void setInputs(InputAvailability availability);
+	RenderTargetStateListener getRenderTargetStateListener();
 
     void beginShadowRender();
 	void endShadowRender();

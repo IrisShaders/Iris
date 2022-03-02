@@ -75,7 +75,8 @@ import java.util.function.Supplier;
 public class ShadowRenderer implements ShadowMapRenderer {
 	private final float halfPlaneLength;
 	private final float renderDistanceMultiplier;
-	private final int resolution;
+	// TODO: Don't make this public
+	public final int resolution;
 	private final float intervalSize;
 	private final Float fov;
 	public static Matrix4f MODELVIEW;
@@ -707,7 +708,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 	}
 
-	private void setupShadowProgram() {
+	// TODO: This shouldn't be public
+	public void setupShadowProgram() {
 		if (shadowProgram != null) {
 			shadowProgram.use();
 			setupAttributes(shadowProgram);
