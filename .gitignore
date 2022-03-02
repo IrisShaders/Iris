@@ -9,6 +9,9 @@ classes/
 .brachyura
 *.jfr
 
+# custom sodium
+/custom_sodium/
+
 # idea
 
 .idea/

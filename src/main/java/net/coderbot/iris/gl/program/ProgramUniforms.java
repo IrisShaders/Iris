@@ -21,6 +21,7 @@ import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.ARBShaderImageLoadStore;
 import org.lwjgl.opengl.GL20C;
 
 import java.nio.IntBuffer;
@@ -200,9 +201,9 @@ public class ProgramUniforms {
 				if (provided == null && !name.startsWith("gl_")) {
 					String typeName = getTypeName(type);
 
-					if (isSampler(type)) {
-						// don't print a warning, samplers are managed elsewhere.
-						// TODO: Detect unsupported samplers?
+					if (isSampler(type) || isImage(type)) {
+						// don't print a warning, samplers and images are managed elsewhere.
+						// TODO: Detect unsupported samplers/images?
 						continue;
 					}
 
@@ -315,6 +316,10 @@ public class ProgramUniforms {
 			typeName = "sampler2DShadow";
 		} else if (type == GL20C.GL_SAMPLER_1D_SHADOW) {
 			typeName = "sampler1DShadow";
+		} else if (type == ARBShaderImageLoadStore.GL_IMAGE_2D) {
+			typeName = "image2D";
+		} else if (type == ARBShaderImageLoadStore.GL_IMAGE_3D) {
+			typeName = "image3D";
 		} else {
 			typeName = "(unknown:" + type + ")";
 		}
@@ -366,5 +371,13 @@ public class ProgramUniforms {
 				|| type == GL20C.GL_SAMPLER_3D
 				|| type == GL20C.GL_SAMPLER_1D_SHADOW
 				|| type == GL20C.GL_SAMPLER_2D_SHADOW;
+	}
+
+	private static boolean isImage(int type) {
+		return type == ARBShaderImageLoadStore.GL_IMAGE_1D
+			|| type == ARBShaderImageLoadStore.GL_IMAGE_2D
+			|| type == ARBShaderImageLoadStore.GL_IMAGE_3D
+			|| type == ARBShaderImageLoadStore.GL_IMAGE_1D_ARRAY
+			|| type == ARBShaderImageLoadStore.GL_IMAGE_2D_ARRAY;
 	}
 }
