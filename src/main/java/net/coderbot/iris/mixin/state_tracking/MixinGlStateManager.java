@@ -3,7 +3,7 @@ package net.coderbot.iris.mixin.state_tracking;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gbuffer_overrides.state.StateTracker;
-import net.coderbot.iris.texunits.TextureUnit;
+import net.coderbot.iris.samplers.IrisSamplers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,11 +17,11 @@ public class MixinGlStateManager {
 
 	@Inject(method = "_enableTexture()V", at = @At("HEAD"))
 	private static void iris$onEnableTexture(CallbackInfo ci) {
-		if (activeTexture == TextureUnit.TERRAIN.getSamplerId()) {
+		if (activeTexture == IrisSamplers.ALBEDO_TEXTURE_UNIT) {
 			StateTracker.INSTANCE.albedoSampler = true;
-		} else if (activeTexture == TextureUnit.LIGHTMAP.getSamplerId()) {
+		} else if (activeTexture == IrisSamplers.LIGHTMAP_TEXTURE_UNIT) {
 			StateTracker.INSTANCE.lightmapSampler = true;
-		} else if (activeTexture == TextureUnit.OVERLAY.getSamplerId()) {
+		} else if (activeTexture == IrisSamplers.OVERLAY_TEXTURE_UNIT) {
 			StateTracker.INSTANCE.overlaySampler = true;
 		} else {
 			return;
@@ -32,11 +32,11 @@ public class MixinGlStateManager {
 
 	@Inject(method = "_disableTexture()V", at = @At("HEAD"))
 	private static void iris$onDisableTexture(CallbackInfo ci) {
-		if (activeTexture == TextureUnit.TERRAIN.getSamplerId()) {
+		if (activeTexture == IrisSamplers.ALBEDO_TEXTURE_UNIT) {
 			StateTracker.INSTANCE.albedoSampler = false;
-		} else if (activeTexture == TextureUnit.LIGHTMAP.getSamplerId()) {
+		} else if (activeTexture == IrisSamplers.LIGHTMAP_TEXTURE_UNIT) {
 			StateTracker.INSTANCE.lightmapSampler = false;
-		} else if (activeTexture == TextureUnit.OVERLAY.getSamplerId()) {
+		} else if (activeTexture == IrisSamplers.OVERLAY_TEXTURE_UNIT) {
 			StateTracker.INSTANCE.overlaySampler = false;
 		} else {
 			return;

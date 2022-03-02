@@ -51,12 +51,7 @@
     "statelisteners.GlStateManagerAccessor",
     "statelisteners.MixinGlStateManager",
     "state_tracking.MixinGlStateManager",
-    "state_tracking.MixinVertexFormat",
-    "texunits.MixinBufferVertexConsumer",
-    "texunits.MixinDefaultVertexFormat",
-    "texunits.MixinGlStateManager",
-    "texunits.MixinLightTexture",
-    "texunits.MixinOverlayTexture"
+    "state_tracking.MixinVertexFormat"
   ],
   "injectors": {
     "defaultRequire": 1

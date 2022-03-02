@@ -8,24 +8,20 @@ import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
-import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class IrisSamplers {
-	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
-		TextureUnit.TERRAIN.getSamplerId(),
-		TextureUnit.LIGHTMAP.getSamplerId(),
-		TextureUnit.OVERLAY.getSamplerId()
-	);
+	public static final int ALBEDO_TEXTURE_UNIT = 0;
+	public static final int OVERLAY_TEXTURE_UNIT = 1;
+	public static final int LIGHTMAP_TEXTURE_UNIT = 2;
+
+	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(0, 1, 2);
 
 	// TODO: In composite programs, there shouldn't be any reserved textures.
 	// We need a way to restore these texture bindings.
-	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
-		TextureUnit.LIGHTMAP.getSamplerId(),
-		TextureUnit.OVERLAY.getSamplerId()
-	);
+	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(1, 2);
 
 	private IrisSamplers() {
 		// no construction allowed
@@ -116,7 +112,7 @@ public class IrisSamplers {
 	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular,
 										AbstractTexture whitePixel, InputAvailability availability) {
 		if (availability.texture) {
-			samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
+			samplers.addExternalSampler(ALBEDO_TEXTURE_UNIT, "tex", "texture", "gtexture");
 		} else {
 			// TODO: Rebind unbound sampler IDs instead of hardcoding a list...
 			samplers.addDynamicSampler(whitePixel::getId, "tex", "texture", "gtexture",
@@ -124,13 +120,13 @@ public class IrisSamplers {
 		}
 
 		if (availability.lightmap) {
-			samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
+			samplers.addExternalSampler(LIGHTMAP_TEXTURE_UNIT, "lightmap");
 		} else {
 			samplers.addDynamicSampler(whitePixel::getId, "lightmap");
 		}
 
 		if (availability.overlay) {
-			samplers.addExternalSampler(TextureUnit.OVERLAY.getSamplerId(), "iris_overlay");
+			samplers.addExternalSampler(OVERLAY_TEXTURE_UNIT, "iris_overlay");
 		} else {
 			samplers.addDynamicSampler(whitePixel::getId, "iris_overlay");
 		}
