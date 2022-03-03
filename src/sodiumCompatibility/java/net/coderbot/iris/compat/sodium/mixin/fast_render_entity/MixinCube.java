@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ModelPart.Cube.class)
-public class MixinCuboid implements ModelCuboidAccessor {
+public class MixinCube implements ModelCuboidAccessor {
     @Shadow
     @Final
     private ModelPart.Polygon[] polygons;

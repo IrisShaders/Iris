@@ -1,21 +1,21 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.xhfp;
+package net.coderbot.iris.compat.sodium.impl.vertex_format;
 
 import java.nio.ByteBuffer;
 
-public class QuadView {
+public class QuadViewTerrain implements QuadView {
 	public ByteBuffer buffer;
 	public int writeOffset;
 	private static final int STRIDE = 36;
 
-	float x(int index) {
+	public float x(int index) {
 		return normalizeVertexPositionShortAsFloat(buffer.getShort(writeOffset - STRIDE * (3 - index)));
 	}
 
-	float y(int index) {
+	public float y(int index) {
 		return normalizeVertexPositionShortAsFloat(buffer.getShort(writeOffset + 2 - STRIDE * (3 - index)));
 	}
 
-	float z(int index) {
+	public float z(int index) {
 		return normalizeVertexPositionShortAsFloat(buffer.getShort(writeOffset + 4 - STRIDE * (3 - index)));
 	}
 
