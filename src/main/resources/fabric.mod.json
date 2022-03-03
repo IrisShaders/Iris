@@ -41,6 +41,12 @@
     "mixins.iris.compat.indium.json"
   ],
 
+  "custom": {
+    "sodium:options": {
+      "mixin.features.entity.fast_render": false
+    }
+  },
+
   "accessWidener" : "iris.accesswidener",
 
   "depends": {

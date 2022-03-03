@@ -29,6 +29,8 @@
     "shadow_map.MixinChunkRenderManager",
     "shadow_map.MixinGameRendererContext",
     "shadow_map.MixinSodiumWorldRenderer",
+    "fast_render_entity.MixinCuboid",
+    "fast_render_entity.MixinModelPart",
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",
