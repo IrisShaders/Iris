@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.FloatSupplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
@@ -7,16 +8,23 @@ import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.phys.Vec3;
 
 // These expressions are copied directly from BSL and Complementary.
 
 // TODO: Remove once custom uniforms are actually supported, this is just a temporary thing to get BSL & Complementary
 // mostly working under Iris.
 public class HardcodedCustomUniforms {
+	private static final Minecraft client = Minecraft.getInstance();
+
 	public static void addHardcodedCustomUniforms(UniformHolder holder, FrameUpdateNotifier updateNotifier) {
 		CameraUniforms.CameraPositionTracker tracker = new CameraUniforms.CameraPositionTracker(updateNotifier);
+
+		SmoothedFloat eyeInCave = new SmoothedFloat(6, 12, HardcodedCustomUniforms::getEyeInCave, updateNotifier);
 
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "timeAngle", HardcodedCustomUniforms::getTimeAngle);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "timeBrightness", HardcodedCustomUniforms::getTimeBrightness);
@@ -28,8 +36,31 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isDry", new SmoothedFloat(20, 10, () -> getRawPrecipitation() == 0 ? 1 : 0, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isRainy", new SmoothedFloat(20, 10, () -> getRawPrecipitation() == 1 ? 1 : 0, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isSnowy", new SmoothedFloat(20, 10, () -> getRawPrecipitation() == 2 ? 1 : 0, updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isEyeInCave", CommonUniforms.isEyeInWater() == 0 ? eyeInCave : () -> 0);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "velocity", () -> getVelocity(tracker));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "starter", getStarter(tracker, updateNotifier));
+	}
+
+	private static float getEyeInCave() {
+		if (client.getCameraEntity().getEyeY() < 5.0) {
+			System.out.println(getEyeSkyBrightness() / 240F);
+			return getEyeSkyBrightness() / 240F;
+		}
+		return 0.0F;
+	}
+
+	private static float getEyeSkyBrightness() {
+		if (client.cameraEntity == null || client.level == null) {
+			return 0;
+		}
+
+		Vec3 feet = client.cameraEntity.position();
+		Vec3 eyes = new Vec3(feet.x, client.cameraEntity.getEyeY(), feet.z);
+		BlockPos eyeBlockPos = new BlockPos(eyes);
+
+		int skyLight = client.level.getBrightness(LightLayer.SKY, eyeBlockPos);
+
+		return skyLight * 16;
 	}
 
 	private static float getVelocity(CameraUniforms.CameraPositionTracker tracker) {
