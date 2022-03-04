@@ -10,6 +10,7 @@ import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.VertexDrain;
 import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexSink;
+import me.jellysquid.mods.sodium.client.util.Norm3b;
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
 import me.jellysquid.mods.sodium.client.util.color.ColorU8;
 import me.jellysquid.mods.sodium.client.util.math.MatrixUtil;
@@ -86,7 +87,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer {
         }
 
 		if (drain instanceof EntityVertexSink) {
-			((EntityVertexSink) drain).endQuad(4 );
+			((EntityVertexSink) drain).endQuad(4, Norm3b.unpackX(norm), Norm3b.unpackY(norm), Norm3b.unpackZ(norm));
 		}
 
 		drain.flush();

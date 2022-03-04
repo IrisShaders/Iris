@@ -77,7 +77,7 @@ public class MixinModelPart {
                     drain.writeQuad(x2, y2, z2, color, vertex.u, vertex.v, light, overlay, norm);
                 }
 
-				((EntityVertexSink) drain).endQuad(quad.vertices.length);
+				((EntityVertexSink) drain).endQuad(quad.vertices.length, normX, normY, normZ);
 			}
         }
 

@@ -45,5 +45,5 @@ public interface EntityVertexSink extends VertexSink, QuadVertexSink {
         this.writeQuad(x2, y2, z2, color, u, v, light, overlay, norm);
     }
 
-	void endQuad(int length);
+	void endQuad(int length, float normalX, float normalY, float normalZ);
 }

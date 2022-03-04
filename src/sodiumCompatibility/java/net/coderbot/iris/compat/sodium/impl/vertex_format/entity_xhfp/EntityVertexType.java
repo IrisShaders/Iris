@@ -44,8 +44,8 @@ public class EntityVertexType implements VanillaVertexType<EntityVertexSink>, Bl
 		}
 
 		@Override
-		public void endQuad(int length) {
-			((EntityVertexSink)this.delegate).endQuad(length);
+		public void endQuad(int length, float normalX, float normalY, float normalZ) {
+			((EntityVertexSink)this.delegate).endQuad(length, normalX, normalY, normalZ);
 		}
 	}
 }

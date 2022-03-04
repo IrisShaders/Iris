@@ -27,7 +27,7 @@ public class EntityVertexWriterFallback extends VertexWriterFallback implements 
     }
 
 	@Override
-	public void endQuad(int length) {
+	public void endQuad(int length, float normalX, float normalY, float normalZ) {
 
 	}
 }

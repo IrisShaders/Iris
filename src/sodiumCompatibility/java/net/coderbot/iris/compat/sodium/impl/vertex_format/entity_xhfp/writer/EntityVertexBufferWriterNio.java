@@ -14,12 +14,8 @@ import net.coderbot.iris.vertices.QuadView;
 import java.nio.ByteBuffer;
 
 public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implements EntityVertexSink {
-	int vertexCount = 0;
-	float uSum;
-	float vSum;
-	private QuadView quad = new QuadView();
-	private Vector3f normal = new Vector3f();
-	int STRIDE;
+	private final QuadView quad = new QuadView();
+	private final int STRIDE;
 
 	public EntityVertexBufferWriterNio(VertexBufferView backingBuffer) {
 		super(backingBuffer, IrisModelVertexFormats.ENTITIES);
@@ -28,41 +24,32 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 
 	@Override
 	public void writeQuad(float x, float y, float z, int color, float u, float v, int light, int overlay, int normal) {
-		uSum += u;
-		vSum += v;
+		int i = this.writeOffset;
 
-		this.writeQuadInternal(x, y, z, color, u, v, light, overlay, normal);
+		ByteBuffer buffer = this.byteBuffer;
+		buffer.putFloat(i, x);
+		buffer.putFloat(i + 4, y);
+		buffer.putFloat(i + 8, z);
+		buffer.putInt(i + 12, color);
+		buffer.putFloat(i + 16, u);
+		buffer.putFloat(i + 20, v);
+		buffer.putInt(i + 24, overlay);
+		buffer.putInt(i + 28, light);
+		buffer.putInt(i + 32, normal);
+		buffer.putShort(i + 36, (short) -1);
+		buffer.putShort(i + 38, (short) -1);
+
+		this.advance();
 	}
 
 	@Override
-	public void endQuad(int length) {
+	public void endQuad(int length, float normalX, float normalY, float normalZ) {
 		ByteBuffer buffer = this.byteBuffer;
 		int i = this.writeOffset;
-		// TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
 
-		// NB: Be careful with the math here! A previous bug was caused by midU going negative as a short, which
-		// was sign-extended into midTexCoord, causing midV to have garbage (likely NaN data). If you're touching
-		// this code, be aware of that, and don't introduce those kinds of bugs!
-		//
-		// Also note that OpenGL takes shorts in the range of [0, 65535] and transforms them linearly to [0.0, 1.0],
-		// so multiply by 65535, not 65536.
-		//
-		// TODO: Does this introduce precision issues? Do we need to fall back to floats here? This might break
-		// with high resolution texture packs.
+		quad.setup(buffer, i, STRIDE);
 
-		vertexCount = 0;
-		uSum = 0;
-		vSum = 0;
-
-		// TODO: Keep this in sync with the extensions
-		int extendedDataLength = (2 * 2) + (1 * 4) + (1 * 4);
-
-		int nextElementByte = i;
-
-		quad.setup(buffer, nextElementByte, STRIDE);
-
-
-		computeTangents(buffer, i, length);
+		computeTangents(buffer, i, length, normalX, normalY, normalZ);
 
 		float midU = 0;
 		float midV = 0;
@@ -76,32 +63,12 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 		midV *= 0.25;
 
 		for (int vertex = 0; vertex < length; vertex++) {
-			buffer.putFloat(nextElementByte - 12 - STRIDE * vertex, midU);
-			buffer.putFloat(nextElementByte - 8 - STRIDE * vertex, midV);
+			buffer.putFloat(i - 12 - STRIDE * vertex, midU);
+			buffer.putFloat(i - 8 - STRIDE * vertex, midV);
 		}
 	}
 
-	public void writeQuadInternal(float x, float y, float z, int color, float u, float v, int light, int overlay, int unneededNormal) {
-		this.normal.set(Norm3b.unpackX(unneededNormal), Norm3b.unpackY(unneededNormal), Norm3b.unpackZ(unneededNormal));
-		int i = this.writeOffset;
-
-		ByteBuffer buffer = this.byteBuffer;
-		buffer.putFloat(i, x);
-		buffer.putFloat(i + 4, y);
-		buffer.putFloat(i + 8, z);
-		buffer.putInt(i + 12, color);
-		buffer.putFloat(i + 16, u);
-		buffer.putFloat(i + 20, v);
-		buffer.putInt(i + 24, overlay);
-		buffer.putInt(i + 28, light);
-		buffer.putInt(i + 32, unneededNormal);
-		buffer.putShort(i + 36, (short) -1);
-		buffer.putShort(i + 38, (short) -1);
-
-		this.advance();
-	}
-
-	private void computeTangents(ByteBuffer buffer, int i, int length) {
+	private void computeTangents(ByteBuffer buffer, int i, int length, float normalX, float normalY, float normalZ) {
 		// Capture all of the relevant vertex positions
 		float x0 = quad.x(0);
 		float y0 = quad.y(0);
@@ -168,9 +135,9 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 		// tx ty tz
 		// nx ny nz
 
-		float pbitangentx =   tangenty * normal.z - tangentz * normal.y;
-		float pbitangenty = -(tangentx * normal.z - tangentz * normal.x);
-		float pbitangentz =   tangentx * normal.x - tangenty * normal.y;
+		float pbitangentx =   tangenty * normalZ - tangentz * normalY;
+		float pbitangenty = -(tangentx * normalZ - tangentz * normalX);
+		float pbitangentz =   tangentx * normalX - tangenty * normalY;
 
 		float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
 		float tangentW;
@@ -181,33 +148,11 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 			tangentW = 1.0F;
 		}
 
-		int tangent = net.coderbot.iris.vertices.NormalHelper.packNormal(tangentx, tangenty, tangentz, tangentW);
-
-		// TODO: Use packed tangents in the vertex format
-		if (tangent == 0) {
-			throw new RuntimeException("tf????");
-		}
+		int tangent = NormalHelper.packNormal(tangentx, tangenty, tangentz, tangentW);
 
 		for (int vertex = 0; vertex < length; vertex++) {
 			buffer.putInt(i - 4 - STRIDE * vertex, tangent);
 		}
-/*
-		for (int vertex = 0; vertex < 4; vertex++) {
-			buffer.putFloat(this.nextElementByte - 16 - stride * vertex, tangentx);
-			buffer.putFloat(this.nextElementByte - 12 - stride * vertex, tangenty);
-			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, tangentz);
-			buffer.putFloat(this.nextElementByte - 4 - stride * vertex, 1.0F);
-		}*/
-	}
-
-	// TODO: Verify that this works with the new changes to the CVF
-	private static float normalizeVertexPositionShortAsFloat(short value) {
-		return (value & 0xFFFF) * (1.0f / 65535.0f);
-	}
-
-	// TODO: Verify that this is correct
-	private static float normalizeVertexTextureShortAsFloat(short value) {
-		return (value & 0xFFFF) * (1.0f / 32768.0f);
 	}
 
 	private static float rsqrt(float value) {
