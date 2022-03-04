@@ -9,7 +9,6 @@ import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter
 import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.NormalHelper;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.QuadViewTerrain;
 import net.coderbot.iris.vendored.joml.Vector3f;
 
 import java.nio.ByteBuffer;

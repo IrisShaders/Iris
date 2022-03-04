@@ -1,4 +1,6 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format;
+package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
+
+import net.coderbot.iris.compat.sodium.impl.vertex_format.QuadView;
 
 import java.nio.ByteBuffer;
 
