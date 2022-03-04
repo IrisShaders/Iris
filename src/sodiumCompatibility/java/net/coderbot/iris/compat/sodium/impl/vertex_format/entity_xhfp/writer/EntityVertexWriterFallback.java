@@ -25,4 +25,9 @@ public class EntityVertexWriterFallback extends VertexWriterFallback implements 
         consumer.normal(Norm3b.unpackX(normal), Norm3b.unpackY(normal), Norm3b.unpackZ(normal));
         consumer.endVertex();
     }
+
+	@Override
+	public void endQuad(int length) {
+
+	}
 }

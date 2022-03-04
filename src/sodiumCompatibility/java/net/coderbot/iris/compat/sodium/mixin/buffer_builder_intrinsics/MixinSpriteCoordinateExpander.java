@@ -7,6 +7,7 @@ import me.jellysquid.mods.sodium.client.model.vertex.VertexSink;
 import me.jellysquid.mods.sodium.client.model.vertex.transformers.SpriteTexturedVertexTransformer;
 import me.jellysquid.mods.sodium.client.model.vertex.type.VertexType;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertexType;
 import net.minecraft.client.renderer.SpriteCoordinateExpander;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.spongepowered.asm.mixin.Final;
@@ -27,7 +28,7 @@ public abstract class MixinSpriteCoordinateExpander implements VertexDrain {
     @Override
     public <T extends VertexSink> T createSink(VertexType<T> type) {
         if (type == IrisModelVertexFormats.ENTITIES) {
-            return (T) new SpriteTexturedVertexTransformer.Quad(VertexDrain.of(this.delegate)
+            return (T) new EntityVertexType.EntitySpriteTexturedVertexTransformer(VertexDrain.of(this.delegate)
                     .createSink(IrisModelVertexFormats.ENTITIES), this.sprite);
         } else if (type == VanillaVertexTypes.QUADS) {
             return (T) new SpriteTexturedVertexTransformer.Quad(VertexDrain.of(this.delegate)

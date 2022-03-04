@@ -21,88 +21,87 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 	private Vector3f normal = new Vector3f();
 	int STRIDE;
 
-    public EntityVertexBufferWriterNio(VertexBufferView backingBuffer) {
-        super(backingBuffer, IrisModelVertexFormats.ENTITIES);
+	public EntityVertexBufferWriterNio(VertexBufferView backingBuffer) {
+		super(backingBuffer, IrisModelVertexFormats.ENTITIES);
 		STRIDE = IrisModelVertexFormats.ENTITIES.getVertexFormat().getVertexSize();
-    }
+	}
 
-    @Override
-    public void writeQuad(float x, float y, float z, int color, float u, float v, int light, int overlay, int normal) {
+	@Override
+	public void writeQuad(float x, float y, float z, int color, float u, float v, int light, int overlay, int normal) {
 		uSum += u;
 		vSum += v;
 
 		this.writeQuadInternal(x, y, z, color, u, v, light, overlay, normal);
 	}
 
-	public void writeQuadInternal(float x, float y, float z, int color, float u, float v, int light, int overlay, int unneededNormal) {
-        int i = this.writeOffset;
+	@Override
+	public void endQuad(int length) {
+		ByteBuffer buffer = this.byteBuffer;
+		int i = this.writeOffset;
+		// TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
 
-        ByteBuffer buffer = this.byteBuffer;
-        buffer.putFloat(i, x);
-        buffer.putFloat(i + 4, y);
-        buffer.putFloat(i + 8, z);
-        buffer.putInt(i + 12, color);
-        buffer.putFloat(i + 16, u);
-        buffer.putFloat(i + 20, v);
-        buffer.putInt(i + 24, overlay);
-        buffer.putInt(i + 28, light);
-        buffer.putShort(i + 36, (short) -1);
-        buffer.putShort(i + 38, (short) -1);
+		// NB: Be careful with the math here! A previous bug was caused by midU going negative as a short, which
+		// was sign-extended into midTexCoord, causing midV to have garbage (likely NaN data). If you're touching
+		// this code, be aware of that, and don't introduce those kinds of bugs!
+		//
+		// Also note that OpenGL takes shorts in the range of [0, 65535] and transforms them linearly to [0.0, 1.0],
+		// so multiply by 65535, not 65536.
+		//
+		// TODO: Does this introduce precision issues? Do we need to fall back to floats here? This might break
+		// with high resolution texture packs.
 
-        this.advance();
+		vertexCount = 0;
+		uSum = 0;
+		vSum = 0;
 
-		if (vertexCount == 4) {
-			// TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
+		// TODO: Keep this in sync with the extensions
+		int extendedDataLength = (2 * 2) + (1 * 4) + (1 * 4);
 
-			// NB: Be careful with the math here! A previous bug was caused by midU going negative as a short, which
-			// was sign-extended into midTexCoord, causing midV to have garbage (likely NaN data). If you're touching
-			// this code, be aware of that, and don't introduce those kinds of bugs!
-			//
-			// Also note that OpenGL takes shorts in the range of [0, 65535] and transforms them linearly to [0.0, 1.0],
-			// so multiply by 65535, not 65536.
-			//
-			// TODO: Does this introduce precision issues? Do we need to fall back to floats here? This might break
-			// with high resolution texture packs.
+		int nextElementByte = i;
 
-			vertexCount = 0;
-			uSum = 0;
-			vSum = 0;
+		quad.setup(buffer, nextElementByte, STRIDE);
 
-			// TODO: Keep this in sync with the extensions
-			int extendedDataLength = (2 * 2) + (1 * 4) + (1 * 4);
 
-			int nextElementByte = i + STRIDE;
+		computeTangents(buffer, i, length);
 
-			quad.setup(buffer, nextElementByte, STRIDE);
-			net.coderbot.iris.vertices.NormalHelper.computeFaceNormal(this.normal, quad);
-			int packedNormal = NormalHelper.packNormal(this.normal, 0);
+		float midU = 0;
+		float midV = 0;
 
-			buffer.putInt(nextElementByte - 4 - extendedDataLength, packedNormal);
-			buffer.putInt(nextElementByte - 4 - extendedDataLength - STRIDE, packedNormal);
-			buffer.putInt(nextElementByte - 4 - extendedDataLength - STRIDE * 2, packedNormal);
-			buffer.putInt(nextElementByte - 4 - extendedDataLength - STRIDE * 3, packedNormal);
+		for (int vertex = 0; vertex < length; vertex++) {
+			midU += quad.u(vertex);
+			midV += quad.v(vertex);
+		}
 
-			computeTangents(buffer, i);
+		midU *= 0.25;
+		midV *= 0.25;
 
-			float midU = 0;
-			float midV = 0;
-
-			for (int vertex = 0; vertex < 4; vertex++) {
-				midU += quad.u(vertex);
-				midV += quad.v(vertex);
-			}
-
-			midU *= 0.25;
-			midV *= 0.25;
-
-			for (int vertex = 0; vertex < 4; vertex++) {
-				buffer.putFloat(nextElementByte - 12 - STRIDE * vertex, midU);
-				buffer.putFloat(nextElementByte - 8 - STRIDE * vertex, midV);
-			}
+		for (int vertex = 0; vertex < length; vertex++) {
+			buffer.putFloat(nextElementByte - 12 - STRIDE * vertex, midU);
+			buffer.putFloat(nextElementByte - 8 - STRIDE * vertex, midV);
 		}
 	}
 
-	private void computeTangents(ByteBuffer buffer, int i) {
+	public void writeQuadInternal(float x, float y, float z, int color, float u, float v, int light, int overlay, int unneededNormal) {
+		this.normal.set(Norm3b.unpackX(unneededNormal), Norm3b.unpackY(unneededNormal), Norm3b.unpackZ(unneededNormal));
+		int i = this.writeOffset;
+
+		ByteBuffer buffer = this.byteBuffer;
+		buffer.putFloat(i, x);
+		buffer.putFloat(i + 4, y);
+		buffer.putFloat(i + 8, z);
+		buffer.putInt(i + 12, color);
+		buffer.putFloat(i + 16, u);
+		buffer.putFloat(i + 20, v);
+		buffer.putInt(i + 24, overlay);
+		buffer.putInt(i + 28, light);
+		buffer.putInt(i + 32, unneededNormal);
+		buffer.putShort(i + 36, (short) -1);
+		buffer.putShort(i + 38, (short) -1);
+
+		this.advance();
+	}
+
+	private void computeTangents(ByteBuffer buffer, int i, int length) {
 		// Capture all of the relevant vertex positions
 		float x0 = quad.x(0);
 		float y0 = quad.y(0);
@@ -185,10 +184,13 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 		int tangent = net.coderbot.iris.vertices.NormalHelper.packNormal(tangentx, tangenty, tangentz, tangentW);
 
 		// TODO: Use packed tangents in the vertex format
-		buffer.putInt(i + STRIDE - 4, tangent);
-		buffer.putInt(i - 4, tangent);
-		buffer.putInt(i + STRIDE - 4 - STRIDE * 2, tangent);
-		buffer.putInt(i + STRIDE - 4 - STRIDE * 3, tangent);
+		if (tangent == 0) {
+			throw new RuntimeException("tf????");
+		}
+
+		for (int vertex = 0; vertex < length; vertex++) {
+			buffer.putInt(i - 4 - STRIDE * vertex, tangent);
+		}
 /*
 		for (int vertex = 0; vertex < 4; vertex++) {
 			buffer.putFloat(this.nextElementByte - 16 - stride * vertex, tangentx);

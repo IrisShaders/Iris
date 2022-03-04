@@ -13,6 +13,7 @@ import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexSink
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
 import me.jellysquid.mods.sodium.client.util.color.ColorU8;
 import me.jellysquid.mods.sodium.client.util.math.MatrixUtil;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertexSink;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -84,6 +85,10 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer {
             drain.writeQuad(pos.x(), pos.y(), pos.z(), color, u, v, light[i], overlay, norm);
         }
 
-        drain.flush();
+		if (drain instanceof EntityVertexSink) {
+			((EntityVertexSink) drain).endQuad(4 );
+		}
+
+		drain.flush();
     }
 }
