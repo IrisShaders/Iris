@@ -7,6 +7,7 @@ import me.jellysquid.mods.sodium.client.model.vertex.transformers.SpriteTextured
 import me.jellysquid.mods.sodium.client.model.vertex.type.BlittableVertexType;
 import me.jellysquid.mods.sodium.client.model.vertex.type.VanillaVertexType;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer.EntityVertexBufferWriterNio;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer.EntityVertexBufferWriterUnsafe;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer.EntityVertexWriterFallback;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 
@@ -18,7 +19,7 @@ public class EntityVertexType implements VanillaVertexType<EntityVertexSink>, Bl
 
     @Override
     public EntityVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-        return new EntityVertexBufferWriterNio(buffer);
+        return direct ? new EntityVertexBufferWriterUnsafe(buffer) : new EntityVertexBufferWriterNio(buffer);
     }
 
     @Override

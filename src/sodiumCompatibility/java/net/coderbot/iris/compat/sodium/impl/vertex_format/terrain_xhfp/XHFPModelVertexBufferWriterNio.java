@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.xhfp;
+package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
