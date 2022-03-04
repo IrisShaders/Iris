@@ -5,23 +5,28 @@ import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNi
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertexSink;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
+import net.coderbot.iris.vertices.IrisVertexFormats;
 
 import java.nio.ByteBuffer;
 
 public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implements EntityVertexSink {
 	private final QuadViewEntity quad = new QuadViewEntity();
-	private final int STRIDE;
+	private static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
+	float midU = 0;
+	float midV = 0;
 
 	public EntityVertexBufferWriterNio(VertexBufferView backingBuffer) {
 		super(backingBuffer, IrisModelVertexFormats.ENTITIES);
-		STRIDE = IrisModelVertexFormats.ENTITIES.getVertexFormat().getVertexSize();
 	}
 
 	@Override
 	public void writeQuad(float x, float y, float z, int color, float u, float v, int light, int overlay, int normal) {
 		int i = this.writeOffset;
-
 		ByteBuffer buffer = this.byteBuffer;
+
+		midU += u;
+		midV += v;
+
 		buffer.putFloat(i, x);
 		buffer.putFloat(i + 4, y);
 		buffer.putFloat(i + 8, z);
@@ -50,20 +55,12 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 			buffer.putInt(i - 4 - STRIDE * vertex, tangent);
 		}
 
-		float midU = 0;
-		float midV = 0;
-
 		for (int vertex = 0; vertex < length; vertex++) {
-			midU += quad.u(vertex);
-			midV += quad.v(vertex);
+			buffer.putFloat(i - 12 - STRIDE * vertex, midU / 4F);
+			buffer.putFloat(i - 8 - STRIDE * vertex, midV / 4F);
 		}
 
-		midU *= 0.25;
-		midV *= 0.25;
-
-		for (int vertex = 0; vertex < length; vertex++) {
-			buffer.putFloat(i - 12 - STRIDE * vertex, midU);
-			buffer.putFloat(i - 8 - STRIDE * vertex, midV);
-		}
+		midU = 0;
+		midV = 0;
 	}
 }

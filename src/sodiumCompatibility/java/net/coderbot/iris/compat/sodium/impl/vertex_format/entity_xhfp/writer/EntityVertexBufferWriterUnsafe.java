@@ -5,21 +5,26 @@ import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUn
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertexSink;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
+import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.lwjgl.system.MemoryUtil;
 
 public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements EntityVertexSink {
 	private final QuadViewEntity quad = new QuadViewEntity();
-	private final int STRIDE;
+	private static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
+	float midU = 0;
+	float midV = 0;
 
 	public EntityVertexBufferWriterUnsafe(VertexBufferView backingBuffer) {
 		super(backingBuffer, IrisModelVertexFormats.ENTITIES);
-		STRIDE = IrisModelVertexFormats.ENTITIES.getVertexFormat().getVertexSize();
 	}
 
 	@Override
 	public void writeQuad(float x, float y, float z, int color, float u, float v, int light, int overlay, int normal) {
 		long i = this.writePointer;
+
+		midU += u;
+		midV += v;
 
 		MemoryUtil.memPutFloat(i, x);
 		MemoryUtil.memPutFloat(i + 4, y);
@@ -48,20 +53,12 @@ public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe imp
 			MemoryUtil.memPutInt(i - 4 - STRIDE * vertex, tangent);
 		}
 
-		float midU = 0;
-		float midV = 0;
-
-		for (int vertex = 0; vertex < length; vertex++) {
-			midU += quad.u(vertex);
-			midV += quad.v(vertex);
-		}
-
-		midU *= 0.25;
-		midV *= 0.25;
-
 		for (long vertex = 0; vertex < length; vertex++) {
-			MemoryUtil.memPutFloat(i - 12 - STRIDE * vertex, midU);
-			MemoryUtil.memPutFloat(i - 8 - STRIDE * vertex, midV);
+			MemoryUtil.memPutFloat(i - 12 - STRIDE * vertex, midU / 4F);
+			MemoryUtil.memPutFloat(i - 8 - STRIDE * vertex, midV / 4F);
 		}
+
+		midU = 0;
+		midV = 0;
 	}
 }
