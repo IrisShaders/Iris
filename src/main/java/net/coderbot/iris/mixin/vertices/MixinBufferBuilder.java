@@ -108,11 +108,12 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		}
 
 		this.putShort(0, currentBlock);
-		this.putShort(4, currentRenderType);
+		this.putShort(2, currentRenderType);
 		this.nextElement();
-		this.buffer.putInt(this.nextElementByte, 0);
+		this.putFloat(0, 0);
+		this.putFloat(4, 0);
 		this.nextElement();
-		this.buffer.putInt(this.nextElementByte, 0);
+		this.putInt(0, 0);
 		this.nextElement();
 
 		vertexCount += 1;
@@ -125,7 +126,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		vertexCount = 0;
 
 		// TODO: Keep this in sync with the extensions
-		int extendedDataLength = (2 * 2) + (4) + (4); // 12
+		int extendedDataLength = (2 * 2) + (1 * 4) + (1 * 4);
 
 		int stride = this.format.getVertexSize();
 
@@ -140,8 +141,8 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 		computeTangents();
 
-		short midU = 0;
-		short midV = 0;
+		float midU = 0;
+		float midV = 0;
 
 		for (int vertex = 0; vertex < 4; vertex++) {
 			midU += quad.u(vertex);
@@ -150,10 +151,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 		midU *= 0.25;
 		midV *= 0.25;
-		int midTexCoord = (midV << 16) | midU;
 
 		for (int vertex = 0; vertex < 4; vertex++) {
-			buffer.putInt(this.nextElementByte - extendedDataLength - stride * vertex, midTexCoord);
+			buffer.putFloat(this.nextElementByte - 12 - stride * vertex, midU);
+			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, midV);
 		}
 	}
 
@@ -258,8 +259,8 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		buffer.putInt(this.nextElementByte - 4 - stride, tangent);
 		buffer.putInt(this.nextElementByte - 4 - stride * 2, tangent);
 		buffer.putInt(this.nextElementByte - 4 - stride * 3, tangent);
-
-		/*for (int vertex = 0; vertex < 4; vertex++) {
+/*
+		for (int vertex = 0; vertex < 4; vertex++) {
 			buffer.putFloat(this.nextElementByte - 16 - stride * vertex, tangentx);
 			buffer.putFloat(this.nextElementByte - 12 - stride * vertex, tangenty);
 			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, tangentz);
@@ -276,5 +277,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		} else {
 			return (float) (1.0 / Math.sqrt(value));
 		}
+	}
+
+	@Unique
+	public void putInt(int i, int value) {
+		this.buffer.putInt(this.nextElementByte + i, value);
 	}
 }

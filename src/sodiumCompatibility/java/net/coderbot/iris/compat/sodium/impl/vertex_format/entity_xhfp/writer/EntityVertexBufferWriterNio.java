@@ -45,9 +45,8 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
         buffer.putFloat(i + 20, v);
         buffer.putInt(i + 24, overlay);
         buffer.putInt(i + 28, light);
-        buffer.putShort(i + 34, (short) -1);
         buffer.putShort(i + 36, (short) -1);
-		buffer.putInt(i + 32, unneededNormal);
+        buffer.putShort(i + 38, (short) -1);
 
         this.advance();
 
@@ -65,12 +64,11 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 			// with high resolution texture packs.
 			int midU = (int)(65535.0F * Math.min(uSum * 0.25f, 1.0f)) & 0xFFFF;
 			int midV = (int)(65535.0F * Math.min(vSum * 0.25f, 1.0f)) & 0xFFFF;
-			int midTexCoord = (midV << 16) | midU;
 
-			buffer.putInt(i + 38, midTexCoord);
-			buffer.putInt(i + 38 - STRIDE, midTexCoord);
-			buffer.putInt(i + 38 - STRIDE * 2, midTexCoord);
-			buffer.putInt(i + 38 - STRIDE * 3, midTexCoord);
+			for (int vertex = 0; vertex < 4; vertex++) {
+				buffer.putFloat(i + 40 - STRIDE * vertex, midU);
+				buffer.putFloat(i + 44 - STRIDE * vertex, midV);
+			}
 
 			vertexCount = 0;
 			uSum = 0;
@@ -85,9 +83,10 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 			NormalHelper.computeFaceNormal(normal, currentQuad);
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
-			//buffer.putInt(i + 32 - STRIDE, packedNormal);
-			//buffer.putInt(i + 32 - STRIDE * 2, packedNormal);
-			//buffer.putInt(i + 32 - STRIDE * 3, packedNormal);
+			buffer.putInt(i + 32, packedNormal);
+			buffer.putInt(i + 32 - STRIDE, packedNormal);
+			buffer.putInt(i + 32 - STRIDE * 2, packedNormal);
+			buffer.putInt(i + 32 - STRIDE * 3, packedNormal);
 
 			// Capture all of the relevant vertex positions
 			float x0 = buffer.getFloat(i - STRIDE * 3);
@@ -171,10 +170,10 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 			int tangent = Norm3b.pack(tangentx, tangenty, tangentz);
 			tangent |= (tangentW << 24);
 
-			buffer.putInt(i + 42, tangent);
-			buffer.putInt(i + 42 - STRIDE, tangent);
-			buffer.putInt(i + 42 - STRIDE * 2, tangent);
-			buffer.putInt(i + 42 - STRIDE * 3, tangent);
+			buffer.putInt(i + 48, tangent);
+			buffer.putInt(i + 48 - STRIDE, tangent);
+			buffer.putInt(i + 48 - STRIDE * 2, tangent);
+			buffer.putInt(i + 48 - STRIDE * 3, tangent);
 		}
 	}
 

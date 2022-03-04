@@ -20,7 +20,7 @@ public class EntityVertexType implements VanillaVertexType<EntityVertexSink>, Bl
 
     @Override
     public EntityVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-        return direct ? new EntityVertexBufferWriterUnsafe(buffer) : new EntityVertexBufferWriterNio(buffer);
+        return new EntityVertexBufferWriterNio(buffer);
     }
 
     @Override
