@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.buffer_builder_intrinsics;
+package net.coderbot.iris.compat.sodium.mixin.sodium_copy;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+// This copy of Sodium's Mixin is required in order for the configuration disabling to work.
 @SuppressWarnings({ "SameParameterValue" })
 @Mixin(BufferBuilder.class)
 public abstract class MixinBufferBuilder extends DefaultedVertexConsumer {
@@ -85,10 +86,6 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer {
 
             drain.writeQuad(pos.x(), pos.y(), pos.z(), color, u, v, light[i], overlay, norm);
         }
-
-		if (drain instanceof EntityVertexSink) {
-			((EntityVertexSink) drain).endQuad(4, Norm3b.unpackX(norm), Norm3b.unpackY(norm), Norm3b.unpackZ(norm));
-		}
 
 		drain.flush();
     }

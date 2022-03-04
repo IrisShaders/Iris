@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.buffer_builder_intrinsics;
+package net.coderbot.iris.compat.sodium.mixin.vertex_format.entity;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;

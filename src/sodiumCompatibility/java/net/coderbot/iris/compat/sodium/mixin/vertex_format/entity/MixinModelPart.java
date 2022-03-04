@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.fast_render_entity;
+package net.coderbot.iris.compat.sodium.mixin.vertex_format.entity;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -80,7 +80,6 @@ public class MixinModelPart {
 				((EntityVertexSink) drain).endQuad(quad.vertices.length, normX, normY, normZ);
 			}
         }
-
 
 		drain.flush();
     }

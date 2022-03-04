@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.buffer_builder_intrinsics;
+package net.coderbot.iris.compat.sodium.mixin.sodium_copy;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.LevelRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
+// This copy of Sodium's Mixin is required in order for the configuration disabling to work.
 @Mixin(LevelRenderer.class)
 public class MixinLevelRenderer {
     /**
