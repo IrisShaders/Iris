@@ -5,10 +5,11 @@ import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.NormalHelper;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.QuadViewEntity;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertexSink;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vertices.NormalHelper;
+import net.coderbot.iris.vertices.QuadView;
 
 import java.nio.ByteBuffer;
 
@@ -16,7 +17,7 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 	int vertexCount = 0;
 	float uSum;
 	float vSum;
-	private QuadViewEntity currentQuad = new QuadViewEntity(IrisModelVertexFormats.ENTITIES.getVertexFormat().getVertexSize(), false);
+	private QuadView quad = new QuadView();
 	private Vector3f normal = new Vector3f();
 	int STRIDE;
 
@@ -62,119 +63,139 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 			//
 			// TODO: Does this introduce precision issues? Do we need to fall back to floats here? This might break
 			// with high resolution texture packs.
-			int midU = (int)(65535.0F * Math.min(uSum * 0.25f, 1.0f)) & 0xFFFF;
-			int midV = (int)(65535.0F * Math.min(vSum * 0.25f, 1.0f)) & 0xFFFF;
-
-			for (int vertex = 0; vertex < 4; vertex++) {
-				buffer.putFloat(i + 40 - STRIDE * vertex, midU);
-				buffer.putFloat(i + 44 - STRIDE * vertex, midV);
-			}
 
 			vertexCount = 0;
 			uSum = 0;
 			vSum = 0;
 
-			// normal computation
-			// Implementation based on the algorithm found here:
-			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
+			// TODO: Keep this in sync with the extensions
+			int extendedDataLength = (2 * 2) + (1 * 4) + (1 * 4);
 
-			currentQuad.buffer = this.byteBuffer;
-			currentQuad.writeOffset = this.writeOffset;
-			NormalHelper.computeFaceNormal(normal, currentQuad);
-			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+			int nextElementByte = i + STRIDE;
 
-			buffer.putInt(i + 32, packedNormal);
-			buffer.putInt(i + 32 - STRIDE, packedNormal);
-			buffer.putInt(i + 32 - STRIDE * 2, packedNormal);
-			buffer.putInt(i + 32 - STRIDE * 3, packedNormal);
+			quad.setup(buffer, nextElementByte, STRIDE);
+			net.coderbot.iris.vertices.NormalHelper.computeFaceNormal(this.normal, quad);
+			int packedNormal = NormalHelper.packNormal(this.normal, 0);
 
-			// Capture all of the relevant vertex positions
-			float x0 = buffer.getFloat(i - STRIDE * 3);
-			float y0 = buffer.getFloat(i + 4 - STRIDE * 3);
-			float z0 = buffer.getFloat(i + 8 - STRIDE * 3);
+			buffer.putInt(nextElementByte - 4 - extendedDataLength, packedNormal);
+			buffer.putInt(nextElementByte - 4 - extendedDataLength - STRIDE, packedNormal);
+			buffer.putInt(nextElementByte - 4 - extendedDataLength - STRIDE * 2, packedNormal);
+			buffer.putInt(nextElementByte - 4 - extendedDataLength - STRIDE * 3, packedNormal);
 
-			float x1 = buffer.getFloat(i - STRIDE * 2);
-			float y1 = buffer.getFloat(i + 4 - STRIDE * 2);
-			float z1 = buffer.getFloat(i + 8 - STRIDE * 2);
+			computeTangents(buffer, i);
 
-			float x2 = buffer.getFloat(i - STRIDE);
-			float y2 = buffer.getFloat(i + 4 - STRIDE);
-			float z2 = buffer.getFloat(i + 8 - STRIDE);
+			float midU = 0;
+			float midV = 0;
 
-			float edge1x = x1 - x0;
-			float edge1y = y1 - y0;
-			float edge1z = z1 - z0;
-
-			float edge2x = x2 - x0;
-			float edge2y = y2 - y0;
-			float edge2z = z2 - z0;
-
-			float u0 = buffer.getFloat(i + 16 - STRIDE * 3);
-			float v0 = buffer.getFloat(i + 20 - STRIDE * 3);
-
-			float u1 = buffer.getFloat(i + 16 - STRIDE * 2);
-			float v1 = buffer.getFloat(i + 20 - STRIDE * 2);
-
-			float u2 = buffer.getFloat(i + 16 - STRIDE);
-			float v2 = buffer.getFloat(i + 20 - STRIDE);
-
-			float deltaU1 = u1 - u0;
-			float deltaV1 = v1 - v0;
-			float deltaU2 = u2 - u0;
-			float deltaV2 = v2 - v0;
-
-			float fdenom = deltaU1 * deltaV2 - deltaU2 * deltaV1;
-			float f;
-
-			if (fdenom == 0.0) {
-				f = 1.0f;
-			} else {
-				f = 1.0f / fdenom;
+			for (int vertex = 0; vertex < 4; vertex++) {
+				midU += quad.u(vertex);
+				midV += quad.v(vertex);
 			}
 
-			float tangentx = f * (deltaV2 * edge1x - deltaV1 * edge2x);
-			float tangenty = f * (deltaV2 * edge1y - deltaV1 * edge2y);
-			float tangentz = f * (deltaV2 * edge1z - deltaV1 * edge2z);
-			float tcoeff = rsqrt(tangentx * tangentx + tangenty * tangenty + tangentz * tangentz);
-			tangentx *= tcoeff;
-			tangenty *= tcoeff;
-			tangentz *= tcoeff;
+			midU *= 0.25;
+			midV *= 0.25;
 
-			float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
-			float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
-			float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
-			float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
-			bitangentx *= bitcoeff;
-			bitangenty *= bitcoeff;
-			bitangentz *= bitcoeff;
-
-			// predicted bitangent = tangent × normal
-			// Compute the determinant of the following matrix to get the cross product
-			//  i  j  k
-			// tx ty tz
-			// nx ny nz
-
-			float pbitangentx =   tangenty * normal.z() - tangentz * normal.y();
-			float pbitangenty = -(tangentx * normal.z() - tangentz * normal.x());
-			float pbitangentz =   tangentx * normal.x() - tangenty * normal.y();
-
-			float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
-			byte tangentW;
-
-			if (dot < 0) {
-				tangentW = -127;
-			} else {
-				tangentW = 127;
+			for (int vertex = 0; vertex < 4; vertex++) {
+				buffer.putFloat(nextElementByte - 12 - STRIDE * vertex, midU);
+				buffer.putFloat(nextElementByte - 8 - STRIDE * vertex, midV);
 			}
-
-			int tangent = Norm3b.pack(tangentx, tangenty, tangentz);
-			tangent |= (tangentW << 24);
-
-			buffer.putInt(i + 48, tangent);
-			buffer.putInt(i + 48 - STRIDE, tangent);
-			buffer.putInt(i + 48 - STRIDE * 2, tangent);
-			buffer.putInt(i + 48 - STRIDE * 3, tangent);
 		}
+	}
+
+	private void computeTangents(ByteBuffer buffer, int i) {
+		// Capture all of the relevant vertex positions
+		float x0 = quad.x(0);
+		float y0 = quad.y(0);
+		float z0 = quad.z(0);
+
+		float x1 = quad.x(1);
+		float y1 = quad.y(1);
+		float z1 = quad.z(1);
+
+		float x2 = quad.x(2);
+		float y2 = quad.y(2);
+		float z2 = quad.z(2);
+
+		float edge1x = x1 - x0;
+		float edge1y = y1 - y0;
+		float edge1z = z1 - z0;
+
+		float edge2x = x2 - x0;
+		float edge2y = y2 - y0;
+		float edge2z = z2 - z0;
+
+		float u0 = quad.u(0);
+		float v0 = quad.v(0);
+
+		float u1 = quad.u(1);
+		float v1 = quad.v(1);
+
+		float u2 = quad.u(2);
+		float v2 = quad.v(2);
+
+		float deltaU1 = u1 - u0;
+		float deltaV1 = v1 - v0;
+		float deltaU2 = u2 - u0;
+		float deltaV2 = v2 - v0;
+
+		float fdenom = deltaU1 * deltaV2 - deltaU2 * deltaV1;
+		float f;
+
+		if (fdenom == 0.0) {
+			f = 1.0f;
+		} else {
+			f = 1.0f / fdenom;
+		}
+
+		float tangentx = f * (deltaV2 * edge1x - deltaV1 * edge2x);
+		float tangenty = f * (deltaV2 * edge1y - deltaV1 * edge2y);
+		float tangentz = f * (deltaV2 * edge1z - deltaV1 * edge2z);
+		float tcoeff = rsqrt(tangentx * tangentx + tangenty * tangenty + tangentz * tangentz);
+		tangentx *= tcoeff;
+		tangenty *= tcoeff;
+		tangentz *= tcoeff;
+
+		float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
+		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
+		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
+		float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
+		bitangentx *= bitcoeff;
+		bitangenty *= bitcoeff;
+		bitangentz *= bitcoeff;
+
+		// predicted bitangent = tangent × normal
+		// Compute the determinant of the following matrix to get the cross product
+		//  i  j  k
+		// tx ty tz
+		// nx ny nz
+
+		float pbitangentx =   tangenty * normal.z - tangentz * normal.y;
+		float pbitangenty = -(tangentx * normal.z - tangentz * normal.x);
+		float pbitangentz =   tangentx * normal.x - tangenty * normal.y;
+
+		float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
+		float tangentW;
+
+		if (dot < 0) {
+			tangentW = -1.0F;
+		} else {
+			tangentW = 1.0F;
+		}
+
+		int tangent = net.coderbot.iris.vertices.NormalHelper.packNormal(tangentx, tangenty, tangentz, tangentW);
+
+		// TODO: Use packed tangents in the vertex format
+		buffer.putInt(i + STRIDE - 4, tangent);
+		buffer.putInt(i - 4, tangent);
+		buffer.putInt(i + STRIDE - 4 - STRIDE * 2, tangent);
+		buffer.putInt(i + STRIDE - 4 - STRIDE * 3, tangent);
+/*
+		for (int vertex = 0; vertex < 4; vertex++) {
+			buffer.putFloat(this.nextElementByte - 16 - stride * vertex, tangentx);
+			buffer.putFloat(this.nextElementByte - 12 - stride * vertex, tangenty);
+			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, tangentz);
+			buffer.putFloat(this.nextElementByte - 4 - stride * vertex, 1.0F);
+		}*/
 	}
 
 	// TODO: Verify that this works with the new changes to the CVF
