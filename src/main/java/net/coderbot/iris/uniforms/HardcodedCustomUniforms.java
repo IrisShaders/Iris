@@ -43,10 +43,9 @@ public class HardcodedCustomUniforms {
 
 	private static float getEyeInCave() {
 		if (client.getCameraEntity().getEyeY() < 5.0) {
-			System.out.println(getEyeSkyBrightness() / 240F);
-			return getEyeSkyBrightness() / 240F;
+			return 1.0f - getEyeSkyBrightness() / 240F;
 		}
-		return 0.0F;
+		return 0.0f;
 	}
 
 	private static float getEyeSkyBrightness() {
