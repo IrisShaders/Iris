@@ -11,12 +11,12 @@ public class SodiumVersionCheck {
 	// If you forget to edit the download links you'll cause the support team a bunch
 	// of pain. So don't forget!
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
-			// Development build for 22w03a
-			AllowedSodiumVersion.exact("0.4.1+rev.d50338a",
-					"https://updatethis.link"),
+			// Release version
+			AllowedSodiumVersion.exact("0.4.1+build.15",
+					"https://modrinth.com/mod/sodium"),
 
 			// For use by ReplayMod
-			AllowedSodiumVersion.prefix("0.4.0-alpha6+replaymod")
+			AllowedSodiumVersion.prefix("0.4.1+replaymod")
 	);
 
 	public static String getDownloadLink() {
