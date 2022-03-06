@@ -24,86 +24,88 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 
 public class Buildscript extends MultiSrcDirFabricProject {
-    static final boolean SODIUM = true;
-    static final boolean CUSTOM_SODIUM = false;
-    static final String customSodiumName = "sodium-fabric-mc1.18.2-0.4.1+rev.d50338a.jar";
-  
+	static final boolean SODIUM = true;
+	static final boolean CUSTOM_SODIUM = false;
+	static final String customSodiumName = "sodium-fabric-mc1.18.2-0.4.1+rev.d50338a.jar";
+
 	@Override
 	public VersionMeta createMcVersion() {
 		return Minecraft.getVersion("1.18.2");
 	}
-  
-	@Override
-    public MappingTree createMappings() {
-        return createMojmap();
-    }
 
-    @Override
-    public FabricLoader getLoader() {
-        return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.13.3"));
-    }
+	@Override
+	public MappingTree createMappings() {
+		return createMojmap();
+	}
+
+	@Override
+	public FabricLoader getLoader() {
+		return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.13.3"));
+	}
 
 	@Override
 	public int getJavaVersion() {
 		return 17;
 	}
 
-    @Override
-    public Path getSrcDir() {
-        throw new UnsupportedOperationException();
-    }
+	@Override
+	public Path getSrcDir() {
+		throw new UnsupportedOperationException();
+	}
 
-    @Override
-    public Consumer<AccessWidenerVisitor> getAw() {
-        return v -> {
-            try {
-                new AccessWidenerReader(v).read(Files.newBufferedReader(getResourcesDir().resolve("iris.accesswidener")), Namespaces.NAMED);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-    }
+	@Override
+	public Consumer<AccessWidenerVisitor> getAw() {
+		return v -> {
+			try {
+				new AccessWidenerReader(v).read(Files.newBufferedReader(getResourcesDir().resolve("iris.accesswidener")), Namespaces.NAMED);
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		};
+	}
 
-    @Override
-    public void getModDependencies(ModDependencyCollector d) {
-        d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
-        d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.16+55dca1a4d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
-        d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.11+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+	@Override
+	public void getModDependencies(ModDependencyCollector d) {
+		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.16+55dca1a4d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.11+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.3+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.6+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "2.0.1+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
 		if (SODIUM) {
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.3+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.6+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "2.0.1+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-
 			if (CUSTOM_SODIUM) {
 				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
 				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			}
-
-			d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		} else {
+			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"), ModDependencyFlag.COMPILE);
 		}
-    }
+
+		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+	}
 
 	@Override
-    public Path[] paths(String subdir, boolean onlyHeaders) {
-        List<Path> r = new ArrayList<>();
-        if (!onlyHeaders) {
-            Collections.addAll(
-                r,
-                getProjectDir().resolve("src").resolve("main").resolve(subdir),
-                getProjectDir().resolve("src").resolve("vendored").resolve(subdir)
-            );
-            if (SODIUM) {
-                r.add(getProjectDir().resolve("src").resolve("sodiumCompatibility").resolve(subdir));
-            } else {
-                r.add(getProjectDir().resolve("src").resolve("noSodiumStub").resolve(subdir));
-            }
-        }
-        r.add(getProjectDir().resolve("src").resolve("headers").resolve(subdir));
-        r.removeIf(p -> !Files.exists(p));
-        return r.toArray(new Path[0]);
-    }
+	public Path[] paths(String subdir, boolean onlyHeaders) {
+		List<Path> r = new ArrayList<>();
+		if (!onlyHeaders) {
+			Collections.addAll(
+				r,
+				getProjectDir().resolve("src").resolve("main").resolve(subdir),
+				getProjectDir().resolve("src").resolve("vendored").resolve(subdir)
+			);
+			if (SODIUM) {
+				r.add(getProjectDir().resolve("src").resolve("sodiumCompatibility").resolve(subdir));
+			} else {
+				r.add(getProjectDir().resolve("src").resolve("noSodiumStub").resolve(subdir));
+			}
+		}
+		r.add(getProjectDir().resolve("src").resolve("headers").resolve(subdir));
+		r.removeIf(p -> !Files.exists(p));
+		return r.toArray(new Path[0]);
+	}
 
 	@Override
 	public String getVersion() {
