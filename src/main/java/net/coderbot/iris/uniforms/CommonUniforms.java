@@ -216,7 +216,7 @@ public final class CommonUniforms {
 		return 0.0F;
 	}
 
-	private static int isEyeInWater() {
+	static int isEyeInWater() {
 		// Note: With certain utility / cheat mods, this method will return air even when the player is submerged when
 		// the "No Overlay" feature is enabled.
 		//

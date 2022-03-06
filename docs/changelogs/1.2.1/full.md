@@ -1,6 +1,4 @@
-# Iris 1.2.1 Preliminary Changelog
-
-This update isn't actually released yet, we're just writing this now to keep track of our progress.
+# Iris 1.2.1 Changelog
 
 - Switched to the Brachyura build system, substantially speeding up the build process & allowing us to much more easily tweak and debug our build scripts (ThatTrollzer, coderbot, IMS)
   - Brachyura is still in development and is incomplete, but Iris is an early adopter. We hope that it will continue to stabilize and become appropriate for use by all Minecraft mods in due time.
@@ -35,6 +33,7 @@ This update isn't actually released yet, we're just writing this now to keep tra
   - Fixes entity shadows on SEUS PTGI.
 - Added support for the extended vertex format on entities, block entities, and similar (IMS)
   - Fixes rendering issues with Advanced Materials on BSL, AstraLex, and similar packs
+  - Fixes block breaking animation with KUDA shaders
   - Fixes many miscellaneous issues on other older packs
 
 ## Translations

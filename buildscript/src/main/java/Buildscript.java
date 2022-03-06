@@ -97,6 +97,14 @@ public class Buildscript extends MultiSrcDirFabricProject {
 
 	@Override
 	public String getVersion() {
+		String baseVersion = super.getVersion().replace("development-environment", "");
+
+		String build_id = System.getenv("GITHUB_RUN_NUMBER");
+
+		if (build_id != null) {
+			return baseVersion + "build." + build_id;
+		}
+
 		String commitHash = "";
 		boolean isDirty = false;
 		try {
@@ -107,8 +115,6 @@ public class Buildscript extends MultiSrcDirFabricProject {
 		} catch (IOException | GitAPIException e) {
 			e.printStackTrace();
 		}
-
-		String baseVersion = super.getVersion().replace("development-environment", "");
 
 		return baseVersion + commitHash + (isDirty ? "-dirty" : "");
 	}
