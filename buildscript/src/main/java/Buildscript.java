@@ -71,20 +71,21 @@ public class Buildscript extends MultiSrcDirFabricProject {
         d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.10+f09604ce18"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
         d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.6+2a2bb57318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
 
-		if (SODIUM) {
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.0+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.1.6+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "0.2.1+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.0+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.1.6+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "0.2.1+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
+		if (SODIUM) {
 			if (CUSTOM_SODIUM) {
 				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
 				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.17.1-0.3.4"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			}
-
-			d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-
+		} else {
+			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.17.1-0.3.4"), ModDependencyFlag.COMPILE, null);
 		}
+
+		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
     }
 
 	@Override
