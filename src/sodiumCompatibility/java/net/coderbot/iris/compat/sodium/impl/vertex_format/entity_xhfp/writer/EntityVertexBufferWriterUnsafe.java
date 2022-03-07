@@ -1,10 +1,7 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer;
 
-import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
-import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.writer.QuadVertexBufferWriterUnsafe;
-import me.jellysquid.mods.sodium.client.util.Norm3b;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertexSink;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
@@ -15,19 +12,17 @@ import org.lwjgl.system.MemoryUtil;
 public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements EntityVertexSink {
 	private final QuadViewEntity quad = new QuadViewEntity();
 	private static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
-	private float midU = 0;
-	private float midV = 0;
-	private int vertexCount = 0;
+	float midU = 0;
+	float midV = 0;
 
 	public EntityVertexBufferWriterUnsafe(VertexBufferView backingBuffer) {
-		super(backingBuffer, VanillaVertexTypes.QUADS);
+		super(backingBuffer, IrisModelVertexFormats.ENTITIES);
 	}
 
 	@Override
 	public void writeQuad(float x, float y, float z, int color, float u, float v, int light, int overlay, int normal) {
 		long i = this.writePointer;
 
-		vertexCount++;
 		midU += u;
 		midV += v;
 
@@ -43,25 +38,27 @@ public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe imp
 		MemoryUtil.memPutShort(i + 36, (short) -1);
 		MemoryUtil.memPutShort(i + 38, (short) -1);
 
-		if (this.vertexCount == 4) {
-			quad.setup(writePointer, STRIDE);
+		this.advance();
+	}
 
-			int tangent = quad.computeTangent(Norm3b.unpackX(normal), Norm3b.unpackY(normal), Norm3b.unpackZ(normal));
+	@Override
+	public void endQuad(int length, float normalX, float normalY, float normalZ) {
+		long i = this.writePointer;
 
-			for (long vertex = 0; vertex < 4; vertex++) {
-				MemoryUtil.memPutInt(i - 4 - STRIDE * vertex, tangent);
-			}
+		quad.setup(writePointer, STRIDE);
 
-			for (long vertex = 0; vertex < 4; vertex++) {
-				MemoryUtil.memPutFloat(i - 12 - STRIDE * vertex, midU / 4F);
-				MemoryUtil.memPutFloat(i - 8 - STRIDE * vertex, midV / 4F);
-			}
+		int tangent = quad.computeTangent(normalX, normalY, normalZ);
 
-			midU = 0;
-			midV = 0;
-			vertexCount = 0;
+		for (long vertex = 0; vertex < length; vertex++) {
+			MemoryUtil.memPutInt(i - 4 - STRIDE * vertex, tangent);
 		}
 
-		this.advance();
+		for (long vertex = 0; vertex < length; vertex++) {
+			MemoryUtil.memPutFloat(i - 12 - STRIDE * vertex, midU / 4F);
+			MemoryUtil.memPutFloat(i - 8 - STRIDE * vertex, midV / 4F);
+		}
+
+		midU = 0;
+		midV = 0;
 	}
 }
