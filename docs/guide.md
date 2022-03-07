@@ -123,9 +123,9 @@ After enabling the selected shader, you can now configure it by clicking on the 
 
 Here you can edit the shader pack options provided by the shader itself. The options in the menu should be the exact same as the options you'd get by loading the shader in Optifine. There are a few additional functions in the top right of the menu, however:
 
-- Import button ![importbutton](guide-resources/importbutton.png) : Loads a shader setting file (.txt format) into the currently enabled shader. The button opens up a file selection prompt, letting you select the file. Useful for loading custom shader settings found online.
-- Export button ![exportbutton](guide-resources/exportbutton.png) : Exports your currently active shader settings to a .txt file. Useful for sharing your custom shader settings.
-- Reset button ![resetbutton](guide-resources/resetbutton.png) : Hold Left SHIFT and click this button to restore the default settings for the selected shader.
+- ![importbutton](guide-resources/importbutton.png) Import button : Loads a shader setting file (.txt format) into the currently enabled shader. The button opens up a file selection prompt, letting you select the file. Useful for loading custom shader settings found online.
+- ![exportbutton](guide-resources/exportbutton.png) Export button: Exports your currently active shader settings to a .txt file. Useful for sharing your custom shader settings.
+- ![resetbutton](guide-resources/resetbutton.png) Reset button : Hold Left SHIFT and click this button to restore the default settings for the selected shader.
 
 After you're done with customizing the shader, click Apply to apply the changes. You can now go back to the shader pack list by clicking on the "Shader Pack List..." button, or to the video settings menu by clicking the "Done" button.  
 
