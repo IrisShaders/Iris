@@ -29,17 +29,12 @@
     "shadow_map.MixinChunkRenderManager",
     "shadow_map.MixinGameRendererContext",
     "shadow_map.MixinSodiumWorldRenderer",
-    "sodium_copy.MixinCube",
-    "sodium_copy.MixinLevelRenderer",
-    "sodium_copy.MixinBufferBuilder",
-    "vertex_format.entity.MixinItemRenderer",
-    "vertex_format.entity.MixinModelPart",
-    "vertex_format.entity.MixinSpriteCoordinateExpander",
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinChunkOneshotGraphicsState",
     "vertex_format.MixinGlVertexFormatBuilder",
+    "vertex_format.MixinQuadVertexType",
     "vertex_format.MixinMultidrawChunkRenderBackend",
     "vertex_format.MixinSodiumWorldRenderer"
   ]
