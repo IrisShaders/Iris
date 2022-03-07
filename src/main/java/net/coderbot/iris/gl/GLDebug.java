@@ -5,6 +5,7 @@
 
 package net.coderbot.iris.gl;
 
+import net.coderbot.iris.Iris;
 import org.lwjgl.opengl.AMDDebugOutput;
 import org.lwjgl.opengl.ARBDebugOutput;
 import org.lwjgl.opengl.GL;
@@ -15,16 +16,13 @@ import org.lwjgl.opengl.GLDebugMessageARBCallback;
 import org.lwjgl.opengl.GLDebugMessageCallback;
 import org.lwjgl.opengl.KHRDebug;
 import org.lwjgl.system.APIUtil;
-import org.lwjgl.system.Callback;
 
-import javax.annotation.Nullable;
 import java.io.PrintStream;
 import java.util.function.Consumer;
 
 public final class GLDebug {
-	@Nullable
-	public static Callback setupDebugMessageCallback() {
-		return setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
+	public static void setupDebugMessageCallback() {
+		setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
 	}
 
 	private static void trace(Consumer<String> output) {
@@ -46,10 +44,6 @@ public final class GLDebug {
 			String className = elems[i].getClassName();
 			if (className == null) {
 				className = "";
-			}
-			if (className.startsWith("org.lwjglx.") && !className.startsWith("org.lwjglx.debug.opengl")
-					&& !className.startsWith("org.lwjglx.debug.glfw")) {
-				continue;
 			}
 			filtered[j++] = elems[i];
 		}
@@ -74,11 +68,10 @@ public final class GLDebug {
 		});
 	}
 
-	@Nullable
-	public static Callback setupDebugMessageCallback(PrintStream stream) {
+	public static void setupDebugMessageCallback(PrintStream stream) {
 		GLCapabilities caps = GL.getCapabilities();
 		if (caps.OpenGL43) {
-			APIUtil.apiLog("[GL] Using OpenGL 4.3 for error logging.");
+			Iris.logger.info("[GL] Using OpenGL 4.3 for error logging.");
 			GLDebugMessageCallback proc = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
 				stream.println("[LWJGL] OpenGL debug message");
 				printDetail(stream, "ID", String.format("0x%X", id));
@@ -90,13 +83,11 @@ public final class GLDebug {
 			});
 			GL43C.glDebugMessageCallback(proc, 0L);
 			if ((GL43C.glGetInteger(33310) & 2) == 0) {
-				APIUtil.apiLog("[GL] Warning: A non-debug context may not produce any debug output.");
+				Iris.logger.info("[GL] Warning: A non-debug context may not produce any debug output.");
 				GL43C.glEnable(37600);
 			}
-
-			return proc;
 		} else if (caps.GL_KHR_debug) {
-			APIUtil.apiLog("[GL] Using KHR_debug for error logging.");
+			Iris.logger.info("[GL] Using KHR_debug for error logging.");
 			GLDebugMessageCallback proc = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
 				stream.println("[LWJGL] OpenGL debug message");
 				printDetail(stream, "ID", String.format("0x%X", id));
@@ -108,13 +99,11 @@ public final class GLDebug {
 			});
 			KHRDebug.glDebugMessageCallback(proc, 0L);
 			if (caps.OpenGL30 && (GL43C.glGetInteger(33310) & 2) == 0) {
-				APIUtil.apiLog("[GL] Warning: A non-debug context may not produce any debug output.");
+				Iris.logger.info("[GL] Warning: A non-debug context may not produce any debug output.");
 				GL43C.glEnable(37600);
 			}
-
-			return proc;
 		} else if (caps.GL_ARB_debug_output) {
-			APIUtil.apiLog("[GL] Using ARB_debug_output for error logging.");
+			Iris.logger.info("[GL] Using ARB_debug_output for error logging.");
 			GLDebugMessageARBCallback proc = GLDebugMessageARBCallback.create((source, type, id, severity, length, message, userParam) -> {
 				stream.println("[LWJGL] ARB_debug_output message");
 				printDetail(stream, "ID", String.format("0x%X", id));
@@ -125,9 +114,8 @@ public final class GLDebug {
 				printTrace(stream);
 			});
 			ARBDebugOutput.glDebugMessageCallbackARB(proc, 0L);
-			return proc;
 		} else if (caps.GL_AMD_debug_output) {
-			APIUtil.apiLog("[GL] Using AMD_debug_output for error logging.");
+			Iris.logger.info("[GL] Using AMD_debug_output for error logging.");
 			GLDebugMessageAMDCallback proc = GLDebugMessageAMDCallback.create((id, category, severity, length, message, userParam) -> {
 				stream.println("[LWJGL] AMD_debug_output message");
 				printDetail(stream, "ID", String.format("0x%X", id));
@@ -137,10 +125,8 @@ public final class GLDebug {
 				printTrace(stream);
 			});
 			AMDDebugOutput.glDebugMessageCallbackAMD(proc, 0L);
-			return proc;
 		} else {
-			APIUtil.apiLog("[GL] No debug output implementation is available.");
-			return null;
+			Iris.logger.info("[GL] No debug output implementation is available, cannot return debug info.");
 		}
 	}
 
