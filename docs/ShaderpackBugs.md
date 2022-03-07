@@ -7,6 +7,12 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
 * Vanilla shadows appear in addition to dynamic shadows
     * Diagnosis: Shader packs force there to be shadows where there is low skylight to prevent light from leaking into caves. [While I would like to make this workaround unnecessary](https://github.com/IrisShaders/Iris/issues/317), it is entirely something implemented in the shaderpack, Iris doesn't really have control over it.
     * Workaround: no general workaround, each pack implements this differently.
+* Translucency issues
+    - Examples:
+        - Water renders wrongly through beacon beams
+        - World border interacts oddly with water
+        - Transparent nametags when looking at someone sneaking in front of water
+    - Diagnosis: Deferred rendering / translucency sorting issues inherent to many shader packs
 
 ## SEUS Renewed v1.0.1
 
@@ -18,6 +24,9 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
 
 ## Sildur's Vibrant Shaders v1.29
 
+* Weird black spots and red/green/yellow lines on Sildur's Vibrant at very specific large window resolutions
+  (windowed mode on a 3440x1440 monitor for example)
+    * Diagnosis: Not attempted
 * Enchantment glints have z-fighting in the nether and end
     * Diagnosis: In the nether and end, `gbuffers_armor_glint` uses a series of matrix multiplications, but
       `gbuffers_textured` uses ftransform. The matrix multiplications introduce precision errors compared to ftransform
@@ -33,6 +42,9 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
       from block entities, the block breaking animation is written to the terrain render target instead of being blended
       with the block entity.
     * Workaround: unknown.
+- Sky is visible through chests if a nether portal is in front of the chest
+    - Diagnosis: The chest pixels get blended with the nether portal pixels and then the combined pixels get blended with the horizon with the nether portal's alpha value
+    - Workaround: none, inherent issue with how Sildur's Vibrant does deferred rendering.
 
 ## Chocapic v4
 

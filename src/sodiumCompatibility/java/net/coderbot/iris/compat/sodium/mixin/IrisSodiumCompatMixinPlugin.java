@@ -1,6 +1,5 @@
 package net.coderbot.iris.compat.sodium.mixin;
 
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
@@ -10,6 +9,11 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Semi-critical mixin config plugin, disables mixins if Sodium isn't present,
+ * since on 1.18+ we have mixins into Iris classes that crash the game instead of just
+ * spamming the log if Sodium isn't present.
+ */
 public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 	private boolean validSodiumVersion = false;
 
@@ -22,7 +26,8 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 		}).orElse(false);
 
 		if (!validSodiumVersion) {
-			Iris.logger.error("Invalid/missing version of Sodium detected, disabling compatibility mixins!");
+			// We can't use Iris' logger here due to classloading issues.
+			System.err.println("[Iris] Invalid/missing version of Sodium detected, disabling compatibility mixins!");
 		}
 	}
 

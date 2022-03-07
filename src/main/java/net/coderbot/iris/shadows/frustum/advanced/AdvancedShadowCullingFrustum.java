@@ -7,6 +7,26 @@ import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
+/**
+ * A Frustum implementation that derives a tightly-fitted shadow pass frustum based on the player's camera frustum and
+ * an assumption that the shadow map will only be sampled for the purposes of direct shadow casting, volumetric lighting,
+ * and similar effects, but notably not sun-bounce GI or similar effects.
+ *
+ * <p>The key idea of this algorithm is that if you are looking at the sun, something behind you cannot directly cast
+ * a shadow on things visible to you. It's clear why this wouldn't work for sun-bounce GI, since with sun-bounce GI an
+ * object behind you could cause light to bounce on to things visible to you.</p>
+ * 
+ * <p>Derived from L. Spiro's clever algorithm & helpful diagrams described in a two-part blog tutorial:</p>
+ * 
+ * <ul>
+ * <li><a href="http://lspiroengine.com/?p=153">Tutorial: Tightly Culling Shadow Casters for Directional Lights (Part 1)</a></li>
+ * <li><a href="http://lspiroengine.com/?p=187">Tutorial: Tightly Culling Shadow Casters for Directional Lights (Part 2)</a></li>
+ * </ul>
+ *
+ * <p>Notable changes include switching out some of the sub-algorithms for computing the "extruded" edge planes to ones that
+ * are not sensitive to the specific internal ordering of planes and corners, in order to avoid potential bugs at the
+ * cost of slightly more computations.</p>
+ */
 public class AdvancedShadowCullingFrustum extends Frustum {
 	// conservative estimate for the maximum number of clipping planes:
 	// 6 base planes, and 5 possible planes added for each base plane.

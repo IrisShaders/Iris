@@ -1,6 +1,0 @@
-{
-  "package": "net.coderbot.iris.mixin",
-  "required": false,
-  "compatibilityLevel": "JAVA_8",
-  "client": []
-}

@@ -1,40 +1,52 @@
 # FAQ
 
-> Q. Why doesn't the Iris Installer work?
+## Table of Contents
 
-A. You need java, please get it from: [Adoptium.net](https://adoptium.net/?variant=openjdk17&jvmVariant=hotspot)
+- Why doesn't the Iris Installer work?
+- How can I configure my shaders?
+- Is my system supported?
+- Why is (insert shader) not working?
+- How do I disable my shaders?
+- I added Iris, why is my game crashing?
+- What shaders have been tested and are working with Iris?
+- Will (insert feature) part of OptiFine be added to iris?
 
-> Q. How can I configure my shaders?
+## Why doesn't the Iris Installer work?
 
-A. [#663](https://github.com/IrisShaders/Iris/issues/663)
+You need java, please get it from: [Adoptium.net](https://adoptium.net/?variant=openjdk17&jvmVariant=hotspot)
 
-> Q. Why is (insert shader) not working?
+## How can I configure my shaders?
 
-A. That shader likely isn't supported currently, but should be in the future. See the list of supported shaders [here](./supportedshaders.md)
+Go to Options>Video Settings>Shader Packs>Shader Pack Settings.
 
-> Q. How do I disable my shaders?
+## Is my system supported?
 
-A. Press K to disable shaders without using the GUI.
+See the [Driver Support](usage/drivers.md) document for more information. 
 
-> Q. I added Iris, why is my game crashing?
+## Why is (insert shader) not working?
 
-A. There are a few possible reasons:
+That shader likely isn't supported currently, but should be in the future. See the list of supported shaders [here](./supportedshaders.md)
 
-• You're using an outdated version of Indium, Sodium Extras or Better Sodium Menu.
+## How do I disable my shaders?
 
-• You're using an unsupported shader pack.
+Press K to disable shaders without using the GUI.
 
-• You're using macOS, which has limited support.
+## I added Iris, why is my game crashing?
 
-• You may have an incompatible mod installed.
+There are a few possible reasons:
 
-> Q. What shaders have been tested and are working with Iris?
+- You're using an outdated version of Indium, Sodium Extras or Better Sodium Menu.
+- You're using an unsupported shader pack.
+- You're using macOS, which has limited support.
+- You may have an incompatible mod installed.
 
-A. See [this](./supportedshaders.md) document for the list
+## What shaders have been tested and are working with Iris?
 
-> Q. Will (insert feature) part of OptiFine be added to iris?
+See [this](./supportedshaders.md) document for the list
 
-A. Iris is specifically a shaders mod. Other features are not planned for Iris. However, many other wonderful mods have been made by the fabric modding community which cover many of the features of OptiFine.
+## Will (insert feature) part of OptiFine be added to iris?
+
+Iris is specifically a shaders mod. Other features are not planned for Iris. However, many other wonderful mods have been made by the fabric modding community which cover many of the features of OptiFine.
 
 The following is a short list, more alternatives can be found through further research, the list is alphabetical.
 

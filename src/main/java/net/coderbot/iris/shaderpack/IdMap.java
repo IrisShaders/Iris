@@ -26,6 +26,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.materialmap.BlockEntry;
 import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 
 /**
@@ -52,14 +53,14 @@ public class IdMap {
 	 */
 	private Map<NamespacedId, BlockRenderType> blockRenderTypeMap;
 
-	IdMap(Path shaderPath) {
-		itemIdMap = loadProperties(shaderPath, "item.properties")
+	IdMap(Path shaderPath, ShaderPackOptions shaderPackOptions) {
+		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions)
 			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
-		entityIdMap = loadProperties(shaderPath, "entity.properties")
+		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions)
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
-		loadProperties(shaderPath, "block.properties").ifPresent(blockProperties -> {
+		loadProperties(shaderPath, "block.properties", shaderPackOptions).ifPresent(blockProperties -> {
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});
@@ -80,19 +81,17 @@ public class IdMap {
 	/**
 	 * Loads properties from a properties file in a shaderpack path
 	 */
-	private static Optional<Properties> loadProperties(Path shaderPath, String name) {
+	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.process(shaderPath.getParent(), shaderPath, fileContents);
+		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions);
 
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
 		try {
-			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
-			//     so we don't need to do the UTF-8 workaround here.
 			properties.load(propertiesReader);
 		} catch (IOException e) {
 			Iris.logger.error("Error loading " + name + " at " + shaderPath, e);
@@ -105,7 +104,8 @@ public class IdMap {
 
 	private static String readProperties(Path shaderPath, String name) {
 		try {
-			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.UTF_8);
+			// ID maps should be encoded in ISO_8859_1.
+			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.ISO_8859_1);
 		} catch (NoSuchFileException e) {
 			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
 
@@ -151,7 +151,8 @@ public class IdMap {
 				return;
 			}
 
-			for (String part : value.split(" ")) {
+			// Split on any whitespace
+			for (String part : value.split("\\s+")) {
 				if (part.contains("=")) {
 					// Avoid tons of logspam for now
 					Iris.logger.warn("Failed to parse an ResourceLocation in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
@@ -191,7 +192,8 @@ public class IdMap {
 
 			List<BlockEntry> entries = new ArrayList<>();
 
-			for (String part : value.split(" ")) {
+			// Split on whitespace groups, not just single spaces
+			for (String part : value.split("\\s+")) {
 				if (part.isEmpty()) {
 					continue;
 				}
@@ -236,7 +238,7 @@ public class IdMap {
 				return;
 			}
 
-			for (String part : value.split(" ")) {
+			for (String part : value.split("\\s+")) {
 				// Note: NamespacedId performs no validation on the content. That will need to be done by whatever is
 				//       converting these things to ResourceLocations.
 				overrides.put(new NamespacedId(part), renderType);

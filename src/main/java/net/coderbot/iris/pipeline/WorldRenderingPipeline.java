@@ -12,7 +12,12 @@ public interface WorldRenderingPipeline {
 	void renderShadows(LevelRendererAccessor levelRenderer, Camera camera);
 	void addDebugText(List<String> messages);
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
-	void beginShadowRender();
+
+	WorldRenderingPhase getPhase();
+
+	void setPhase(WorldRenderingPhase phase);
+
+    void beginShadowRender();
 	void endShadowRender();
 
 	void beginHand();
@@ -32,6 +37,7 @@ public interface WorldRenderingPipeline {
 	boolean shouldRenderUnderwaterOverlay();
 	boolean shouldRenderVignette();
 	boolean shouldWriteRainAndSnowToDepthBuffer();
+	boolean shouldRenderParticlesBeforeDeferred();
 
 	float getSunPathRotation();
 }

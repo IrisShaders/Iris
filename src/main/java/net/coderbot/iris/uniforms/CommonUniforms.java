@@ -3,11 +3,13 @@ package net.coderbot.iris.uniforms;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.layer.EntityColorRenderStateShard;
+import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
 import net.coderbot.iris.samplers.TextureAtlasTracker;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -18,6 +20,7 @@ import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.Vector4i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -35,6 +38,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
@@ -58,20 +62,6 @@ public final class CommonUniforms {
 		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
 		FogUniforms.addFogUniforms(uniforms);
 
-		uniforms.uniform4f("entityColor", () -> {
-			if (EntityColorRenderStateShard.currentHurt) {
-				return new Vector4f(1.0f, 0.0f, 0.0f, 0.3f);
-			}
-
-			float shade = EntityColorRenderStateShard.currentWhiteFlash;
-
-			if (shade != 0.0f) {
-				return new Vector4f(shade, shade, shade, 0.5f);
-			}
-
-			return new Vector4f(0.0f, 0.0f, 0.0f, 0.0f);
-		}, EntityColorRenderStateShard.getUpdateNotifier());
-
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
 		uniforms.uniform2i("atlasSize", () -> {
@@ -82,6 +72,18 @@ public final class CommonUniforms {
 			return new Vector2i((int) atlasSize.x, (int) atlasSize.y);
 		}, StateUpdateNotifiers.atlasTextureNotifier);
 
+		uniforms.uniform4i("blendFunc", () -> {
+			GlStateManager.BlendState blend = net.coderbot.iris.mixin.GlStateManagerAccessor.getBLEND();
+
+			if (((BooleanStateAccessor) blend.mode).isEnabled()) {
+				return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
+			} else {
+				return new Vector4i(0, 0, 0, 0);
+			}
+		}, StateUpdateNotifiers.blendFuncNotifier);
+
+		uniforms.uniform1i("renderStage", () -> GbufferPrograms.getCurrentPhase().ordinal(), StateUpdateNotifiers.phaseChangeNotifier);
+
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}
 
@@ -89,7 +91,7 @@ public final class CommonUniforms {
 		ExternallyManagedUniforms.addExternallyManagedUniforms116(uniforms);
 
 		// TODO: Parse the value of const float eyeBrightnessHalflife from the shaderpack's fragment shader configuration
-		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(10.0f, CommonUniforms::getEyeBrightness, updateNotifier);
+		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(10.0f, 10.0f, CommonUniforms::getEyeBrightness, updateNotifier);
 
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
@@ -100,6 +102,9 @@ public final class CommonUniforms {
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
+			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
+			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
+			.uniform4f(ONCE, "entityColor", Vector4f::new)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
 			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {
@@ -108,7 +113,7 @@ public final class CommonUniforms {
 			})
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			// TODO: Parse the value of const float wetnessHalfLife and const float drynessHalfLife from the shaderpack's fragment shader configuration
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, CommonUniforms::getRainStrength, updateNotifier))
+			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, 600f, CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
 			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor);
 	}
@@ -211,7 +216,7 @@ public final class CommonUniforms {
 		return 0.0F;
 	}
 
-	private static int isEyeInWater() {
+	static int isEyeInWater() {
 		// Note: With certain utility / cheat mods, this method will return air even when the player is submerged when
 		// the "No Overlay" feature is enabled.
 		//

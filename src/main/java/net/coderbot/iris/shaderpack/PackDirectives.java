@@ -19,22 +19,22 @@ public class PackDirectives {
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean oldLighting;
-	private OptionalBoolean shadowCulling;
+	private boolean particlesBeforeDeferred;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
 
-	private PackDirectives(Set<Integer> supportedRenderTargets) {
+	private PackDirectives(Set<Integer> supportedRenderTargets, PackShadowDirectives packShadowDirectives) {
 		noiseTextureResolution = 256;
 		sunPathRotation = 0.0F;
 		ambientOcclusionLevel = 1.0F;
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
-		shadowDirectives = new PackShadowDirectives();
+		shadowDirectives = packShadowDirectives;
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
-		this(supportedRenderTargets);
+		this(supportedRenderTargets, new PackShadowDirectives(properties));
 		areCloudsEnabled = properties.areCloudsEnabled();
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
@@ -42,16 +42,16 @@ public class PackDirectives {
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
-		shadowCulling = properties.getShadowCulling();
+		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
-		this(supportedRenderTargets);
+		this(supportedRenderTargets, new PackShadowDirectives(directives.getShadowDirectives()));
 		areCloudsEnabled = directives.areCloudsEnabled();
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
 		explicitFlips = directives.explicitFlips;
-		shadowCulling = directives.shadowCulling;
+		particlesBeforeDeferred = directives.particlesBeforeDeferred;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -90,8 +90,8 @@ public class PackDirectives {
 		return oldLighting;
 	}
 
-	public OptionalBoolean getCullingState() {
-		return shadowCulling;
+	public boolean areParticlesBeforeDeferred() {
+		return particlesBeforeDeferred;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {

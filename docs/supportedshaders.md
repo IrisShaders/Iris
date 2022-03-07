@@ -12,11 +12,11 @@
 
 * [Continuum 2.0.4](https://continuum.graphics/downloads)
 
-* [SEUS V11](https://www.sonicether.com/seus/)
-
-* [SEUS Renewed](https://www.sonicether.com/seus/)
-
-* [SEUS PTGI](https://www.sonicether.com/seus)
+* SEUS (NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drivers)
+   * [SEUS V11](https://www.sonicether.com/seus/)
+   * [SEUS Renewed](https://www.sonicether.com/seus/)
+   * [SEUS PTGI E12 / HRR 2.1](https://www.sonicether.com/seus)
+       * SEUS PTGI HRR 3 is not currently supported.
 
 * [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
 
@@ -32,9 +32,9 @@
 
 #### The following shaders have been tested and work with some minor issues:
 
-* [Project Luma](https://www.curseforge.com/minecraft/customization/projectluma) (Nothing renders in The End)
+* [Project Luma](https://www.curseforge.com/minecraft/customization/projectluma) (End doesn't render properly)
   * [Sora Shaders v1.12](https://www.curseforge.com/minecraft/customization/sora-shaders) (Number edit of LUMA. Works well though)
 
-* [Triliton V8](https://www.curseforge.com/minecraft/customization/trilitons-shaders) (Reflections broken)
+* [Triliton V8](https://www.curseforge.com/minecraft/customization/trilitons-shaders) (Lighting broken - shadow everywhere)
 
 * [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus) (Broken Clouds in 1.16, No sky on 1.17)
