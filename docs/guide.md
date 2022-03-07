@@ -5,7 +5,7 @@ Last updated on March 7, 2022.
 
 ### Introduction
 
-Iris Shaders is a brand new work-in-progress shaders mod for the Fabric mod loader. It aims to provide full Optifine shader compatibility while offering superior performance. This is achieved by building Iris to be compatible with [Sodium](https://www.curseforge.com/minecraft/mc-mods/sodium), an optimization mod by JellySquid which significantly increases chunk rendering performance and reduces stutters.
+Iris Shaders is a brand new work-in-progress shaders mod for the Fabric mod loader. It aims to provide full Optifine shader compatibility while offering superior performance. This is achieved by building Iris to be compatible with [Sodium](https://modrinth.com/mod/sodium), an optimization mod by JellySquid which significantly increases chunk rendering performance and reduces stutters.
 
 ### Contents
 
