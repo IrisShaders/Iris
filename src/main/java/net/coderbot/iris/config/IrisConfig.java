@@ -27,7 +27,7 @@ public class IrisConfig {
 	private boolean enableShaders;
 
 	/**
-	 * If debug features should be enabled. Gives much more detailed GLSL error outputs at the cost of performance.
+	 * If debug features should be enabled. Gives much more detailed OpenGL error outputs at the cost of performance.
 	 */
 	private boolean enableDebug;
 
