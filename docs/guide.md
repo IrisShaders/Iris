@@ -88,9 +88,9 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    
    | Minecraft    | Sodium       |
    |:------------:|:------------:|
-   | 1.16.5       | 1.16.5-0.2.0        |
-   | 1.17.1       | 1.17.1-0.3.4        |
-   | 1.18.1       | 1.18.1-0.4.0-alpha6 |
+   | 1.16.5       | 1.16.5-0.2.0 |
+   | 1.17.1       | 1.17.1-0.3.4 |
+   | 1.18.2       | 1.18.2-0.4.1 |
 9. Place the downloaded files (and optionally your other Fabric mods) into the mods folder. The location of the mods folder depends on  your operating system:
     - Windows: `%APPDATA%\.minecraft\mods`  
     - Linux: `~/.minecraft/mods`  
@@ -182,9 +182,9 @@ Make sure to download the version that supports your current version of Sodium:
 
 | Sodium       | Indium       |
 |:------------:|:------------:|
-| 1.16.5-0.2.0        | 1.0.0 for 1.16.5        |
-| 1.17.1-0.3.4        | 1.0.1 for 1.17.1        |
-| 1.18.1-0.4.0-alpha6 | 1.0.2-alpha2 for 1.18.1 |  
+| 1.16.5-0.2.0 | 1.0.0 for 1.16.5 |
+| 1.17.1-0.3.4 | 1.0.1 for 1.17.1 |
+| 1.18.2-0.4.1 | 1.0.2 for 1.18.2 |  
 
 **Keep in mind that this list does not cover all the mods which won't work properly without Indium**. If blocks or items from a certain mod are invisible or are not displaying correctly, or the mod crashes your game, chances are high that the mod requires Indium to work properly with Iris and Sodium.
 
