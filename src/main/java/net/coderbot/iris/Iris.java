@@ -118,7 +118,7 @@ public class Iris implements ClientModInitializer {
 		}
 
 		if (irisConfig.isDebugEnabled()) {
-			logger.warn("Debug features enabled, GLSL logging will be more verbose!");
+			logger.info("Debug features enabled, OpenGL error logging will be more verbose!");
 			GLDebug.setupDebugMessageCallback();
 		}
 
