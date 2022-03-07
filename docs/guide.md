@@ -1,7 +1,7 @@
 # Iris installation and usage guide
 
 This guide is created to serve as an all-in-one reference for all the things you might want to know about the Iris Shaders mod. It will be periodically updated as the mod itself evolves.  
-Last updated on January 27, 2022.
+Last updated on March 7, 2022.
 
 ### Introduction
 
