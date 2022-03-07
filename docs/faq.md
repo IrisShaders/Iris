@@ -17,7 +17,7 @@ You need java, please get it from: [Adoptium.net](https://adoptium.net/?variant=
 
 ## How can I configure my shaders?
 
-[#663](https://github.com/IrisShaders/Iris/issues/663)
+Go to Options>Video Settings>Shader Packs>Shader Pack Settings.
 
 ## Is my system supported?
 
