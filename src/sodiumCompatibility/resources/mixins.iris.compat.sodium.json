@@ -32,6 +32,7 @@
     "sodium_copy.MixinCube",
     "sodium_copy.MixinLevelRenderer",
     "sodium_copy.MixinBufferBuilder",
+    "vertex_format.entity.MixinItemRenderer",
     "vertex_format.entity.MixinModelPart",
     "vertex_format.entity.MixinSpriteCoordinateExpander",
     "vertex_format.ChunkMeshAttributeAccessor",
