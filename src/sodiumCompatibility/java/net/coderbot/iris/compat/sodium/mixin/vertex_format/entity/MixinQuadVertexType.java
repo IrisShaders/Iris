@@ -20,7 +20,7 @@ public class MixinQuadVertexType {
 	 * @author IMS
 	 * @reason Redirects don't work here
 	 */
-	@Overwrite
+	@Overwrite(remap = false)
 	public QuadVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return direct ? new EntityVertexBufferWriterUnsafe(buffer) : new EntityVertexBufferWriterNio(buffer);
