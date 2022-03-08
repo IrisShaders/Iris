@@ -17,7 +17,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 @Mixin(QuadVertexType.class)
 public class MixinQuadVertexType {
 	/**
-	 * @author
+	 * @author IMS
+	 * @reason Redirects don't work here
 	 */
 	@Overwrite
 	public QuadVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
@@ -29,7 +30,8 @@ public class MixinQuadVertexType {
 	}
 
 	/**
-	 * @author
+	 * @author IMS
+	 * @reason Cheap redirect
 	 */
 	@Overwrite
 	public VertexFormat getVertexFormat() {
