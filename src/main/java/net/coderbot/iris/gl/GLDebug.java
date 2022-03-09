@@ -21,8 +21,12 @@ import java.io.PrintStream;
 import java.util.function.Consumer;
 
 public final class GLDebug {
-	public static void setupDebugMessageCallback() {
-		setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
+	/**
+	 * Sets up debug callbacks
+	 * @return 0 for failure, 1 for success, 2 for "possible issue".
+	 */
+	public static int setupDebugMessageCallback() {
+		return setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
 	}
 
 	private static void trace(Consumer<String> output) {
@@ -68,7 +72,7 @@ public final class GLDebug {
 		});
 	}
 
-	public static void setupDebugMessageCallback(PrintStream stream) {
+	public static int setupDebugMessageCallback(PrintStream stream) {
 		GLCapabilities caps = GL.getCapabilities();
 		if (caps.OpenGL43) {
 			Iris.logger.info("[GL] Using OpenGL 4.3 for error logging.");
@@ -83,9 +87,11 @@ public final class GLDebug {
 			});
 			GL43C.glDebugMessageCallback(proc, 0L);
 			if ((GL43C.glGetInteger(33310) & 2) == 0) {
-				Iris.logger.info("[GL] Warning: A non-debug context may not produce any debug output.");
+				Iris.logger.warn("[GL] Warning: A non-debug context may not produce any debug output.");
 				GL43C.glEnable(37600);
+				return 2;
 			}
+			return 1;
 		} else if (caps.GL_KHR_debug) {
 			Iris.logger.info("[GL] Using KHR_debug for error logging.");
 			GLDebugMessageCallback proc = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
@@ -99,9 +105,10 @@ public final class GLDebug {
 			});
 			KHRDebug.glDebugMessageCallback(proc, 0L);
 			if (caps.OpenGL30 && (GL43C.glGetInteger(33310) & 2) == 0) {
-				Iris.logger.info("[GL] Warning: A non-debug context may not produce any debug output.");
+				Iris.logger.warn("[GL] Warning: A non-debug context may not produce any debug output.");
 				GL43C.glEnable(37600);
 			}
+			return 1;
 		} else if (caps.GL_ARB_debug_output) {
 			Iris.logger.info("[GL] Using ARB_debug_output for error logging.");
 			GLDebugMessageARBCallback proc = GLDebugMessageARBCallback.create((source, type, id, severity, length, message, userParam) -> {
@@ -114,6 +121,7 @@ public final class GLDebug {
 				printTrace(stream);
 			});
 			ARBDebugOutput.glDebugMessageCallbackARB(proc, 0L);
+			return 1;
 		} else if (caps.GL_AMD_debug_output) {
 			Iris.logger.info("[GL] Using AMD_debug_output for error logging.");
 			GLDebugMessageAMDCallback proc = GLDebugMessageAMDCallback.create((id, category, severity, length, message, userParam) -> {
@@ -125,8 +133,34 @@ public final class GLDebug {
 				printTrace(stream);
 			});
 			AMDDebugOutput.glDebugMessageCallbackAMD(proc, 0L);
+			return 1;
 		} else {
 			Iris.logger.info("[GL] No debug output implementation is available, cannot return debug info.");
+			return 0;
+		}
+	}
+
+	public static int disableDebugMessages() {
+		GLCapabilities caps = GL.getCapabilities();
+		if (caps.OpenGL43) {
+			GL43C.glDebugMessageCallback(null, 0L);
+			return 1;
+		} else if (caps.GL_KHR_debug) {
+			KHRDebug.glDebugMessageCallback(null, 0L);
+			if (caps.OpenGL30 && (GL43C.glGetInteger(33310) & 2) == 0) {
+				Iris.logger.warn("[GL] Warning: A non-debug context may not produce any debug output.");
+				GL43C.glDisable(37600);
+			}
+			return 1;
+		} else if (caps.GL_ARB_debug_output) {
+			ARBDebugOutput.glDebugMessageCallbackARB(null, 0L);
+			return 1;
+		} else if (caps.GL_AMD_debug_output) {
+			AMDDebugOutput.glDebugMessageCallbackAMD(null, 0L);
+			return 1;
+		} else {
+			Iris.logger.info("[GL] No debug output implementation is available, cannot disable debug info.");
+			return 0;
 		}
 	}
 

@@ -94,6 +94,10 @@ public class IrisConfig {
 		return enableDebug;
 	}
 
+	public void setDebugEnabled(boolean enabled) {
+		enableDebug = enabled;
+	}
+
 	/**
 	 * Sets whether shaders should be used for rendering.
 	 */
