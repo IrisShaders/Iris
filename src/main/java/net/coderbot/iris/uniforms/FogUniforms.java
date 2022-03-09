@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
@@ -18,6 +19,7 @@ public class FogUniforms {
 		if (fogMode == FogMode.OFF) {
 			uniforms.uniform1f(UniformUpdateFrequency.ONCE, "fogDensity", () -> 0.0F);
 			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> 0);
+			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogShape", () -> -1);
 		} else if (fogMode == FogMode.ENABLED) {
 			uniforms.uniform1f("fogDensity", () -> {
 				// ensure that the minimum value is 0.0
@@ -33,6 +35,9 @@ public class FogUniforms {
 					return GL11.GL_EXP2;
 				}
 			}, notifier -> {});
+
+			// To keep a stable interface, 0 is defined as spherical while 1 is defined as cylindrical, even if Mojang's index changes.
+			uniforms.uniform1i(PER_FRAME, "fogShape", () -> RenderSystem.getShaderFogShape() == FogShape.CYLINDER ? 1 : 0);
 		}
 
 		uniforms
