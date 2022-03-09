@@ -10,7 +10,7 @@ import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.lwjgl.system.MemoryUtil;
 
 public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements QuadVertexSink {
-	private final QuadViewEntity quad = new QuadViewEntity();
+	private final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
 	private static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
 	float midU = 0;
 	float midV = 0;
@@ -58,9 +58,12 @@ public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe imp
 			MemoryUtil.memPutInt(i - 4 - STRIDE * vertex, tangent);
 		}
 
+		midU *= 0.25;
+		midV *= 0.25;
+
 		for (long vertex = 0; vertex < length; vertex++) {
-			MemoryUtil.memPutFloat(i - 12 - STRIDE * vertex, midU / 4F);
-			MemoryUtil.memPutFloat(i - 8 - STRIDE * vertex, midV / 4F);
+			MemoryUtil.memPutFloat(i - 12 - STRIDE * vertex, midU);
+			MemoryUtil.memPutFloat(i - 8 - STRIDE * vertex, midV);
 		}
 
 		midU = 0;

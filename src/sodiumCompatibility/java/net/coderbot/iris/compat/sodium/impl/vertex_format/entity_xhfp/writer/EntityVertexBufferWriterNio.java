@@ -11,7 +11,7 @@ import net.coderbot.iris.vertices.IrisVertexFormats;
 import java.nio.ByteBuffer;
 
 public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implements QuadVertexSink {
-	private final QuadViewEntity quad = new QuadViewEntity();
+	private final QuadViewEntity.QuadViewEntityNio quad = new QuadViewEntity.QuadViewEntityNio();
 	private static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
 	private float midU = 0;
 	private float midV = 0;
@@ -63,9 +63,12 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 			buffer.putInt(i - 4 - STRIDE * vertex, tangent);
 		}
 
+		midU *= 0.25;
+		midV *= 0.25;
+
 		for (int vertex = 0; vertex < length; vertex++) {
-			buffer.putFloat(i - 12 - STRIDE * vertex, midU / 4F);
-			buffer.putFloat(i - 8 - STRIDE * vertex, midV / 4F);
+			buffer.putFloat(i - 12 - STRIDE * vertex, midU);
+			buffer.putFloat(i - 8 - STRIDE * vertex, midV);
 		}
 
 		midU = 0;

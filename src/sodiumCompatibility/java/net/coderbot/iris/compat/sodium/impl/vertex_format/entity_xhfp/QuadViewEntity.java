@@ -6,24 +6,9 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
-public class QuadViewEntity extends QuadView {
-	private ByteBuffer buffer;
-	private long writePointer;
-	private int stride = 48;
-	private boolean unsafe;
-
-	public void setup(ByteBuffer buffer, int writeOffset, int stride) {
-		this.buffer = buffer;
-		this.writePointer = writeOffset;
-		this.stride = stride;
-		this.unsafe = false;
-	}
-
-	public void setup(long writePointer, int stride) {
-		this.writePointer = writePointer;
-		this.stride = stride;
-		this.unsafe = true;
-	}
+public abstract class QuadViewEntity extends QuadView {
+	long writePointer;
+	int stride = 48;
 
 	public float x(int index) {
 		return getFloat(writePointer - stride * (4L - index));
@@ -45,10 +30,31 @@ public class QuadViewEntity extends QuadView {
 		return getFloat(writePointer + 20 - stride * (4L - index));
 	}
 
-	private float getFloat(long writePointer) {
-		if (unsafe) {
+	abstract float getFloat(long writePointer);
+
+	public static class QuadViewEntityUnsafe extends QuadViewEntity {
+		public void setup(long writePointer, int stride) {
+			this.writePointer = writePointer;
+			this.stride = stride;
+		}
+
+		@Override
+		float getFloat(long writePointer) {
 			return MemoryUtil.memGetFloat(writePointer);
-		} else {
+		}
+	}
+
+	public static class QuadViewEntityNio extends QuadViewEntity {
+		ByteBuffer buffer;
+
+		public void setup(ByteBuffer buffer, int writeOffset, int stride) {
+			this.buffer = buffer;
+			this.writePointer = writeOffset;
+			this.stride = stride;
+		}
+
+		@Override
+		float getFloat(long writePointer) {
 			return buffer.getFloat((int) writePointer);
 		}
 	}

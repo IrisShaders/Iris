@@ -35,7 +35,6 @@ public class QuadViewTerrain extends QuadView {
 		return (value & 0xFFFF) * (1.0f / 32768.0f);
 	}
 
-	// TODO: Verify that this works with the new changes to the CVF
 	private static float normalizeVertexPositionShortAsFloat(short value) {
 		return (value & 0xFFFF) * (1.0f / 65535.0f);
 	}
