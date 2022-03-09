@@ -253,7 +253,7 @@ public class FinalPassRenderer {
 
 		String geometry = null;
 		if (source.getGeometrySource().isPresent()) {
-			geometry = TriforcePatcher.patchComposite(source.getGeometrySource().orElseThrow(RuntimeException::new), ShaderType.GEOMETRY);
+			geometry = Patcher.getInstance().patchComposite(source.getGeometrySource().orElseThrow(RuntimeException::new), ShaderType.GEOMETRY);
 		}
 
 		String fragment = Patcher.getInstance().patchComposite(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
