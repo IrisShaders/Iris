@@ -64,6 +64,9 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Shadow
 	private @Nullable VertexFormatElement currentElement;
 
+	@Shadow
+	public abstract void putShort(int i, short s);
+
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
 		extending = IrisApi.getInstance().isShaderPackInUse() && (format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN || format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY);
@@ -104,18 +107,13 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			return;
 		}
 
-		this.putFloat(0, currentBlock);
-		this.putFloat(4, currentRenderType);
-		this.putFloat(8, (short) -1);
-		this.putFloat(12, (short) -1);
+		this.putShort(0, currentBlock);
+		this.putShort(2, currentRenderType);
 		this.nextElement();
-		this.putFloat(0, 0F);
-		this.putFloat(4, 0F);
+		this.putFloat(0, 0);
+		this.putFloat(4, 0);
 		this.nextElement();
-		this.putFloat(0, 1F);
-		this.putFloat(4, 0F);
-		this.putFloat(8, 0F);
-		this.putFloat(12, 1F);
+		this.putInt(0, 0);
 		this.nextElement();
 
 		vertexCount += 1;
@@ -128,7 +126,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		vertexCount = 0;
 
 		// TODO: Keep this in sync with the extensions
-		int extendedDataLength = (4 * 4) + (2 * 4) + (4 * 4);
+		int extendedDataLength = (2 * 2) + (1 * 4) + (1 * 4);
 
 		int stride = this.format.getVertexSize();
 
@@ -155,8 +153,8 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		midV *= 0.25;
 
 		for (int vertex = 0; vertex < 4; vertex++) {
-			buffer.putFloat(this.nextElementByte - 24 - stride * vertex, midU);
-			buffer.putFloat(this.nextElementByte - 20 - stride * vertex, midV);
+			buffer.putFloat(this.nextElementByte - 12 - stride * vertex, midU);
+			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, midV);
 		}
 	}
 
@@ -257,17 +255,17 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		int stride = this.format.getVertexSize();
 
 		// TODO: Use packed tangents in the vertex format
-		/*buffer.putInt(this.elementOffset - 16, tangent);
-		buffer.putInt(this.elementOffset - 16 - stride, tangent);
-		buffer.putInt(this.elementOffset - 16 - stride * 2, tangent);
-		buffer.putInt(this.elementOffset - 16 - stride * 3, tangent);*/
-
+		buffer.putInt(this.nextElementByte - 4, tangent);
+		buffer.putInt(this.nextElementByte - 4 - stride, tangent);
+		buffer.putInt(this.nextElementByte - 4 - stride * 2, tangent);
+		buffer.putInt(this.nextElementByte - 4 - stride * 3, tangent);
+/*
 		for (int vertex = 0; vertex < 4; vertex++) {
 			buffer.putFloat(this.nextElementByte - 16 - stride * vertex, tangentx);
 			buffer.putFloat(this.nextElementByte - 12 - stride * vertex, tangenty);
 			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, tangentz);
 			buffer.putFloat(this.nextElementByte - 4 - stride * vertex, 1.0F);
-		}
+		}*/
 	}
 
 	@Unique
@@ -279,5 +277,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		} else {
 			return (float) (1.0 / Math.sqrt(value));
 		}
+	}
+
+	@Unique
+	public void putInt(int i, int value) {
+		this.buffer.putInt(this.nextElementByte + i, value);
 	}
 }

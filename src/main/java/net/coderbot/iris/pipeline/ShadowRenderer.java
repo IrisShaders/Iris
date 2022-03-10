@@ -695,7 +695,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		generateMipmaps();
 
-		profiler.pop();
+		profiler.popPush("restore gl state");
 
 		restoreGlState(client);
 
