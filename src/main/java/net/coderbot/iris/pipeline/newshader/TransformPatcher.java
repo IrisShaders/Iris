@@ -68,12 +68,6 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
  * TODO: good examples for more complex transformation in triforce patcher?
  * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
  * replacements that account for whitespace like the one for gl_TextureMatrix
- * 
- * TODO: how are defines handled? glsl-transformer can't deal with code that is
- * not valid GLSL code. Directives like #if will mess it up.
- * TODO: use new glsl-transformer features on RunPhase to make all the RunPhase
- * subclasses much more comapct (just one method call:
- * withInjectExternalDeclarations)
  */
 public class TransformPatcher implements Patcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
@@ -254,13 +248,7 @@ public class TransformPatcher implements Patcher {
      */
     Transformation<Parameters> wrapFrontColor = WrapIdentifier.fromTerminal(
         "gl_FrontColor", "iris_FrontColor",
-        new RunPhase<Parameters>() {
-          @Override
-          protected void run(TranslationUnitContext ctx) {
-            injectExternalDeclaration(
-                InjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_FrontColor;");
-          };
-        });
+        RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_FrontColor;"));
 
     // TOOD: this is not implemented yet for now as it's quite involved
     // fixes locations of outs in fragment shaders (to be called fixFragLayouts)
@@ -701,12 +689,8 @@ public class TransformPatcher implements Patcher {
               }
             }));
 
-            addEndDependent(new RunPhase<Parameters>() {
-              @Override
-              protected void run(TranslationUnitContext ctx) {
-                injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_ColorModulator;");
-              }
-            });
+            addEndDependent(RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+                "uniform vec4 iris_ColorModulator;"));
           }
         });
       }
@@ -759,8 +743,9 @@ public class TransformPatcher implements Patcher {
         chainConcurrentDependent(new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
-            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_TextureMat;");
-            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_LightmapTextureMatrix;");
+            injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+                "uniform mat4 iris_TextureMat;",
+                "uniform mat4 iris_LightmapTextureMatrix;");
           }
 
           @Override
@@ -860,8 +845,8 @@ public class TransformPatcher implements Patcher {
             injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ModelViewMat;");
 
             if (type == ModelViewMatrixType.CHUNK_OFFSET) {
-              injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform vec3 iris_ChunkOffset;");
-              injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+              injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+                  "uniform vec3 iris_ChunkOffset;",
                   "mat4 _iris_internal_translate(vec3 offset) {\n" +
                       "    // NB: Column-major order\n" +
                       "    return mat4(1.0, 0.0, 0.0, 0.0,\n" +
@@ -870,9 +855,8 @@ public class TransformPatcher implements Patcher {
                       "                offset.x, offset.y, offset.z, 1.0);\n" +
                       "}");
             } else if (type == ModelViewMatrixType.NEW_LINES) {
-              injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
-                  "const float iris_VIEW_SHRINK = 1.0 - (1.0 / 256.0);");
-              injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+              injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+                  "const float iris_VIEW_SHRINK = 1.0 - (1.0 / 256.0);",
                   "const mat4 iris_VIEW_SCALE = mat4(\n" +
                       "    iris_VIEW_SHRINK, 0.0, 0.0, 0.0,\n" +
                       "    0.0, iris_VIEW_SHRINK, 0.0, 0.0,\n" +
