@@ -149,7 +149,6 @@ public class IrisChunkProgramOverrides {
                     .bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
                     .bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
                     .bindAttribute("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
-					.bindFragmentData("iris_FragData", ChunkShaderBindingPoints.FRAG_COLOR)
 					.link((shader) -> {
 						// TODO: Better way for this? It's a bit too much casting for me.
 						int handle = ((GlObject) shader).handle();
