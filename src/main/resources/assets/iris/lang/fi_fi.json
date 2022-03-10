@@ -41,12 +41,12 @@
   "options.iris.profile": "Profiili",
   "options.iris.profile.custom": "Mukautettu",
   "options.iris.shadowDistance": "Varjojen enimmäisetäisyys",
-  "options.iris.shadowDistance.enabled": "Sallii varjojen enimmäisetäisyydeen vaihtamisen. Maasto ja kohteet asetetun etäisyyden jälken eivät enää tuota varjoja. Varjoetäisyyden alentaminen saattaa nostaa pelin kuvataajuutta huomattavasti.",
+  "options.iris.shadowDistance.enabled": "Sallii varjojen enimmäisetäisyydeen määrittämisen. Maasto ja kohteet asetetun etäisyyden jälken eivät enää tuota varjoja. Varjoetäisyyden alentaminen saattaa nostaa pelin kuvataajuutta huomattavasti.",
   "options.iris.shadowDistance.disabled": "Käyttöön ottamasi shader-paketti määrittää varjoetäisyyden jo; et voi muuttaa sitä.", 
 
   "pack.iris.select.title": "Valitse",
   "pack.iris.configure.title": "Mukauta",
-  "pack.iris.list.label": "+ Rahaa ja pudota shader-paketti lisätäksesi sen",
+  "pack.iris.list.label": "+ Raahaa ja pudota shader-paketti lisätäksesi sen",
 
   "label.iris.true": "Päällä",
   "label.iris.false": "Pois"
