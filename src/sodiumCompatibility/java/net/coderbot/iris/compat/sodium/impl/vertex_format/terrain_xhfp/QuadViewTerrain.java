@@ -10,32 +10,24 @@ public class QuadViewTerrain extends QuadView {
 	private static final int STRIDE = 36;
 
 	public float x(int index) {
-		return normalizeVertexPositionShortAsFloat(buffer.getShort(writeOffset - STRIDE * (3 - index)));
+		return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset - STRIDE * (3 - index)));
 	}
 
 	public float y(int index) {
-		return normalizeVertexPositionShortAsFloat(buffer.getShort(writeOffset + 2 - STRIDE * (3 - index)));
+		return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset + 2 - STRIDE * (3 - index)));
 	}
 
 	public float z(int index) {
-		return normalizeVertexPositionShortAsFloat(buffer.getShort(writeOffset + 4 - STRIDE * (3 - index)));
+		return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset + 4 - STRIDE * (3 - index)));
 	}
 
 	@Override
 	public float u(int index) {
-		return normalizeVertexTextureShortAsFloat(buffer.getShort(writeOffset + 12 - STRIDE * (3 - index)));
+		return XHFPModelVertexType.decodeBlockTexture(buffer.getShort(writeOffset + 12 - STRIDE * (3 - index)));
 	}
 
 	@Override
 	public float v(int index) {
-		return normalizeVertexTextureShortAsFloat(buffer.getShort(writeOffset + 14 - STRIDE * (3 - index)));
-	}
-
-	private static float normalizeVertexTextureShortAsFloat(short value) {
-		return (value & 0xFFFF) * (1.0f / 32768.0f);
-	}
-
-	private static float normalizeVertexPositionShortAsFloat(short value) {
-		return (value & 0xFFFF) * (1.0f / 65535.0f);
+		return XHFPModelVertexType.decodeBlockTexture(buffer.getShort(writeOffset + 14 - STRIDE * (3 - index)));
 	}
 }

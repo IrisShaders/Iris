@@ -5,7 +5,7 @@ import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadWinding;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import me.jellysquid.mods.sodium.client.render.pipeline.FluidRenderer;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.xhfp.XHFPModelVertexBufferWriterNio;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexBufferWriterNio;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.material.FluidState;
