@@ -552,7 +552,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		generateMipmaps();
 
-		levelRenderer.getLevel().getProfiler().pop();
+		levelRenderer.getLevel().getProfiler().popPush("restore gl state");
 
 		// Restore backface culling
 		RenderSystem.enableCull();

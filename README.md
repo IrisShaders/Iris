@@ -11,8 +11,9 @@
 
 ## FAQ
 
-Find answers to frequently asked questions on our [FAQ page](docs/faq.md).\
-A list of known-supported shaderpacks can be found [here](docs/supportedshaders.md)
+- Find answers to frequently asked questions on our [FAQ page](docs/faq.md).
+- A list of known-supported shaderpacks is available [here](docs/supportedshaders.md).
+- A list of unfixable limitations in Iris is available [here](docs/limitations.md).
 
 
 ## Why did you make Iris?
