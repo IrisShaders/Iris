@@ -1,11 +1,11 @@
 # Iris installation and usage guide
 
 This guide is created to serve as an all-in-one reference for all the things you might want to know about the Iris Shaders mod. It will be periodically updated as the mod itself evolves.  
-Last updated on January 27, 2022.
+Last updated on March 7, 2022.
 
 ### Introduction
 
-Iris Shaders is a brand new work-in-progress shaders mod for the Fabric mod loader. It aims to provide full Optifine shader compatibility while offering superior performance. This is achieved by building Iris to be compatible with [Sodium](https://www.curseforge.com/minecraft/mc-mods/sodium), an optimization mod by JellySquid which significantly increases chunk rendering performance and reduces stutters.
+Iris Shaders is a brand new work-in-progress shaders mod for the Fabric mod loader. It aims to provide full Optifine shader compatibility while offering superior performance. This is achieved by building Iris to be compatible with [Sodium](https://modrinth.com/mod/sodium), an optimization mod by JellySquid which significantly increases chunk rendering performance and reduces stutters.
 
 ### Contents
 
@@ -88,9 +88,9 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    
    | Minecraft    | Sodium       |
    |:------------:|:------------:|
-   | 1.16.5       | 1.16.5-0.2.0        |
-   | 1.17.1       | 1.17.1-0.3.4        |
-   | 1.18.1       | 1.18.1-0.4.0-alpha6 |
+   | 1.16.5       | 1.16.5-0.2.0 |
+   | 1.17.1       | 1.17.1-0.3.4 |
+   | 1.18.2       | 1.18.2-0.4.1 |
 9. Place the downloaded files (and optionally your other Fabric mods) into the mods folder. The location of the mods folder depends on  your operating system:
     - Windows: `%APPDATA%\.minecraft\mods`  
     - Linux: `~/.minecraft/mods`  
@@ -123,9 +123,9 @@ After enabling the selected shader, you can now configure it by clicking on the 
 
 Here you can edit the shader pack options provided by the shader itself. The options in the menu should be the exact same as the options you'd get by loading the shader in Optifine. There are a few additional functions in the top right of the menu, however:
 
-- Import button ![importbutton](guide-resources/importbutton.png) : Loads a shader setting file (.txt format) into the currently enabled shader. The button opens up a file selection prompt, letting you select the file. Useful for loading custom shader settings found online.
-- Export button ![exportbutton](guide-resources/exportbutton.png) : Exports your currently active shader settings to a .txt file. Useful for sharing your custom shader settings.
-- Reset button ![resetbutton](guide-resources/resetbutton.png) : Hold Left SHIFT and click this button to restore the default settings for the selected shader.
+- ![importbutton](guide-resources/importbutton.png) Import button: Loads a shader setting file (.txt format) into the currently enabled shader. The button opens up a file selection prompt, letting you select the file. Useful for loading custom shader settings found online.
+- ![exportbutton](guide-resources/exportbutton.png) Export button: Exports your currently active shader settings to a .txt file. Useful for sharing your custom shader settings.
+- ![resetbutton](guide-resources/resetbutton.png) Reset button: Hold Left SHIFT and click this button to restore the default settings for the selected shader.
 
 After you're done with customizing the shader, click Apply to apply the changes. You can now go back to the shader pack list by clicking on the "Shader Pack List..." button, or to the video settings menu by clicking the "Done" button.  
 
@@ -182,9 +182,9 @@ Make sure to download the version that supports your current version of Sodium:
 
 | Sodium       | Indium       |
 |:------------:|:------------:|
-| 1.16.5-0.2.0        | 1.0.0 for 1.16.5        |
-| 1.17.1-0.3.4        | 1.0.1 for 1.17.1        |
-| 1.18.1-0.4.0-alpha6 | 1.0.2-alpha2 for 1.18.1 |  
+| 1.16.5-0.2.0 | 1.0.0 for 1.16.5 |
+| 1.17.1-0.3.4 | 1.0.1 for 1.17.1 |
+| 1.18.2-0.4.1 | 1.0.2 for 1.18.2 |  
 
 **Keep in mind that this list does not cover all the mods which won't work properly without Indium**. If blocks or items from a certain mod are invisible or are not displaying correctly, or the mod crashes your game, chances are high that the mod requires Indium to work properly with Iris and Sodium.
 
