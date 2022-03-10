@@ -23,7 +23,8 @@ import io.github.douira.glsl_transformer.tree.ExtendedContext;
  * references to them with function calls and other code.
  * 
  * NOTE: this class is here because it was in glsl-transformer before but it's
- * actually not supposed to be part of that so I moved it.
+ * actually not supposed to be part of that so I moved it. Also, it's old and
+ * probably does things badly and with outdated practices.
  */
 public class ReplaceDeclarations<T> extends Transformation<T> {
   private static class Declaration {
@@ -47,7 +48,7 @@ public class ReplaceDeclarations<T> extends Transformation<T> {
   private Map<String, Declaration> declarations;
 
   @Override
-  protected void resetState() {
+  public void resetState() {
     declarations = new HashMap<>();
   }
 
@@ -56,11 +57,11 @@ public class ReplaceDeclarations<T> extends Transformation<T> {
    * finding declarations and one for inserting calls to the generated functions.
    */
   {
-    addPhase(new WalkPhase<T>() {
+    addEndDependent(new WalkPhase<T>() {
       ParseTreePattern declarationPattern;
 
       @Override
-      protected void init() {
+      public void init() {
         declarationPattern = compilePattern("layout (location = 0) <type:storageQualifier> vec4 <name:IDENTIFIER>;",
             GLSLParser.RULE_externalDeclaration);
       }
@@ -108,7 +109,7 @@ public class ReplaceDeclarations<T> extends Transformation<T> {
       }
     });
 
-    addPhase(new WalkPhase<T>() {
+    chainDependent(new WalkPhase<T>() {
       @Override
       protected boolean isActive() {
         return !declarations.isEmpty();
