@@ -325,7 +325,7 @@ public class TransformPatcher implements Patcher {
       private String usedCustomName;
 
       @Override
-      protected void resetState() {
+      public void resetState() {
         type = null;
         usesFragColor = false;
         usesFragData = false;
@@ -343,41 +343,14 @@ public class TransformPatcher implements Patcher {
          * 1a. throw if more than one of these options is being used
          */
 
-        // detect use of gl_FragColor
-        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(
-            new HandlerTargetImpl<Parameters>("gl_FragColor") {
-              @Override
-              public void handleResult(TreeMember node, String match) {
-                usesFragColor = true;
-              }
-            }));
-
-        // detect use of gl_FragData
-        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(
-            new HandlerTargetImpl<Parameters>("gl_FragData") {
-              @Override
-              public void handleResult(TreeMember node, String match) {
-                usesFragData = true;
-              }
-            }) {
-
-          // throw if there more than one of the two integrated methods is being used
-          @Override
-          protected void afterWalk(TranslationUnitContext ctx) {
-            if (usesFragColor && usesFragData) {
-              throw new SemanticException("gl_FragColor and gl_FragData can't be used at the same time!");
-            }
-          }
-        });
-
         // detect use of custom color outputs like
         // "layout (location = 0) out vec4 <IDENTIFIER>"
-        addPhase(new WalkPhase<Parameters>() {
+        addEndDependent(new WalkPhase<Parameters>() {
           ParseTreePattern customColorOutPattern;
           ParseTreePattern illegalOutPattern;
 
           @Override
-          protected void init() {
+          public void init() {
             customColorOutPattern = compilePattern(
                 "layout (location = 0) out vec4 <name:IDENTIFIER>;",
                 GLSLParser.RULE_externalDeclaration);
@@ -427,9 +400,34 @@ public class TransformPatcher implements Patcher {
           }
         });
 
+        // detect use of gl_FragColor
+        addEndDependent(new SearchTerminalsImpl<Parameters>(
+            new HandlerTargetImpl<Parameters>("gl_FragColor") {
+              @Override
+              public void handleResult(TreeMember node, String match) {
+                usesFragColor = true;
+              }
+            }));
+
+        // detect use of gl_FragData
+        addEndDependent(new SearchTerminalsImpl<Parameters>(
+            new HandlerTargetImpl<Parameters>("gl_FragData") {
+              @Override
+              public void handleResult(TreeMember node, String match) {
+                usesFragData = true;
+              }
+            }));
+
+        // throw if there more than one of the two integrated methods is being used
+        prependDependent(RunPhase.withRun(() -> {
+          if (usesFragColor && usesFragData) {
+            throw new SemanticException("gl_FragColor and gl_FragData can't be used at the same time!");
+          }
+        }));
+
         // if we are doing custom, check if any of the declared names are being used
         // (and if they are being used multiple times)
-        addPhase(new SearchTerminalsDynamic<Parameters>() {
+        prependDependent(new SearchTerminalsDynamic<Parameters>() {
           @Override
           protected Collection<HandlerTarget<Parameters>> getTargetsDynamic() {
             return declaredCustomNames.stream()
@@ -449,11 +447,6 @@ public class TransformPatcher implements Patcher {
                 })
                 .collect(Collectors.toList());
           }
-
-          @Override
-          protected boolean isActiveBeforeWalk() {
-            return true;
-          };
 
           // only run the walk if there are any names to find but run the after walk for
           // determining the final frag color type
@@ -498,7 +491,7 @@ public class TransformPatcher implements Patcher {
          * (throw if the replacement target is present already)
          * 3. redirect gl_Frag* to the newly created output (replace identifiers)
          */
-        append(new WrapIdentifierExternalDeclaration<Parameters>() {
+        chainConcurrentDependent(new WrapIdentifierExternalDeclaration<Parameters>() {
           @Override
           protected String getInjectionContent() {
             return "out vec4 " + (type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData[8]") + ";";
@@ -523,7 +516,7 @@ public class TransformPatcher implements Patcher {
         /**
          * 4. if alpha test is given, apply it with iris_FragColor/iris_FragData[0].
          **/
-        append(new WrapIdentifierExternalDeclaration<Parameters>() {
+        chainConcurrentDependent(new WrapIdentifierExternalDeclaration<Parameters>() {
           @Override
           protected String getInjectionContent() {
             // inserts the alpha test, it is not null because it shouldn't be
@@ -575,7 +568,7 @@ public class TransformPatcher implements Patcher {
       boolean hasNormalAndIsNotNewLines;
 
       @Override
-      protected void resetState() {
+      public void resetState() {
         ShaderAttributeInputs attributeInputs = ((VanillaParameters) getJobParameters()).inputs;
         hasTex = attributeInputs.hasTex();
         hasLight = attributeInputs.hasLight();
@@ -583,20 +576,20 @@ public class TransformPatcher implements Patcher {
       }
 
       {
-        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV0")) {
+        addEndDependent(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV0")) {
           @Override
           protected boolean isActive() {
             return hasTex;
           }
         });
-        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV2")) {
+        addEndDependent(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV2")) {
           @Override
           protected boolean isActive() {
             return hasLight;
           }
         });
 
-        addPhase(new SearchTerminalsImpl<Parameters>() {
+        prependDependent(new SearchTerminalsImpl<Parameters>() {
           {
             addTarget(new ParsedReplaceTarget<Parameters>("gl_MultiTexCoord0") {
               @Override
@@ -635,7 +628,7 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-        addConcurrentPhase(new RunPhase<Parameters>() {
+        chainConcurrentDependent(new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
             injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec2 iris_UV0;");
@@ -646,7 +639,7 @@ public class TransformPatcher implements Patcher {
             return hasTex;
           }
         });
-        addConcurrentPhase(new RunPhase<Parameters>() {
+        chainConcurrentDependent(new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
             injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in ivec2 iris_UV2;");
@@ -657,7 +650,7 @@ public class TransformPatcher implements Patcher {
             return hasLight;
           }
         });
-        addConcurrentPhase(new RunPhase<Parameters>() {
+        chainConcurrentDependent(new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
             injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
@@ -669,7 +662,7 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-        append(replaceExcessMultiTexCoord);
+        chainConcurrentDependent(replaceExcessMultiTexCoord);
       }
     };
 
@@ -679,37 +672,41 @@ public class TransformPatcher implements Patcher {
       boolean hasColor;
 
       @Override
-      protected void resetState() {
+      public void resetState() {
         ShaderAttributeInputs attributeInputs = ((VanillaParameters) getJobParameters()).inputs;
         hasColor = attributeInputs.hasColor();
       }
 
       {
-        addConcurrentPhase(
+        addEndDependent(
             new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_ColorModulator")));
-        addConcurrentPhase(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_Color")) {
+        addEndDependent(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_Color")) {
           @Override
           protected boolean isActive() {
             return hasColor;
           }
         });
 
-        addPhase(new SearchTerminalsImpl<Parameters>(new ParsedReplaceTarget<Parameters>("gl_Color") {
-          @Override
-          protected String getNewContent(TreeMember node, String match) {
-            return hasColor ? "(iris_Color * iris_ColorModulator)" : "iris_ColorModulator";
-          }
+        prependDependent(new Transformation<Parameters>() {
+          {
+            addEndDependent(new SearchTerminalsImpl<Parameters>(new ParsedReplaceTarget<Parameters>("gl_Color") {
+              @Override
+              protected String getNewContent(TreeMember node, String match) {
+                return hasColor ? "(iris_Color * iris_ColorModulator)" : "iris_ColorModulator";
+              }
 
-          @Override
-          protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
-            return GLSLParser::expression;
-          }
-        }));
+              @Override
+              protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+                return GLSLParser::expression;
+              }
+            }));
 
-        addConcurrentPhase(new RunPhase<Parameters>() {
-          @Override
-          protected void run(TranslationUnitContext ctx) {
-            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_ColorModulator;");
+            addEndDependent(new RunPhase<Parameters>() {
+              @Override
+              protected void run(TranslationUnitContext ctx) {
+                injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform vec4 iris_ColorModulator;");
+              }
+            });
           }
         });
       }
@@ -721,21 +718,21 @@ public class TransformPatcher implements Patcher {
       boolean replacementHappened;
 
       @Override
-      protected void resetState() {
+      public void resetState() {
         replacementHappened = false;
       }
 
       {
-        addConcurrentPhase(
+        addEndDependent(
             new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_TextureMat")));
-        addConcurrentPhase(
+        addEndDependent(
             new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_LightmapTextureMatrix")));
 
-        addPhase(new WalkPhase<Parameters>() {
+        prependDependent(new WalkPhase<Parameters>() {
           ParseTreePattern pattern;
 
           @Override
-          protected void init() {
+          public void init() {
             pattern = compilePattern("gl_TextureMatrix[<index:expression>]", GLSLParser.RULE_expression);
           }
 
@@ -759,7 +756,7 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-        addPhase(new RunPhase<Parameters>() {
+        chainConcurrentDependent(new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
             injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_TextureMat;");
@@ -785,7 +782,7 @@ public class TransformPatcher implements Patcher {
       }
 
       {
-        addPhase(new SearchTerminalsDynamic<Parameters>() {
+        addEndDependent(new SearchTerminalsDynamic<Parameters>() {
           // determine the model view matrix result and what the mode is
           @Override
           protected void beforeWalk(TranslationUnitContext ctx) {
@@ -821,7 +818,7 @@ public class TransformPatcher implements Patcher {
         });
 
         // do variable replacements
-        addPhase(new SearchTerminalsImpl<>(List.of(
+        chainDependent(new SearchTerminalsImpl<>(List.of(
             new ParsedReplaceTarget<>("gl_ModelViewMatrix") {
               @Override
               protected String getNewContent(TreeMember node, String match) {
@@ -857,7 +854,7 @@ public class TransformPatcher implements Patcher {
             })));
 
         // do fixed and conditional injections
-        addPhase(new RunPhase<Parameters>() {
+        chainConcurrentDependent(new RunPhase<Parameters>() {
           @Override
           protected void run(TranslationUnitContext ctx) {
             injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ModelViewMat;");
@@ -904,40 +901,40 @@ public class TransformPatcher implements Patcher {
         manager.setParseTokenFilter(parseTokenFilter);
 
         // patchCommon and alpha test
-        manager.registerTransformation(detectReserved);
-        manager.registerTransformation(fixVersion);
-        manager.registerTransformation(wrapFogSetup);
+        manager.addConcurrent(detectReserved);
+        manager.addConcurrent(fixVersion);
+        manager.addConcurrent(wrapFogSetup);
 
         if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
-          manager.registerTransformation(wrapFogFragCoord);
+          manager.addConcurrent(wrapFogFragCoord);
         }
 
         if (type == ShaderType.VERTEX) {
-          manager.registerTransformation(wrapFrontColor);
-          manager.registerTransformation(replaceStorageQualifierVertex);
+          manager.addConcurrent(wrapFrontColor);
+          manager.addConcurrent(replaceStorageQualifierVertex);
         } else if (type == ShaderType.FRAGMENT) {
           // manager.registerTransformation(fixFragLayouts);
-          manager.registerTransformation(replaceStorageQualifierFragment);
-          manager.registerTransformation(injectTextureFunctionsFragment);
+          manager.addConcurrent(replaceStorageQualifierFragment);
+          manager.addConcurrent(injectTextureFunctionsFragment);
         }
 
-        manager.registerTransformation(injectTextureFunctions);
+        manager.addConcurrent(injectTextureFunctions);
 
         // is part of patchCommon but also does the alpha test now (addAlphaTest)
         if (type == ShaderType.FRAGMENT) {
-          manager.registerTransformation(wrapFragColorOutput);
+          manager.addConcurrent(wrapFragColorOutput);
         }
 
         // patchVanilla
         if (patch == Patch.VANILLA) {
-          manager.registerTransformation(wrapProjMatrixVanilla);
+          manager.addConcurrent(wrapProjMatrixVanilla);
           if (type == ShaderType.VERTEX) {
-            manager.registerTransformation(wrapAttributeInputsVanillaVertex);
+            manager.addConcurrent(wrapAttributeInputsVanillaVertex);
           }
-          manager.registerTransformation(wrapColorVanilla);
-          manager.registerTransformation(wrapTextureMatricesVanilla);
-          manager.registerTransformation(wrapModelViewMatrixVanilla);
-          manager.registerTransformation(replaceModelViewProjectionVanilla);
+          manager.addConcurrent(wrapColorVanilla);
+          manager.addConcurrent(wrapTextureMatricesVanilla);
+          manager.addConcurrent(wrapModelViewMatrixVanilla);
+          manager.addConcurrent(replaceModelViewProjectionVanilla);
         }
 
         // patchSodium
