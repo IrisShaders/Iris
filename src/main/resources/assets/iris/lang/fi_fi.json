@@ -14,7 +14,7 @@
   "options.iris.apply": "Ota käyttöön",
   "options.iris.refresh": "Lataa uudelleen",
   "options.iris.openShaderPackFolder": "Avaa shader-pakettikansio...",
-  "options.iris.shaderPackSettings": "Shade-pakettiasetukset...",
+  "options.iris.shaderPackSettings": "Shader-pakettiasetukset...",
   "options.iris.shaderPackList": "Shader-pakettiluettelo...",
   "options.iris.refreshShaderPacks": "Lataa shader-paketit uudelleen",
   "options.iris.shaderPackSelection": "Shader-paketit...",
