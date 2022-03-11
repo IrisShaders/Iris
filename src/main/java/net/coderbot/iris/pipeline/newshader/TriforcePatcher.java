@@ -457,7 +457,7 @@ public class TriforcePatcher {
 				throw new IllegalStateException("Expected \"compatibility\" after the GLSL version: #version " + actualVersion);
 			}
 		} else {
-			actualVersion = "150 core";
+			actualVersion = "330 core";
 		}
 
 		beforeVersion = beforeVersion.trim();
