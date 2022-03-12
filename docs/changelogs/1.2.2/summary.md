@@ -2,7 +2,7 @@ Iris 1.2.2 is ready for download, with major performance improvements!
 
 Here's what's changed since 1.2:
 
-⌛ Improved performance around entities with a new vertex format
+⌛ Fixed a regression in 1.2.1 causing low performance around entities
 🗣️ Two translations have been updated
 🩹 ...as well as some other fixes!
 
