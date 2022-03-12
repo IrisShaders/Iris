@@ -1,4 +1,4 @@
-# Iris 1.2.1 Changelog
+# Iris 1.2.2 Changelog
 
 - Added a custom Sodium vertex format for entities
     - This improves performance greatly in entity-heavy spots over 1.2.1.
