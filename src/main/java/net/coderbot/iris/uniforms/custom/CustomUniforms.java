@@ -61,8 +61,7 @@ public class CustomUniforms implements FunctionContext {
 			} catch (Exception e) {
 				Iris.logger
 						.warn("Failed to resolve uniform " + variable.name + ", reason: " + e
-								.getMessage() + " ( = " + variable.expression + ")");
-				Iris.logger.catching(e);
+								.getMessage() + " ( = " + variable.expression + ")", e);
 			}
 		}
 
