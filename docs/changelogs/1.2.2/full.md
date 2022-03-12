@@ -7,5 +7,5 @@
 
 ## Translations
 
-- Updated Korean translation (ko_kr.json) by @brackryun in #1300
+- Updated Korean translation (ko_kr.json) by @backryun in #1300
 - Added Finnish translation (fi_fi.json) by @tappaja666 in #1313
