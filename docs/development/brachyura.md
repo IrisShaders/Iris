@@ -10,18 +10,15 @@ Iris, unlike most other Minecraft mods, uses the [Brachyura](https://github.com/
     - If you are using an IDE other than IntelliJ IDEA, you will need to use the appropriate commands instead of `idea`:
       - VS Code:
         ```
-        java -jar brachyura-bootstrap-0.jar buildscript vscode
-        java -jar brachyura-bootstrap-0.jar vscode
+        java -jar brachyura-bootstrap-0.jar jdt
         ```
         In VS Code it's probably helpful to also run the command `Java: Clean Java Language Server Workspace` afterwards.
       - Eclipse:
         ```
-        java -jar brachyura-bootstrap-0.jar buildscript eclipse
-        java -jar brachyura-bootstrap-0.jar eclipse
+        java -jar brachyura-bootstrap-0.jar jdt
         ```
       - Netbeans:
         ```
-        java -jar brachyura-bootstrap-0.jar buildscript netbeans
         java -jar brachyura-bootstrap-0.jar netbeans
         ```
 - Re-open your IDE and allow it to import (or re-import) the project.
@@ -29,19 +26,19 @@ Iris, unlike most other Minecraft mods, uses the [Brachyura](https://github.com/
 
 ## Running
 
-You can either use the generated run configurations, or use `java -jar .\brachyura-bootstrap-0.jar runMinecraftClient`.
+You can either use the generated run configurations, or use `java -jar brachyura-bootstrap-0.jar runMinecraftClient`.
 
 
 ## Building a release JAR
 
-Run `java -jar .\brachyura-bootstrap-0.jar build`. The resulting JAR file will be in `build/libs`.
+Run `java -jar brachyura-bootstrap-0.jar build`. The resulting JAR file will be in `build/libs`.
 
 
 ## Editing the build script
 
 The build script is a normal Java file at `buildscript/src/main/java/Buildscript.java`. If you want to use external dependencies, they must be added to `brachyurabootstrapconf.txt` in the appropriate format.
 
-If you are using an IDE, make sure to use `java -jar .\brachyura-bootstrap-0.jar idea` (substituting `idea` as appropriate for your current IDE) to re-generate the project files for your edits to fully apply.
+If you are using an IDE, make sure to use `java -jar brachyura-bootstrap-0.jar idea` (substituting `idea` as appropriate for your current IDE) to re-generate the project files for your edits to fully apply.
 
 
 ## Updating Brachyura
@@ -58,4 +55,4 @@ If you are using an IDE, make sure to use `java -jar .\brachyura-bootstrap-0.jar
     https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.35/slf4j-api-1.7.35.jar	517f3a0687490b72d0e56d815e05608a541af802	slf4j-api-1.7.35.jar	true
     ```
 
-- If you are using an IDE, make sure to use `java -jar .\brachyura-bootstrap-0.jar idea` (substituting `idea` as appropriate for your current IDE) to re-generate the project files for your edits to fully apply.
+- If you are using an IDE, make sure to use `java -jar brachyura-bootstrap-0.jar idea` (substituting `idea` as appropriate for your current IDE) to re-generate the project files for your edits to fully apply.

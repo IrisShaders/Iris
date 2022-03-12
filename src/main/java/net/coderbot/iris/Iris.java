@@ -51,7 +51,7 @@ import net.fabricmc.loader.api.FabricLoader;
 
 public class Iris implements ClientModInitializer {
 	public static final String MODID = "iris";
-	public static final Logger logger = LogManager.getLogger(MODID);
+	public static final IrisLogging logger = new IrisLogging("Iris");
 
 	private static Path shaderpacksDirectory;
 	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
@@ -103,7 +103,7 @@ public class Iris implements ClientModInitializer {
 			}
 		} catch (IOException e) {
 			logger.warn("Failed to create the shaderpacks directory!");
-			logger.catching(Level.WARN, e);
+			logger.warn("", e);
 		}
 
 		irisConfig = new IrisConfig(FabricLoader.getInstance().getConfigDir().resolve("iris.properties"));
@@ -112,7 +112,7 @@ public class Iris implements ClientModInitializer {
 			irisConfig.initialize();
 		} catch (IOException e) {
 			logger.error("Failed to initialize Iris configuration, default values will be used instead");
-			logger.catching(Level.ERROR, e);
+			logger.error("", e);
 		}
 
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
@@ -240,7 +240,7 @@ public class Iris implements ClientModInitializer {
 				return false;
 			} catch (IOException e) {
 				logger.error("Failed to load the shaderpack \"{}\"!", name);
-				logger.catching(Level.ERROR, e);
+				logger.error("", e);
 
 				return false;
 			}
@@ -291,7 +291,7 @@ public class Iris implements ClientModInitializer {
 			tryUpdateConfigPropertiesFile(shaderPackConfigTxt, configsToSave);
 		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
-			logger.catching(e);
+			logger.error("", e);
 
 			return false;
 		}

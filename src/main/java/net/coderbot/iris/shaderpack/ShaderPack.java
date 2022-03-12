@@ -300,8 +300,7 @@ public class ShaderPack {
 
 			return null;
 		} catch (IOException e) {
-			Iris.logger.error("An IOException occurred reading " + name + " from the current shaderpack");
-			Iris.logger.catching(Level.ERROR, e);
+			Iris.logger.error("An IOException occurred reading " + name + " from the current shaderpack", e);
 
 			return null;
 		}

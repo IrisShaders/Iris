@@ -7,11 +7,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.fabric.FabricLoader;
 import io.github.coolcrabs.brachyura.fabric.FabricMaven;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
+import io.github.coolcrabs.brachyura.minecraft.Minecraft;
+import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
@@ -22,13 +25,15 @@ import org.eclipse.jgit.lib.Constants;
 
 public class Buildscript extends MultiSrcDirFabricProject {
     static final boolean SODIUM = true;
+	static final boolean CUSTOM_SODIUM = false;
+	static final String customSodiumName = "";
 
-    @Override
-    public String getMcVersion() {
-        return "1.16.5";
-    }
+	@Override
+	public VersionMeta createMcVersion() {
+		return Minecraft.getVersion("1.16.5");
+	}
 
-    @Override
+	@Override
     public MappingTree createMappings() {
         return createMojmap();
     }
@@ -62,18 +67,21 @@ public class Buildscript extends MultiSrcDirFabricProject {
         d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.5+3cc0f0907d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
 
 		if (SODIUM) {
-			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.16.5-0.2.0"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			if (CUSTOM_SODIUM) {
+				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			} else {
+				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.16.5-0.2.0"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			}
 		}
     }
 
 	@Override
-    public Path[] paths(String subdir, boolean headers, boolean tocompile) {
+    public Path[] paths(String subdir, boolean onlyHeaders) {
         List<Path> r = new ArrayList<>();
-        if (tocompile) {
+        if (!onlyHeaders) {
             Collections.addAll(
                 r,
                 getProjectDir().resolve("src").resolve("main").resolve(subdir),
-                getProjectDir().resolve("src").resolve("headers").resolve(subdir),
                 getProjectDir().resolve("src").resolve("vendored").resolve(subdir)
             );
             if (SODIUM) {
@@ -82,15 +90,21 @@ public class Buildscript extends MultiSrcDirFabricProject {
                 r.add(getProjectDir().resolve("src").resolve("noSodiumStub").resolve(subdir));
             }
         }
-        if (headers) {
-            r.add(getProjectDir().resolve("src").resolve("headers").resolve(subdir));
-        }
+        r.add(getProjectDir().resolve("src").resolve("headers").resolve(subdir));
         r.removeIf(p -> !Files.exists(p));
         return r.toArray(new Path[0]);
     }
 
 	@Override
 	public String getVersion() {
+		String baseVersion = super.getVersion().replace("development-environment", "");
+
+		String build_id = System.getenv("GITHUB_RUN_NUMBER");
+
+		if (build_id != null) {
+			return baseVersion + "build." + build_id;
+		}
+
 		String commitHash = "";
 		boolean isDirty = false;
 		try {
@@ -102,14 +116,12 @@ public class Buildscript extends MultiSrcDirFabricProject {
 			e.printStackTrace();
 		}
 
-		String baseVersion = super.getVersion().replace("-development-environment", "");
-
 		return baseVersion + commitHash + (isDirty ? "-dirty" : "");
 	}
 
 	@Override
 	public Path getBuildJarPath() {
-		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + getMcVersion() + "-" + getVersion() + ".jar");
+		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + createMcVersion().version + "-" + getVersion() + ".jar");
 	}
 
 	@Override

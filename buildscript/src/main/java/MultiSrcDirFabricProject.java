@@ -2,7 +2,7 @@ import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.fabric.FabricProject;
-import io.github.coolcrabs.brachyura.ide.IdeProject;
+import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.MappingTreeMappingProvider;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor;
@@ -27,11 +27,10 @@ import java.io.Reader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public abstract class MultiSrcDirFabricProject extends FabricProject {
-	public abstract Path[] paths(String subdir, boolean headers, boolean tocompile);
+	public abstract Path[] paths(String subdir, boolean onlyHeaders);
 
 	@Override
 	public JavaJarDependency build() {
@@ -49,14 +48,10 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 				)
 				.addClasspath(getCompileDependencies());
 
-			List<Path> headerSourceSets = new ArrayList<>();
+			Path[] headerSourceSets = paths("java", true);
 
-			for (Path p : paths("java", false, true)) {
+			for (Path p : paths("java", false)) {
 				compilation.addSourceDir(p);
-			}
-			for (Path p : paths("java", true, false)) {
-				compilation.addSourcePathDir(p);
-				headerSourceSets.add(p);
 			}
 			ProcessingSponge compilationOutput = new ProcessingSponge();
 			JavaCompilationResult compileResult = compilation.compile();
@@ -92,7 +87,7 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 				new RemapperProcessor(TinyRemapper.newRemapper().withMappings(new MappingTreeMappingProvider(compmappings, Namespaces.NAMED, Namespaces.INTERMEDIARY)), getCompileDependencies())
 			).apply(trout, compilationOutput);
 			try (AtomicZipProcessingSink out = new AtomicZipProcessingSink(getBuildJarPath())) {
-				Path[] resources = paths("resources", false, true);
+				Path[] resources = paths("resources", false);
 				DirectoryProcessingSource[] sources = new DirectoryProcessingSource[resources.length];
 				for (int i = 0; i < resources.length; i++) {
 					sources[i] = new DirectoryProcessingSource(resources[i]);
@@ -108,7 +103,7 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 	}
 
 	@Override
-	public IdeProject getIdeProject() {
+	public IdeModule[] getIdeModules() {
 		Path cwd = PathUtil.resolveAndCreateDir(getProjectDir(), "run");
 		Lazy<List<Path>> classpath = new Lazy<>(() -> {
 			Path mappingsClasspath = writeMappings4FabricStuff().getParent().getParent();
@@ -120,55 +115,49 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 			return r;
 		});
 		Lazy<Path> launchConfig = new Lazy<>(this::writeLaunchCfg);
-		HashMap<String, Path> sourcePaths = new HashMap<>();
-		for (Path p : paths("java", true, true)) {
-			String key = p.getParent().getFileName().toString();
-			if ("main".equals(key)) key = "src";
-			sourcePaths.put(key, p);
-		}
-		return new IdeProject.IdeProjectBuilder()
-			.name(getModId())
-			.javaVersion(getJavaVersion())
-			.dependencies(ideDependencies)
-			.sourcePaths(sourcePaths)
-			// TODO: Audit runRunConfig behavior in BaseJavaProject - mixed references to IdeProject and RunConfig
-			.resourcePaths(paths("resources", false, true))
-			.runConfigs(
-				new IdeProject.RunConfig.RunConfigBuilder()
-					.name("Minecraft Client")
-					.cwd(cwd)
-					.mainClass("net.fabricmc.devlaunchinjector.Main")
-					.classpath(classpath)
-					.resourcePaths(paths("resources", false, true))
-					.vmArgs(
-						() -> {
-							ArrayList<String> clientArgs = new ArrayList<>(Arrays.asList(
-								"-Dfabric.dli.config=" + launchConfig.get().toString(),
-								"-Dfabric.dli.env=client",
-								"-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotClient"
-							));
-							if (OsUtil.OS == OsUtil.Os.OSX) {
-								clientArgs.add("-XstartOnFirstThread");
+		return new IdeModule[] {
+			new IdeModule.IdeModuleBuilder()
+				.name(getModId())
+				.root(getProjectDir())
+				.javaVersion(getJavaVersion())
+				.dependencies(ideDependencies)
+				.sourcePaths(paths("java", false))
+				.resourcePaths(paths("resources", false))
+				.runConfigs(
+					new IdeModule.RunConfigBuilder()
+						.name("Minecraft Client")
+						.cwd(cwd)
+						.mainClass("net.fabricmc.devlaunchinjector.Main")
+						.classpath(classpath)
+						.resourcePaths(paths("resources", false))
+						.vmArgs(
+							() -> {
+								ArrayList<String> clientArgs = new ArrayList<>(Arrays.asList(
+									"-Dfabric.dli.config=" + launchConfig.get().toString(),
+									"-Dfabric.dli.env=client",
+									"-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotClient"
+								));
+								if (OsUtil.OS == OsUtil.Os.OSX) {
+									clientArgs.add("-XstartOnFirstThread");
+								}
+								return clientArgs;
 							}
-							return clientArgs;
-						}
-					)
-					.build(),
-				new IdeProject.RunConfig.RunConfigBuilder()
-					.name("Minecraft Server")
-					.cwd(cwd)
-					.mainClass("net.fabricmc.devlaunchinjector.Main")
-					.classpath(classpath)
-					.resourcePaths(getResourcesDir())
-					.vmArgs(
-						() -> Arrays.asList(
-							"-Dfabric.dli.config=" + launchConfig.get().toString(),
-							"-Dfabric.dli.env=server",
-							"-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotServer"
+						),
+					new IdeModule.RunConfigBuilder()
+						.name("Minecraft Server")
+						.cwd(cwd)
+						.mainClass("net.fabricmc.devlaunchinjector.Main")
+						.classpath(classpath)
+						.resourcePaths(getResourcesDir())
+						.vmArgs(
+							() -> Arrays.asList(
+								"-Dfabric.dli.config=" + launchConfig.get().toString(),
+								"-Dfabric.dli.env=server",
+								"-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotServer"
+							)
 						)
-					)
-					.build()
-			)
-			.build();
+				)
+				.build()
+		};
 	}
 }
