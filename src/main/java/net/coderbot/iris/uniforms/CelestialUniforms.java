@@ -131,12 +131,6 @@ public final class CelestialUniforms {
 	}
 
 	private static float getSkyAngle() {
-		float timeOfDay = getWorld().getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
-		;
-
-		float dayTime = ((DimensionTypeAccessor) getWorld().dimensionType()).getFixedTime()
-																		  .orElse((long) timeOfDay % 24000L);
-
-		return (int) dayTime;
+		return getWorld().getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 }

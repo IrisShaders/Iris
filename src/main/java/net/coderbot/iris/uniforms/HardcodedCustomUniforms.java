@@ -11,7 +11,6 @@ import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
 import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TextComponent;
@@ -51,12 +50,7 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "night", HardcodedCustomUniforms::getNight);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "dawnDusk", HardcodedCustomUniforms::getDawnDusk);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "shdFade", HardcodedCustomUniforms::getShdFade);
-		holder.uniform3f(UniformUpdateFrequency.PER_FRAME, "nLightPos", () -> getNLightPos(directives));
-		Vector3f nlightpos = getNLightPos(directives);
-		System.out.println("day: " + getDay() + " night:" + getNight() + " dawnDusk:" + getDawnDusk() + " shdFade:" + getShdFade() + "nLightPos: " + nlightpos.x + " " + nlightpos.y + " " + nlightpos.z);
-		if (Minecraft.getInstance().player != null) {
-			Minecraft.getInstance().player.displayClientMessage(new TextComponent("day: " + getDay() + " night:" + getNight() + " dawnDusk:" + getDawnDusk() + " shdFade:" + getShdFade() + "nLightPos: " + nlightpos.x + " " + nlightpos.y + " " + nlightpos.z), false);
-		}
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isPrecipitationRain", new SmoothedFloat(20, 10, () -> (getRawPrecipitation() == 1 && tracker.getCurrentCameraPosition().y < 96.0f) ? 1 : 0, updateNotifier));
 	}
 
 	private static float getEyeInCave() {
@@ -167,11 +161,6 @@ public class HardcodedCustomUniforms {
 		return (1.0f - getDay()) - getNight();
 	}
 
-
-	private static Vector3f getNLightPos(PackDirectives directives) {
-		Vector4f a = new CelestialUniforms(directives.getSunPathRotation()).getShadowLightPosition().normalize();
-		return new Vector3f(a.x, a.y, a.z);
-	}
 
 	private static float getShdFade() {
 		return (float) Math.clamp(0.0, 1.0, 1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.225) * 40.0);
