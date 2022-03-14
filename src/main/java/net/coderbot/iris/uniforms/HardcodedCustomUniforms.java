@@ -149,11 +149,11 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getDay() {
-		return (float) Math.clamp(5.5 - getAdjTime(), 0.0, 1.0);
+		return (float) Math.clamp(0.0, 1.0, 5.5 - getAdjTime());
 	}
 
 	private static float getNight() {
-		return (float) Math.clamp(getAdjTime() - 6.0, 0.0, 1.0);
+		return (float) Math.clamp( 0.0, 1.0, getAdjTime() - 6.0);
 	}
 
 	private static float getDawnDusk() {
@@ -168,6 +168,6 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getShdFade() {
-		return (float) Math.clamp(1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.225) * 40.0, 0.0, 1.0);
+		return (float) Math.clamp(0.0, 1.0, 1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.225) * 40.0);
 	}
 }
