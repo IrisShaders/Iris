@@ -1,12 +1,16 @@
 package net.coderbot.iris.uniforms;
 
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.uniform.FloatSupplier;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
+import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
+import net.coderbot.iris.vendored.joml.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -21,7 +25,7 @@ import net.minecraft.world.phys.Vec3;
 public class HardcodedCustomUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
 
-	public static void addHardcodedCustomUniforms(UniformHolder holder, FrameUpdateNotifier updateNotifier) {
+	public static void addHardcodedCustomUniforms(PackDirectives directives, UniformHolder holder, FrameUpdateNotifier updateNotifier) {
 		CameraUniforms.CameraPositionTracker tracker = new CameraUniforms.CameraPositionTracker(updateNotifier);
 
 		SmoothedFloat eyeInCave = new SmoothedFloat(6, 12, HardcodedCustomUniforms::getEyeInCave, updateNotifier);
@@ -39,6 +43,13 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isEyeInCave", CommonUniforms.isEyeInWater() == 0 ? eyeInCave : () -> 0);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "velocity", () -> getVelocity(tracker));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "starter", getStarter(tracker, updateNotifier));
+
+		// The following uniforms are specific to Super Duper Vanilla Shaders.
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "day", HardcodedCustomUniforms::getDay);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "night", HardcodedCustomUniforms::getNight);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "dawnDusk", HardcodedCustomUniforms::getDawnDusk);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "shdFade", HardcodedCustomUniforms::getShdFade);
+		holder.uniform3f(UniformUpdateFrequency.PER_FRAME, "nLightPos", () -> getNLightPos(directives));
 	}
 
 	private static float getEyeInCave() {
@@ -131,5 +142,32 @@ public class HardcodedCustomUniforms {
 
 	private static float frac(float value) {
 		return java.lang.Math.abs(value % 1);
+	}
+
+	private static float getAdjTime() {
+		return (float) Math.abs((((((float) WorldTimeUniforms.getWorldDayTime()) / 1000.0) + 6.0) % 24.0) - 12.0);
+	}
+
+	private static float getDay() {
+		return (float) Math.clamp(5.5 - getAdjTime(), 0.0, 1.0);
+	}
+
+	private static float getNight() {
+		return (float) Math.clamp(getAdjTime() - 6.0, 0.0, 1.0);
+	}
+
+	private static float getDawnDusk() {
+		return (float) ((1.0 - getDay()) - getNight());
+	}
+
+
+	private static Vector3f getNLightPos(PackDirectives directives) {
+		Matrix4f modelView = ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose();
+		float[] array = ((Matrix4fAccess) (Object) modelView).copyIntoArray();
+		return new Vector3f(array[9], array[10], array[11]);
+	}
+
+	private static float getShdFade() {
+		return (float) Math.clamp(1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.225) * 40.0, 0.0, 1.0);
 	}
 }

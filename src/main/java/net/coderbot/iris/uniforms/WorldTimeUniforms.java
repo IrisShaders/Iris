@@ -25,7 +25,7 @@ public final class WorldTimeUniforms {
 			.uniform1i(PER_TICK, "moonPhase", () -> getWorld().getMoonPhase());
 	}
 
-	private static int getWorldDayTime() {
+	static int getWorldDayTime() {
 		long timeOfDay = getWorld().getDayTime();
 
 		long dayTime = ((DimensionTypeAccessor) getWorld().dimensionType()).getFixedTime()
