@@ -8,7 +8,6 @@ import java.util.Objects;
 
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;

@@ -1,19 +1,12 @@
 package net.coderbot.iris.uniforms;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
-import net.coderbot.iris.pipeline.ShadowRenderer;
-import net.coderbot.iris.shaderpack.PackDirectives;
-import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
-import net.coderbot.iris.vendored.joml.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
@@ -26,7 +19,7 @@ import net.minecraft.world.phys.Vec3;
 public class HardcodedCustomUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
 
-	public static void addHardcodedCustomUniforms(PackDirectives directives, UniformHolder holder, FrameUpdateNotifier updateNotifier) {
+	public static void addHardcodedCustomUniforms(UniformHolder holder, FrameUpdateNotifier updateNotifier) {
 		CameraUniforms.CameraPositionTracker tracker = new CameraUniforms.CameraPositionTracker(updateNotifier);
 
 		SmoothedFloat eyeInCave = new SmoothedFloat(6, 12, HardcodedCustomUniforms::getEyeInCave, updateNotifier);
