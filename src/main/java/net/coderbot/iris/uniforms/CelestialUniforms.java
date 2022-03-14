@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -130,6 +131,12 @@ public final class CelestialUniforms {
 	}
 
 	private static float getSkyAngle() {
-		return getWorld().getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
+		float timeOfDay = getWorld().getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
+		;
+
+		float dayTime = ((DimensionTypeAccessor) getWorld().dimensionType()).getFixedTime()
+																		  .orElse((long) timeOfDay % 24000L);
+
+		return (int) dayTime;
 	}
 }

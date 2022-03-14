@@ -11,8 +11,10 @@ import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
@@ -50,6 +52,11 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "dawnDusk", HardcodedCustomUniforms::getDawnDusk);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "shdFade", HardcodedCustomUniforms::getShdFade);
 		holder.uniform3f(UniformUpdateFrequency.PER_FRAME, "nLightPos", () -> getNLightPos(directives));
+		Vector3f nlightpos = getNLightPos(directives);
+		System.out.println("day: " + getDay() + " night:" + getNight() + " dawnDusk:" + getDawnDusk() + " shdFade:" + getShdFade() + "nLightPos: " + nlightpos.x + " " + nlightpos.y + " " + nlightpos.z);
+		if (Minecraft.getInstance().player != null) {
+			Minecraft.getInstance().player.displayClientMessage(new TextComponent("day: " + getDay() + " night:" + getNight() + " dawnDusk:" + getDawnDusk() + " shdFade:" + getShdFade() + "nLightPos: " + nlightpos.x + " " + nlightpos.y + " " + nlightpos.z), false);
+		}
 	}
 
 	private static float getEyeInCave() {
@@ -145,26 +152,25 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getAdjTime() {
-		return (float) Math.abs((((((float) WorldTimeUniforms.getWorldDayTime()) / 1000.0) + 6.0) % 24.0) - 12.0);
+		return Math.abs(((((WorldTimeUniforms.getWorldDayTime()) / 1000.0f) + 6.0f) % 24.0f) - 12.0f);
 	}
 
 	private static float getDay() {
-		return (float) Math.clamp(0.0, 1.0, 5.5 - getAdjTime());
+		return Math.clamp(0.0f, 1.0f, 5.5f - getAdjTime());
 	}
 
 	private static float getNight() {
-		return (float) Math.clamp( 0.0, 1.0, getAdjTime() - 6.0);
+		return Math.clamp(0.0f, 1.0f, getAdjTime() - 6.0f);
 	}
 
 	private static float getDawnDusk() {
-		return (float) ((1.0 - getDay()) - getNight());
+		return (1.0f - getDay()) - getNight();
 	}
 
 
 	private static Vector3f getNLightPos(PackDirectives directives) {
-		Matrix4f modelView = ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose();
-		float[] array = ((Matrix4fAccess) (Object) modelView).copyIntoArray();
-		return new Vector3f(array[9], array[10], array[11]);
+		Vector4f a = new CelestialUniforms(directives.getSunPathRotation()).getShadowLightPosition().normalize();
+		return new Vector3f(a.x, a.y, a.z);
 	}
 
 	private static float getShdFade() {
