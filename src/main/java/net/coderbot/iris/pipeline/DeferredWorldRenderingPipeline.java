@@ -342,7 +342,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.phase = WorldRenderingPhase.NONE;
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
-				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages);
+			shadowMapRenderer instanceof EmptyShadowMapRenderer || shadowMapRenderer == null ? null : createShadowTerrainSamplers,
+			createTerrainImages, createShadowTerrainImages);
 	}
 
 	private void checkWorld() {
