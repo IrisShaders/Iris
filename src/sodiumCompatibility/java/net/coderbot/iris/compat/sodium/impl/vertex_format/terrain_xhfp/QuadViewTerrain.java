@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
 import net.coderbot.iris.compat.sodium.impl.vertex_format.QuadView;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
