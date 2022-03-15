@@ -18,6 +18,15 @@ public class OptionDiscoverTest {
 	}
 
 	@Test
+	void testAstraLexDefine() {
+		// AstraLex omits the space
+		testTrivialString(
+			"#define SECRET 0//[0]",
+			"SECRET", "0", ImmutableList.of("0")
+		);
+	}
+
+	@Test
 	void testInferredDefaultDefine() {
 		testTrivialString(
 				"#define OPT 1 //[0]",

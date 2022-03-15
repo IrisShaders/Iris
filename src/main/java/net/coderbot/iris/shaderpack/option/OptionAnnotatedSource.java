@@ -383,13 +383,13 @@ public final class OptionAnnotatedSource {
 					" a list of allowed values afterwards, but it has a value so is therefore not a boolean.");
 			return;
 		} else if (!tookWhitespace) {
-			builder.diagnostics.put(index,
+			if (!line.takeComments()) {
+				builder.diagnostics.put(index,
 					"Invalid syntax after value #define directive. " +
-							"Invalid characters after number or word.");
-			return;
-		}
-
-		if (!line.takeComments()) {
+						"Invalid characters after number or word.");
+				return;
+			}
+		} else if (!line.takeComments()) {
 			builder.diagnostics.put(index,
 					"Invalid syntax after value #define directive. " +
 							"Only comments may come after the value.");
