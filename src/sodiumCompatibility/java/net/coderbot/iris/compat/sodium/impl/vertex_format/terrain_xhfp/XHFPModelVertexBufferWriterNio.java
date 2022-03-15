@@ -13,7 +13,6 @@ import net.coderbot.iris.vendored.joml.Vector3f;
 
 import java.nio.ByteBuffer;
 
-// TODO: Implement an Unsafe variant of this class.
 public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implements ModelVertexSink, MaterialIdAwareVertexWriter {
 	private MaterialIdHolder idHolder;
 

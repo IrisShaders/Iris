@@ -13,7 +13,6 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
-// TODO: Add Unsafe version
 public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, MaterialIdAwareVertexWriter {
     private MaterialIdHolder idHolder;
 
