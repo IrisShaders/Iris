@@ -44,10 +44,10 @@ public class XHFPModelVertexType implements ChunkVertexType {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-		return new XHFPModelVertexBufferWriterNio(buffer);
-	}
+    @Override
+    public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
+        return direct ? new XHFPModelVertexBufferWriterUnsafe(buffer) : new XHFPModelVertexBufferWriterNio(buffer);
+    }
 
 	@Override
 	public BlittableVertexType<ModelVertexSink> asBlittable() {
