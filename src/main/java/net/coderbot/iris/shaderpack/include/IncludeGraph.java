@@ -114,18 +114,29 @@ public class IncludeGraph {
 			ImmutableList<String> lines = ImmutableList.copyOf(source.split("\\R"));
 
 			FileNode node = new FileNode(next, lines);
-			nodes.put(next, node);
+			boolean selfInclude = false;
 
-			ImmutableCollection<AbsolutePackPath> includes = node.getIncludes().values();
+			for (Map.Entry<Integer, AbsolutePackPath> include : node.getIncludes().entrySet()) {
+				int line = include.getKey();
+				AbsolutePackPath included = include.getValue();
 
-			node.getIncludes().forEach((line, included) -> {
-				if (!seen.contains(included)) {
+				if (next.equals(included)) {
+					selfInclude = true;
+					failures.put(next, new RusticError("error", "trivial #include cycle detected",
+						"file includes itself", next.getPathString(), line + 1, lines.get(line)));
+
+					break;
+				} else if (!seen.contains(included)) {
 					queue.add(included);
 					seen.add(included);
 					cameFrom.put(included, next);
 					lineNumberInclude.put(included, line);
 				}
-			});
+			}
+
+			if (!selfInclude) {
+				nodes.put(next, node);
+			}
 		}
 
 		this.nodes = ImmutableMap.copyOf(nodes);
