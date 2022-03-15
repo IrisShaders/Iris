@@ -30,6 +30,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 	private QuadViewTerrain.QuadViewTerrainNio currentQuad = new QuadViewTerrain.QuadViewTerrainNio();
 	private final Vector3f normal = new Vector3f();
 
+	@Override
 	public void copyQuadAndFlipNormal() {
 		ensureCapacity(4);
 
@@ -45,7 +46,6 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		dst.put(src);
 
 		// Now flip vertex normals
-
 		int packedNormal = this.byteBuffer.getInt(this.writeOffset + 28);
 		int inverted = NormalHelper.invertPackedNormal(packedNormal);
 
@@ -131,7 +131,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			// Implementation based on the algorithm found here:
 			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-			currentQuad.setup(buffer, writeOffset, 36);
+			currentQuad.setup(buffer, writeOffset, XHFPModelVertexType.STRIDE);
             NormalHelper.computeFaceNormal(normal, currentQuad);
             int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
