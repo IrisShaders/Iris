@@ -25,7 +25,7 @@ public class ShaderPackOptions {
 		Map<AbsolutePackPath, OptionAnnotatedSource> allAnnotations = new HashMap<>();
 		OptionSet.Builder setBuilder = OptionSet.builder();
 
-		graph.computeWeaklyConnectedSubgraphs().forEach(subgraph -> {
+		graph.computeWeaklyConnectedComponents().forEach(subgraph -> {
 			ImmutableMap.Builder<AbsolutePackPath, OptionAnnotatedSource> annotationBuilder = ImmutableMap.builder();
 			Set<String> referencedBooleanDefines = new HashSet<>();
 

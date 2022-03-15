@@ -147,7 +147,7 @@ public class IncludeGraph {
 		return nodes;
 	}
 
-	public List<IncludeGraph> computeWeaklyConnectedSubgraphs() {
+	public List<IncludeGraph> computeWeaklyConnectedComponents() {
 		//List<IncludeGraph> components = new ArrayList<>();
 
 		// TODO: WCC
@@ -165,9 +165,7 @@ public class IncludeGraph {
 	public IncludeGraph map(Function<AbsolutePackPath, LineTransform> transformProvider) {
 		ImmutableMap.Builder<AbsolutePackPath, FileNode> mappedNodes = ImmutableMap.builder();
 
-		nodes.forEach((path, node) -> {
-			mappedNodes.put(path, node.map(transformProvider.apply(path)));
-		});
+		nodes.forEach((path, node) -> mappedNodes.put(path, node.map(transformProvider.apply(path))));
 
 		return new IncludeGraph(mappedNodes.build(), failures);
 	}
