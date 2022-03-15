@@ -99,6 +99,14 @@ public class ShaderPack {
 		// Read all files and included files recursively
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
+		if (!graph.getFailures().isEmpty()) {
+			graph.getFailures().forEach((path, error) -> {
+				Iris.logger.error("{}", error.toString());
+			});
+
+			throw new IOException("Failed to resolve some #include directives, see previous messages for details");
+		}
+
 		this.languageMap = new LanguageMap(root.resolve("lang"));
 
 		// Discover, merge, and apply shader pack options
