@@ -48,6 +48,8 @@
     "shadows.MixinBeaconRenderer",
     "shadows.MixinLevelRenderer",
     "shadows.MixinPreventRebuildNearInShadowPass",
+    "sky.MixinClientLevelData_DisableVoidPlane",
+    "sky.MixinDimensionSpecialEffects",
     "statelisteners.BooleanStateAccessor",
     "statelisteners.GlStateManagerAccessor",
     "statelisteners.MixinGlStateManager",
