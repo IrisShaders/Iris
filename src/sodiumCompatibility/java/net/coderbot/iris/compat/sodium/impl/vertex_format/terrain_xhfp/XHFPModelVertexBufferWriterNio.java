@@ -27,7 +27,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 	float uSum;
 	float vSum;
 
-	private final QuadViewTerrain currentQuad = new QuadViewTerrain();
+	private QuadViewTerrain.QuadViewTerrainNio currentQuad = new QuadViewTerrain.QuadViewTerrainNio();
 	private final Vector3f normal = new Vector3f();
 
 	public void copyQuadAndFlipNormal() {
@@ -131,10 +131,9 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			// Implementation based on the algorithm found here:
 			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-			currentQuad.buffer = this.byteBuffer;
-			currentQuad.writeOffset = this.writeOffset;
-			NormalHelper.computeFaceNormal(normal, currentQuad);
-			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+			currentQuad.setup(buffer, writeOffset, 36);
+            NormalHelper.computeFaceNormal(normal, currentQuad);
+            int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
 			buffer.putInt(i + 28, packedNormal);
 			buffer.putInt(i + 28 - STRIDE, packedNormal);
