@@ -3,11 +3,13 @@ package net.coderbot.iris.shaderpack.include;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.coderbot.iris.shaderpack.error.RusticError;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,17 +58,20 @@ import java.util.function.Function;
 // TODO: Write tests for this code
 public class IncludeGraph {
 	private final ImmutableMap<AbsolutePackPath, FileNode> nodes;
-	private final ImmutableMap<AbsolutePackPath, IOException> failures;
+	private final ImmutableMap<AbsolutePackPath, RusticError> failures;
 
 	private IncludeGraph(ImmutableMap<AbsolutePackPath, FileNode> nodes,
-						 ImmutableMap<AbsolutePackPath, IOException> failures) {
+						 ImmutableMap<AbsolutePackPath, RusticError> failures) {
 		this.nodes = nodes;
 		this.failures = failures;
 	}
 
 	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths) {
+		Map<AbsolutePackPath, AbsolutePackPath> cameFrom = new HashMap<>();
+		Map<AbsolutePackPath, Integer> lineNumberInclude = new HashMap<>();
+
 		Map<AbsolutePackPath, FileNode> nodes = new HashMap<>();
-		Map<AbsolutePackPath, IOException> failures = new HashMap<>();
+		Map<AbsolutePackPath, RusticError> failures = new HashMap<>();
 
 		List<AbsolutePackPath> queue = new ArrayList<>(startingPaths);
 		Set<AbsolutePackPath> seen = new HashSet<>(startingPaths);
@@ -79,7 +84,30 @@ public class IncludeGraph {
 			try {
 				source = readFile(next.resolved(root));
 			} catch (IOException e) {
-				failures.put(next, e);
+				AbsolutePackPath src = cameFrom.get(next);
+
+				if (src == null) {
+					throw new RuntimeException("unexpected error: failed to read " + next.getPathString(), e);
+				}
+
+				String topLevelMessage;
+				String detailMessage;
+
+				if (e instanceof NoSuchFileException) {
+					topLevelMessage = "failed to resolve #include directive";
+					detailMessage = "file not found";
+				} else {
+					topLevelMessage = "unexpected I/O error while resolving #include directive: " + e;
+					detailMessage = "IO error";
+				}
+
+				String badLine = nodes.get(src).getLines().get(lineNumberInclude.get(next)).trim();
+
+				RusticError topLevelError = new RusticError("error", topLevelMessage, detailMessage, src.getPathString(),
+					lineNumberInclude.get(next) + 1, badLine);
+
+				failures.put(next, topLevelError);
+
 				continue;
 			}
 
@@ -90,12 +118,14 @@ public class IncludeGraph {
 
 			ImmutableCollection<AbsolutePackPath> includes = node.getIncludes().values();
 
-			for (AbsolutePackPath included : includes) {
+			node.getIncludes().forEach((line, included) -> {
 				if (!seen.contains(included)) {
 					queue.add(included);
 					seen.add(included);
+					cameFrom.put(included, next);
+					lineNumberInclude.put(included, line);
 				}
-			}
+			});
 		}
 
 		this.nodes = ImmutableMap.copyOf(nodes);
@@ -131,7 +161,7 @@ public class IncludeGraph {
 		return new IncludeGraph(mappedNodes.build(), failures);
 	}
 
-	public ImmutableMap<AbsolutePackPath, IOException> getFailures() {
+	public ImmutableMap<AbsolutePackPath, RusticError> getFailures() {
 		return failures;
 	}
 
