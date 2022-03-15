@@ -12,6 +12,7 @@ import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -88,6 +89,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final Program shadowProgram;
 	@Nullable
 	private final BlendModeOverride blendModeOverride;
+	@Nullable
+	private final AlphaTestOverride alphaTestOverride;
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
@@ -162,6 +165,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 			// Note: ProgramSet handles defaulting this to "OFF" on the shadow program.
 			this.blendModeOverride = shadow.getDirectives().getBlendModeOverride();
+			this.alphaTestOverride = shadow.getDirectives().getAlphaTestOverride().orElse(null);
 
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// Also assume voxelization if image load / store is detected.
@@ -170,6 +174,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		} else {
 			this.shadowProgram = null;
 			this.blendModeOverride = BlendModeOverride.OFF;
+			this.alphaTestOverride = null;
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
@@ -534,6 +539,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			BlendModeOverride.restore();
 		}
 
+		if (alphaTestOverride != null) {
+			alphaTestOverride.apply();
+		} else {
+			AlphaTestOverride.restore();
+		}
+
 		Minecraft client = Minecraft.getInstance();
 
 		profiler.popPush("shadows");
@@ -701,9 +712,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		pipeline.endShadowRender();
 
-		// Note: This MUST happen before popProgram, otherwise we'll mess up the blend mode override of the program that
-		//       is being restored.
+		// Note: This MUST happen before popProgram, otherwise we'll mess up the blend mode override
+		//       and alpha test override of the program that is being restored.
 		BlendModeOverride.restore();
+		AlphaTestOverride.restore();
 
 		// Note: This unbinds the shadow framebuffer
 		pipeline.popProgram(GbufferProgram.NONE);
