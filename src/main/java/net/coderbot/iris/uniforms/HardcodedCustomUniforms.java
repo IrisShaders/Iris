@@ -143,7 +143,7 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getDay() {
-		return Math.clamp(0.0f, 1.0f, 5.5f - getAdjTime());
+		return Math.clamp(0.0f, 1.0f, 5.4f - getAdjTime());
 	}
 
 	private static float getNight() {
