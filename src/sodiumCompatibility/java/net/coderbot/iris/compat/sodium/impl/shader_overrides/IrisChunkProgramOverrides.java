@@ -191,7 +191,7 @@ public class IrisChunkProgramOverrides {
 					continue;
 				}
 
-                this.programs.put(pass, createShader(device, pass, sodiumTerrainPipeline));
+                this.programs.put(pass, createShader(pass, pipeline));
             }
         } else {
             this.programs.clear();
@@ -211,15 +211,15 @@ public class IrisChunkProgramOverrides {
 		}
 
         if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-        	GlProgram<IrisChunkShaderInterface> shader;
+        	GlProgram<IrisChunkShaderInterface> shadowProgram;
 
 			if (pass == BlockRenderPass.CUTOUT || pass == BlockRenderPass.CUTOUT_MIPPED) {
-				shader = this.programs.get(IrisTerrainPass.SHADOW_CUTOUT);
+				shadowProgram = this.programs.get(IrisTerrainPass.SHADOW_CUTOUT);
 			} else {
-				shader = this.programs.get(IrisTerrainPass.SHADOW);
+				shadowProgram = this.programs.get(IrisTerrainPass.SHADOW);
 			}
 
-			if (shader == null) {
+			if (shadowProgram == null) {
 				throw new IllegalStateException("Shadow program requested, but the pack does not have a shadow pass?");
 			}
 

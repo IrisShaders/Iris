@@ -6,6 +6,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.FogType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -30,9 +31,9 @@ public class MixinDimensionSpecialEffects {
 			cir.setReturnValue(null);
 		}
 
-		FluidState submergedFluid = Minecraft.getInstance().gameRenderer.getMainCamera().getFluidInCamera();
+		FogType fogType = Minecraft.getInstance().gameRenderer.getMainCamera().getFluidInCamera();
 
-		if (!submergedFluid.isEmpty()) {
+		if (fogType != FogType.NONE) {
 			cir.setReturnValue(null);
 		}
 	}
