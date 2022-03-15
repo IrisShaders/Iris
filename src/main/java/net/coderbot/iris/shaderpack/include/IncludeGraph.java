@@ -1,8 +1,8 @@
 package net.coderbot.iris.shaderpack.include;
 
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.error.RusticError;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 
@@ -55,7 +55,6 @@ import java.util.function.Function;
  *         </li>
  * </ul>
  */
-// TODO: Write tests for this code
 public class IncludeGraph {
 	private final ImmutableMap<AbsolutePackPath, FileNode> nodes;
 	private final ImmutableMap<AbsolutePackPath, RusticError> failures;
@@ -141,6 +140,87 @@ public class IncludeGraph {
 
 		this.nodes = ImmutableMap.copyOf(nodes);
 		this.failures = ImmutableMap.copyOf(failures);
+
+		detectCycle();
+	}
+
+	private void detectCycle() {
+		List<AbsolutePackPath> cycle = new ArrayList<>();
+		Set<AbsolutePackPath> visited = new HashSet<>();
+
+		for (AbsolutePackPath start : nodes.keySet()) {
+			if (exploreForCycles(start, cycle, visited)) {
+				AbsolutePackPath lastFilePath = null;
+
+				StringBuilder error = new StringBuilder();
+
+				for (AbsolutePackPath node : cycle) {
+					if (lastFilePath == null) {
+						lastFilePath = node;
+						continue;
+					}
+
+					FileNode lastFile = nodes.get(lastFilePath);
+					int lineNumber = -1;
+
+					for (Map.Entry<Integer, AbsolutePackPath> include : lastFile.getIncludes().entrySet()) {
+						if (include.getValue() == node) {
+							lineNumber = include.getKey() + 1;
+						}
+					}
+
+					String badLine = lastFile.getLines().get(lineNumber - 1);
+
+					String detailMessage = node.equals(start) ? "final #include in cycle" : "#include involved in cycle";
+
+					if (lastFilePath.equals(start)) {
+						// first node in cycle
+						error.append(new RusticError("error", "#include cycle detected",
+							detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
+					} else {
+						error.append("\n  = " + new RusticError("note", "cycle involves another file",
+							detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
+					}
+
+					lastFilePath = node;
+				}
+
+				error.append(
+					"\n  = note: #include directives are resolved before any other preprocessor directives, any form of #include guard will not work" +
+						"\n  = note: other cycles may still exist, only the first detected non-trivial cycle will be reported");
+
+				// TODO: Expose this to the caller (more semantic error handling)
+				Iris.logger.error(error.toString());
+
+				throw new IllegalStateException("Cycle detected in #include graph, see previous messages for details");
+			}
+		}
+	}
+
+	private boolean exploreForCycles(AbsolutePackPath frontier, List<AbsolutePackPath> path, Set<AbsolutePackPath> visited) {
+		if (visited.contains(frontier)) {
+			path.add(frontier);
+			return true;
+		}
+
+		path.add(frontier);
+		visited.add(frontier);
+
+		for (AbsolutePackPath included : nodes.get(frontier).getIncludes().values()) {
+			if (!nodes.containsKey(included)) {
+				// file that failed to load for another reason, error should already be reported
+				continue;
+			}
+
+			if (exploreForCycles(included, path, visited)) {
+				return true;
+			}
+		}
+
+		path.remove(path.size() - 1);
+		visited.remove(frontier);
+
+		return false;
 	}
 
 	public ImmutableMap<AbsolutePackPath, FileNode> getNodes() {
