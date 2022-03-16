@@ -47,6 +47,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public void refreshActiveProgram() {
+		// stub
+	}
+
+	@Override
 	public void setPhase(WorldRenderingPhase phase) {
 
 	}
@@ -59,16 +64,6 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	@Override
 	public RenderTargetStateListener getRenderTargetStateListener() {
 		return RenderTargetStateListener.NOP;
-	}
-
-	@Override
-	public void beginShadowRender() {
-		// stub: nothing to do here
-	}
-
-	@Override
-	public void endShadowRender() {
-		// stub: nothing to do here
 	}
 
 	@Override

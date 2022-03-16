@@ -7,7 +7,7 @@ import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -86,7 +86,7 @@ public class IrisSamplers {
 		return false;
 	}
 
-	public static boolean addShadowSamplers(SamplerHolder samplers, ShadowMapRenderer shadowMapRenderer) {
+	public static boolean addShadowSamplers(SamplerHolder samplers, ShadowRenderTargets shadowRenderTargets) {
 		boolean usesShadows;
 
 		// TODO: figure this out from parsing the shader source code to be 100% compatible with the legacy
@@ -95,16 +95,16 @@ public class IrisSamplers {
 
 		if (waterShadowEnabled) {
 			usesShadows = true;
-			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "watershadow");
-			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId,
+			samplers.addDynamicSampler(shadowRenderTargets.getDepthTexture()::getTextureId, "shadowtex0", "watershadow");
+			samplers.addDynamicSampler(shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId,
 					"shadowtex1", "shadow");
 		} else {
-			usesShadows = samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "shadow");
-			usesShadows |= samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId, "shadowtex1");
+			usesShadows = samplers.addDynamicSampler(shadowRenderTargets.getDepthTexture()::getTextureId, "shadowtex0", "shadow");
+			usesShadows |= samplers.addDynamicSampler(shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, "shadowtex1");
 		}
 
-		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture0Id, "shadowcolor", "shadowcolor0");
-		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture1Id, "shadowcolor1");
+		samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(0), "shadowcolor", "shadowcolor0");
+		samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(1), "shadowcolor1");
 
 		return usesShadows;
 	}

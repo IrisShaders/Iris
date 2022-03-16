@@ -7,7 +7,9 @@ import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkRenderShaderBackend;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ChunkRenderBackendExt;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
@@ -80,6 +82,7 @@ public class MixinChunkRenderShaderBackend implements ChunkRenderBackendExt {
     @Inject(method = "end", at = @At("RETURN"))
     private void iris$onEnd(PoseStack poseStack, CallbackInfo ci) {
         ProgramUniforms.clearActiveUniforms();
+		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::refreshActiveProgram);
     }
 
     @Inject(method = "delete", at = @At("HEAD"), remap = false)

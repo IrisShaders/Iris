@@ -17,12 +17,10 @@ public interface WorldRenderingPipeline {
 
 	WorldRenderingPhase getPhase();
 
+	void refreshActiveProgram();
 	void setPhase(WorldRenderingPhase phase);
 	void setInputs(InputAvailability availability);
 	RenderTargetStateListener getRenderTargetStateListener();
-
-    void beginShadowRender();
-	void endShadowRender();
 
 	void beginHand();
 

@@ -1,30 +1,16 @@
 package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
-import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.IrisRenderSystem;
-import net.coderbot.iris.gl.blending.AlphaTestOverride;
-import net.coderbot.iris.gl.blending.BlendModeOverride;
-import net.coderbot.iris.gl.program.Program;
-import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.program.ProgramSamplers;
-import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
-import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.samplers.IrisImages;
-import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -33,7 +19,6 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
-import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
@@ -44,7 +29,6 @@ import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CelestialUniforms;
-import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
@@ -57,13 +41,10 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -71,28 +52,19 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
-public class ShadowRenderer implements ShadowMapRenderer {
+public class ShadowRenderer {
 	private final float halfPlaneLength;
 	private final float renderDistanceMultiplier;
 	private final float entityShadowDistanceMultiplier;
-	// TODO: Don't make this public
-	public final int resolution;
+	private final int resolution;
 	private final float intervalSize;
 	private final Float fov;
 	public static Matrix4f MODELVIEW;
 	public static Matrix4f PROJECTION;
 
-	private final WorldRenderingPipeline pipeline;
 	private final ShadowRenderTargets targets;
 
-	private final Program shadowProgram;
-	@Nullable
-	private final BlendModeOverride blendModeOverride;
-	@Nullable
-	private final AlphaTestOverride alphaTestOverride;
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
@@ -105,15 +77,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final RenderBuffers buffers;
 	private final RenderBuffersExt renderBuffersExt;
 
-	private final RenderTargets gbufferRenderTargets;
-	private final AbstractTexture normals;
-	private final AbstractTexture specular;
-	private final AbstractTexture whitePixel;
-	private final IntSupplier noise;
-
 	public static List<BlockEntity> visibleBlockEntities;
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
-	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 
 	public static boolean ACTIVE = false;
 	private final String debugStringOverall;
@@ -124,11 +89,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private int renderedShadowBlockEntities = 0;
 	private final ProfilerFiller profiler;
 
-	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
-                          Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-                          AbstractTexture normals, AbstractTexture specular, IntSupplier noise, ProgramSet programSet,
-						  AbstractTexture whitePixel, Object2ObjectMap<String, IntSupplier> customTextureIds) {
-		this.pipeline = pipeline;
+	public ShadowRenderer(ProgramSource shadow, PackDirectives directives, ProgramSet programSet,
+						  ShadowRenderTargets shadowRenderTargets, boolean shadowUsesImages) {
+
 		this.profiler = Minecraft.getInstance().getProfiler();
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
@@ -149,36 +112,14 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.entityFrustumHolder = new FrustumHolder();
 
 		this.fov = shadowDirectives.getFov();
-
-		// TODO: Support more than two shadowcolor render targets
-		this.targets = new ShadowRenderTargets(resolution, new InternalTextureFormat[]{
-			// TODO: Custom shadowcolor format support
-			InternalTextureFormat.RGBA,
-			InternalTextureFormat.RGBA
-		});
-
-		this.gbufferRenderTargets = gbufferRenderTargets;
-		this.normals = normals;
-		this.specular = specular;
-		this.noise = noise;
-		this.whitePixel = whitePixel;
-		this.customTextureIds = customTextureIds;
+		this.targets = shadowRenderTargets;
 
 		if (shadow != null) {
-			this.shadowProgram = createProgram(shadow, directives, flipped);
-
-			// Note: ProgramSet handles defaulting this to "OFF" on the shadow program.
-			this.blendModeOverride = shadow.getDirectives().getBlendModeOverride();
-			this.alphaTestOverride = shadow.getDirectives().getAlphaTestOverride().orElse(null);
-
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// Also assume voxelization if image load / store is detected.
-			this.packHasVoxelization = shadow.getGeometrySource().isPresent() || shadowProgram.getActiveImages() > 0;
+			this.packHasVoxelization = shadow.getGeometrySource().isPresent() || shadowUsesImages;
 			this.packCullingState = shadowDirectives.getCullingState();
 		} else {
-			this.shadowProgram = null;
-			this.blendModeOverride = BlendModeOverride.OFF;
-			this.alphaTestOverride = null;
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
@@ -225,11 +166,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
 
-		RenderSystem.bindTexture(getDepthTextureId());
-		configureDepthSampler(getDepthTextureId(), depthSamplingSettings.get(0));
+		RenderSystem.bindTexture(targets.getDepthTexture().getTextureId());
+		configureDepthSampler(targets.getDepthTexture().getTextureId(), depthSamplingSettings.get(0));
 
-		RenderSystem.bindTexture(getDepthTextureNoTranslucentsId());
-		configureDepthSampler(getDepthTextureNoTranslucentsId(), depthSamplingSettings.get(1));
+		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
+		configureDepthSampler(targets.getDepthTextureNoTranslucents().getTextureId(), depthSamplingSettings.get(1));
 
 		for (int i = 0; i < colorSamplingSettings.size(); i++) {
 			int glTextureId = targets.getColorTextureId(i);
@@ -284,59 +225,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
 	}
 
-	// TODO: Don't just copy this from ShaderPipeline
-	private Program createProgram(ProgramSource source, PackDirectives directives,
-								  Supplier<ImmutableSet<Integer>> flipped) {
-		// TODO: Properly handle empty shaders
-		Objects.requireNonNull(source.getVertexSource());
-		Objects.requireNonNull(source.getFragmentSource());
-		ProgramBuilder builder;
-
-		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-					source.getFragmentSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-		} catch (RuntimeException e) {
-			// TODO: Better error handling
-			throw new RuntimeException("Shader compilation failed!", e);
-		}
-
-		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds);
-
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), directives, pipeline.getFrameUpdateNotifier());
-		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, gbufferRenderTargets, false);
-		IrisImages.addRenderTargetImages(builder, flipped, gbufferRenderTargets);
-
-		// TODO: Proper input availability
-		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, normals, specular,
-				whitePixel, new InputAvailability(true, true, false));
-		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noise);
-
-		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, this);
-		IrisImages.addShadowColorImages(builder, this);
-
-		return builder.build();
-	}
-
-	private static void setupAttributes(Program program) {
-		// Add default attribute values to avoid undefined behavior on content rendered without an extended vertex format
-		// TODO: Avoid duplication with DeferredWorldRenderingPipeline
-		setupAttribute(program, "mc_Entity", 11, -1.0F, -1.0F, -1.0F, -1.0F);
-		setupAttribute(program, "mc_midTexCoord", 12, 0.0F, 0.0F, 0.0F, 0.0F);
-		setupAttribute(program, "at_tangent", 13, 1.0F, 0.0F, 0.0F, 1.0F);
-	}
-
-	private static void setupAttribute(Program program, String name, int expectedLocation, float v0, float v1, float v2, float v3) {
-		int location = IrisRenderSystem.getAttribLocation(program.getProgramId(), name);
-
-		if (location != -1) {
-			if (location != expectedLocation) {
-				throw new IllegalStateException();
-			}
-
-			IrisRenderSystem.vertexAttrib4f(location, v0, v1, v2, v3);
-		}
-	}
-
 	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
 		// Determine the camera position
 		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
@@ -370,7 +258,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			}
 
 			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
-				distanceInfo = + Minecraft.getInstance().options.renderDistance * 16
+				distanceInfo = Minecraft.getInstance().options.renderDistance * 16
 						+ " blocks (capped by normal render distance)";
 				cullingInfo = "disabled " + reason;
 				return holder.setInfo(new NonCullingFrustum(), distanceInfo, cullingInfo);
@@ -424,22 +312,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	}
 
 	private void setupGlState(float[] projMatrix) {
-		// Set up the shadow program
-		setupShadowProgram();
-
-		// Set up and clear our framebuffer
-		targets.getFramebuffer().bind();
-
-		// TODO: Support shadow clear color directives & disable buffer clearing
-		// Ensure that the color and depth values are cleared appropriately
-		RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		RenderSystem.clearDepth(1.0f);
-		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
-
-		// Set up the viewport
-		RenderSystem.viewport(0, 0, resolution, resolution);
-
-		// Set up our orthographic projection matrix and load it into the legacy matrix stack
+		// Set up our projection matrix and load it into the legacy matrix stack
 		IrisRenderSystem.setupProjectionMatrix(projMatrix);
 
 		// Disable backface culling
@@ -452,15 +325,12 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.disableCull();
 	}
 
-	private void restoreGlState(Minecraft client) {
+	private void restoreGlState() {
 		// Restore backface culling
 		RenderSystem.enableCull();
 
 		// Make sure to unload the projection matrix
 		IrisRenderSystem.restoreProjectionMatrix();
-
-		// Restore the old viewport
-		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
 	}
 
 	private void copyPreTranslucentDepth() {
@@ -535,22 +405,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		renderedShadowBlockEntities = shadowBlockEntities;
 	}
 
-	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
-		// Note: This will probably be done differently in 1.17 since blend mode overrides are now associated with
-		//       vanilla ShaderInstances.
-		if (blendModeOverride != null) {
-			blendModeOverride.apply();
-		} else {
-			BlendModeOverride.restore();
-		}
-
-		if (alphaTestOverride != null) {
-			alphaTestOverride.apply();
-		} else {
-			AlphaTestOverride.restore();
-		}
-
 		Minecraft client = Minecraft.getInstance();
 
 		profiler.popPush("shadows");
@@ -621,11 +476,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		profiler.popPush("terrain");
 
-		((DeferredWorldRenderingPipeline) pipeline).beginPass(null);
-
-		pipeline.pushProgram(GbufferProgram.NONE);
-		pipeline.beginShadowRender();
-
 		setupGlState(projMatrix);
 
 		// Render all opaque terrain unless pack requests not to
@@ -635,27 +485,23 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ);
 		}
 
-		// Reset our shader program in case Sodium overrode it.
-		//
-		// If we forget to do this entities will be very small on most shaderpacks since they're being rendered
-		// without shaders, which doesn't integrate with their shadow distortion code.
-		setupShadowProgram();
-
 		profiler.popPush("entities");
 
 		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
 		// it is set to a fixed value.
 		final float tickDelta = CapturedRenderingState.INSTANCE.getTickDelta();
 
-		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass
-		// TODO: Make this configurable and disable-able
+		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass,
+		// if the shader pack has requested it. Otherwise, use the same frustum as for terrain.
 		boolean hasEntityFrustum = false;
+
 		if (entityShadowDistanceMultiplier == 1.0F || entityShadowDistanceMultiplier < 0.0F) {
 			entityFrustumHolder.setInfo(terrainFrustumHolder.getFrustum(), terrainFrustumHolder.getDistanceInfo(), terrainFrustumHolder.getCullingInfo());
 		} else {
 			hasEntityFrustum = true;
 			entityFrustumHolder = createShadowFrustum(renderDistanceMultiplier * entityShadowDistanceMultiplier, entityFrustumHolder);
 		}
+
 		Frustum entityShadowFrustum = entityFrustumHolder.getFrustum();
 		entityShadowFrustum.prepare(cameraX, cameraY, cameraZ);
 
@@ -698,11 +544,9 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		if (shouldRenderTranslucent) {
 			levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ);
 		}
+
 		// Note: Apparently tripwire isn't rendered in the shadow pass.
 		// worldRenderer.invokeRenderType(RenderType.getTripwire(), modelView, cameraX, cameraY, cameraZ);
-
-		// NB: If we want to render anything after translucent terrain, we need to uncomment this line!
-		// setupShadowProgram();
 
 		if (renderBuffersExt != null) {
 			renderBuffersExt.endLevelRendering();
@@ -716,19 +560,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		profiler.popPush("restore gl state");
 
-		restoreGlState(client);
-
-		pipeline.endShadowRender();
-
-		// Note: This MUST happen before popProgram, otherwise we'll mess up the blend mode override
-		//       and alpha test override of the program that is being restored.
-		BlendModeOverride.restore();
-		AlphaTestOverride.restore();
-
-		// Note: This unbinds the shadow framebuffer
-		pipeline.popProgram(GbufferProgram.NONE);
-
-		((DeferredWorldRenderingPipeline) pipeline).matchPass();
+		restoreGlState();
 
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
@@ -740,7 +572,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		profiler.popPush("updatechunks");
 	}
 
-	@Override
 	public void addDebugText(List<String> messages) {
 		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
 		messages.add("[Iris] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
@@ -753,16 +584,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		if (buffers instanceof DrawCallTrackingRenderBuffers && shouldRenderEntities) {
 			DrawCallTrackingRenderBuffers drawCallTracker = (DrawCallTrackingRenderBuffers) buffers;
 			messages.add("[Iris] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
-		}
-	}
-
-	// TODO: This shouldn't be public
-	public void setupShadowProgram() {
-		if (shadowProgram != null) {
-			shadowProgram.use();
-			setupAttributes(shadowProgram);
-		} else {
-			ProgramManager.glUseProgram(0);
 		}
 	}
 
@@ -800,41 +621,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		return shadowAngle;
-	}
-
-	@Override
-	public int getDepthTextureId() {
-		return targets.getDepthTexture().getTextureId();
-	}
-
-	@Override
-	public int getDepthTextureNoTranslucentsId() {
-		return targets.getDepthTextureNoTranslucents().getTextureId();
-	}
-
-	// TODO: Support more shadow color textures as well as support there being no shadow color textures.
-	@Override
-	public int getColorTexture0Id() {
-		return targets.getColorTextureId(0);
-	}
-
-	@Override
-	public int getColorTexture1Id() {
-		return targets.getColorTextureId(1);
-	}
-
-	@Override
-	public ShadowRenderTargets getRenderTargets() {
-		return targets;
-	}
-
-	@Override
-	public void destroy() {
-		this.targets.destroy();
-
-		if (this.shadowProgram != null) {
-			this.shadowProgram.destroy();
-		}
 	}
 
 	private static class MipmapPass {
