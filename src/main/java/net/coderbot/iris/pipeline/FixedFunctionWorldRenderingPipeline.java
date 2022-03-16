@@ -47,8 +47,13 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void refreshActiveProgram() {
-		// stub
+	public void beginSodiumTerrainRendering() {
+
+	}
+
+	@Override
+	public void endSodiumTerrainRendering() {
+
 	}
 
 	@Override

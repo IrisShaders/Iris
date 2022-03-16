@@ -478,6 +478,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			return;
 		}
 
+		if (sodiumTerrainRendering) {
+			beginPass(table.match(getCondition(phase), new InputAvailability(true, true, false)));
+			return;
+		}
+
 		beginPass(table.match(getCondition(phase), inputs));
 	}
 
@@ -938,8 +943,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		return phase;
 	}
 
+	boolean sodiumTerrainRendering = false;
+
 	@Override
-	public void refreshActiveProgram() {
+	public void beginSodiumTerrainRendering() {
+		sodiumTerrainRendering = true;
+		matchPass();
+	}
+
+	@Override
+	public void endSodiumTerrainRendering() {
+		sodiumTerrainRendering = false;
 		current = null;
 		matchPass();
 	}

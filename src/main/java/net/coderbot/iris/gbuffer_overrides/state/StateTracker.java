@@ -19,9 +19,8 @@ public class StateTracker {
 	public boolean overlayAttribute;
 
 	public InputAvailability getInputs() {
-		// TODO: Checking texAttribute & lightmapAttribute breaks things (terrain)?
-		return new InputAvailability(albedoSampler,
-				lightmapSampler,
+		return new InputAvailability(texAttribute && albedoSampler,
+				lightmapAttribute && lightmapSampler,
 				overlaySampler && overlayAttribute);
 	}
 }
