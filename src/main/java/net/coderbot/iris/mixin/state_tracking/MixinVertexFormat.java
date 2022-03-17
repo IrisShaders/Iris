@@ -19,19 +19,28 @@ public class MixinVertexFormat {
 	@Final
 	private ImmutableList<VertexFormatElement> elements;
 
+	private boolean iris$hasUv0;
+	private boolean iris$hasUv1;
+	private boolean iris$hasUv2;
+
+	@Inject(method = "<init>(Lcom/google/common/collect/ImmutableList;)V", at = @At("RETURN"))
+	private void iris$onInit(ImmutableList<VertexFormatElement> constructorElements, CallbackInfo ci) {
+		iris$hasUv0 = elements.contains(DefaultVertexFormat.ELEMENT_UV0);
+		iris$hasUv1 = elements.contains(DefaultVertexFormat.ELEMENT_UV1);
+		iris$hasUv2 = elements.contains(DefaultVertexFormat.ELEMENT_UV2);
+	}
+
 	@Inject(method = "setupBufferState", at = @At("RETURN"), cancellable = true)
 	private void iris$onSetupBufferState(long pointer, CallbackInfo ci) {
-		// TODO: Not efficient.
-		StateTracker.INSTANCE.texAttribute = elements.contains(DefaultVertexFormat.ELEMENT_UV0);
-		StateTracker.INSTANCE.lightmapAttribute = elements.contains(DefaultVertexFormat.ELEMENT_UV2);
-		StateTracker.INSTANCE.overlayAttribute = elements.contains(DefaultVertexFormat.ELEMENT_UV1);
+		StateTracker.INSTANCE.texAttribute = iris$hasUv0;
+		StateTracker.INSTANCE.lightmapAttribute = iris$hasUv2;
+		StateTracker.INSTANCE.overlayAttribute = iris$hasUv1;
 
 		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setInputs(StateTracker.INSTANCE.getInputs()));
 	}
 
 	@Inject(method = "clearBufferState", at = @At("RETURN"), cancellable = true)
 	private void iris$onClearBufferState(CallbackInfo ci) {
-		// TODO: Not efficient.
 		StateTracker.INSTANCE.texAttribute = false;
 		StateTracker.INSTANCE.lightmapAttribute = false;
 		StateTracker.INSTANCE.overlayAttribute = false;
