@@ -45,8 +45,7 @@
 
   "depends": {
     "fabricloader": ">=0.12.3",
-    "minecraft": "1.18.x",
-    "fabric-resource-loader-v0": ">=0.3.2",
+    "minecraft": "1.19.x",
     "fabric-key-binding-api-v1": ">=1.0.1"
   },
 

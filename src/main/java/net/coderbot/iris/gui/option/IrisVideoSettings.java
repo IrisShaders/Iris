@@ -3,10 +3,14 @@ package net.coderbot.iris.gui.option;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Option;
 import net.minecraft.client.ProgressOption;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.FormattedCharSequence;
+
 import java.io.IOException;
+import java.util.List;
 
 public class IrisVideoSettings {
 	public static int shadowDistance = 32;
@@ -68,6 +72,6 @@ public class IrisVideoSettings {
 			tooltip = ENABLED_TOOLTIP;
 		}
 
-		return Minecraft.getInstance().font.split(tooltip, 200);
+		return (Option.TooltipSupplier<Double>) aDouble -> Minecraft.getInstance().font.split(tooltip, 200);
 	});
 }

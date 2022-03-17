@@ -25,12 +25,12 @@ import org.eclipse.jgit.lib.Constants;
 
 public class Buildscript extends MultiSrcDirFabricProject {
 	static final boolean SODIUM = true;
-	static final boolean CUSTOM_SODIUM = false;
-	static final String customSodiumName = "sodium-fabric-mc1.18.2-0.4.1+rev.d50338a.jar";
+	static final boolean CUSTOM_SODIUM = true;
+	static final String customSodiumName = "sodium-fabric-mc22w11a-0.4.1+rev.96cae5a.jar";
 
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion("1.18.2");
+		return Minecraft.getVersion("22w11a");
 	}
 
 	@Override
@@ -67,7 +67,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
 	@Override
 	public void getModDependencies(ModDependencyCollector d) {
 		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
-		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.16+55dca1a4d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
+		//d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.16+55dca1a4d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.11+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME, ModDependencyFlag.JIJ);
 
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.3+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);

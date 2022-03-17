@@ -6,6 +6,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.Holder;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.FogType;
@@ -32,7 +33,7 @@ public class MixinFogRenderer {
 				density -= localPlayer.getWaterVision() * localPlayer.getWaterVision() * 0.03F;
 				Holder<Biome> biome = localPlayer.level.getBiome(localPlayer.blockPosition());
 
-				if (Biome.getBiomeCategory(biome) == Biome.BiomeCategory.SWAMP) {
+				if (biome.is(BiomeTags.HAS_CLOSER_WATER_FOG)) {
 					density += 0.005F;
 				}
 			}
