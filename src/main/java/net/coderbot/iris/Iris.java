@@ -18,8 +18,10 @@ import java.util.zip.ZipException;
 
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
+import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.shaderpack.DimensionId;
@@ -31,6 +33,7 @@ import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.fabricmc.loader.api.ModContainer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
@@ -119,7 +122,42 @@ public class Iris implements ClientModInitializer {
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
 		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 
+		setupCommands(Minecraft.getInstance());
+
 		initialized = true;
+	}
+
+	private void setupCommands(Minecraft instance) {
+		ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("iris").then(ClientCommandManager.literal("debug").then(
+			ClientCommandManager.argument("enabled", BoolArgumentType.bool()).executes(context -> {
+				boolean enable = BoolArgumentType.getBool(context, "enabled");
+
+				Iris.setDebug(enable);
+
+				return 0;
+			})
+		)).then(ClientCommandManager.literal("enabled").then(ClientCommandManager.argument("option", BoolArgumentType.bool()).executes(context -> {
+			try {
+				toggleShaders(instance, BoolArgumentType.getBool(context, "option"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			return 0;
+		}))).then(ClientCommandManager.literal("reload").executes(context -> {
+			try {
+				reload();
+
+				if (instance.player != null) {
+					instance.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded"), false);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				return -1;
+			}
+
+			return 0;
+		})));
 	}
 
 	public static void onRenderSystemInit() {
@@ -128,6 +166,8 @@ public class Iris implements ClientModInitializer {
 					" Is Not Enough Crashes doing something weird? Trying to avoid a crash but this is an odd state.");
 			return;
 		}
+
+		setDebug(irisConfig.isDebugEnabled());
 
 		// Only load the shader pack when we can access OpenGL
 		loadShaderpack();
@@ -150,15 +190,8 @@ public class Iris implements ClientModInitializer {
 				}
 			}
 		} else if (toggleShadersKeybind.consumeClick()) {
-			IrisConfig config = getIrisConfig();
 			try {
-				config.setShadersEnabled(!config.areShadersEnabled());
-				config.save();
-
-				reload();
-				if (minecraft.player != null) {
-					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled", config.areShadersEnabled() ? currentPackName : "off"), false);
-				}
+				toggleShaders(minecraft, !irisConfig.areShadersEnabled());
 			} catch (Exception e) {
 				logger.error("Error while toggling shaders!", e);
 
@@ -171,6 +204,16 @@ public class Iris implements ClientModInitializer {
 			}
 		} else if (shaderpackScreenKeybind.consumeClick()) {
 			minecraft.setScreen(new ShaderPackScreen(null));
+		}
+	}
+
+	public static void toggleShaders(Minecraft minecraft, boolean enabled) throws IOException {
+		irisConfig.setShadersEnabled(enabled);
+		irisConfig.save();
+
+		reload();
+		if (minecraft.player != null) {
+			minecraft.player.displayClientMessage(enabled ? new TranslatableComponent("iris.shaders.toggled", currentPackName) : new TranslatableComponent("iris.shaders.disabled"), false);
 		}
 	}
 
@@ -333,6 +376,30 @@ public class Iris implements ClientModInitializer {
 		currentPackName = "(off)";
 
 		logger.info("Shaders are disabled");
+	}
+
+	private static void setDebug(boolean enable) {
+		int success;
+		if (enable) {
+			success = GLDebug.setupDebugMessageCallback();
+		} else {
+			success = GLDebug.disableDebugMessages();
+		}
+
+		logger.info("Debug functionality is " + (enable ? "enabled, logging will be more verbose!" : "disabled."));
+		if (Minecraft.getInstance().player != null) {
+			Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent(success != 0 ? (enable ? "iris.shaders.debug.enabled" : "iris.shaders.debug.disabled") : "iris.shaders.debug.failure"), false);
+			if (success == 2) {
+				Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent("iris.shaders.debug.issue"), false);
+			}
+		}
+
+		try {
+			irisConfig.setDebugEnabled(enable);
+			irisConfig.save();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static Optional<Properties> tryReadConfigProperties(Path path) {
