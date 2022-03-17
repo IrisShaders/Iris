@@ -24,7 +24,6 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.postprocess.BufferFlipper;
@@ -371,16 +370,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			isRenderingWorld = false;
 			current = null;
 		}
-	}
-
-	@Override
-	public void pushProgram(GbufferProgram program) {
-		// no-op
-	}
-
-	@Override
-	public void popProgram(GbufferProgram expected) {
-		// no-op
 	}
 
 	@Override

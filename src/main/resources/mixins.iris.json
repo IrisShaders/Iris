@@ -41,7 +41,6 @@
     "math.MixinMatrix4f",
     "rendertype.MixinRenderType_FixEyesTranslucency",
     "rendertype.MixinRenderType_FixTerrainAlpha",
-    "rendertype.MixinRenderType",
     "rendertype.RenderStateShardAccessor",
     "rendertype.RenderTypeAccessor",
     "shadows.ChunkInfoAccessor",

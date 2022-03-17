@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
-import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
@@ -78,16 +77,6 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 
 	@Override
 	public void beginTranslucents() {
-		// stub: nothing to do here
-	}
-
-	@Override
-	public void pushProgram(GbufferProgram program) {
-		// stub: nothing to do here
-	}
-
-	@Override
-	public void popProgram(GbufferProgram program) {
 		// stub: nothing to do here
 	}
 
