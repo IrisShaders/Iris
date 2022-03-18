@@ -1,7 +1,8 @@
-package net.coderbot.iris.pipeline.newshader;
+package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
 public interface Patcher {
   // static Patcher INSTANCE = new TriforcePatcher();

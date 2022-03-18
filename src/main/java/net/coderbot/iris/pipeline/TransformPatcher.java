@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline.newshader;
+package net.coderbot.iris.pipeline;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,7 +46,7 @@ import io.github.douira.glsl_transformer.tree.ExtendedContext;
 import io.github.douira.glsl_transformer.tree.TreeMember;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.AttributeShaderTransformer;
+import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
@@ -73,7 +73,7 @@ public class TransformPatcher implements Patcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 
   private static enum Patch {
-    VANILLA, SODIUM, COMPOSITE
+    ATTRIBUTES, VANILLA, SODIUM, COMPOSITE
   }
 
   private static class Parameters {
