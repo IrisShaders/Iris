@@ -146,7 +146,32 @@ public class TransformPatcher implements Patcher {
       Patch.values().length,
       ShaderType.values().length);
 
-  public TransformPatcher() {
+  private static abstract class MainWrapperDynamic<R> extends WrapIdentifierExternalDeclaration<R> {
+    protected abstract String getMainContent();
+
+    @Override
+    protected String getInjectionContent() {
+      // inserts the alpha test, it is not null because it shouldn't be
+      return "void main() { irisMain(); " + getMainContent() + "}";
+    }
+
+    @Override
+    protected InjectionPoint getInjectionLocation() {
+      return InjectionPoint.BEFORE_EOF;
+    }
+
+    @Override
+    protected String getWrapResultDynamic() {
+      return "irisMain";
+    }
+
+    @Override
+    protected String getWrapTargetDynamic() {
+      return "main";
+    }
+  }
+
+  {
     /**
      * PREV TODO: Only do the NewLines patches if the source code isn't from
      * gbuffers_lines
@@ -504,29 +529,11 @@ public class TransformPatcher implements Patcher {
         /**
          * 4. if alpha test is given, apply it with iris_FragColor/iris_FragData[0].
          **/
-        chainConcurrentDependent(new WrapIdentifierExternalDeclaration<Parameters>() {
+        chainConcurrentDependent(new MainWrapperDynamic<Parameters>() {
           @Override
-          protected String getInjectionContent() {
-            // inserts the alpha test, it is not null because it shouldn't be
-            return "void main() { irisMain(); "
-                + getJobParameters().getAlphaTest().toExpression(
-                    type == FragColorOutput.COLOR ? "gl_FragColor.a" : "gl_FragData[0].a", "")
-                + "}";
-          }
-
-          @Override
-          protected InjectionPoint getInjectionLocation() {
-            return InjectionPoint.BEFORE_EOF;
-          }
-
-          @Override
-          protected String getWrapResultDynamic() {
-            return "irisMain";
-          }
-
-          @Override
-          protected String getWrapTargetDynamic() {
-            return "main";
+          protected String getMainContent() {
+            return getJobParameters().getAlphaTest().toExpression(
+                type == FragColorOutput.COLOR ? "gl_FragColor.a" : "gl_FragData[0].a", "");
           }
 
           @Override
@@ -869,7 +876,94 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    // TODO: continue with vanilla's vertex-specific block (the last one)
+    Transformation<Parameters> vertexPositionWrapVanilla = new Transformation<Parameters>() {
+      boolean isNewLines;
+      String glVertexResult;
+
+      {
+        addEndDependent(RunPhase.withRun(() -> {
+          isNewLines = ((VanillaParameters) getJobParameters()).inputs.isNewLines();
+          glVertexResult = isNewLines ? "vec4(iris_Position + iris_vertex_offset, 1.0)" : "vec4(iris_Position, 1.0)";
+        }));
+
+        chainDependent(new SearchTerminalsImpl<Parameters>(new ParsedReplaceTarget<Parameters>("gl_Vertex") {
+          protected String getNewContent(TreeMember node, String match) {
+            return glVertexResult;
+          }
+
+          protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+            return GLSLParser::expression;
+          }
+        }));
+
+        chainConcurrentDependent(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "vec3 iris_vertex_offset = vec3(0.0);");
+          }
+
+          @Override
+          protected boolean isActive() {
+            return isNewLines;
+          }
+        });
+
+        chainConcurrentDependent(new MainWrapperDynamic<Parameters>() {
+          {
+            chainDependency(RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+                "uniform vec2 iris_ScreenSize;",
+                "uniform float iris_LineWidth;",
+                "// Widen the line into a rectangle of appropriate width\n" +
+                    "// Isolated from Minecraft's rendertype_lines.vsh\n" +
+                    "// Both arguments are positions in NDC space (the same space as gl_Position)\n" +
+                    "void iris_widen_lines(vec4 linePosStart, vec4 linePosEnd) {\n" +
+                    "    vec3 ndc1 = linePosStart.xyz / linePosStart.w;\n" +
+                    "    vec3 ndc2 = linePosEnd.xyz / linePosEnd.w;\n" +
+                    "\n" +
+                    "    vec2 lineScreenDirection = normalize((ndc2.xy - ndc1.xy) * iris_ScreenSize);\n" +
+                    "    vec2 lineOffset = vec2(-lineScreenDirection.y, lineScreenDirection.x) * iris_LineWidth / iris_ScreenSize;\n"
+                    +
+                    "\n" +
+                    "    if (lineOffset.x < 0.0) {\n" +
+                    "        lineOffset *= -1.0;\n" +
+                    "    }\n" +
+                    "\n" +
+                    "    if (gl_VertexID % 2 == 0) {\n" +
+                    "        gl_Position = vec4((ndc1 + vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);\n" +
+                    "    } else {\n" +
+                    "        gl_Position = vec4((ndc1 - vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);\n" +
+                    "    }\n" +
+                    "}\n"));
+          }
+
+          @Override
+          protected String getMainContent() {
+            return "    iris_vertex_offset = iris_Normal;\n" +
+                "    irisMain();\n" +
+                "    vec4 linePosEnd = gl_Position;\n" +
+                "    gl_Position = vec4(0.0);\n\n" +
+                "    iris_vertex_offset = vec3(0.0);\n" +
+                "    irisMain();\n" +
+                "    vec4 linePosStart = gl_Position;\n\n" +
+                "    iris_widen_lines(linePosStart, linePosEnd);";
+          }
+
+          @Override
+          protected boolean isActiveDynamic() {
+            return isNewLines;
+          }
+        });
+
+        chainConcurrentDependent(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Position;");
+            injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+                "vec4 ftransform() { return gl_ModelViewProjectionMatrix * " + glVertexResult + "; }");
+          }
+        });
+      }
+    };
 
     // compose the transformations and phases into the managers
     for (Patch patch : Patch.values()) {
@@ -879,40 +973,37 @@ public class TransformPatcher implements Patcher {
 
         manager.setParseTokenFilter(parseTokenFilter);
 
-        // patchCommon and alpha test
         manager.addConcurrent(detectReserved);
         manager.addConcurrent(fixVersion);
         manager.addConcurrent(wrapFogSetup);
-
-        if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
-          manager.addConcurrent(wrapFogFragCoord);
-        }
-
-        if (type == ShaderType.VERTEX) {
-          manager.addConcurrent(wrapFrontColor);
-          manager.addConcurrent(replaceStorageQualifierVertex);
-        } else if (type == ShaderType.FRAGMENT) {
-          // manager.registerTransformation(fixFragLayouts);
-          manager.addConcurrent(replaceStorageQualifierFragment);
-          manager.addConcurrent(injectTextureFunctionsFragment);
-        }
-
         manager.addConcurrent(injectTextureFunctions);
 
-        // is part of patchCommon but also does the alpha test now (addAlphaTest)
+        if (type == ShaderType.VERTEX) {
+          manager.addConcurrent(wrapFogFragCoord);
+          manager.addConcurrent(wrapFrontColor);
+          manager.addConcurrent(replaceStorageQualifierVertex);
+        }
+
         if (type == ShaderType.FRAGMENT) {
+          manager.addConcurrent(wrapFogFragCoord);
+          manager.addConcurrent(replaceStorageQualifierFragment);
+          manager.addConcurrent(injectTextureFunctionsFragment);
+
+          // is part of patchCommon but also does the alpha test now (addAlphaTest)
           manager.addConcurrent(wrapFragColorOutput);
         }
 
         // patchVanilla
         if (patch == Patch.VANILLA) {
           manager.addConcurrent(wrapProjMatrixVanilla);
-          if (type == ShaderType.VERTEX) {
-            manager.addConcurrent(wrapAttributeInputsVanillaVertex);
-          }
           manager.addConcurrent(wrapColorVanilla);
           manager.addConcurrent(wrapTextureMatricesVanilla);
           manager.addConcurrent(wrapModelViewMatrixVanilla);
+
+          if (type == ShaderType.VERTEX) {
+            manager.addConcurrent(wrapAttributeInputsVanillaVertex);
+            manager.addConcurrent(vertexPositionWrapVanilla);
+          }
         }
 
         // patchSodium
