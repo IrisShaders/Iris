@@ -407,7 +407,7 @@ public class TransformPatcher implements Patcher {
             }));
 
         // throw if there more than one of the two integrated methods is being used
-        prependDependent(RunPhase.withRun(() -> {
+        prependDependency(RunPhase.withRun(() -> {
           if (usesFragColor && usesFragData) {
             throw new SemanticException("gl_FragColor and gl_FragData can't be used at the same time!");
           }
@@ -415,7 +415,7 @@ public class TransformPatcher implements Patcher {
 
         // if we are doing custom, check if any of the declared names are being used
         // (and if they are being used multiple times)
-        prependDependent(new SearchTerminalsDynamic<Parameters>() {
+        prependDependency(new SearchTerminalsDynamic<Parameters>() {
           @Override
           protected Collection<HandlerTarget<Parameters>> getTargetsDynamic() {
             return declaredCustomNames.stream()
@@ -577,7 +577,7 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-        prependDependent(new SearchTerminalsImpl<Parameters>() {
+        prependDependency(new SearchTerminalsImpl<Parameters>() {
           {
             addTarget(new ParsedReplaceTarget<Parameters>("gl_MultiTexCoord0") {
               @Override
@@ -675,7 +675,7 @@ public class TransformPatcher implements Patcher {
           }
         });
 
-        prependDependent(new Transformation<Parameters>() {
+        prependDependency(new Transformation<Parameters>() {
           {
             addEndDependent(new SearchTerminalsImpl<Parameters>(new ParsedReplaceTarget<Parameters>("gl_Color") {
               @Override
@@ -712,7 +712,7 @@ public class TransformPatcher implements Patcher {
         addEndDependent(
             new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_LightmapTextureMatrix")));
 
-        prependDependent(new WalkPhase<Parameters>() {
+        prependDependency(new WalkPhase<Parameters>() {
           ParseTreePattern pattern;
 
           @Override
