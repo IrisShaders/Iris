@@ -869,11 +869,6 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    Transformation<Parameters> replaceModelViewProjectionVanilla = new Transformation<Parameters>(
-        SearchTerminalsImpl.withReplacementExpression(
-            "gl_ModelViewProjectionMatrix",
-            "(gl_ProjectionMatrix * gl_ModelViewMatrix)"));
-
     // TODO: continue with vanilla's vertex-specific block (the last one)
 
     // compose the transformations and phases into the managers
@@ -918,7 +913,6 @@ public class TransformPatcher implements Patcher {
           manager.addConcurrent(wrapColorVanilla);
           manager.addConcurrent(wrapTextureMatricesVanilla);
           manager.addConcurrent(wrapModelViewMatrixVanilla);
-          manager.addConcurrent(replaceModelViewProjectionVanilla);
         }
 
         // patchSodium
