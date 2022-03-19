@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(ClientLevel.ClientLevelData.class)
 public class MixinClientLevelData_DisableVoidPlane {
-	@Inject(method = "getHorizonHeight()D", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "getHorizonHeight", at = @At("HEAD"), cancellable = true)
 	private void iris$getHorizonHeight(CallbackInfoReturnable<Double> cir) {
 		FogType fogType = Minecraft.getInstance().gameRenderer.getMainCamera().getFluidInCamera();
 
