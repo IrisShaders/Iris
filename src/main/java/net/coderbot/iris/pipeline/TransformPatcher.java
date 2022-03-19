@@ -40,6 +40,7 @@ import io.github.douira.glsl_transformer.transform.RunPhase;
 import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
+import io.github.douira.glsl_transformer.transform.TransformationPhase;
 import io.github.douira.glsl_transformer.transform.TransformationPhase.InjectionPoint;
 import io.github.douira.glsl_transformer.transform.WalkPhase;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
@@ -47,8 +48,6 @@ import io.github.douira.glsl_transformer.tree.TreeMember;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
-import net.coderbot.iris.shaderpack.transform.StringTransformations;
-import net.coderbot.iris.shaderpack.transform.Transformations;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
@@ -73,7 +72,7 @@ public class TransformPatcher implements Patcher {
   private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 
   private static enum Patch {
-    ATTRIBUTES, VANILLA, SODIUM, COMPOSITE
+    ATTRIBUTES, VANILLA_REGULAR, VANILLA_WITH_ATTRIBUTE_TRANSFORM, SODIUM, COMPOSITE
   }
 
   private static class Parameters {
@@ -90,14 +89,28 @@ public class TransformPatcher implements Patcher {
     }
   }
 
-  private static class VanillaParameters extends Parameters {
+  private static class AttributeParameters extends Parameters {
+    public final boolean hasGeometry;
+
+    public AttributeParameters(Patch patch, ShaderType type, boolean hasGeometry) {
+      super(patch, type);
+      this.hasGeometry = hasGeometry;
+    }
+  }
+
+  /**
+   * This extends AttributeParameters so that the attribute transformation code
+   * can cast the job parameter object to AttributeParameters without issues even
+   * if it's actually a VanillaParameters instance.
+   */
+  private static class VanillaParameters extends AttributeParameters {
     public final AlphaTest alpha;
     public final boolean hasChunkOffset;
     public final ShaderAttributeInputs inputs;
 
     public VanillaParameters(Patch patch, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
         ShaderAttributeInputs inputs) {
-      super(patch, type);
+      super(patch, type, false);
       this.alpha = alpha;
       this.hasChunkOffset = hasChunkOffset;
       this.inputs = inputs;
@@ -189,20 +202,21 @@ public class TransformPatcher implements Patcher {
     };
 
     // setup the transformations and even loose phases if necessary
-    Transformation<Parameters> detectReserved = new Transformation<Parameters>(
-        new SearchTerminalsImpl<Parameters>(SearchTerminals.IDENTIFIER,
-            ImmutableSet.of(
-                new ThrowTargetImpl<Parameters>(
-                    "moj_import", "Iris shader programs may not use moj_import directives."),
-                new ThrowTargetImpl<Parameters>(
-                    "iris_",
-                    "Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))));
+    TransformationPhase<Parameters> detectReserved = new SearchTerminalsImpl<Parameters>(SearchTerminals.IDENTIFIER,
+        ImmutableSet.of(
+            new ThrowTargetImpl<Parameters>(
+                "moj_import", "Iris shader programs may not use moj_import directives."),
+            new ThrowTargetImpl<Parameters>(
+                "iris_",
+                "Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))) {
+      {
+        allowInexactMatches();
+      }
+    };
 
-    Transformation<Parameters> fixVersion = new Transformation<Parameters>(new RunPhase<Parameters>() {
-      /**
-       * This largely replicates the behavior of
-       * {@link net.coderbot.iris.pipeline.newshader.TriforcePatcher#fixVersion(Transformations)}
-       */
+    // Transformation<Parameters> replaceEntityColor =
+
+    TransformationPhase<Parameters> fixVersion = new RunPhase<Parameters>() {
       @Override
       protected void run(TranslationUnitContext ctx) {
         VersionStatementContext versionStatement = ctx.versionStatement();
@@ -231,7 +245,7 @@ public class TransformPatcher implements Patcher {
 
         replaceNode(versionStatement, "#version " + version + " " + profile + "\n", GLSLParser::versionStatement);
       }
-    });
+    };
 
     /**
      * PREV NOTE:
@@ -281,34 +295,34 @@ public class TransformPatcher implements Patcher {
     // 2. check if there is a single non-located out that could receive location
     // 3. add location 0 to that declaration
 
-    Transformation<Parameters> replaceStorageQualifierVertex = new Transformation<Parameters>(
-        new SearchTerminalsImpl<Parameters>(SearchTerminals.ANY_TYPE) {
-          {
-            addReplacementTerminal("attribute", "in");
-            addReplacementTerminal("varying", "out");
-          }
-        });
-    Transformation<Parameters> replaceStorageQualifierFragment = new Transformation<Parameters>(
-        new SearchTerminalsImpl<Parameters>(SearchTerminals.ANY_TYPE) {
-          {
-            addReplacementTerminal("varying", "in");
-          }
-        });
+    TransformationPhase<Parameters> replaceStorageQualifierVertex = new SearchTerminalsImpl<Parameters>(
+        SearchTerminals.ANY_TYPE) {
+      {
+        addReplacementTerminal("attribute", "in");
+        addReplacementTerminal("varying", "out");
+      }
+    };
+    TransformationPhase<Parameters> replaceStorageQualifierFragment = new SearchTerminalsImpl<Parameters>(
+        SearchTerminals.ANY_TYPE) {
+      {
+        addReplacementTerminal("varying", "in");
+      }
+    };
 
     // PREV TODO: Add similar functions for all legacy texture sampling functions
-    Transformation<Parameters> injectTextureFunctions = new Transformation<Parameters>(
-        RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
-            "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
-            "vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
-            "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }",
-            "vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) { return textureLod(sampler, coord, lod); }",
-            "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }",
-            "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }",
-            "vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-            "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-            "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-            "vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }",
-            "vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }"));
+    TransformationPhase<Parameters> injectTextureFunctions = RunPhase.withInjectExternalDeclarations(
+        InjectionPoint.BEFORE_DECLARATIONS,
+        "vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
+        "vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
+        "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }",
+        "vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) { return textureLod(sampler, coord, lod); }",
+        "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }",
+        "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }",
+        "vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+        "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+        "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
+        "vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }",
+        "vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }");
 
     /**
      * PREV NOTE:
@@ -316,11 +330,10 @@ public class TransformPatcher implements Patcher {
      * In all functions below, the bias parameter is optional for fragment shaders.
      * The bias parameter is not accepted in a vertex or geometry shader.
      */
-    Transformation<Parameters> injectTextureFunctionsFragment = new Transformation<Parameters>(
-        RunPhase.withInjectExternalDeclarations(
-            InjectionPoint.BEFORE_DECLARATIONS,
-            "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
-            "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }"));
+    TransformationPhase<Parameters> injectTextureFunctionsFragment = RunPhase.withInjectExternalDeclarations(
+        InjectionPoint.BEFORE_DECLARATIONS,
+        "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
+        "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
 
     Transformation<Parameters> wrapFragColorOutput = new Transformation<Parameters>() {
       private FragColorOutput type;
@@ -539,7 +552,8 @@ public class TransformPatcher implements Patcher {
           @Override
           protected boolean isActiveDynamic() {
             Patch patch = getJobParameters().patch;
-            return (patch == Patch.VANILLA || patch == Patch.SODIUM) && getJobParameters().getAlphaTest() != null;
+            return (patch == Patch.VANILLA_REGULAR || patch == Patch.SODIUM)
+                && getJobParameters().getAlphaTest() != null;
           }
         });
       }
@@ -662,7 +676,7 @@ public class TransformPatcher implements Patcher {
     };
 
     // TODO: in triforce this is confusing because iris_Color is used even when
-    // !hasColor in which case it's not defined anywhere
+    // hasColor is false in which case it's not defined anywhere
     Transformation<Parameters> wrapColorVanilla = new Transformation<Parameters>() {
       boolean hasColor;
 
@@ -972,49 +986,62 @@ public class TransformPatcher implements Patcher {
         managers.put(patch, type, manager);
 
         manager.setParseTokenFilter(parseTokenFilter);
-
         manager.addConcurrent(detectReserved);
-        manager.addConcurrent(fixVersion);
-        manager.addConcurrent(wrapFogSetup);
-        manager.addConcurrent(injectTextureFunctions);
 
-        if (type == ShaderType.VERTEX) {
-          manager.addConcurrent(wrapFogFragCoord);
-          manager.addConcurrent(wrapFrontColor);
-          manager.addConcurrent(replaceStorageQualifierVertex);
-        }
+        // patchAttributes
+        if (patch == Patch.ATTRIBUTES || patch == Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM) {
+          // manager.addConcurrent(replaceEntityColor);
 
-        if (type == ShaderType.FRAGMENT) {
-          manager.addConcurrent(wrapFogFragCoord);
-          manager.addConcurrent(replaceStorageQualifierFragment);
-          manager.addConcurrent(injectTextureFunctionsFragment);
-
-          // is part of patchCommon but also does the alpha test now (addAlphaTest)
-          manager.addConcurrent(wrapFragColorOutput);
-        }
-
-        // patchVanilla
-        if (patch == Patch.VANILLA) {
-          manager.addConcurrent(wrapProjMatrixVanilla);
-          manager.addConcurrent(wrapColorVanilla);
-          manager.addConcurrent(wrapTextureMatricesVanilla);
-          manager.addConcurrent(wrapModelViewMatrixVanilla);
-
-          if (type == ShaderType.VERTEX) {
-            manager.addConcurrent(wrapAttributeInputsVanillaVertex);
-            manager.addConcurrent(vertexPositionWrapVanilla);
+          if (type == ShaderType.VERTEX || type == ShaderType.GEOMETRY) {
+            // manager.addConcurrent(wrapOverlay);
           }
         }
 
-        // patchSodium
-        if (patch == Patch.SODIUM) {
+        if (patch != Patch.ATTRIBUTES) {
+          manager.addConcurrent(fixVersion);
+          manager.addConcurrent(wrapFogSetup);
+          manager.addConcurrent(injectTextureFunctions);
 
+          if (type == ShaderType.VERTEX) {
+            manager.addConcurrent(wrapFogFragCoord);
+            manager.addConcurrent(wrapFrontColor);
+            manager.addConcurrent(replaceStorageQualifierVertex);
+          }
+
+          else if (type == ShaderType.FRAGMENT) {
+            manager.addConcurrent(wrapFogFragCoord);
+            manager.addConcurrent(replaceStorageQualifierFragment);
+            manager.addConcurrent(injectTextureFunctionsFragment);
+
+            // does frag color handling and the alpha test as well
+            manager.addConcurrent(wrapFragColorOutput);
+          }
+
+          // patchVanilla
+          if (patch == Patch.VANILLA_REGULAR || patch == Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM) {
+            manager.addConcurrent(wrapProjMatrixVanilla);
+            manager.addConcurrent(wrapColorVanilla);
+            manager.addConcurrent(wrapTextureMatricesVanilla);
+            manager.addConcurrent(wrapModelViewMatrixVanilla);
+
+            if (type == ShaderType.VERTEX) {
+              manager.addConcurrent(wrapAttributeInputsVanillaVertex);
+              manager.addConcurrent(vertexPositionWrapVanilla);
+            }
+          }
+
+          // patchSodium
+          if (patch == Patch.SODIUM) {
+
+          }
+
+          // patchComposite
+          if (patch == Patch.COMPOSITE) {
+
+          }
         }
 
-        // patchComposite
-        if (patch == Patch.COMPOSITE) {
-
-        }
+        manager.planExecution();
       }
     }
   }
@@ -1024,20 +1051,18 @@ public class TransformPatcher implements Patcher {
   }
 
   @Override
+  public String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+    return transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
+  }
+
+  @Override
   public String patchVanilla(
       String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
       ShaderAttributeInputs inputs) {
-    // TODO: get rid of this by merging transformations from
-    // AttributeShaderTransformer into the vanilla managers
-    if (inputs.hasOverlay()) {
-      StringTransformations preTransform = new StringTransformations(source);
-      // PREV TODO: Change this once we implement 1.17 geometry shader support!
-      AttributeShaderTransformer.patch(preTransform, type, false);
-      source = source.toString();
-    }
-
     return transform(source,
-        new VanillaParameters(Patch.VANILLA, type, alpha, hasChunkOffset, inputs));
+        new VanillaParameters(
+            inputs.hasOverlay() ? Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM : Patch.VANILLA_REGULAR,
+            type, alpha, hasChunkOffset, inputs));
   }
 
   @Override
@@ -1045,7 +1070,8 @@ public class TransformPatcher implements Patcher {
       String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs,
       float positionScale, float positionOffset, float textureScale) {
     return transform(source,
-        new SodiumParameters(Patch.VANILLA, type, alpha, inputs, positionScale, positionOffset, textureScale));
+        new SodiumParameters(Patch.SODIUM,
+            type, alpha, inputs, positionScale, positionOffset, textureScale));
   }
 
   @Override

@@ -13,6 +13,8 @@ public interface Patcher {
     return INSTANCE;
   }
 
+  public String patchAttributes(String source, ShaderType type, boolean hasGeometry);
+
   public String patchVanilla(
       String source, ShaderType type, AlphaTest alpha,
       boolean hasChunkOffset, ShaderAttributeInputs inputs);

@@ -108,6 +108,11 @@ public class TriforcePatcher implements Patcher {
 		//System.out.println(transformations.toString());
 	}
 
+	@Override
+	public String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+		return AttributeShaderTransformer.patch(new StringTransformations(source), type, hasGeometry).toString();
+	}
+
 	public String patchVanilla(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
 		StringTransformations transformations = new StringTransformations(source);
 

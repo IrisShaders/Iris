@@ -35,7 +35,6 @@ import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
-import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -45,7 +44,6 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -563,10 +561,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private Pass createEntityPass(ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		String geometry = source.getGeometrySource().orElse(null);
-		String vertex = AttributeShaderTransformer.patch(new StringTransformations(source.getVertexSource().orElseThrow(NullPointerException::new)),
-				ShaderType.VERTEX, geometry != null).toString();
-		String fragment = AttributeShaderTransformer.patch(new StringTransformations(source.getVertexSource().orElseThrow(NullPointerException::new)),
-				ShaderType.FRAGMENT, geometry != null).toString();
+		String vertex = Patcher.getInstance().patchAttributes(
+			source.getVertexSource().orElseThrow(NullPointerException::new), ShaderType.VERTEX, geometry != null);
+		String fragment = Patcher.getInstance().patchAttributes(
+			source.getVertexSource().orElseThrow(NullPointerException::new), ShaderType.FRAGMENT, geometry != null);
 
 		ProgramBuilder builder;
 		try {
