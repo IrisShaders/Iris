@@ -53,10 +53,13 @@
     "rendertype.MixinRenderType",
     "rendertype.RenderTypeAccessor",
     "rendertype.RenderStateShardAccessor",
+    "rendertype.RenderTypeAccessor",
     "shadows.ChunkInfoAccessor",
     "shadows.MixinBeaconRenderer",
     "shadows.MixinPreventRebuildNearInShadowPass",
     "shadows.MixinLevelRenderer",
+    "sky.MixinClientLevelData_DisableVoidPlane",
+    "sky.MixinDimensionSpecialEffects",
     "statelisteners.BooleanStateAccessor",
     "statelisteners.MixinGlStateManager",
     "DimensionTypeAccessor"

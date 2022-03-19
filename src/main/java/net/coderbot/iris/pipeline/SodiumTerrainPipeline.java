@@ -239,6 +239,10 @@ public class SodiumTerrainPipeline {
 		return uniforms.buildUniforms();
 	}
 
+	public boolean hasShadowPass() {
+		return createShadowSamplers != null;
+	}
+
 	public ProgramSamplers initTerrainSamplers(int programId) {
 		return createTerrainSamplers.apply(programId);
 	}

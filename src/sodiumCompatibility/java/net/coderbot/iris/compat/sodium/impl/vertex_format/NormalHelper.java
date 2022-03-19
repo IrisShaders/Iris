@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.xhfp;
+package net.coderbot.iris.compat.sodium.impl.vertex_format;
 
 /*
  * Copyright (c) 2016, 2017, 2018, 2019 FabricMC

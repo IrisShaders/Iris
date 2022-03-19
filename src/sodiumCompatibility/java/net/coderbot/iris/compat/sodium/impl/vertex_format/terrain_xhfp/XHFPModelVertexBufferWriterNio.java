@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.xhfp;
+package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
@@ -8,11 +8,11 @@ import me.jellysquid.mods.sodium.client.util.Norm3b;
 import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
 import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.NormalHelper;
 import net.coderbot.iris.vendored.joml.Vector3f;
 
 import java.nio.ByteBuffer;
 
-// TODO: Implement an Unsafe variant of this class.
 public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implements ModelVertexSink, MaterialIdAwareVertexWriter {
 	private MaterialIdHolder idHolder;
 
@@ -26,9 +26,10 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 	float uSum;
 	float vSum;
 
-	private final QuadView currentQuad = new QuadView();
+	private QuadViewTerrain.QuadViewTerrainNio currentQuad = new QuadViewTerrain.QuadViewTerrainNio();
 	private final Vector3f normal = new Vector3f();
 
+	@Override
 	public void copyQuadAndFlipNormal() {
 		ensureCapacity(4);
 
@@ -44,7 +45,6 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		dst.put(src);
 
 		// Now flip vertex normals
-
 		int packedNormal = this.byteBuffer.getInt(this.writeOffset + 28);
 		int inverted = NormalHelper.invertPackedNormal(packedNormal);
 
@@ -130,109 +130,16 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			// Implementation based on the algorithm found here:
 			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-			currentQuad.buffer = this.byteBuffer;
-			currentQuad.writeOffset = this.writeOffset;
-			NormalHelper.computeFaceNormal(normal, currentQuad);
-			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+			currentQuad.setup(buffer, writeOffset, XHFPModelVertexType.STRIDE);
+            NormalHelper.computeFaceNormal(normal, currentQuad);
+            int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
 			buffer.putInt(i + 28, packedNormal);
 			buffer.putInt(i + 28 - STRIDE, packedNormal);
 			buffer.putInt(i + 28 - STRIDE * 2, packedNormal);
 			buffer.putInt(i + 28 - STRIDE * 3, packedNormal);
 
-			// Capture all of the relevant vertex positions
-			float x0 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 0 - STRIDE * 3));
-			float y0 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 2 - STRIDE * 3));
-			float z0 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 4 - STRIDE * 3));
-
-			float x1 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 0 - STRIDE * 2));
-			float y1 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 2 - STRIDE * 2));
-			float z1 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 4 - STRIDE * 2));
-
-			float x2 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 0 - STRIDE));
-			float y2 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 2 - STRIDE));
-			float z2 = XHFPModelVertexType.decodePosition(buffer.getShort(i + 4 - STRIDE));
-
-			float edge1x = x1 - x0;
-			float edge1y = y1 - y0;
-			float edge1z = z1 - z0;
-
-			float edge2x = x2 - x0;
-			float edge2y = y2 - y0;
-			float edge2z = z2 - z0;
-
-			// edge2 one element gets inverted
-
-			/*
-			float edge1x = x2 - x3;
-			float edge1y = y2 - y3;
-			float edge1z = z2 - z3;
-
-			float edge2x = x1 - x3;
-			float edge2y = y1 - y3;
-			float edge2z = z1 - z3;
-			 */
-
-			float u0 = XHFPModelVertexType.decodeBlockTexture(buffer.getShort(i + 12 - STRIDE * 3));
-			float v0 = XHFPModelVertexType.decodeBlockTexture(buffer.getShort(i + 14 - STRIDE * 3));
-
-			float u1 = XHFPModelVertexType.decodeBlockTexture(buffer.getShort(i + 12 - STRIDE * 2));
-			float v1 = XHFPModelVertexType.decodeBlockTexture(buffer.getShort(i + 14 - STRIDE * 2));
-
-			float u2 = XHFPModelVertexType.decodeBlockTexture(buffer.getShort(i + 12 - STRIDE));
-			float v2 = XHFPModelVertexType.decodeBlockTexture(buffer.getShort(i + 14 - STRIDE));
-
-			float deltaU1 = u1 - u0;
-			float deltaV1 = v1 - v0;
-			float deltaU2 = u2 - u0;
-			float deltaV2 = v2 - v0;
-
-			float fdenom = deltaU1 * deltaV2 - deltaU2 * deltaV1;
-			float f;
-
-			if (fdenom == 0.0) {
-				f = 1.0f;
-			} else {
-				f = 1.0f / fdenom;
-			}
-
-			float tangentx = f * (deltaV2 * edge1x - deltaV1 * edge2x);
-			float tangenty = f * (deltaV2 * edge1y - deltaV1 * edge2y);
-			float tangentz = f * (deltaV2 * edge1z - deltaV1 * edge2z);
-			float tcoeff = rsqrt(tangentx * tangentx + tangenty * tangenty + tangentz * tangentz);
-			tangentx *= tcoeff;
-			tangenty *= tcoeff;
-			tangentz *= tcoeff;
-
-			float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
-			float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
-			float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
-			float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
-			bitangentx *= bitcoeff;
-			bitangenty *= bitcoeff;
-			bitangentz *= bitcoeff;
-
-			// predicted bitangent = tangent × normal
-			// Compute the determinant of the following matrix to get the cross product
-			//  i  j  k
-			// tx ty tz
-			// nx ny nz
-
-			float pbitangentx =   tangenty * normal.z() - tangentz * normal.y();
-			float pbitangenty = -(tangentx * normal.z() - tangentz * normal.x());
-			float pbitangentz =   tangentx * normal.x() - tangenty * normal.y();
-
-			float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
-			byte tangentW;
-
-			if (dot < 0) {
-				tangentW = -127;
-			} else {
-				tangentW = 127;
-			}
-
-			int tangent = Norm3b.pack(tangentx, tangenty, tangentz);
-			tangent |= (tangentW << 24);
+            int tangent = currentQuad.computeTangent(normal.x(), normal.y(), normal.z());
 
 			buffer.putInt(i + 24, tangent);
 			buffer.putInt(i + 24 - STRIDE, tangent);
@@ -243,18 +150,8 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		this.advance();
 	}
 
-	private static float rsqrt(float value) {
-		if (value == 0.0f) {
-			// You heard it here first, folks: 1 divided by 0 equals 1
-			// In actuality, this is a workaround for normalizing a zero length vector (leaving it as zero length)
-			return 1.0f;
-		} else {
-			return (float) (1.0 / Math.sqrt(value));
-		}
-	}
-
-	@Override
-	public void iris$setIdHolder(MaterialIdHolder holder) {
-		this.idHolder = holder;
-	}
+    @Override
+    public void iris$setIdHolder(MaterialIdHolder holder) {
+        this.idHolder = holder;
+    }
 }
