@@ -30,6 +30,7 @@ import io.github.douira.glsl_transformer.core.WrapIdentifierExternalDeclaration;
 import io.github.douira.glsl_transformer.core.target.HandlerTarget;
 import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ParsedReplaceTarget;
+import io.github.douira.glsl_transformer.core.target.ParsedReplaceTargetImpl;
 import io.github.douira.glsl_transformer.core.target.TerminalReplaceTargetImpl;
 import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
 import io.github.douira.glsl_transformer.core.target.WrapThrowTargetImpl;
@@ -214,32 +215,80 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    TransformationPhase<Parameters> replaceEntityColor = new WalkPhase<Parameters>() {
-      ParseTreePattern entityColorPattern;
+    Transformation<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
+      {
+        addEndDependent(new WalkPhase<Parameters>() {
+          ParseTreePattern entityColorPattern;
 
-      @Override
-      public void init() {
-        entityColorPattern = compilePattern(
-            "uniform vec4 entityColor;",
-            GLSLParser.RULE_externalDeclaration);
-      }
-
-      @Override
-      public void enterExternalDeclaration(ExternalDeclarationContext ctx) {
-        ParseTreeMatch match = entityColorPattern.match(ctx);
-        if (match.succeeded()) {
-          if (getJobParameters().type == ShaderType.FRAGMENT) {
-            replaceNode(ctx, "in vec4 entityColor;", GLSLParser::externalDeclaration);
-          } else {
-            removeNode(ctx);
+          @Override
+          public void init() {
+            entityColorPattern = compilePattern(
+                "uniform vec4 entityColor;",
+                GLSLParser.RULE_externalDeclaration);
           }
-        }
+
+          @Override
+          public void enterExternalDeclaration(ExternalDeclarationContext ctx) {
+            ParseTreeMatch match = entityColorPattern.match(ctx);
+            if (match.succeeded()) {
+              removeNode(ctx);
+            }
+          }
+        });
+
+        chainDependent(new SearchTerminalsImpl<Parameters>(
+            new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)) {
+          @Override
+          protected boolean isActive() {
+            return getJobParameters().type == ShaderType.GEOMETRY;
+          }
+        });
+
+        chainDependent(new RunPhase<Parameters>() {
+          @Override
+          protected void run(TranslationUnitContext ctx) {
+            switch (getJobParameters().type) {
+              case VERTEX:
+                injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+                    "out vec4 entityColor;",
+                    "uniform sampler2D iris_overlay;",
+                    "in ivec2 iris_UV1;");
+                break;
+              case GEOMETRY:
+                injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+                    "in vec4 entityColor[];",
+                    "out vec4 entityColorGS;");
+                break;
+              case FRAGMENT:
+                injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec4 entityColor;");
+                break;
+            }
+          }
+        });
       }
     };
 
-    Transformation<Parameters> wrapOverlay = new Transformation<Parameters>() {
-      {
-        // TODO
+    Transformation<Parameters> wrapOverlay = new MainWrapperDynamic<TransformPatcher.Parameters>() {
+      @Override
+      protected String getMainContent() {
+        return (getJobParameters().type == ShaderType.VERTEX
+            ? "	vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);\n" +
+                "	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n"
+            : "	 entityColorGS = entityColor[0];\n")
+            + "  irisMain();\n";
+      }
+
+      @Override
+      protected boolean isActiveDynamic() {
+        return true;
+      }
+    };
+
+    TransformationPhase<Parameters> renameEntityColorFragment = new SearchTerminalsImpl<Parameters>(
+        new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS")) {
+      @Override
+      protected boolean isActive() {
+        return ((AttributeParameters) getJobParameters()).hasGeometry;
       }
     };
 
@@ -1017,10 +1066,12 @@ public class TransformPatcher implements Patcher {
 
         // patchAttributes
         if (patch == Patch.ATTRIBUTES || patch == Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM) {
-          manager.addConcurrent(replaceEntityColor);
+          manager.addConcurrent(replaceEntityColorDeclaration);
 
           if (type == ShaderType.VERTEX || type == ShaderType.GEOMETRY) {
             manager.addConcurrent(wrapOverlay);
+          } else if (type == ShaderType.FRAGMENT) {
+            manager.addConcurrent(renameEntityColorFragment);
           }
         }
 
