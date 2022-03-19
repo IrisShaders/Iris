@@ -214,7 +214,34 @@ public class TransformPatcher implements Patcher {
       }
     };
 
-    // Transformation<Parameters> replaceEntityColor =
+    TransformationPhase<Parameters> replaceEntityColor = new WalkPhase<Parameters>() {
+      ParseTreePattern entityColorPattern;
+
+      @Override
+      public void init() {
+        entityColorPattern = compilePattern(
+            "uniform vec4 entityColor;",
+            GLSLParser.RULE_externalDeclaration);
+      }
+
+      @Override
+      public void enterExternalDeclaration(ExternalDeclarationContext ctx) {
+        ParseTreeMatch match = entityColorPattern.match(ctx);
+        if (match.succeeded()) {
+          if (getJobParameters().type == ShaderType.FRAGMENT) {
+            replaceNode(ctx, "in vec4 entityColor;", GLSLParser::externalDeclaration);
+          } else {
+            removeNode(ctx);
+          }
+        }
+      }
+    };
+
+    Transformation<Parameters> wrapOverlay = new Transformation<Parameters>() {
+      {
+        // TODO
+      }
+    };
 
     TransformationPhase<Parameters> fixVersion = new RunPhase<Parameters>() {
       @Override
@@ -990,10 +1017,10 @@ public class TransformPatcher implements Patcher {
 
         // patchAttributes
         if (patch == Patch.ATTRIBUTES || patch == Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM) {
-          // manager.addConcurrent(replaceEntityColor);
+          manager.addConcurrent(replaceEntityColor);
 
           if (type == ShaderType.VERTEX || type == ShaderType.GEOMETRY) {
-            // manager.addConcurrent(wrapOverlay);
+            manager.addConcurrent(wrapOverlay);
           }
         }
 
