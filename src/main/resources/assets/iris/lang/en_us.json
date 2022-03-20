@@ -5,7 +5,7 @@
   "iris.shaders.debug.enabled": "Debugging has been enabled, debug logging will be more verbose!",
   "iris.shaders.debug.disabled": "Debugging has been disabled.",
   "iris.shaders.debug.failure": "Cannot enable debugging, your computer does not support debug features.",
-  "iris.shaders.debug.issue": "Debugging may not work due to an issue, check logs for details.",
+  "iris.shaders.debug.restart": "You do not have a debug context, please restart to enable debugging.",
   "iris.keybind.reload": "Reload Shaders",
   "iris.keybind.shaderPackSelection": "Shaderpack Selection Screen",
   "iris.keybind.toggleShaders": "Toggle Shaders",

@@ -390,7 +390,7 @@ public class Iris implements ClientModInitializer {
 		if (Minecraft.getInstance().player != null) {
 			Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent(success != 0 ? (enable ? "iris.shaders.debug.enabled" : "iris.shaders.debug.disabled") : "iris.shaders.debug.failure"), false);
 			if (success == 2) {
-				Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent("iris.shaders.debug.issue"), false);
+				Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent("iris.shaders.debug.restart"), false);
 			}
 		}
 

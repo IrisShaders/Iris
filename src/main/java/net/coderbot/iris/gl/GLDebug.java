@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 public final class GLDebug {
 	/**
 	 * Sets up debug callbacks
-	 * @return 0 for failure, 1 for success, 2 for "possible issue".
+	 * @return 0 for failure, 1 for success, 2 for restart required.
 	 */
 	public static int setupDebugMessageCallback() {
 		return setupDebugMessageCallback(APIUtil.DEBUG_STREAM);

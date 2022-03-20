@@ -33,6 +33,7 @@
     "MixinTitleScreen",
     "MixinMaxFpsCrashFix",
     "MixinTweakFarPlane",
+    "MixinWindow",
     "MixinCrashReport",
     "entity_render_context.MixinBlockEntityRenderDispatcher",
     "entity_render_context.MixinEntityRenderDispatcher",
