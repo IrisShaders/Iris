@@ -29,13 +29,13 @@ Canvas is another shaders mod that has already gained some traction. Its big dow
 
 These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achieved all of these goals, though we are on the right track.
 
-* **Performance.** Iris should fully utilize your graphics card when paired with optimization mods like Sodium.
-* **Correctness.** Iris should try to be as issueless as possible in its implementation.
-* **Mod compatibility.** Iris should make a best effort to be compatible with modded environments.
-* **Backwards compatibility.** All existing ShadersMod / OptiFine shader packs should just work on Iris, without any modifications required.
-* **Features for shader pack developers.** Once Iris has full support for existing features of the shader pipeline and is reasonably bug free, I wish to expand the horizons of what's possible to do with Minecraft shader packs through the addition of new features to the shader pipeline. Unlimited color buffers, direct voxel data access, and fancy debug HUDs are some examples of features that I'd like to add in the future.
-* **A well-organized codebase.** I'd like for working with Iris code to be a pleasant experience overall.
-* **Agnostic of Minecraft versions.** This is more of a long-term goal, but if it is possible to make the majority of Iris version-independent, then porting to new versions should be straightforward and quick. This theoretically works in the other direction as well, though Iris for 1.8.9 (and similar old versions) isn't very practical currently since Sodium doesn't exist for these versions of the game.
+* **效能。** Iris should fully utilize your graphics card when paired with optimization mods like Sodium.
+* **正確性。** Iris should try to be as issueless as possible in its implementation.
+* **模組相容性。** Iris should make a best effort to be compatible with modded environments.
+* **向下相容性。** All existing ShadersMod / OptiFine shader packs should just work on Iris, without any modifications required.
+* **給光影包開發者的功能性。** Once Iris has full support for existing features of the shader pipeline and is reasonably bug free, I wish to expand the horizons of what's possible to do with Minecraft shader packs through the addition of new features to the shader pipeline. Unlimited color buffers, direct voxel data access, and fancy debug HUDs are some examples of features that I'd like to add in the future.
+* **有序的代碼庫。** I'd like for working with Iris code to be a pleasant experience overall.
+* **Minecraft 版本通用。** This is more of a long-term goal, but if it is possible to make the majority of Iris version-independent, then porting to new versions should be straightforward and quick. This theoretically works in the other direction as well, though Iris for 1.8.9 (and similar old versions) isn't very practical currently since Sodium doesn't exist for these versions of the game.
 
 
 ## 現在的開發狀況如何？
