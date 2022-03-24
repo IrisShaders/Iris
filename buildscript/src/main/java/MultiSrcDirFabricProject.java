@@ -41,22 +41,6 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 	public abstract Path[] paths(String subdir, boolean onlyHeaders);
 
 	@Override
-	public MappingTree createIntermediary() {
-		try {
-			HashMap<String, String> nameMap = new HashMap<>();
-			nameMap.put("official", Namespaces.OBF);
-			nameMap.put("hashed", Namespaces.INTERMEDIARY);
-			FileDependency d = Maven.getMavenFileDep("https://maven.quiltmc.org/repository/release/", new MavenId("org.quiltmc:hashed:22w12a"), ".jar");
-			MemoryMappingTree r = new MemoryMappingTree(false);
-			try (FileSystem f = FileSystemUtil.newJarFileSystem(d.file)) {
-				MappingReader.read(f.getPath("hashed", "mappings.tiny"), MappingFormat.TINY_2, new MappingNsRenamer(r, nameMap));
-			}
-			return r;
-		} catch (Exception e) {
-			throw Util.sneak(e);
-		}
-	}
-	@Override
 	public JavaJarDependency build() {
 		try {
 			String mixinOut = "mixinmapout.tiny";

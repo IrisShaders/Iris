@@ -48,8 +48,8 @@ public class IrisSodiumOptions {
                 .setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class,
 						new Component[] { new TextComponent("Fast"), new TextComponent("Fancy") }))
                 .setBinding(
-                        (opts, value) -> opts.graphicsMode = value.toVanilla(),
-                        opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode))
+                        (opts, value) -> opts.graphicsMode().set(value.toVanilla()),
+                        opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode().get()))
                 .setImpact(OptionImpact.HIGH)
                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 .build();
