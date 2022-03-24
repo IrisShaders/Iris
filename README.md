@@ -6,8 +6,8 @@
 
 * **前往[我們的網站](https://irisshaders.net)下載、瀏覽漂亮的擷圖！**
 * 前往[我們的 Discord 伺服器](https://discord.gg/jQJnav2jPu)來聊聊模組或取得支援！那裡也是即時獲得開發新資訊的好地方。
-* 前往[我的　Patreon 頁面](https://www.patreon.com/coderbot)，支持 Iris 繼續開發！
-* 前往[開發者文件](https://github.com/IrisShaders/Iris/tree/trunk/docs/development) 取得開發、建置的新資訊，或為 Iris 做出貢獻！
+* 前往[我的 Patreon 頁面](https://www.patreon.com/coderbot)，支持 Iris 繼續開發！
+* 前往[開發者文件](https://github.com/IrisShaders/Iris/tree/trunk/docs/development)取得開發、建置的新資訊，或為 Iris 做出貢獻！
 
 ## 常見問題
 
