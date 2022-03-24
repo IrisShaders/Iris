@@ -2,21 +2,21 @@
 
 # Iris
 
-## Links
+## 連結
 
-* **Visit [our website](https://irisshaders.net) for downloads and pretty screenshots!**
-* Visit [our Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and get support! It's also a great place to get development updates right as they're happening.
-* Visit [my Patreon page](https://www.patreon.com/coderbot) to support the continued development of Iris!
-* Visit [the developer documentation](https://github.com/IrisShaders/Iris/tree/trunk/docs/development) for information on developing, building, and contributing to Iris!
+* **前往[我們的網站](https://irisshaders.net)下載、瀏覽漂亮的擷圖！**
+* 前往[我們的 Discord 伺服器](https://discord.gg/jQJnav2jPu)來聊聊模組或取得支援！那裡也是即時獲得開發新資訊的好地方。
+* 前往[我的　Patreon 頁面](https://www.patreon.com/coderbot)，支持 Iris 繼續開發！
+* 前往[開發者文件](https://github.com/IrisShaders/Iris/tree/trunk/docs/development) 取得開發、建置的新資訊，或為 Iris 做出貢獻！
 
-## FAQ
+## 常見問題
 
 - Find answers to frequently asked questions on our [FAQ page](docs/faq.md).
 - A list of known-supported shaderpacks is available [here](docs/supportedshaders.md).
 - A list of unfixable limitations in Iris is available [here](docs/usage/limitations.md).
 
 
-## Why did you make Iris?
+## 為什麼你要做 Iris？
 
 Iris was created to fill a void that I saw in the Minecraft customization and graphical enhancement community: the lack of an open-source shaders mod that would let me load my favorite shader packs on modern versions of the game, while retaining performance and compatibility with modpacks. OptiFine, the current dominant mod for loading shader packs, has restrictive licensing that firmly stands in the way of any sort of tinkering, and is fairly notorious for having compatibility issues with the mods that I like. It's also mutually incompatible with Sodium, the best rendering optimization mod in existence by a large margin. ShadersMod was never updated past 1.12, and it lacks support for many of the many modern popular shaderpacks. So I created Iris, to try and solve these issues, and also address many other longstanding issues with shader packs.
 
@@ -25,7 +25,7 @@ I first and foremost develop Iris to meet my own needs of a performance-oriented
 Canvas is another shaders mod that has already gained some traction. Its big downside for me, however, is the fact that it doesn't support the existing popular OptiFine shaderpacks that I want to use. This is because it uses a new format for shader packs that isn't compatible with the existing format, in order to achieve many of its goals for better mod integration with shaders. And while Canvas now has a few nice shaders like Lumi Lights, I still want to have the option of using existing shader packs that were designed for OptiFine. Shader packs just aren't interchangeable, just like how you cannot hand a copy of *The Last Supper* to someone who wants a copy of the *Mona Lisa*. They're both great pieces of art, but you absolutely cannot just swap one out for the other. That being said, if you're a fan of the shader packs available for Canvas, then great! Canvas and Iris are both perfectly fine ways to enjoy shaders with Minecraft.
 
 
-## Goals
+## 目標
 
 These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achieved all of these goals, though we are on the right track.
 
@@ -38,23 +38,23 @@ These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achi
 * **Agnostic of Minecraft versions.** This is more of a long-term goal, but if it is possible to make the majority of Iris version-independent, then porting to new versions should be straightforward and quick. This theoretically works in the other direction as well, though Iris for 1.8.9 (and similar old versions) isn't very practical currently since Sodium doesn't exist for these versions of the game.
 
 
-## What's the current state of development?
+## 現在的開發狀況如何？
 
 Iris has public releases for 1.16.5, 1.17.1, and 1.18 that work with the official releases of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
 
 Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris.
 
 
-## How can I help?
+## 我該怎麼幫忙？
 
 * The Iris Discord server is looking for people willing to provide support and moderate the server! Send @IMS#7902 a message if you'd like to apply.
 * Code review on open PRs is appreciated! This helps get important issues with PRs resolved before I give them a look.
 * Code contributions through PRs are also welcome! If you're working on a large / significant feature it's usually a good idea to talk about your plans beforehand, to make sure that work isn't wasted.
 
 
-## But where's the Forge version?
+## Forge 版在哪裡呢？
 
-Iris doesn't support Forge. This is for a few reasons:
+Iris 不支援 Forge。這有一些原因：
 
 * My time is limited, and properly supporting all the mods available for Forge (as well as Forge itself) is a huge amount of work. When people ask for Forge support, they aren't asking just for Iris to run on Forge, they are also asking for it to be compatible out of the box with their kitchen sink modpack that contains over 300 mods. As a result, properly supporting Forge would require me to divert large amounts of precious time into fixing tedious compatibility issues and bugs, time that could instead be spent making the Fabric version of Iris better.
 * The Forge toolchain isn't really designed to play nice with mods like Iris that need to make many patches to the game code. It's possible, but Fabric & Quilt are just *better* for mods like Iris. It's no coincidence that the emergence of Fabric and the initial emergence of OptiFine replacements happened at around the same time.
