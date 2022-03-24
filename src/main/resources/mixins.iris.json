@@ -36,6 +36,7 @@
     "MixinClientLanguage",
     "MixinMaxFpsCrashFix",
     "MixinTweakFarPlane",
+    "MixinLightTexture",
     "MixinSystemReport",
     "MixinLevelRenderer",
     "MixinUniform",

@@ -321,6 +321,20 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
+		"getRendertypeEntityTranslucentEmissiveShader"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityTranslucentEmissiveShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY, cir);
+		} else if (isRenderingWorld()) {
+			override(ShaderKey.ENTITIES_EYES_TRANS, cir);
+		}
+	}
+
+	@Inject(method = {
 			"getRendertypeLeashShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideLeashShader(CallbackInfoReturnable<ShaderInstance> cir) {

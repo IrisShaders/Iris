@@ -13,6 +13,7 @@ public class CapturedRenderingState {
 	private Matrix4f gbufferProjection;
 	private Vector3d fogColor;
 	private float fogDensity;
+	private float darknessLightFactor;
 	private float tickDelta;
 	private int currentRenderedBlockEntity;
 	private Runnable blockEntityIdListener = null;
@@ -97,5 +98,13 @@ public class CapturedRenderingState {
 
 	public int getCurrentRenderedEntity() {
 		return currentRenderedEntity;
+	}
+
+	public float getDarknessLightFactor() {
+		return darknessLightFactor;
+	}
+
+    public void setDarknessLightFactor(float factor) {
+		darknessLightFactor = factor;
 	}
 }
