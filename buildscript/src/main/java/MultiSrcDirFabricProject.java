@@ -1,37 +1,61 @@
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
+import io.github.coolcrabs.brachyura.dependency.FileDependency;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.fabric.FabricProject;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.MappingTreeMappingProvider;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor;
+import io.github.coolcrabs.brachyura.maven.Maven;
+import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
+import io.github.coolcrabs.brachyura.util.FileSystemUtil;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
 import io.github.coolcrabs.brachyura.util.OsUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.mappingio.MappingReader;
+import net.fabricmc.mappingio.adapter.MappingNsRenamer;
 import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.format.MappingFormat;
+import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public abstract class MultiSrcDirFabricProject extends FabricProject {
 	public abstract Path[] paths(String subdir, boolean onlyHeaders);
 
+	@Override
+	public MappingTree createIntermediary() {
+		try {
+			HashMap<String, String> nameMap = new HashMap<>();
+			nameMap.put("official", Namespaces.OBF);
+			nameMap.put("hashed", Namespaces.INTERMEDIARY);
+			FileDependency d = Maven.getMavenFileDep("https://maven.quiltmc.org/repository/release/", new MavenId("org.quiltmc:hashed:22w12a"), ".jar");
+			MemoryMappingTree r = new MemoryMappingTree(false);
+			try (FileSystem f = FileSystemUtil.newJarFileSystem(d.file)) {
+				MappingReader.read(f.getPath("hashed", "mappings.tiny"), MappingFormat.TINY_2, new MappingNsRenamer(r, nameMap));
+			}
+			return r;
+		} catch (Exception e) {
+			throw Util.sneak(e);
+		}
+	}
 	@Override
 	public JavaJarDependency build() {
 		try {

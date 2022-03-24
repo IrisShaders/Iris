@@ -103,7 +103,7 @@ public final class CommonUniforms {
 			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(InteractionHand.MAIN_HAND))
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
-			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
+			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma().get())
 			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
 			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
 			.uniform4f(ONCE, "entityColor", Vector4f::new)

@@ -34,9 +34,9 @@ public class MixinDisableFabulousGraphics {
 			return;
 		}
 
-		if (options.graphicsMode == GraphicsStatus.FABULOUS) {
+		if (options.graphicsMode().get() == GraphicsStatus.FABULOUS) {
 			// Disable fabulous graphics when shaders are enabled.
-			options.graphicsMode = GraphicsStatus.FANCY;
+			options.graphicsMode().set(GraphicsStatus.FANCY);
 		}
 	}
 }
