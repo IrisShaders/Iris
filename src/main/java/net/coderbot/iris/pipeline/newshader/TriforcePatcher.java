@@ -324,6 +324,19 @@ public class TriforcePatcher {
 		transformations.define("VERT_POS_OFFSET", String.valueOf(positionOffset));
 		transformations.define("VERT_TEX_SCALE", String.valueOf(textureScale));
 
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
+			layout(std140, binding = 0) uniform ubo_CameraMatrices {
+				    // The projection matrix
+				    mat4 u_ProjectionMatrix;
+				    
+				    // The model-view matrix
+				    mat4 u_ModelViewMatrix;
+				    
+				    // The model-view-projection matrix
+				    mat4 u_ModelViewProjectionMatrix;
+				};
+		""");
+
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
@@ -352,18 +365,7 @@ public class TriforcePatcher {
 				""");
 		}
 
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
-			layout(std140, binding = 0) uniform ubo_CameraMatrices {
-				    // The projection matrix
-				    mat4 u_ProjectionMatrix;
-				    
-				    // The model-view matrix
-				    mat4 u_ModelViewMatrix;
-				    
-				    // The model-view-projection matrix
-				    mat4 u_ModelViewProjectionMatrix;
-				};
-				""");
+
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
 		transformations.define("gl_NormalMatrix", "mat3(transpose(inverse(u_ModelViewMatrix)))");

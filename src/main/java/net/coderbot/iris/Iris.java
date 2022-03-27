@@ -34,7 +34,6 @@ import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
-import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.fabricmc.loader.api.ModContainer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
@@ -129,36 +128,6 @@ public class Iris implements ClientModInitializer {
 	}
 
 	private void setupCommands(Minecraft instance) {
-		ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("iris").then(ClientCommandManager.literal("debug").then(
-			ClientCommandManager.argument("enabled", BoolArgumentType.bool()).executes(context -> {
-				boolean enable = BoolArgumentType.getBool(context, "enabled");
-
-				Iris.setDebug(enable);
-
-				return 0;
-			})
-		)).then(ClientCommandManager.literal("enabled").then(ClientCommandManager.argument("option", BoolArgumentType.bool()).executes(context -> {
-			try {
-				toggleShaders(instance, BoolArgumentType.getBool(context, "option"));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			return 0;
-		}))).then(ClientCommandManager.literal("reload").executes(context -> {
-			try {
-				reload();
-
-				if (instance.player != null) {
-					instance.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded"), false);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-				return -1;
-			}
-
-			return 0;
-		})));
 	}
 
 	public static void onRenderSystemInit() {

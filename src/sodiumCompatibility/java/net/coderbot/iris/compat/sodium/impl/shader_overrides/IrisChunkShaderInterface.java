@@ -45,6 +45,7 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	public void setup() {
 		GlStateManager._glUseProgram(handle);
 		getFramebuffer(pass).bind();
+
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();
 		}

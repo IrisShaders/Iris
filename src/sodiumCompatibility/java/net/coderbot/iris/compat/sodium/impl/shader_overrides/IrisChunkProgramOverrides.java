@@ -7,6 +7,7 @@ import net.caffeinemc.gfx.api.shader.ShaderType;
 import net.caffeinemc.gfx.opengl.shader.GlProgram;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.passes.DefaultRenderPasses;
+import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
@@ -131,7 +132,6 @@ public class IrisChunkProgramOverrides {
 			.addAttributeBinding("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
 			.addAttributeBinding("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
 			.addAttributeBinding("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
-			.addFragmentBinding("iris_FragData", 0)
 			.build();
 
 		Program<ChunkShaderInterface> interfaces = device.createProgram(desc, IrisChunkShaderInterface::new);
@@ -154,10 +154,14 @@ public class IrisChunkProgramOverrides {
     private void createShaders(RenderDevice device, TerrainVertexType vertexType) {
     	SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
         Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
+		this.programs.clear();
 
         if (pipeline != null) {
 			pipeline.patchShaders(vertexType);
 			for (IrisTerrainPass pass : IrisTerrainPass.values()) {
+				if (!pipeline.hasShadowPass() && (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT)) {
+					continue;
+				}
                 this.programs.put(pass, createShader(device, pass, vertexType, pipeline));
             }
         } else {
