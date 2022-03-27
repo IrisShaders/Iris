@@ -23,6 +23,21 @@ public class ShadowMatrices {
 		};
 	}
 
+	public static float[] createPerspectiveMatrix(float fov) {
+		// This converts from degrees to radians.
+		float yScale = (float) (1.0f / Math.tan(Math.toRadians(fov) * 0.5f));
+		return new float[] {
+				// column 1
+				yScale, 0f, 0f, 0f,
+				// column 2
+				0f, yScale, 0f, 0f,
+				// column 3
+				0f, 0f, (FAR + NEAR) / (NEAR - FAR), -1.0F,
+				// column 4
+				0f, 0f, 2.0F * FAR * NEAR / (NEAR - FAR), 1f
+		};
+	}
+
 	public static void createBaselineModelViewMatrix(Matrix4f target, float shadowAngle, float sunPathRotation) {
 		float skyAngle;
 
@@ -75,10 +90,10 @@ public class ShadowMatrices {
 			// const float shadowDistance = 32.0;
 			// /* SHADOWHPL:32.0 */
 			float[] expected = new float[] {
-				0.03125f, 0f, 0f, 0f,
-				0f, 0.03125f, 0f, 0f,
-				0f, 0f, -0.007814026437699795f, 0f,
-				0f, 0f, -1.000390648841858f, 1f
+					0.03125f, 0f, 0f, 0f,
+					0f, 0.03125f, 0f, 0f,
+					0f, 0f, -0.007814026437699795f, 0f,
+					0f, 0f, -1.000390648841858f, 1f
 			};
 
 			test("ortho projection hpl=32", expected, createOrthoMatrix(32.0f));
@@ -94,27 +109,36 @@ public class ShadowMatrices {
 
 			test("ortho projection hpl=110", expected110, createOrthoMatrix(110.0f));
 
+			float[] expected90Proj = new float[] {
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, -1.0003906f, -1.0f,
+					0.0f, 0.0f, -0.10001954f, 0.0f
+			};
+
+			test("perspective projection fov=90", expected90Proj, createPerspectiveMatrix(90.0f));
+
 			float[] expectedModelViewAtDawn = new float[] {
-				// column 1
-				0.21545040607452393f,
-				5.820481518981069E-8f,
-				0.9765146970748901f,
-				0,
-				// column 2
-				-0.9765147466795349f,
-				1.2841844920785661E-8f,
-				0.21545039117336273f,
-				0,
-				// column 3
-				0,
-				-0.9999999403953552f,
-				5.960464477539063E-8f,
-				0,
-				// column 4
-				0.38002151250839233f,
-				1.0264281034469604f,
-				-100.4463119506836f,
-				1
+					// column 1
+					0.21545040607452393f,
+					5.820481518981069E-8f,
+					0.9765146970748901f,
+					0,
+					// column 2
+					-0.9765147466795349f,
+					1.2841844920785661E-8f,
+					0.21545039117336273f,
+					0,
+					// column 3
+					0,
+					-0.9999999403953552f,
+					5.960464477539063E-8f,
+					0,
+					// column 4
+					0.38002151250839233f,
+					1.0264281034469604f,
+					-100.4463119506836f,
+					1
 			};
 
 			Matrix4f modelView = new Matrix4f();

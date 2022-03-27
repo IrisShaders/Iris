@@ -40,6 +40,16 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public WorldRenderingPhase getPhase() {
+		return WorldRenderingPhase.NONE;
+	}
+
+	@Override
+	public void setPhase(WorldRenderingPhase phase) {
+
+	}
+
+	@Override
 	public void beginShadowRender() {
 		// stub: nothing to do here
 	}

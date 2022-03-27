@@ -4,6 +4,7 @@
 
 - Why doesn't the Iris Installer work?
 - How can I configure my shaders?
+- Is my system supported?
 - Why is (insert shader) not working?
 - How do I disable my shaders?
 - I added Iris, why is my game crashing?
@@ -16,7 +17,11 @@ You need java, please get it from: [Adoptium.net](https://adoptium.net/?variant=
 
 ## How can I configure my shaders?
 
-[#663](https://github.com/IrisShaders/Iris/issues/663)
+Go to Options>Video Settings>Shader Packs>Shader Pack Settings.
+
+## Is my system supported?
+
+See the [Driver Support](usage/drivers.md) document for more information. 
 
 ## Why is (insert shader) not working?
 

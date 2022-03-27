@@ -11,24 +11,38 @@ public class IrisVertexFormats {
 	public static final VertexFormatElement TANGENT_ELEMENT;
 
 	public static final VertexFormat TERRAIN;
+	public static final VertexFormat ENTITY;
 
 	static {
-		ENTITY_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 4);
+		ENTITY_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
 		MID_TEXTURE_ELEMENT = new VertexFormatElement(12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
-		TANGENT_ELEMENT = new VertexFormatElement(13, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 4);
+		TANGENT_ELEMENT = new VertexFormatElement(13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
 
-		ImmutableMap.Builder<String, VertexFormatElement> elements = ImmutableMap.builder();
+		ImmutableMap.Builder<String, VertexFormatElement> terrainElements = ImmutableMap.builder();
+		ImmutableMap.Builder<String, VertexFormatElement> entityElements = ImmutableMap.builder();
 
-		elements.put("Position", DefaultVertexFormat.ELEMENT_POSITION);
-		elements.put("Color", DefaultVertexFormat.ELEMENT_COLOR);
-		elements.put("UV0", DefaultVertexFormat.ELEMENT_UV);
-		elements.put("UV2", DefaultVertexFormat.ELEMENT_UV2);
-		elements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL);
-		elements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING);
-		elements.put("mc_Entity", ENTITY_ELEMENT);
-		elements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT);
-		elements.put("at_tangent", TANGENT_ELEMENT);
+		terrainElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION);
+		terrainElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR);
+		terrainElements.put("UV0", DefaultVertexFormat.ELEMENT_UV);
+		terrainElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2);
+		terrainElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL);
+		terrainElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING);
+		terrainElements.put("mc_Entity", ENTITY_ELEMENT);
+		terrainElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT);
+		terrainElements.put("at_tangent", TANGENT_ELEMENT);
 
-		TERRAIN = new VertexFormat(elements.build());
+		entityElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION);
+		entityElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR);
+		entityElements.put("UV0", DefaultVertexFormat.ELEMENT_UV);
+		entityElements.put("UV1", DefaultVertexFormat.ELEMENT_UV1);
+		entityElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2);
+		entityElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL);
+		entityElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING);
+		entityElements.put("mc_Entity", ENTITY_ELEMENT);
+		entityElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT);
+		entityElements.put("at_tangent", TANGENT_ELEMENT);
+
+		TERRAIN = new VertexFormat(terrainElements.build());
+		ENTITY = new VertexFormat(entityElements.build());
 	}
 }

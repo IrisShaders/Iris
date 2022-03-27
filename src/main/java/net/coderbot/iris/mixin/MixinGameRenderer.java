@@ -1,6 +1,8 @@
 package net.coderbot.iris.mixin;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.coderbot.iris.Iris;
@@ -8,10 +10,11 @@ import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.IrisProgramTypes;
 import net.coderbot.iris.pipeline.newshader.ShaderKey;
-import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 
 import net.irisshaders.iris.api.v0.IrisApi;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,8 +24,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -33,10 +34,10 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
 @Mixin(GameRenderer.class)
-@Environment(EnvType.CLIENT)
 public class MixinGameRenderer {
 	@Shadow
 	private boolean renderHand;
@@ -51,7 +52,7 @@ public class MixinGameRenderer {
 	}
 
 	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/player/LocalPlayer;I)V"))
-	private void disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
+	private void iris$disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return;
 		}
@@ -59,11 +60,18 @@ public class MixinGameRenderer {
 		itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, localPlayer, light);
 	}
 
+	@Redirect(method = "reloadShaders", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList()Ljava/util/ArrayList;"))
+	private ArrayList<Program> iris$reloadGeometryShaders() {
+		ArrayList<Program> programs = Lists.newArrayList();
+		programs.addAll(IrisProgramTypes.GEOMETRY.getPrograms().values());
+		return programs;
+	}
+
 	//TODO: check cloud phase
 
 	@Inject(method = "getPositionShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_BASIC, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowBasic
@@ -74,7 +82,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionColorShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_BASIC_COLOR, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowBasicColor
@@ -87,7 +95,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionTexShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_TEXTURED, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowTextured
@@ -98,7 +106,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = "getPositionTexColorShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isPhase(WorldRenderingPhase.SKY)) {
+		if (isSky()) {
 			override(ShaderKey.SKY_TEXTURED_COLOR, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			// TODO: shadowTexturedColor
@@ -107,13 +115,27 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getBlockShader, getNewEntityShader
+	// TODO: getBlockShader
+
+	@Inject(method = "getNewEntityShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideNewEntityShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
+		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+		} else if (isRenderingWorld()) {
+			override(ShaderKey.ENTITIES_SOLID_BRIGHT, cir);
+		}
+	}
 
 	@Inject(method = {
 			"getParticleShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideParticleShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if(isPhase(WorldRenderingPhase.WEATHER)) {
+		if(isPhase(WorldRenderingPhase.RAIN_SNOW)) {
 			override(ShaderKey.WEATHER, cir);
 		} else if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
 			override(ShaderKey.PARTICLES, cir);
@@ -136,7 +158,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_SOLID, cir);
 		}
 	}
@@ -146,7 +168,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_CUTOUT_MIPPED, cir);
 		}
 	}
@@ -155,7 +177,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_CUTOUT, cir);
 		}
 	}
@@ -165,7 +187,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
 	}
@@ -177,7 +199,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
 	}
@@ -374,11 +396,30 @@ public class MixinGameRenderer {
 		}
 	}
 
+	private static boolean isSky() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null) {
+			switch (pipeline.getPhase()) {
+				case SKY:
+				case SUNSET:
+				case SUN:
+				case STARS:
+				case VOID:
+				case MOON:
+					return true;
+				default: return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
 	private static boolean isPhase(WorldRenderingPhase phase) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).getPhase() == phase;
+		if (pipeline != null) {
+			return pipeline.getPhase() == phase;
 		} else {
 			return false;
 		}
@@ -388,7 +429,7 @@ public class MixinGameRenderer {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).getPhase() != WorldRenderingPhase.NOT_RENDERING_WORLD;
+			return ((CoreWorldRenderingPipeline) pipeline).isRenderingWorld();
 		} else {
 			return false;
 		}

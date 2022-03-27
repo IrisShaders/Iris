@@ -4,4 +4,6 @@ import net.coderbot.iris.block_rendering.MaterialIdHolder;
 
 public interface MaterialIdAwareVertexWriter {
     void iris$setIdHolder(MaterialIdHolder holder);
+
+    void copyQuadAndFlipNormal();
 }

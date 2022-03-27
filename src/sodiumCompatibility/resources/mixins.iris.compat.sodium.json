@@ -35,6 +35,7 @@
     "shadow_map.frustum.MixinCullEverythingFrustum",
     "shadow_map.frustum.MixinNonCullingFrustum",
     "sky.MixinLevelRenderer",
+    "vertex_format.entity.MixinQuadVertexType",
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.MixinFluidRenderer",
     "vertex_format.GlVertexAttributeFormatAccessor",
@@ -43,6 +44,5 @@
     "vertex_format.MixinRegionChunkRenderer",
     "vertex_format.MixinRenderRegionArenas",
     "vertex_format.MixinRenderSectionManager"
-  ],
-  "refmap": "iris-sodium-compat-refmap.json"
+  ]
 }

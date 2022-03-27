@@ -5,7 +5,7 @@ import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadWinding;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import me.jellysquid.mods.sodium.client.render.pipeline.FluidRenderer;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.xhfp.XHFPModelVertexBufferWriterNio;
+import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.material.FluidState;
@@ -30,7 +30,7 @@ public class MixinFluidRenderer {
 	slice = @Slice(
 			from = @At(value = "INVOKE", target = "net/minecraft/world/level/material/FluidState.shouldRenderBackwardUpFace" +
 					"(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z")
-	))
+	), remap = false)
 	private void iris$fixBackwardUpFaceNormal(IndexBufferBuilder indices, int vertexStart, ModelQuadWinding winding,
 											  BlockAndTintGetter world, FluidState fluidState, BlockPos pos,
 											  BlockPos offset, ChunkModelBuilder buffers) {
@@ -45,7 +45,7 @@ public class MixinFluidRenderer {
 			slice = @Slice(
 					from = @At(value = "FIELD",
 							target = "me/jellysquid/mods/sodium/common/util/DirectionUtil.HORIZONTAL_DIRECTIONS : [Lnet/minecraft/core/Direction;")
-			))
+			), remap = false)
 	private void iris$fixSidewaysInnerFaceNormal(IndexBufferBuilder indices, int vertexStart, ModelQuadWinding winding,
 												 BlockAndTintGetter world, FluidState fluidState, BlockPos pos,
 												 BlockPos offset, ChunkModelBuilder buffers) {
@@ -58,8 +58,8 @@ public class MixinFluidRenderer {
 		if (winding == ModelQuadWinding.COUNTERCLOCKWISE) {
 			ModelVertexSink sink = buffers.getVertexSink();
 
-			if (sink instanceof XHFPModelVertexBufferWriterNio) {
-				((XHFPModelVertexBufferWriterNio) sink).copyQuadAndFlipNormal();
+			if (sink instanceof MaterialIdAwareVertexWriter) {
+				((MaterialIdAwareVertexWriter) sink).copyQuadAndFlipNormal();
 
 				indices.add(vertexStart + 4, winding);
 

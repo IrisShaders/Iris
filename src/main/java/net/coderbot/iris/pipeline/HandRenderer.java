@@ -25,11 +25,13 @@ public class HandRenderer {
 	private boolean renderingSolid;
 	private FullyBufferedMultiBufferSource bufferSource = new FullyBufferedMultiBufferSource();
 
+	public static final float DEPTH = 0.125F;
+
 	private void setupGlState(GameRenderer gameRenderer, Camera camera, PoseStack poseStack, float tickDelta) {
         final PoseStack.Pose pose = poseStack.last();
 
 		// We need to scale the matrix by 0.125 so the hand doesn't clip through blocks.
-		Matrix4f scaleMatrix = Matrix4f.createScaleMatrix(1F, 1F, 0.125F);
+		Matrix4f scaleMatrix = Matrix4f.createScaleMatrix(1F, 1F, DEPTH);
 		scaleMatrix.multiply(gameRenderer.getProjectionMatrix(((GameRendererAccessor) gameRenderer).invokeGetFov(camera, tickDelta, false)));
 		gameRenderer.resetProjectionMatrix(scaleMatrix);
 
@@ -74,6 +76,8 @@ public class HandRenderer {
 
 		ACTIVE = true;
 
+		pipeline.setPhase(WorldRenderingPhase.HAND_SOLID);
+
 		poseStack.pushPose();
 
 		Minecraft.getInstance().getProfiler().push("iris_hand");
@@ -94,6 +98,8 @@ public class HandRenderer {
 
 		renderingSolid = false;
 
+		pipeline.setPhase(WorldRenderingPhase.NONE);
+
 		ACTIVE = false;
 	}
 
@@ -103,6 +109,8 @@ public class HandRenderer {
 		}
 
 		ACTIVE = true;
+
+		pipeline.setPhase(WorldRenderingPhase.HAND_TRANSLUCENT);
 
 		poseStack.pushPose();
 
@@ -119,6 +127,8 @@ public class HandRenderer {
 		gameRenderer.resetProjectionMatrix(CapturedRenderingState.INSTANCE.getGbufferProjection());
 
 		bufferSource.endBatch();
+
+		pipeline.setPhase(WorldRenderingPhase.NONE);
 
 		ACTIVE = false;
 	}

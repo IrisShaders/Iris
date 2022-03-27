@@ -26,6 +26,8 @@ public class LegacyIdMap {
 
 		add(blockIdMap, 50, block("torch"));
 		add(blockIdMap, 89, block("glowstone"));
+
+		// TODO: what about inactive redstone lamps?
 		add(blockIdMap, 124, block("redstone_lamp"));
 
 		add(blockIdMap, 12, block("sand"));
@@ -37,7 +39,7 @@ public class LegacyIdMap {
 		// Apparently this is what SEUS v11 expects? Maybe old shadersmod was buggy.
 		add(blockIdMap, -123, block("emerald_block"));
 
-		addMany(blockIdMap, 34, COLORS, color -> block(color + "_wool"));
+		addMany(blockIdMap, 35, COLORS, color -> block(color + "_wool"));
 
 		add(blockIdMap, 8, block("water"));
 		add(blockIdMap, 10, block("lava"));
@@ -45,7 +47,7 @@ public class LegacyIdMap {
 
 		addMany(blockIdMap, 18, WOOD_TYPES, woodType -> block(woodType + "_leaves"));
 
-		addMany(blockIdMap, 94, COLORS, color -> block(color + "_stained_glass"));
+		addMany(blockIdMap, 95, COLORS, color -> block(color + "_stained_glass"));
 		addMany(blockIdMap, 160, COLORS, color -> block(color + "_stained_glass_pane"));
 
 		// Short grass / bush

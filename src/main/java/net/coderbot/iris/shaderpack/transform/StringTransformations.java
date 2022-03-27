@@ -113,6 +113,15 @@ public class StringTransformations implements Transformations {
 	}
 
 	@Override
+	public void replaceRegex(String regex, String to) {
+		prefix = prefix.replaceAll(regex, to);
+		extensions = extensions.replaceAll(regex, to);
+		injections = new StringBuilder(injections.toString().replaceAll(regex, to));
+		body = body.replaceAll(regex, to);
+		suffix = new StringBuilder(suffix.toString().replaceAll(regex, to));
+	}
+
+	@Override
 	public String toString() {
 		return prefix + extensions + injections + body + suffix;
 	}

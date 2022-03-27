@@ -2,7 +2,6 @@ package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import java.util.List;
@@ -13,7 +12,12 @@ public interface WorldRenderingPipeline {
 	void renderShadows(LevelRendererAccessor worldRenderer, Camera camera);
 	void addDebugText(List<String> messages);
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
-	void beginShadowRender();
+
+	WorldRenderingPhase getPhase();
+
+	void setPhase(WorldRenderingPhase phase);
+
+    void beginShadowRender();
 	void endShadowRender();
 
 	void beginHand();
@@ -26,10 +30,6 @@ public interface WorldRenderingPipeline {
 
 	SodiumTerrainPipeline getSodiumTerrainPipeline();
 	FrameUpdateNotifier getFrameUpdateNotifier();
-
-	default void setPhase(WorldRenderingPhase phase) {
-		// no-op
-	}
 
 	boolean shouldDisableVanillaEntityShadows();
 	boolean shouldDisableDirectionalShading();

@@ -15,6 +15,8 @@
   "options.iris.apply": "应用",
   "options.iris.refresh": "刷新",
   "options.iris.openShaderPackFolder": "打开光影包文件夹...",
+  "options.iris.shaderPackSettings": "光影包设置...",
+  "options.iris.shaderPackList": "光影包列表...",
   "options.iris.refreshShaderPacks": "刷新光影包",
   "options.iris.shaderPackSelection": "光影包...",
   "options.iris.shaderPackSelection.title": "光影包",
@@ -24,12 +26,30 @@
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" 不是有效的光影包",
   "options.iris.shaderPackSelection.copyError": "无法添加光影包 \"%s\"",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 已存在于光影包文件夹中！",
+  "options.iris.shaderPackOptions.tooManyFiles": "无法导入多个光影设置文件！",
+  "options.iris.shaderPackOptions.failedImport": "导入光影设置文件 \"%s\" 失败",
+  "options.iris.shaderPackOptions.importedSettings": "已从 \"%s\" 导入光影设置",
   "options.iris.shaders.disabled": "光影：已禁用",
   "options.iris.shaders.enabled": "光影：已启用",
+  "options.iris.shaders.nonePresent": "光影：无光影包",
+  "options.iris.back": "返回",
+  "options.iris.reset": "重置",
+  "options.iris.reset.tooltip": "重置所有选项并应用？",
+  "options.iris.reset.tooltip.holdShift": "按住 SHIFT 点击以重置",
+  "options.iris.importSettings.tooltip": "从文件导入设置",
+  "options.iris.exportSettings.tooltip": "导出应用的设置到文件",
+  "options.iris.setToDefault": "把选项设为默认值？",
+  "options.iris.profile": "Profile",
+  "options.iris.profile.custom": "自定义",
   "options.iris.shadowDistance": "最大阴影距离",
   "options.iris.shadowDistance.enabled": "允许更改阴影的最远距离。超出此距离的地形和实体不会投射阴影。降低阴影距离可以显著提高性能。",
   "options.iris.shadowDistance.disabled": "当前的光影包已经为阴影设置了渲染距离，你不能改变。",
-  
+  "options.iris.shadowDistance.sodium_tooltip": "阴影渲染距离控制阴影通道中多远处的地形有可能被渲染。距离越小，则渲染的地形越少，帧率得以提高。对于明确指定阴影渲染距离的光影包，这个选项不能更改。阴影渲染距离的实际上限是设置的视距。",
+
   "pack.iris.select.title": "选择",
-  "pack.iris.list.label": "+ 拖放光影包以添加"
+  "pack.iris.configure.title": "配置",
+  "pack.iris.list.label": "+ 拖放光影包至此以添加",
+
+  "label.iris.true": "开",
+  "label.iris.false": "关"
 }

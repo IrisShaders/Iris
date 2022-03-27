@@ -2,6 +2,7 @@ package net.coderbot.iris;
 
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.api.v0.IrisApiConfig;
@@ -18,7 +19,13 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public boolean isShaderPackInUse() {
-		return !(Iris.getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline);
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline == null) {
+			return false;
+		}
+
+		return !(pipeline instanceof FixedFunctionWorldRenderingPipeline);
 	}
 
 	@Override

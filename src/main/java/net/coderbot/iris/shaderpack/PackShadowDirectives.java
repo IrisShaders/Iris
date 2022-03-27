@@ -13,13 +13,20 @@ public class PackShadowDirectives {
 	private Float fov;
 	private float distance;
 	private float distanceRenderMul;
+	private float entityShadowDistanceMul;
 	private boolean explicitRenderDistance;
 	private float intervalSize;
+
+	private boolean shouldRenderTerrain;
+	private boolean shouldRenderTranslucent;
+	private boolean shouldRenderEntities;
+	private boolean shouldRenderBlockEntities;
+	private OptionalBoolean cullingState;
 
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
 	private final ImmutableList<SamplingSettings> colorSamplingSettings;
 
-	public PackShadowDirectives() {
+	public PackShadowDirectives(ShaderProperties properties) {
 		// By default, the shadow map has a resolution of 1024x1024. It's recommended to increase this for better
 		// quality.
 		this.resolution = 1024;
@@ -50,12 +57,19 @@ public class PackShadowDirectives {
 		// whether or not shadows can possibly be cast into the player's view, instead of just checking
 		// the shadow matrices.
 		this.distanceRenderMul = -1.0f;
+		this.entityShadowDistanceMul = 1.0f;
 		this.explicitRenderDistance = false;
 
 		// By default, a shadow interval size of 2 meters is used. This means that the shadow camera will be snapped to
 		// a grid where each grid cell is 2 meters by 2 meters by 2 meters, and it will only move either when the sun /
 		// moon move, or when the player camera moves into a different grid cell.
 		this.intervalSize = 2.0f;
+
+		this.shouldRenderTerrain = properties.getShadowTerrain().orElse(true);
+		this.shouldRenderTranslucent = properties.getShadowTranslucent().orElse(true);
+		this.shouldRenderEntities = properties.getShadowEntities().orElse(true);
+		this.shouldRenderBlockEntities = properties.getShadowBlockEntities().orElse(true);
+		this.cullingState = properties.getShadowCulling();
 
 		this.depthSamplingSettings = ImmutableList.of(new DepthSamplingSettings(), new DepthSamplingSettings());
 
@@ -66,6 +80,23 @@ public class PackShadowDirectives {
 		}
 
 		this.colorSamplingSettings = colorSamplingSettings.build();
+	}
+
+	public PackShadowDirectives(PackShadowDirectives shadowDirectives) {
+		this.resolution = shadowDirectives.resolution;
+		this.fov = shadowDirectives.fov;
+		this.distance = shadowDirectives.distance;
+		this.distanceRenderMul = shadowDirectives.distanceRenderMul;
+		this.entityShadowDistanceMul = shadowDirectives.entityShadowDistanceMul;
+		this.explicitRenderDistance = shadowDirectives.explicitRenderDistance;
+		this.intervalSize = shadowDirectives.intervalSize;
+		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain;
+		this.shouldRenderTranslucent = shadowDirectives.shouldRenderTranslucent;
+		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities;
+		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities;
+		this.cullingState = shadowDirectives.cullingState;
+		this.depthSamplingSettings = shadowDirectives.depthSamplingSettings;
+		this.colorSamplingSettings = shadowDirectives.colorSamplingSettings;
 	}
 
 	public int getResolution() {
@@ -84,12 +115,36 @@ public class PackShadowDirectives {
 		return distanceRenderMul;
 	}
 
+	public float getEntityShadowDistanceMul() {
+		return entityShadowDistanceMul;
+	}
+
 	public boolean isDistanceRenderMulExplicit() {
 		return explicitRenderDistance;
 	}
 
 	public float getIntervalSize() {
 		return intervalSize;
+	}
+
+	public boolean shouldRenderTerrain() {
+		return shouldRenderTerrain;
+	}
+
+	public boolean shouldRenderTranslucent() {
+		return shouldRenderTranslucent;
+	}
+
+	public boolean shouldRenderEntities() {
+		return shouldRenderEntities;
+	}
+
+	public boolean shouldRenderBlockEntities() {
+		return shouldRenderBlockEntities;
+	}
+
+	public OptionalBoolean getCullingState() {
+		return cullingState;
 	}
 
 	public ImmutableList<DepthSamplingSettings> getDepthSamplingSettings() {
@@ -109,6 +164,8 @@ public class PackShadowDirectives {
 
 		directives.acceptCommentFloatDirective("SHADOWHPL", distance -> this.distance = distance);
 		directives.acceptConstFloatDirective("shadowDistance", distance -> this.distance = distance);
+
+		directives.acceptConstFloatDirective("entityShadowDistanceMul", distance -> this.entityShadowDistanceMul = distance);
 
 		directives.acceptConstFloatDirective("shadowDistanceRenderMul", distanceRenderMul -> {
 			this.distanceRenderMul = distanceRenderMul;
@@ -224,6 +281,7 @@ public class PackShadowDirectives {
 				", fov=" + fov +
 				", distance=" + distance +
 				", distanceRenderMul=" + distanceRenderMul +
+				", entityDistanceRenderMul=" + entityShadowDistanceMul +
 				", intervalSize=" + intervalSize +
 				", depthSamplingSettings=" + depthSamplingSettings +
 				", colorSamplingSettings=" + colorSamplingSettings +
