@@ -41,11 +41,11 @@ public class IrisLogging {
 	}
 
 	public void info(String info) {
-		this.logger.warn(info);
+		this.logger.info(info);
 	}
 
 	public void info(String info, Object... o) {
-		this.logger.warn(info, o);
+		this.logger.info(info, o);
 	}
 
 	public void debug(String debug) {

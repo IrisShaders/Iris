@@ -41,6 +41,7 @@
     "MixinUniform",
     "MixinVertexBuffer",
     "LevelRendererAccessor",
+    "MixinWindow",
     "entity_render_context.MixinBlockEntityRenderDispatcher",
     "entity_render_context.MixinEntityRenderDispatcher",
     "fabulous.MixinDisableFabulousGraphics",

@@ -13,7 +13,7 @@
 
 - Find answers to frequently asked questions on our [FAQ page](docs/faq.md).
 - A list of known-supported shaderpacks is available [here](docs/supportedshaders.md).
-- A list of unfixable limitations in Iris is available [here](docs/limitations.md).
+- A list of unfixable limitations in Iris is available [here](docs/usage/limitations.md).
 
 
 ## Why did you make Iris?
