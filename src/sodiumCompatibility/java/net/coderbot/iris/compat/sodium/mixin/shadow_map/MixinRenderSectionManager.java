@@ -3,14 +3,14 @@ package net.coderbot.iris.compat.sodium.mixin.shadow_map;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
-import me.jellysquid.mods.sodium.interop.vanilla.math.frustum.Frustum;
-import me.jellysquid.mods.sodium.opengl.device.RenderDevice;
-import me.jellysquid.mods.sodium.render.SodiumWorldRenderer;
-import me.jellysquid.mods.sodium.render.chunk.RenderSection;
-import me.jellysquid.mods.sodium.render.chunk.RenderSectionManager;
-import me.jellysquid.mods.sodium.render.chunk.draw.ChunkRenderList;
-import me.jellysquid.mods.sodium.render.chunk.passes.ChunkRenderPassManager;
-import me.jellysquid.mods.sodium.render.chunk.state.ChunkRenderBounds;
+import net.caffeinemc.sodium.interop.vanilla.math.frustum.Frustum;
+import net.caffeinemc.sodium.opengl.device.RenderDevice;
+import net.caffeinemc.sodium.render.SodiumWorldRenderer;
+import net.caffeinemc.sodium.render.chunk.RenderSection;
+import net.caffeinemc.sodium.render.chunk.RenderSectionManager;
+import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderList;
+import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPassManager;
+import net.caffeinemc.sodium.render.chunk.state.ChunkRenderBounds;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
@@ -129,7 +129,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 
 	@Redirect(method = "calculateVisibilityFlags",
 			at = @At(value = "FIELD",
-					target = "me/jellysquid/mods/sodium/render/chunk/RenderSectionManager.isBlockFaceCullingEnabled : Z"))
+					target = "net/caffeinemc/sodium/render/chunk/RenderSectionManager.isBlockFaceCullingEnabled : Z"))
 	private boolean iris$disableBlockFaceCullingInShadowPass(RenderSectionManager manager) {
 		return isBlockFaceCullingEnabled && !ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 	}

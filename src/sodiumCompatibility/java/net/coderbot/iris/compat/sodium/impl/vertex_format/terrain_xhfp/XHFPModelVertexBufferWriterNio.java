@@ -1,10 +1,8 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
-import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
-import me.jellysquid.mods.sodium.client.util.Norm3b;
-
+import net.caffeinemc.sodium.render.terrain.format.TerrainVertexSink;
+import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferView;
+import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferWriterNio;
 import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
 import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
@@ -13,7 +11,7 @@ import net.coderbot.iris.vendored.joml.Vector3f;
 
 import java.nio.ByteBuffer;
 
-public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implements ModelVertexSink, MaterialIdAwareVertexWriter {
+public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implements TerrainVertexSink, MaterialIdAwareVertexWriter {
 	private MaterialIdHolder idHolder;
 
 	public XHFPModelVertexBufferWriterNio(VertexBufferView backingBuffer) {
@@ -63,18 +61,17 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 	}
 
 	@Override
-	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light, int chunkId) {
+	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light) {
 		uSum += u;
 		vSum += v;
 
 		short materialId = idHolder.id;
 		short renderType = idHolder.renderType;
 
-		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType, chunkId);
+		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType);
 	}
 
-	private void writeQuadInternal(float posX, float posY, float posZ, int color,
-								   float u, float v, int light, short materialId, short renderType, int chunkId) {
+	private void writeQuadInternal(float posX, float posY, float posZ, int color, float u, float v, int light, short materialId, short renderType) {
 		int i = this.writeOffset;
 
 		vertexCount++;
@@ -85,7 +82,6 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		buffer.putShort(i + 0, XHFPModelVertexType.encodePosition(posX));
 		buffer.putShort(i + 2, XHFPModelVertexType.encodePosition(posY));
 		buffer.putShort(i + 4, XHFPModelVertexType.encodePosition(posZ));
-		buffer.putShort(i + 6, (short) chunkId);
 
 		buffer.putInt(i + 8, color);
 

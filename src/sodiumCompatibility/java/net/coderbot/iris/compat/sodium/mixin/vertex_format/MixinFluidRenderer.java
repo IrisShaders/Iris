@@ -1,10 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
-import me.jellysquid.mods.sodium.client.model.IndexBufferBuilder;
-import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadWinding;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
-import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
-import me.jellysquid.mods.sodium.client.render.pipeline.FluidRenderer;
+import net.caffeinemc.sodium.render.terrain.FluidRenderer;
 import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -21,11 +17,11 @@ import org.spongepowered.asm.mixin.injection.Slice;
  * the same vertices for each side of the quad does not work.
  */
 @Mixin(FluidRenderer.class)
-public class MixinFluidRenderer {
+public class MixinFluidRenderer {/*
 	@SuppressWarnings("mapping")
 	@Redirect(method = "render",
-			at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/model/IndexBufferBuilder.add" +
-					"(ILme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadWinding;)V",
+			at = @At(value = "INVOKE", target = "net/caffeinemc/sodium/client/model/IndexBufferBuilder.add" +
+					"(ILnet/caffeinemc/sodium/client/model/quad/properties/ModelQuadWinding;)V",
 					ordinal = 0),
 	slice = @Slice(
 			from = @At(value = "INVOKE", target = "net/minecraft/world/level/material/FluidState.shouldRenderBackwardUpFace" +
@@ -39,12 +35,12 @@ public class MixinFluidRenderer {
 
 	@SuppressWarnings("mapping")
 	@Redirect(method = "render",
-			at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/model/IndexBufferBuilder.add" +
-					"(ILme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadWinding;)V",
+			at = @At(value = "INVOKE", target = "net/caffeinemc/sodium/client/model/IndexBufferBuilder.add" +
+					"(ILnet/caffeinemc/sodium/client/model/quad/properties/ModelQuadWinding;)V",
 					ordinal = 1),
 			slice = @Slice(
 					from = @At(value = "FIELD",
-							target = "me/jellysquid/mods/sodium/common/util/DirectionUtil.HORIZONTAL_DIRECTIONS : [Lnet/minecraft/core/Direction;")
+							target = "net/caffeinemc/sodium/common/util/DirectionUtil.HORIZONTAL_DIRECTIONS : [Lnet/minecraft/core/Direction;")
 			), remap = false)
 	private void iris$fixSidewaysInnerFaceNormal(IndexBufferBuilder indices, int vertexStart, ModelQuadWinding winding,
 												 BlockAndTintGetter world, FluidState fluidState, BlockPos pos,
@@ -68,5 +64,5 @@ public class MixinFluidRenderer {
 		}
 
 		indices.add(vertexStart, winding);
-	}
+	}*/
 }

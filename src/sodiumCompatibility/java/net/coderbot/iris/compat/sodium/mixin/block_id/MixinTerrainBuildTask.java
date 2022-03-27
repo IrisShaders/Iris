@@ -1,9 +1,9 @@
 package net.coderbot.iris.compat.sodium.mixin.block_id;
 
-import me.jellysquid.mods.sodium.render.chunk.compile.tasks.TerrainBuildResult;
-import me.jellysquid.mods.sodium.render.chunk.compile.tasks.TerrainBuildTask;
-import me.jellysquid.mods.sodium.render.terrain.TerrainBuildContext;
-import me.jellysquid.mods.sodium.util.tasks.CancellationSource;
+import net.caffeinemc.sodium.render.chunk.compile.tasks.TerrainBuildResult;
+import net.caffeinemc.sodium.render.chunk.compile.tasks.TerrainBuildTask;
+import net.caffeinemc.sodium.render.terrain.TerrainBuildContext;
+import net.caffeinemc.sodium.util.tasks.CancellationSource;
 import net.coderbot.iris.compat.sodium.impl.block_id.TerrainBuildBuffersExt;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;

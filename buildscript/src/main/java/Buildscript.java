@@ -25,8 +25,10 @@ import org.eclipse.jgit.lib.Constants;
 
 public class Buildscript extends MultiSrcDirFabricProject {
 	static final boolean SODIUM = true;
-	static final boolean CUSTOM_SODIUM = false;
-	static final String customSodiumName = "sodium-fabric-mc1.18.2-0.4.1+rev.d50338a.jar";
+	static final boolean CUSTOM_SODIUM = true;
+	static final String customSodiumName = "sodium-fabric-0.5.0+mc1.18.1-unstable.jar";
+	static final String customSodiumGfxName = "sodium-gfx-0.5.0+mc1.18.1-unstable.jar";
+	static final String customSodiumGfxOpenglName = "sodium-gfx-opengl-0.5.0+mc1.18.1-unstable.jar";
 
 	@Override
 	public VersionMeta createMcVersion() {
@@ -76,7 +78,9 @@ public class Buildscript extends MultiSrcDirFabricProject {
 
 		if (SODIUM) {
 			if (CUSTOM_SODIUM) {
-				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("net.caffeinemc", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumGfxName).toAbsolutePath(), null, new MavenId("net.caffeinemc", "sodium-fabric", customSodiumGfxName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumGfxOpenglName).toAbsolutePath(), null, new MavenId("net.caffeinemc", "sodium-fabric", customSodiumGfxOpenglName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
 				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			}

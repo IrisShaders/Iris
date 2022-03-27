@@ -57,7 +57,7 @@ public abstract class MixinPreventRebuildNearInShadowPass {
 	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
 	@Inject(method = "setupRender",
 			at = @At(value = "INVOKE",
-					target = "me/jellysquid/mods/sodium/client/gl/device/RenderDevice.enterManagedCode ()V",
+					target = "net/caffeinemc/sodium/client/gl/device/RenderDevice.enterManagedCode ()V",
 					remap = false),
 			require = 0)
 	private void iris$cannotInject(Camera camera, Frustum frustum, boolean bl, boolean bl2, CallbackInfo ci) {

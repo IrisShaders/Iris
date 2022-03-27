@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.directional_shading;
 
-import me.jellysquid.mods.sodium.render.terrain.light.data.QuadLightData;
-import me.jellysquid.mods.sodium.render.terrain.light.smooth.SmoothLightPipeline;
+import net.caffeinemc.sodium.render.terrain.light.data.QuadLightData;
+import net.caffeinemc.sodium.render.terrain.light.smooth.SmoothLightPipeline;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.minecraft.core.Direction;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.options;
 
-import me.jellysquid.mods.sodium.config.user.UserConfig;
-import me.jellysquid.mods.sodium.render.chunk.RenderSectionManager;
+import net.caffeinemc.sodium.config.user.UserConfig;
+import net.caffeinemc.sodium.render.chunk.RenderSectionManager;
 import net.coderbot.iris.Iris;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinRenderSectionManager {
     @Redirect(method = "setup", remap = false,
             at = @At(value = "FIELD",
-                    target = "me/jellysquid/mods/sodium/config/user/UserConfig$PerformanceSettings.useFogOcclusion : Z",
+                    target = "net/caffeinemc/sodium/config/user/UserConfig$PerformanceSettings.useFogOcclusion : Z",
                     remap = false))
     private boolean iris$disableFogOcclusion(UserConfig.PerformanceSettings settings) {
         if (Iris.getCurrentPack().isPresent()) {

@@ -1,10 +1,12 @@
 package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import me.jellysquid.mods.sodium.client.gl.GlObject;
-import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
+import net.caffeinemc.gfx.opengl.GlObject;
+import net.caffeinemc.gfx.opengl.shader.GlProgram;
+import net.caffeinemc.sodium.client.gl.GlObject;
+import net.caffeinemc.sodium.client.gl.shader.GlProgram;
+import net.caffeinemc.sodium.client.gl.shader.uniform.GlUniform;
+import net.caffeinemc.sodium.client.gl.shader.uniform.GlUniformBlock;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderBindingContextExt;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,6 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
-import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
+import net.caffeinemc.sodium.render.terrain.format.TerrainMeshAttribute;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Final;
@@ -9,18 +9,18 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 
 /**
- * Uses some rather hacky shenanigans to add a few new enum values to {@link ChunkMeshAttribute} corresponding to our
+ * Uses some rather hacky shenanigans to add a few new enum values to {@link TerrainMeshAttribute} corresponding to our
  * extended vertex attributes.
  *
  * Credit goes to Nuclearfarts for the trick.
  */
-@Mixin(ChunkMeshAttribute.class)
+@Mixin(TerrainMeshAttribute.class)
 public class MixinChunkMeshAttribute {
 	@SuppressWarnings("target")
     @Shadow(remap = false)
     @Final
     @Mutable
-    private static ChunkMeshAttribute[] $VALUES;
+    private static TerrainMeshAttribute[] $VALUES;
 
     static {
         int baseOrdinal = $VALUES.length;

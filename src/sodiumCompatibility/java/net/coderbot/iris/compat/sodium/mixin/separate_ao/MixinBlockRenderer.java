@@ -1,8 +1,8 @@
 package net.coderbot.iris.compat.sodium.mixin.separate_ao;
 
-import me.jellysquid.mods.sodium.render.chunk.compile.buffers.ChunkMeshBuilder;
-import me.jellysquid.mods.sodium.render.terrain.BlockRenderer;
-import me.jellysquid.mods.sodium.util.packed.ColorABGR;
+import net.caffeinemc.sodium.render.chunk.compile.buffers.ChunkMeshBuilder;
+import net.caffeinemc.sodium.render.terrain.BlockRenderer;
+import net.caffeinemc.sodium.util.packed.ColorABGR;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
@@ -33,7 +33,7 @@ public class MixinBlockRenderer {
 
     @Redirect(method = "renderQuad", remap = false,
             at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/util/packed/ColorABGR.mul (IF)I",
+                    target = "net/caffeinemc/sodium/util/packed/ColorABGR.mul (IF)I",
                     remap = false))
     private int iris$applySeparateAo(int color, float ao) {
         if (useSeparateAo) {

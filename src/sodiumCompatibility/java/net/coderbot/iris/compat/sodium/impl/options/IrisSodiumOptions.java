@@ -1,12 +1,12 @@
 package net.coderbot.iris.compat.sodium.impl.options;
 
-import me.jellysquid.mods.sodium.config.user.options.OptionFlag;
-import me.jellysquid.mods.sodium.config.user.options.OptionImpact;
-import me.jellysquid.mods.sodium.config.user.options.OptionImpl;
-import me.jellysquid.mods.sodium.gui.config.ControlValueFormatter;
-import me.jellysquid.mods.sodium.gui.config.CyclingControl;
-import me.jellysquid.mods.sodium.gui.config.SliderControl;
-import me.jellysquid.mods.sodium.interop.vanilla.options.MinecraftOptionsStorage;
+import net.caffeinemc.sodium.config.user.options.OptionFlag;
+import net.caffeinemc.sodium.config.user.options.OptionImpact;
+import net.caffeinemc.sodium.config.user.options.OptionImpl;
+import net.caffeinemc.sodium.gui.config.ControlValueFormatter;
+import net.caffeinemc.sodium.gui.config.CyclingControl;
+import net.caffeinemc.sodium.gui.config.SliderControl;
+import net.caffeinemc.sodium.interop.vanilla.options.MinecraftOptionsStorage;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.Options;

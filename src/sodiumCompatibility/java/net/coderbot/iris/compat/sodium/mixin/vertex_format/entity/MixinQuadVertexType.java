@@ -2,11 +2,11 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format.entity;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexSink;
-import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexType;
-import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.writer.QuadVertexBufferWriterNio;
-import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.writer.QuadVertexBufferWriterUnsafe;
+import net.caffeinemc.sodium.interop.vanilla.vertex.formats.quad.QuadVertexSink;
+import net.caffeinemc.sodium.interop.vanilla.vertex.formats.quad.QuadVertexType;
+import net.caffeinemc.sodium.interop.vanilla.vertex.formats.quad.writer.QuadVertexBufferWriterNio;
+import net.caffeinemc.sodium.interop.vanilla.vertex.formats.quad.writer.QuadVertexBufferWriterUnsafe;
+import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferView;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer.EntityVertexBufferWriterNio;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer.EntityVertexBufferWriterUnsafe;
 import net.coderbot.iris.vertices.IrisVertexFormats;

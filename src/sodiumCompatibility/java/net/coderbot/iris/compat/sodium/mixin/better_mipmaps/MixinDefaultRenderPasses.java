@@ -1,6 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.better_mipmaps;
 
-import me.jellysquid.mods.sodium.render.chunk.passes.DefaultRenderPasses;
+import net.caffeinemc.sodium.render.chunk.passes.DefaultRenderPasses;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -13,10 +13,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 public class MixinDefaultRenderPasses {
 	@ModifyArg(method = "<clinit>",
 			at = @At(value = "INVOKE",
-					target = "me/jellysquid/mods/sodium/render/chunk/passes/ChunkRenderPass.<init> (" +
-							"Lme/jellysquid/mods/sodium/opengl/types/RenderState;ZF" +
-							")V"))
-	private float iris$tweakCutoutMippedAlphaThreshold(float threshold) {
+					target = "Lnet/caffeinemc/sodium/render/chunk/passes/ChunkRenderPass;<init>(Lnet/caffeinemc/gfx/api/pipeline/PipelineDescription;ZF)V"))
+	private static float iris$tweakCutoutMippedAlphaThreshold(float threshold) {
 		if (threshold == 0.5f) {
 			return 0.1f;
 		} else {

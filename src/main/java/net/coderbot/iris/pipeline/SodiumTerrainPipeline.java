@@ -7,8 +7,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableSet;
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
-import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
+import net.caffeinemc.sodium.render.shader.ShaderLoader;
+import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -91,7 +91,7 @@ public class SodiumTerrainPipeline {
 		this.createShadowImages = createShadowImages;
 	}
 
-	public void patchShaders(ChunkVertexType vertexType) {
+	public void patchShaders(TerrainVertexType vertexType) {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(true, true, false, true, true);
 
 		AlphaTest cutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
@@ -287,6 +287,6 @@ public class SodiumTerrainPipeline {
 		String path = matcher.group("path");
 
 		ResourceLocation identifier = new ResourceLocation(namespace, path);
-		return ShaderLoader.getShaderSource(identifier);
+		return ShaderLoader.MINECRAFT_ASSETS.getShaderSource(identifier);
 	}
 }

@@ -1,10 +1,10 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer;
 
-import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
-import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexSink;
-import me.jellysquid.mods.sodium.client.util.Norm3b;
+import net.caffeinemc.sodium.client.model.vertex.VanillaVertexTypes;
+import net.caffeinemc.sodium.client.model.vertex.buffer.VertexBufferView;
+import net.caffeinemc.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
+import net.caffeinemc.sodium.client.model.vertex.formats.quad.QuadVertexSink;
+import net.caffeinemc.sodium.client.util.Norm3b;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.lwjgl.system.MemoryUtil;

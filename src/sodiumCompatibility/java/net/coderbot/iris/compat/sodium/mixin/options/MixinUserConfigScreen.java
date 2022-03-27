@@ -1,8 +1,8 @@
 package net.coderbot.iris.compat.sodium.mixin.options;
 
 import com.google.common.collect.ImmutableList;
-import me.jellysquid.mods.sodium.config.user.options.OptionPage;
-import me.jellysquid.mods.sodium.gui.screen.UserConfigScreen;
+import net.caffeinemc.sodium.config.user.options.OptionPage;
+import net.caffeinemc.sodium.gui.screen.UserConfigScreen;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;

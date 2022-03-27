@@ -1,19 +1,19 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
-import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
+import net.caffeinemc.sodium.render.terrain.format.TerrainVertexSink;
+import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferView;
+import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferWriterUnsafe;
 import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.NormalHelper;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.minecraft.core.Vec3i;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
-public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, MaterialIdAwareVertexWriter {
+public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements TerrainVertexSink, MaterialIdAwareVertexWriter {
     private MaterialIdHolder idHolder;
 
     public XHFPModelVertexBufferWriterUnsafe(VertexBufferView backingBuffer) {
@@ -54,18 +54,17 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 	}
 
 	@Override
-	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light, int chunkId) {
+	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light) {
 		uSum += u;
 		vSum += v;
 
 		short materialId = idHolder.id;
 		short renderType = idHolder.renderType;
 
-		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType, chunkId);
+		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType);
 	}
 
-	private void writeQuadInternal(float posX, float posY, float posZ, int color,
-								   float u, float v, int light, short materialId, short renderType, int chunkId) {
+	private void writeQuadInternal(float posX, float posY, float posZ, int color, float u, float v, int light, short materialId, short renderType) {
 		long i = this.writePointer;
 
 		vertexCount++;
@@ -74,7 +73,6 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		MemoryUtil.memPutShort(i + 0, XHFPModelVertexType.encodePosition(posX));
 		MemoryUtil.memPutShort(i + 2, XHFPModelVertexType.encodePosition(posY));
 		MemoryUtil.memPutShort(i + 4, XHFPModelVertexType.encodePosition(posZ));
-		MemoryUtil.memPutShort(i + 6, (short) chunkId);
 
 		MemoryUtil.memPutInt(i + 8, color);
 

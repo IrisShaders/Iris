@@ -1,6 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.options;
 
-import me.jellysquid.mods.sodium.config.user.UserConfig;
+import net.caffeinemc.sodium.config.user.UserConfig;
 import net.coderbot.iris.Iris;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

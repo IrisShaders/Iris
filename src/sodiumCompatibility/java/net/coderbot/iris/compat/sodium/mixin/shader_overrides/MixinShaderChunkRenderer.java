@@ -1,12 +1,11 @@
 package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
-import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
-import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
-import me.jellysquid.mods.sodium.client.render.chunk.ShaderChunkRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
-import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
+import net.caffeinemc.gfx.api.device.RenderDevice;
+import net.caffeinemc.gfx.opengl.shader.GlProgram;
+import net.caffeinemc.sodium.render.chunk.draw.ShaderChunkRenderer;
+import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
+import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
 import net.coderbot.iris.gl.program.ProgramUniforms;
@@ -32,14 +31,11 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
     private GlProgram<IrisChunkShaderInterface> override;
 
     @Shadow(remap = false)
-    private GlProgram<ChunkShaderInterface> activeProgram;
-
-    @Shadow(remap = false)
 	@Final
-	protected ChunkVertexType vertexType;
+	protected TerrainVertexType vertexType;
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
-    private void iris$onInit(RenderDevice device, ChunkVertexType vertexType, CallbackInfo ci) {
+    private void iris$onInit(RenderDevice device, TerrainVertexType vertexType, CallbackInfo ci) {
         irisChunkProgramOverrides = new IrisChunkProgramOverrides();
     }
 

@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
-import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
+import net.caffeinemc.gfx.api.shader.Program;
 
 public interface ShaderChunkRendererExt {
-	GlProgram<IrisChunkShaderInterface> iris$getOverride();
+	Program<IrisChunkShaderInterface> iris$getOverride();
 }
