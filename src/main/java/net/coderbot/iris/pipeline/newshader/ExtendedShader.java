@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
 public class ExtendedShader extends ShaderInstance implements SamplerHolder, ImageHolder, ShaderInstanceInterface {
+	private final boolean isFullbright;
 	private final boolean intensitySwizzle;
 	private final ProgramImages.Builder imageBuilder;
 	NewWorldRenderingPipeline parent;
@@ -38,9 +39,8 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	HashMap<String, IntSupplier> dynamicSamplers;
 	private ProgramImages currentImages;
 	private Program geometry;
-	private boolean isFullbright;
 
-	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright, NewWorldRenderingPipeline parent) throws IOException {
+	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, boolean isBeacon, boolean isSwizzle, boolean isFullbright, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
@@ -58,9 +58,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.imageBuilder = ProgramImages.builder(programId);
 		this.currentImages = null;
 		this.isFullbright = isFullbright;
-
-		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
-		this.intensitySwizzle = getName().contains("intensity");
+		this.intensitySwizzle = isSwizzle;
 	}
 
 	public boolean isIntensitySwizzle() {
