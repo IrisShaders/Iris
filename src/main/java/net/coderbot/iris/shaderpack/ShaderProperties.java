@@ -239,10 +239,17 @@ public class ShaderProperties {
 			// the last definition being used, should be tested if behavior matches OptiFine
 			handleWhitespacedListDirective(key, value, "sliders", sliders -> sliderOptions = sliders);
 			handlePrefixedWhitespacedListDirective("profile.", key, value, profiles::put);
+
+			if (handleIntDirective(key, value, "screen.columns", columns -> mainScreenColumnCount = columns)) {
+				return;
+			}
+
+			if (handleAffixedIntDirective("screen.", ".columns", key, value, subScreenColumnCount::put)) {
+				return;
+			}
+
 			handleWhitespacedListDirective(key, value, "screen", options -> mainScreenOptions = options);
 			handlePrefixedWhitespacedListDirective("screen.", key, value, subScreenOptions::put);
-			handleIntDirective(key, value, "screen.columns", columns -> mainScreenColumnCount = columns);
-			handleAffixedIntDirective("screen.", ".columns", key, value, subScreenColumnCount::put);
 		});
 	}
 
@@ -270,9 +277,9 @@ public class ShaderProperties {
 		}
 	}
 
-	private static void handleIntDirective(String key, String value, String expectedKey, Consumer<Integer> handler) {
+	private static boolean handleIntDirective(String key, String value, String expectedKey, Consumer<Integer> handler) {
 		if (!expectedKey.equals(key)) {
-			return;
+			return false;
 		}
 
 		try {
@@ -282,15 +289,17 @@ public class ShaderProperties {
 		} catch (NumberFormatException nex) {
 			Iris.logger.warn("Unexpected value for integer key " + key + " in shaders.properties: got " + value + ", but expected an integer");
 		}
+
+		return true;
 	}
 
-	private static void handleAffixedIntDirective(String prefix, String suffix, String key, String value, BiConsumer<String, Integer> handler) {
+	private static boolean handleAffixedIntDirective(String prefix, String suffix, String key, String value, BiConsumer<String, Integer> handler) {
 		if (key.startsWith(prefix) && key.endsWith(suffix)) {
 			int substrBegin = prefix.length();
 			int substrEnd = key.length() - suffix.length();
 
 			if (substrEnd <= substrBegin) {
-				return;
+				return false;
 			}
 
 			String affixStrippedKey = key.substring(substrBegin, substrEnd);
@@ -302,7 +311,11 @@ public class ShaderProperties {
 			} catch (NumberFormatException nex) {
 				Iris.logger.warn("Unexpected value for integer key " + key + " in shaders.properties: got " + value + ", but expected an integer");
 			}
+
+			return true;
 		}
+
+		return false;
 	}
 
 	private static void handlePassDirective(String prefix, String key, String value, Consumer<String> handler) {

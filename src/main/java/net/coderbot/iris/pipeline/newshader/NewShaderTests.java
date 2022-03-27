@@ -38,12 +38,16 @@ public class NewShaderTests {
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
-		String vertex = TriforcePatcher.patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs);
+
 		String geometry = null;
+		boolean hasGeometry = false;
 		if (source.getGeometrySource().isPresent()) {
-			geometry = TriforcePatcher.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs);
+			hasGeometry = true;
+			geometry = TriforcePatcher.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs, true);
 		}
-		String fragment = TriforcePatcher.patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs);
+
+		String vertex = TriforcePatcher.patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs, hasGeometry);
+		String fragment = TriforcePatcher.patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs, hasGeometry);
 
 		StringBuilder shaderJson = new StringBuilder("{\n" +
 				"    \"blend\": {\n" +
