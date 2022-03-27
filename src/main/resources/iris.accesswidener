@@ -6,3 +6,4 @@ accessible  class   net/minecraft/client/renderer/RenderType$CompositeState
 accessible  class   net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
 accessible  class   net/minecraft/client/Options$FieldAccess
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
+accessible field com/mojang/blaze3d/platform/GlStateManager TEXTURES [Lcom/mojang/blaze3d/platform/GlStateManager$TextureState;

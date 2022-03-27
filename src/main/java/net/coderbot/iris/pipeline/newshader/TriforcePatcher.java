@@ -10,7 +10,7 @@ import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class TriforcePatcher {
-	public static void patchCommon(StringTransformations transformations, ShaderType type) {
+	public static void patchCommon(StringTransformations transformations, ShaderType type, boolean sodium) {
 		// TODO: Only do the NewLines patches if the source code isn't from gbuffers_lines
 
 		if (transformations.contains("moj_import")) {
@@ -21,7 +21,7 @@ public class TriforcePatcher {
 			throw new IllegalStateException("Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported.");
 		}
 
-		fixVersion(transformations);
+		fixVersion(sodium, transformations);
 
 		// This must be defined and valid in all shader passes, including composite passes.
 		//
@@ -110,7 +110,7 @@ public class TriforcePatcher {
 	public static String patchVanilla(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs) {
 		StringTransformations transformations = new StringTransformations(source);
 
-		patchCommon(transformations, type);
+		patchCommon(transformations, type, false);
 
 		if (inputs.hasOverlay()) {
 			// TODO: Change this once we implement 1.17 geometry shader support!
@@ -272,7 +272,7 @@ public class TriforcePatcher {
 	public static String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
 		StringTransformations transformations = new StringTransformations(source);
 
-		patchCommon(transformations, type);
+		patchCommon(transformations, type, true);
 		addAlphaTest(transformations, type, alpha);
 
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
@@ -317,28 +317,62 @@ public class TriforcePatcher {
 			}
 		}
 
+		if (type == ShaderType.VERTEX) {
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define USE_VERTEX_COMPRESSION");
+		transformations.define("VERT_POS_SCALE", String.valueOf(positionScale));
+		transformations.define("VERT_POS_OFFSET", String.valueOf(positionOffset));
+		transformations.define("VERT_TEX_SCALE", String.valueOf(textureScale));
+
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
+
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
+			const uint MAX_INSTANCES = 8 * 4 * 8;
+				    
+				struct InstanceData {
+				    vec3 translation;
+				};
+						
+				layout(std140, binding = 1) uniform ubo_InstanceData {
+				    InstanceData instances[MAX_INSTANCES];
+				};
+				
+				vec4 getVertexPosition() {
+					InstanceData instance = instances[gl_BaseInstance];
+				    return vec4(instance.translation + _vert_position, 1.0);
+				}
+			""");
+	} else if (type == ShaderType.FRAGMENT) {
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
+					        layout(std140, binding = 1) uniform ubo_FogParameters {
+						             vec4 u_FogColor; // The color of the shader fog
+						             float u_FogStart; // The starting position of the shader fog
+						             float u_FogEnd; // The ending position of the shader fog
+						    };
+				""");
+		}
+
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
+			layout(std140, binding = 0) uniform ubo_CameraMatrices {
+				    // The projection matrix
+				    mat4 u_ProjectionMatrix;
+				    
+				    // The model-view matrix
+				    mat4 u_ModelViewMatrix;
+				    
+				    // The model-view-projection matrix
+				    mat4 u_ModelViewProjectionMatrix;
+				};
+				""");
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
-		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_NormalMatrix;");
-
+		transformations.define("gl_NormalMatrix", "mat3(transpose(inverse(u_ModelViewMatrix)))");
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix u_ModelViewMatrix");
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (u_ProjectionMatrix * u_ModelViewMatrix)");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix u_ModelViewProjectionMatrix");
 
 		if (type == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to chunks.
-
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define USE_VERTEX_COMPRESSION");
-			transformations.define("VERT_POS_SCALE", String.valueOf(positionScale));
-			transformations.define("VERT_POS_OFFSET", String.valueOf(positionOffset));
-			transformations.define("VERT_TEX_SCALE", String.valueOf(textureScale));
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 u_RegionOffset;");
-
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"));
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_matrices.glsl>"));
 
 			transformations.define("gl_Vertex", "getVertexPosition()");
 
@@ -349,17 +383,17 @@ public class TriforcePatcher {
 			// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
 			// end.
 			transformations.replaceExact("main", "irisMain");
-			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
-					"   _vert_init();\n" +
-					"\n" +
-					"	irisMain();\n" +
-					"}");
+			transformations.injectLine(Transformations.InjectionPoint.END, """
+				void main() {
+				   _vert_init();
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(u_RegionOffset + _draw_translation + _vert_position, 1.0); }");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
-		} else {
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
+					irisMain();
+				}""");
+
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
+				
+				""");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return u_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
 		// Just being careful
@@ -370,7 +404,7 @@ public class TriforcePatcher {
 
 	public static String patchComposite(String source, ShaderType type) {
 		StringTransformations transformations = new StringTransformations(source);
-		patchCommon(transformations, type);
+		patchCommon(transformations, type, false);
 
 		// TODO: More solid way to handle texture matrices
 		// TODO: Provide these values with uniforms
@@ -437,7 +471,7 @@ public class TriforcePatcher {
 		}
 	}
 
-	private static void fixVersion(Transformations transformations) {
+	private static void fixVersion(boolean sodium, Transformations transformations) {
 		String prefix = transformations.getPrefix();
 		int split = prefix.indexOf("#version");
 		String beforeVersion = prefix.substring(0, split);
@@ -454,7 +488,7 @@ public class TriforcePatcher {
 				throw new IllegalStateException("Expected \"compatibility\" after the GLSL version: #version " + actualVersion);
 			}
 		} else {
-			actualVersion = "150 core";
+			actualVersion = (sodium ? 460 : 150) + " core";
 		}
 
 		beforeVersion = beforeVersion.trim();

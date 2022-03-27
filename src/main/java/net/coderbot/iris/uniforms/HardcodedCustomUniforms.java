@@ -113,7 +113,7 @@ public class HardcodedCustomUniforms {
 		if (Minecraft.getInstance().level == null) {
 			return 0;
 		}
-		Biome.Precipitation precipitation = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().getCameraEntity().blockPosition()).value().getPrecipitation();
+		Biome.Precipitation precipitation = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().getCameraEntity().blockPosition()).getPrecipitation();
 		switch (precipitation) {
 			case RAIN:
 				return 1;

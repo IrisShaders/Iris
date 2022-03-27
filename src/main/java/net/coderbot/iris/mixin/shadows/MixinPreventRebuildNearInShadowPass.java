@@ -37,7 +37,7 @@ public abstract class MixinPreventRebuildNearInShadowPass {
 	@Shadow
 	protected abstract void applyFrustum(Frustum frustum);
 
-	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
+	/*@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
 	@Inject(method = "setupRender",
 			at = @At(value = "INVOKE",
 					target = "Ljava/util/concurrent/atomic/AtomicReference;get()Ljava/lang/Object;"),
@@ -57,10 +57,10 @@ public abstract class MixinPreventRebuildNearInShadowPass {
 	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
 	@Inject(method = "setupRender",
 			at = @At(value = "INVOKE",
-					target = "net/caffeinemc/sodium/client/gl/device/RenderDevice.enterManagedCode ()V",
+					target = "Lnet/caffeinemc/gfx/api/device/RenderDevice;usePipeline(Lnet/caffeinemc/gfx/api/pipeline/Pipeline;Lnet/caffeinemc/gfx/api/device/commands/PipelineGate;)V",
 					remap = false),
 			require = 0)
 	private void iris$cannotInject(Camera camera, Frustum frustum, boolean bl, boolean bl2, CallbackInfo ci) {
 		// Dummy injection just to assert that either Sodium is present, or the vanilla injection passed.
-	}
+	}*/
 }

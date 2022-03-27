@@ -1,6 +1,5 @@
 package net.coderbot.iris;
 
-import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +13,7 @@ public class IrisLogging {
 	}
 
 	public void fatal(String fatal) {
-		this.logger.error(LogUtils.FATAL_MARKER, fatal);
+		this.logger.error(fatal);
 	}
 
 	public void error(String error) {

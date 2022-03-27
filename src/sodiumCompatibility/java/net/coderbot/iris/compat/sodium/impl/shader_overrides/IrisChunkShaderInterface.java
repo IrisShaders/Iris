@@ -1,36 +1,41 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.gfx.api.shader.BufferBlock;
 import net.caffeinemc.gfx.api.shader.ShaderBindingContext;
+import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.texunits.TextureUnit;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
-public class IrisChunkShaderInterface {
-	public final BufferBlock uniformCameraMatrices;
-	public final BufferBlock uniformFogParameters;
-	public final BufferBlock uniformInstanceData;
-
+public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	private BlendModeOverride blendModeOverride;
 	private ProgramUniforms irisProgramUniforms;
 	private ProgramSamplers irisProgramSamplers;
 	private ProgramImages irisProgramImages;
+	private IrisTerrainPass pass;
+	private int handle;
 
 	public IrisChunkShaderInterface(ShaderBindingContext context) {
-		this.uniformCameraMatrices = context.bindUniformBlock("ubo_CameraMatrices", 0);
-		this.uniformFogParameters = context.bindUniformBlock("ubo_FogParameters", 1);
-		this.uniformInstanceData = context.bindUniformBlock("ubo_InstanceData", 2);
+		super(context);
 	}
 
-	public void setInfo(boolean isShadowPass, SodiumTerrainPipeline pipeline, int handle, BlendModeOverride blendModeOverride) {
+	public void setInfo(boolean isShadowPass, SodiumTerrainPipeline pipeline, int handle, IrisTerrainPass pass, BlendModeOverride blendModeOverride) {
 		this.blendModeOverride = blendModeOverride;
 
+		this.pass = pass;
+		this.handle = handle;
 		this.irisProgramUniforms = pipeline.initUniforms(handle);
 		this.irisProgramSamplers
 			= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
@@ -38,12 +43,8 @@ public class IrisChunkShaderInterface {
 	}
 
 	public void setup() {
-		// See IrisSamplers#addLevelSamplers
-		RenderSystem.activeTexture(TextureUnit.TERRAIN.getUnitId());
-		RenderSystem.bindTexture(RenderSystem.getShaderTexture(0));
-		RenderSystem.activeTexture(TextureUnit.LIGHTMAP.getUnitId());
-		RenderSystem.bindTexture(RenderSystem.getShaderTexture(2));
-
+		GlStateManager._glUseProgram(handle);
+		getFramebuffer(pass).bind();
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();
 		}
@@ -56,6 +57,38 @@ public class IrisChunkShaderInterface {
 	public void restore() {
 		if (blendModeOverride != null) {
 			BlendModeOverride.restore();
+		}
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+	}
+
+	public GlFramebuffer getFramebuffer(IrisTerrainPass pass) {
+		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
+		boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
+
+		if (pipeline != null) {
+			GlFramebuffer framebuffer;
+
+			if (isShadowPass) {
+				framebuffer = pipeline.getShadowFramebuffer();
+			} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+				framebuffer = pipeline.getTranslucentFramebuffer();
+			} else {
+				framebuffer = pipeline.getTerrainFramebuffer();
+			}
+
+			return framebuffer;
+		}
+
+		return null;
+	}
+
+	private SodiumTerrainPipeline getSodiumTerrainPipeline() {
+		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (worldRenderingPipeline != null) {
+			return worldRenderingPipeline.getSodiumTerrainPipeline();
+		} else {
+			return null;
 		}
 	}
 }

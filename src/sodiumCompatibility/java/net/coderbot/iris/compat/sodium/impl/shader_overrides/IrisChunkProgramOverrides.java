@@ -9,19 +9,14 @@ import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.passes.DefaultRenderPasses;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
-import net.caffeinemc.sodium.render.shader.ShaderLoader;
-import net.caffeinemc.sodium.render.shader.ShaderParser;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
@@ -29,7 +24,7 @@ import java.util.Optional;
 
 public class IrisChunkProgramOverrides {
 	private boolean shadersCreated = false;
-    private final EnumMap<IrisTerrainPass, Program<IrisChunkShaderInterface>> programs = new EnumMap<>(IrisTerrainPass.class);
+    private final EnumMap<IrisTerrainPass, Program<ChunkShaderInterface>> programs = new EnumMap<>(IrisTerrainPass.class);
 
 	private String createVertexShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
 		Optional<String> irisVertexShader;
@@ -109,12 +104,21 @@ public class IrisChunkProgramOverrides {
 	}
 
     @Nullable
-    private Program<IrisChunkShaderInterface> createShader(RenderDevice device, IrisTerrainPass pass, TerrainVertexType type, SodiumTerrainPipeline pipeline) {
+    private Program<ChunkShaderInterface> createShader(RenderDevice device, IrisTerrainPass pass, TerrainVertexType type, SodiumTerrainPipeline pipeline) {
 		ShaderConstants constants = getShaderConstants(pass, type);
 		String vertShader = createVertexShader(pass, pipeline);
 		String geomShader = createGeometryShader(pass, pipeline);
 		String fragShader = createFragmentShader(pass, pipeline);
 		ShaderDescription.Builder builder = ShaderDescription.builder().addShaderSource(ShaderType.VERTEX, vertShader);
+
+		if (fragShader == null || vertShader == null) {
+			if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
+				return null;
+			} else {
+				throw new RuntimeException("Shader source is null for pass " + pass.getName());
+			}
+		}
+
 		if (geomShader != null) {
 			builder = builder.addShaderSource(ShaderType.GEOMETRY, geomShader);
 		}
@@ -130,9 +134,9 @@ public class IrisChunkProgramOverrides {
 			.addFragmentBinding("iris_FragData", 0)
 			.build();
 
-		Program<IrisChunkShaderInterface> interfaces = device.createProgram(desc, IrisChunkShaderInterface::new);
+		Program<ChunkShaderInterface> interfaces = device.createProgram(desc, IrisChunkShaderInterface::new);
 
-		interfaces.getInterface().setInfo(pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, pipeline, GlProgram.getHandle(interfaces), getBlendOverride(pass, pipeline));
+		((IrisChunkShaderInterface) interfaces.getInterface()).setInfo(pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, pipeline, GlProgram.getHandle(interfaces), pass, getBlendOverride(pass, pipeline));
 
 		return interfaces;
     }
@@ -164,7 +168,7 @@ public class IrisChunkProgramOverrides {
     }
 
     @Nullable
-    public Program<IrisChunkShaderInterface> getProgramOverride(RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
+    public Program<ChunkShaderInterface> getProgramOverride(RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
         if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
             deleteShaders(device);
         }
@@ -190,39 +194,11 @@ public class IrisChunkProgramOverrides {
         }
     }
 
-    public void bindFramebuffer(ChunkRenderPass pass) {
-		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
-		boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 
-		if (pipeline != null) {
-			GlFramebuffer framebuffer;
-
-			if (isShadowPass) {
-				framebuffer = pipeline.getShadowFramebuffer();
-			} else if (pass == DefaultRenderPasses.TRANSLUCENT || pass == DefaultRenderPasses.TRIPWIRE) {
-				framebuffer = pipeline.getTranslucentFramebuffer();
-			} else {
-				framebuffer = pipeline.getTerrainFramebuffer();
-			}
-
-			if (framebuffer != null) {
-				framebuffer.bind();
-			}
-		}
-	}
-
-	public void unbindFramebuffer() {
-		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
-
-		if (pipeline != null) {
-			// TODO: Bind the framebuffer to whatever fallback is specified by SodiumTerrainPipeline.
-			Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
-		}
-	}
 
     public void deleteShaders(RenderDevice device) {
         for (Program<?> program : this.programs.values()) {
-            if (program != null) {
+            if (program != null && ((GlObjectExt) program).getHandle() != -2147483648) {
                 device.deleteProgram(program);
             }
         }

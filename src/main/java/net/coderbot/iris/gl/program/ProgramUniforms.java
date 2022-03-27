@@ -270,7 +270,9 @@ public class ProgramUniforms {
 		@Override
 		public Builder addDynamicUniform(Uniform uniform, ValueUpdateNotifier notifier) {
 			dynamic.put(locations.get(uniform.getLocation()), uniform);
-			notifiersToReset.add(notifier);
+			if (notifier != null) {
+				notifiersToReset.add(notifier);
+			}
 
 			return this;
 		}

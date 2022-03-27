@@ -1,10 +1,10 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer;
 
-import net.caffeinemc.sodium.client.model.vertex.VanillaVertexTypes;
-import net.caffeinemc.sodium.client.model.vertex.buffer.VertexBufferView;
-import net.caffeinemc.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
-import net.caffeinemc.sodium.client.model.vertex.formats.quad.QuadVertexSink;
-import net.caffeinemc.sodium.client.util.Norm3b;
+import net.caffeinemc.sodium.interop.vanilla.vertex.VanillaVertexFormats;
+import net.caffeinemc.sodium.interop.vanilla.vertex.formats.quad.QuadVertexSink;
+import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferView;
+import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferWriterNio;
+import net.caffeinemc.sodium.util.packed.Normal3b;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 
@@ -18,7 +18,7 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 	private int vertexCount;
 
 	public EntityVertexBufferWriterNio(VertexBufferView backingBuffer) {
-		super(backingBuffer, VanillaVertexTypes.QUADS);
+		super(backingBuffer, VanillaVertexFormats.QUADS);
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 		this.advance();
 
 		if (vertexCount == 4) {
-			this.endQuad(vertexCount, Norm3b.unpackX(normal), Norm3b.unpackY(normal), Norm3b.unpackZ(normal));
+			this.endQuad(vertexCount, Normal3b.unpackX(normal), Normal3b.unpackY(normal), Normal3b.unpackZ(normal));
 		}
 	}
 

@@ -1,6 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderer;
+import net.caffeinemc.sodium.render.chunk.draw.DefaultChunkRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
@@ -13,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ChunkRenderer.class)
+@Mixin(DefaultChunkRenderer.class)
 public class MixinRegionChunkRenderer {
 	/*@Shadow(remap = false)
 	@Final

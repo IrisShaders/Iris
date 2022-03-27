@@ -38,7 +38,7 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-		return validSodiumVersion;
+		return true;
 	}
 
 	@Override
