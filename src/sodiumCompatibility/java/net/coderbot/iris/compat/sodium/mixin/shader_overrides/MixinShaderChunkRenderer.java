@@ -1,10 +1,5 @@
 package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.caffeinemc.gfx.api.array.VertexArrayDescription;
-import net.caffeinemc.gfx.api.array.VertexArrayResourceBinding;
-import net.caffeinemc.gfx.api.array.attribute.VertexAttributeBinding;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.shader.Program;
@@ -17,13 +12,10 @@ import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
 import net.caffeinemc.sodium.render.shader.ShaderLoader;
 import net.caffeinemc.sodium.render.shader.ShaderParser;
-import net.caffeinemc.sodium.render.terrain.format.TerrainMeshAttribute;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.GlObjectExt;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
-import net.coderbot.iris.gl.program.ProgramUniforms;
-import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.resources.ResourceLocation;
@@ -37,8 +29,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-
 /**
  * Overrides shaders in {@link ShaderChunkRenderer} with our own as needed.
  */
@@ -46,9 +36,6 @@ import java.util.List;
 public abstract class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
     @Unique
     private IrisChunkProgramOverrides irisChunkProgramOverrides;
-
-    @Unique
-    private GlProgram<IrisChunkShaderInterface> override;
 
     @Shadow(remap = false)
 	@Final
@@ -66,20 +53,30 @@ public abstract class MixinShaderChunkRenderer implements ShaderChunkRendererExt
 		return null;
 	}
 
+	@Shadow
+	public abstract void delete();
+
+	@Shadow
+	protected abstract Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> createPipeline(ChunkRenderPass pass);
+
 	@Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void iris$onInit(RenderDevice device, TerrainVertexType vertexType, CallbackInfo ci) {
         irisChunkProgramOverrides = new IrisChunkProgramOverrides();
     }
 
-	/**
-	 * @author
-	 */
+	@Overwrite(remap = false)
+	protected Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> getPipeline(ChunkRenderPass pass) {
+		return this.createPipeline(pass);
+	}
+		/**
+		 * @author
+		 */
 	@Overwrite(remap = false)
 	private Program<ChunkShaderInterface> createProgram(ChunkRenderPass pass) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return irisChunkProgramOverrides.getProgramOverride(device, pass, vertexType);
 		} else {
-			ShaderConstants constants = this.getShaderConstants(pass, this.vertexType);
+			ShaderConstants constants = getShaderConstants(pass, this.vertexType);
 			String vertShader = ShaderParser.parseShader(ShaderLoader.MINECRAFT_ASSETS, new ResourceLocation("sodium", "blocks/block_layer_opaque.vsh"), constants);
 			String fragShader = ShaderParser.parseShader(ShaderLoader.MINECRAFT_ASSETS, new ResourceLocation("sodium", "blocks/block_layer_opaque.fsh"), constants);
 			ShaderDescription desc = ShaderDescription.builder().addShaderSource(ShaderType.VERTEX, vertShader).addShaderSource(ShaderType.FRAGMENT, fragShader).addAttributeBinding("a_Position", 1).addAttributeBinding("a_Color", 2).addAttributeBinding("a_TexCoord", 3).addAttributeBinding("a_LightCoord", 4).addFragmentBinding("fragColor", 0).build();
@@ -100,7 +97,7 @@ public abstract class MixinShaderChunkRenderer implements ShaderChunkRendererExt
     }
 
 	@Override
-	public GlProgram<IrisChunkShaderInterface> iris$getOverride() {
-		return override;
+	public IrisChunkProgramOverrides iris$getOverrides() {
+		return irisChunkProgramOverrides;
 	}
 }

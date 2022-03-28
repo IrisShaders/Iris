@@ -12,8 +12,10 @@ import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.region.RenderRegion;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.irisshaders.iris.api.v0.IrisApi;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,12 +33,14 @@ public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer imple
 
 	@Shadow
 	protected abstract void updateUniforms(ChunkRenderMatrices matrices, ChunkShaderInterface programInterface, PipelineState state);
-
 	@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/sodium/render/chunk/draw/DefaultChunkRenderer;getPipeline(Lnet/caffeinemc/sodium/render/chunk/passes/ChunkRenderPass;)Lnet/caffeinemc/gfx/api/pipeline/Pipeline;"))
 	private Pipeline setup(DefaultChunkRenderer instance, ChunkRenderPass chunkRenderPass) {
 		Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> pipeline = this.getPipeline(chunkRenderPass);
 		if (pipeline.getProgram() != null && pipeline.getProgram().getInterface() instanceof IrisChunkShaderInterface programInterface2) {
 			programInterface2.setup();
+			if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+				Iris.getPipelineManager().getPipeline().ifPresent(worldRenderingPipeline -> worldRenderingPipeline.getSodiumTerrainPipeline().getShadowFramebuffer().bind());
+			}
 		}
 		return pipeline;
 	}

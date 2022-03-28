@@ -23,6 +23,7 @@
     "separate_ao.MixinBlockRenderer",
     "separate_ao.MixinFluidRenderer",
     "shader_overrides.MixinGlObject",
+    "shader_overrides.MixinGlProgram",
     "shader_overrides.MixinRegionChunkRenderer",
     "shader_overrides.MixinShaderChunkRenderer",
     "shadow_map.MixinRenderSectionManager",

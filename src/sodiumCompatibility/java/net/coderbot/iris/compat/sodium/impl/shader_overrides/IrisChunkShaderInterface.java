@@ -43,16 +43,21 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	}
 
 	public void setup() {
-		GlStateManager._glUseProgram(handle);
-		getFramebuffer(pass).bind();
+		if (Iris.getPipelineManager().getPipelineNullable() != null) {
+			GlStateManager._glUseProgram(handle);
+			GlFramebuffer framebuffer = getFramebuffer(pass);
+			if (framebuffer != null) {
+				framebuffer.bind();
+			}
 
-		if (blendModeOverride != null) {
-			blendModeOverride.apply();
+			if (blendModeOverride != null) {
+				blendModeOverride.apply();
+			}
+
+			irisProgramUniforms.update();
+			irisProgramSamplers.update();
+			irisProgramImages.update();
 		}
-
-		irisProgramUniforms.update();
-		irisProgramSamplers.update();
-		irisProgramImages.update();
 	}
 
 	public void restore() {
@@ -64,12 +69,11 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 
 	public GlFramebuffer getFramebuffer(IrisTerrainPass pass) {
 		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
-		boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 
 		if (pipeline != null) {
 			GlFramebuffer framebuffer;
 
-			if (isShadowPass) {
+			if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
 				framebuffer = pipeline.getShadowFramebuffer();
 			} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
 				framebuffer = pipeline.getTranslucentFramebuffer();

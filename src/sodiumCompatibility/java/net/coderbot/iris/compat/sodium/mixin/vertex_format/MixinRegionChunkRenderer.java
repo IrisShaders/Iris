@@ -1,21 +1,44 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
-import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderer;
-import net.caffeinemc.sodium.render.chunk.draw.DefaultChunkRenderer;
+import net.caffeinemc.gfx.api.array.VertexArrayResourceBinding;
+import net.caffeinemc.gfx.api.array.attribute.VertexAttributeBinding;
+import net.caffeinemc.gfx.api.array.attribute.VertexFormat;
+import net.caffeinemc.sodium.render.chunk.draw.ShaderChunkRenderer;
+import net.caffeinemc.sodium.render.terrain.format.TerrainMeshAttribute;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
+import net.irisshaders.iris.api.v0.IrisApi;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(DefaultChunkRenderer.class)
+@Mixin(ShaderChunkRenderer.class)
 public class MixinRegionChunkRenderer {
+	@Shadow
+	@Final
+	protected VertexFormat<TerrainMeshAttribute> vertexFormat;
+
+	@ModifyArg(method = "createPipeline", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/gfx/api/array/VertexArrayResourceBinding;<init>(Ljava/lang/Enum;[Lnet/caffeinemc/gfx/api/array/attribute/VertexAttributeBinding;)V"))
+	private VertexAttributeBinding[] addBindings(VertexAttributeBinding[] attributeBindings) {
+		if (Iris.isPackActive()) {
+			return ArrayUtils.addAll(attributeBindings,
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
+					this.vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
+					vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
+					vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
+					vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL)));
+		}
+
+		return attributeBindings;
+	}
 	/*@Shadow(remap = false)
 	@Final
 	@Mutable

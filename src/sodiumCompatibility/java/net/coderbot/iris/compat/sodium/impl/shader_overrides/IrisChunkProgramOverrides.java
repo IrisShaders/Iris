@@ -124,7 +124,8 @@ public class IrisChunkProgramOverrides {
 			builder = builder.addShaderSource(ShaderType.GEOMETRY, geomShader);
 		}
 
-		ShaderDescription desc = builder.addShaderSource(ShaderType.FRAGMENT, fragShader).addAttributeBinding("a_Position", 1)
+		ShaderDescription desc = builder.addShaderSource(ShaderType.FRAGMENT, fragShader)
+			.addAttributeBinding("a_Position", 1)
 			.addAttributeBinding("a_Color", 2)
 			.addAttributeBinding("a_TexCoord", 3)
 			.addAttributeBinding("a_LightCoord", 4)
