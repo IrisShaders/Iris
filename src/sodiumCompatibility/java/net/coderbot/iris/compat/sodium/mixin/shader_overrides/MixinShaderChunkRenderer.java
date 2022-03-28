@@ -1,6 +1,10 @@
 package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.caffeinemc.gfx.api.array.VertexArrayDescription;
+import net.caffeinemc.gfx.api.array.VertexArrayResourceBinding;
+import net.caffeinemc.gfx.api.array.attribute.VertexAttributeBinding;
+import net.caffeinemc.gfx.api.array.attribute.VertexFormat;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.shader.Program;
@@ -12,11 +16,14 @@ import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
 import net.caffeinemc.sodium.render.shader.ShaderLoader;
 import net.caffeinemc.sodium.render.shader.ShaderParser;
+import net.caffeinemc.sodium.render.terrain.format.TerrainMeshAttribute;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.GlObjectExt;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.resources.ResourceLocation;
@@ -31,6 +38,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,6 +79,9 @@ public abstract class MixinShaderChunkRenderer implements ShaderChunkRendererExt
 	@Final
 	private Map<ChunkRenderPass, Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> pipelines;
 
+	@Shadow
+	@Final
+	protected VertexFormat<TerrainMeshAttribute> vertexFormat;
 	@Unique
 	private final Map<ChunkRenderPass, Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> shadowPipelines = new Object2ObjectOpenHashMap();
 
@@ -82,28 +93,42 @@ public abstract class MixinShaderChunkRenderer implements ShaderChunkRendererExt
         irisChunkProgramOverrides = new IrisChunkProgramOverrides();
     }
 
-	@Redirect(method = "getProgram", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/draw/ShaderChunkRenderer;programs:Ljava/util/Map;"))
-	private Map<ChunkRenderPass, Program<ChunkShaderInterface>> redirectShadowProgram(ShaderChunkRenderer instance) {
-		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowPrograms : programs;
+	/**
+	 * @author IMS
+	 */
+	@Overwrite(remap = false)
+	protected Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> getPipeline(ChunkRenderPass pass) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			return this.shadowPipelines.computeIfAbsent(pass, this::createShadowPipeline);
+		} else {
+			return this.pipelines.computeIfAbsent(pass, this::createPipeline);
+		}
 	}
 
-	@Redirect(method = "getPipeline", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/draw/ShaderChunkRenderer;pipelines:Ljava/util/Map;"))
-	private Map<ChunkRenderPass, Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> redirectShadowPipeline(ShaderChunkRenderer instance) {
-		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowPipelines : pipelines;
-	}
-
-	@Inject(method = "getPipeline", at = @At("HEAD"), cancellable = true)
-	protected void getPipeline(ChunkRenderPass pass, CallbackInfoReturnable<Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> cir) {
-
+	private Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> createShadowPipeline(ChunkRenderPass pass) {
+		Program<ChunkShaderInterface> program = this.getIrisProgram(true, pass);
+		VertexArrayDescription<ShaderChunkRenderer.BufferTarget> vertexArray = new VertexArrayDescription(ShaderChunkRenderer.BufferTarget.values(), List.of(new VertexArrayResourceBinding(ShaderChunkRenderer.BufferTarget.VERTICES, new VertexAttributeBinding[]{new VertexAttributeBinding(1, this.vertexFormat.getAttribute(TerrainMeshAttribute.POSITION)), new VertexAttributeBinding(2, this.vertexFormat.getAttribute(TerrainMeshAttribute.COLOR)), new VertexAttributeBinding(3, this.vertexFormat.getAttribute(TerrainMeshAttribute.BLOCK_TEXTURE)), new VertexAttributeBinding(4, this.vertexFormat.getAttribute(TerrainMeshAttribute.LIGHT_TEXTURE)),new VertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
+			this.vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
+			new VertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
+			new VertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
+			new VertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))})));
+		return this.device.createPipeline(pass.pipelineDescription(), program, vertexArray);
 	}
 
 	/**
-	 * @author
+	 * @author IMS
 	 */
 	@Overwrite(remap = false)
 	private Program<ChunkShaderInterface> createProgram(ChunkRenderPass pass) {
+		return this.getIrisProgram(false, pass);
+	}
+
+	private Program<ChunkShaderInterface> getIrisProgram(boolean isShadowPass, ChunkRenderPass pass) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
-			return irisChunkProgramOverrides.getProgramOverride(device, pass, vertexType);
+			return irisChunkProgramOverrides.getProgramOverride(isShadowPass, device, pass, vertexType);
 		} else {
 			ShaderConstants constants = getShaderConstants(pass, this.vertexType);
 			String vertShader = ShaderParser.parseShader(ShaderLoader.MINECRAFT_ASSETS, new ResourceLocation("sodium", "blocks/block_layer_opaque.vsh"), constants);

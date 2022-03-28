@@ -7,6 +7,7 @@ import net.caffeinemc.gfx.api.shader.ShaderType;
 import net.caffeinemc.gfx.opengl.shader.GlProgram;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.passes.DefaultRenderPasses;
+import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
@@ -123,14 +124,15 @@ public class IrisChunkProgramOverrides {
 		}
 
 		ShaderDescription desc = builder.addShaderSource(ShaderType.FRAGMENT, fragShader)
-			.addAttributeBinding("a_Position", 1)
-			.addAttributeBinding("a_Color", 2)
-			.addAttributeBinding("a_TexCoord", 3)
-			.addAttributeBinding("a_LightCoord", 4)
+			.addAttributeBinding("a_Position", ChunkShaderBindingPoints.ATTRIBUTE_POSITION)
+			.addAttributeBinding("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
+			.addAttributeBinding("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE)
+			.addAttributeBinding("a_LightCoord", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE)
 			.addAttributeBinding("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
 			.addAttributeBinding("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
 			.addAttributeBinding("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
 			.addAttributeBinding("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
+			.addFragmentBinding("iris_FragData", ChunkShaderBindingPoints.FRAG_COLOR)
 			.build();
 
 		Program<ChunkShaderInterface> interfaces = device.createProgram(desc, IrisChunkShaderInterface::new);
@@ -163,15 +165,13 @@ public class IrisChunkProgramOverrides {
 				}
                 this.programs.put(pass, createShader(device, pass, vertexType, pipeline));
             }
-        } else {
-            this.programs.clear();
         }
 
         shadersCreated = true;
     }
 
     @Nullable
-    public Program<ChunkShaderInterface> getProgramOverride(RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
+    public Program<ChunkShaderInterface> getProgramOverride(boolean isShadowPass, RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
         if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
             deleteShaders(device);
 			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
@@ -181,7 +181,7 @@ public class IrisChunkProgramOverrides {
 			createShaders(device, vertexType);
 		}
 
-        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+        if (isShadowPass) {
         	if (pass == DefaultRenderPasses.CUTOUT || pass == DefaultRenderPasses.CUTOUT_MIPPED) {
 				return this.programs.get(IrisTerrainPass.SHADOW_CUTOUT);
 			} else {
