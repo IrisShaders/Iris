@@ -5,6 +5,8 @@ import net.caffeinemc.gfx.api.device.commands.RenderCommandList;
 import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.pipeline.PipelineState;
 import net.caffeinemc.gfx.api.texture.Sampler;
+import net.caffeinemc.sodium.render.chunk.draw.ChunkCameraContext;
+import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderList;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderMatrices;
 import net.caffeinemc.sodium.render.chunk.draw.DefaultChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.draw.ShaderChunkRenderer;
@@ -32,15 +34,11 @@ public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer imple
 		super(device, vertexType);
 	}
 
-	@Shadow
-	protected abstract void updateUniforms(ChunkRenderMatrices matrices, ChunkShaderInterface programInterface, PipelineState state);
-	@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/sodium/render/chunk/draw/DefaultChunkRenderer;getPipeline(Lnet/caffeinemc/sodium/render/chunk/passes/ChunkRenderPass;)Lnet/caffeinemc/gfx/api/pipeline/Pipeline;"))
-	private Pipeline setup(DefaultChunkRenderer instance, ChunkRenderPass chunkRenderPass) {
-		Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> pipeline = this.getPipeline(chunkRenderPass);
-		if (pipeline != null && pipeline.getProgram() != null && pipeline.getProgram().getInterface() instanceof IrisChunkShaderInterface programInterface2) {
+	@Inject(method = "lambda$render$0", at = @At("HEAD"))
+	private void setup(ChunkRenderPass pass, ChunkRenderMatrices matrices, ChunkRenderList list, ChunkCameraContext camera, RenderCommandList commandList, ChunkShaderInterface chunkShaderInterface, PipelineState state, CallbackInfo ci) {
+		if (chunkShaderInterface instanceof IrisChunkShaderInterface programInterface2) {
 			programInterface2.setup();
 		}
-		return pipeline;
 	}
 
 	@Redirect(method = "bindTextures", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/gfx/api/pipeline/PipelineState;bindTexture(IILnet/caffeinemc/gfx/api/texture/Sampler;)V"))
@@ -51,11 +49,9 @@ public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer imple
 		instance.bindTexture(i, j, sampler);
 	}
 
-	@Inject(method = "executeDrawBatches", at = @At("TAIL"))
-	private void end(RenderCommandList<ShaderChunkRenderer.BufferTarget> renderCommandList, ChunkShaderInterface programInterface, PipelineState state, RenderRegion.Resources resources, DefaultChunkRenderer.Handles handles, CallbackInfo ci) {
-		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
-
-		if (programInterface instanceof IrisChunkShaderInterface programInterface2){
+	@Inject(method = "lambda$render$0", at = @At("TAIL"))
+	private void end(ChunkRenderPass pass, ChunkRenderMatrices matrices, ChunkRenderList list, ChunkCameraContext camera, RenderCommandList commandList, ChunkShaderInterface chunkShaderInterface, PipelineState state, CallbackInfo ci) {
+		if (chunkShaderInterface instanceof IrisChunkShaderInterface programInterface2) {
 			programInterface2.restore();
 		}
 	}
