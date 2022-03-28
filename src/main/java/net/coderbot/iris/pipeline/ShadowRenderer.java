@@ -559,7 +559,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.enableCull();
 
 		pipeline.endShadowRender();
-		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
 		// Restore the old viewport
 		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
@@ -572,6 +571,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		visibleBlockEntities = null;
 		ACTIVE = false;
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+
 		levelRenderer.getLevel().getProfiler().popPush("updatechunks");
 
 		BlendModeOverride.restore();

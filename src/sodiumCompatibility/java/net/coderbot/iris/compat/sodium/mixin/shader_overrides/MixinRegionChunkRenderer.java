@@ -37,11 +37,8 @@ public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer imple
 	@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/sodium/render/chunk/draw/DefaultChunkRenderer;getPipeline(Lnet/caffeinemc/sodium/render/chunk/passes/ChunkRenderPass;)Lnet/caffeinemc/gfx/api/pipeline/Pipeline;"))
 	private Pipeline setup(DefaultChunkRenderer instance, ChunkRenderPass chunkRenderPass) {
 		Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> pipeline = this.getPipeline(chunkRenderPass);
-		if (pipeline.getProgram() != null && pipeline.getProgram().getInterface() instanceof IrisChunkShaderInterface programInterface2) {
+		if (pipeline != null && pipeline.getProgram() != null && pipeline.getProgram().getInterface() instanceof IrisChunkShaderInterface programInterface2) {
 			programInterface2.setup();
-			if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-				Iris.getPipelineManager().getPipeline().ifPresent(worldRenderingPipeline -> worldRenderingPipeline.getSodiumTerrainPipeline().getShadowFramebuffer().bind());
-			}
 		}
 		return pipeline;
 	}

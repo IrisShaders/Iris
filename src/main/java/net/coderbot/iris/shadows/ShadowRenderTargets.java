@@ -2,6 +2,7 @@ package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
@@ -12,6 +13,7 @@ import org.lwjgl.opengl.GL13C;
 
 import java.nio.IntBuffer;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 public class ShadowRenderTargets {
 	// TODO: Make this match the value of GL_MAX_DRAW_BUFFERS (or whatever property name it is)

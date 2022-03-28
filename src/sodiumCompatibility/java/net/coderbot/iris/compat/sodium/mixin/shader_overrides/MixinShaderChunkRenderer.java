@@ -92,12 +92,9 @@ public abstract class MixinShaderChunkRenderer implements ShaderChunkRendererExt
 		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowPipelines : pipelines;
 	}
 
-	@Inject(method = "getPipeline", at = @At("HEAD"))
+	@Inject(method = "getPipeline", at = @At("HEAD"), cancellable = true)
 	protected void getPipeline(ChunkRenderPass pass, CallbackInfoReturnable<Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> cir) {
-		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
-			deletePrograms();
-			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
-		}
+
 	}
 
 	/**
