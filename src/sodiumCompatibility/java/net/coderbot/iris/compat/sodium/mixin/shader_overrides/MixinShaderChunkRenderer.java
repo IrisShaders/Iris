@@ -1,11 +1,11 @@
 package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.shader.Program;
 import net.caffeinemc.gfx.api.shader.ShaderDescription;
 import net.caffeinemc.gfx.api.shader.ShaderType;
-import net.caffeinemc.gfx.opengl.shader.GlProgram;
 import net.caffeinemc.sodium.render.chunk.draw.ShaderChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
@@ -13,10 +13,11 @@ import net.caffeinemc.sodium.render.shader.ShaderConstants;
 import net.caffeinemc.sodium.render.shader.ShaderLoader;
 import net.caffeinemc.sodium.render.shader.ShaderParser;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.GlObjectExt;
-import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Final;
@@ -28,6 +29,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Map;
 
 /**
  * Overrides shaders in {@link ShaderChunkRenderer} with our own as needed.
@@ -59,18 +63,46 @@ public abstract class MixinShaderChunkRenderer implements ShaderChunkRendererExt
 	@Shadow
 	protected abstract Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> createPipeline(ChunkRenderPass pass);
 
+	@Shadow
+	@Final
+	private Map<ChunkRenderPass, Program<ChunkShaderInterface>> programs;
+
+	@Shadow
+	@Final
+	private Map<ChunkRenderPass, Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> pipelines;
+
+	@Unique
+	private final Map<ChunkRenderPass, Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> shadowPipelines = new Object2ObjectOpenHashMap();
+
+	@Unique
+	private final Map<ChunkRenderPass, Program<ChunkShaderInterface>> shadowPrograms = new Object2ObjectOpenHashMap();
+
 	@Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void iris$onInit(RenderDevice device, TerrainVertexType vertexType, CallbackInfo ci) {
         irisChunkProgramOverrides = new IrisChunkProgramOverrides();
     }
 
-	@Overwrite(remap = false)
-	protected Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget> getPipeline(ChunkRenderPass pass) {
-		return this.createPipeline(pass);
+	@Redirect(method = "getProgram", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/draw/ShaderChunkRenderer;programs:Ljava/util/Map;"))
+	private Map<ChunkRenderPass, Program<ChunkShaderInterface>> redirectShadowProgram(ShaderChunkRenderer instance) {
+		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowPrograms : programs;
 	}
-		/**
-		 * @author
-		 */
+
+	@Redirect(method = "getPipeline", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/draw/ShaderChunkRenderer;pipelines:Ljava/util/Map;"))
+	private Map<ChunkRenderPass, Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> redirectShadowPipeline(ShaderChunkRenderer instance) {
+		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowPipelines : pipelines;
+	}
+
+	@Inject(method = "getPipeline", at = @At("HEAD"))
+	protected void getPipeline(ChunkRenderPass pass, CallbackInfoReturnable<Pipeline<ChunkShaderInterface, ShaderChunkRenderer.BufferTarget>> cir) {
+		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
+			deletePrograms();
+			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
+		}
+	}
+
+	/**
+	 * @author
+	 */
 	@Overwrite(remap = false)
 	private Program<ChunkShaderInterface> createProgram(ChunkRenderPass pass) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
@@ -86,15 +118,33 @@ public abstract class MixinShaderChunkRenderer implements ShaderChunkRendererExt
 
 	@Redirect(method = "delete", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/gfx/api/device/RenderDevice;deleteProgram(Lnet/caffeinemc/gfx/api/shader/Program;)V"))
 	private void checkHandleFirst(RenderDevice instance, Program program) {
-		if (((GlObjectExt) program).getHandle() != -2147483648) {
+		if (((GlObjectExt) program).isHandleValid()) {
 			instance.deleteProgram(program);
 		}
 	}
 
     @Inject(method = "delete", at = @At("HEAD"), remap = false)
     private void iris$onDelete(CallbackInfo ci) {
-        irisChunkProgramOverrides.deleteShaders(this.device);
-    }
+		deletePrograms();
+	}
+
+	private void deletePrograms() {
+		for (var pipeline : this.shadowPipelines.values()) {
+			this.device.deletePipeline(pipeline);
+		}
+
+		this.shadowPipelines.clear();
+
+		for (var program : this.shadowPrograms.values()) {
+			if (((GlObjectExt) program).isHandleValid()) {
+				this.device.deleteProgram(program);
+			}
+		}
+
+		this.shadowPrograms.clear();
+
+		irisChunkProgramOverrides.deleteShaders(this.device);
+	}
 
 	@Override
 	public IrisChunkProgramOverrides iris$getOverrides() {

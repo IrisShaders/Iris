@@ -7,13 +7,11 @@ import net.caffeinemc.gfx.api.shader.ShaderType;
 import net.caffeinemc.gfx.opengl.shader.GlProgram;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.passes.DefaultRenderPasses;
-import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
@@ -176,6 +174,7 @@ public class IrisChunkProgramOverrides {
     public Program<ChunkShaderInterface> getProgramOverride(RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
         if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
             deleteShaders(device);
+			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
         }
 
         if (!shadersCreated) {
@@ -203,7 +202,7 @@ public class IrisChunkProgramOverrides {
 
     public void deleteShaders(RenderDevice device) {
         for (Program<?> program : this.programs.values()) {
-            if (program != null && ((GlObjectExt) program).getHandle() != -2147483648) {
+            if (program != null && ((GlObjectExt) program).isHandleValid()) {
                 device.deleteProgram(program);
             }
         }

@@ -11,7 +11,7 @@ public class MixinGlObject implements GlObjectExt {
 	private int handle;
 
 	@Override
-	public int getHandle() {
-		return this.handle;
+	public boolean isHandleValid() {
+		return this.handle != -2147483648;
 	}
 }

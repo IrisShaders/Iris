@@ -18,6 +18,7 @@ import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRenderer
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.irisshaders.iris.api.v0.IrisApi;
+import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -55,6 +56,8 @@ public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer imple
 
 	@Inject(method = "executeDrawBatches", at = @At("TAIL"))
 	private void end(RenderCommandList<ShaderChunkRenderer.BufferTarget> renderCommandList, ChunkShaderInterface programInterface, PipelineState state, RenderRegion.Resources resources, DefaultChunkRenderer.Handles handles, CallbackInfo ci) {
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+
 		if (programInterface instanceof IrisChunkShaderInterface programInterface2){
 			programInterface2.restore();
 		}
