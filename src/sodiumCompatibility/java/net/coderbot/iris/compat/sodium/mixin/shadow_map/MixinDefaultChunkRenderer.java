@@ -24,29 +24,15 @@ public class MixinDefaultChunkRenderer {
 	@Final
 	private MappedBuffer bufferCameraMatrices;
 
-	@Shadow
-	@Final
-	private MappedBuffer bufferFogParameters;
-
 	@Unique
 	private MappedBuffer bufferCameraMatricesShadow;
 
-	@Unique
-	private MappedBuffer bufferFogParametersShadow;
-
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void newBuffers(RenderDevice device, TerrainVertexType vertexType, CallbackInfo ci) {
-		this.bufferCameraMatricesShadow = device.createMappedBuffer(192L, EnumSet.of(BufferStorageFlags.PERSISTENT, BufferStorageFlags.MAP_WRITE), EnumSet.of(BufferMapFlags.WRITE, BufferMapFlags.EXPLICIT_FLUSH, BufferMapFlags.PERSISTENT));
-		this.bufferFogParametersShadow = device.createMappedBuffer(24L, EnumSet.of(BufferStorageFlags.PERSISTENT, BufferStorageFlags.MAP_WRITE), EnumSet.of(BufferMapFlags.WRITE, BufferMapFlags.EXPLICIT_FLUSH, BufferMapFlags.PERSISTENT));
+		this.bufferCameraMatricesShadow = device.createMappedBuffer(192L, EnumSet.of(BufferStorageFlags.WRITABLE, BufferStorageFlags.COHERENT, BufferStorageFlags.PERSISTENT), EnumSet.of(BufferMapFlags.WRITE, BufferMapFlags.COHERENT, BufferMapFlags.PERSISTENT));
 	}
 
-
-	@Redirect(method = "updateUniforms", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/draw/DefaultChunkRenderer;bufferFogParameters:Lnet/caffeinemc/gfx/api/buffer/MappedBuffer;"))
-	private MappedBuffer redirectFogParameters(DefaultChunkRenderer instance) {
-		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? bufferFogParametersShadow : bufferFogParameters;
-	}
-
-	@Redirect(method = "updateUniforms", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/draw/DefaultChunkRenderer;bufferCameraMatrices:Lnet/caffeinemc/gfx/api/buffer/MappedBuffer;"))
+	@Redirect(method = "setupUniforms", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/draw/DefaultChunkRenderer;bufferCameraMatrices:Lnet/caffeinemc/gfx/api/buffer/MappedBuffer;"))
 	private MappedBuffer redirectCameraMatrices(DefaultChunkRenderer instance) {
 		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? bufferCameraMatricesShadow : bufferCameraMatrices;
 	}

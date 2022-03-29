@@ -22,9 +22,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.EnumMap;
 import java.util.Optional;
 
-public class IrisChunkProgramOverrides {
+public class IrisChunkProgramOverrides<T> {
 	private boolean shadersCreated = false;
-    private final EnumMap<IrisTerrainPass, Program<ChunkShaderInterface>> programs = new EnumMap<>(IrisTerrainPass.class);
+    private final EnumMap<IrisTerrainPass, Program<T>> programs = new EnumMap<>(IrisTerrainPass.class);
 
 	private String createVertexShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
 		Optional<String> irisVertexShader;
@@ -104,7 +104,7 @@ public class IrisChunkProgramOverrides {
 	}
 
     @Nullable
-    private Program<ChunkShaderInterface> createShader(RenderDevice device, IrisTerrainPass pass, TerrainVertexType type, SodiumTerrainPipeline pipeline) {
+    private Program<T> createShader(RenderDevice device, IrisTerrainPass pass, TerrainVertexType type, SodiumTerrainPipeline pipeline) {
 		ShaderConstants constants = getShaderConstants(pass, type);
 		String vertShader = createVertexShader(pass, pipeline);
 		String geomShader = createGeometryShader(pass, pipeline);
@@ -139,7 +139,7 @@ public class IrisChunkProgramOverrides {
 
 		((IrisChunkShaderInterface) interfaces.getInterface()).setInfo(pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, pipeline, GlProgram.getHandle(interfaces), pass, getBlendOverride(pass, pipeline));
 
-		return interfaces;
+		return (Program<T>) interfaces;
     }
 
     private SodiumTerrainPipeline getSodiumTerrainPipeline() {
@@ -171,7 +171,7 @@ public class IrisChunkProgramOverrides {
     }
 
     @Nullable
-    public Program<ChunkShaderInterface> getProgramOverride(boolean isShadowPass, RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
+    public Program<T> getProgramOverride(boolean isShadowPass, RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
         if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
             deleteShaders(device);
 			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();

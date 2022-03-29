@@ -9,11 +9,7 @@ import net.caffeinemc.sodium.render.SodiumWorldRenderer;
 import net.caffeinemc.sodium.render.chunk.RenderSection;
 import net.caffeinemc.sodium.render.chunk.RenderSectionManager;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderList;
-import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderMatrices;
-import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPassManager;
-import net.caffeinemc.sodium.render.chunk.state.ChunkRenderBounds;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
@@ -29,7 +25,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -41,11 +36,6 @@ import java.util.Iterator;
  */
 @Mixin(RenderSectionManager.class)
 public class MixinRenderSectionManager implements SwappableRenderSectionManager {
-    @Shadow(remap = false)
-    @Final
-    @Mutable
-    private ChunkRenderList chunkRenderList;
-
     @Shadow(remap = false)
     @Final
     @Mutable
@@ -63,8 +53,13 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 	@Final
 	private boolean isBlockFaceCullingEnabled;
 
-    @Unique
-    private ChunkRenderList chunkRenderListSwap;
+	@Shadow(remap = false)
+	@Final
+	@Mutable
+	private ObjectList<RenderSection> visibleSections;
+
+	@Unique
+    private ObjectList<RenderSection> visibleSectionsSwap;
 
     @Unique
     private ObjectList<RenderSection> tickableChunksSwap;
@@ -81,7 +76,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void iris$onInit(RenderDevice device, SodiumWorldRenderer worldRenderer,
 							 ChunkRenderPassManager renderPassManager, ClientLevel world, int renderDistance, CallbackInfo ci) {
-        this.chunkRenderListSwap = new ChunkRenderList();
+        this.visibleSectionsSwap = new ObjectArrayList<>();
         this.tickableChunksSwap = new ObjectArrayList<>();
         this.visibleBlockEntitiesSwap = new ObjectArrayList<>();
         this.needsUpdateSwap = true;
@@ -89,9 +84,9 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 
     @Override
     public void iris$swapVisibilityState() {
-        ChunkRenderList chunkRenderListTmp = chunkRenderList;
-        chunkRenderList = chunkRenderListSwap;
-        chunkRenderListSwap = chunkRenderListTmp;
+        ObjectList<RenderSection> visibleSectionsTmp = visibleSections;
+		visibleSections = visibleSectionsSwap;
+        visibleSectionsSwap = visibleSectionsTmp;
 
         ObjectList<RenderSection> tickableChunksTmp = tickableChunks;
         tickableChunks = tickableChunksSwap;
