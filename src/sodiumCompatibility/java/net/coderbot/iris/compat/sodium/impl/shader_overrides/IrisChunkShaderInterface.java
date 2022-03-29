@@ -73,7 +73,7 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 		if (pipeline != null) {
 			GlFramebuffer framebuffer;
 
-			if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
+			if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT || ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 				framebuffer = pipeline.getShadowFramebuffer();
 			} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
 				framebuffer = pipeline.getTranslucentFramebuffer();

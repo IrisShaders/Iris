@@ -26,6 +26,7 @@
     "shader_overrides.MixinGlProgram",
     "shader_overrides.MixinRegionChunkRenderer",
     "shader_overrides.MixinShaderChunkRenderer",
+    "shadow_map.MixinDefaultChunkRenderer",
     "shadow_map.MixinRenderSectionManager",
     "shadow_map.MixinSodiumWorldRenderer",
     "shadow_map.frustum.MixinAdvancedShadowCullingFrustum",

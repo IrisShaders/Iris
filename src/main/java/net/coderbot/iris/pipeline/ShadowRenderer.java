@@ -369,7 +369,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// Ensure that the color and depth values are cleared appropriately
 		RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.clearDepth(1.0f);
-		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
+		RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
 
 		// Set up the viewport
 		RenderSystem.viewport(0, 0, resolution, resolution);
