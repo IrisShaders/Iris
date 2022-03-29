@@ -270,7 +270,7 @@ public class TriforcePatcher {
 		return transformations.toString();
 	}
 
-	public static String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
+	public static String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float vertexRange) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type, true);
@@ -278,7 +278,7 @@ public class TriforcePatcher {
 
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 
-		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
+		transformations.define("gl_ProjectionMatrix", "mat_proj");
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasTex()) {
@@ -312,52 +312,21 @@ public class TriforcePatcher {
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasNormal()) {
 				transformations.define("gl_Normal", "a_Normal");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 a_Normal;");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "layout(location = 7) in vec3 a_Normal;");
 			} else {
 				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
 		}
 
 		if (type == ShaderType.VERTEX) {
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define USE_VERTEX_COMPRESSION");
-		transformations.define("VERT_POS_SCALE", String.valueOf(positionScale));
-		transformations.define("VERT_POS_OFFSET", String.valueOf(positionOffset));
-		transformations.define("VERT_TEX_SCALE", String.valueOf(textureScale));
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define VERT_SCALE " + vertexRange);
 
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
-			layout(std140, binding = 0) uniform ubo_CameraMatrices {
-				    // The projection matrix
-				    mat4 u_ProjectionMatrix;
-				    
-				    // The model-view matrix
-				    mat4 u_ModelViewMatrix;
-				    
-				    // The model-view-projection matrix
-				    mat4 u_ModelViewProjectionMatrix;
-				};
-		""");
-
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
-
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
-			const uint MAX_INSTANCES = 8 * 4 * 8;
-				    
-				struct InstanceData {
-				    vec3 translation;
-				};
-						
-				layout(std140, binding = 1) uniform ubo_InstanceData {
-				    InstanceData instances[MAX_INSTANCES];
-				};
-				
-				vec4 getVertexPosition() {
-					InstanceData instance = instances[gl_BaseInstance];
-				    return vec4(instance.translation + _vert_position, 1.0);
-				}
-			""");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_format.vert>"));
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_view.vert>"));
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_draw.vert>"));
 	} else if (type == ShaderType.FRAGMENT) {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
-					        layout(std140, binding = 1) uniform ubo_FogParameters {
+					        layout(std140, binding = 2) uniform ubo_FogParameters {
 						             vec4 u_FogColor; // The color of the shader fog
 						             float u_FogStart; // The starting position of the shader fog
 						             float u_FogEnd; // The ending position of the shader fog
@@ -368,16 +337,16 @@ public class TriforcePatcher {
 
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
-		transformations.define("gl_NormalMatrix", "mat3(transpose(inverse(u_ModelViewMatrix)))");
+		transformations.define("gl_NormalMatrix", "mat3(transpose(inverse(mat_modelview)))");
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix u_ModelViewMatrix");
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix u_ModelViewProjectionMatrix");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix mat_modelview");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix mat_modelviewproj");
 
 		if (type == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to chunks.
 
-			transformations.define("gl_Vertex", "getVertexPosition()");
+			transformations.define("gl_Vertex", "vec4(_apply_view_transform(_vert_position), 1.0)");
 
 			if (transformations.contains("irisMain")) {
 				throw new IllegalStateException("Shader already contains \"irisMain\"???");
@@ -396,7 +365,7 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
 				
 				""");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return u_ModelViewProjectionMatrix * gl_Vertex; }");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return mat_modelviewproj * gl_Vertex; }");
 		}
 
 		// Just being careful

@@ -30,30 +30,6 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
     private Vector3f normal = new Vector3f();
 
 	@Override
-	public void copyQuadAndFlipNormal() {
-		ensureCapacity(4);
-
-		MemoryUtil.memCopy(this.writePointer - STRIDE * 4, this.writePointer, STRIDE * 4);
-
-		// Now flip vertex normals
-		int packedNormal = MemoryUtil.memGetInt(this.writePointer + 28);
-		int inverted = NormalHelper.invertPackedNormal(packedNormal);
-
-		MemoryUtil.memPutInt(this.writePointer + 28, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE * 2, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE * 3, inverted);
-
-		// We just wrote 4 vertices, advance by 4
-		for (int i = 0; i < 4; i++) {
-			this.advance();
-		}
-
-		// Ensure vertices are flushed
-		this.flush();
-	}
-
-	@Override
 	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light) {
 		uSum += u;
 		vSum += v;

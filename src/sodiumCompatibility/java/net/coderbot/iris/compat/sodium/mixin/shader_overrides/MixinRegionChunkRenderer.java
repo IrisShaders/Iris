@@ -59,43 +59,4 @@ public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer<Chunk
 	public MixinRegionChunkRenderer(RenderDevice device, TerrainVertexType vertexType) {
 		super(device, vertexType);
 	}
-
-	@Inject(method = "lambda$render$0", at = @At("HEAD"))
-	private void setup(ChunkRenderPass pass, ChunkRenderMatrices matrices, ChunkPrep.PreparedRenderList list, RenderCommandList commandList, ChunkShaderInterface chunkShaderInterface, PipelineState state, CallbackInfo ci) {
-		if (chunkShaderInterface instanceof IrisChunkShaderInterface programInterface2) {
-			programInterface2.setup();
-		}
-	}
-
-	@ModifyConstant(method="setupTextures", constant=@Constant(intValue=1))
-	private int redirectLightMap(int constant) {
-		if (IrisApi.getInstance().isShaderPackInUse()) {
-			return TextureUnit.LIGHTMAP.getSamplerId();
-		}
-		return constant;
-	}
-
-	@Inject(method = "lambda$render$0", at = @At("TAIL"))
-	private void end(ChunkRenderPass pass, ChunkRenderMatrices matrices, ChunkPrep.PreparedRenderList list, RenderCommandList commandList, ChunkShaderInterface chunkShaderInterface, PipelineState state, CallbackInfo ci) {
-		if (chunkShaderInterface instanceof IrisChunkShaderInterface programInterface2) {
-			programInterface2.restore();
-		}
-	}
-
-	/**
-	 * @author IMS
-	 */
-	@Override
-	public Program<ChunkShaderInterface> createProgram(ChunkRenderPass pass) {
-		Program<ChunkShaderInterface> program = this.getIrisProgram(false, pass);
-		if (program != null) {
-			return program;
-		} else {
-			ShaderConstants constants = getShaderConstants(pass, this.vertexType);
-			String vertShader = ShaderParser.parseShader(ShaderLoader.MINECRAFT_ASSETS, new ResourceLocation("sodium", "blocks/block_layer_opaque.vsh"), constants);
-			String fragShader = ShaderParser.parseShader(ShaderLoader.MINECRAFT_ASSETS, new ResourceLocation("sodium", "blocks/block_layer_opaque.fsh"), constants);
-			ShaderDescription desc = ShaderDescription.builder().addShaderSource(ShaderType.VERTEX, vertShader).addShaderSource(ShaderType.FRAGMENT, fragShader).addAttributeBinding("a_Position", 1).addAttributeBinding("a_Color", 2).addAttributeBinding("a_TexCoord", 3).addAttributeBinding("a_LightCoord", 4).addFragmentBinding("fragColor", 0).build();
-			return this.device.createProgram(desc, ChunkShaderInterface::new);
-		}
-	}
 }

@@ -33,13 +33,13 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 
 	public void setInfo(boolean isShadowPass, SodiumTerrainPipeline pipeline, int handle, IrisTerrainPass pass, BlendModeOverride blendModeOverride) {
 		this.blendModeOverride = blendModeOverride;
-
 		this.pass = pass;
 		this.handle = handle;
 		this.irisProgramUniforms = pipeline.initUniforms(handle);
 		this.irisProgramSamplers
 			= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
 		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
+
 	}
 
 	public void setup() {

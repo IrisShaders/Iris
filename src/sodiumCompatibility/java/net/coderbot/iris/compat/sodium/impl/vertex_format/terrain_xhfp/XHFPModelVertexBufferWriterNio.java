@@ -28,39 +28,6 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 	private final Vector3f normal = new Vector3f();
 
 	@Override
-	public void copyQuadAndFlipNormal() {
-		ensureCapacity(4);
-
-		ByteBuffer src = this.byteBuffer.duplicate();
-		ByteBuffer dst = this.byteBuffer.duplicate();
-
-		src.position(this.byteBuffer.position() + this.writeOffset - STRIDE * 4);
-		src.limit(src.position() + STRIDE * 4);
-
-		dst.position(this.byteBuffer.position() + this.writeOffset);
-		dst.limit(dst.position() + STRIDE * 4);
-
-		dst.put(src);
-
-		// Now flip vertex normals
-		int packedNormal = this.byteBuffer.getInt(this.writeOffset + 28);
-		int inverted = NormalHelper.invertPackedNormal(packedNormal);
-
-		this.byteBuffer.putInt(this.writeOffset + 28, inverted);
-		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE, inverted);
-		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE * 2, inverted);
-		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE * 3, inverted);
-
-		// We just wrote 4 vertices, advance by 4
-		for (int i = 0; i < 4; i++) {
-			this.advance();
-		}
-
-		// Ensure vertices are flushed
-		this.flush();
-	}
-
-	@Override
 	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light) {
 		uSum += u;
 		vSum += v;

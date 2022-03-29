@@ -7,6 +7,4 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(GlProgram.class)
 public class MixinGlProgram {
-	@Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL30C;glBindFragDataLocation(IILjava/lang/CharSequence;)V"))
-	private void no(int nameEncoded, int program, CharSequence colorNumber) {}
 }

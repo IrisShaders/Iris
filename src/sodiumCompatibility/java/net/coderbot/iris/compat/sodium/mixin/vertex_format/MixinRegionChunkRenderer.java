@@ -22,23 +22,6 @@ public class MixinRegionChunkRenderer {
 	@Shadow
 	@Final
 	protected VertexFormat<TerrainMeshAttribute> vertexFormat;
-
-	@ModifyArg(method = "createPipeline", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/gfx/api/array/VertexArrayResourceBinding;<init>(Ljava/lang/Enum;[Lnet/caffeinemc/gfx/api/array/attribute/VertexAttributeBinding;)V"))
-	private VertexAttributeBinding[] addBindings(VertexAttributeBinding[] attributeBindings) {
-		if (Iris.isPackActive()) {
-			return ArrayUtils.addAll(attributeBindings,
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
-					this.vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL)));
-		}
-
-		return attributeBindings;
-	}
 	/*@Shadow(remap = false)
 	@Final
 	@Mutable

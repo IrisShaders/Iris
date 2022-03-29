@@ -16,6 +16,6 @@ public class MixinRenderRegionArenas {
 					target = "Lnet/caffeinemc/gfx/api/buffer/BufferVertexFormat;stride()I",
 					remap = false))
 	private int iris$useExtendedStride(BufferVertexFormat format) {
-		return Iris.isPackActive() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP.getCustomVertexFormat().stride() : TerrainVertexFormats.STANDARD.getBufferVertexFormat().stride();
+		return Iris.isPackActive() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP.getCustomVertexFormat().stride() : format.stride();
 	}
 }

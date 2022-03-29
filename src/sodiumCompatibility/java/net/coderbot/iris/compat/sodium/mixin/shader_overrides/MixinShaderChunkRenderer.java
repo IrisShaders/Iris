@@ -64,106 +64,12 @@ public abstract class MixinShaderChunkRenderer<T> implements ShaderChunkRenderer
 	@Shadow
 	@Final
 	protected VertexFormat<TerrainMeshAttribute> vertexFormat;
-	@Unique
-	private final Map<ChunkRenderPass, Pipeline<T, ShaderChunkRenderer.BufferTarget>> shadowPipelines = new Object2ObjectOpenHashMap();
 
-	@Unique
-	private final Map<ChunkRenderPass, Program<T>> shadowPrograms = new Object2ObjectOpenHashMap();
 
 	@Redirect(method = "delete", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/gfx/api/device/RenderDevice;deleteProgram(Lnet/caffeinemc/gfx/api/shader/Program;)V"))
 	private void checkHandleFirst(RenderDevice instance, Program program) {
 		if (((GlObjectExt) program).isHandleValid()) {
 			instance.deleteProgram(program);
-		}
-	}
-
-	@Unique
-	private IrisChunkProgramOverrides<ChunkShaderInterface> irisChunkProgramOverrides;
-
-	@Shadow
-	public abstract void delete();
-
-	@Shadow
-	@Final
-	protected TerrainVertexType vertexType;
-
-	@Inject(method = "<init>", at = @At("RETURN"), remap = false)
-	private void iris$onInit(RenderDevice device, TerrainVertexType vertexType, CallbackInfo ci) {
-		irisChunkProgramOverrides = new IrisChunkProgramOverrides<>();
-	}
-
-	/**
-	 * @author
-	 */
-	@Overwrite(remap = false)
-	protected Pipeline<T, ShaderChunkRenderer.BufferTarget> getPipeline(ChunkRenderPass pass) {
-		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
-			for (var pipeline : this.pipelines.values()) {
-				this.device.deletePipeline(pipeline);
-			}
-
-			this.pipelines.clear();
-
-			for (var program : this.programs.values()) {
-				if (((GlObjectExt) program).isHandleValid()) {
-					this.device.deleteProgram(program);
-				}
-			}
-
-			this.programs.clear();
-
-			deletePrograms();
-		}
-
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			return this.shadowPipelines.computeIfAbsent(pass, this::createShadowPipeline);
-		} else {
-			return this.pipelines.computeIfAbsent(pass, this::createPipeline);
-		}
-	}
-
-	private Pipeline<T, ShaderChunkRenderer.BufferTarget> createShadowPipeline(ChunkRenderPass pass) {
-		Program<T> program = this.getIrisProgram(true, pass);
-		VertexArrayDescription<ShaderChunkRenderer.BufferTarget> vertexArray = new VertexArrayDescription(ShaderChunkRenderer.BufferTarget.values(), List.of(new VertexArrayResourceBinding(ShaderChunkRenderer.BufferTarget.VERTICES, new VertexAttributeBinding[]{new VertexAttributeBinding(1, this.vertexFormat.getAttribute(TerrainMeshAttribute.POSITION)), new VertexAttributeBinding(2, this.vertexFormat.getAttribute(TerrainMeshAttribute.COLOR)), new VertexAttributeBinding(3, this.vertexFormat.getAttribute(TerrainMeshAttribute.BLOCK_TEXTURE)), new VertexAttributeBinding(4, this.vertexFormat.getAttribute(TerrainMeshAttribute.LIGHT_TEXTURE)),new VertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
-			this.vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
-			new VertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
-				vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
-			new VertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
-				vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
-			new VertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
-				vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))})));
-		return this.device.createPipeline(pass.pipelineDescription(), program, vertexArray);
-	}
-
-	@Inject(method = "delete", at = @At("HEAD"), remap = false)
-	private void iris$onDelete(CallbackInfo ci) {
-		deletePrograms();
-	}
-
-	private void deletePrograms() {
-		for (var pipeline : this.shadowPipelines.values()) {
-			this.device.deletePipeline(pipeline);
-		}
-
-		this.shadowPipelines.clear();
-
-		for (var program : this.shadowPrograms.values()) {
-			if (((GlObjectExt) program).isHandleValid()) {
-				this.device.deleteProgram(program);
-			}
-		}
-
-		this.shadowPrograms.clear();
-
-		irisChunkProgramOverrides.deleteShaders(this.device);
-	}
-
-	public Program<T> getIrisProgram(boolean isShadowPass, ChunkRenderPass pass) {
-		if (IrisApi.getInstance().isShaderPackInUse()) {
-			// todo: terrible cast
-			return (Program<T>) irisChunkProgramOverrides.getProgramOverride(isShadowPass, device, pass, vertexType);
-		} else {
-			return null;
 		}
 	}
 }

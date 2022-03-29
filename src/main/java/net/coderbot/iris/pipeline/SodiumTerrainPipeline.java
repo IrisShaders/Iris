@@ -91,7 +91,7 @@ public class SodiumTerrainPipeline {
 		this.createShadowImages = createShadowImages;
 	}
 
-	public void patchShaders(TerrainVertexType vertexType) {
+	public void patchShaders(float vertexRange) {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(true, true, false, true, true);
 
 		AlphaTest cutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
@@ -121,45 +121,45 @@ public class SodiumTerrainPipeline {
 		});
 
 		if (terrainVertex != null) {
-			terrainVertex = TriforcePatcher.patchSodium(terrainVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainVertex = TriforcePatcher.patchSodium(terrainVertex, ShaderType.VERTEX, null, inputs, vertexRange);
 		}
 
 		if (translucentVertex != null) {
-			translucentVertex = TriforcePatcher.patchSodium(translucentVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			translucentVertex = TriforcePatcher.patchSodium(translucentVertex, ShaderType.VERTEX, null, inputs, vertexRange);
 		}
 
 		if (shadowVertex != null) {
-			shadowVertex = TriforcePatcher.patchSodium(shadowVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowVertex = TriforcePatcher.patchSodium(shadowVertex, ShaderType.VERTEX, null, inputs, vertexRange);
 		}
 
 		if (terrainGeometry != null) {
-			terrainGeometry = TriforcePatcher.patchSodium(terrainGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainGeometry = TriforcePatcher.patchSodium(terrainGeometry, ShaderType.GEOMETRY, null, inputs, vertexRange);
 		}
 
 		if (translucentGeometry != null) {
-			translucentGeometry = TriforcePatcher.patchSodium(translucentGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			translucentGeometry = TriforcePatcher.patchSodium(translucentGeometry, ShaderType.GEOMETRY, null, inputs, vertexRange);
 		}
 
 		if (shadowGeometry != null) {
-			shadowGeometry = TriforcePatcher.patchSodium(shadowGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowGeometry = TriforcePatcher.patchSodium(shadowGeometry, ShaderType.GEOMETRY, null, inputs, vertexRange);
 		}
 
 		if (terrainFragment != null) {
 			String fragment = terrainFragment;
 
-			terrainFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
-			terrainCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexRange);
+			terrainCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexRange);
 		}
 
 		if (translucentFragment != null) {
-			translucentFragment = TriforcePatcher.patchSodium(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			translucentFragment = TriforcePatcher.patchSodium(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexRange);
 		}
 
 		if (shadowFragment != null) {
 			String fragment = shadowFragment;
 
-			shadowFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
-			shadowCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexRange);
+			shadowCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexRange);
 		}
 	}
 
