@@ -20,6 +20,7 @@ import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
@@ -82,6 +83,8 @@ public class Iris implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		System.out.println(XHFPModelVertexType.decodePosition(XHFPModelVertexType.encodePosition(1018)));
+		System.out.println(XHFPModelVertexType.encodePosition(1018));
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
 					sodiumInstalled = true;

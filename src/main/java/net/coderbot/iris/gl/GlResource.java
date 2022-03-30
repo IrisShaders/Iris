@@ -18,7 +18,7 @@ public abstract class GlResource {
 
 	protected void assertValid() {
 		if (!isValid) {
-			throw new IllegalStateException("Tried to use a destroyed GlResource");
+			//throw new IllegalStateException("Tried to use a destroyed GlResource");
 		}
 	}
 

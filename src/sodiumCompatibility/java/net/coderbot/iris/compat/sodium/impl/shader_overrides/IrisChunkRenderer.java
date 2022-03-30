@@ -16,9 +16,12 @@ import net.caffeinemc.gfx.api.shader.ShaderDescription;
 import net.caffeinemc.gfx.api.shader.ShaderType;
 import net.caffeinemc.gfx.api.types.ElementFormat;
 import net.caffeinemc.gfx.api.types.PrimitiveType;
+import net.caffeinemc.sodium.SodiumClientMod;
+import net.caffeinemc.sodium.render.buffer.StreamingBuffer;
+import net.caffeinemc.sodium.render.chunk.draw.AbstractChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkPrep;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderMatrices;
-import net.caffeinemc.sodium.render.chunk.draw.ShaderChunkRenderer;
+import net.caffeinemc.sodium.render.chunk.draw.DefaultChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
@@ -43,51 +46,85 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-public class IrisChunkRenderer extends ShaderChunkRenderer<IrisChunkShaderInterface> {
-	private final MappedBuffer bufferCameraMatrices;
-	private final MappedBuffer bufferCameraMatricesShadow;
-	private final MappedBuffer bufferFogParameters;
+public class IrisChunkRenderer extends AbstractChunkRenderer {
+	private final StreamingBuffer bufferCameraMatrices;
+	private final StreamingBuffer bufferFogParameters;
 
-	private final SequenceIndexBuffer sequenceIndexBuffer;
+	private Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline;
 
-	private final Map<ChunkRenderPass, Pipeline<IrisChunkShaderInterface, BufferTarget>> shadowPipelines = new Object2ObjectOpenHashMap();
-	private final Map<ChunkRenderPass, Program<IrisChunkShaderInterface>> shadowPrograms = new Object2ObjectOpenHashMap();
-
-	private final Map<ChunkRenderPass, Pipeline<IrisChunkShaderInterface, BufferTarget>> gbufferPipelines = new Object2ObjectOpenHashMap();
-	private final Map<ChunkRenderPass, Program<IrisChunkShaderInterface>> gbufferPrograms = new Object2ObjectOpenHashMap();
+	private final SequenceIndexBuffer indexBuffer;
 
 	private final IrisChunkProgramOverrides irisChunkProgramOverrides;
 
-	public IrisChunkRenderer(RenderDevice device, TerrainVertexType vertexType) {
+	private final boolean isShadowPass;
+	private final ChunkRenderPass pass;
+	private final VertexArrayDescription<BufferTarget> vertexArray;
+
+	public IrisChunkRenderer(boolean isShadowPass, RenderDevice device, SequenceIndexBuffer indexBuffer, TerrainVertexType vertexType, ChunkRenderPass pass) {
 		super(device, vertexType);
 
-		var storageFlags = EnumSet.of(BufferStorageFlags.WRITABLE, BufferStorageFlags.COHERENT, BufferStorageFlags.PERSISTENT);
-		var mapFlags = EnumSet.of(BufferMapFlags.WRITE, BufferMapFlags.COHERENT, BufferMapFlags.PERSISTENT);
+		var storageFlags = EnumSet.of(BufferStorageFlags.WRITABLE, BufferStorageFlags.PERSISTENT);
+		var mapFlags = EnumSet.of(BufferMapFlags.WRITE, BufferMapFlags.EXPLICIT_FLUSH, BufferMapFlags.PERSISTENT, BufferMapFlags.UNSYNCHRONIZED);
 
-		this.bufferCameraMatrices = device.createMappedBuffer(192, storageFlags, mapFlags);
-		this.bufferCameraMatricesShadow = device.createMappedBuffer(192, storageFlags, mapFlags);
-		this.bufferFogParameters = device.createMappedBuffer(24, storageFlags, mapFlags);
+		var maxInFlightFrames = SodiumClientMod.options().advanced.cpuRenderAheadLimit + 1;
 
-		this.sequenceIndexBuffer = new SequenceIndexBuffer(device, SequenceBuilder.QUADS);
+		this.bufferCameraMatrices = new StreamingBuffer(device, storageFlags, mapFlags, 192, maxInFlightFrames);
+		this.bufferFogParameters = new StreamingBuffer(device, storageFlags, mapFlags, 24, maxInFlightFrames);
+
+		this.indexBuffer = indexBuffer;
 
 		this.irisChunkProgramOverrides = new IrisChunkProgramOverrides();
+
+		this.pass = pass;
+		this.isShadowPass = isShadowPass;
+
+		var vertexFormat = vertexType.getCustomVertexFormat();
+		this.vertexArray = new VertexArrayDescription<>(BufferTarget.values(), List.of(
+			new VertexArrayResourceBinding<>(BufferTarget.VERTICES, new VertexAttributeBinding[] {
+				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_POSITION,
+					vertexFormat.getAttribute(TerrainMeshAttribute.POSITION)),
+				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_COLOR,
+					vertexFormat.getAttribute(TerrainMeshAttribute.COLOR)),
+				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE,
+					vertexFormat.getAttribute(TerrainMeshAttribute.BLOCK_TEXTURE)),
+				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE,
+					vertexFormat.getAttribute(TerrainMeshAttribute.LIGHT_TEXTURE)),
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
+					vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
+					vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
+					vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
+					vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL)),
+			})
+		));
+
+		this.pipeline = this.device.createPipeline(pass.pipelineDescription(), irisChunkProgramOverrides.getProgramOverride(isShadowPass, device, pass, vertexType), vertexArray);
 	}
 
 	@Override
-	public void render(ChunkPrep.PreparedRenderList lists, ChunkRenderPass renderPass, ChunkRenderMatrices matrices) {
-		this.sequenceIndexBuffer.ensureCapacity(lists.largestVertexIndex());
+	public void render(ChunkPrep.PreparedRenderList lists, ChunkRenderPass renderPass, ChunkRenderMatrices matrices, int frameIndex) {
+		this.indexBuffer.ensureCapacity(lists.largestVertexIndex());
 
-		this.device.usePipeline(this.getPipeline(renderPass), (cmd, programInterface, pipelineState) -> {
+		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
+			irisChunkProgramOverrides.deleteShaders(device);
+			this.pipeline = this.device.createPipeline(pass.pipelineDescription(), irisChunkProgramOverrides.getProgramOverride(isShadowPass, device, pass, vertexType), vertexArray);
+		}
+
+		if (this.pipeline.getProgram() == null) return;
+
+		this.device.usePipeline(this.pipeline, (cmd, programInterface, pipelineState) -> {
 			programInterface.setup();
 			this.setupTextures(renderPass, pipelineState);
-			this.setupUniforms(matrices, programInterface, pipelineState);
+			this.setupUniforms(matrices, programInterface, pipelineState, frameIndex);
 
 			for (var batch : lists.batches()) {
 				pipelineState.bindUniformBlock(programInterface.uniformInstanceData, lists.instanceBuffer(),
 					batch.instanceData().offset(), batch.instanceData().length());
 
-				cmd.bindVertexBuffer(BufferTarget.VERTICES, batch.vertexBuffer(), 0, this.vertexFormat.stride());
-				cmd.bindElementBuffer(this.sequenceIndexBuffer.getBuffer());
+				cmd.bindVertexBuffer(BufferTarget.VERTICES, batch.vertexBuffer(), 0, batch.vertexStride());
+				cmd.bindElementBuffer(this.indexBuffer.getBuffer());
 
 				cmd.multiDrawElementsIndirect(lists.commandBuffer(), batch.commandData().offset(), batch.commandCount(),
 					ElementFormat.UNSIGNED_INT, PrimitiveType.TRIANGLES);
@@ -102,41 +139,40 @@ public class IrisChunkRenderer extends ShaderChunkRenderer<IrisChunkShaderInterf
 		pipelineState.bindTexture(2, TextureUtil.getLightTexture(), this.lightTextureSampler);
 	}
 
-	private void setupUniforms(ChunkRenderMatrices matrices, ChunkShaderInterface programInterface, PipelineState state) {
+	private void setupUniforms(ChunkRenderMatrices renderMatrices, ChunkShaderInterface programInterface, PipelineState state, int frameIndex) {
 		boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
-		var bufMatrices = (isShadowPass ? bufferCameraMatricesShadow : bufferCameraMatrices).view();
+		var matrices = this.bufferCameraMatrices.slice(frameIndex);
+		var matricesBuf = matrices.view();
 
-		matrices.projection()
-			.get(0, bufMatrices);
-		matrices.modelView()
-			.get(64, bufMatrices);
+		renderMatrices.projection()
+			.get(0, matricesBuf);
+		renderMatrices.modelView()
+			.get(64, matricesBuf);
 
 		var mvpMatrix = new Matrix4f();
-		mvpMatrix.set(matrices.projection());
-		mvpMatrix.mul(matrices.modelView());
+		mvpMatrix.set(renderMatrices.projection());
+		mvpMatrix.mul(renderMatrices.modelView());
 		mvpMatrix
-			.get(128, bufMatrices);
+			.get(128, matricesBuf);
 
-		(isShadowPass ? bufferCameraMatricesShadow : bufferCameraMatrices).flush();
+		bufferCameraMatrices.flush(matrices);
 
-		var bufFogParameters = this.bufferFogParameters.view();
+		state.bindUniformBlock(programInterface.uniformCameraMatrices, matrices.buffer(), matrices.offset(), matrices.length());
+
+		var fogParams = this.bufferFogParameters.slice(frameIndex);
+		var fogParamsBuf = fogParams.view();
+
 		var paramFogColor = RenderSystem.getShaderFogColor();
-		bufFogParameters.putFloat(0, paramFogColor[0]);
-		bufFogParameters.putFloat(4, paramFogColor[1]);
-		bufFogParameters.putFloat(8, paramFogColor[2]);
-		bufFogParameters.putFloat(12, paramFogColor[3]);
-		bufFogParameters.putFloat(16, RenderSystem.getShaderFogStart());
-		bufFogParameters.putFloat(20, RenderSystem.getShaderFogEnd());
+		fogParamsBuf.putFloat(0, paramFogColor[0]);
+		fogParamsBuf.putFloat(4, paramFogColor[1]);
+		fogParamsBuf.putFloat(8, paramFogColor[2]);
+		fogParamsBuf.putFloat(12, paramFogColor[3]);
+		fogParamsBuf.putFloat(16, RenderSystem.getShaderFogStart());
+		fogParamsBuf.putFloat(20, RenderSystem.getShaderFogEnd());
 
-		this.bufferFogParameters.flush();
+		this.bufferFogParameters.flush(fogParams);
 
-		state.bindUniformBlock(programInterface.uniformFogParameters, this.bufferFogParameters);
-		state.bindUniformBlock(programInterface.uniformCameraMatrices, (isShadowPass ? bufferCameraMatricesShadow : bufferCameraMatrices));
-	}
-
-	@Override
-	protected Program<IrisChunkShaderInterface> createProgram(ChunkRenderPass pass) {
-		return null; // No-op
+		state.bindUniformBlock(programInterface.uniformFogParameters, fogParams.buffer(), fogParams.offset(), fogParams.length());
 	}
 
 	private static ShaderConstants getShaderConstants(ChunkRenderPass pass, TerrainVertexType vertexType) {
@@ -154,125 +190,21 @@ public class IrisChunkRenderer extends ShaderChunkRenderer<IrisChunkShaderInterf
 	}
 
 	@Override
-	protected Pipeline<IrisChunkShaderInterface, BufferTarget> getPipeline(ChunkRenderPass pass) {
-		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
-			for (var pipeline : this.gbufferPipelines.values()) {
-				this.device.deletePipeline(pipeline);
-			}
-
-			this.gbufferPipelines.clear();
-
-			for (var program : this.gbufferPrograms.values()) {
-				if (((GlObjectExt) program).isHandleValid()) {
-					this.device.deleteProgram(program);
-				}
-			}
-
-			this.gbufferPrograms.clear();
-
-			deletePrograms();
-		}
-
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			return this.shadowPipelines.computeIfAbsent(pass, this::createShadowPipeline);
-		} else {
-			return this.gbufferPipelines.computeIfAbsent(pass, this::createGbufferPipeline);
-		}
-	}
-
-	private Pipeline<IrisChunkShaderInterface, ShaderChunkRenderer.BufferTarget> createGbufferPipeline(ChunkRenderPass pass) {
-		Program<IrisChunkShaderInterface> program = this.getIrisProgram(false, pass);
-		VertexArrayDescription<BufferTarget> vertexArray =  new VertexArrayDescription<>(BufferTarget.values(), List.of(
-			new VertexArrayResourceBinding<>(BufferTarget.VERTICES, new VertexAttributeBinding[] {
-				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_POSITION,
-					this.vertexFormat.getAttribute(TerrainMeshAttribute.POSITION)),
-				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_COLOR,
-					this.vertexFormat.getAttribute(TerrainMeshAttribute.COLOR)),
-				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE,
-					this.vertexFormat.getAttribute(TerrainMeshAttribute.BLOCK_TEXTURE)),
-				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE,
-					this.vertexFormat.getAttribute(TerrainMeshAttribute.LIGHT_TEXTURE)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
-					this.vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))})));
-		return this.device.createPipeline(pass.pipelineDescription(), program, vertexArray);
-	}
-
-	private Pipeline<IrisChunkShaderInterface, ShaderChunkRenderer.BufferTarget> createShadowPipeline(ChunkRenderPass pass) {
-		Program<IrisChunkShaderInterface> program = this.getIrisProgram(true, pass);
-		VertexArrayDescription<BufferTarget> vertexArray = new VertexArrayDescription<>(ShaderChunkRenderer.BufferTarget.values(), List.of(
-			new VertexArrayResourceBinding<>(BufferTarget.VERTICES, new VertexAttributeBinding[] {
-				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_POSITION,
-					this.vertexFormat.getAttribute(TerrainMeshAttribute.POSITION)),
-				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_COLOR,
-					this.vertexFormat.getAttribute(TerrainMeshAttribute.COLOR)),
-				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE,
-					this.vertexFormat.getAttribute(TerrainMeshAttribute.BLOCK_TEXTURE)),
-				new VertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE,
-					this.vertexFormat.getAttribute(TerrainMeshAttribute.LIGHT_TEXTURE)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
-					this.vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
-				new VertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
-					vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))})));
-		return this.device.createPipeline(pass.pipelineDescription(), program, vertexArray);
-	}
-
-	private void deletePrograms() {
-		for (var pipeline : this.gbufferPipelines.values()) {
-			this.device.deletePipeline(pipeline);
-		}
-
-		this.gbufferPipelines.clear();
-
-		for (var program : this.gbufferPrograms.values()) {
-			if (((GlObjectExt) program).isHandleValid()) {
-				this.device.deleteProgram(program);
-			}
-		}
-
-		this.gbufferPrograms.clear();
-
-		for (var pipeline : this.shadowPipelines.values()) {
-			this.device.deletePipeline(pipeline);
-		}
-
-		this.shadowPipelines.clear();
-
-		for (var program : this.shadowPrograms.values()) {
-			if (((GlObjectExt) program).isHandleValid()) {
-				this.device.deleteProgram(program);
-			}
-		}
-
-		this.shadowPrograms.clear();
-
-		irisChunkProgramOverrides.deleteShaders(this.device);
-	}
-
-	public Program<IrisChunkShaderInterface> getIrisProgram(boolean isShadowPass, ChunkRenderPass pass) {
-		if (IrisApi.getInstance().isShaderPackInUse()) {
-			return irisChunkProgramOverrides.getProgramOverride(isShadowPass, device, pass, vertexType);
-		} else {
-			return null;
-		}
-	}
-	@Override
 	public void delete() {
 		super.delete();
 
-		deletePrograms();
+		this.device.deletePipeline(this.pipeline);
+		irisChunkProgramOverrides.deleteShaders(device);
 
-		this.device.deleteBuffer(this.bufferFogParameters);
-		this.device.deleteBuffer(this.bufferCameraMatrices);
-		this.device.deleteBuffer(this.bufferCameraMatricesShadow);
+		this.bufferFogParameters.delete();
+		this.bufferCameraMatrices.delete();
+	}
+
+
+	public static enum BufferTarget {
+		VERTICES;
+
+		private BufferTarget() {
+		}
 	}
 }

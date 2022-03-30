@@ -94,8 +94,7 @@ public class MixinSodiumWorldRenderer {
     }
 
     @Inject(method = "drawChunkLayer",  remap = false, at = @At("HEAD"))
-    private void iris$beforeDrawChunkLayer(RenderType renderType, PoseStack poseStack, double x, double y,
-										   double z, CallbackInfo ci) {
+    private void iris$beforeDrawChunkLayer(RenderType renderLayer, PoseStack matrixStack, CallbackInfo ci) {
         iris$restoreStateIfShadowsWereBeingRendered();
     }
 }

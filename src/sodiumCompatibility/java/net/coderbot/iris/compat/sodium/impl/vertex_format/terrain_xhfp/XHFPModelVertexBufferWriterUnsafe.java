@@ -27,7 +27,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
     float vSum;
 
     private QuadViewTerrain.QuadViewTerrainUnsafe currentQuad = new QuadViewTerrain.QuadViewTerrainUnsafe();
-    private Vector3f normal = new Vector3f();
+    private Vector3f normal = new Vector3f(0, 0, 1);
 
 	@Override
 	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light) {

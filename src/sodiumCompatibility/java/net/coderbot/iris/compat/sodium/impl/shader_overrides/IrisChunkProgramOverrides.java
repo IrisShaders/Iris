@@ -131,7 +131,6 @@ public class IrisChunkProgramOverrides {
 		GlStateManager._glBindAttribLocation(handle, 4, "mc_Entity");
 		GlStateManager._glBindAttribLocation(handle, 5, "mc_midTexCoord");
 		GlStateManager._glBindAttribLocation(handle, 6, "at_tangent");
-		GlStateManager._glBindAttribLocation(handle, 7, "a_Normal");
 
 		interfaces.getInterface().setInfo(pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, pipeline, handle, pass, getBlendOverride(pass, pipeline));
 

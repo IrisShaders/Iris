@@ -5,6 +5,8 @@ import net.caffeinemc.sodium.SodiumClientMod;
 import net.caffeinemc.sodium.render.chunk.RenderSectionManager;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.draw.DefaultChunkRenderer;
+import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
+import net.caffeinemc.sodium.render.sequence.SequenceIndexBuffer;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexFormats;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.coderbot.iris.Iris;
@@ -18,19 +20,5 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(RenderSectionManager.class)
 public class MixinRenderSectionManager {
-	/**
-	 * @author IMS
-	 */
-	@Overwrite(remap = false)
-	private static ChunkRenderer createChunkRenderer(RenderDevice device, TerrainVertexType vertexType) {
-		return IrisApi.getInstance().isShaderPackInUse() ? new IrisChunkRenderer(device, IrisModelVertexFormats.MODEL_VERTEX_XHFP) : new DefaultChunkRenderer(device, vertexType);
-	}
 
-	/**
-	 * @author
-	 */
-	@Overwrite(remap = false)
-	private static TerrainVertexType createVertexType() {
-		return IrisApi.getInstance().isShaderPackInUse() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : (SodiumClientMod.options().performance.useCompactVertexFormat ? TerrainVertexFormats.COMPACT : TerrainVertexFormats.STANDARD);
-	}
 }

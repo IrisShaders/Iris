@@ -24,8 +24,7 @@
     "separate_ao.MixinFluidRenderer",
     "shader_overrides.MixinGlObject",
     "shader_overrides.MixinGlProgram",
-    "shader_overrides.MixinRegionChunkRenderer",
-    "shader_overrides.MixinShaderChunkRenderer",
+    "shader_overrides.MixinRenderSectionManager",
     "shadow_map.MixinDefaultChunkRenderer",
     "shadow_map.MixinRenderSectionManager",
     "shadow_map.MixinSodiumWorldRenderer",
@@ -39,7 +38,6 @@
     "vertex_format.MixinFluidRenderer",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
-    "vertex_format.MixinRegionChunkRenderer",
     "vertex_format.MixinRenderRegionArenas",
     "vertex_format.MixinRenderSectionManager"
   ]

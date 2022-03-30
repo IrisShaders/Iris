@@ -32,7 +32,7 @@ public class XHFPModelVertexType implements TerrainVertexType {
 	private static final int TEXTURE_MAX_VALUE = 65536;
 	private static final float POSITION_ORIGIN = 8.0F;
 	private static final float POSITION_RANGE = 16.0F;
-	private static final float POSITION_SCALE = 2048.0F;
+	private static final float POSITION_SCALE = POSITION_MAX_VALUE / POSITION_RANGE;
 
 	@Override
 	public TerrainVertexSink createFallbackWriter(VertexConsumer consumer) {
@@ -62,12 +62,12 @@ public class XHFPModelVertexType implements TerrainVertexType {
 		return (raw & 0xFFFF) * 1.0f / TEXTURE_MAX_VALUE;
 	}
 
-	static short encodePosition(float v) {
-		return (short)((int)((v - POSITION_ORIGIN) * POSITION_SCALE));
+	public static short encodePosition(float v) {
+		return (short) ((v - POSITION_ORIGIN) * POSITION_SCALE);
 	}
 
-	static float decodePosition(short raw) {
-		return (raw & 0xFFFF) * POSITION_SCALE + POSITION_ORIGIN;
+	public static float decodePosition(short v) {
+		return ((v / POSITION_SCALE) + POSITION_ORIGIN);
 	}
 
 	static int encodeLightMapTexCoord(int light) {
