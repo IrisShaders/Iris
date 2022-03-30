@@ -88,8 +88,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
 			} else {
 				sodium = Maven.getMavenJarDep("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"));
 			}
-			ArrayList<JavaJarDependency> sodiumLibs = new ArrayList<>(3);
-			sodiumLibs.add(sodium);
+			d.add(sodium, ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			try {
 				try (FileSystem sfs = FileSystemUtil.newJarFileSystem(sodium.jar)) {
 					Files.walkFileTree(sfs.getPath("META-INF/jars"), new SimpleFileVisitor<Path>(){
@@ -97,19 +96,19 @@ public class Buildscript extends MultiSrcDirFabricProject {
 						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 							String fileName = file.getFileName().toString();
 							if (fileName.endsWith(".jar")) {
-								boolean shouldExtract = false;
+								boolean shouldUse = false;
 								String name = null;
 								String version = null;
 								if (fileName.startsWith("sodium-gfx-opengl-")) {
-									shouldExtract = true;
+									shouldUse = true;
 									name = "sodium-gfx-opengl";
 									version = fileName.replace("sodium-gfx-opengl-", "").replace(".jar", "");
 								} else if (fileName.startsWith("sodium-gfx-")) {
-									shouldExtract = true;
+									shouldUse = true;
 									name = "sodium-gfx";
 									version = fileName.replace("sodium-gfx-", "").replace(".jar", "");
 								}
-								if (shouldExtract) {
+								if (shouldUse) {
 									Path p = PathUtil.resolveAndCreateDir(getLocalBrachyuraPath(), "sodiumlibs").resolve(name + "-" + version + ".jar");
 									boolean unstable = version.endsWith("unstable"); 
 									if (unstable || !Files.exists(p)) {
@@ -118,7 +117,7 @@ public class Buildscript extends MultiSrcDirFabricProject {
 											f.commit();
 										}
 									}
-									sodiumLibs.add(new JavaJarDependency(p, null, unstable ? null : new MavenId("net.caffeinemc", name, version)));
+									d.add(new JavaJarDependency(p, null, unstable ? null : new MavenId("net.caffeinemc", name, version)), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 								}
 							}
 							return super.visitFile(file, attrs);
@@ -128,7 +127,6 @@ public class Buildscript extends MultiSrcDirFabricProject {
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
-			for (JavaJarDependency sl : sodiumLibs) d.add(sl, ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME); 
 		}
 
 		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
