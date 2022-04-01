@@ -83,8 +83,6 @@ public class Iris implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		System.out.println(XHFPModelVertexType.decodePosition(XHFPModelVertexType.encodePosition(1018)));
-		System.out.println(XHFPModelVertexType.encodePosition(1018));
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
 					sodiumInstalled = true;

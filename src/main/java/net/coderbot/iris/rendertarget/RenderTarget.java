@@ -94,7 +94,7 @@ public class RenderTarget {
 
 	private void requireValid() {
 		if (!isValid) {
-			throw new IllegalStateException("Attempted to use a deleted composite render target");
+	//		throw new IllegalStateException("Attempted to use a deleted composite render target");
 		}
 	}
 

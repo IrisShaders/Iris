@@ -231,7 +231,8 @@ public class ProgramUniforms {
 					}
 
 					if (size == 1) {
-						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
+						//todo restore
+						//Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + typeName + " " + name);
 					} else {
 						Iris.logger.warn("[" + this.name + "] Unsupported uniform: " + name + " of size " + size + " and type " + typeName);
 					}

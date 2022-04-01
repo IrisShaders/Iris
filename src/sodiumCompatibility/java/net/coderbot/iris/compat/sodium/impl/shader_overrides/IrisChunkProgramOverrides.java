@@ -128,10 +128,6 @@ public class IrisChunkProgramOverrides {
 
 		int handle = GlProgram.getHandle(interfaces);
 
-		GlStateManager._glBindAttribLocation(handle, 4, "mc_Entity");
-		GlStateManager._glBindAttribLocation(handle, 5, "mc_midTexCoord");
-		GlStateManager._glBindAttribLocation(handle, 6, "at_tangent");
-
 		interfaces.getInterface().setInfo(pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, pipeline, handle, pass, getBlendOverride(pass, pipeline));
 
 		return interfaces;
@@ -167,11 +163,6 @@ public class IrisChunkProgramOverrides {
 
     @Nullable
     public Program<IrisChunkShaderInterface> getProgramOverride(boolean isShadowPass, RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
-        if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
-            deleteShaders(device);
-			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
-        }
-
         if (!shadersCreated) {
 			createShaders(device, vertexType);
 		}

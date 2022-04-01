@@ -30,8 +30,10 @@ public class XHFPModelVertexType implements TerrainVertexType {
 
 	private static final int POSITION_MAX_VALUE = 32768;
 	private static final int TEXTURE_MAX_VALUE = 65536;
-	private static final float POSITION_ORIGIN = 8.0F;
-	private static final float POSITION_RANGE = 16.0F;
+	private static final float TEXTURE_MAX_VALUE_INV = 1.0f / 65536;
+
+	private static final float POSITION_ORIGIN = 8.0f;
+	private static final float POSITION_RANGE = 16.0f;
 	private static final float POSITION_SCALE = POSITION_MAX_VALUE / POSITION_RANGE;
 
 	@Override
@@ -54,20 +56,20 @@ public class XHFPModelVertexType implements TerrainVertexType {
 		return VERTEX_FORMAT;
 	}
 
-	static short encodeBlockTexture(float value) {
-		return (short) (value * TEXTURE_MAX_VALUE);
+	static short encodeBlockTexture(float v) {
+		return (short) (v * TEXTURE_MAX_VALUE);
 	}
 
-	static float decodeBlockTexture(short raw) {
-		return (raw & 0xFFFF) * 1.0f / TEXTURE_MAX_VALUE;
-	}
-
-	public static short encodePosition(float v) {
+	static short encodePosition(float v) {
 		return (short) ((v - POSITION_ORIGIN) * POSITION_SCALE);
 	}
 
+	public static float decodeBlockTexture(short raw) {
+		return (raw & 0xFFFF) * TEXTURE_MAX_VALUE_INV;
+	}
+
 	public static float decodePosition(short v) {
-		return ((v / POSITION_SCALE) + POSITION_ORIGIN);
+		return (v + POSITION_ORIGIN) / POSITION_SCALE;
 	}
 
 	static int encodeLightMapTexCoord(int light) {

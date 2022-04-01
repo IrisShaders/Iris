@@ -39,7 +39,6 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 		this.irisProgramSamplers
 			= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
 		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
-
 	}
 
 	public void setup() {

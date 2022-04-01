@@ -54,13 +54,11 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 
 	private final SequenceIndexBuffer indexBuffer;
 
-	private final IrisChunkProgramOverrides irisChunkProgramOverrides;
-
 	private final boolean isShadowPass;
 	private final ChunkRenderPass pass;
 	private final VertexArrayDescription<BufferTarget> vertexArray;
 
-	public IrisChunkRenderer(boolean isShadowPass, RenderDevice device, SequenceIndexBuffer indexBuffer, TerrainVertexType vertexType, ChunkRenderPass pass) {
+	public IrisChunkRenderer(IrisChunkProgramOverrides overrides, boolean isShadowPass, RenderDevice device, SequenceIndexBuffer indexBuffer, TerrainVertexType vertexType, ChunkRenderPass pass) {
 		super(device, vertexType);
 
 		var storageFlags = EnumSet.of(BufferStorageFlags.WRITABLE, BufferStorageFlags.PERSISTENT);
@@ -72,8 +70,6 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 		this.bufferFogParameters = new StreamingBuffer(device, storageFlags, mapFlags, 24, maxInFlightFrames);
 
 		this.indexBuffer = indexBuffer;
-
-		this.irisChunkProgramOverrides = new IrisChunkProgramOverrides();
 
 		this.pass = pass;
 		this.isShadowPass = isShadowPass;
@@ -100,17 +96,12 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 			})
 		));
 
-		this.pipeline = this.device.createPipeline(pass.pipelineDescription(), irisChunkProgramOverrides.getProgramOverride(isShadowPass, device, pass, vertexType), vertexArray);
+		this.pipeline = this.device.createPipeline(pass.pipelineDescription(), overrides.getProgramOverride(isShadowPass, device, pass, vertexType), vertexArray);
 	}
 
 	@Override
 	public void render(ChunkPrep.PreparedRenderList lists, ChunkRenderPass renderPass, ChunkRenderMatrices matrices, int frameIndex) {
 		this.indexBuffer.ensureCapacity(lists.largestVertexIndex());
-
-		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
-			irisChunkProgramOverrides.deleteShaders(device);
-			this.pipeline = this.device.createPipeline(pass.pipelineDescription(), irisChunkProgramOverrides.getProgramOverride(isShadowPass, device, pass, vertexType), vertexArray);
-		}
 
 		if (this.pipeline.getProgram() == null) return;
 
@@ -140,7 +131,6 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 	}
 
 	private void setupUniforms(ChunkRenderMatrices renderMatrices, ChunkShaderInterface programInterface, PipelineState state, int frameIndex) {
-		boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 		var matrices = this.bufferCameraMatrices.slice(frameIndex);
 		var matricesBuf = matrices.view();
 
@@ -194,10 +184,13 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 		super.delete();
 
 		this.device.deletePipeline(this.pipeline);
-		irisChunkProgramOverrides.deleteShaders(device);
 
 		this.bufferFogParameters.delete();
 		this.bufferCameraMatrices.delete();
+	}
+
+	public void deletePipeline(IrisChunkProgramOverrides overrides) {
+		this.pipeline = this.device.createPipeline(pass.pipelineDescription(), overrides.getProgramOverride(isShadowPass, device, pass, vertexType), vertexArray);
 	}
 
 

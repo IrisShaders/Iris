@@ -5,6 +5,7 @@ import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.sodium.SodiumClientMod;
 import net.caffeinemc.sodium.render.SodiumWorldRenderer;
 import net.caffeinemc.sodium.render.chunk.RenderSectionManager;
+import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderMatrices;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.draw.DefaultChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
@@ -13,6 +14,8 @@ import net.caffeinemc.sodium.render.chunk.passes.DefaultRenderPasses;
 import net.caffeinemc.sodium.render.sequence.SequenceIndexBuffer;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexFormats;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkRenderer;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.shadows.ShadowRenderingState;
@@ -40,12 +43,24 @@ public class MixinRenderSectionManager {
 	@Final
 	private Map<ChunkRenderPass, ChunkRenderer> chunkRenderers;
 
+	@Shadow
+	@Final
+	private RenderDevice device;
 	@Unique
 	private Map<ChunkRenderPass, ChunkRenderer> chunkRenderersShadow;
+
+	@Unique
+	private IrisChunkProgramOverrides irisChunkProgramOverrides;
 
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void createShadow(RenderDevice device, SodiumWorldRenderer worldRenderer, ChunkRenderPassManager renderPassManager, ClientLevel world, int renderDistance, CallbackInfo ci) {
 		this.chunkRenderersShadow = new Reference2ReferenceOpenHashMap<>();
+
+		this.irisChunkProgramOverrides = new IrisChunkProgramOverrides();
+
+		for (var renderPass : DefaultRenderPasses.ALL) {
+			this.chunkRenderers.put(renderPass, irisChunkRendererCreation(false, device, this.indexBuffer, createVertexType(), renderPass));
+		}
 
 		for (var renderPass : DefaultRenderPasses.ALL) {
 			this.chunkRenderersShadow.put(renderPass, irisChunkRendererCreation(true, device, this.indexBuffer, createVertexType(), renderPass));
@@ -57,6 +72,23 @@ public class MixinRenderSectionManager {
 		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? chunkRenderersShadow : chunkRenderers;
 	}
 
+	@Inject(method = "renderLayer", at = @At("HEAD"))
+	private void renderLayerHead(ChunkRenderMatrices matrices, ChunkRenderPass renderPass, CallbackInfo ci) {
+		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
+			irisChunkProgramOverrides.deleteShaders(device);
+			for (ChunkRenderer renderer : chunkRenderers.values()) {
+				if (renderer instanceof IrisChunkRenderer irisChunkRenderer) {
+					irisChunkRenderer.deletePipeline(irisChunkProgramOverrides);
+				}
+			}
+			for (ChunkRenderer renderer : chunkRenderersShadow.values()) {
+				if (renderer instanceof IrisChunkRenderer irisChunkRenderer) {
+					irisChunkRenderer.deletePipeline(irisChunkProgramOverrides);
+				}
+			}
+			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
+		}
+	}
 	@Inject(method = "destroy", at = @At("TAIL"))
 	private void destroyShadow(CallbackInfo ci) {
 		for (ChunkRenderer renderer : this.chunkRenderersShadow.values()) {
@@ -64,6 +96,8 @@ public class MixinRenderSectionManager {
 		}
 
 		this.chunkRenderersShadow.clear();
+
+		irisChunkProgramOverrides.deleteShaders(device);
 	}
 
 	/**
@@ -71,11 +105,11 @@ public class MixinRenderSectionManager {
 	 */
 	@Overwrite(remap = false)
 	private static ChunkRenderer createChunkRenderer(RenderDevice device, SequenceIndexBuffer indexBuffer, TerrainVertexType vertexType, ChunkRenderPass pass) {
-		return irisChunkRendererCreation(false, device, indexBuffer, vertexType, pass);
+		return null;
 	}
 
-	private static ChunkRenderer irisChunkRendererCreation(boolean isShadowPass, RenderDevice device, SequenceIndexBuffer indexBuffer, TerrainVertexType vertexType, ChunkRenderPass pass) {
-		return IrisApi.getInstance().isShaderPackInUse() ? new IrisChunkRenderer(isShadowPass, device, indexBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP, pass) : new DefaultChunkRenderer(device, indexBuffer, vertexType, pass);
+	private ChunkRenderer irisChunkRendererCreation(boolean isShadowPass, RenderDevice device, SequenceIndexBuffer indexBuffer, TerrainVertexType vertexType, ChunkRenderPass pass) {
+		return IrisApi.getInstance().isShaderPackInUse() ? new IrisChunkRenderer(irisChunkProgramOverrides, isShadowPass, device, indexBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP, pass) : new DefaultChunkRenderer(device, indexBuffer, vertexType, pass);
 	}
 
 	/**
