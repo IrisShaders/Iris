@@ -1,7 +1,12 @@
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +21,9 @@ import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
+import io.github.coolcrabs.brachyura.util.AtomicFile;
+import io.github.coolcrabs.brachyura.util.FileSystemUtil;
+import io.github.coolcrabs.brachyura.util.PathUtil;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -26,9 +34,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends MultiSrcDirFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String customSodiumName = "sodium-fabric-0.5.06+mc1.18.1-unstable.jar";
-	static final String customSodiumGfxName = "sodium-gfx-0.5.04+mc1.18.1-unstable.jar";
-	static final String customSodiumGfxOpenglName = "sodium-gfx-opengl-0.5.04+mc1.18.1-unstable.jar";
+	static final String customSodiumName = "sodium-fabric-0.5.0mc1.18.1beta7-unstable.jar";
 
 	@Override
 	public VersionMeta createMcVersion() {
@@ -75,16 +81,52 @@ public class Buildscript extends MultiSrcDirFabricProject {
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.4+7242e9d765"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "0.1.18+3ac43d9565"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
-			if (SODIUM) {
+		if (SODIUM) {
+			JavaJarDependency sodium;
 			if (CUSTOM_SODIUM) {
-				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("net.caffeinemc", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumGfxName).toAbsolutePath(), null, new MavenId("net.caffeinemc", "sodium-fabric", customSodiumGfxName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumGfxOpenglName).toAbsolutePath(), null, new MavenId("net.caffeinemc", "sodium-fabric", customSodiumGfxOpenglName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				sodium = new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("net.caffeinemc", "sodium-fabric", customSodiumName.replace("sodium-fabric-", "").replace(".jar", "")));
 			} else {
-				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				sodium = Maven.getMavenJarDep("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"));
 			}
-		} else {
-			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"), ModDependencyFlag.COMPILE);
+			d.add(sodium, ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			try {
+				try (FileSystem sfs = FileSystemUtil.newJarFileSystem(sodium.jar)) {
+					Files.walkFileTree(sfs.getPath("META-INF/jars"), new SimpleFileVisitor<Path>(){
+						@Override
+						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+							String fileName = file.getFileName().toString();
+							if (fileName.endsWith(".jar")) {
+								boolean shouldUse = false;
+								String name = null;
+								String version = null;
+								if (fileName.startsWith("sodium-gfx-opengl-")) {
+									shouldUse = true;
+									name = "sodium-gfx-opengl";
+									version = fileName.replace("sodium-gfx-opengl-", "").replace(".jar", "");
+								} else if (fileName.startsWith("sodium-gfx-")) {
+									shouldUse = true;
+									name = "sodium-gfx";
+									version = fileName.replace("sodium-gfx-", "").replace(".jar", "");
+								}
+								if (shouldUse) {
+									Path p = PathUtil.resolveAndCreateDir(getLocalBrachyuraPath(), "sodiumlibs").resolve(name + "-" + version + ".jar");
+									boolean unstable = version.endsWith("unstable"); 
+									if (unstable || !Files.exists(p)) {
+										try (AtomicFile f = new AtomicFile(p)) {
+											Files.copy(file, f.tempPath, StandardCopyOption.REPLACE_EXISTING);
+											f.commit();
+										}
+									}
+									d.add(new JavaJarDependency(p, null, unstable ? null : new MavenId("net.caffeinemc", name, version)), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+								}
+							}
+							return super.visitFile(file, attrs);
+						}
+					});
+				}
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
 		}
 
 		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
