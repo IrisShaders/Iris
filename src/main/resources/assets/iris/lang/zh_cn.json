@@ -1,6 +1,11 @@
 {
   "iris.shaders.reloaded": "已重新加载光影！",
+  "iris.shaders.disabled": "光影已禁用！",
   "iris.shaders.toggled": "光影已切换到 %s！",
+  "iris.shaders.debug.enabled": "调试已启用，日志将更加详细！",
+  "iris.shaders.debug.disabled": "调试已禁用。",
+  "iris.shaders.debug.failure": "无法启用调试，你的电脑不支持调试功能",
+  "iris.shaders.debug.restart": "请重启以启用调试。",
   "iris.keybind.reload": "重新加载光影",
   "iris.keybind.shaderPackSelection": "光影包选择界面",
   "iris.keybind.toggleShaders": "开关光影",
@@ -44,7 +49,6 @@
   "options.iris.shadowDistance": "最大阴影距离",
   "options.iris.shadowDistance.enabled": "允许更改阴影的最远距离。超出此距离的地形和实体不会投射阴影。降低阴影距离可以显著提高性能。",
   "options.iris.shadowDistance.disabled": "当前的光影包已经为阴影设置了渲染距离，你不能改变。",
-  "options.iris.shadowDistance.sodium_tooltip": "阴影渲染距离控制阴影通道中多远处的地形有可能被渲染。距离越小，则渲染的地形越少，帧率得以提高。对于明确指定阴影渲染距离的光影包，这个选项不能更改。阴影渲染距离的实际上限是设置的视距。",
 
   "pack.iris.select.title": "选择",
   "pack.iris.configure.title": "配置",
