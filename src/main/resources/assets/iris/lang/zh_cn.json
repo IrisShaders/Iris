@@ -4,7 +4,7 @@
   "iris.shaders.toggled": "光影已切换到 %s！",
   "iris.shaders.debug.enabled": "调试已启用，日志将更加详细！",
   "iris.shaders.debug.disabled": "调试已禁用。",
-  "iris.shaders.debug.failure": "无法启用调试，你的电脑不支持调试功能",
+  "iris.shaders.debug.failure": "无法启用调试，你的电脑不支持调试功能。",
   "iris.shaders.debug.restart": "请重启以启用调试。",
   "iris.keybind.reload": "重新加载光影",
   "iris.keybind.shaderPackSelection": "光影包选择界面",
