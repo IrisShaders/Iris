@@ -25,6 +25,7 @@
     "MixinLevelRenderer",
     "MixinMinecraft",
     "MixinModelViewBobbing",
+    "MixinOptions_Entrypoint",
     "MixinBufferSource_WrapperChecking",
     "MixinParticleEngine",
     "MixinRenderSystem",

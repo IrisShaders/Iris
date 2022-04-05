@@ -48,11 +48,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
-import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
-public class Iris implements ClientModInitializer {
+public class Iris {
 	public static final String MODID = "iris";
 	public static final IrisLogging logger = new IrisLogging("Iris");
 
@@ -80,8 +79,16 @@ public class Iris implements ClientModInitializer {
 
 	private static String IRIS_VERSION;
 
-	@Override
-	public void onInitializeClient() {
+	/**
+	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
+	 * some very basic setup, config loading, and environment checks.
+	 *
+	 * <p>This is roughly equivalent to Fabric Loader's ClientModInitializer#onInitializeClient entrypoint, except
+	 * it's entirely cross platform & we get to decide its exact semantics.</p>
+	 *
+	 * <p>This is called right before options are loaded, so we can add key bindings here.</p>
+	 */
+	public void onEarlyInitialize() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
 					sodiumInstalled = true;
@@ -160,10 +167,13 @@ public class Iris implements ClientModInitializer {
 		})));
 	}
 
+	/**
+	 * Called once RenderSystem#initRenderer has completed. This means that we can safely access OpenGL.
+	 */
 	public static void onRenderSystemInit() {
 		if (!initialized) {
-			Iris.logger.warn("Iris::onRenderSystemInit was called, but Iris::onInitializeClient was not called." +
-					" Is Not Enough Crashes doing something weird? Trying to avoid a crash but this is an odd state.");
+			Iris.logger.warn("Iris::onRenderSystemInit was called, but Iris::onEarlyInitialize was not called." +
+					" Trying to avoid a crash but this is an odd state.");
 			return;
 		}
 
