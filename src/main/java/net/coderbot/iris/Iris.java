@@ -673,7 +673,7 @@ public class Iris {
 
 	public static ShaderpackDirectoryManager getShaderpacksDirectoryManager() {
 		if (shaderpacksDirectoryManager == null) {
-			shaderpacksDirectoryManager = new ShaderpackDirectoryManager(shaderpacksDirectory);
+			shaderpacksDirectoryManager = new ShaderpackDirectoryManager(getShaderpacksDirectory());
 		}
 
 		return shaderpacksDirectoryManager;
