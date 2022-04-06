@@ -1,6 +1,11 @@
 {
   "iris.shaders.reloaded": "Шейдеры перезагружены!",
+  "iris.shaders.disabled": "Шейдеры выключены!",
   "iris.shaders.toggled": "Шейдеры переключены на %s!",
+  "iris.shaders.debug.enabled": "Отладка включена, ведение журнала будет более подробным.",
+  "iris.shaders.debug.disabled": "Отладка отключена.",
+  "iris.shaders.debug.failure": "Невозможно включить отладку, ваш компьютер не поддерживает необходимые функции.",
+  "iris.shaders.debug.restart": "У вас нет контекста отладки. Перезапустите, чтобы включить отладку."
   "iris.keybind.reload": "Перезагрузить шейдеры",
   "iris.keybind.shaderPackSelection": "Экран выбора шейдеров",
   "iris.keybind.toggleShaders": "Переключить шейдеры",
@@ -9,8 +14,8 @@
   "iris.shaders.toggled.failure": "Не удалось переключить шейдеры! Причина: %s",
   "iris.sodium.failure.title": "Не удалось загрузить Iris!",
   "iris.sodium.failure.download": "Загрузить Sodium",
-  "iris.sodium.failure.reason.notFound": "Iris требует Sodium для хорошей производительности, но Sodium не установлен. Пожалуйста, загрузите Sodium, добавьте его в папку с модами и перезапустите игру.",
-  "iris.sodium.failure.reason.incompatible": "Iris требует Sodium для хорошей производительности, но ваша версия Sodium несовместима. Пожалуйста, загрузите подходящую версию Sodium, добавьте его в папку с модами, удалите старую версию и перезапустите игру.",
+  "iris.sodium.failure.reason.notFound": "Iris требует Sodium для лучшей производительности, но Sodium не установлен. Пожалуйста, загрузите Sodium, добавьте его в папку с модами и перезапустите игру.",
+  "iris.sodium.failure.reason.incompatible": "Iris требует Sodium для лучшей производительности, но ваша версия Sodium несовместима. Пожалуйста, загрузите подходящую версию Sodium, добавьте его в папку с модами, удалите старую версию и перезапустите игру.",
   
   "options.iris.apply": "Применить",
   "options.iris.refresh": "Обновить",
@@ -34,7 +39,7 @@
   "options.iris.shaders.nonePresent": "Шейдеры: пакетов не обнаружено",
   "options.iris.back": "Назад",
   "options.iris.reset": "Сбросить",
-  "options.iris.reset.tooltip": "Сбросить ВСЕ параметры?",
+  "options.iris.reset.tooltip": "Сбросить ВСЕ настройки?",
   "options.iris.reset.tooltip.holdShift": "Для сброса нажмите, удерживая Shift",
   "options.iris.importSettings.tooltip": "Загрузить настройки из файла",
   "options.iris.exportSettings.tooltip": "Сохранить настройки в файл",
@@ -46,7 +51,7 @@
   "options.iris.shadowDistance.disabled": "Ваши текущие шейдеры уже установили своё расстояние для теней; вы не сможете его изменить.",
   "options.iris.shadowDistance.sodium_tooltip": "Дальность теней определяет, насколько далеко местность может обрабатываться на этапе просчёта теней. Меньшие значения соответствуют меньшей площади, что улучшает частоту кадров. Этот параметр нельзя изменить для шейдеров, в которых установлено своё расстояние рендеринга теней. Фактическое расстояние рендеринга ограничено дальностью прорисовки.",
   
-  "pack.iris.select.title": "Выберите",
+  "pack.iris.select.title": "Выберите пакет шейдеров",
   "pack.iris.configure.title": "Настроить",
   "pack.iris.list.label": "+ Перетащите шейдер для добавления",
   
