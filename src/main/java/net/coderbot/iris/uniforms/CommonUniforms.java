@@ -260,4 +260,7 @@ public final class CommonUniforms {
 		}
 	}
 
+	static {
+		GbufferPrograms.init();
+	}
 }

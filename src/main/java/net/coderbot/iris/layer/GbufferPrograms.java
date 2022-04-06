@@ -76,4 +76,8 @@ public class GbufferPrograms {
 	static {
 		StateUpdateNotifiers.phaseChangeNotifier = listener -> phaseChangeListener = listener;
 	}
+
+	public static void init() {
+		// Empty initializer to run static
+	}
 }

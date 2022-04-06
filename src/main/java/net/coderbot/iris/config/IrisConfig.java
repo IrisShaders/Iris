@@ -26,11 +26,17 @@ public class IrisConfig {
 	 */
 	private boolean enableShaders;
 
+	/**
+	 * If debug features should be enabled. Gives much more detailed OpenGL error outputs at the cost of performance.
+	 */
+	private boolean enableDebug;
+
 	private final Path propertiesPath;
 
 	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;
 		enableShaders = true;
+		enableDebug = false;
 		this.propertiesPath = propertiesPath;
 	}
 
@@ -84,6 +90,14 @@ public class IrisConfig {
 		return enableShaders;
 	}
 
+	public boolean isDebugEnabled() {
+		return enableDebug;
+	}
+
+	public void setDebugEnabled(boolean enabled) {
+		enableDebug = enabled;
+	}
+
 	/**
 	 * Sets whether shaders should be used for rendering.
 	 */
@@ -107,6 +121,7 @@ public class IrisConfig {
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
+		enableDebug = !"false".equals(properties.getProperty("enableDebug"));
 		try {
 			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("maxShadowRenderDistance", "32"));
 		} catch (NumberFormatException e) {
@@ -131,6 +146,7 @@ public class IrisConfig {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName().orElse(""));
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
+		properties.setProperty("enableDebug", enableDebug ? "true" : "false");
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
