@@ -296,7 +296,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideBeaconBeamShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_BEACON_BEAM, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.BEACON, cir);
 		}
 	}
