@@ -1,32 +1,41 @@
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
+import io.github.coolcrabs.brachyura.dependency.FileDependency;
+import io.github.coolcrabs.brachyura.mappings.tinyremapper.TrWrapper;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.fabric.FabricProject;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.MappingTreeMappingProvider;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor;
+import io.github.coolcrabs.brachyura.maven.Maven;
+import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
+import io.github.coolcrabs.brachyura.util.FileSystemUtil;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
 import io.github.coolcrabs.brachyura.util.OsUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.mappingio.MappingReader;
+import net.fabricmc.mappingio.adapter.MappingNsRenamer;
 import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.format.MappingFormat;
+import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public abstract class MultiSrcDirFabricProject extends FabricProject {
@@ -84,7 +93,7 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 			}
 			ProcessingSponge trout = new ProcessingSponge();
 			new ProcessorChain(
-				new RemapperProcessor(TinyRemapper.newRemapper().withMappings(new MappingTreeMappingProvider(compmappings, Namespaces.NAMED, Namespaces.INTERMEDIARY)), getCompileDependencies())
+				new RemapperProcessor(new TrWrapper(TinyRemapper.newRemapper().withMappings(new MappingTreeMappingProvider(compmappings, Namespaces.NAMED, Namespaces.INTERMEDIARY))), getCompileDependencies())
 			).apply(trout, compilationOutput);
 			try (AtomicZipProcessingSink out = new AtomicZipProcessingSink(getBuildJarPath())) {
 				Path[] resources = paths("resources", false);
@@ -114,7 +123,6 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 			r.add(mappingsClasspath);
 			return r;
 		});
-		Lazy<Path> launchConfig = new Lazy<>(this::writeLaunchCfg);
 		return new IdeModule[] {
 			new IdeModule.IdeModuleBuilder()
 				.name(getModId())
@@ -127,35 +135,19 @@ public abstract class MultiSrcDirFabricProject extends FabricProject {
 					new IdeModule.RunConfigBuilder()
 						.name("Minecraft Client")
 						.cwd(cwd)
-						.mainClass("net.fabricmc.devlaunchinjector.Main")
+						.mainClass("net.fabricmc.loader.launch.knot.KnotClient")
 						.classpath(classpath)
 						.resourcePaths(paths("resources", false))
-						.vmArgs(
-							() -> {
-								ArrayList<String> clientArgs = new ArrayList<>(Arrays.asList(
-									"-Dfabric.dli.config=" + launchConfig.get().toString(),
-									"-Dfabric.dli.env=client",
-									"-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotClient"
-								));
-								if (OsUtil.OS == OsUtil.Os.OSX) {
-									clientArgs.add("-XstartOnFirstThread");
-								}
-								return clientArgs;
-							}
-						),
+						.vmArgs(() -> this.ideVmArgs(true))
+						.args(() -> this.ideArgs(true)),
 					new IdeModule.RunConfigBuilder()
 						.name("Minecraft Server")
 						.cwd(cwd)
-						.mainClass("net.fabricmc.devlaunchinjector.Main")
+						.mainClass("net.fabricmc.loader.launch.knot.KnotServer")
 						.classpath(classpath)
 						.resourcePaths(getResourcesDir())
-						.vmArgs(
-							() -> Arrays.asList(
-								"-Dfabric.dli.config=" + launchConfig.get().toString(),
-								"-Dfabric.dli.env=server",
-								"-Dfabric.dli.main=net.fabricmc.loader.launch.knot.KnotServer"
-							)
-						)
+						.vmArgs(() -> this.ideVmArgs(false))
+						.args(() -> this.ideArgs(false))
 				)
 				.build()
 		};
