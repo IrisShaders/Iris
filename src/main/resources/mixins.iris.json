@@ -29,6 +29,7 @@
     "MixinMinecraft",
     "MixinMinecraft_PipelineDestruction",
     "MixinModelViewBobbing",
+    "MixinOptions_Entrypoint",
     "MixinRenderSystem",
     "MixinShaderInstance",
     "MixinTextureAtlas",
@@ -36,6 +37,7 @@
     "MixinClientLanguage",
     "MixinMaxFpsCrashFix",
     "MixinTweakFarPlane",
+    "MixinWindow",
     "MixinSystemReport",
     "MixinLevelRenderer",
     "MixinUniform",
@@ -58,8 +60,11 @@
     "shadows.MixinBeaconRenderer",
     "shadows.MixinPreventRebuildNearInShadowPass",
     "shadows.MixinLevelRenderer",
+    "sky.MixinClientLevelData_DisableVoidPlane",
+    "sky.MixinDimensionSpecialEffects",
     "statelisteners.BooleanStateAccessor",
     "statelisteners.MixinGlStateManager",
+    "statelisteners.MixinRenderSystem",
     "DimensionTypeAccessor"
   ],
   "injectors": {
