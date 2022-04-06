@@ -6,14 +6,11 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.pipeline.newshader.fallback.ShaderSynthesizer;
-import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
@@ -27,6 +24,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
@@ -214,63 +212,34 @@ public class NewShaderTests {
 		}
 
 		@Override
-		public Resource getResource(ResourceLocation id) throws IOException {
+		public Optional<Resource> getResource(ResourceLocation id) {
 			final String path = id.getPath();
 
 			if (path.endsWith("json")) {
-				return new StringResource(id, json);
+				return Optional.of(new StringResource(id, json));
 			} else if (path.endsWith("vsh")) {
-				return new StringResource(id, vertex);
+				return Optional.of(new StringResource(id, vertex));
 			} else if (path.endsWith("gsh")) {
 				if (geometry == null) {
-					return null;
+					return Optional.empty();
 				}
-				return new StringResource(id, geometry);
+				return Optional.of(new StringResource(id, geometry));
 			} else if (path.endsWith("fsh")) {
-				return new StringResource(id, fragment);
+				return Optional.of(new StringResource(id, fragment));
 			}
 
-			throw new IOException("Couldn't load " + id);
+			return Optional.empty();
 		}
 	}
 
-	private static class StringResource implements Resource {
+	private static class StringResource extends Resource {
 		private final ResourceLocation id;
 		private final String content;
 
 		private StringResource(ResourceLocation id, String content) {
+			super("<iris shaderpack shaders>", (IoSupplier<InputStream>) () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
 			this.id = id;
 			this.content = content;
-		}
-
-		@Override
-		public ResourceLocation getLocation() {
-			return id;
-		}
-
-		@Override
-		public InputStream getInputStream() {
-			return new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
-		}
-
-		@Override
-		public boolean hasMetadata() {
-			return false;
-		}
-
-		@Override
-		public <T> @Nullable T getMetadata(MetadataSectionSerializer<T> metaReader) {
-			return null;
-		}
-
-		@Override
-		public String getSourceName() {
-			return "<iris shaderpack shaders>";
-		}
-
-		@Override
-		public void close() throws IOException {
-			// No resources to release
 		}
 	}
 }
