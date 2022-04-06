@@ -64,6 +64,7 @@
     "sky.MixinDimensionSpecialEffects",
     "statelisteners.BooleanStateAccessor",
     "statelisteners.MixinGlStateManager",
+    "statelisteners.MixinRenderSystem",
     "DimensionTypeAccessor"
   ],
   "injectors": {
