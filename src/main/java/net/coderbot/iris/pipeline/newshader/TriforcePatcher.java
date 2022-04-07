@@ -301,7 +301,7 @@ public class TriforcePatcher {
 
 		if (inputs.hasColor()) {
 			// TODO: Handle the fragment shader here
-			transformations.define("gl_Color", "_vert_color");
+			transformations.define("gl_Color", "_vert_color_shade");
 
 			if (type == ShaderType.VERTEX) {
 			}
