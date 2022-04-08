@@ -90,7 +90,11 @@ public class IdMap {
 		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions);
 
 		StringReader propertiesReader = new StringReader(processed);
-		Properties properties = new Properties();
+
+		// Note: ordering of properties is significant
+		// See https://github.com/IrisShaders/Iris/issues/1327 and the relevant putIfAbsent calls in
+		// BlockMaterialMapping
+		Properties properties = new OrderBackedProperties();
 		try {
 			properties.load(propertiesReader);
 		} catch (IOException e) {
