@@ -45,8 +45,8 @@ public class MixinGui {
 		Font font = Minecraft.getInstance().font;
 
 		List<String> warningLines = new ArrayList<>();
-		warningLines.add("[Iris] Sodium isn't installed; you will have poor performance.");
-		warningLines.add("[Iris] Install Sodium if you want to run benchmarks or get higher FPS!");
+		warningLines.add("[" + Iris.MODNAME + "] Sodium isn't installed; you will have poor performance.");
+		warningLines.add("[" + Iris.MODNAME + "] Install Sodium if you want to run benchmarks or get higher FPS!");
 
 		for (int i = 0; i < warningLines.size(); ++i) {
 			String string = warningLines.get(i);

@@ -196,7 +196,7 @@ public class MixinLevelRenderer {
 		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
 			pipeline.pushProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
-			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
+			throw new IllegalStateException("[" + Iris.MODNAME + "] Unexpected terrain layer: " + renderType);
 		}
 		pipeline.setPhase(GbufferPrograms.refineTerrainPhase(renderType));
 	}
@@ -209,7 +209,7 @@ public class MixinLevelRenderer {
 		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
 			pipeline.popProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
-			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
+			throw new IllegalStateException("[" + Iris.MODNAME + "] Unexpected terrain layer: " + renderType);
 		}
 	}
 

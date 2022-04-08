@@ -52,7 +52,15 @@ import java.util.zip.ZipException;
 
 public class Iris {
 	public static final String MODID = "iris";
-	public static final IrisLogging logger = new IrisLogging("Iris");
+
+	/**
+	 * The user-facing name of the mod. Moved into a constant to facilitate
+	 * easy branding changes (for forks). You'll still need to change this
+	 * separately in mixin plugin classes & the language files.
+	 */
+	public static final String MODNAME = "Iris";
+
+	public static final IrisLogging logger = new IrisLogging(MODNAME);
 
 	private static Path shaderpacksDirectory;
 	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
