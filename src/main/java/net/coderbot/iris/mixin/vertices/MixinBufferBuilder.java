@@ -32,10 +32,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private int vertexCount;
 
 	@Unique
-	private QuadView quad = new QuadView();
+	private final QuadView quad = new QuadView();
 
 	@Unique
-	private Vector3f normal = new Vector3f();
+	private final Vector3f normal = new Vector3f();
 
 	@Unique
 	private int normalOffset;

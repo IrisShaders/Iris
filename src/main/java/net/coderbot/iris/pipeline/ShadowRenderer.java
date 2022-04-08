@@ -186,15 +186,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 			// Detect the sun-bounce GI in SEUS Renewed and SEUS v11.
 			// TODO: This is very hacky, we need a better way to detect sun-bounce GI.
-			if (fsh.contains("GI_QUALITY") && fsh.contains("GI_RENDER_RESOLUTION")
-					&& fsh.contains("GI_RADIUS")
-					&& fsh.contains("#define GI\t// Indirect lighting from sunlight.")
-					&& !fsh.contains("//#define GI\t// Indirect lighting from sunlight.")
-					&& !fsh.contains("// #define GI\t// Indirect lighting from sunlight.")) {
-				this.packHasIndirectSunBounceGi = true;
-			} else {
-				this.packHasIndirectSunBounceGi = false;
-			}
+			this.packHasIndirectSunBounceGi = fsh.contains("GI_QUALITY") && fsh.contains("GI_RENDER_RESOLUTION")
+				&& fsh.contains("GI_RADIUS")
+				&& fsh.contains("#define GI\t// Indirect lighting from sunlight.")
+				&& !fsh.contains("//#define GI\t// Indirect lighting from sunlight.")
+				&& !fsh.contains("// #define GI\t// Indirect lighting from sunlight.");
 		} else {
 			this.packHasIndirectSunBounceGi = false;
 		}

@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 public class IrisLogging {
 	public static boolean ENABLE_SPAM = false; // FabricLoader.getInstance().isDevelopmentEnvironment();
 
-	private Logger logger;
+	private final Logger logger;
 
 	public IrisLogging(String loggerName) {
 		this.logger = LogManager.getLogger(loggerName);

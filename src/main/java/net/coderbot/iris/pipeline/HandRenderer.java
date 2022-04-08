@@ -23,7 +23,7 @@ public class HandRenderer {
 
 	private boolean ACTIVE;
 	private boolean renderingSolid;
-	private FullyBufferedMultiBufferSource bufferSource = new FullyBufferedMultiBufferSource();
+	private final FullyBufferedMultiBufferSource bufferSource = new FullyBufferedMultiBufferSource();
 
 	public static final float DEPTH = 0.125F;
 

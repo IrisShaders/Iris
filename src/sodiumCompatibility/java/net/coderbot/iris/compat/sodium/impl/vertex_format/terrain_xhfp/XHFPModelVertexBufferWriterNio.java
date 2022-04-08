@@ -26,8 +26,8 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
     float uSum;
     float vSum;
 
-    private QuadViewTerrain.QuadViewTerrainNio currentQuad = new QuadViewTerrain.QuadViewTerrainNio();
-    private Vector3f normal = new Vector3f();
+    private final QuadViewTerrain.QuadViewTerrainNio currentQuad = new QuadViewTerrain.QuadViewTerrainNio();
+    private final Vector3f normal = new Vector3f();
 
     @Override
     public void writeQuad(float x, float y, float z, int color, float u, float v, int light) {

@@ -8,7 +8,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.BufferUtils;
 
 public class MatrixUniform extends Uniform {
-	private FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+	private final FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
 	private Matrix4f cachedValue;
 	private final Supplier<Matrix4f> value;
 
