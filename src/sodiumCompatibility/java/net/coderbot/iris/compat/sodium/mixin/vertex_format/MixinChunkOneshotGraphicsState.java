@@ -5,7 +5,6 @@ import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
 import me.jellysquid.mods.sodium.client.gl.buffer.VertexData;
 import me.jellysquid.mods.sodium.client.render.chunk.backends.oneshot.ChunkOneshotGraphicsState;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
-import me.jellysquid.mods.sodium.client.render.chunk.format.DefaultModelVertexFormats;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;

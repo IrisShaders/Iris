@@ -26,7 +26,7 @@ public enum WorldRenderingPhase {
 	CLOUDS,
 	RAIN_SNOW,
 	WORLD_BORDER,
-	HAND_TRANSLUCENT;
+	HAND_TRANSLUCENT
 
 	public static WorldRenderingPhase fromTerrainRenderType(RenderType renderType) {
 		if (renderType == RenderType.solid()) {

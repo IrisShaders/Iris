@@ -1,12 +1,12 @@
 package net.coderbot.iris.rendertarget;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class RenderTargets {
 	private final RenderTarget[] targets;

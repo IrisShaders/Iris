@@ -9,6 +9,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
