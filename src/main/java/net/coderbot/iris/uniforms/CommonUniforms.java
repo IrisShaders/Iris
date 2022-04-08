@@ -1,8 +1,5 @@
 package net.coderbot.iris.uniforms;
 
-import java.util.Objects;
-import java.util.function.IntSupplier;
-
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
@@ -37,6 +34,9 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Objects;
+import java.util.function.IntSupplier;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;

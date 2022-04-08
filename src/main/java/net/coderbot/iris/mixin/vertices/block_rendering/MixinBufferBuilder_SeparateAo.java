@@ -1,12 +1,13 @@
 package net.coderbot.iris.mixin.vertices.block_rendering;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
-import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.util.Arrays;
 
 /**

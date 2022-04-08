@@ -1,11 +1,10 @@
 package net.coderbot.iris.uniforms;
 
-import java.util.OptionalLong;
-import java.util.function.IntSupplier;
-
-import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+
+import java.util.OptionalLong;
+import java.util.function.IntSupplier;
 
 /**
  * Implements uniforms relating the system time (as opposed to the world time)

@@ -1,9 +1,9 @@
 package net.coderbot.iris.gl.blending;
 
-import java.util.Optional;
-
 import net.coderbot.iris.Iris;
 import org.lwjgl.opengl.GL11;
+
+import java.util.Optional;
 
 public enum BlendModeFunction {
 	ZERO(GL11.GL_ZERO),

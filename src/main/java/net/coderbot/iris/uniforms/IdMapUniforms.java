@@ -1,7 +1,5 @@
 package net.coderbot.iris.uniforms;
 
-import java.util.function.IntSupplier;
-
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
@@ -12,6 +10,8 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.function.IntSupplier;
 
 public final class IdMapUniforms {
 

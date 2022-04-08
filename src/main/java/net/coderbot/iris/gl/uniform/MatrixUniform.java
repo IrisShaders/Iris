@@ -1,11 +1,11 @@
 package net.coderbot.iris.gl.uniform;
 
 import com.mojang.math.Matrix4f;
-import java.nio.FloatBuffer;
-import java.util.function.Supplier;
-
 import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
+import java.util.function.Supplier;
 
 public class MatrixUniform extends Uniform {
 	private final FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
