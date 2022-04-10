@@ -1,12 +1,12 @@
 package net.coderbot.iris.layer;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import net.coderbot.batchedentityrendering.impl.WrappableRenderType;
 import net.coderbot.iris.mixin.rendertype.RenderTypeAccessor;
 import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
+import java.util.Optional;
 
 public class IrisRenderTypeWrapper extends RenderType implements WrappableRenderType {
 	private final UseProgramRenderStateShard useProgram;

@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import net.coderbot.iris.block_rendering.MaterialIdHolder;
@@ -10,8 +9,6 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats
 import net.coderbot.iris.compat.sodium.impl.vertex_format.NormalHelper;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
-
-import java.nio.ByteBuffer;
 
 public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, MaterialIdAwareVertexWriter {
     private MaterialIdHolder idHolder;
@@ -26,8 +23,8 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
     float uSum;
     float vSum;
 
-    private QuadViewTerrain.QuadViewTerrainUnsafe currentQuad = new QuadViewTerrain.QuadViewTerrainUnsafe();
-    private Vector3f normal = new Vector3f();
+    private final QuadViewTerrain.QuadViewTerrainUnsafe currentQuad = new QuadViewTerrain.QuadViewTerrainUnsafe();
+    private final Vector3f normal = new Vector3f();
 
 	@Override
 	public void copyQuadAndFlipNormal() {
