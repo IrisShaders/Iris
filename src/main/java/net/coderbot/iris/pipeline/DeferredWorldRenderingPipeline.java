@@ -271,7 +271,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				}
 
 				if (source == null) {
-					return null;
+					return createDefaultPass();
 				}
 
 				return createPass(source, availability, condition == RenderCondition.SHADOW);
@@ -283,11 +283,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 				programs.getPackDirectives().getRenderTargetDirectives());
 
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
+		this.baseline = renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[] {0});
 
 		if (shadowRenderTargets != null) {
-			boolean shadowUsesImages =
-				table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram().getActiveImages() > 0;
+			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
+			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
 
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
 				programs.getPackDirectives(), programs, shadowRenderTargets, shadowUsesImages);
@@ -476,10 +476,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	public void beginPass(Pass pass) {
-		beginPass(pass, true);
-	}
-
-	public void beginPass(Pass pass, boolean allowBindBaseline) {
 		if (current == pass) {
 			return;
 		}
@@ -494,13 +490,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			pass.use();
 		} else {
 			Program.unbind();
-
-			if (allowBindBaseline) {
-				RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-				RenderSystem.viewport(0, 0, main.width, main.height);
-				this.baseline.bind();
-			}
 		}
+	}
+
+	private Pass createDefaultPass() {
+		GlFramebuffer framebufferBeforeTranslucents;
+		GlFramebuffer framebufferAfterTranslucents;
+
+		framebufferBeforeTranslucents =
+			renderTargets.createGbufferFramebuffer(flippedAfterPrepare, new int[] {0});
+		framebufferAfterTranslucents =
+			renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, new int[] {0});
+
+		return new Pass(null, framebufferBeforeTranslucents, framebufferAfterTranslucents, null,
+			null, false);
 	}
 
 	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow) {
@@ -618,20 +621,23 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			current = null;
 			matchPass();
 		} else {
-			beginPass(null, false);
+			beginPass(null);
 		}
 	}
 
 	private final class Pass {
+		@Nullable
 		private final Program program;
 		private final GlFramebuffer framebufferBeforeTranslucents;
 		private final GlFramebuffer framebufferAfterTranslucents;
+		@Nullable
 		private final AlphaTestOverride alphaTestOverride;
+		@Nullable
 		private final BlendModeOverride blendModeOverride;
 		private final boolean shadowViewport;
 
-		private Pass(Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents,
-					 AlphaTestOverride alphaTestOverride, BlendModeOverride blendModeOverride, boolean shadowViewport) {
+		private Pass(@Nullable Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents,
+					 @Nullable AlphaTestOverride alphaTestOverride, @Nullable BlendModeOverride blendModeOverride, boolean shadowViewport) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
@@ -683,12 +689,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			}
 		}
 
+		@Nullable
 		public Program getProgram() {
 			return program;
 		}
 
 		public void destroy() {
-			this.program.destroy();
+			if (this.program != null) {
+				this.program.destroy();
+			}
 		}
 	}
 
