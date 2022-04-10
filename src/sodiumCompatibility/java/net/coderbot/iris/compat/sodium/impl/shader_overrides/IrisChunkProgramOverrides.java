@@ -186,7 +186,7 @@ public class IrisChunkProgramOverrides {
         if (pipeline != null) {
 			pipeline.patchShaders(vertexType);
             for (IrisTerrainPass pass : IrisTerrainPass.values()) {
-				if (pass == IrisTerrainPass.SHADOW && !pipeline.hasShadowPass()) {
+				if (pass.isShadow() && !pipeline.hasShadowPass()) {
 					this.programs.put(pass, null);
 					continue;
 				}

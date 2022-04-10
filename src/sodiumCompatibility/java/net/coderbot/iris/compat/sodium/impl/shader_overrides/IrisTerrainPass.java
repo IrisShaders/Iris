@@ -16,4 +16,8 @@ public enum IrisTerrainPass {
     public String getName() {
         return name;
     }
+
+	public boolean isShadow() {
+		return this == SHADOW || this == SHADOW_CUTOUT;
+	}
 }
