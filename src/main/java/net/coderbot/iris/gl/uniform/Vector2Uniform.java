@@ -1,9 +1,9 @@
 package net.coderbot.iris.gl.uniform;
 
-import java.util.function.Supplier;
-
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.vendored.joml.Vector2f;
+
+import java.util.function.Supplier;
 
 public class Vector2Uniform extends Uniform {
 	private Vector2f cachedValue;

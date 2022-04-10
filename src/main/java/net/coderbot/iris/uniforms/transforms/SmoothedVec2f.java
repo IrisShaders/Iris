@@ -3,6 +3,7 @@ package net.coderbot.iris.uniforms.transforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
+
 import java.util.function.Supplier;
 
 public class SmoothedVec2f implements Supplier<Vector2f> {

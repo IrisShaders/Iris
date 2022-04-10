@@ -1,5 +1,14 @@
 package net.coderbot.iris.gl.shader;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.pipeline.WorldRenderingPhase;
+import net.minecraft.SharedConstants;
+import net.minecraft.Util;
+import org.lwjgl.opengl.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,16 +19,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.GlUtil;
-import net.coderbot.iris.pipeline.WorldRenderingPhase;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.gl.IrisRenderSystem;
-import org.lwjgl.opengl.*;
-
-import net.minecraft.SharedConstants;
-import net.minecraft.Util;
 
 public class StandardMacros {
 

@@ -24,5 +24,5 @@ public enum WorldRenderingPhase {
 	CLOUDS,
 	RAIN_SNOW,
 	WORLD_BORDER,
-	HAND_TRANSLUCENT;
+	HAND_TRANSLUCENT
 }
