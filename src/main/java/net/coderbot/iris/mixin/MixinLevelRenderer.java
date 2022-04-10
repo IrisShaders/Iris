@@ -79,6 +79,8 @@ public class MixinLevelRenderer {
 		Program.unbind();
 	}
 
+	// Setup shadow terrain & render shadows before the main terrain setup. We need to do things in this order to
+	// avoid breaking other mods such as Light Overlay: https://github.com/IrisShaders/Iris/issues/1356
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "net/minecraft/client/renderer/LevelRenderer.setupRender (Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZIZ)V"))
 	private void iris$renderTerrainShadows(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.renderShadows((LevelRendererAccessor) this, camera);
