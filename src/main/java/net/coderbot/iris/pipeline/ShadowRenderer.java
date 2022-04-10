@@ -88,7 +88,7 @@ public class ShadowRenderer {
 	private String debugStringTerrain = "(unavailable)";
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
-	private final ProfilerFiller profiler;
+	private ProfilerFiller profiler;
 
 	public ShadowRenderer(ProgramSource shadow, PackDirectives directives, ProgramSet programSet,
 						  ShadowRenderTargets shadowRenderTargets, boolean shadowUsesImages) {
@@ -372,6 +372,8 @@ public class ShadowRenderer {
 		}
 
 		renderedShadowEntities = shadowEntities;
+
+		profiler.pop();
 	}
 
 	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum) {
@@ -400,9 +402,15 @@ public class ShadowRenderer {
 		}
 
 		renderedShadowBlockEntities = shadowBlockEntities;
+
+		profiler.pop();
 	}
 
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		// We have to re-query this each frame since this changes based on whether the profiler is active
+		// If the profiler is inactive, it will return InactiveProfiler.INSTANCE
+		this.profiler = Minecraft.getInstance().getProfiler();
+
 		Minecraft client = Minecraft.getInstance();
 
 		profiler.popPush("shadows");
@@ -566,6 +574,7 @@ public class ShadowRenderer {
 		levelRenderer.setRenderBuffers(playerBuffers);
 
 		ACTIVE = false;
+		profiler.pop();
 		profiler.popPush("updatechunks");
 	}
 
