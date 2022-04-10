@@ -120,7 +120,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private String debugStringTerrain = "(unavailable)";
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
-	private final ProfilerFiller profiler;
+	private ProfilerFiller profiler;
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
@@ -496,6 +496,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		renderedShadowEntities = shadowEntities;
+
+		profiler.pop();
 	}
 
 	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum) {
@@ -524,10 +526,16 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		renderedShadowBlockEntities = shadowBlockEntities;
+
+		profiler.pop();
 	}
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		// We have to re-query this each frame since this changes based on whether the profiler is active
+		// If the profiler is inactive, it will return InactiveProfiler.INSTANCE
+		this.profiler = Minecraft.getInstance().getProfiler();
+
 		// Note: This will probably be done differently in 1.17 since blend mode overrides are now associated with
 		//       vanilla ShaderInstances.
 		if (blendModeOverride != null) {
@@ -724,6 +732,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		levelRenderer.setRenderBuffers(playerBuffers);
 
 		ACTIVE = false;
+		profiler.pop();
 		profiler.popPush("updatechunks");
 	}
 
