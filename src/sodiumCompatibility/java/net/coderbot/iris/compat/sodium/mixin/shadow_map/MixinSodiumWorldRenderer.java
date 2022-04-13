@@ -73,8 +73,8 @@ public class MixinSodiumWorldRenderer {
 
             wasRenderingShadows = true;
         } else if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			if (this.chunkRenderManager instanceof SwappableChunkRenderManager) {
-				((SwappableChunkRenderManager) this.chunkRenderManager).iris$swapVisibilityState();
+			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
+				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
 				swapCachedCameraPositions();
 			}
 
