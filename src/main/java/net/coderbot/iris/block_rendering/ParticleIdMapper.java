@@ -9,7 +9,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.TerrainParticle;
 
 public class ParticleIdMapper {
-	public static ParticleIdMapper instance = new ParticleIdMapper();
+	public static ParticleIdMapper INSTANCE = new ParticleIdMapper();
 
 	private Object2IntFunction<NamespacedId> idMap = new Object2IntOpenHashMap<>();
 
@@ -30,5 +30,9 @@ public class ParticleIdMapper {
 	public void resetParticle() {
 		this.currentParticle = 0;
 		this.currentBlockParticle = 0;
+	}
+
+	public static ParticleIdMapper getInstance() {
+		return INSTANCE;
 	}
 }

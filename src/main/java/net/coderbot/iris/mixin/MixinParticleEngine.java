@@ -43,12 +43,12 @@ public class MixinParticleEngine {
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/Particle;render(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void captureParticles(PoseStack arg, MultiBufferSource.BufferSource arg2, LightTexture arg3, Camera arg4, float f, CallbackInfo ci, Iterator var6, ParticleRenderType lv, Iterable iterable, Tesselator lv2, BufferBuilder lv3, Iterator var11, Particle lv4) {
-		ParticleIdMapper.instance.setCurrentParticle(lv4);
+		ParticleIdMapper.getInstance().setCurrentParticle(lv4);
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/Particle;render(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void resetParticles(PoseStack arg, MultiBufferSource.BufferSource arg2, LightTexture arg3, Camera arg4, float f, CallbackInfo ci, Iterator var6, ParticleRenderType lv, Iterable iterable, Tesselator lv2, BufferBuilder lv3, Iterator var11, Particle lv4) {
-		ParticleIdMapper.instance.resetParticle();
+		ParticleIdMapper.getInstance().resetParticle();
 	}
 
 	@Inject(method = RENDER, at = @At("RETURN"))

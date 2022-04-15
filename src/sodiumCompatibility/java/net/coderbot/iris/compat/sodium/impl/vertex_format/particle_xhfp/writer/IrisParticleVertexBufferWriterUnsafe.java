@@ -2,16 +2,12 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.particle_xhfp.writer;
 
 import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
 import me.jellysquid.mods.sodium.client.model.vertex.formats.particle.ParticleVertexSink;
-import me.jellysquid.mods.sodium.client.util.Norm3b;
 import net.coderbot.iris.block_rendering.ParticleIdMapper;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.particle_xhfp.QuadViewParticle;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.lwjgl.system.MemoryUtil;
-
-import java.nio.ByteBuffer;
 
 public class IrisParticleVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ParticleVertexSink {
 	private final QuadViewParticle.QuadViewParticleUnsafe quad = new QuadViewParticle.QuadViewParticleUnsafe();
@@ -35,8 +31,8 @@ public class IrisParticleVertexBufferWriterUnsafe extends VertexBufferWriterUnsa
 		MemoryUtil.memPutFloat(i + 16, v);
 		MemoryUtil.memPutInt(i + 20, color);
 		MemoryUtil.memPutInt(i + 24, light);
-		MemoryUtil.memPutShort(i + 28, (short) ParticleIdMapper.instance.currentParticle);
-		MemoryUtil.memPutShort(i + 30, (short) ParticleIdMapper.instance.currentBlockParticle);
+		MemoryUtil.memPutShort(i + 28, (short) ParticleIdMapper.getInstance().currentParticle);
+		MemoryUtil.memPutShort(i + 30, (short) ParticleIdMapper.getInstance().currentBlockParticle);
 
 		this.advance();
 

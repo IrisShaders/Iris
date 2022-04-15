@@ -190,7 +190,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programs.getPackDirectives().shouldUseSeparateAo());
 
-		ParticleIdMapper.instance.setIdMap(programs.getPack().getIdMap().getParticleIdMap());
+		ParticleIdMapper.getInstance().setIdMap(programs.getPack().getIdMap().getParticleIdMap());
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);

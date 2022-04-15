@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.BufferVertexConsumer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
+import net.coderbot.iris.block_rendering.ParticleIdMapper;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
@@ -28,6 +29,9 @@ import java.nio.ByteBuffer;
 public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder  {
 	@Unique
 	boolean extending;
+
+	@Unique
+	boolean isParticle;
 
 	@Unique
 	private int vertexCount;
@@ -70,7 +74,8 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
-		extending = IrisApi.getInstance().isShaderPackInUse() && (format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN || format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY || format == DefaultVertexFormat.PARTICLE || format == IrisVertexFormats.PARTICLE);
+		isParticle = format == DefaultVertexFormat.PARTICLE || format == IrisVertexFormats.PARTICLE;
+		extending = IrisApi.getInstance().isShaderPackInUse() && (isParticle || format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN || format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY);
 		vertexCount = 0;
 
 		if (extending) {
@@ -83,7 +88,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		if (extending) {
 			if (format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY) {
 				this.format = IrisVertexFormats.ENTITY;
-			} else if (format == DefaultVertexFormat.PARTICLE || format == IrisVertexFormats.PARTICLE) {
+			} else if (isParticle) {
 				this.format = IrisVertexFormats.PARTICLE;
 			} else if (format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN) {
 				this.format = IrisVertexFormats.TERRAIN;
@@ -115,12 +120,12 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			return;
 		}
 
-		this.putShort(0, currentBlock);
-		this.putShort(2, currentRenderType);
+		this.putShort(0, isParticle ? (short) ParticleIdMapper.getInstance().currentParticle : currentBlock);
+		this.putShort(2, isParticle ? (short) ParticleIdMapper.getInstance().currentBlockParticle : currentRenderType);
 		this.nextElement();
 		this.putFloat(0, 0);
 		this.putFloat(4, 0);
-		if (format != IrisVertexFormats.PARTICLE) {
+		if (!isParticle) {
 			this.nextElement();
 			this.putInt(0, 0);
 		}
@@ -155,7 +160,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, midV);
 		}
 
-		if (format != IrisVertexFormats.PARTICLE) {
+		if (!isParticle) {
 			// TODO: Keep this in sync with the extensions
 			int extendedDataLength = (2 * 2) + (2 * 4) + (1 * 4);
 
