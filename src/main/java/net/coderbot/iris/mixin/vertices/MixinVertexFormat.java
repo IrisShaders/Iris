@@ -26,6 +26,10 @@ public class MixinVertexFormat {
 				IrisVertexFormats.ENTITY.setupBufferState(pointer);
 
 				ci.cancel();
+			} else if ((Object) this == DefaultVertexFormat.PARTICLE) {
+				IrisVertexFormats.PARTICLE.setupBufferState(pointer);
+
+				ci.cancel();
 			}
 		}
 	}
@@ -39,6 +43,10 @@ public class MixinVertexFormat {
 				ci.cancel();
 			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
 				IrisVertexFormats.ENTITY.clearBufferState();
+
+				ci.cancel();
+			} else if ((Object) this == DefaultVertexFormat.PARTICLE) {
+				IrisVertexFormats.PARTICLE.clearBufferState();
 
 				ci.cancel();
 			}

@@ -31,6 +31,8 @@ public class MixinVertexBuffer {
 				this.format = IrisVertexFormats.TERRAIN;
 			} else if (format == DefaultVertexFormat.NEW_ENTITY) {
 				this.format = IrisVertexFormats.ENTITY;
+			} else if (format == DefaultVertexFormat.PARTICLE) {
+				this.format = IrisVertexFormats.PARTICLE;
 			}
 		}
 	}

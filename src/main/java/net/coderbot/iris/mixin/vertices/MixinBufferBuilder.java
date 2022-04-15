@@ -70,7 +70,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
-		extending = IrisApi.getInstance().isShaderPackInUse() && (format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN || format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY);
+		extending = IrisApi.getInstance().isShaderPackInUse() && (format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN || format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY || format == DefaultVertexFormat.PARTICLE || format == IrisVertexFormats.PARTICLE);
 		vertexCount = 0;
 
 		if (extending) {
@@ -81,7 +81,14 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Inject(method = "begin", at = @At("RETURN"))
 	private void iris$afterBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
 		if (extending) {
-			this.format = (format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY) ? IrisVertexFormats.ENTITY : IrisVertexFormats.TERRAIN;
+			if (format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY) {
+				this.format = IrisVertexFormats.ENTITY;
+			} else if (format == DefaultVertexFormat.PARTICLE || format == IrisVertexFormats.PARTICLE) {
+				this.format = IrisVertexFormats.PARTICLE;
+			} else if (format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN) {
+				this.format = IrisVertexFormats.TERRAIN;
+			}
+
 			this.currentElement = this.format.getElements().get(0);
 		}
 	}
@@ -113,8 +120,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		this.nextElement();
 		this.putFloat(0, 0);
 		this.putFloat(4, 0);
-		this.nextElement();
-		this.putInt(0, 0);
+		if (format != IrisVertexFormats.PARTICLE) {
+			this.nextElement();
+			this.putInt(0, 0);
+		}
 		this.nextElement();
 
 		vertexCount += 1;
@@ -126,21 +135,9 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 		vertexCount = 0;
 
-		// TODO: Keep this in sync with the extensions
-		int extendedDataLength = (2 * 2) + (2 * 4) + (1 * 4);
-
 		int stride = this.format.getVertexSize();
 
 		quad.setup(this.buffer, this.nextElementByte, stride);
-		NormalHelper.computeFaceNormal(this.normal, quad);
-		int packedNormal = NormalHelper.packNormal(this.normal, 0);
-
-		buffer.putInt(this.nextElementByte - 4 - extendedDataLength, packedNormal);
-		buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride, packedNormal);
-		buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride * 2, packedNormal);
-		buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride * 3, packedNormal);
-
-		computeTangents();
 
 		float midU = 0;
 		float midV = 0;
@@ -156,6 +153,21 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		for (int vertex = 0; vertex < 4; vertex++) {
 			buffer.putFloat(this.nextElementByte - 12 - stride * vertex, midU);
 			buffer.putFloat(this.nextElementByte - 8 - stride * vertex, midV);
+		}
+
+		if (format != IrisVertexFormats.PARTICLE) {
+			// TODO: Keep this in sync with the extensions
+			int extendedDataLength = (2 * 2) + (2 * 4) + (1 * 4);
+
+			NormalHelper.computeFaceNormal(this.normal, quad);
+			int packedNormal = NormalHelper.packNormal(this.normal, 0);
+
+			buffer.putInt(this.nextElementByte - 4 - extendedDataLength, packedNormal);
+			buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride, packedNormal);
+			buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride * 2, packedNormal);
+			buffer.putInt(this.nextElementByte - 4 - extendedDataLength - stride * 3, packedNormal);
+
+			computeTangents();
 		}
 	}
 

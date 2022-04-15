@@ -44,6 +44,11 @@ public class IdMap {
 	private final Object2IntMap<NamespacedId> entityIdMap;
 
 	/**
+	 * Maps a given particle ID to an integer ID
+	 */
+	private final Object2IntMap<NamespacedId> particleIdMap;
+
+	/**
 	 * Maps block states to block ids defined in block.properties
 	 */
 	private Int2ObjectMap<List<BlockEntry>> blockPropertiesMap;
@@ -59,6 +64,9 @@ public class IdMap {
 
 		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions)
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
+
+		particleIdMap = loadProperties(shaderPath, "particle.properties", shaderPackOptions)
+			.map(IdMap::parseParticleIdMap).orElse(Object2IntMaps.emptyMap());
 
 		loadProperties(shaderPath, "block.properties", shaderPackOptions).ifPresent(blockProperties -> {
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
@@ -127,6 +135,10 @@ public class IdMap {
 
 	private static Object2IntMap<NamespacedId> parseEntityIdMap(Properties properties) {
 		return parseIdMap(properties, "entity.", "entity.properties");
+	}
+
+	private static Object2IntMap<NamespacedId> parseParticleIdMap(Properties properties) {
+		return parseIdMap(properties, "particle.", "particle.properties");
 	}
 
 	/**
@@ -264,6 +276,10 @@ public class IdMap {
 		return entityIdMap;
 	}
 
+	public Object2IntFunction<NamespacedId> getParticleIdMap() {
+		return particleIdMap;
+	}
+
 	public Map<NamespacedId, BlockRenderType> getBlockRenderTypeMap() {
 		return blockRenderTypeMap;
 	}
@@ -282,12 +298,13 @@ public class IdMap {
 
 		return Objects.equals(itemIdMap, idMap.itemIdMap)
 				&& Objects.equals(entityIdMap, idMap.entityIdMap)
+				&& Objects.equals(particleIdMap, idMap.particleIdMap)
 				&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
 				&& Objects.equals(blockRenderTypeMap, idMap.blockRenderTypeMap);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderTypeMap);
+		return Objects.hash(itemIdMap, entityIdMap, particleIdMap, blockPropertiesMap, blockRenderTypeMap);
 	}
 }

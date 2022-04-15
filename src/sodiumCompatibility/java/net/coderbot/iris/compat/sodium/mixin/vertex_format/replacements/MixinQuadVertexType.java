@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.vertex_format.entity;
+package net.coderbot.iris.compat.sodium.mixin.vertex_format.replacements;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;

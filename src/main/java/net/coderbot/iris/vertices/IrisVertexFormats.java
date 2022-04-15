@@ -12,6 +12,7 @@ public class IrisVertexFormats {
 
 	public static final VertexFormat TERRAIN;
 	public static final VertexFormat ENTITY;
+	public static final VertexFormat PARTICLE;
 
 	static {
 		ENTITY_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
@@ -20,6 +21,7 @@ public class IrisVertexFormats {
 
 		ImmutableList.Builder<VertexFormatElement> terrainElements = ImmutableList.builder();
 		ImmutableList.Builder<VertexFormatElement> entityElements = ImmutableList.builder();
+		ImmutableList.Builder<VertexFormatElement> particleElements = ImmutableList.builder();
 
 		terrainElements.add(DefaultVertexFormat.ELEMENT_POSITION);
 		terrainElements.add(DefaultVertexFormat.ELEMENT_COLOR);
@@ -42,7 +44,15 @@ public class IrisVertexFormats {
 		entityElements.add(MID_TEXTURE_ELEMENT);
 		entityElements.add(TANGENT_ELEMENT);
 
+		particleElements.add(DefaultVertexFormat.ELEMENT_POSITION);
+		particleElements.add(DefaultVertexFormat.ELEMENT_UV0);
+		particleElements.add(DefaultVertexFormat.ELEMENT_COLOR);
+		particleElements.add(DefaultVertexFormat.ELEMENT_UV2);
+		particleElements.add(ENTITY_ELEMENT);
+		particleElements.add(MID_TEXTURE_ELEMENT);
+
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());
+		PARTICLE = new VertexFormat(particleElements.build());
 	}
 }
