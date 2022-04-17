@@ -14,7 +14,8 @@
 
 * SEUS (NVIDIA or AMD GPU required, does not work on Intel Windows drivers)
    * [SEUS V11](https://www.sonicether.com/seus/)
-   * [SEUS Renewed](https://www.sonicether.com/seus/) (force_glsl_extensions_warn=true)
+   * [SEUS Renewed](https://www.sonicether.com/seus/)
+      * (To use SEUS Renewed with mesa, you need to add the environment variable "force_glsl_extensions_warn=true", to do this you need to add "set force_glsl_extensions_warn=true" as a wrapper command (you need an appropriate launcher, like PolyMC))
    * [SEUS PTGI E12 / HRR 2.1](https://www.sonicether.com/seus)
        * SEUS PTGI HRR 3 is not currently supported.
 
