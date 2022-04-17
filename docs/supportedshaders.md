@@ -12,9 +12,9 @@
 
 * [Continuum 2.0.4](https://continuum.graphics/downloads)
 
-* SEUS (NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drivers)
+* SEUS (NVIDIA or AMD GPU required, does not work on Intel Windows drivers)
    * [SEUS V11](https://www.sonicether.com/seus/)
-   * [SEUS Renewed](https://www.sonicether.com/seus/)
+   * [SEUS Renewed](https://www.sonicether.com/seus/) (force_glsl_extensions_warn=true)
    * [SEUS PTGI E12 / HRR 2.1](https://www.sonicether.com/seus)
        * SEUS PTGI HRR 3 is not currently supported.
 
