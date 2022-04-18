@@ -4,8 +4,8 @@ import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
 import me.jellysquid.mods.sodium.client.model.vertex.formats.particle.ParticleVertexSink;
-import net.coderbot.iris.block_rendering.ParticleIdMapper;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.particle_xhfp.QuadViewParticle;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 
 import java.nio.ByteBuffer;
@@ -33,9 +33,8 @@ public class IrisParticleVertexBufferWriterNio extends VertexBufferWriterNio imp
 		buffer.putFloat(i + 16, v);
 		buffer.putInt(i + 20, color);
 		buffer.putInt(i + 24, light);
-		buffer.putShort(i + 28, (short) ParticleIdMapper.getInstance().currentParticle);
-		buffer.putShort(i + 30, (short) ParticleIdMapper.getInstance().currentBlockParticle);
-
+		buffer.putShort(i + 28, (short) CapturedRenderingState.INSTANCE.getCurrentParticle().x);
+		buffer.putShort(i + 30, (short) CapturedRenderingState.INSTANCE.getCurrentParticle().y);
 
 		this.advance();
 

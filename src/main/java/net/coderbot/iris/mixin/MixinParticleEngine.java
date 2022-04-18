@@ -3,11 +3,11 @@ package net.coderbot.iris.mixin;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
-import net.coderbot.iris.block_rendering.ParticleIdMapper;
 import net.coderbot.iris.fantastic.ParticleIdHolder;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
@@ -43,12 +43,12 @@ public class MixinParticleEngine {
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/Particle;render(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void captureParticles(PoseStack arg, MultiBufferSource.BufferSource arg2, LightTexture arg3, Camera arg4, float f, CallbackInfo ci, Iterator var6, ParticleRenderType lv, Iterable iterable, Tesselator lv2, BufferBuilder lv3, Iterator var11, Particle lv4) {
-		ParticleIdMapper.getInstance().setCurrentParticle(lv4);
+		CapturedRenderingState.INSTANCE.setCurrentParticle(lv4);
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/Particle;render(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/client/Camera;F)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void resetParticles(PoseStack arg, MultiBufferSource.BufferSource arg2, LightTexture arg3, Camera arg4, float f, CallbackInfo ci, Iterator var6, ParticleRenderType lv, Iterable iterable, Tesselator lv2, BufferBuilder lv3, Iterator var11, Particle lv4) {
-		ParticleIdMapper.getInstance().resetParticle();
+		CapturedRenderingState.INSTANCE.setCurrentParticle(null);
 	}
 
 	@Inject(method = RENDER, at = @At("RETURN"))

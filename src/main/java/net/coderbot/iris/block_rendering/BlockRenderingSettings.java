@@ -12,6 +12,7 @@ public class BlockRenderingSettings {
 	private boolean reloadRequired;
 	private Object2IntMap<BlockState> blockStateIds;
 	private Object2IntFunction<NamespacedId> entityIds;
+	private Object2IntFunction<NamespacedId> particleIds;
 	private float ambientOcclusionLevel;
 	private boolean disableDirectionalShading;
 	private boolean useSeparateAo;
@@ -37,10 +38,15 @@ public class BlockRenderingSettings {
 		return blockStateIds;
 	}
 
-	// TODO (coderbot): This doesn't belong here. But I couldn't think of a nicer place to put it.
+	// TODO (coderbot): These don't belong here. But I couldn't think of a nicer place to put them.
 	@Nullable
 	public Object2IntFunction<NamespacedId> getEntityIds() {
 		return entityIds;
+	}
+
+	@Nullable
+	public Object2IntFunction<NamespacedId> getParticleIds() {
+		return particleIds;
 	}
 
 	public void setBlockStateIds(Object2IntMap<BlockState> blockStateIds) {
@@ -55,6 +61,12 @@ public class BlockRenderingSettings {
 	public void setEntityIds(Object2IntFunction<NamespacedId> entityIds) {
 		// note: no reload needed, entities are rebuilt every frame.
 		this.entityIds = entityIds;
+	}
+
+	public void setParticleIds(Object2IntFunction<NamespacedId> particleIds) {
+		// todo: do we need to reload?
+		this.reloadRequired = true;
+		this.particleIds = particleIds;
 	}
 
 	public float getAmbientOcclusionLevel() {

@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.BufferVertexConsumer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
-import net.coderbot.iris.block_rendering.ParticleIdMapper;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
@@ -120,8 +120,8 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			return;
 		}
 
-		this.putShort(0, isParticle ? (short) ParticleIdMapper.getInstance().currentParticle : currentBlock);
-		this.putShort(2, isParticle ? (short) ParticleIdMapper.getInstance().currentBlockParticle : currentRenderType);
+		this.putShort(0, isParticle ? (short) CapturedRenderingState.INSTANCE.getCurrentParticle().x : currentBlock);
+		this.putShort(2, isParticle ? (short) CapturedRenderingState.INSTANCE.getCurrentParticle().y : currentRenderType);
 		this.nextElement();
 		this.putFloat(0, 0);
 		this.putFloat(4, 0);

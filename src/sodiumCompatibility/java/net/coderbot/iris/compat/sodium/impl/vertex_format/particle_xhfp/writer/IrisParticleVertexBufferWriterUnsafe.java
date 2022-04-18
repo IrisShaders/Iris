@@ -4,8 +4,8 @@ import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
 import me.jellysquid.mods.sodium.client.model.vertex.formats.particle.ParticleVertexSink;
-import net.coderbot.iris.block_rendering.ParticleIdMapper;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.particle_xhfp.QuadViewParticle;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.lwjgl.system.MemoryUtil;
 
@@ -31,8 +31,8 @@ public class IrisParticleVertexBufferWriterUnsafe extends VertexBufferWriterUnsa
 		MemoryUtil.memPutFloat(i + 16, v);
 		MemoryUtil.memPutInt(i + 20, color);
 		MemoryUtil.memPutInt(i + 24, light);
-		MemoryUtil.memPutShort(i + 28, (short) ParticleIdMapper.getInstance().currentParticle);
-		MemoryUtil.memPutShort(i + 30, (short) ParticleIdMapper.getInstance().currentBlockParticle);
+		MemoryUtil.memPutShort(i + 28, (short) CapturedRenderingState.INSTANCE.getCurrentParticle().x);
+		MemoryUtil.memPutShort(i + 30, (short) CapturedRenderingState.INSTANCE.getCurrentParticle().y);
 
 		this.advance();
 

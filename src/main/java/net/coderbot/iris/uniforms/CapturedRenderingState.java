@@ -1,9 +1,15 @@
 package net.coderbot.iris.uniforms;
 
 import com.mojang.math.Matrix4f;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.fantastic.ParticleIdHolder;
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
+import net.coderbot.iris.mixin.TerrainParticleAccessor;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.TerrainParticle;
 
 public class CapturedRenderingState {
 	public static final CapturedRenderingState INSTANCE = new CapturedRenderingState();
@@ -16,6 +22,9 @@ public class CapturedRenderingState {
 	private Runnable blockEntityIdListener = null;
 
 	private int currentRenderedEntity = -1;
+
+	private Vector2i currentParticle = new Vector2i();
+
 	private Runnable entityIdListener = null;
 
 	private CapturedRenderingState() {
@@ -83,6 +92,24 @@ public class CapturedRenderingState {
 
 	public ValueUpdateNotifier getBlockEntityIdNotifier() {
 		return listener -> this.blockEntityIdListener = listener;
+	}
+
+	public void setCurrentParticle(Particle particle) {
+		if (particle == null) {
+			this.currentParticle.set(0);
+			return;
+		}
+
+		int particleId = BlockRenderingSettings.INSTANCE.getParticleIds().applyAsInt(((ParticleIdHolder) particle).getParticleId());
+		int blockParticleId = 0;
+		if (particle instanceof TerrainParticle && BlockRenderingSettings.INSTANCE.getBlockStateIds() != null) {
+			blockParticleId = BlockRenderingSettings.INSTANCE.getBlockStateIds().applyAsInt(((TerrainParticleAccessor) particle).getBlockState());
+		}
+		this.currentParticle.set(particleId, blockParticleId);
+	}
+
+	public Vector2i getCurrentParticle() {
+		return currentParticle;
 	}
 
 	public int getCurrentRenderedEntity() {
