@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(targets = "net/fabricmc/fabric/impl/client/indigo/renderer/render/AbstractQuadRenderer", remap = false)
 @Pseudo
 public class MixinAbstractQuadRenderer {
-	@Redirect(method = {"tesselateSmooth", "tesselateSmoothEmissive"},
+	@Redirect(method = {"tessellateSmooth", "tessellateSmoothEmissive"},
 	          at = @At(value = "INVOKE",
 	                   target = "Lnet/fabricmc/fabric/impl/client/indigo/renderer/helper/ColorHelper;multiplyRGB(IF)I"))
 	private int iris$separateAoColorMultiply(int color, float ao) {
