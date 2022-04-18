@@ -12,7 +12,6 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 
 import java.util.List;
-import java.util.Optional;
 
 public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStringOptionElement> {
 	protected final StringOption option;

@@ -1,19 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.OptionalInt;
-import java.util.Set;
-import java.util.function.IntFunction;
-import java.util.function.Supplier;
-
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -62,6 +48,19 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL15C;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -347,7 +346,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.phase = WorldRenderingPhase.NONE;
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
-				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages);
+			shadowMapRenderer instanceof EmptyShadowMapRenderer || shadowMapRenderer == null ? null : createShadowTerrainSamplers,
+			createTerrainImages, createShadowTerrainImages);
 	}
 
 	private void checkWorld() {

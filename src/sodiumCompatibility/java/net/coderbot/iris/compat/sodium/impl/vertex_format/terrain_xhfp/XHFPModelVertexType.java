@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.xhfp;
+package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeFormat;
@@ -36,7 +36,7 @@ public class XHFPModelVertexType implements ChunkVertexType {
 
     @Override
     public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-        return new XHFPModelVertexBufferWriterNio(buffer);
+        return direct ? new XHFPModelVertexBufferWriterUnsafe(buffer) : new XHFPModelVertexBufferWriterNio(buffer);
     }
 
     @Override

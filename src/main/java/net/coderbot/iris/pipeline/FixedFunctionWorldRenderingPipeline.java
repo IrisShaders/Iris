@@ -1,8 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import java.util.List;
-import java.util.OptionalInt;
-
 import com.mojang.blaze3d.platform.GlStateManager;
 
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
@@ -11,6 +8,9 @@ import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+
+import java.util.List;
+import java.util.OptionalInt;
 
 public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
 	public FixedFunctionWorldRenderingPipeline() {

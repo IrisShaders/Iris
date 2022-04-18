@@ -48,7 +48,10 @@ public class BlockMaterialMapping {
 		if (propertyPredicates.isEmpty()) {
 			// Just add all the states if there aren't any predicates
 			for (BlockState state : block.getStateDefinition().getPossibleStates()) {
-				idMap.put(state, intId);
+				// NB: Using putIfAbsent means that the first successful mapping takes precedence
+				//     Needed for OptiFine parity:
+				//     https://github.com/IrisShaders/Iris/issues/1327
+				idMap.putIfAbsent(state, intId);
 			}
 
 			return;
@@ -77,7 +80,10 @@ public class BlockMaterialMapping {
 		// block and check for ones that match the filters. This isn't particularly efficient, but it works!
 		for (BlockState state : stateManager.getPossibleStates()) {
 			if (checkState(state, properties)) {
-				idMap.put(state, intId);
+				// NB: Using putIfAbsent means that the first successful mapping takes precedence
+				//     Needed for OptiFine parity:
+				//     https://github.com/IrisShaders/Iris/issues/1327
+				idMap.putIfAbsent(state, intId);
 			}
 		}
 	}
