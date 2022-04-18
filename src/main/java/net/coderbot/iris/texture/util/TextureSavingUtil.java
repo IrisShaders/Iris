@@ -11,10 +11,10 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 
 public class TextureSavingUtil {
-	public static void saveTextures(String directory, String filename, int textureId, int maxLevel, int width, int height) {
+	public static void saveTextures(String directory, String filename, int textureId, int mipLevel, int width, int height) {
 		String extension = FilenameUtils.getExtension(filename);
 		String baseName = filename.substring(0, filename.length() - extension.length() - 1);
-		for (int level = 0; level <= maxLevel; ++level) {
+		for (int level = 0; level <= mipLevel; ++level) {
 			saveTexture(directory, baseName + "_" + level + "." + extension, textureId, level, width >> level, height >> level);
 		}
 	}

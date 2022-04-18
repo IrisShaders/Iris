@@ -42,7 +42,9 @@ public class HorizonRenderer {
 	 */
 	private static final double SIN_22_5 = Math.sin(Math.toRadians(22.5));
 
-	public HorizonRenderer() {
+	public static final HorizonRenderer INSTANCE = new HorizonRenderer();
+
+	private HorizonRenderer() {
 	}
 
 	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {

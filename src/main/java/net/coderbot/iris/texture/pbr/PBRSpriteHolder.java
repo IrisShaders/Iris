@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 
-public class PBRAtlasSpriteHolder {
+public class PBRSpriteHolder {
 	protected TextureAtlasSprite normalSprite;
 	protected TextureAtlasSprite specularSprite;
 

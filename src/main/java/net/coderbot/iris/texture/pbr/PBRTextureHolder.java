@@ -1,24 +1,13 @@
 package net.coderbot.iris.texture.pbr;
 
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.client.renderer.texture.AbstractTexture;
 
 public interface PBRTextureHolder {
-	boolean hasNormalTexture();
+	@NotNull
+	AbstractTexture normalTexture();
 
-	boolean hasSpecularTexture();
-
-	@Nullable
-	AbstractTexture getNormalTexture();
-
-	@Nullable
-	AbstractTexture getSpecularTexture();
-
-	public interface Provider {
-		boolean hasPBRHolder();
-
-		@Nullable
-		PBRTextureHolder getPBRHolder();
-	}
+	@NotNull
+	AbstractTexture specularTexture();
 }

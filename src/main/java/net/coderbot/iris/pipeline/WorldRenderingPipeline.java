@@ -7,7 +7,6 @@ import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 
 public interface WorldRenderingPipeline {
 	void beginLevelRendering();
@@ -18,7 +17,7 @@ public interface WorldRenderingPipeline {
 	WorldRenderingPhase getPhase();
 
 	void setPhase(WorldRenderingPhase phase);
-	void setBoundTexture(AbstractTexture texture, int id);
+	void onBindTexture(int id);
 
 	void beginShadowRender();
 	void endShadowRender();

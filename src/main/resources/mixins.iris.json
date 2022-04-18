@@ -50,6 +50,8 @@
     "texture.MixinAbstractTexture",
     "texture.MixinGlStateManager",
     "texture.MixinTextureAtlas",
+    "texture.SimpleTextureAccessor",
+    "texture.TextureAtlasAccessor",
     "texture.TextureAtlasSpriteAccessor",
     "texunits.MixinBufferVertexConsumer",
     "texunits.MixinDefaultVertexFormat",

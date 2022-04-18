@@ -11,7 +11,6 @@ import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 
 public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
 	public FixedFunctionWorldRenderingPipeline() {
@@ -53,7 +52,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void setBoundTexture(AbstractTexture texture, int id) {
+	public void onBindTexture(int id) {
 
 	}
 

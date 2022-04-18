@@ -117,7 +117,7 @@ public class MixinLevelRenderer {
 		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
 		RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
 
-		new HorizonRenderer().renderHorizon(poseStack);
+		HorizonRenderer.INSTANCE.renderHorizon(poseStack);
 
 		RenderSystem.depthMask(true);
 	}

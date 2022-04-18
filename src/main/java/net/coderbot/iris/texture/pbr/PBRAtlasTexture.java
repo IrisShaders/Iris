@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.mojang.blaze3d.platform.TextureUtil;
 
-import net.coderbot.iris.mixin.texture.pbr.TextureAtlasPreparationsAccessor;
+import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
 import net.coderbot.iris.texture.util.TextureColorUtil;
 import net.coderbot.iris.texture.util.TextureSavingUtil;
 import net.minecraft.CrashReport;
@@ -18,6 +18,7 @@ import net.minecraft.ReportedException;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 
@@ -59,20 +60,18 @@ public class PBRAtlasTexture extends AbstractTexture {
 		animatedSprites.clear();
 	}
 
-	public void reload(TextureAtlas.Preparations preparations) {
+	public void upload(int atlasWidth, int atlasHeight, int mipLevel) {
 		int glId = getId();
-		TextureAtlasPreparationsAccessor preparationsAccessor = (TextureAtlasPreparationsAccessor) preparations;
-		int maxLevel = preparationsAccessor.getMipLevel();
-		TextureUtil.prepareImage(glId, maxLevel, preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
+		TextureUtil.prepareImage(glId, mipLevel, atlasWidth, atlasHeight);
 
 		int defaultValue = type.getDefaultValue();
 		if (defaultValue != 0) {
-			TextureColorUtil.fillWithColor(glId, maxLevel, defaultValue);
+			TextureColorUtil.fillWithColor(glId, mipLevel, defaultValue);
 		}
 
 		for (TextureAtlasSprite sprite : sprites.values()) {
 			try {
-				sprite.uploadFirstFrame();
+				uploadSprite(sprite);
 			} catch (Throwable throwable) {
 				CrashReport crashReport = CrashReport.forThrowable(throwable, "Stitching texture atlas");
 				CrashReportCategory crashReportCategory = crashReport.addCategory("Texture being stitched together");
@@ -82,9 +81,27 @@ public class PBRAtlasTexture extends AbstractTexture {
 			}
 		}
 
-		if (Boolean.parseBoolean(System.getProperty("iris.pbr.debug"))) {
-			TextureSavingUtil.saveTextures("atlas", id.getPath().replaceAll("/", "_"), glId, maxLevel, preparationsAccessor.getWidth(), preparationsAccessor.getHeight());
+		if (PBRTextureManager.DEBUG) {
+			TextureSavingUtil.saveTextures("atlas", id.getNamespace() + "_" + id.getPath().replaceAll("/", "_"), glId, mipLevel, atlasWidth, atlasHeight);
 		}
+	}
+
+	protected void uploadSprite(TextureAtlasSprite sprite) {
+		if (sprite.isAnimation()) {
+			TextureAtlasSpriteAccessor accessor = (TextureAtlasSpriteAccessor) sprite;
+			AnimationMetadataSection metadata = accessor.getMetadata();
+
+			int frameCount = sprite.getFrameCount();
+			for (int frame = accessor.getFrame(); frame >= 0; frame--) {
+				int frameIndex = metadata.getFrameIndex(frame);
+				if (frameIndex >= 0 && frameIndex < frameCount) {
+					accessor.callUpload(frameIndex);
+					return;
+				}
+			}
+		}
+
+		sprite.uploadFirstFrame();
 	}
 
 	public void cycleAnimationFrames() {

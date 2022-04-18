@@ -4,11 +4,9 @@
   "package": "net.coderbot.iris.mixin.texture.pbr",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinSimpleTexture",
     "MixinTextureAtlas",
     "MixinTextureAtlasSprite",
-    "MixinTextureManager",
-    "TextureAtlasPreparationsAccessor"
+    "MixinTextureManager"
   ],
   "injectors": {
     "defaultRequire": 1

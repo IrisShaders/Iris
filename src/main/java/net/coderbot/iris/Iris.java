@@ -31,6 +31,7 @@ import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
+import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.fabricmc.loader.api.ModContainer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
@@ -38,11 +39,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.dimension.DimensionType;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import net.fabricmc.api.ClientModInitializer;
@@ -128,6 +125,8 @@ public class Iris implements ClientModInitializer {
 					" Is Not Enough Crashes doing something weird? Trying to avoid a crash but this is an odd state.");
 			return;
 		}
+
+		PBRTextureManager.INSTANCE.init();
 
 		// Only load the shader pack when we can access OpenGL
 		loadShaderpack();

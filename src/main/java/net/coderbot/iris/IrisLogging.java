@@ -51,4 +51,8 @@ public class IrisLogging {
 	public void debug(String debug) {
 		this.logger.debug(debug);
 	}
+
+	public void debug(String debug, Throwable t) {
+		this.logger.debug(debug, t);
+	}
 }

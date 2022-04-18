@@ -6,14 +6,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.coderbot.iris.texture.pbr.PBRAtlasSpriteHolder;
+import net.coderbot.iris.texture.pbr.PBRSpriteHolder;
 import net.coderbot.iris.texture.pbr.TextureAtlasSpriteExtension;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 
 @Mixin(TextureAtlasSprite.class)
 public class MixinTextureAtlasSprite implements TextureAtlasSpriteExtension {
 	@Unique
-	private PBRAtlasSpriteHolder pbrHolder;
+	private PBRSpriteHolder pbrHolder;
 
 	@Inject(method = "close()V", at = @At("TAIL"), remap = false)
 	private void onTailClose(CallbackInfo ci) {
@@ -23,19 +23,19 @@ public class MixinTextureAtlasSprite implements TextureAtlasSpriteExtension {
 	}
 
 	@Override
-	public boolean hasPBRSpriteHolder() {
+	public boolean hasPBRHolder() {
 		return pbrHolder != null;
 	}
 
 	@Override
-	public PBRAtlasSpriteHolder getPBRSpriteHolder() {
+	public PBRSpriteHolder getPBRHolder() {
 		return pbrHolder;
 	}
 
 	@Override
-	public PBRAtlasSpriteHolder getOrCreatePBRSpriteHolder() {
+	public PBRSpriteHolder getOrCreatePBRHolder() {
 		if (pbrHolder == null) {
-			pbrHolder = new PBRAtlasSpriteHolder();
+			pbrHolder = new PBRSpriteHolder();
 		}
 		return pbrHolder;
 	}

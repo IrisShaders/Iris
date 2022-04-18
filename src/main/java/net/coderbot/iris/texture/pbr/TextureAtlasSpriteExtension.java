@@ -3,10 +3,10 @@ package net.coderbot.iris.texture.pbr;
 import org.jetbrains.annotations.Nullable;
 
 public interface TextureAtlasSpriteExtension {
-	boolean hasPBRSpriteHolder();
+	boolean hasPBRHolder();
 
 	@Nullable
-	PBRAtlasSpriteHolder getPBRSpriteHolder();
+	PBRSpriteHolder getPBRHolder();
 
-	PBRAtlasSpriteHolder getOrCreatePBRSpriteHolder();
+	PBRSpriteHolder getOrCreatePBRHolder();
 }

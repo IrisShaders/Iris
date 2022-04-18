@@ -11,11 +11,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
-import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
-import net.coderbot.iris.texture.pbr.PBRType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -26,8 +24,6 @@ import net.minecraft.resources.ResourceLocation;
 public class CustomTextureManager {
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
 	private final IntSupplier noise;
-	private final NativeImageBackedSingleColorTexture defaultNormalMap;
-	private final NativeImageBackedSingleColorTexture defaultSpecularMap;
 
 	/**
 	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
@@ -70,13 +66,6 @@ public class CustomTextureManager {
 
 			return texture::getId;
 		});
-
-		// Create some placeholder PBR textures if some of the PBR textures are missing
-		defaultNormalMap = new NativeImageBackedSingleColorTexture(PBRType.NORMAL.getDefaultValue());
-		defaultSpecularMap = new NativeImageBackedSingleColorTexture(PBRType.SPECULAR.getDefaultValue());
-
-		ownedTextures.add(defaultNormalMap);
-		ownedTextures.add(defaultSpecularMap);
 	}
 
 	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
@@ -115,14 +104,6 @@ public class CustomTextureManager {
 
 	public IntSupplier getNoiseTexture() {
 		return noise;
-	}
-
-	public NativeImageBackedSingleColorTexture getDefaultNormalMap() {
-		return defaultNormalMap;
-	}
-
-	public NativeImageBackedSingleColorTexture getDefaultSpecularMap() {
-		return defaultSpecularMap;
 	}
 
 	public void destroy() {

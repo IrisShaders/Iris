@@ -113,6 +113,10 @@ public class IrisSamplers {
 		return usesShadows;
 	}
 
+	public static boolean hasPBRSamplers(SamplerHolder samplers) {
+		return samplers.hasSampler("normals") || samplers.hasSampler("specular");
+	}
+
 	public static void addLevelSamplers(SamplerHolder samplers) {
 		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
 		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
