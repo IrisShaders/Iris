@@ -29,6 +29,7 @@
     "MixinBufferSource_WrapperChecking",
     "MixinParticleEngine",
     "MixinRenderSystem",
+    "MixinRenderTarget",
     "MixinTextureAtlas",
     "MixinTheEndPortalRenderer",
     "MixinTitleScreen",
