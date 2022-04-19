@@ -41,6 +41,6 @@ public interface TextureAtlasSpriteAccessor {
 		return null;
 	}
 
-	@Invoker("upload(I)V")
+	@Invoker("upload")
 	void callUpload(int frameIndex);
 }
