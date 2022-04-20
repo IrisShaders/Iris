@@ -29,6 +29,8 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		.define(StandardMacros.getVendor())
 		.define("MC_RENDER_QUALITY", "1.0")
 		.define("MC_SHADOW_QUALITY", "1.0")
+		.define("MC_NORMAL_MAP")
+		.define("MC_SPECULAR_MAP")
 		.define("MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH))
 		.defineAll(StandardMacros.getIrisDefines())
 		.defineAll(StandardMacros.getGlExtensions())
