@@ -11,7 +11,7 @@
     "MixinDebugScreenOverlay",
     "MixinBufferSource",
     "MixinCompositeRenderType",
-    "MixinItemRenderer",
+    "MixinBufferSource119",
     "MixinLevelRenderer",
     "MixinLevelRenderer_EntityListSorting",
     "CompositeStateAccessor",
