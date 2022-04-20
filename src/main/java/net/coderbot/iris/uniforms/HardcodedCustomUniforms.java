@@ -1,7 +1,5 @@
 package net.coderbot.iris.uniforms;
 
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.uniform.FloatSupplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;

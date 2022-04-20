@@ -57,8 +57,13 @@ public class FullScreenQuadRenderer {
 	}
 
 	public void end() {
+		// NB: No need to clear the buffer state by calling glDisableVertexAttribArray - this VAO will always
+		// have the same format, and buffer state is only associated with a given VAO, so we can keep it bound.
+		//
+		// Using quad.getFormat().clearBufferState() causes some Intel drivers to freak out:
+		// https://github.com/IrisShaders/Iris/issues/1214
+
 		RenderSystem.enableDepthTest();
-		quad.getFormat().clearBufferState();
 		VertexBuffer.unbind();
 		((VertexBufferHelper) quad).restoreBinding();
 	}

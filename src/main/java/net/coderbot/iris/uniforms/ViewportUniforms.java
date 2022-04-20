@@ -1,12 +1,12 @@
 package net.coderbot.iris.uniforms;
 
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
-
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import java.util.Objects;
-
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.minecraft.client.Minecraft;
+
+import java.util.Objects;
+
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 /**
  * Implements uniforms relating the current viewport

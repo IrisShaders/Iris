@@ -2,7 +2,6 @@ package net.coderbot.iris.uniforms;
 
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
-
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Minecraft;
 
