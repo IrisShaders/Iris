@@ -1,5 +1,6 @@
 package net.coderbot.batchedentityrendering.impl;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 
@@ -26,7 +27,8 @@ public class BufferSegmentRenderer {
      */
     public void drawInner(BufferSegment segment) {
         fakeBufferBuilderExt.setupBufferSlice(segment.getSlice(), segment.getDrawState());
-        BufferUploader.draw(fakeBufferBuilder);
-        fakeBufferBuilderExt.teardownBufferSlice();
+        BufferUploader.drawWithShader(fakeBufferBuilder);
+
+		fakeBufferBuilderExt.teardownBufferSlice();
     }
 }

@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import net.minecraft.client.OptionInstance;
+import net.minecraft.client.Options;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

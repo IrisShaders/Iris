@@ -54,7 +54,10 @@ public class HorizonRenderer {
 		buildHorizon(builder);
 		builder.end();
 
+		buffer.bind();
 		buffer.upload(builder);
+		VertexBuffer.unbind();
+
 	}
 
 	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {
@@ -143,6 +146,8 @@ public class HorizonRenderer {
 
 	public void renderHorizon(Matrix4f modelView, Matrix4f projection, ShaderInstance shader) {
 		// Despite the name, this actually dispatches the draw call using the specified shader.
+		buffer.bind();
 		buffer.drawWithShader(modelView, projection, shader);
+		VertexBuffer.unbind();
 	}
 }
