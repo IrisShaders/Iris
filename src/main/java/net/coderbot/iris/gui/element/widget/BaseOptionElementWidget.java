@@ -17,8 +17,8 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Optional;
 
 public abstract class BaseOptionElementWidget<T extends OptionMenuElement> extends CommentedElementWidget<T> {
-	protected static final Component SET_TO_DEFAULT = new TranslatableComponent("options.iris.setToDefault").withStyle(ChatFormatting.GREEN);
-	protected static final Component DIVIDER = new TextComponent(": ");
+	protected static final Component SET_TO_DEFAULT = Component.translatable("options.iris.setToDefault").withStyle(ChatFormatting.GREEN);
+	protected static final Component DIVIDER = Component.literal(": ");
 
 	protected MutableComponent unmodifiedLabel;
 	protected ShaderPackScreen screen;
@@ -154,7 +154,7 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 
 	@Override
 	public Optional<Component> getCommentBody() {
-		return Optional.ofNullable(getCommentKey()).map(key -> I18n.exists(key) ? new TranslatableComponent(key) : null);
+		return Optional.ofNullable(getCommentKey()).map(key -> I18n.exists(key) ? Component.translatable(key) : null);
 	}
 
 	@Override

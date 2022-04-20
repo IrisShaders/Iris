@@ -18,8 +18,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
@@ -112,15 +110,15 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 	}
 
 	public static class HeaderEntry extends BaseEntry {
-		public static final Component BACK_BUTTON_TEXT = new TextComponent("< ").append(new TranslatableComponent("options.iris.back").withStyle(ChatFormatting.ITALIC));
-		public static final MutableComponent RESET_BUTTON_TEXT_INACTIVE = new TranslatableComponent("options.iris.reset").withStyle(ChatFormatting.GRAY);
-		public static final MutableComponent RESET_BUTTON_TEXT_ACTIVE = new TranslatableComponent("options.iris.reset").withStyle(ChatFormatting.YELLOW);
+		public static final Component BACK_BUTTON_TEXT = Component.literal("< ").append(Component.translatable("options.iris.back").withStyle(ChatFormatting.ITALIC));
+		public static final MutableComponent RESET_BUTTON_TEXT_INACTIVE = Component.translatable("options.iris.reset").withStyle(ChatFormatting.GRAY);
+		public static final MutableComponent RESET_BUTTON_TEXT_ACTIVE = Component.translatable("options.iris.reset").withStyle(ChatFormatting.YELLOW);
 
-		public static final MutableComponent RESET_HOLD_SHIFT_TOOLTIP = new TranslatableComponent("options.iris.reset.tooltip.holdShift").withStyle(ChatFormatting.GOLD);
-		public static final MutableComponent RESET_TOOLTIP = new TranslatableComponent("options.iris.reset.tooltip").withStyle(ChatFormatting.RED);
-		public static final MutableComponent IMPORT_TOOLTIP = new TranslatableComponent("options.iris.importSettings.tooltip")
+		public static final MutableComponent RESET_HOLD_SHIFT_TOOLTIP = Component.translatable("options.iris.reset.tooltip.holdShift").withStyle(ChatFormatting.GOLD);
+		public static final MutableComponent RESET_TOOLTIP = Component.translatable("options.iris.reset.tooltip").withStyle(ChatFormatting.RED);
+		public static final MutableComponent IMPORT_TOOLTIP = Component.translatable("options.iris.importSettings.tooltip")
 				.withStyle(style -> style.withColor(TextColor.fromRgb(0x4da6ff)));
-		public static final MutableComponent EXPORT_TOOLTIP = new TranslatableComponent("options.iris.exportSettings.tooltip")
+		public static final MutableComponent EXPORT_TOOLTIP = Component.translatable("options.iris.exportSettings.tooltip")
 				.withStyle(style -> style.withColor(TextColor.fromRgb(0xfc7d3d)));
 
 		private static final int MIN_SIDE_BUTTON_WIDTH = 42;
@@ -310,7 +308,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 		@Override
 		public Component getNarration() {
-			return new TranslatableComponent("narrator.select", text);
+			return Component.translatable("narrator.select", text);
 		}
 	}
 
@@ -368,7 +366,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 		@Override
 		public Component getNarration() {
-			return new TranslatableComponent("narrator.select");
+			return Component.translatable("narrator.select");
 		}
 	}
 }

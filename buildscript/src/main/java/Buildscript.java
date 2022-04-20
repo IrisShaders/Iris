@@ -26,11 +26,11 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends MultiSrcDirFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String customSodiumName = "sodium-fabric-mc22w14a-0.4.1rev.f044912-dirty.jar";
+	static final String customSodiumName = "sodium-fabric-mc22w16b-0.4.1+rev.a0e71d8-dirty.jar";
 
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion("22w15a");
+		return Minecraft.getVersion("22w16a");
 	}
 
 	@Override

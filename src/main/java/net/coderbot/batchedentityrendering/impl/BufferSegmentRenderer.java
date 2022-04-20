@@ -26,7 +26,7 @@ public class BufferSegmentRenderer {
      */
     public void drawInner(BufferSegment segment) {
         fakeBufferBuilderExt.setupBufferSlice(segment.getSlice(), segment.getDrawState());
-        BufferUploader.end(fakeBufferBuilder);
+        BufferUploader.draw(fakeBufferBuilder);
         fakeBufferBuilderExt.teardownBufferSlice();
     }
 }

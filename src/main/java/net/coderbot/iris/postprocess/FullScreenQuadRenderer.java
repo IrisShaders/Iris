@@ -48,17 +48,18 @@ public class FullScreenQuadRenderer {
 		((VertexBufferHelper) quad).saveBinding();
 		RenderSystem.disableDepthTest();
 		BufferUploader.reset();
+		quad.bind();
+
 	}
 
 	public void renderQuad() {
-		quad.drawChunkLayer();
+		quad.draw();
 	}
 
 	public void end() {
 		RenderSystem.enableDepthTest();
 		quad.getFormat().clearBufferState();
 		VertexBuffer.unbind();
-		VertexBuffer.unbindVertexArray();
 		((VertexBufferHelper) quad).restoreBinding();
 	}
 }

@@ -9,7 +9,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.network.chat.TranslatableComponent;
+
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -35,9 +36,9 @@ public class MixinTitleScreen {
 		if (Iris.isSodiumInvalid()) {
 			Minecraft.getInstance().setScreen(new AlertScreen(
 					Minecraft.getInstance()::stop,
-					new TranslatableComponent("iris.sodium.failure.title").withStyle(ChatFormatting.RED),
-					new TranslatableComponent("iris.sodium.failure.reason"),
-					new TranslatableComponent("menu.quit")));
+					Component.translatable("iris.sodium.failure.title").withStyle(ChatFormatting.RED),
+					Component.translatable("iris.sodium.failure.reason"),
+					Component.translatable("menu.quit")));
 		}
 
 		Minecraft.getInstance().setScreen(new ConfirmScreen(
@@ -52,9 +53,9 @@ public class MixinTitleScreen {
 						Minecraft.getInstance().stop();
 					}
 				},
-				new TranslatableComponent("iris.sodium.failure.title").withStyle(ChatFormatting.RED),
-				new TranslatableComponent(reason),
-				new TranslatableComponent("iris.sodium.failure.download"),
-				new TranslatableComponent("menu.quit")));
+				Component.translatable("iris.sodium.failure.title").withStyle(ChatFormatting.RED),
+				Component.translatable(reason),
+				Component.translatable("iris.sodium.failure.download"),
+				Component.translatable("menu.quit")));
 	}
 }

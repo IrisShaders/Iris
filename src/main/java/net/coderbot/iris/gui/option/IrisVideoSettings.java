@@ -4,7 +4,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+
 import net.minecraft.util.FormattedCharSequence;
 
 import java.io.IOException;
@@ -14,8 +14,8 @@ public class IrisVideoSettings {
 	public static int shadowDistance = 32;
 
 	// TODO: Tell the user to check in the shader options once that's supported.
-	private static final Component DISABLED_TOOLTIP = new TranslatableComponent("options.iris.shadowDistance.disabled");
-	private static final Component ENABLED_TOOLTIP = new TranslatableComponent("options.iris.shadowDistance.enabled");
+	private static final Component DISABLED_TOOLTIP = Component.translatable("options.iris.shadowDistance.disabled");
+	private static final Component ENABLED_TOOLTIP = Component.translatable("options.iris.shadowDistance.enabled");
 
 	public static int getOverriddenShadowDistance(int base) {
 		return Iris.getPipelineManager().getPipeline()
@@ -50,11 +50,11 @@ public class IrisVideoSettings {
 		}
 
 		if (d <= 0.0) {
-			return new TranslatableComponent("options.generic_value", new TranslatableComponent("options.iris.shadowDistance"), "0 (disabled)");
+			return Component.translatable("options.generic_value", Component.translatable("options.iris.shadowDistance"), "0 (disabled)");
 		} else {
-			return new TranslatableComponent("options.generic_value",
-					new TranslatableComponent("options.iris.shadowDistance"),
-					new TranslatableComponent("options.chunks", d));
+			return Component.translatable("options.generic_value",
+					Component.translatable("options.iris.shadowDistance"),
+					Component.translatable("options.chunks", d));
 		}
 	}, client -> {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
