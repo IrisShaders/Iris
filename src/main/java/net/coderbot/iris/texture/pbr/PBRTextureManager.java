@@ -1,7 +1,5 @@
 package net.coderbot.iris.texture.pbr;
 
-import org.jetbrains.annotations.NotNull;
-
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
@@ -11,6 +9,7 @@ import net.coderbot.iris.texture.pbr.loader.PBRTextureLoader.PBRTextureConsumer;
 import net.coderbot.iris.texture.pbr.loader.PBRTextureLoaderRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import org.jetbrains.annotations.NotNull;
 
 public class PBRTextureManager {
 	public static final PBRTextureManager INSTANCE = new PBRTextureManager();

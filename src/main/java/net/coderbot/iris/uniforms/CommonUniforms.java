@@ -1,7 +1,6 @@
 package net.coderbot.iris.uniforms;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;

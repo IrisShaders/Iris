@@ -1,16 +1,15 @@
 package net.coderbot.iris.mixin.texture;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import net.coderbot.iris.texture.AtlasInfoGatherer;
 import net.coderbot.iris.texture.TextureAtlasInterface;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TextureAtlas.class)
 public abstract class MixinTextureAtlas extends AbstractTexture implements TextureAtlasInterface {

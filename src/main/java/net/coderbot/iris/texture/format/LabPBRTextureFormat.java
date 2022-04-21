@@ -1,9 +1,5 @@
 package net.coderbot.iris.texture.format;
 
-import java.util.Objects;
-
-import org.jetbrains.annotations.Nullable;
-
 import net.coderbot.iris.texture.mipmap.ChannelMipmapGenerator;
 import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
 import net.coderbot.iris.texture.mipmap.LinearBlendFunction;
@@ -11,6 +7,9 @@ import net.coderbot.iris.texture.mipmap.SpecularAlphaBlendFunction;
 import net.coderbot.iris.texture.mipmap.SpecularBlueBlendFunction;
 import net.coderbot.iris.texture.mipmap.SpecularGreenBlendFunction;
 import net.coderbot.iris.texture.pbr.PBRType;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 public class LabPBRTextureFormat implements TextureFormat {
 	public static final ChannelMipmapGenerator SPECULAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(LinearBlendFunction.INSTANCE, SpecularGreenBlendFunction.INSTANCE, SpecularBlueBlendFunction.INSTANCE, SpecularAlphaBlendFunction.INSTANCE);

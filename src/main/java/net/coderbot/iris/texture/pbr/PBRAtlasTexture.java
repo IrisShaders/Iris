@@ -1,14 +1,6 @@
 package net.coderbot.iris.texture.pbr;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import org.jetbrains.annotations.Nullable;
-
 import com.mojang.blaze3d.platform.TextureUtil;
-
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
 import net.coderbot.iris.texture.util.TextureColorUtil;
 import net.coderbot.iris.texture.util.TextureSavingUtil;
@@ -21,6 +13,12 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class PBRAtlasTexture extends AbstractTexture {
 	protected final TextureAtlas atlasTexture;

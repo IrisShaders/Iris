@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;

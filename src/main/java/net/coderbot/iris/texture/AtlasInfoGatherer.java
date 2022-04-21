@@ -1,14 +1,12 @@
 package net.coderbot.iris.texture;
 
-import org.lwjgl.opengl.GL20C;
-
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import org.lwjgl.opengl.GL20C;
 
 public class AtlasInfoGatherer {
 	public static int getWidth(TextureAtlas atlas) {

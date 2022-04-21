@@ -1,9 +1,8 @@
 package net.coderbot.iris.texture.format;
 
-import org.jetbrains.annotations.Nullable;
-
 import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
 import net.coderbot.iris.texture.pbr.PBRType;
+import org.jetbrains.annotations.Nullable;
 
 public interface TextureFormat {
 	String getName();

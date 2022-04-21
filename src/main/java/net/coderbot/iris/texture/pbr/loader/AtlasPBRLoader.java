@@ -1,13 +1,7 @@
 package net.coderbot.iris.texture.pbr.loader;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
-import org.jetbrains.annotations.Nullable;
-
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.datafixers.util.Pair;
-
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
@@ -21,7 +15,7 @@ import net.coderbot.iris.texture.pbr.PBRAtlasTexture;
 import net.coderbot.iris.texture.pbr.PBRSpriteHolder;
 import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.texture.pbr.TextureAtlasSpriteExtension;
-import net.coderbot.iris.texture.util.ImageScalingUtil;
+import net.coderbot.iris.texture.util.ImageManipulationUtil;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -29,6 +23,10 @@ import net.minecraft.client.resources.metadata.animation.AnimationMetadataSectio
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.jetbrains.annotations.Nullable;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE);
@@ -99,9 +97,9 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 					int newHeight = nativeImage.getHeight() * newWidth / nativeImage.getWidth();
 					NativeImage scaledImage;
 					if (newWidth < nativeImage.getWidth() || newWidth % nativeImage.getWidth() != 0) {
-						scaledImage = ImageScalingUtil.scaleBilinear(nativeImage, newWidth, newHeight);
+						scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, newWidth, newHeight);
 					} else {
-						scaledImage = ImageScalingUtil.scaleNearestNeighbor(nativeImage, newWidth, newHeight);
+						scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, newWidth, newHeight);
 					}
 					nativeImage.close();
 					nativeImage = scaledImage;

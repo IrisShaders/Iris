@@ -1,10 +1,6 @@
 package net.coderbot.iris.texture;
 
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL20C;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
@@ -12,6 +8,8 @@ import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL20C;
 
 public class TextureTracker {
 	public static final TextureTracker INSTANCE = new TextureTracker();

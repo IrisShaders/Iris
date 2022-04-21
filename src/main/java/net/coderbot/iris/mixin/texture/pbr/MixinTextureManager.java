@@ -1,15 +1,14 @@
 package net.coderbot.iris.mixin.texture.pbr;
 
-import java.util.concurrent.Executor;
-
+import net.coderbot.iris.texture.pbr.PBRTextureManager;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.coderbot.iris.texture.pbr.PBRTextureManager;
-import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.server.packs.resources.ResourceManager;
+import java.util.concurrent.Executor;
 
 @Mixin(TextureManager.class)
 public class MixinTextureManager {

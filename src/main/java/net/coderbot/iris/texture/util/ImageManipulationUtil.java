@@ -2,7 +2,7 @@ package net.coderbot.iris.texture.util;
 
 import com.mojang.blaze3d.platform.NativeImage;
 
-public class ImageScalingUtil {
+public class ImageManipulationUtil {
 	public static NativeImage scaleNearestNeighbor(NativeImage image, int newWidth, int newHeight) {
 		NativeImage scaled = new NativeImage(image.format(), newWidth, newHeight, false);
 		float xScale = (float) newWidth / image.getWidth();

@@ -1,14 +1,12 @@
 package net.coderbot.iris.texture.util;
 
-import java.io.File;
-
-import org.apache.commons.io.FilenameUtils;
-
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import org.apache.commons.io.FilenameUtils;
+
+import java.io.File;
 
 public class TextureSavingUtil {
 	public static void saveTextures(String directory, String filename, int textureId, int mipLevel, int width, int height) {

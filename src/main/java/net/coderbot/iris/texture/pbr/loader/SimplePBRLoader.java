@@ -1,15 +1,14 @@
 package net.coderbot.iris.texture.pbr.loader;
 
-import java.io.IOException;
-
-import org.jetbrains.annotations.Nullable;
-
 import net.coderbot.iris.mixin.texture.SimpleTextureAccessor;
 import net.coderbot.iris.texture.pbr.PBRType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.jetbrains.annotations.Nullable;
+
+import java.io.IOException;
 
 public class SimplePBRLoader implements PBRTextureLoader<SimpleTexture> {
 	@Override

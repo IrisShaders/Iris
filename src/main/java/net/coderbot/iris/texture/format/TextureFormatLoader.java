@@ -1,15 +1,14 @@
 package net.coderbot.iris.texture.format;
 
-import java.io.FileNotFoundException;
-import java.util.Objects;
-import java.util.Properties;
-
-import org.jetbrains.annotations.Nullable;
-
 import net.coderbot.iris.Iris;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.jetbrains.annotations.Nullable;
+
+import java.io.FileNotFoundException;
+import java.util.Objects;
+import java.util.Properties;
 
 public class TextureFormatLoader {
 	public static final ResourceLocation LOCATION = new ResourceLocation("optifine/texture.properties");
