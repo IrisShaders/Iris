@@ -28,6 +28,7 @@
     "MixinOptions_Entrypoint",
     "MixinParticleEngine",
     "MixinRenderSystem",
+    "MixinRenderTarget",
     "MixinTextureAtlas",
     "MixinTheEndPortalRenderer",
     "MixinTitleScreen",
