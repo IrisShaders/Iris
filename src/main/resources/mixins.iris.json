@@ -52,6 +52,7 @@
     "sky.MixinDimensionSpecialEffects",
     "statelisteners.BooleanStateAccessor",
     "statelisteners.MixinGlStateManager",
+    "texture.AnimationMetadataSectionAccessor",
     "texture.MixinAbstractTexture",
     "texture.MixinGlStateManager",
     "texture.MixinTextureAtlas",

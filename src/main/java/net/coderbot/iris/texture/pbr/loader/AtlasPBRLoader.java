@@ -3,6 +3,7 @@ package net.coderbot.iris.texture.pbr.loader;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.datafixers.util.Pair;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.mixin.texture.AnimationMetadataSectionAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
 import net.coderbot.iris.texture.AtlasInfoGatherer;
@@ -92,27 +93,52 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 			try {
 				NativeImage nativeImage = NativeImage.read(resource.getInputStream());
-				if (nativeImage.getWidth() != sprite.getWidth()) {
-					int newWidth = sprite.getWidth();
-					int newHeight = nativeImage.getHeight() * newWidth / nativeImage.getWidth();
-					NativeImage scaledImage;
-					if (newWidth < nativeImage.getWidth() || newWidth % nativeImage.getWidth() != 0) {
-						scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, newWidth, newHeight);
-					} else {
-						scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, newWidth, newHeight);
-					}
-					nativeImage.close();
-					nativeImage = scaledImage;
-				}
-
 				AnimationMetadataSection animationMetadata = resource.getMetadata(AnimationMetadataSection.SERIALIZER);
 				if (animationMetadata == null) {
 					animationMetadata = AnimationMetadataSection.EMPTY;
 				}
 
-				Pair<Integer, Integer> size = animationMetadata.getFrameSize(nativeImage.getWidth(), nativeImage.getHeight());
+				Pair<Integer, Integer> frameSize = animationMetadata.getFrameSize(nativeImage.getWidth(), nativeImage.getHeight());
+				int frameWidth = frameSize.getFirst();
+				int frameHeight = frameSize.getSecond();
+				int targetFrameWidth = sprite.getWidth();
+				int targetFrameHeight = sprite.getHeight();
+				if (frameWidth != targetFrameWidth || frameHeight != targetFrameHeight) {
+					int imageWidth = nativeImage.getWidth();
+					int imageHeight = nativeImage.getHeight();
+
+					// We can assume the following is always true as a result of getFrameSize's check:
+					// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
+					int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
+					int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
+
+					NativeImage scaledImage;
+					if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
+						scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
+					} else {
+						scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
+					}
+					nativeImage.close();
+					nativeImage = scaledImage;
+
+					frameWidth = targetFrameWidth;
+					frameHeight = targetFrameHeight;
+
+					if (animationMetadata != AnimationMetadataSection.EMPTY) {
+						AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) animationMetadata;
+						int internalFrameWidth = animationAccessor.getFrameWidth();
+						int internalFrameHeight = animationAccessor.getFrameHeight();
+						if (internalFrameWidth != -1) {
+							animationAccessor.setFrameWidth(frameWidth);
+						}
+						if (internalFrameHeight != -1) {
+							animationAccessor.setFrameHeight(frameHeight);
+						}
+					}
+				}
+
 				ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
-				TextureAtlasSprite.Info pbrSpriteInfo = new TextureAtlasSprite.Info(pbrSpriteName, size.getFirst(), size.getSecond(), animationMetadata);
+				TextureAtlasSprite.Info pbrSpriteInfo = new TextureAtlasSprite.Info(pbrSpriteName, frameWidth, frameHeight, animationMetadata);
 
 				int x = ((TextureAtlasSpriteAccessor) sprite).getX();
 				int y = ((TextureAtlasSpriteAccessor) sprite).getY();
