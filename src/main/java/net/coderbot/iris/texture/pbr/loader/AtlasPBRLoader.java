@@ -12,6 +12,11 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
 import net.coderbot.iris.texture.AtlasInfoGatherer;
+import net.coderbot.iris.texture.format.TextureFormat;
+import net.coderbot.iris.texture.format.TextureFormatLoader;
+import net.coderbot.iris.texture.mipmap.ChannelMipmapGenerator;
+import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
+import net.coderbot.iris.texture.mipmap.LinearBlendFunction;
 import net.coderbot.iris.texture.pbr.PBRAtlasTexture;
 import net.coderbot.iris.texture.pbr.PBRSpriteHolder;
 import net.coderbot.iris.texture.pbr.PBRType;
@@ -26,6 +31,8 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
+	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE);
+
 	@Override
 	public void load(TextureAtlas atlas, ResourceManager resourceManager, PBRTextureConsumer pbrTextureConsumer) {
 		int atlasWidth = AtlasInfoGatherer.getWidth(atlas);
@@ -175,5 +182,17 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 		targetAccessor.setFrame(targetFrame);
 		targetAccessor.setSubFrame(ticks + sourceAccessor.getSubFrame());
+	}
+
+	// TODO: actually use this generator for PBR sprites
+	public static CustomMipmapGenerator getMipmapGenerator(PBRType pbrType) {
+		TextureFormat format = TextureFormatLoader.getFormat();
+		if (format != null) {
+			CustomMipmapGenerator generator = format.getMipmapGenerator(pbrType);
+			if (generator != null) {
+				return generator;
+			}
+		}
+		return LINEAR_MIPMAP_GENERATOR;
 	}
 }
