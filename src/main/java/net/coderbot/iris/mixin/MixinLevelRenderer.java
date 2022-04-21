@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import net.coderbot.iris.HorizonRenderer;
+import net.coderbot.iris.pipeline.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
@@ -47,6 +47,9 @@ public class MixinLevelRenderer {
 
 	@Unique
 	private WorldRenderingPipeline pipeline;
+
+	@Unique
+	private HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	// Begin shader rendering after buffers have been cleared.
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
@@ -119,7 +122,7 @@ public class MixinLevelRenderer {
 		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
 		RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
 
-		new HorizonRenderer().renderHorizon(poseStack);
+		horizonRenderer.renderHorizon(poseStack);
 
 		RenderSystem.depthMask(true);
 	}
