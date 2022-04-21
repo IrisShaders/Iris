@@ -29,6 +29,7 @@ import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
 import io.github.coolcrabs.brachyura.project.java.BuildModule;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
+import io.github.coolcrabs.brachyura.util.Lazy;
 import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
@@ -38,6 +39,7 @@ import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Constants;
 
 public class Buildscript extends SimpleFabricProject {
@@ -134,8 +136,7 @@ public class Buildscript extends SimpleFabricProject {
 		return getDirs("resources");
 	}
 
-	@Override
-	public String getVersion() {
+	private final Lazy<String> computeVersionLazy = new Lazy<>(() -> {
 		String baseVersion = super.getVersion().replace("development-environment", "");
 
 		String build_id = System.getenv("GITHUB_RUN_NUMBER");
@@ -151,11 +152,19 @@ public class Buildscript extends SimpleFabricProject {
 			isDirty = !git.status().call().getUncommittedChanges().isEmpty();
 			commitHash = git.getRepository().parseCommit(git.getRepository().resolve(Constants.HEAD).toObjectId()).getName().substring(0, 8);
 			git.close();
+		} catch (RepositoryNotFoundException e) {
+			// User might have downloaded the repository as a zip.
+			return baseVersion + "nogit";
 		} catch (IOException | GitAPIException e) {
 			e.printStackTrace();
 		}
 
 		return baseVersion + commitHash + (isDirty ? "-dirty" : "");
+	});
+
+	@Override
+	public String getVersion() {
+		return computeVersionLazy.get();
 	}
 
 	@Override
