@@ -648,7 +648,7 @@ public class Iris {
 		if (version.endsWith("-development-environment")) {
 			color = ChatFormatting.GOLD;
 			version = version.replace("-development-environment", " (Development Environment)");
-		} else if (version.endsWith("-dirty") || version.contains("unknown")) {
+		} else if (version.endsWith("-dirty") || version.contains("unknown") || version.endsWith("-nogit")) {
 			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
 			color = ChatFormatting.LIGHT_PURPLE;
