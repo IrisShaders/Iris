@@ -49,13 +49,13 @@ public class FogUniforms {
 			uniforms.uniform1f("fogEnd", RenderSystem::getShaderFogEnd, listener -> {
 				StateUpdateNotifiers.fogEndNotifier.setListener(listener);
 			});
-
-			uniforms
-				// TODO: Update frequency of continuous?
-				.uniform3f(PER_FRAME, "fogColor", () -> {
-					float[] fogColor = RenderSystem.getShaderFogColor();
-					return new Vector3f(fogColor[0], fogColor[1], fogColor[2]);
-				});
 		}
+
+		uniforms
+			// TODO: Update frequency of continuous?
+			.uniform3f(PER_FRAME, "fogColor", () -> {
+				float[] fogColor = RenderSystem.getShaderFogColor();
+				return new Vector3f(fogColor[0], fogColor[1], fogColor[2]);
+			});
 	}
 }
