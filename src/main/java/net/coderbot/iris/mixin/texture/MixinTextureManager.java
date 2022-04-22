@@ -1,5 +1,6 @@
-package net.coderbot.iris.mixin.texture.pbr;
+package net.coderbot.iris.mixin.texture;
 
+import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -14,6 +15,7 @@ import java.util.concurrent.Executor;
 public class MixinTextureManager {
 	@Inject(method = "lambda$reload$4(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/concurrent/Executor;Ljava/lang/Void;)V", at = @At("TAIL"))
 	private void onTailReloadLambda(ResourceManager resourceManager, Executor applyExecutor, Void void1, CallbackInfo ci) {
+		TextureFormatLoader.reload(resourceManager);
 		PBRTextureManager.INSTANCE.clear();
 	}
 

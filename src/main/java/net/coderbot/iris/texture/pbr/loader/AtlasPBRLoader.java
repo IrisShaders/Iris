@@ -30,7 +30,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
-	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE);
+	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
+			LinearBlendFunction.INSTANCE,
+			LinearBlendFunction.INSTANCE,
+			LinearBlendFunction.INSTANCE,
+			LinearBlendFunction.INSTANCE
+	);
 
 	@Override
 	public void load(TextureAtlas atlas, ResourceManager resourceManager, PBRTextureConsumer pbrTextureConsumer) {
@@ -138,11 +143,11 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 				}
 
 				ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
-				TextureAtlasSprite.Info pbrSpriteInfo = new TextureAtlasSprite.Info(pbrSpriteName, frameWidth, frameHeight, animationMetadata);
+				TextureAtlasSprite.Info pbrSpriteInfo = new PBRTextureAtlasSpriteInfo(pbrSpriteName, frameWidth, frameHeight, animationMetadata, pbrType);
 
 				int x = ((TextureAtlasSpriteAccessor) sprite).getX();
 				int y = ((TextureAtlasSpriteAccessor) sprite).getY();
-				pbrSprite = TextureAtlasSpriteAccessor.callInit(atlas, pbrSpriteInfo, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
+				pbrSprite = new PBRTextureAtlasSprite(atlas, pbrSpriteInfo, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
 				syncAnimation(sprite, pbrSprite);
 			} catch (Throwable t) {
 				if (resource != null) {
@@ -208,15 +213,33 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		targetAccessor.setSubFrame(ticks + sourceAccessor.getSubFrame());
 	}
 
-	// TODO: actually use this generator for PBR sprites
-	public static CustomMipmapGenerator getMipmapGenerator(PBRType pbrType) {
-		TextureFormat format = TextureFormatLoader.getFormat();
-		if (format != null) {
-			CustomMipmapGenerator generator = format.getMipmapGenerator(pbrType);
-			if (generator != null) {
-				return generator;
-			}
+	protected static class PBRTextureAtlasSpriteInfo extends TextureAtlasSprite.Info {
+		protected final PBRType pbrType;
+
+		public PBRTextureAtlasSpriteInfo(ResourceLocation name, int width, int height, AnimationMetadataSection metadata, PBRType pbrType) {
+			super(name, width, height, metadata);
+			this.pbrType = pbrType;
 		}
-		return LINEAR_MIPMAP_GENERATOR;
+	}
+
+	public static class PBRTextureAtlasSprite extends TextureAtlasSprite implements CustomMipmapGenerator.Provider {
+		protected PBRTextureAtlasSprite(TextureAtlas atlas, TextureAtlasSprite.Info info, int mipLevel, int atlasWidth, int atlasHeight, int x, int y, NativeImage nativeImage) {
+			super(atlas, info, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
+		}
+
+		@Override
+		public CustomMipmapGenerator getMipmapGenerator(Info info, int atlasWidth, int atlasHeight) {
+			if (info instanceof PBRTextureAtlasSpriteInfo) {
+				PBRType pbrType = ((PBRTextureAtlasSpriteInfo) info).pbrType;
+				TextureFormat format = TextureFormatLoader.getFormat();
+				if (format != null) {
+					CustomMipmapGenerator generator = format.getMipmapGenerator(pbrType);
+					if (generator != null) {
+						return generator;
+					}
+				}
+			}
+			return LINEAR_MIPMAP_GENERATOR;
+		}
 	}
 }

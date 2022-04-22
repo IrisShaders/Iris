@@ -20,7 +20,6 @@ public class TextureFormatLoader {
 		return format;
 	}
 
-	// TODO: call this from somewhere
 	public static void reload(ResourceManager resourceManager) {
 		TextureFormat newFormat = loadFormat(resourceManager);
 		boolean didFormatChange = !Objects.equals(format, newFormat);

@@ -1,6 +1,7 @@
 package net.coderbot.iris.texture.mipmap;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.Nullable;
 
 public interface CustomMipmapGenerator {
@@ -8,6 +9,6 @@ public interface CustomMipmapGenerator {
 
 	public interface Provider {
 		@Nullable
-		CustomMipmapGenerator getMipmapGenerator();
+		CustomMipmapGenerator getMipmapGenerator(TextureAtlasSprite.Info info, int atlasWidth, int atlasHeight);
 	}
 }

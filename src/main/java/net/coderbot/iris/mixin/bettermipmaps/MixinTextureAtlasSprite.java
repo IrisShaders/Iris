@@ -35,8 +35,8 @@ public class MixinTextureAtlasSprite {
 	// support Forge, since this works well on Fabric too, it's fine to ensure that the diff between Fabric and Forge
 	// can remain minimal. Being less dependent on specific details of Fabric is good, since it means we can be more
 	// cross-platform.
-	@ModifyVariable(method = "<init>", at = @At(value = "INVOKE",
-		target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;generateMipLevels(Lcom/mojang/blaze3d/platform/NativeImage;I)[Lcom/mojang/blaze3d/platform/NativeImage;"))
+	@ModifyVariable(method = "<init>", at = @At(value = "FIELD",
+		target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;metadata:Lnet/minecraft/client/resources/metadata/animation/AnimationMetadataSection;"), argsOnly = true)
 	private NativeImage iris$beforeGenerateMipLevels(NativeImage nativeImage) {
 		// We're injecting after the "info" field has been set, so this is safe even though we're in a constructor.
 		ResourceLocation name = Objects.requireNonNull(info).name();
