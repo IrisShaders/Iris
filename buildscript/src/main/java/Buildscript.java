@@ -15,7 +15,6 @@ import io.github.coolcrabs.brachyura.fabric.FabricContext;
 import io.github.coolcrabs.brachyura.fabric.FabricLoader;
 import io.github.coolcrabs.brachyura.fabric.FabricMaven;
 import io.github.coolcrabs.brachyura.fabric.FabricModule;
-import io.github.coolcrabs.brachyura.fabric.FabricProject;
 import io.github.coolcrabs.brachyura.fabric.SimpleFabricProject;
 import io.github.coolcrabs.brachyura.fabric.FabricContext.ModDependencyCollector;
 import io.github.coolcrabs.brachyura.fabric.FabricContext.ModDependencyFlag;
@@ -102,14 +101,14 @@ public class Buildscript extends SimpleFabricProject {
 
     @Override
     public void getModDependencies(ModDependencyCollector d) {
-		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), FabricProject.ModDependencyFlag.COMPILE, FabricProject.ModDependencyFlag.RUNTIME, FabricProject.ModDependencyFlag.JIJ));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.16+55dca1a4d2"), FabricProject.ModDependencyFlag.COMPILE, FabricProject.ModDependencyFlag.RUNTIME, FabricProject.ModDependencyFlag.JIJ));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.11+54e5b2ecd2"), FabricProject.ModDependencyFlag.COMPILE, FabricProject.ModDependencyFlag.RUNTIME, FabricProject.ModDependencyFlag.JIJ));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-command-api-v1", "1.1.9+d7c144a860"), FabricProject.ModDependencyFlag.COMPILE, FabricProject.ModDependencyFlag.RUNTIME, FabricProject.ModDependencyFlag.JIJ));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.3+d7c144a8d2"), FabricProject.ModDependencyFlag.COMPILE, FabricProject.ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.16+55dca1a4d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.11+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-command-api-v1", "1.1.9+d7c144a860"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.3+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 
-		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.1.6+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "0.2.1+cf39a74318"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.6+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "2.0.1+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
 		if (SODIUM) {
 			if (CUSTOM_SODIUM) {
