@@ -21,6 +21,7 @@ public interface WorldRenderingPipeline {
 	void endSodiumTerrainRendering();
 	void setPhase(WorldRenderingPhase phase);
 	void setInputs(InputAvailability availability);
+	void syncProgram();
 	RenderTargetStateListener getRenderTargetStateListener();
 
 	void beginHand();

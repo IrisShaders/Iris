@@ -463,7 +463,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		}
 	}
 
-	public void matchPass() {
+	private void matchPass() {
 		if (!isRenderingWorld || isRenderingFullScreenPass || isPostChain || !isMainBound) {
 			return;
 		}
@@ -605,8 +605,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	@Override
 	public void endPostChain() {
 		isPostChain = false;
-
-		matchPass();
 	}
 
 	@Override
@@ -620,7 +618,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		if (bound) {
 			// force refresh
 			current = null;
-			matchPass();
 		} else {
 			beginPass(null);
 		}
@@ -832,15 +829,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
 
 		isRenderingFullScreenPass = false;
-
-		matchPass();
 	}
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
 		if (shadowRenderer != null) {
 			isRenderingShadow = true;
-			matchPass();
 
 			shadowRenderer.renderShadows(levelRenderer, playerCamera);
 
@@ -854,8 +848,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		prepareRenderer.renderAll();
 
 		isRenderingFullScreenPass = false;
-
-		matchPass();
 	}
 
 	@Override
@@ -903,10 +895,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		// Get ready for world rendering
 		prepareRenderTargets();
-
-		// Default to rendering with BASIC for all unknown content.
-		// This probably isn't the best approach, but it works for now.
-		matchPass();
 	}
 
 	@Override
@@ -949,16 +937,22 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	boolean sodiumTerrainRendering = false;
 
 	@Override
+	public void syncProgram() {
+		matchPass();
+	}
+
+	@Override
 	public void beginSodiumTerrainRendering() {
 		sodiumTerrainRendering = true;
-		matchPass();
+		syncProgram();
+
 	}
 
 	@Override
 	public void endSodiumTerrainRendering() {
 		sodiumTerrainRendering = false;
 		current = null;
-		matchPass();
+		syncProgram();
 	}
 
 	@Override
@@ -966,14 +960,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.phase = phase;
 
 		GbufferPrograms.runPhaseChangeNotifier();
-		matchPass();
 	}
 
 	@Override
 	public void setInputs(InputAvailability availability) {
 		this.inputs = availability;
-
-		matchPass();
 	}
 
 	@Override

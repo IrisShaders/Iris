@@ -67,6 +67,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public void syncProgram() {
+
+	}
+
+	@Override
 	public RenderTargetStateListener getRenderTargetStateListener() {
 		return RenderTargetStateListener.NOP;
 	}
