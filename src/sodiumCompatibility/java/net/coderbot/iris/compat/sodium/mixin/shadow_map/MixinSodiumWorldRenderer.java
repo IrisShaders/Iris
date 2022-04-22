@@ -28,32 +28,58 @@ public class MixinSodiumWorldRenderer {
     @Shadow(remap = false)
     private RenderSectionManager renderSectionManager;
 
-    @Shadow(remap = false)
-    private double lastCameraX;
-
     @Unique
     private boolean wasRenderingShadows = false;
 
-    @Unique
-    public void iris$restoreStateIfShadowsWereBeingRendered() {
-        if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
-                ((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
-            }
+	@Shadow(remap = false)
+	private double lastCameraX, lastCameraY, lastCameraZ, lastCameraPitch, lastCameraYaw;
 
-            wasRenderingShadows = false;
-        }
-    }
+	@Unique
+	private double iris$swapLastCameraX, iris$swapLastCameraY, iris$swapLastCameraZ,
+		iris$swapLastCameraPitch, iris$swapLastCameraYaw;
+
+	@Unique
+	private void swapCachedCameraPositions() {
+		double tmp;
+
+		tmp = lastCameraX;
+		lastCameraX = iris$swapLastCameraX;
+		iris$swapLastCameraX = tmp;
+
+		tmp = lastCameraY;
+		lastCameraY = iris$swapLastCameraY;
+		iris$swapLastCameraY = tmp;
+
+		tmp = lastCameraZ;
+		lastCameraZ = iris$swapLastCameraZ;
+		iris$swapLastCameraZ = tmp;
+
+		tmp = lastCameraPitch;
+		lastCameraPitch = iris$swapLastCameraPitch;
+		iris$swapLastCameraPitch = tmp;
+
+		tmp = lastCameraYaw;
+		lastCameraYaw = iris$swapLastCameraYaw;
+		iris$swapLastCameraYaw = tmp;
+	}
 
     @Unique
     private void iris$ensureStateSwapped() {
         if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
-                ((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
-            }
+			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
+				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
+				swapCachedCameraPositions();
+			}
 
             wasRenderingShadows = true;
-        }
+        } else if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
+				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
+				swapCachedCameraPositions();
+			}
+
+			wasRenderingShadows = false;
+		}
     }
 
     @Inject(method = "scheduleTerrainUpdate()V", remap = false,
@@ -96,6 +122,6 @@ public class MixinSodiumWorldRenderer {
     @Inject(method = "drawChunkLayer",  remap = false, at = @At("HEAD"))
     private void iris$beforeDrawChunkLayer(RenderType renderType, PoseStack poseStack, double x, double y,
 										   double z, CallbackInfo ci) {
-        iris$restoreStateIfShadowsWereBeingRendered();
+        iris$ensureStateSwapped();
     }
 }
