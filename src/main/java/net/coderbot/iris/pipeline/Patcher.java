@@ -17,7 +17,7 @@ public interface Patcher {
 
   public String patchVanilla(
       String source, ShaderType type, AlphaTest alpha,
-      boolean hasChunkOffset, ShaderAttributeInputs inputs);
+      boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean hasGeometry);
 
   public String patchSodium(String source, ShaderType type, AlphaTest alpha,
       ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale);
