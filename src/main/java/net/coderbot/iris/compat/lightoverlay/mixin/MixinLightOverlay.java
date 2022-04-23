@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.lightoverlay.mixin;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -21,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLightOverlay {
 	@Inject(method = "lambda$register$2()V", at = @At(value = "INVOKE", target = "org/lwjgl/opengl/GL11.glBegin (I)V"))
 	private static void iris$onGlBegin(CallbackInfo ci) {
-		GbufferPrograms.setFallbackBlockLight(240.0f);
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::syncProgram);
 	}
 }

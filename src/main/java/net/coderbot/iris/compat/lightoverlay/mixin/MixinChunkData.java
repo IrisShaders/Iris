@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.lightoverlay.mixin;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -19,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinChunkData {
 	@Redirect(method = "renderList", at = @At(value = "INVOKE", target = "org/lwjgl/opengl/GL11.glCallList (I)V"))
 	private void renderList(int listId) {
-		GbufferPrograms.setFallbackBlockLight(240.0f);
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::syncProgram);
 	}
 }
