@@ -1,11 +1,16 @@
 package net.coderbot.iris.gl.shader;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
+import net.coderbot.iris.texture.format.TextureFormat;
+import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20C;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,9 +24,34 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class StandardMacros {
-
 	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)(.*)");
 
+	public static ImmutableList<String> createDefines() {
+		DefineDirectivesBuilder builder = new DefineDirectivesBuilder();
+
+		builder
+			.define(getOsString())
+			.define("MC_VERSION", getMcVersion())
+			.define("MC_GL_VERSION", getGlVersion(GL20C.GL_VERSION))
+			.define("MC_GLSL_VERSION", getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+			.define(getRenderer())
+			.define(getVendor())
+			.define("MC_RENDER_QUALITY", "1.0")
+			.define("MC_SHADOW_QUALITY", "1.0")
+			.define("MC_NORMAL_MAP")
+			.define("MC_SPECULAR_MAP")
+			.define("MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH))
+			.defineAll(getIrisDefines())
+			.defineAll(getGlExtensions())
+			.defineAll(getRenderStages());
+
+		TextureFormat textureFormat = TextureFormatLoader.getFormat();
+		if (textureFormat != null) {
+			textureFormat.addMacros(builder);
+		}
+
+		return builder.build();
+	}
 
 	/**
 	 * Gets the current mc version String in a 5 digit format

@@ -7,6 +7,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -62,6 +63,10 @@ public class TextureFormatLoader {
 	}
 
 	private static void onFormatChange() {
-		// TODO: enqueue shader recompilation
+		try {
+			Iris.reload();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

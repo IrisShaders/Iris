@@ -61,11 +61,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 	public void upload(int atlasWidth, int atlasHeight, int mipLevel) {
 		int glId = getId();
 		TextureUtil.prepareImage(glId, mipLevel, atlasWidth, atlasHeight);
-
-		int defaultValue = type.getDefaultValue();
-		if (defaultValue != 0) {
-			TextureColorUtil.fillWithColor(glId, mipLevel, defaultValue);
-		}
+		TextureColorUtil.fillWithColor(glId, mipLevel, type.getDefaultValue());
 
 		for (TextureAtlasSprite sprite : sprites.values()) {
 			try {

@@ -8,9 +8,7 @@ import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.shader.GlShader;
-import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
@@ -64,7 +62,7 @@ public class ShaderPack {
 	private final String profileInfo;
 
 	public ShaderPack(Path root) throws IOException {
-		this(root, Collections.emptyMap());
+		this(root, Collections.emptyMap(), Collections.emptyList());
 	}
 
 	/**
@@ -75,10 +73,9 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, Iterable<String> defines) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
-
 
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
@@ -169,9 +166,7 @@ public class ShaderPack {
 			}
 
 			// Apply shader environment defines / constants
-			// TODO: Write our own code pathways for this
-			ShaderConstants constants = ProgramBuilder.MACRO_CONSTANTS;
-			String source = GlShader.processShader(builder.toString(), constants);
+			String source = GlShader.processShader(builder.toString(), defines);
 
 			// Apply GLSL preprocessor to source
 			source = JcppProcessor.glslPreprocessSource(source);

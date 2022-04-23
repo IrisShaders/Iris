@@ -1,11 +1,11 @@
 package net.coderbot.iris.texture.format;
 
+import net.coderbot.iris.gl.shader.DefineDirectivesBuilder;
 import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
 import net.coderbot.iris.texture.pbr.PBRType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
-import java.util.function.Consumer;
 
 public interface TextureFormat {
 	String getName();
@@ -13,17 +13,16 @@ public interface TextureFormat {
 	@Nullable
 	String getVersion();
 
-	// TODO: call this method when adding directives
-	default void addDirectives(Consumer<String> consumer) {
-		String directiveName = getName().toUpperCase(Locale.ROOT).replaceAll("-", "_");
-		String directive = "MC_TEXTURE_FORMAT_" + directiveName;
-		consumer.accept(directive);
+	default void addMacros(DefineDirectivesBuilder builder) {
+		String macroName = getName().toUpperCase(Locale.ROOT).replaceAll("-", "_");
+		String macro = "MC_TEXTURE_FORMAT_" + macroName;
+		builder.define(macro);
 
 		String version = getVersion();
 		if (version != null) {
-			String directiveVersion = version.replaceAll("\\.-", "_");
-			String versionDirective = directive + "_" + directiveVersion;
-			consumer.accept(versionDirective);
+			String macroVersion = version.replaceAll("[.-]", "_");
+			String versionMacro = macro + "_" + macroVersion;
+			builder.define(versionMacro);
 		}
 	}
 
