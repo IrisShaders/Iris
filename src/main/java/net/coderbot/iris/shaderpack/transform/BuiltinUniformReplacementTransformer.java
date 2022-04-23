@@ -1,7 +1,7 @@
 package net.coderbot.iris.shaderpack.transform;
 
 public class BuiltinUniformReplacementTransformer {
-	private String normalizedLightmapCoords;
+	private final String normalizedLightmapCoords;
 
 	private static final String NORMALIZED_PLACEHOLDER = "iris_NormalizedLightmapCoords";
 

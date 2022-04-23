@@ -4,7 +4,6 @@ import net.coderbot.iris.gl.uniform.UniformHolder;
 import java.util.function.IntSupplier;
 
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
-import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;

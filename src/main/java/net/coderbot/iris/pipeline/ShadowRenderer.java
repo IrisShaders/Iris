@@ -11,7 +11,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -89,6 +91,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final Program shadowProgram;
 	@Nullable
 	private final BlendModeOverride blendModeOverride;
+	@Nullable
+	private final AlphaTestOverride alphaTestOverride;
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean packHasIndirectSunBounceGi;
@@ -117,7 +121,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private String debugStringTerrain = "(unavailable)";
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
-	private final ProfilerFiller profiler;
+	private ProfilerFiller profiler;
 
 	private final CustomUniforms customUniforms;
 
@@ -166,6 +170,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 			// Note: ProgramSet handles defaulting this to "OFF" on the shadow program.
 			this.blendModeOverride = shadow.getDirectives().getBlendModeOverride();
+			this.alphaTestOverride = shadow.getDirectives().getAlphaTestOverride().orElse(null);
 
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// Also assume voxelization if image load / store is detected.
@@ -174,6 +179,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		} else {
 			this.shadowProgram = null;
 			this.blendModeOverride = BlendModeOverride.OFF;
+			this.alphaTestOverride = null;
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
@@ -185,15 +191,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 			// Detect the sun-bounce GI in SEUS Renewed and SEUS v11.
 			// TODO: This is very hacky, we need a better way to detect sun-bounce GI.
-			if (fsh.contains("GI_QUALITY") && fsh.contains("GI_RENDER_RESOLUTION")
-					&& fsh.contains("GI_RADIUS")
-					&& fsh.contains("#define GI\t// Indirect lighting from sunlight.")
-					&& !fsh.contains("//#define GI\t// Indirect lighting from sunlight.")
-					&& !fsh.contains("// #define GI\t// Indirect lighting from sunlight.")) {
-				this.packHasIndirectSunBounceGi = true;
-			} else {
-				this.packHasIndirectSunBounceGi = false;
-			}
+			this.packHasIndirectSunBounceGi = fsh.contains("GI_QUALITY") && fsh.contains("GI_RENDER_RESOLUTION")
+				&& fsh.contains("GI_RADIUS")
+				&& fsh.contains("#define GI\t// Indirect lighting from sunlight.")
+				&& !fsh.contains("//#define GI\t// Indirect lighting from sunlight.")
+				&& !fsh.contains("// #define GI\t// Indirect lighting from sunlight.");
 		} else {
 			this.packHasIndirectSunBounceGi = false;
 		}
@@ -506,6 +508,8 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		renderedShadowEntities = shadowEntities;
+
+		profiler.pop();
 	}
 
 	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum) {
@@ -534,16 +538,28 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		}
 
 		renderedShadowBlockEntities = shadowBlockEntities;
+
+		profiler.pop();
 	}
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		// We have to re-query this each frame since this changes based on whether the profiler is active
+		// If the profiler is inactive, it will return InactiveProfiler.INSTANCE
+		this.profiler = Minecraft.getInstance().getProfiler();
+
 		// Note: This will probably be done differently in 1.17 since blend mode overrides are now associated with
 		//       vanilla ShaderInstances.
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();
 		} else {
 			BlendModeOverride.restore();
+		}
+
+		if (alphaTestOverride != null) {
+			alphaTestOverride.apply();
+		} else {
+			AlphaTestOverride.restore();
 		}
 
 		Minecraft client = Minecraft.getInstance();
@@ -713,9 +729,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 		pipeline.endShadowRender();
 
-		// Note: This MUST happen before popProgram, otherwise we'll mess up the blend mode override of the program that
-		//       is being restored.
+		// Note: This MUST happen before popProgram, otherwise we'll mess up the blend mode override
+		//       and alpha test override of the program that is being restored.
 		BlendModeOverride.restore();
+		AlphaTestOverride.restore();
 
 		// Note: This unbinds the shadow framebuffer
 		pipeline.popProgram(GbufferProgram.NONE);
@@ -727,22 +744,23 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		levelRenderer.setRenderBuffers(playerBuffers);
 
 		ACTIVE = false;
+		profiler.pop();
 		profiler.popPush("updatechunks");
 	}
 
 	@Override
 	public void addDebugText(List<String> messages) {
-		messages.add("[Iris] Shadow Maps: " + debugStringOverall);
-		messages.add("[Iris] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
-		messages.add("[Iris] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
-		messages.add("[Iris] Shadow Terrain: " + debugStringTerrain
+		messages.add("[" + Iris.MODNAME + "] Shadow Maps: " + debugStringOverall);
+		messages.add("[" + Iris.MODNAME + "] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
+		messages.add("[" + Iris.MODNAME + "] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
+		messages.add("[" + Iris.MODNAME + "] Shadow Terrain: " + debugStringTerrain
 				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
-		messages.add("[Iris] Shadow Entities: " + getEntitiesDebugString());
-		messages.add("[Iris] Shadow Block Entities: " + getBlockEntitiesDebugString());
+		messages.add("[" + Iris.MODNAME + "] Shadow Entities: " + getEntitiesDebugString());
+		messages.add("[" + Iris.MODNAME + "] Shadow Block Entities: " + getBlockEntitiesDebugString());
 
 		if (buffers instanceof DrawCallTrackingRenderBuffers && shouldRenderEntities) {
 			DrawCallTrackingRenderBuffers drawCallTracker = (DrawCallTrackingRenderBuffers) buffers;
-			messages.add("[Iris] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
+			messages.add("[" + Iris.MODNAME + "] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
 		}
 	}
 

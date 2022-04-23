@@ -1,7 +1,6 @@
 package net.coderbot.iris.shaderpack.option.menu;
 
 import net.coderbot.iris.Iris;
-
 import net.coderbot.iris.shaderpack.ShaderProperties;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 

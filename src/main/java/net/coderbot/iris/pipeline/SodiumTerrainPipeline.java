@@ -1,9 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.IntFunction;
-
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
@@ -16,6 +12,10 @@ import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.IntFunction;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -215,6 +215,10 @@ public class SodiumTerrainPipeline {
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 
 		return uniforms;
+	}
+
+	public boolean hasShadowPass() {
+		return createShadowSamplers != null;
 	}
 
 	public ProgramSamplers initTerrainSamplers(int programId) {

@@ -1,11 +1,11 @@
 package net.coderbot.iris.mixin.texunits;
 
 import net.coderbot.iris.texunits.TextureUnit;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import org.lwjgl.opengl.GL15;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 
 @Mixin(OverlayTexture.class)
 public class MixinOverlayTexture {

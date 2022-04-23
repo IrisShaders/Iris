@@ -25,6 +25,7 @@ import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
+import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
@@ -45,7 +46,6 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -355,7 +355,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.phase = WorldRenderingPhase.NONE;
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
-				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, customUniforms);
+			shadowMapRenderer instanceof EmptyShadowMapRenderer || shadowMapRenderer == null ? null : createShadowTerrainSamplers,
+			createTerrainImages, createShadowTerrainImages, customUniforms);
 
 		// first optimization pass
 		this.customUniforms.optimise();
@@ -772,7 +773,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		renderTargets.resizeIfNeeded(main.width, main.height);
+		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
+
+		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), main.width, main.height);
+
+		mainExt.iris$clearDepthBufferDirtyFlag();
 
 		final ImmutableList<ClearPass> passes;
 

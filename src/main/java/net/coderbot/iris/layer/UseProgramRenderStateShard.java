@@ -1,7 +1,8 @@
 package net.coderbot.iris.layer;
 
-import java.util.Objects;
 import net.minecraft.client.renderer.RenderStateShard;
+
+import java.util.Objects;
 
 public class UseProgramRenderStateShard extends RenderStateShard {
 	private final GbufferProgram program;

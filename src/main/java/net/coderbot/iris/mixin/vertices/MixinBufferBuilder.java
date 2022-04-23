@@ -1,5 +1,10 @@
 package net.coderbot.iris.mixin.vertices;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferVertexConsumer;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
@@ -13,11 +18,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferVertexConsumer;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -32,10 +33,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private int vertexCount;
 
 	@Unique
-	private QuadView quad = new QuadView();
+	private final QuadView quad = new QuadView();
 
 	@Unique
-	private Vector3f normal = new Vector3f();
+	private final Vector3f normal = new Vector3f();
 
 	@Unique
 	private int normalOffset;
@@ -126,7 +127,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		vertexCount = 0;
 
 		// TODO: Keep this in sync with the extensions
-		int extendedDataLength = (2 * 2) + (1 * 4) + (1 * 4);
+		int extendedDataLength = (2 * 2) + (2 * 4) + (1 * 4);
 
 		int stride = this.format.getVertexSize();
 

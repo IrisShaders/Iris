@@ -23,7 +23,7 @@ public class ProgramSet {
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTexturedLit;
 	private final ProgramSource gbuffersTerrain;
-	private final ProgramSource gbuffersDamagedBlock;
+	private ProgramSource gbuffersDamagedBlock;
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
@@ -92,6 +92,27 @@ public class ProgramSet {
 		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, shaderProperties);
 
 		locateDirectives();
+
+		if (!gbuffersDamagedBlock.isValid()) {
+			// Special behavior inherited by OptiFine & Iris from old ShadersMod
+			// Presumably this was added before DRAWBUFFERS was a thing? Or just a hardcoded hacky fix for some
+			// shader packs - in any case, Sildurs Vibrant Shaders and other packs rely on it.
+			first(getGbuffersTerrain(), getGbuffersTexturedLit(), getGbuffersTextured(), getGbuffersBasic()).ifPresent(src -> {
+				ProgramDirectives overrideDirectives = src.getDirectives().withOverriddenDrawBuffers(new int[] { 0 });
+				this.gbuffersDamagedBlock = src.withDirectiveOverride(overrideDirectives);
+			});
+		}
+	}
+
+	@SafeVarargs
+	private static <T> Optional<T> first(Optional<T>... candidates) {
+		for (Optional<T> candidate : candidates) {
+			if (candidate.isPresent()) {
+				return candidate;
+			}
+		}
+
+		return Optional.empty();
 	}
 
 	private ProgramSource[] readProgramArray(AbsolutePackPath directory,

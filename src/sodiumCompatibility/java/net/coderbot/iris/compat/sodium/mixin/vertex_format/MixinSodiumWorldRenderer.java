@@ -2,10 +2,8 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.format.DefaultModelVertexFormats;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
-import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;

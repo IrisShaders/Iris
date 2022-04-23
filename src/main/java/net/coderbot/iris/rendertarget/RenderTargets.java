@@ -1,16 +1,20 @@
 package net.coderbot.iris.rendertarget;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.IntSupplier;
+
 public class RenderTargets {
 	private final RenderTarget[] targets;
-	private final DepthTexture depthTexture;
+
+	private final IntSupplier depthTexture;
+	private int lastDepthTextureId;
+
 	private final DepthTexture noTranslucents;
 	private final DepthTexture noHand;
 
@@ -21,10 +25,10 @@ public class RenderTargets {
 	private boolean fullClearRequired;
 
 	public RenderTargets(com.mojang.blaze3d.pipeline.RenderTarget reference, PackRenderTargetDirectives directives) {
-		this(reference.width, reference.height, directives.getRenderTargetSettings());
+		this(reference.width, reference.height, reference::getDepthTextureId, directives.getRenderTargetSettings());
 	}
 
-	public RenderTargets(int width, int height, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
+	public RenderTargets(int width, int height, IntSupplier depthTexture, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
 		targets = new net.coderbot.iris.rendertarget.RenderTarget[renderTargets.size()];
 
 		renderTargets.forEach((index, settings) -> {
@@ -34,7 +38,9 @@ public class RenderTargets {
 					.setPixelFormat(settings.getInternalFormat().getPixelFormat()).build();
 		});
 
-		this.depthTexture = new DepthTexture(width, height);
+		this.depthTexture = depthTexture;
+		this.lastDepthTextureId = depthTexture.getAsInt();
+
 		this.noTranslucents = new DepthTexture(width, height);
 		this.noHand = new DepthTexture(width, height);
 
@@ -57,7 +63,6 @@ public class RenderTargets {
 			target.destroy();
 		}
 
-		depthTexture.destroy();
 		noTranslucents.destroy();
 		noHand.destroy();
 	}
@@ -70,7 +75,7 @@ public class RenderTargets {
 		return targets[index];
 	}
 
-	public DepthTexture getDepthTexture() {
+	public IntSupplier getDepthTexture() {
 		return depthTexture;
 	}
 
@@ -82,7 +87,24 @@ public class RenderTargets {
 		return noHand;
 	}
 
-	public void resizeIfNeeded(int newWidth, int newHeight) {
+	public void resizeIfNeeded(boolean recreateDepth, int newWidth, int newHeight) {
+		int newDepthTextureId = depthTexture.getAsInt();
+
+		if (recreateDepth || newDepthTextureId != lastDepthTextureId) {
+			// Re-attach the depth textures with the new depth texture ID, since Minecraft re-creates
+			// the depth texture when resizing its render targets.
+			//
+			// I'm not sure if our framebuffers holding on to the old depth texture between frames
+			// could be a concern, in the case of resizing and similar. I think it should work
+			// based on what I've seen of the spec, though - it seems like deleting a texture
+			// automatically detaches it from its framebuffers.
+			lastDepthTextureId = newDepthTextureId;
+
+			for (GlFramebuffer framebuffer : ownedFramebuffers) {
+				framebuffer.addDepthAttachment(newDepthTextureId);
+			}
+		}
+
 		if (newWidth == cachedWidth && newHeight == cachedHeight) {
 			// No resize needed
 			return;
@@ -95,7 +117,6 @@ public class RenderTargets {
 			target.resize(newWidth, newHeight);
 		}
 
-		depthTexture.resize(newWidth, newHeight);
 		noTranslucents.resize(newWidth, newHeight);
 		noHand.resize(newWidth, newHeight);
 
@@ -139,7 +160,7 @@ public class RenderTargets {
 
 		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToMain, drawBuffers);
 
-		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
+		framebuffer.addDepthAttachment(lastDepthTextureId);
 
 		return framebuffer;
 	}
@@ -161,7 +182,7 @@ public class RenderTargets {
 	public GlFramebuffer createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
 		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
-		framebuffer.addDepthAttachment(this.getDepthTexture().getTextureId());
+		framebuffer.addDepthAttachment(lastDepthTextureId);
 
 		return framebuffer;
 	}
