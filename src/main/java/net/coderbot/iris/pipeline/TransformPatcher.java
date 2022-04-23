@@ -7,9 +7,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Table;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
@@ -18,13 +16,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.GLSLParser;
-import io.github.douira.glsl_transformer.GLSLParser.ExpressionContext;
+import io.github.douira.glsl_transformer.GLSLParser.ArrayAccessExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
 import io.github.douira.glsl_transformer.core.SearchTerminalsDynamic;
 import io.github.douira.glsl_transformer.core.SearchTerminalsImpl;
+import io.github.douira.glsl_transformer.core.SemanticException;
 import io.github.douira.glsl_transformer.core.WrapIdentifier;
 import io.github.douira.glsl_transformer.core.WrapIdentifierExternalDeclaration;
 import io.github.douira.glsl_transformer.core.target.HandlerTarget;
@@ -37,8 +36,8 @@ import io.github.douira.glsl_transformer.core.target.WrapThrowTargetImpl;
 import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
 import io.github.douira.glsl_transformer.print.filter.TokenChannel;
 import io.github.douira.glsl_transformer.print.filter.TokenFilter;
+import io.github.douira.glsl_transformer.transform.JobParameters;
 import io.github.douira.glsl_transformer.transform.RunPhase;
-import io.github.douira.glsl_transformer.transform.SemanticException;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.TransformationManager;
 import io.github.douira.glsl_transformer.transform.TransformationPhase;
@@ -71,12 +70,13 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
  */
 public class TransformPatcher implements Patcher {
 	private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
+	private TransformationManager<Parameters> manager;
 
 	private static enum Patch {
 		ATTRIBUTES, VANILLA_REGULAR, VANILLA_WITH_ATTRIBUTE_TRANSFORM, SODIUM, COMPOSITE
 	}
 
-	private static class Parameters {
+	private static class Parameters extends JobParameters {
 		public final Patch patch;
 		public final ShaderType type;
 
@@ -87,6 +87,17 @@ public class TransformPatcher implements Patcher {
 
 		public AlphaTest getAlphaTest() {
 			return null;
+		}
+
+		@Override
+		public boolean equals(JobParameters other) {
+			return other instanceof Parameters otherParams
+					&& otherParams.patch == patch && otherParams.type == type;
+		}
+
+		@Override
+		public int hashCode() {
+			return patch.hashCode() ^ type.hashCode();
 		}
 	}
 
@@ -150,17 +161,7 @@ public class TransformPatcher implements Patcher {
 		COLOR, DATA, CUSTOM
 	}
 
-	/**
-	 * A transformation manager is kept for each patch type and shader type for
-	 * better performance since it allows the phase collector to compact the whole
-	 * run better. The object parameter can be filled with one of the parameter
-	 * classes and the transformation phases have to do their own casts.
-	 */
-	private Table<Patch, ShaderType, TransformationManager<Parameters>> managers = HashBasedTable.create(
-			Patch.values().length,
-			ShaderType.values().length);
-
-	private static abstract class MainWrapperDynamic<R> extends WrapIdentifierExternalDeclaration<R> {
+	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifierExternalDeclaration<R> {
 		protected abstract String getMainContent();
 
 		@Override
@@ -831,7 +832,7 @@ public class TransformPatcher implements Patcher {
 					}
 
 					@Override
-					public void enterExpression(ExpressionContext ctx) {
+					public void enterArrayAccessExpression(ArrayAccessExpressionContext ctx) {
 						ParseTreeMatch match = pattern.match(ctx);
 						if (match.succeeded()) {
 							int index = Integer.parseInt(match.get("index").getText());
@@ -1078,56 +1079,55 @@ public class TransformPatcher implements Patcher {
 			}
 		};
 
-		// compose the transformations and phases into the managers
-		for (Patch patch : Patch.values()) {
-			for (ShaderType type : ShaderType.values()) {
-				TransformationManager<Parameters> manager = new TransformationManager<Parameters>();
-				managers.put(patch, type, manager);
+		manager = new TransformationManager<Parameters>(new Transformation<>() {
+			@Override
+			protected void setupGraph() {
+				var patch = getJobParameters().patch;
+				var type = getJobParameters().type;
 
-				manager.setParseTokenFilter(parseTokenFilter);
-				manager.addConcurrent(detectReserved);
+				addEndDependent(detectReserved);
 
 				// patchAttributes
 				if (patch == Patch.ATTRIBUTES || patch == Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM) {
-					manager.addConcurrent(replaceEntityColorDeclaration);
+					addEndDependent(replaceEntityColorDeclaration);
 
 					if (type == ShaderType.VERTEX || type == ShaderType.GEOMETRY) {
-						manager.addConcurrent(wrapOverlay);
+						addEndDependent(wrapOverlay);
 					} else if (type == ShaderType.FRAGMENT) {
-						manager.addConcurrent(renameEntityColorFragment);
+						addEndDependent(renameEntityColorFragment);
 					}
 				}
 
 				if (patch != Patch.ATTRIBUTES) {
-					manager.addConcurrent(fixVersion);
-					manager.addConcurrent(wrapFogSetup);
-					manager.addConcurrent(injectTextureFunctions);
+					addEndDependent(fixVersion);
+					addEndDependent(wrapFogSetup);
+					addEndDependent(injectTextureFunctions);
 
 					if (type == ShaderType.VERTEX) {
-						manager.addConcurrent(wrapFogFragCoord);
-						manager.addConcurrent(wrapFrontColor);
-						manager.addConcurrent(replaceStorageQualifierVertex);
+						addEndDependent(wrapFogFragCoord);
+						addEndDependent(wrapFrontColor);
+						addEndDependent(replaceStorageQualifierVertex);
 					}
 
 					else if (type == ShaderType.FRAGMENT) {
-						manager.addConcurrent(wrapFogFragCoord);
-						manager.addConcurrent(replaceStorageQualifierFragment);
-						manager.addConcurrent(injectTextureFunctionsFragment);
+						addEndDependent(wrapFogFragCoord);
+						addEndDependent(replaceStorageQualifierFragment);
+						addEndDependent(injectTextureFunctionsFragment);
 
 						// does frag color handling and the alpha test as well
-						manager.addConcurrent(wrapFragColorOutput);
+						addEndDependent(wrapFragColorOutput);
 					}
 
 					// patchVanilla
 					if (patch == Patch.VANILLA_REGULAR || patch == Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM) {
-						manager.addConcurrent(wrapProjMatrixVanilla);
-						manager.addConcurrent(wrapColorVanilla);
-						manager.addConcurrent(wrapTextureMatricesVanilla);
-						manager.addConcurrent(wrapModelViewMatrixVanilla);
+						addEndDependent(wrapProjMatrixVanilla);
+						addEndDependent(wrapColorVanilla);
+						addEndDependent(wrapTextureMatricesVanilla);
+						addEndDependent(wrapModelViewMatrixVanilla);
 
 						if (type == ShaderType.VERTEX) {
-							manager.addConcurrent(wrapAttributeInputsVanillaVertex);
-							manager.addConcurrent(vertexPositionWrapVanilla);
+							addEndDependent(wrapAttributeInputsVanillaVertex);
+							addEndDependent(vertexPositionWrapVanilla);
 						}
 					}
 
@@ -1141,26 +1141,22 @@ public class TransformPatcher implements Patcher {
 
 					}
 				}
-
-				manager.planExecution();
 			}
-		}
-	}
+		});
 
-	private String transform(String source, Parameters parameters) {
-		return managers.get(parameters.patch, parameters.type).transform(source, parameters);
+		manager.setParseTokenFilter(parseTokenFilter);
 	}
 
 	@Override
 	public String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
-		return transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
+		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
 	}
 
 	@Override
 	public String patchVanilla(
 			String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
 			ShaderAttributeInputs inputs, boolean hasGeometry) {
-		return transform(source,
+		return manager.transform(source,
 				new VanillaParameters(
 						inputs.hasOverlay() ? Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM : Patch.VANILLA_REGULAR,
 						type, alpha, hasChunkOffset, inputs, hasGeometry));
@@ -1170,13 +1166,13 @@ public class TransformPatcher implements Patcher {
 	public String patchSodium(
 			String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale) {
-		return transform(source,
+		return manager.transform(source,
 				new SodiumParameters(Patch.SODIUM,
 						type, alpha, inputs, positionScale, positionOffset, textureScale));
 	}
 
 	@Override
 	public String patchComposite(String source, ShaderType type) {
-		return transform(source, new Parameters(Patch.COMPOSITE, type));
+		return manager.transform(source, new Parameters(Patch.COMPOSITE, type));
 	}
 }

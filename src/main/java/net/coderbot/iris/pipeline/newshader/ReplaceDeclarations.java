@@ -12,7 +12,8 @@ import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
 import io.github.douira.glsl_transformer.GLSLParser.FunctionHeaderContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VariableIdentifierContext;
-import io.github.douira.glsl_transformer.transform.SemanticException;
+import io.github.douira.glsl_transformer.core.SemanticException;
+import io.github.douira.glsl_transformer.transform.JobParameters;
 import io.github.douira.glsl_transformer.transform.Transformation;
 import io.github.douira.glsl_transformer.transform.WalkPhase;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
@@ -26,7 +27,7 @@ import io.github.douira.glsl_transformer.tree.ExtendedContext;
  * actually not supposed to be part of that so I moved it. Also, it's old and
  * probably does things badly and with outdated practices.
  */
-public class ReplaceDeclarations<T> extends Transformation<T> {
+public class ReplaceDeclarations<T extends JobParameters> extends Transformation<T> {
   private static class Declaration {
     private final String type;
     private final String name;
