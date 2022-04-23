@@ -5,7 +5,6 @@ import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
@@ -84,8 +83,6 @@ public final class CommonUniforms {
 		}, StateUpdateNotifiers.blendFuncNotifier);
 
 		uniforms.uniform1i("renderStage", () -> GbufferPrograms.getCurrentPhase().ordinal(), StateUpdateNotifiers.phaseChangeNotifier);
-
-		uniforms.uniform1f("iris_fallbackBlockLight", () -> GbufferPrograms.fallbackBlockLight, StateUpdateNotifiers.irisFallbackBlockLight);
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
 	}

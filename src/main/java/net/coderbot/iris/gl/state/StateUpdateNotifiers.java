@@ -15,5 +15,4 @@ public class StateUpdateNotifiers {
 	public static ValueUpdateNotifier blendFuncNotifier;
 	public static ValueUpdateNotifier atlasTextureNotifier;
 	public static ValueUpdateNotifier phaseChangeNotifier;
-	public static ValueUpdateNotifier irisFallbackBlockLight;
 }

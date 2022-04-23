@@ -3,10 +3,8 @@ package net.coderbot.iris.mixin.state_tracking;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gbuffer_overrides.state.StateTracker;
-import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.samplers.IrisSamplers;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -50,12 +48,6 @@ public class MixinGlStateManager {
 
 	@Inject(method = "_drawArrays(III)V", at = @At("HEAD"))
 	private static void iris$beforeDrawArrays(int mode, int first, int count, CallbackInfo ci) {
-		if (mode == GL11.GL_LINES || mode == GL11.GL_LINE_STRIP) {
-			GbufferPrograms.setFallbackBlockLight(240.0f);
-		} else {
-			GbufferPrograms.setFallbackBlockLight(0.0f);
-		}
-
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::syncProgram);
 	}
 }

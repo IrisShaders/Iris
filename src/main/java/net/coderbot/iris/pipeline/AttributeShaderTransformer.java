@@ -14,19 +14,8 @@ public class AttributeShaderTransformer {
 		StringTransformations transformations = new StringTransformations(source);
 
 		if (!inputs.lightmap) {
-			// Allow the fallback light value to be customized. Currently, this is used to make lines without light
-			// data emissive, and quads not be emissive.
-			//
-			// This is a compromise, since translucent emissive quads render as effectively opaque on most shader packs
-			// due to how they handle HDR (if they blend at all), so we do not make them emissive in the hopes that the
-			// shader pack will allow them to be somewhat see-through.
-			//
-			// However, that isn't really a problem for lines, and emissive chunk borders look cool. Hence making it
-			// possible to change the fallback with a uniform.
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_fallbackBlockLight;");
-
-			transformations.replaceExact("gl_MultiTexCoord1", "vec4(iris_fallbackBlockLight, 240.0, 0.0, 1.0)");
-			transformations.replaceExact("gl_MultiTexCoord2", "vec4(iris_fallbackBlockLight, 240.0, 0.0, 1.0)");
+			transformations.replaceExact("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
+			transformations.replaceExact("gl_MultiTexCoord2", "vec4(240.0, 240.0, 0.0, 1.0)");
 		} else {
 			transformations.replaceExact("gl_MultiTexCoord1", "gl_MultiTexCoord2");
 		}
