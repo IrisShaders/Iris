@@ -7,6 +7,7 @@ import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+
 import java.util.List;
 import java.util.OptionalInt;
 

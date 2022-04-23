@@ -1,8 +1,5 @@
 package net.coderbot.iris.uniforms;
 
-import java.util.Objects;
-import java.util.function.IntSupplier;
-
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.JomlConversions;
@@ -38,10 +35,12 @@ import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Objects;
+import java.util.function.IntSupplier;
+
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
@@ -263,4 +262,7 @@ public final class CommonUniforms {
 		}
 	}
 
+	static {
+		GbufferPrograms.init();
+	}
 }

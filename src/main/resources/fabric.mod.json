@@ -22,9 +22,6 @@
 
   "environment": "client",
   "entrypoints": {
-    "client": [
-      "net.coderbot.iris.Iris"
-    ],
     "modmenu": [
       "net.coderbot.iris.compat.modmenu.ModMenuIntegration"
     ]

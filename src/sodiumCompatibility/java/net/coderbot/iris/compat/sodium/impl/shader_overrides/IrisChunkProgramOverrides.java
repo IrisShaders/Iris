@@ -6,12 +6,12 @@ import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
-import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -186,7 +186,7 @@ public class IrisChunkProgramOverrides {
         if (pipeline != null) {
 			pipeline.patchShaders(vertexType);
             for (IrisTerrainPass pass : IrisTerrainPass.values()) {
-				if (pass == IrisTerrainPass.SHADOW && !pipeline.hasShadowPass()) {
+				if (pass.isShadow() && !pipeline.hasShadowPass()) {
 					this.programs.put(pass, null);
 					continue;
 				}

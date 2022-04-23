@@ -29,6 +29,17 @@ public class ProgramDirectives {
 	private final ImmutableSet<Integer> mipmappedBuffers;
 	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
+	private ProgramDirectives(int[] drawBuffers, float viewportScale, @Nullable AlphaTest alphaTestOverride,
+							 @Nullable BlendModeOverride blendModeOverride, ImmutableSet<Integer> mipmappedBuffers,
+							 ImmutableMap<Integer, Boolean> explicitFlips) {
+		this.drawBuffers = drawBuffers;
+		this.viewportScale = viewportScale;
+		this.alphaTestOverride = alphaTestOverride;
+		this.blendModeOverride = blendModeOverride;
+		this.mipmappedBuffers = mipmappedBuffers;
+		this.explicitFlips = explicitFlips;
+	}
+
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets,
 					  @Nullable BlendModeOverride defaultBlendOverride) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
@@ -93,6 +104,11 @@ public class ProgramDirectives {
 		});
 
 		this.mipmappedBuffers = ImmutableSet.copyOf(mipmappedBuffers);
+	}
+
+	public ProgramDirectives withOverriddenDrawBuffers(int[] drawBuffersOverride) {
+		return new ProgramDirectives(drawBuffersOverride, viewportScale, alphaTestOverride, blendModeOverride,
+			mipmappedBuffers, explicitFlips);
 	}
 
 	private static Optional<CommentDirective> findDrawbuffersDirective(Optional<String> stageSource) {

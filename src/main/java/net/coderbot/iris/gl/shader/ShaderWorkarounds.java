@@ -14,12 +14,12 @@
 
 package net.coderbot.iris.gl.shader;
 
-import java.nio.ByteBuffer;
-
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+
+import java.nio.ByteBuffer;
 
 /**
  * Contains a workaround for a crash in nglShaderSource on some AMD drivers. Copied from the following Canvas commit:

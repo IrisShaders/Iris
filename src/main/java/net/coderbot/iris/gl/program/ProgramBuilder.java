@@ -12,10 +12,8 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.pipeline.HandRenderer;
-
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL21C;
 
 import java.util.function.IntSupplier;
 

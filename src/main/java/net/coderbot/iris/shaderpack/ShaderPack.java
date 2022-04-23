@@ -26,7 +26,6 @@ import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
-import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;

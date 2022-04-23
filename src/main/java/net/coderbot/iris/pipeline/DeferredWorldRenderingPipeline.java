@@ -25,6 +25,7 @@ import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
+import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
@@ -750,7 +751,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		renderTargets.resizeIfNeeded(main.width, main.height);
+		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
+
+		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), main.width, main.height);
+
+		mainExt.iris$clearDepthBufferDirtyFlag();
 
 		final ImmutableList<ClearPass> passes;
 

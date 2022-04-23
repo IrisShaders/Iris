@@ -17,11 +17,11 @@ public class PackShadowDirectives {
 	private boolean explicitRenderDistance;
 	private float intervalSize;
 
-	private boolean shouldRenderTerrain;
-	private boolean shouldRenderTranslucent;
-	private boolean shouldRenderEntities;
-	private boolean shouldRenderBlockEntities;
-	private OptionalBoolean cullingState;
+	private final boolean shouldRenderTerrain;
+	private final boolean shouldRenderTranslucent;
+	private final boolean shouldRenderEntities;
+	private final boolean shouldRenderBlockEntities;
+	private final OptionalBoolean cullingState;
 
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
 	private final ImmutableList<SamplingSettings> colorSamplingSettings;
