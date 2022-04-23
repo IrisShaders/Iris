@@ -6,6 +6,8 @@ import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 
 public class GbufferPrograms {
+	private static Runnable irisFallbackBlockLightListener;
+	public static float fallbackBlockLight;
 	private static boolean entities;
 	private static boolean blockEntities;
 	private static Runnable phaseChangeListener;
@@ -49,6 +51,14 @@ public class GbufferPrograms {
 		blockEntities = false;
 	}
 
+	public static void setFallbackBlockLight(float blockLight) {
+		fallbackBlockLight = blockLight;
+
+		if (irisFallbackBlockLightListener != null) {
+			irisFallbackBlockLightListener.run();
+		}
+	}
+
 	public static WorldRenderingPhase getCurrentPhase() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -75,6 +85,7 @@ public class GbufferPrograms {
 
 	static {
 		StateUpdateNotifiers.phaseChangeNotifier = listener -> phaseChangeListener = listener;
+		StateUpdateNotifiers.irisFallbackBlockLight = listener -> irisFallbackBlockLightListener = listener;
 	}
 
 	public static void init() {
