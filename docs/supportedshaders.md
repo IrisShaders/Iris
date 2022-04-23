@@ -10,7 +10,7 @@
 
 * [Continuum 1.3](https://continuum.graphics/downloads)
 
-* [Continuum 2.0.4](https://continuum.graphics/downloads)
+* [Continuum 2.0.4](https://continuum.graphics/downloads) (does not work on Mesa drivers)
 
 * SEUS (NVIDIA or AMD GPU required, does not work on Intel Windows drivers)
    * [SEUS V11](https://www.sonicether.com/seus/)
