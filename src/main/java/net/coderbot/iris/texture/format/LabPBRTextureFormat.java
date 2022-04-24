@@ -58,6 +58,6 @@ public class LabPBRTextureFormat implements TextureFormat {
 		if (getClass() != obj.getClass())
 			return false;
 		LabPBRTextureFormat other = (LabPBRTextureFormat) obj;
-		return name == other.name && Objects.equals(version, other.version);
+		return Objects.equals(name, other.name) && Objects.equals(version, other.version);
 	}
 }
