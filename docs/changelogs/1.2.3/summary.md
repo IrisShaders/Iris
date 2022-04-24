@@ -5,7 +5,7 @@ Here's what's changed since 1.2.2:
 🖥️ Added debug commands
 🌊 Fixed issues with sky rendering in high fog situations (underwater)
 ⚔️ Fixed issues with changing lobbies on servers with shaders enabled
-🚤 Improved performance
+🚤 Improved performance slightly with more optimized vertex writing
 🩹 And many other bug fixes and translations!
 
 Known potential issues:
