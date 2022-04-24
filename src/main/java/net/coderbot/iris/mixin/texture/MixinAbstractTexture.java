@@ -15,7 +15,7 @@ public class MixinAbstractTexture {
 	protected int id;
 
 	@Inject(method = "getId()I", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/TextureUtil;generateTextureId()I", shift = Shift.BY, by = 2))
-	private void onGenerateId(CallbackInfoReturnable<Integer> cir) {
+	private void iris$onGenerateId(CallbackInfoReturnable<Integer> cir) {
 		TextureTracker.INSTANCE.trackTexture(id, (AbstractTexture) (Object) this);
 	}
 }

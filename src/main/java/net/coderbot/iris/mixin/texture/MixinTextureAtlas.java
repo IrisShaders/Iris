@@ -53,7 +53,7 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 	}
 
 	@Inject(method = "load(Lnet/minecraft/server/packs/resources/ResourceManager;)V", at = @At("TAIL"))
-	private void onTailLoad(ResourceManager resourceManager, CallbackInfo ci) {
+	private void iris$onTailLoad(ResourceManager resourceManager, CallbackInfo ci) {
 		AtlasInfoGatherer.resetInfo((TextureAtlas) (Object) this);
 	}
 }
