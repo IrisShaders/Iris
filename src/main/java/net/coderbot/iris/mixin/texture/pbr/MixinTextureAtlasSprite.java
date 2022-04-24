@@ -22,11 +22,6 @@ public class MixinTextureAtlasSprite implements TextureAtlasSpriteExtension {
 	}
 
 	@Override
-	public boolean hasPBRHolder() {
-		return pbrHolder != null;
-	}
-
-	@Override
 	public PBRSpriteHolder getPBRHolder() {
 		return pbrHolder;
 	}

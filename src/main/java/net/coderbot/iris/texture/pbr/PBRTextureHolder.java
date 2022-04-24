@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 
 public interface PBRTextureHolder {
 	@NotNull
-	AbstractTexture normalTexture();
+	AbstractTexture getNormalTexture();
 
 	@NotNull
-	AbstractTexture specularTexture();
+	AbstractTexture getSpecularTexture();
 }

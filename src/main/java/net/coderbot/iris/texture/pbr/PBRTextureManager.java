@@ -22,14 +22,15 @@ public class PBRTextureManager {
 
 	private NativeImageBackedSingleColorTexture defaultNormalTexture;
 	private NativeImageBackedSingleColorTexture defaultSpecularTexture;
+	// Not PBRTextureHolderImpl to directly reference fields
 	private final PBRTextureHolder defaultHolder = new PBRTextureHolder() {
 		@Override
-		public @NotNull AbstractTexture normalTexture() {
+		public @NotNull AbstractTexture getNormalTexture() {
 			return defaultNormalTexture;
 		}
 
 		@Override
-		public @NotNull AbstractTexture specularTexture() {
+		public @NotNull AbstractTexture getSpecularTexture() {
 			return defaultSpecularTexture;
 		}
 	};
@@ -73,7 +74,19 @@ public class PBRTextureManager {
 				PBRTextureLoader loader = PBRTextureLoaderRegistry.INSTANCE.getLoader(clazz);
 				if (loader != null) {
 					loader.load(texture, Minecraft.getInstance().getResourceManager(), consumer);
-					return consumer.toHolder();
+
+					AbstractTexture normalTexture = consumer.normalTexture;
+					AbstractTexture specularTexture = consumer.specularTexture;
+					if (normalTexture == null && specularTexture == null) {
+						return defaultHolder;
+					}
+					if (normalTexture == null) {
+						normalTexture = defaultNormalTexture;
+					}
+					if (specularTexture == null) {
+						specularTexture = defaultSpecularTexture;
+					}
+					return new PBRTextureHolderImpl(normalTexture, specularTexture);
 				}
 			}
 		} catch (Exception e) {
@@ -95,7 +108,7 @@ public class PBRTextureManager {
 
 	public void clear() {
 		for (PBRTextureHolder holder : holders) {
-			if (holder != null) {
+			if (holder != null && holder != defaultHolder) {
 				closeHolder(holder);
 			}
 		}
@@ -109,27 +122,26 @@ public class PBRTextureManager {
 	}
 
 	private void closeHolder(PBRTextureHolder holder) {
-		AbstractTexture normalTexture = holder.normalTexture();
-		AbstractTexture specularTexture = holder.specularTexture();
+		AbstractTexture normalTexture = holder.getNormalTexture();
+		AbstractTexture specularTexture = holder.getSpecularTexture();
 		if (normalTexture != defaultNormalTexture) {
-			try {
-				normalTexture.close();
-			} catch (Exception e) {
-				//
-			}
-			normalTexture.releaseId();
+			closeTexture(normalTexture);
 		}
 		if (specularTexture != defaultSpecularTexture) {
-			try {
-				specularTexture.close();
-			} catch (Exception e) {
-				//
-			}
-			specularTexture.releaseId();
+			closeTexture(specularTexture);
 		}
 	}
 
-	private class PBRTextureConsumerImpl implements PBRTextureConsumer {
+	private static void closeTexture(AbstractTexture texture) {
+		try {
+			texture.close();
+		} catch (Exception e) {
+			//
+		}
+		texture.releaseId();
+	}
+
+	private static class PBRTextureConsumerImpl implements PBRTextureConsumer {
 		private AbstractTexture normalTexture;
 		private AbstractTexture specularTexture;
 
@@ -141,19 +153,6 @@ public class PBRTextureManager {
 		@Override
 		public void acceptSpecularTexture(AbstractTexture texture) {
 			specularTexture = texture;
-		}
-
-		private PBRTextureHolder toHolder() {
-			if (normalTexture == null && specularTexture == null) {
-				return defaultHolder;
-			}
-			if (normalTexture == null) {
-				normalTexture = defaultNormalTexture;
-			}
-			if (specularTexture == null) {
-				specularTexture = defaultSpecularTexture;
-			}
-			return new PBRTextureHolderImpl(normalTexture, specularTexture);
 		}
 
 		private void clear() {
@@ -172,12 +171,12 @@ public class PBRTextureManager {
 		}
 
 		@Override
-		public @NotNull AbstractTexture normalTexture() {
+		public @NotNull AbstractTexture getNormalTexture() {
 			return normalTexture;
 		}
 
 		@Override
-		public @NotNull AbstractTexture specularTexture() {
+		public @NotNull AbstractTexture getSpecularTexture() {
 			return specularTexture;
 		}
 	}

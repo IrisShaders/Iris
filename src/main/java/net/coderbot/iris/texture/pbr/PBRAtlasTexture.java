@@ -75,6 +75,18 @@ public class PBRAtlasTexture extends AbstractTexture {
 			}
 		}
 
+		if (!animatedSprites.isEmpty()) {
+			PBRAtlasHolder pbrHolder = ((TextureAtlasExtension) atlasTexture).getOrCreatePBRHolder();
+			switch (type) {
+			case NORMAL:
+				pbrHolder.setNormalAtlas(this);
+				break;
+			case SPECULAR:
+				pbrHolder.setSpecularAtlas(this);
+				break;
+			}
+		}
+
 		if (PBRTextureManager.DEBUG) {
 			TextureSavingUtil.saveTextures("atlas", id.getNamespace() + "_" + id.getPath().replaceAll("/", "_"), glId, mipLevel, atlasWidth, atlasHeight);
 		}
@@ -102,6 +114,21 @@ public class PBRAtlasTexture extends AbstractTexture {
 		bind();
 		for (TextureAtlasSprite sprite : animatedSprites) {
 			sprite.cycleFrames();
+		}
+	}
+
+	@Override
+	public void close() {
+		PBRAtlasHolder pbrHolder = ((TextureAtlasExtension) atlasTexture).getPBRHolder();
+		if (pbrHolder != null) {
+			switch (type) {
+			case NORMAL:
+				pbrHolder.setNormalAtlas(null);
+				break;
+			case SPECULAR:
+				pbrHolder.setSpecularAtlas(null);
+				break;
+			}
 		}
 	}
 

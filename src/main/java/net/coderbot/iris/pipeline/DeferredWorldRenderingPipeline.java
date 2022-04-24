@@ -925,9 +925,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		if (shouldBindPBR && isRenderingWorld) {
 			PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
 			RenderSystem.activeTexture(TextureUnit.NORMALS.getUnitId());
-			RenderSystem.bindTexture(pbrHolder.normalTexture().getId());
+			RenderSystem.bindTexture(pbrHolder.getNormalTexture().getId());
 			RenderSystem.activeTexture(TextureUnit.SPECULAR.getUnitId());
-			RenderSystem.bindTexture(pbrHolder.specularTexture().getId());
+			RenderSystem.bindTexture(pbrHolder.getSpecularTexture().getId());
 		}
 	}
 
