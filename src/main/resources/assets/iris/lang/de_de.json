@@ -1,6 +1,11 @@
 {
   "iris.shaders.reloaded": "Shader neu geladen!",
-  "iris.shaders.toggled": "Shader umgeschaltet auf: %s",
+  "iris.shaders.disabled": "Shader deaktiviert!",
+  "iris.shaders.toggled": "Shader umgeschaltet auf: %s!",
+  "iris.shaders.debug.enabled": "Debugging wurde aktiviert, die Debug-Protokollierung wird ausführlicher sein!",
+  "iris.shaders.debug.disabled": "Debugging wurde deaktiviert.",
+  "iris.shaders.debug.failure": "Debugging kann nicht aktiviert werden, da dieser Computer keine Debug-Funktionen unterstützt.",
+  "iris.shaders.debug.restart": "Es liegt kein Debug-Kontext vor, starte bitte neu, um Debugging zu aktivieren.",
   "iris.keybind.reload": "Shader neu laden",
   "iris.keybind.shaderPackSelection": "Shader-Auswahlbildschirm",
   "iris.keybind.toggleShaders": "Shader umschalten",
