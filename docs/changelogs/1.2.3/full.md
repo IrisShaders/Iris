@@ -24,5 +24,5 @@
 - Updated Polish translation (pl_pl.json) by @bascioTOja in #1334
 - Updated Portuguese translation (pt_br.json) by @EmqsaGit in #1335
 - Updated Russian translation (ru_ru.json) by @Ultra119 in #1350
-- Added Ukrainian translation (ru_ru.json) by @Ultra119 in #1350
+- Added Ukrainian translation (ua_ua.json) by @Ultra119 in #1350
 - Updated Chinese translation (zh_cn.json) by @Guanran928 in #1377
