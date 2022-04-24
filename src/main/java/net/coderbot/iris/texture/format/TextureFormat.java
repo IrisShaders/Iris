@@ -1,6 +1,6 @@
 package net.coderbot.iris.texture.format;
 
-import net.coderbot.iris.gl.shader.DefineDirectivesBuilder;
+import net.coderbot.iris.gl.shader.MacroBuilder;
 import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
 import net.coderbot.iris.texture.pbr.PBRType;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +13,7 @@ public interface TextureFormat {
 	@Nullable
 	String getVersion();
 
-	default void addMacros(DefineDirectivesBuilder builder) {
+	default void addMacros(MacroBuilder builder) {
 		String macroName = getName().toUpperCase(Locale.ROOT).replaceAll("-", "_");
 		String macro = "MC_TEXTURE_FORMAT_" + macroName;
 		builder.define(macro);

@@ -4,25 +4,25 @@ package net.coderbot.iris.gl.shader;
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class DefineDirectivesBuilder {
+public class MacroBuilder {
 	private static final String EMPTY_VALUE = "";
 
-	private final HashMap<String, String> macros = new HashMap<>();
+	private final Map<String, String> macros = new LinkedHashMap<>();
 
-	public DefineDirectivesBuilder() {
+	public MacroBuilder() {
 	}
 
-	public DefineDirectivesBuilder define(String name) {
+	public MacroBuilder define(String name) {
 		this.define(Objects.requireNonNull(name), EMPTY_VALUE);
 		return this;
 	}
 
-	public DefineDirectivesBuilder define(String name, String value) {
+	public MacroBuilder define(String name, String value) {
 		String prev = this.macros.get(name);
 
 		if (prev != null) {
@@ -34,12 +34,12 @@ public class DefineDirectivesBuilder {
 		return this;
 	}
 
-	public DefineDirectivesBuilder defineAll(List<String> names) {
+	public MacroBuilder defineAll(List<String> names) {
 		names.forEach(this::define);
 		return this;
 	}
 
-	public DefineDirectivesBuilder defineAll(Map<String, String> macros) {
+	public MacroBuilder defineAll(Map<String, String> macros) {
 		macros.forEach(this::define);
 		return this;
 	}
