@@ -1,7 +1,8 @@
-Iris 1.2.3 is ready for download, with major performance improvements!
+Iris 1.2.3 is ready for download, with minor performance improvements and bug fixes!
 
 Here's what's changed since 1.2.2:
 
+🧭 Fixed compatibility with Fabric API 0.51 and Indium 1.0.3
 🖥️ Added debug commands
 🌊 Fixed issues with sky rendering in high fog situations (underwater)
 ⚔️ Fixed issues with changing lobbies on servers with shaders enabled
