@@ -28,6 +28,7 @@
     "MixinBufferSource_WrapperChecking",
     "MixinParticleEngine",
     "MixinRenderSystem",
+    "MixinRenderTarget",
     "MixinTheEndPortalRenderer",
     "MixinTitleScreen",
     "MixinMaxFpsCrashFix",
