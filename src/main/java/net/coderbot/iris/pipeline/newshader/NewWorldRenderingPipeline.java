@@ -565,6 +565,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
 
+		centerDepthSampler.updateSample();
+
 		deferredRenderer.renderAll();
 
 		RenderSystem.enableBlend();
