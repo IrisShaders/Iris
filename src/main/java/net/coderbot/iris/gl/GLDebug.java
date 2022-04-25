@@ -85,6 +85,10 @@ public final class GLDebug {
 				printDetail(stream, "Message", GLDebugMessageCallback.getMessage(length, message));
 				printTrace(stream);
 			});
+			GL43C.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_HIGH, (int[])null, true);
+			GL43C.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_MEDIUM, (int[])null, false);
+			GL43C.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_LOW, (int[])null, false);
+			GL43C.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_NOTIFICATION, (int[])null, false);
 			GL43C.glDebugMessageCallback(proc, 0L);
 			if ((GL43C.glGetInteger(33310) & 2) == 0) {
 				Iris.logger.warn("[GL] Warning: A non-debug context may not produce any debug output.");
@@ -103,6 +107,10 @@ public final class GLDebug {
 				printDetail(stream, "Message", GLDebugMessageCallback.getMessage(length, message));
 				printTrace(stream);
 			});
+			KHRDebug.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_HIGH, (int[])null, true);
+			KHRDebug.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_MEDIUM, (int[])null, false);
+			KHRDebug.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_LOW, (int[])null, false);
+			KHRDebug.glDebugMessageControl(4352, 4352, GL43C.GL_DEBUG_SEVERITY_NOTIFICATION, (int[])null, false);
 			KHRDebug.glDebugMessageCallback(proc, 0L);
 			if (caps.OpenGL30 && (GL43C.glGetInteger(33310) & 2) == 0) {
 				Iris.logger.warn("[GL] Warning: A non-debug context may not produce any debug output.");
@@ -121,6 +129,10 @@ public final class GLDebug {
 				printDetail(stream, "Message", GLDebugMessageARBCallback.getMessage(length, message));
 				printTrace(stream);
 			});
+			ARBDebugOutput.glDebugMessageControlARB(4352, 4352, GL43C.GL_DEBUG_SEVERITY_HIGH, (int[])null, true);
+			ARBDebugOutput.glDebugMessageControlARB(4352, 4352, GL43C.GL_DEBUG_SEVERITY_MEDIUM, (int[])null, false);
+			ARBDebugOutput.glDebugMessageControlARB(4352, 4352, GL43C.GL_DEBUG_SEVERITY_LOW, (int[])null, false);
+			ARBDebugOutput.glDebugMessageControlARB(4352, 4352, GL43C.GL_DEBUG_SEVERITY_NOTIFICATION, (int[])null, false);
 			ARBDebugOutput.glDebugMessageCallbackARB(proc, 0L);
 			return 1;
 		} else if (caps.GL_AMD_debug_output) {
@@ -133,6 +145,10 @@ public final class GLDebug {
 				printDetail(stream, "Message", GLDebugMessageAMDCallback.getMessage(length, message));
 				printTrace(stream);
 			});
+			AMDDebugOutput.glDebugMessageEnableAMD(0, GL43C.GL_DEBUG_SEVERITY_HIGH, (int[])null, true);
+			AMDDebugOutput.glDebugMessageEnableAMD(0, GL43C.GL_DEBUG_SEVERITY_MEDIUM, (int[])null, false);
+			AMDDebugOutput.glDebugMessageEnableAMD(0, GL43C.GL_DEBUG_SEVERITY_LOW, (int[])null, false);
+			AMDDebugOutput.glDebugMessageEnableAMD(0, GL43C.GL_DEBUG_SEVERITY_NOTIFICATION, (int[])null, false);
 			AMDDebugOutput.glDebugMessageCallbackAMD(proc, 0L);
 			return 1;
 		} else {
