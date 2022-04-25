@@ -360,7 +360,9 @@ public class MixinGameRenderer {
 			"getRendertypeTextSeeThroughShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTextShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
+		if (ShadowRenderer.ACTIVE) {
+			override(ShaderKey.SHADOW_TEXT, cir);
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TEXT, cir);
 		}
 	}
