@@ -41,7 +41,7 @@
   "accessWidener" : "iris.accesswidener",
 
   "depends": {
-    "fabricloader": ">=0.12.3",
+    "fabricloader": ">=0.14.0",
     "minecraft": "1.19.x",
     "fabric-key-binding-api-v1": ">=1.0.1"
   },
