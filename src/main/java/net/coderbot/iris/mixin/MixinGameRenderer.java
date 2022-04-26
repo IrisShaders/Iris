@@ -325,9 +325,7 @@ public class MixinGameRenderer {
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideLeashShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
-			// override(CoreWorldRenderingPipeline::getShadowTerrainCutout, cir);
-			return;
+			override(ShaderKey.SHADOW_LEASH, cir);
 		} else if (isRenderingWorld()) {
 			override(ShaderKey.LEASH, cir);
 		}

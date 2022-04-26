@@ -59,6 +59,7 @@ public enum ShaderKey {
 	SHADOW_ENTITIES_CUTOUT (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.OFF    ),
 	SHADOW_BEACON_BEAM     (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.BLOCK,                       FogMode.OFF    ),
 	SHADOW_LINES           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.OFF    ),
+	SHADOW_LEASH           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.OFF    ),
 	SHADOW_TEXT           (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF    ),
 	SHADOW_TEXT_INTENSITY (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF    );
 
