@@ -76,7 +76,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		}
 		if (specularAtlas != null) {
 			if (uploadAtlas(specularAtlas, atlasWidth, atlasHeight, mipLevel, textureFormat)) {
-				pbrTextureConsumer.acceptSpecularTexture(normalAtlas);
+				pbrTextureConsumer.acceptSpecularTexture(specularAtlas);
 			}
 		}
 	}
