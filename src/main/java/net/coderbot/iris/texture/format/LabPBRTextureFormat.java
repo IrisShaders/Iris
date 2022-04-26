@@ -37,6 +37,14 @@ public class LabPBRTextureFormat implements TextureFormat {
 	}
 
 	@Override
+	public boolean canInterpolateValues(PBRType pbrType) {
+		if (pbrType == PBRType.SPECULAR) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
 	public @Nullable CustomMipmapGenerator getMipmapGenerator(PBRType pbrType) {
 		if (pbrType == PBRType.SPECULAR) {
 			return SPECULAR_MIPMAP_GENERATOR;

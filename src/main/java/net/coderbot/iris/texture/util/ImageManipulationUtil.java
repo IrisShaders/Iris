@@ -41,10 +41,10 @@ public class ImageManipulationUtil {
 				if (y0 < 0) {
 					y0valid = false;
 				}
-				if (x1 > image.getWidth()) {
+				if (x1 >= image.getWidth()) {
 					x1valid = false;
 				}
-				if (y1 > image.getHeight()) {
+				if (y1 >= image.getHeight()) {
 					y1valid = false;
 				}
 

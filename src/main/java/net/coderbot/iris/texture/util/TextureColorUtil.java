@@ -1,6 +1,7 @@
 package net.coderbot.iris.texture.util;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
@@ -15,10 +16,10 @@ public class TextureColorUtil {
 
 		int previousFramebufferId = GlStateManager._getInteger(GL30.GL_FRAMEBUFFER_BINDING);
 		float[] previousClearColor = new float[4];
-		GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE, previousClearColor);
+		IrisRenderSystem.getFloatv(GL11.GL_COLOR_CLEAR_VALUE, previousClearColor);
 		int previousTextureId = GlStateManager._getInteger(GL11.GL_TEXTURE_BINDING_2D);
 		int[] previousViewport = new int[4];
-		GL11.glGetIntegerv(GL11.GL_VIEWPORT, previousViewport);
+		IrisRenderSystem.getIntegerv(GL11.GL_VIEWPORT, previousViewport);
 
 		GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, colorFillFBO);
 		GlStateManager._clearColor(

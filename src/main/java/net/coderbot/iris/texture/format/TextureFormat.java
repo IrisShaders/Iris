@@ -1,9 +1,13 @@
 package net.coderbot.iris.texture.format;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.shader.MacroBuilder;
 import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
 import net.coderbot.iris.texture.pbr.PBRType;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11;
 
 import java.util.Locale;
 
@@ -23,6 +27,28 @@ public interface TextureFormat {
 			String macroVersion = version.replaceAll("[.-]", "_");
 			String versionMacro = macro + "_" + macroVersion;
 			builder.define(versionMacro);
+		}
+	}
+
+	/**
+	 * Dictates whether textures of the given PBR type can have their color values interpolated or not.
+	 * Usually, this controls the texture minification and magification filters -
+	 * a return value of false would signify that the linear filters cannot be used.
+	 *
+	 * @param pbrType The type of PBR texture
+	 * @return If texture values can be interpolated or not
+	 */
+	boolean canInterpolateValues(PBRType pbrType);
+
+	default void setupTextureParameters(PBRType pbrType, AbstractTexture texture) {
+		if (!canInterpolateValues(pbrType)) {
+			texture.bind();
+			int minFilter = IrisRenderSystem.getTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER);
+			// Non-mipped filters begin at 0x2600 whereas mipped filters begin at 0x2700,
+			// so this bit mask can be used to check if the filter is mipped or not
+			boolean mipmap = (minFilter & 1 << 8) == 1;
+			GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, mipmap ? GL11.GL_NEAREST_MIPMAP_NEAREST : GL11.GL_NEAREST);
+			GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		}
 	}
 
