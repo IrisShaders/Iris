@@ -27,7 +27,7 @@
     "MixinGlUniform",
     "MixinItemInHandRenderer",
     "MixinMinecraft",
-    "MixinMinecraft_PipelineDestruction",
+    "MixinMinecraft_PipelineManagement",
     "MixinModelViewBobbing",
     "MixinOptions_Entrypoint",
     "MixinRenderSystem",
