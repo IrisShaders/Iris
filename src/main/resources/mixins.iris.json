@@ -24,6 +24,7 @@
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
     "MixinMinecraft",
+    "MixinMinecraft_PipelineManagement",
     "MixinModelViewBobbing",
     "MixinOptions_Entrypoint",
     "MixinBufferSource_WrapperChecking",
