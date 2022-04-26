@@ -394,7 +394,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
-		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
+		GlFramebuffer framebuffer = this.shadowMapRenderer.getRenderTargets().getFramebuffer();
 
 		FallbackShader shader = NewShaderTests.createFallback(name, framebuffer, framebuffer,
 				key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
@@ -407,7 +407,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isBeacon, boolean isFullbright) throws IOException {
-		GlFramebuffer framebuffer = ((ShadowRenderer) this.shadowMapRenderer).getFramebuffer();
+		GlFramebuffer framebuffer = this.shadowMapRenderer.getRenderTargets().getFramebuffer();
 
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
 				fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.ENABLED, isBeacon, isFullbright);
