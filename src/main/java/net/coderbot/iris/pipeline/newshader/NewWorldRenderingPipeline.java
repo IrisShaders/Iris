@@ -471,7 +471,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		updateNotifier.onNewFrame();
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$isDepthBufferDirty(), main.width, main.height);
+		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$isDepthBufferDirty(), main.getDepthTextureId(), main.width, main.height);
 		((Blaze3dRenderTargetExt) main).iris$clearDepthBufferDirtyFlag();
 
 		final ImmutableList<ClearPass> passes;
