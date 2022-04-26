@@ -51,15 +51,18 @@ public enum ShaderKey {
 	LINES                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.ENABLED),
 
 	// Note: These must be at the very end.
-	// TODO: SHADOW_BASIC
-	// TODO: SHADOW_BASIC_COLOR
-	// TODO: SHADOW_TEXTURED
-	// TODO: SHADOW_TEXTURED_COLOR
 	SHADOW_TERRAIN_CUTOUT  (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.OFF    ),
 	SHADOW_ENTITIES_CUTOUT (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.OFF    ),
 	SHADOW_BEACON_BEAM     (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.BLOCK,                       FogMode.OFF    ),
+	SHADOW_BASIC           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION,      				FogMode.OFF    ),
+	SHADOW_BASIC_COLOR     (ProgramId.Shadow,      AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR,       		FogMode.OFF    ),
+	SHADOW_TEX             (ProgramId.Shadow,      AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,       			FogMode.OFF    ),
+	SHADOW_TEX_COLOR       (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR,       	FogMode.OFF    ),
+	SHADOW_CLOUDS          (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,   FogMode.OFF    ),
 	SHADOW_LINES           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.OFF    ),
 	SHADOW_LEASH           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.OFF    ),
+	SHADOW_LIGHTNING       (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,     			FogMode.OFF    ),
+	SHADOW_PARTICLES       (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,	     			FogMode.OFF    ),
 	SHADOW_TEXT           (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF    ),
 	SHADOW_TEXT_INTENSITY (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF    );
 
