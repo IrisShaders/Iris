@@ -372,7 +372,9 @@ public class MixinGameRenderer {
 			"getRendertypeTextIntensitySeeThroughShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTextIntensityShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
+		if (ShadowRenderer.ACTIVE) {
+			override(ShaderKey.SHADOW_TEXT_INTENSITY, cir);
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.TEXT_INTENSITY, cir);
 		}
 	}
