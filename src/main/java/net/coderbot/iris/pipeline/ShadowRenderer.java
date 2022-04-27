@@ -445,7 +445,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		IrisRenderSystem.restoreProjectionMatrix();
 
 		// Restore the old viewport
-		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
+		RenderSystem.viewport(0, 0, client.getMainRenderTarget().width, client.getMainRenderTarget().height);
 	}
 
 	private void copyPreTranslucentDepth() {

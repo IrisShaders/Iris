@@ -576,7 +576,7 @@ public class Iris {
 		}
 	}
 
-	public static DimensionId lastDimension = DimensionId.OVERWORLD;
+	public static DimensionId lastDimension = null;
 
 	public static DimensionId getCurrentDimension() {
 		ClientLevel level = Minecraft.getInstance().level;
