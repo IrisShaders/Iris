@@ -64,18 +64,13 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
             buffer.setQuadSortOrigin(0, 0, 0);
         }
 
-        buffer.end();
+        BufferBuilder.RenderedBuffer finalBuffer = buffer.endOrDiscardIfEmpty();
         currentLayer = null;
 
         List<BufferSegment> segments = new ArrayList<>(usedLayers.size());
 
         for (RenderType layer : usedLayers) {
-            Pair<BufferBuilder.DrawState, ByteBuffer> pair = buffer.popNextBuffer();
-
-            BufferBuilder.DrawState parameters = pair.getFirst();
-            ByteBuffer slice = pair.getSecond();
-
-            segments.add(new BufferSegment(slice, parameters, layer));
+            segments.add(new BufferSegment(finalBuffer, layer));
         }
 
         usedLayers.clear();

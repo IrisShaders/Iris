@@ -52,10 +52,10 @@ public class HorizonRenderer {
 		// Build the horizon quads into a buffer
 		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 		buildHorizon(builder);
-		builder.end();
+		BufferBuilder.RenderedBuffer renderedBuffer = builder.end();
 
 		buffer.bind();
-		buffer.upload(builder);
+		buffer.upload(renderedBuffer);
 		VertexBuffer.unbind();
 
 	}
