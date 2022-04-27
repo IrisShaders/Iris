@@ -3,6 +3,7 @@ package net.coderbot.iris.texture;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -27,6 +28,15 @@ public class AtlasInfoGatherer {
 		return height;
 	}
 
+	public static Vector2i getSizeVector(TextureAtlas atlas) {
+		Vector2i size = ((TextureAtlasInterface) atlas).getSizeVector();
+		if (size == null) {
+			fetchAtlasSizeFromGlState(atlas);
+			size = ((TextureAtlasInterface) atlas).getSizeVector();
+		}
+		return size;
+	}
+
 	public static int getMipLevel(TextureAtlas atlas) {
 		int mipLevel = ((TextureAtlasInterface) atlas).getMipLevel();
 		if (mipLevel == -1) {
@@ -40,6 +50,7 @@ public class AtlasInfoGatherer {
 		TextureAtlasInterface atlasI = (TextureAtlasInterface) atlas;
 		atlasI.setWidth(-1);
 		atlasI.setHeight(-1);
+		atlasI.setSizeVector(null);
 		atlasI.setMipLevel(-1);
 	}
 
@@ -60,6 +71,7 @@ public class AtlasInfoGatherer {
 		TextureAtlasInterface atlasI = (TextureAtlasInterface) atlas;
 		atlasI.setWidth(width);
 		atlasI.setHeight(height);
+		atlasI.setSizeVector(new Vector2i(width, height));
 
 		// Make sure to re-bind the previous texture to avoid issues.
 		RenderSystem.bindTexture(existingGlId);

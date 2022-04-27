@@ -2,6 +2,7 @@ package net.coderbot.iris.mixin.texture;
 
 import net.coderbot.iris.texture.AtlasInfoGatherer;
 import net.coderbot.iris.texture.TextureAtlasInterface;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -20,6 +21,9 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 	private int height = -1;
 
 	@Unique
+	private Vector2i sizeVector;
+
+	@Unique
 	private int mipLevel = -1;
 
 	@Override
@@ -30,6 +34,11 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 	@Override
 	public int getHeight() {
 		return height;
+	}
+
+	@Override
+	public Vector2i getSizeVector() {
+		return sizeVector;
 	}
 
 	@Override
@@ -45,6 +54,11 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 	@Override
 	public void setHeight(int height) {
 		this.height = height;
+	}
+
+	@Override
+	public void setSizeVector(Vector2i size) {
+		sizeVector = size;
 	}
 
 	@Override

@@ -46,6 +46,9 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
+	private static final Vector2i ZERO_VECTOR_2i = new Vector2i();
+	private static final Vector4i ZERO_VECTOR_4i = new Vector4i(0, 0, 0, 0);
+	private static final Vector3d ZERO_VECTOR_3d = new Vector3d();
 
 	private CommonUniforms() {
 		// no construction allowed
@@ -72,22 +75,19 @@ public final class CommonUniforms {
 			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
 			if (texture instanceof TextureAtlas) {
 				TextureAtlas atlas = (TextureAtlas) texture;
-				int width = AtlasInfoGatherer.getWidth(atlas);
-				int height = AtlasInfoGatherer.getHeight(atlas);
-
-				return new Vector2i(width, height);
+				return AtlasInfoGatherer.getSizeVector(atlas);
 			}
 
-			return new Vector2i(0, 0);
+			return ZERO_VECTOR_2i;
 		}, StateUpdateNotifiers.bindTextureNotifier);
 
 		uniforms.uniform4i("blendFunc", () -> {
-			GlStateManager.BlendState blend = net.coderbot.iris.mixin.GlStateManagerAccessor.getBLEND();
+			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND();
 
 			if (((BooleanStateAccessor) blend.mode).isEnabled()) {
 				return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
 			} else {
-				return new Vector4i(0, 0, 0, 0);
+				return ZERO_VECTOR_4i;
 			}
 		}, StateUpdateNotifiers.blendFuncNotifier);
 
@@ -129,7 +129,7 @@ public final class CommonUniforms {
 
 	private static Vector3d getSkyColor() {
 		if (client.level == null || client.cameraEntity == null) {
-			return new Vector3d();
+			return ZERO_VECTOR_3d;
 		}
 
 		return JomlConversions.fromVec3(client.level.getSkyColor(client.cameraEntity.blockPosition(),
@@ -157,7 +157,7 @@ public final class CommonUniforms {
 			return 0.0F;
 		}
 
-		return ((LocalPlayer)client.cameraEntity).getCurrentMood();
+		return ((LocalPlayer) client.cameraEntity).getCurrentMood();
 	}
 
 	static float getRainStrength() {
@@ -170,7 +170,7 @@ public final class CommonUniforms {
 
 	private static Vector2i getEyeBrightness() {
 		if (client.cameraEntity == null || client.level == null) {
-			return new Vector2i(0, 0);
+			return ZERO_VECTOR_2i;
 		}
 
 		Vec3 feet = client.cameraEntity.position();
