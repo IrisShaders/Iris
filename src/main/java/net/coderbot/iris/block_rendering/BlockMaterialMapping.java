@@ -3,9 +3,12 @@ package net.coderbot.iris.block_rendering;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.materialmap.BlockEntry;
+import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -29,6 +32,34 @@ public class BlockMaterialMapping {
 		});
 
 		return blockStateIds;
+	}
+
+	public static Map<Block, RenderType> createBlockTypeMap(Map<NamespacedId, BlockRenderType> blockPropertiesMap) {
+		Map<Block, RenderType> blockTypeIds = new Reference2ReferenceOpenHashMap<>();
+
+		blockPropertiesMap.forEach((id, blockType) -> {
+			ResourceLocation resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
+
+			Block block = Registry.BLOCK.get(resourceLocation);
+
+			blockTypeIds.put(block, convertBlockToRenderType(blockType));
+		});
+
+		return blockTypeIds;
+	}
+
+	private static RenderType convertBlockToRenderType(BlockRenderType type) {
+		if (type == null) {
+			return null;
+		}
+
+		switch (type) {
+			case SOLID: return RenderType.solid();
+			case CUTOUT: return RenderType.cutout();
+			case CUTOUT_MIPPED: return RenderType.cutoutMipped();
+			case TRANSLUCENT: return RenderType.translucent();
+			default: return null;
+		}
 	}
 
 	private static void addBlockStates(BlockEntry entry, Object2IntMap<BlockState> idMap, int intId) {
