@@ -13,20 +13,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(RenderTarget.class)
 public class MixinRenderTarget implements Blaze3dRenderTargetExt {
-	private boolean iris$dirty = false;
+	private boolean iris$depthDirty = false;
+	private boolean iris$colorDirty = false;
 
 	@Inject(method = "destroyBuffers()V", at = @At("HEAD"))
 	private void iris$onDestroyBuffers(CallbackInfo ci) {
-		iris$dirty = true;
+		iris$depthDirty = true;
+		iris$colorDirty = true;
 	}
 
 	@Override
 	public boolean iris$isDepthBufferDirty() {
-		return iris$dirty;
+		return iris$depthDirty;
 	}
 
 	@Override
 	public void iris$clearDepthBufferDirtyFlag() {
-		iris$dirty = false;
+		iris$depthDirty = false;
+	}
+
+	@Override
+	public boolean iris$isColorBufferDirty() {
+		return iris$colorDirty;
+	}
+
+	@Override
+	public void iris$clearColorBufferDirtyFlag() {
+		iris$colorDirty = false;
 	}
 }

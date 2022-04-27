@@ -8,7 +8,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Options.class)
+// Uses priority of 999 to inject before Fabric key binding API.
+@Mixin(value = Options.class, priority = 999)
 public class MixinOptions_Entrypoint {
 	@Unique
 	private static boolean iris$initialized;

@@ -563,7 +563,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
 		// Restore the old viewport
-		RenderSystem.viewport(0, 0, client.getWindow().getWidth(), client.getWindow().getHeight());
+		RenderSystem.viewport(0, 0, client.getMainRenderTarget().width, client.getMainRenderTarget().height);
 
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
