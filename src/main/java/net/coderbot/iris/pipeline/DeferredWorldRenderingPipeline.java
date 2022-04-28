@@ -184,6 +184,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		BlockRenderingSettings.INSTANCE.setBlockStateIds(
 				BlockMaterialMapping.createBlockStateIdMap(programs.getPack().getIdMap().getBlockProperties()));
+		BlockRenderingSettings.INSTANCE.setBlockTypeIds(BlockMaterialMapping.createBlockTypeMap(programs.getPack().getIdMap().getBlockRenderTypeMap()));
 
 		BlockRenderingSettings.INSTANCE.setEntityIds(programs.getPack().getIdMap().getEntityIdMap());
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programs.getPackDirectives().getAmbientOcclusionLevel());
@@ -201,13 +202,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		createShadowMapRenderer = () -> {
 			shadowMapRenderer = new ShadowRenderer((CoreWorldRenderingPipeline) this, programs,
-					programs.getPackDirectives(), renderTargets);
+				programs.getPackDirectives(), renderTargets);
 			createShadowMapRenderer = () -> {};
 		};
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
@@ -753,7 +754,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
 
-		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), main.width, main.height);
+		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), main.getDepthTextureId(), main.width, main.height);
 
 		mainExt.iris$clearDepthBufferDirtyFlag();
 
@@ -797,6 +798,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
+
+		centerDepthSampler.updateSample();
 
 		deferredRenderer.renderAll();
 		Program.unbind();

@@ -179,8 +179,7 @@ public class IrisChunkProgramOverrides {
 		}
 	}
 
-    private void createShaders(ChunkVertexType vertexType) {
-    	SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
+	public void createShaders(SodiumTerrainPipeline pipeline, ChunkVertexType vertexType) {
         Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
 
         if (pipeline != null) {
@@ -206,25 +205,28 @@ public class IrisChunkProgramOverrides {
             deleteShaders();
         }
 
+		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
+		SodiumTerrainPipeline sodiumTerrainPipeline = null;
+
+		if (worldRenderingPipeline != null) {
+			sodiumTerrainPipeline = worldRenderingPipeline.getSodiumTerrainPipeline();
+		}
+
         if (!shadersCreated) {
-			createShaders(vertexType);
+			createShaders(sodiumTerrainPipeline, vertexType);
 		}
 
         if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-        	GlProgram<IrisChunkShaderInterface> shadowProgram;
-
-			if (pass == BlockRenderPass.CUTOUT || pass == BlockRenderPass.CUTOUT_MIPPED) {
-				shadowProgram = this.programs.get(IrisTerrainPass.SHADOW_CUTOUT);
-			} else {
-				shadowProgram = this.programs.get(IrisTerrainPass.SHADOW);
-			}
-
-			if (shadowProgram == null) {
+			if (sodiumTerrainPipeline != null && !sodiumTerrainPipeline.hasShadowPass()) {
 				throw new IllegalStateException("Shadow program requested, but the pack does not have a shadow pass?");
 			}
 
-			return shadowProgram;
-        } else {
+			if (pass == BlockRenderPass.CUTOUT || pass == BlockRenderPass.CUTOUT_MIPPED) {
+				return this.programs.get(IrisTerrainPass.SHADOW_CUTOUT);
+			} else {
+				return this.programs.get(IrisTerrainPass.SHADOW);
+			}
+		} else {
 			if (pass == BlockRenderPass.CUTOUT || pass == BlockRenderPass.CUTOUT_MIPPED) {
 				return this.programs.get(IrisTerrainPass.GBUFFER_CUTOUT);
 			} else if (pass.isTranslucent()) {
