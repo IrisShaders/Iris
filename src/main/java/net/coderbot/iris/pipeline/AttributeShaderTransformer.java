@@ -1,11 +1,14 @@
 package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.shaderpack.transform.StringTransformations;
-import net.coderbot.iris.shaderpack.transform.Transformations;
+import net.coderbot.iris.shaderpack.transform.*;
 
 public class AttributeShaderTransformer {
 	public static StringTransformations patch(StringTransformations transformations, ShaderType type, boolean hasGeometry) {
+		if (transformations.contains("iris_")) {
+			throw new IllegalStateException("Shader is attempting to exploit internal Iris code!");
+		}
+
 		// Add entity color -> overlay color attribute support.
 		if (type == ShaderType.VERTEX) {
 			// delete original declaration (fragile!!! we need glsl-transformer to do this robustly)

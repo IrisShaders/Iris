@@ -1,30 +1,23 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.*;
+import java.util.function.IntFunction;
+import java.util.regex.*;
+
 import com.google.common.collect.ImmutableSet;
+
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
-import net.coderbot.iris.gl.blending.AlphaTest;
-import net.coderbot.iris.gl.blending.AlphaTestFunction;
-import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.*;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.program.ProgramImages;
-import net.coderbot.iris.gl.program.ProgramSamplers;
-import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.gl.program.*;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.newshader.FogMode;
-import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.newshader.*;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.shaderpack.ProgramSet;
-import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.*;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.minecraft.resources.ResourceLocation;
-
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.IntFunction;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -120,45 +113,45 @@ public class SodiumTerrainPipeline {
 		});
 
 		if (terrainVertex != null) {
-			terrainVertex = Patcher.getInstance().patchSodium(terrainVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainVertex = Patcher.INSTANCE.patchSodium(terrainVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (translucentVertex != null) {
-			translucentVertex = Patcher.getInstance().patchSodium(translucentVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			translucentVertex = Patcher.INSTANCE.patchSodium(translucentVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (shadowVertex != null) {
-			shadowVertex = Patcher.getInstance().patchSodium(shadowVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowVertex = Patcher.INSTANCE.patchSodium(shadowVertex, ShaderType.VERTEX, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (terrainGeometry != null) {
-			terrainGeometry = Patcher.getInstance().patchSodium(terrainGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainGeometry = Patcher.INSTANCE.patchSodium(terrainGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (translucentGeometry != null) {
-			translucentGeometry = Patcher.getInstance().patchSodium(translucentGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			translucentGeometry = Patcher.INSTANCE.patchSodium(translucentGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (shadowGeometry != null) {
-			shadowGeometry = Patcher.getInstance().patchSodium(shadowGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowGeometry = Patcher.INSTANCE.patchSodium(shadowGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (terrainFragment != null) {
 			String fragment = terrainFragment;
 
-			terrainFragment = Patcher.getInstance().patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
-			terrainCutoutFragment = Patcher.getInstance().patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainFragment = Patcher.INSTANCE.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainCutoutFragment = Patcher.INSTANCE.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (translucentFragment != null) {
-			translucentFragment = Patcher.getInstance().patchSodium(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			translucentFragment = Patcher.INSTANCE.patchSodium(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (shadowFragment != null) {
 			String fragment = shadowFragment;
 
-			shadowFragment = Patcher.getInstance().patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
-			shadowCutoutFragment = Patcher.getInstance().patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowFragment = Patcher.INSTANCE.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowCutoutFragment = Patcher.INSTANCE.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 	}
 

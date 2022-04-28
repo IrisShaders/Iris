@@ -1,50 +1,23 @@
 package net.coderbot.iris.pipeline;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.*;
 
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
-import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.antlr.v4.runtime.tree.pattern.*;
+import org.apache.logging.log4j.*;
 
 import io.github.douira.glsl_transformer.GLSLParser;
-import io.github.douira.glsl_transformer.GLSLParser.ArrayAccessExpressionContext;
-import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
-import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
-import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
-import io.github.douira.glsl_transformer.core.SearchTerminals;
-import io.github.douira.glsl_transformer.core.SearchTerminalsDynamic;
-import io.github.douira.glsl_transformer.core.SearchTerminalsImpl;
-import io.github.douira.glsl_transformer.core.SemanticException;
-import io.github.douira.glsl_transformer.core.WrapIdentifier;
-import io.github.douira.glsl_transformer.core.WrapIdentifierExternalDeclaration;
-import io.github.douira.glsl_transformer.core.target.HandlerTarget;
-import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
-import io.github.douira.glsl_transformer.core.target.ParsedReplaceTarget;
-import io.github.douira.glsl_transformer.core.target.ParsedReplaceTargetImpl;
-import io.github.douira.glsl_transformer.core.target.TerminalReplaceTargetImpl;
-import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
-import io.github.douira.glsl_transformer.core.target.WrapThrowTargetImpl;
-import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
-import io.github.douira.glsl_transformer.print.filter.TokenChannel;
-import io.github.douira.glsl_transformer.print.filter.TokenFilter;
-import io.github.douira.glsl_transformer.transform.JobParameters;
-import io.github.douira.glsl_transformer.transform.RunPhase;
-import io.github.douira.glsl_transformer.transform.Transformation;
-import io.github.douira.glsl_transformer.transform.TransformationManager;
-import io.github.douira.glsl_transformer.transform.TransformationPhase;
+import io.github.douira.glsl_transformer.GLSLParser.*;
+import io.github.douira.glsl_transformer.core.*;
+import io.github.douira.glsl_transformer.core.target.*;
+import io.github.douira.glsl_transformer.print.filter.*;
+import io.github.douira.glsl_transformer.transform.*;
 import io.github.douira.glsl_transformer.transform.TransformationPhase.InjectionPoint;
-import io.github.douira.glsl_transformer.transform.WalkPhase;
-import io.github.douira.glsl_transformer.tree.ExtendedContext;
-import io.github.douira.glsl_transformer.tree.TreeMember;
+import io.github.douira.glsl_transformer.tree.*;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
@@ -91,8 +64,11 @@ public class TransformPatcher implements Patcher {
 
 		@Override
 		public boolean equals(JobParameters other) {
-			return other instanceof Parameters otherParams
-					&& otherParams.patch == patch && otherParams.type == type;
+			if (other instanceof Parameters) {
+				Parameters otherParams = (Parameters) other;
+				return otherParams.patch == patch && otherParams.type == type;
+			}
+			return false;
 		}
 
 		@Override
@@ -161,13 +137,15 @@ public class TransformPatcher implements Patcher {
 		COLOR, DATA, CUSTOM
 	}
 
+	/**
+	 * Users of this transformation have to insert irisMain(); themselves because it can appear at varying positions in the new string.
+	 */
 	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifierExternalDeclaration<R> {
 		protected abstract String getMainContent();
 
 		@Override
 		protected String getInjectionContent() {
-			// inserts the alpha test, it is not null because it shouldn't be
-			return "void main() { irisMain(); " + getMainContent() + "}";
+			return "void main() { " + getMainContent() + "}";
 		}
 
 		@Override
@@ -217,7 +195,8 @@ public class TransformPatcher implements Patcher {
 		};
 
 		Transformation<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
-			{
+			@Override
+			protected void setupGraph() {
 				addEndDependent(new WalkPhase<Parameters>() {
 					ParseTreePattern entityColorPattern;
 
@@ -237,13 +216,10 @@ public class TransformPatcher implements Patcher {
 					}
 				});
 
-				chainDependent(new SearchTerminalsImpl<Parameters>(
-						new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)) {
-					@Override
-					protected boolean isActive() {
-						return getJobParameters().type == ShaderType.GEOMETRY;
-					}
-				});
+				if (getJobParameters().type == ShaderType.GEOMETRY) {
+					chainDependent(new SearchTerminalsImpl<Parameters>(
+							new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)));
+				}
 
 				chainDependent(new RunPhase<Parameters>() {
 					@Override
@@ -269,7 +245,7 @@ public class TransformPatcher implements Patcher {
 			}
 		};
 
-		Transformation<Parameters> wrapOverlay = new MainWrapperDynamic<TransformPatcher.Parameters>() {
+		Transformation<Parameters> wrapOverlay = new MainWrapperDynamic<Parameters>() {
 			@Override
 			protected String getMainContent() {
 				return (getJobParameters().type == ShaderType.VERTEX
@@ -914,7 +890,7 @@ public class TransformPatcher implements Patcher {
 				});
 
 				// do variable replacements
-				chainDependent(new SearchTerminalsImpl<>(List.of(
+				chainDependent(new SearchTerminalsImpl<>(ImmutableList.of(
 						new ParsedReplaceTarget<>("gl_ModelViewMatrix") {
 							@Override
 							protected String getNewContent(TreeMember node, String match) {
@@ -1079,11 +1055,11 @@ public class TransformPatcher implements Patcher {
 			}
 		};
 
-		manager = new TransformationManager<Parameters>(new Transformation<>() {
+		manager = new TransformationManager<Parameters>(new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
-				var patch = getJobParameters().patch;
-				var type = getJobParameters().type;
+				Patch patch = getJobParameters().patch;
+				ShaderType type = getJobParameters().type;
 
 				addEndDependent(detectReserved);
 
@@ -1148,11 +1124,6 @@ public class TransformPatcher implements Patcher {
 	}
 
 	@Override
-	public String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
-		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
-	}
-
-	@Override
 	public String patchVanilla(
 			String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
 			ShaderAttributeInputs inputs, boolean hasGeometry) {
@@ -1174,5 +1145,8 @@ public class TransformPatcher implements Patcher {
 	@Override
 	public String patchComposite(String source, ShaderType type) {
 		return manager.transform(source, new Parameters(Patch.COMPOSITE, type));
+	}
+	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
+		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
 	}
 }

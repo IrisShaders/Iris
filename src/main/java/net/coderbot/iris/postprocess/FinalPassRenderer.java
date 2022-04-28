@@ -1,51 +1,36 @@
 package net.coderbot.iris.postprocess;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.*;
+import java.util.function.*;
+
+import com.google.common.collect.*;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.*;
+
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.program.Program;
-import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.program.ProgramSamplers;
-import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.gl.program.*;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.Patcher;
 import net.coderbot.iris.pipeline.newshader.FogMode;
-import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
-import net.coderbot.iris.rendertarget.RenderTarget;
-import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.samplers.IrisImages;
-import net.coderbot.iris.samplers.IrisSamplers;
-import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.coderbot.iris.shaderpack.ProgramDirectives;
-import net.coderbot.iris.shaderpack.ProgramSet;
-import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.rendertarget.*;
+import net.coderbot.iris.samplers.*;
+import net.coderbot.iris.shaderpack.*;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
-import net.coderbot.iris.uniforms.CommonUniforms;
-import net.coderbot.iris.uniforms.IrisInternalUniforms;
-import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 public class FinalPassRenderer {
 	private final RenderTargets renderTargets;
@@ -277,14 +262,14 @@ public class FinalPassRenderer {
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 								  Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
-		String vertex = Patcher.getInstance().patchComposite(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
+		String vertex = Patcher.INSTANCE.patchComposite(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
 
 		String geometry = null;
 		if (source.getGeometrySource().isPresent()) {
-			geometry = Patcher.getInstance().patchComposite(source.getGeometrySource().orElseThrow(RuntimeException::new), ShaderType.GEOMETRY);
+			geometry = Patcher.INSTANCE.patchComposite(source.getGeometrySource().orElseThrow(RuntimeException::new), ShaderType.GEOMETRY);
 		}
 
-		String fragment = Patcher.getInstance().patchComposite(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
+		String fragment = Patcher.INSTANCE.patchComposite(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
 
 		Objects.requireNonNull(flipped);
 

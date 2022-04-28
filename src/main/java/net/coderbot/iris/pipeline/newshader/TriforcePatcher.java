@@ -471,4 +471,9 @@ public class TriforcePatcher implements Patcher {
 
 		transformations.setPrefix(beforeVersion + "#version " + actualVersion + "\n");
 	}
+
+	@Override
+	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
+		return AttributeShaderTransformer.patch(new StringTransformations(source), type, hasGeometry).toString();
+	}
 }

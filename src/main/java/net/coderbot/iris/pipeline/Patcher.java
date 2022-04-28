@@ -6,13 +6,20 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
 public interface Patcher {
 	// static Patcher INSTANCE = new TriforcePatcher();
+	// static Patcher INSTANCE = new AttributeShaderTransformer();
 	static Patcher INSTANCE = new TransformPatcher();
 
-	public static Patcher getInstance() {
-		return INSTANCE;
+	// static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
+
+	public default String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+		// LOGGER.debug("INPUT: " + source);
+		String patched = patchAttributesInternal(source, type, hasGeometry);
+		// LOGGER.debug("AGENT: " + getClass().getSimpleName() + " TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry);
+		// LOGGER.debug("PATCHED: " + patched);
+		return patched;
 	}
 
-	public String patchAttributes(String source, ShaderType type, boolean hasGeometry);
+	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry);
 
 	public String patchVanilla(
 			String source, ShaderType type, AlphaTest alpha,
