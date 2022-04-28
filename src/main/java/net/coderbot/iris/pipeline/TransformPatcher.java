@@ -33,7 +33,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
  * replacements that account for whitespace like the one for gl_TextureMatrix
  */
-public class TransformPatcher implements Patcher {
+public class TransformPatcher extends Patcher {
 
 	private TransformationManager<Parameters> manager;
 

@@ -7,7 +7,7 @@ import org.apache.logging.log4j.*;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.shader.ShaderType;
 
-public interface Patcher {
+public abstract class Patcher {
 	static Patcher INSTANCE = new TransformPatcher();
 	// static Patcher INSTANCE = new AttributeShaderTransformer();
 
@@ -25,11 +25,11 @@ public interface Patcher {
 		return patched;
 	}
 
-	default String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+	public final String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
 		return inspectPatch(source,
 				"AGENT: " + getClass().getSimpleName() + " TYPE: " + type + "HAS_GEOMETRY: " + hasGeometry,
 				() -> patchAttributesInternal(source, type, hasGeometry));
 	}
 
-	String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry);
+	protected abstract String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry);
 }
