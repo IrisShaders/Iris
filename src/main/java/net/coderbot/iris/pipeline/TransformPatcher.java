@@ -41,8 +41,10 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
  * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
  * replacements that account for whitespace like the one for gl_TextureMatrix
  */
-public class TransformPatcher implements Patcher {
+
+public class TransformPatcher extends Patcher {
 	private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
+
 	private TransformationManager<Parameters> manager;
 
 	private static enum Patch {
@@ -138,7 +140,8 @@ public class TransformPatcher implements Patcher {
 	}
 
 	/**
-	 * Users of this transformation have to insert irisMain(); themselves because it can appear at varying positions in the new string.
+	 * Users of this transformation have to insert irisMain(); themselves because it
+	 * can appear at varying positions in the new string.
 	 */
 	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifierExternalDeclaration<R> {
 		protected abstract String getMainContent();
@@ -1124,7 +1127,12 @@ public class TransformPatcher implements Patcher {
 	}
 
 	@Override
-	public String patchVanilla(
+	protected String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
+		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
+	}
+
+	@Override
+	protected String patchVanillaInternal(
 			String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
 			ShaderAttributeInputs inputs, boolean hasGeometry) {
 		return manager.transform(source,
@@ -1134,7 +1142,7 @@ public class TransformPatcher implements Patcher {
 	}
 
 	@Override
-	public String patchSodium(
+	protected String patchSodiumInternal(
 			String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale) {
 		return manager.transform(source,
@@ -1143,10 +1151,7 @@ public class TransformPatcher implements Patcher {
 	}
 
 	@Override
-	public String patchComposite(String source, ShaderType type) {
+	protected String patchCompositeInternal(String source, ShaderType type) {
 		return manager.transform(source, new Parameters(Patch.COMPOSITE, type));
-	}
-	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
-		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
 	}
 }

@@ -6,9 +6,9 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.shaderpack.transform.*;
 
-public class TriforcePatcher implements Patcher {
+public class TriforcePatcher extends Patcher {
 	@Override
-	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
+	protected String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
 		return AttributeShaderTransformer.patch(new StringTransformations(source), type, hasGeometry).toString();
 	}
 
@@ -110,7 +110,7 @@ public class TriforcePatcher implements Patcher {
 	}
 
 	@Override
-	public String patchVanillaInternal(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean hasGeometry) {
+	protected String patchVanillaInternal(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean hasGeometry) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type);
@@ -274,7 +274,7 @@ public class TriforcePatcher implements Patcher {
 	}
 
 	@Override
-	public String patchSodiumInternal(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
+	protected String patchSodiumInternal(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type);
@@ -373,7 +373,7 @@ public class TriforcePatcher implements Patcher {
 	}
 
 	@Override
-	public String patchCompositeInternal(String source, ShaderType type) {
+	protected String patchCompositeInternal(String source, ShaderType type) {
 		StringTransformations transformations = new StringTransformations(source);
 		patchCommon(transformations, type);
 
