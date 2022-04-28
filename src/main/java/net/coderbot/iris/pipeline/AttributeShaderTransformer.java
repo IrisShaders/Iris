@@ -1,11 +1,10 @@
 package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.shaderpack.transform.StringTransformations;
-import net.coderbot.iris.shaderpack.transform.Transformations;
+import net.coderbot.iris.shaderpack.transform.*;
 
-public class AttributeShaderTransformer {
-	public static String patch(String source, ShaderType type, boolean hasGeometry) {
+public class AttributeShaderTransformer implements Patcher {
+	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
 		if (source.contains("iris_")) {
 			throw new IllegalStateException("Shader is attempting to exploit internal Iris code!");
 		}

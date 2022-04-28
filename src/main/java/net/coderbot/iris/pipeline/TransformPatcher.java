@@ -227,7 +227,7 @@ public class TransformPatcher implements Patcher {
 	}
 
 	@Override
-	public String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
 		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
 	}
 }
