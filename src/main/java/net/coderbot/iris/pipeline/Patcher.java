@@ -4,22 +4,21 @@ import java.util.function.Supplier;
 
 import org.apache.logging.log4j.*;
 
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public interface Patcher {
-	static boolean INSPECT_PATCH = false;
-	
 	static Patcher INSTANCE = new TransformPatcher();
 	// static Patcher INSTANCE = new AttributeShaderTransformer();
 
 	static Logger LOGGER = LogManager.getLogger(Patcher.class);
 
 	static String inspectPatch(String source, String patchInfo, Supplier<String> patcher) {
-		if (INSPECT_PATCH) {
+		if (IrisLogging.ENABLE_SPAM) {
 			LOGGER.debug("INPUT: " + source);
 		}
 		String patched = patcher.get();
-		if (INSPECT_PATCH) {
+		if (IrisLogging.ENABLE_SPAM) {
 			LOGGER.debug("PATCH INFO: " + patchInfo);
 			LOGGER.debug("PATCHED: " + patched);
 		}
