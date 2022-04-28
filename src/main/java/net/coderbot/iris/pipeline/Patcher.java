@@ -8,7 +8,7 @@ import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public abstract class Patcher {
-	static Patcher INSTANCE = new TransformPatcher();
+	public static Patcher INSTANCE = new TransformPatcher();
 	// static Patcher INSTANCE = new AttributeShaderTransformer();
 
 	static Logger LOGGER = LogManager.getLogger(Patcher.class);
