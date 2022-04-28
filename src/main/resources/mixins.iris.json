@@ -25,6 +25,7 @@
     "MixinGlStateManager_AlphaTestOverride",
     "MixinGlStateManager_BlendOverride",
     "MixinGlUniform",
+    "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
     "MixinMinecraft",
     "MixinMinecraft_PipelineManagement",
