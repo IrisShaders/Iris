@@ -34,6 +34,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * replacements that account for whitespace like the one for gl_TextureMatrix
  */
 public class TransformPatcher implements Patcher {
+
 	private TransformationManager<Parameters> manager;
 
 	private static enum Patch {
@@ -79,7 +80,7 @@ public class TransformPatcher implements Patcher {
 		@Override
 		protected String getInjectionContent() {
 			// inserts the alpha test, it is not null because it shouldn't be
-			return "void main() { irisMain(); " + getMainContent() + "}";
+			return "void main() { " + getMainContent() + "\nirisMain(); }";
 		}
 
 		@Override
@@ -129,7 +130,8 @@ public class TransformPatcher implements Patcher {
 		};
 
 		Transformation<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
-			{
+			@Override
+			protected void setupGraph() {
 				addEndDependent(new WalkPhase<Parameters>() {
 					ParseTreePattern entityColorPattern;
 
@@ -149,13 +151,10 @@ public class TransformPatcher implements Patcher {
 					}
 				});
 
-				chainDependent(new SearchTerminalsImpl<Parameters>(
-						new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)) {
-					@Override
-					protected boolean isActive() {
-						return getJobParameters().type == ShaderType.GEOMETRY;
-					}
-				});
+				if (getJobParameters().type == ShaderType.GEOMETRY) {
+					chainDependent(new SearchTerminalsImpl<Parameters>(
+							new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)));
+				}
 
 				chainDependent(new RunPhase<Parameters>() {
 					@Override
@@ -163,17 +162,16 @@ public class TransformPatcher implements Patcher {
 						switch (getJobParameters().type) {
 							case VERTEX:
 								injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
-										"out vec4 entityColor;",
 										"uniform sampler2D iris_overlay;",
-										"in ivec2 iris_UV1;");
+										"varying vec4 entityColor;");
 								break;
 							case GEOMETRY:
 								injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
-										"in vec4 entityColor[];",
-										"out vec4 entityColorGS;");
+										"out vec4 entityColorGS;",
+										"in vec4 entityColor[];");
 								break;
 							case FRAGMENT:
-								injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec4 entityColor;");
+								injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
 								break;
 						}
 					}
@@ -181,14 +179,13 @@ public class TransformPatcher implements Patcher {
 			}
 		};
 
-		Transformation<Parameters> wrapOverlay = new MainWrapperDynamic<TransformPatcher.Parameters>() {
+		Transformation<Parameters> wrapOverlay = new MainWrapperDynamic<Parameters>() {
 			@Override
 			protected String getMainContent() {
-				return (getJobParameters().type == ShaderType.VERTEX
-						? "	vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);\n" +
-								"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n"
-						: "	 entityColorGS = entityColor[0];\n")
-						+ "  irisMain();\n";
+				return getJobParameters().type == ShaderType.VERTEX
+						? "vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[2] * gl_MultiTexCoord2).xy);\n" +
+								"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);"
+						: "entityColorGS = entityColor[0];";
 			}
 
 			@Override
