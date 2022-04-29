@@ -4,6 +4,7 @@ import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
@@ -69,27 +70,33 @@ public class SodiumTerrainPipeline {
 		});
 
 		if (terrainVertex != null) {
-			terrainVertex = transformVertexShader(terrainVertex);
+			// terrainVertex = transformVertexShader(terrainVertex);
+			terrainVertex = Patcher.INSTANCE.patchSodiumTerrain(terrainVertex, ShaderType.VERTEX);
 		}
 
 		if (translucentVertex != null) {
-			translucentVertex = transformVertexShader(translucentVertex);
+			// translucentVertex = transformVertexShader(translucentVertex);
+			translucentVertex = Patcher.INSTANCE.patchSodiumTerrain(translucentVertex, ShaderType.VERTEX);
 		}
 
 		if (shadowVertex != null) {
-			shadowVertex = transformVertexShader(shadowVertex);
+			// shadowVertex = transformVertexShader(shadowVertex);
+			shadowVertex = Patcher.INSTANCE.patchSodiumTerrain(shadowVertex, ShaderType.VERTEX);
 		}
 
 		if (terrainFragment != null) {
-			terrainFragment = transformFragmentShader(terrainFragment);
+			// terrainFragment = transformFragmentShader(terrainFragment);
+			terrainFragment = Patcher.INSTANCE.patchSodiumTerrain(terrainFragment, ShaderType.FRAGMENT);
 		}
-
+		
 		if (translucentFragment != null) {
-			translucentFragment = transformFragmentShader(translucentFragment);
+			// translucentFragment = transformFragmentShader(translucentFragment);
+			translucentFragment = Patcher.INSTANCE.patchSodiumTerrain(translucentFragment, ShaderType.FRAGMENT);
 		}
-
+		
 		if (shadowFragment != null) {
-			shadowFragment = transformFragmentShader(shadowFragment);
+			// shadowFragment = transformFragmentShader(shadowFragment);
+			shadowFragment = Patcher.INSTANCE.patchSodiumTerrain(shadowFragment, ShaderType.FRAGMENT);
 		}
 
 		this.createTerrainSamplers = createTerrainSamplers;

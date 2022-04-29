@@ -38,7 +38,7 @@ public class TransformPatcher extends Patcher {
 	private TransformationManager<Parameters> manager;
 
 	private static enum Patch {
-		ATTRIBUTES
+		ATTRIBUTES, SODIUM_TERRAIN
 	}
 
 	private static class Parameters extends JobParameters {
@@ -129,7 +129,7 @@ public class TransformPatcher extends Patcher {
 			}
 		};
 
-		//#region patchAttributes
+		// #region patchAttributes
 		Transformation<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
@@ -202,7 +202,51 @@ public class TransformPatcher extends Patcher {
 				return ((AttributeParameters) getJobParameters()).hasGeometry;
 			}
 		};
-		//#endregion patchAttributes
+		// #endregion patchAttributes
+
+		// #region patchSodiumTerrain
+		// see SodiumTerrainPipeline for the original patcher
+		Transformation<Parameters> wrapModelViewMatrix = WrapIdentifier.<Parameters>withExternalDeclaration(
+				"gl_ModelViewMatrix",
+				"u_ModelViewMatrix",
+				"u_ModelViewMatrix",
+				InjectionPoint.BEFORE_DECLARATIONS,
+				"uniform mat4 u_ModelViewMatrix;");
+		Transformation<Parameters> wrapModelViewProjectionMatrix = WrapIdentifier
+				.<Parameters>withExternalDeclaration(
+						"gl_ModelViewProjectionMatrix",
+						"u_ModelViewProjectionMatrix",
+						"u_ModelViewProjectionMatrix",
+						InjectionPoint.BEFORE_DECLARATIONS,
+						"uniform mat4 u_ModelViewProjectionMatrix;");
+		Transformation<Parameters> wrapNormalMatrix = WrapIdentifier
+				.<Parameters>withExternalDeclaration(
+						"gl_NormalMatrix",
+						"u_NormalMatrix",
+						"mat3(u_NormalMatrix)",
+						InjectionPoint.BEFORE_DECLARATIONS,
+						"uniform mat4 u_NormalMatrix;");
+		Transformation<Parameters> replaceTextureMatrix = new Transformation<>() {
+			{
+				addEndDependent(new WalkPhase<Parameters>() {
+					ParseTreePattern textureMatrixPattern;
+
+					@Override
+					public void init() {
+						textureMatrixPattern = compilePattern("gl_TextureMatrix[0]", GLSLParser.RULE_expression);
+					}
+
+					@Override
+					public void enterArrayAccessExpression(ArrayAccessExpressionContext ctx) {
+						ParseTreeMatch match = textureMatrixPattern.match(ctx);
+						if (match.succeeded()) {
+							replaceNode(ctx, "mat4(1.0)", GLSLParser::expression);
+						}
+					}
+				});
+			}
+		};
+		// #endregion patchSodiumTerrain
 
 		manager = new TransformationManager<Parameters>(new Transformation<Parameters>() {
 			@Override
@@ -222,6 +266,20 @@ public class TransformPatcher extends Patcher {
 						addEndDependent(renameEntityColorFragment);
 					}
 				}
+
+				// patchSodiumTerrain
+				if (patch == Patch.SODIUM_TERRAIN) {
+					if (type == ShaderType.VERTEX) {
+						//TODO: some of these are shared with the fragment shader patcher
+					}
+
+					if (type == ShaderType.FRAGMENT) {
+						addEndDependent(wrapModelViewMatrix);
+						addEndDependent(wrapModelViewProjectionMatrix);
+						addEndDependent(wrapNormalMatrix);
+						addEndDependent(replaceTextureMatrix);
+					}
+				}
 			}
 		});
 
@@ -231,5 +289,10 @@ public class TransformPatcher extends Patcher {
 	@Override
 	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
 		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
+	}
+
+	@Override
+	public String patchSodiumTerrainInternal(String source, ShaderType type) {
+		return manager.transform(source, new Parameters(Patch.SODIUM_TERRAIN, type));
 	}
 }
