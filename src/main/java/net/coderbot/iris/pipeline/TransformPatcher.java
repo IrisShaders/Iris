@@ -129,6 +129,7 @@ public class TransformPatcher extends Patcher {
 			}
 		};
 
+		//#region patchAttributes
 		Transformation<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
@@ -201,6 +202,7 @@ public class TransformPatcher extends Patcher {
 				return ((AttributeParameters) getJobParameters()).hasGeometry;
 			}
 		};
+		//#endregion patchAttributes
 
 		manager = new TransformationManager<Parameters>(new Transformation<Parameters>() {
 			@Override
