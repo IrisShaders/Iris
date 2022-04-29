@@ -50,14 +50,11 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
     private boolean dupeNextVertex;
 
     private void duplicateLastVertex() {
-        int i = this.format.getVertexSize();
-        this.buffer.position(this.nextElementByte);
-        ByteBuffer byteBuffer = this.buffer.duplicate();
-        byteBuffer.position(this.nextElementByte - i).limit(this.nextElementByte);
-        this.buffer.put(byteBuffer);
-        this.nextElementByte += i;
-        ++this.vertices;
-        this.ensureVertexCapacity();
+		int i = this.format.getVertexSize();
+		this.buffer.put(this.nextElementByte, this.buffer, this.nextElementByte - i, i);
+		this.nextElementByte += i;
+		++this.vertices;
+		this.ensureVertexCapacity();
     }
 
     @Inject(method = "end", at = @At("RETURN"))
