@@ -7,10 +7,13 @@ import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkRenderShaderBackend;
-import net.coderbot.iris.gl.program.ProgramUniforms;
-import net.coderbot.iris.shadows.ShadowRenderingState;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ChunkRenderBackendExt;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
+import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -48,7 +51,14 @@ public class MixinChunkRenderShaderBackend implements ChunkRenderBackendExt {
     @Inject(method = "createShaders", at = @At("HEAD"), remap = false)
     private void iris$onCreateShaders(RenderDevice device, CallbackInfo ci) {
         this.device = device;
-        irisChunkProgramOverrides.createShaders(device);
+		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
+		SodiumTerrainPipeline sodiumTerrainPipeline = null;
+
+		if (worldRenderingPipeline != null) {
+			sodiumTerrainPipeline = worldRenderingPipeline.getSodiumTerrainPipeline();
+		}
+
+        irisChunkProgramOverrides.createShaders(sodiumTerrainPipeline, device);
     }
 
     @Override

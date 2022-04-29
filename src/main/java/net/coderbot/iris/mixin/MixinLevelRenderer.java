@@ -18,8 +18,10 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.renderer.*;
-
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -83,7 +85,7 @@ public class MixinLevelRenderer {
 		Program.unbind();
 	}
 
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;compileChunksUntil(J)V", shift = At.Shift.AFTER))
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "net/minecraft/client/renderer/LevelRenderer.setupRender (Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZIZ)V"))
 	private void iris$renderTerrainShadows(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		pipeline.renderShadows((LevelRendererAccessor) this, camera);
 	}
@@ -194,7 +196,7 @@ public class MixinLevelRenderer {
 		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
 			pipeline.pushProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
-			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
+			throw new IllegalStateException("[" + Iris.MODNAME + "] Unexpected terrain layer: " + renderType);
 		}
 		pipeline.setPhase(GbufferPrograms.refineTerrainPhase(renderType));
 	}
@@ -207,7 +209,7 @@ public class MixinLevelRenderer {
 		} else if (renderType == RenderType.translucent() || renderType == RenderType.tripwire()) {
 			pipeline.popProgram(GbufferProgram.TRANSLUCENT_TERRAIN);
 		} else {
-			throw new IllegalStateException("[Iris] Unexpected terrain layer: " + renderType);
+			throw new IllegalStateException("[" + Iris.MODNAME + "] Unexpected terrain layer: " + renderType);
 		}
 	}
 

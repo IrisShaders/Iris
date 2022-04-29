@@ -2,6 +2,7 @@ package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.minecraft.client.Camera;
@@ -54,7 +55,7 @@ public class EmptyShadowMapRenderer implements ShadowMapRenderer {
 
 	@Override
 	public void addDebugText(List<String> messages) {
-		messages.add("[Iris] Shadow Maps: not used by shader pack");
+		messages.add("[" + Iris.MODNAME + "] Shadow Maps: not used by shader pack");
 	}
 
 	public int getDepthTextureId() {

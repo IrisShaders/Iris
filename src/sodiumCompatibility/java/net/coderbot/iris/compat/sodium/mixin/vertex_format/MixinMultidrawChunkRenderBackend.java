@@ -8,7 +8,6 @@ import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkRenderShaderBac
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
-import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -1,5 +1,40 @@
 package net.coderbot.iris;
 
+import com.google.common.base.Throwables;
+import com.mojang.blaze3d.platform.GlDebug;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
+import net.coderbot.iris.config.IrisConfig;
+import net.coderbot.iris.gl.GLDebug;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.PipelineManager;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shaderpack.DimensionId;
+import net.coderbot.iris.shaderpack.OptionalBoolean;
+import net.coderbot.iris.shaderpack.ProgramSet;
+import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
+import net.coderbot.iris.shaderpack.option.OptionSet;
+import net.coderbot.iris.shaderpack.option.Profile;
+import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
+import net.coderbot.iris.shaderpack.option.values.OptionValues;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.irisshaders.iris.api.v0.IrisApi;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.dimension.DimensionType;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.FileSystem;
@@ -16,45 +51,17 @@ import java.util.Properties;
 import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
-import com.google.common.base.Throwables;
-import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.brigadier.arguments.BoolArgumentType;
-import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
-import net.coderbot.iris.config.IrisConfig;
-import net.coderbot.iris.gl.GLDebug;
-import net.coderbot.iris.gui.screen.ShaderPackScreen;
-import net.coderbot.iris.pipeline.*;
-import net.coderbot.iris.shaderpack.DimensionId;
-import net.coderbot.iris.shaderpack.OptionalBoolean;
-import net.coderbot.iris.shaderpack.ProgramSet;
-import net.coderbot.iris.shaderpack.ShaderPack;
-import net.coderbot.iris.shaderpack.option.OptionSet;
-import net.coderbot.iris.shaderpack.option.Profile;
-import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
-import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
-import net.coderbot.iris.shaderpack.option.values.OptionValues;
-import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
-import net.fabricmc.loader.api.ModContainer;
-import net.irisshaders.iris.api.v0.IrisApi;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.dimension.DimensionType;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
-
-public class Iris implements ClientModInitializer {
+public class Iris {
 	public static final String MODID = "iris";
-	public static final IrisLogging logger = new IrisLogging("Iris");
+
+	/**
+	 * The user-facing name of the mod. Moved into a constant to facilitate
+	 * easy branding changes (for forks). You'll still need to change this
+	 * separately in mixin plugin classes & the language files.
+	 */
+	public static final String MODNAME = "Iris";
+
+	public static final IrisLogging logger = new IrisLogging(MODNAME);
 
 	private static Path shaderpacksDirectory;
 	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
@@ -80,8 +87,16 @@ public class Iris implements ClientModInitializer {
 
 	private static String IRIS_VERSION;
 
-	@Override
-	public void onInitializeClient() {
+	/**
+	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
+	 * some very basic setup, config loading, and environment checks.
+	 *
+	 * <p>This is roughly equivalent to Fabric Loader's ClientModInitializer#onInitializeClient entrypoint, except
+	 * it's entirely cross platform & we get to decide its exact semantics.</p>
+	 *
+	 * <p>This is called right before options are loaded, so we can add key bindings here.</p>
+	 */
+	public void onEarlyInitialize() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
 					sodiumInstalled = true;
@@ -160,10 +175,13 @@ public class Iris implements ClientModInitializer {
 		})));
 	}
 
+	/**
+	 * Called once RenderSystem#initRenderer has completed. This means that we can safely access OpenGL.
+	 */
 	public static void onRenderSystemInit() {
 		if (!initialized) {
-			Iris.logger.warn("Iris::onRenderSystemInit was called, but Iris::onInitializeClient was not called." +
-					" Is Not Enough Crashes doing something weird? Trying to avoid a crash but this is an odd state.");
+			Iris.logger.warn("Iris::onRenderSystemInit was called, but Iris::onEarlyInitialize was not called." +
+					" Trying to avoid a crash but this is an odd state.");
 			return;
 		}
 
@@ -383,7 +401,8 @@ public class Iris implements ClientModInitializer {
 		if (enable) {
 			success = GLDebug.setupDebugMessageCallback();
 		} else {
-			success = GLDebug.disableDebugMessages();
+			GlDebug.enableDebugCallback(Minecraft.getInstance().options.glDebugVerbosity, false);
+			success = 1;
 		}
 
 		logger.info("Debug functionality is " + (enable ? "enabled, logging will be more verbose!" : "disabled."));
@@ -553,7 +572,7 @@ public class Iris implements ClientModInitializer {
 		}
 	}
 
-	public static DimensionId lastDimension = DimensionId.OVERWORLD;
+	public static DimensionId lastDimension = null;
 
 	public static DimensionId getCurrentDimension() {
 		ClientLevel level = Minecraft.getInstance().level;
@@ -630,7 +649,7 @@ public class Iris implements ClientModInitializer {
 		if (version.endsWith("-development-environment")) {
 			color = ChatFormatting.GOLD;
 			version = version.replace("-development-environment", " (Development Environment)");
-		} else if (version.endsWith("-dirty") || version.contains("unknown")) {
+		} else if (version.endsWith("-dirty") || version.contains("unknown") || version.endsWith("-nogit")) {
 			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
 			color = ChatFormatting.LIGHT_PURPLE;
@@ -663,7 +682,7 @@ public class Iris implements ClientModInitializer {
 
 	public static ShaderpackDirectoryManager getShaderpacksDirectoryManager() {
 		if (shaderpacksDirectoryManager == null) {
-			shaderpacksDirectoryManager = new ShaderpackDirectoryManager(shaderpacksDirectory);
+			shaderpacksDirectoryManager = new ShaderpackDirectoryManager(getShaderpacksDirectory());
 		}
 
 		return shaderpacksDirectoryManager;

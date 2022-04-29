@@ -25,6 +25,7 @@ import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
+import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
@@ -44,7 +45,6 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -184,6 +184,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		BlockRenderingSettings.INSTANCE.setBlockStateIds(
 				BlockMaterialMapping.createBlockStateIdMap(programs.getPack().getIdMap().getBlockProperties()));
+		BlockRenderingSettings.INSTANCE.setBlockTypeIds(BlockMaterialMapping.createBlockTypeMap(programs.getPack().getIdMap().getBlockRenderTypeMap()));
 
 		BlockRenderingSettings.INSTANCE.setEntityIds(programs.getPack().getIdMap().getEntityIdMap());
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programs.getPackDirectives().getAmbientOcclusionLevel());
@@ -209,7 +210,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
@@ -752,7 +753,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		renderTargets.resizeIfNeeded(main.width, main.height);
+		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
+
+		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), main.getDepthTextureId(), main.width, main.height);
+
+		mainExt.iris$clearDepthBufferDirtyFlag();
 
 		final ImmutableList<ClearPass> passes;
 
@@ -794,6 +799,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
 		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
 		GlStateManager._bindTexture(0);
+
+		centerDepthSampler.updateSample();
 
 		deferredRenderer.renderAll();
 		Program.unbind();

@@ -4,6 +4,7 @@ import net.coderbot.iris.Iris;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.util.profiling.ProfilerFiller;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,11 +30,5 @@ public class MixinMinecraft {
 		Iris.handleKeybinds((Minecraft) (Object) this);
 
 		this.profiler.pop();
-	}
-
-	@Inject(method = "setLevel", at = @At("RETURN"))
-	private void iris$dispose(ClientLevel world, CallbackInfo ci) {
-		// Destroy pipelines when changing dimensions.
-		Iris.getPipelineManager().destroyPipeline();
 	}
 }
