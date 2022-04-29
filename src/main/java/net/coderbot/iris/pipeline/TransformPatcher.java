@@ -226,7 +226,7 @@ public class TransformPatcher extends Patcher {
 						"mat3(u_NormalMatrix)",
 						InjectionPoint.BEFORE_DECLARATIONS,
 						"uniform mat4 u_NormalMatrix;");
-		Transformation<Parameters> replaceTextureMatrix = new Transformation<>() {
+		Transformation<Parameters> replaceTextureMatrix = new Transformation<Parameters>() {
 			{
 				addEndDependent(new WalkPhase<Parameters>() {
 					ParseTreePattern textureMatrixPattern;
