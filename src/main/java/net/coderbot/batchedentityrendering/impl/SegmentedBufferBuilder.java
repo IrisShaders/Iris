@@ -9,19 +9,20 @@ import net.minecraft.client.renderer.RenderType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTrackingBuffer {
     private final BufferBuilder buffer;
-    private final List<RenderType> usedLayers;
     private RenderType currentLayer;
+	private List<BufferSegment> buffers;
 
     public SegmentedBufferBuilder() {
         // 2 MB initial allocation
         this.buffer = new BufferBuilder(512 * 1024);
-        this.usedLayers = new ArrayList<>(256);
-
+		this.buffers = new ArrayList<>();
         this.currentLayer = null;
     }
 
@@ -33,8 +34,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
                     buffer.setQuadSortOrigin(0, 0, 0);
                 }
 
-                buffer.end();
-                usedLayers.add(currentLayer);
+                buffers.add(new BufferSegment(buffer.end(), currentLayer));
             }
 
             buffer.begin(renderLayer.mode(), renderLayer.format());
@@ -58,24 +58,19 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
             return Collections.emptyList();
         }
 
-        usedLayers.add(currentLayer);
-
         if (isTranslucent(currentLayer)) {
             buffer.setQuadSortOrigin(0, 0, 0);
         }
 
-        BufferBuilder.RenderedBuffer finalBuffer = buffer.endOrDiscardIfEmpty();
+		buffers.add(new BufferSegment(buffer.end(), currentLayer));
+
         currentLayer = null;
 
-        List<BufferSegment> segments = new ArrayList<>(usedLayers.size());
+		List<BufferSegment> finalSegments = new ArrayList<>(buffers);
 
-        for (RenderType layer : usedLayers) {
-            segments.add(new BufferSegment(finalBuffer, layer));
-        }
+		buffers.clear();
 
-        usedLayers.clear();
-
-        return segments;
+        return finalSegments;
     }
 
     private static boolean isTranslucent(RenderType layer) {
