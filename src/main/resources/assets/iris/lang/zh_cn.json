@@ -1,6 +1,6 @@
 {
   "iris.shaders.reloaded": "已重新加载光影包！",
-  "iris.shaders.disabled": "光影已禁用！",
+  "iris.shaders.disabled": "光影包已禁用！",
   "iris.shaders.toggled": "光影包已切换到 %s！",
   "iris.shaders.debug.enabled": "调试已启用，日志将更加详细！",
   "iris.shaders.debug.disabled": "调试已禁用。",
