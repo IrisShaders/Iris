@@ -21,10 +21,10 @@ public class MixinTerrainParticle {
 	private boolean isOpaque;
 
 	@Inject(method = "<init>(Lnet/minecraft/client/multiplayer/ClientLevel;DDDDDDLnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)V", at = @At("RETURN"))
-	private void iris$resolveTranslucency(ClientLevel clientLevel, double d, double e, double f, double g, double h, double i, BlockState blockState, BlockPos blockPos, CallbackInfo ci) {
-		RenderType layer = ItemBlockRenderTypes.getChunkRenderType(blockState);
+	private void iris$resolveTranslucency(ClientLevel level, double x, double y, double z, double velocityX, double velocityY, double velocityZ, BlockState blockState, BlockPos blockPos, CallbackInfo ci) {
+		RenderType type = ItemBlockRenderTypes.getChunkRenderType(blockState);
 
-		if (layer == RenderType.solid() || layer == RenderType.cutout() || layer == RenderType.cutoutMipped()) {
+		if (type == RenderType.solid() || type == RenderType.cutout() || type == RenderType.cutoutMipped()) {
 			isOpaque = true;
 		}
 	}
@@ -32,7 +32,7 @@ public class MixinTerrainParticle {
 	@Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
 	private void iris$overrideParticleSheet(CallbackInfoReturnable<ParticleRenderType> cir) {
 		if (isOpaque) {
-			cir.setReturnValue(IrisParticleRenderTypes.OPAQUE_TERRAIN_SHEET);
+			cir.setReturnValue(IrisParticleRenderTypes.OPAQUE_TERRAIN);
 		}
 	}
 }
