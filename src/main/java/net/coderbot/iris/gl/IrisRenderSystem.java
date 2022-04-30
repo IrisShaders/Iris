@@ -68,11 +68,6 @@ public class IrisRenderSystem {
 		GL32C.glTexParameteriv(target, pname, params);
 	}
 
-	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
-	}
-
 	public static String getProgramInfoLog(int program) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		return GL32C.glGetProgramInfoLog(program);

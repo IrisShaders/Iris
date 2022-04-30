@@ -1,4 +1,4 @@
-package net.coderbot.iris;
+package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;

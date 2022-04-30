@@ -4,12 +4,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.HandRenderer;
+import net.coderbot.iris.pipeline.HorizonRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -67,7 +67,7 @@ public class MixinLevelRenderer {
 									   Matrix4f projection, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid()) {
 			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
-					" didn't work. This is a bug! Please report it to the Iris developers.");
+				" didn't work. This is a bug! Please report it to the Iris developers.");
 		}
 
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
@@ -110,7 +110,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = RENDER_SKY,
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
 	private void iris$renderSky$drawHorizon(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
 		RenderSystem.depthMask(false);
 
@@ -148,7 +148,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getTimeOfDay(F)F"),
-			slice = @Slice(from = @At(value = "FIELD", target = "com/mojang/math/Vector3f.YP : Lcom/mojang/math/Vector3f;")))
+		slice = @Slice(from = @At(value = "FIELD", target = "com/mojang/math/Vector3f.YP : Lcom/mojang/math/Vector3f;")))
 	private void iris$renderSky$tiltSun(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
 		poseStack.mulPose(Vector3f.ZP.rotationDegrees(pipeline.getSunPathRotation()));
 	}
