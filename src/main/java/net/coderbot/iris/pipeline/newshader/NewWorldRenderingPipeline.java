@@ -9,7 +9,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -536,13 +535,31 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	}
 
+	private void copyDepthTexture() {
+		// Note: Use copyTexSubImage2D, since that will not re-allocate the target texture's storage,
+		// even though we copy the whole depth texture. This might make the copy be a bit faster.
+		GlStateManager._glCopyTexSubImage2D(
+			// target
+			GL20C.GL_TEXTURE_2D,
+			// level
+			0,
+			// xoffset, yoffset
+			0, 0,
+			// x, y
+			0, 0,
+			// width
+			renderTargets.getCurrentWidth(),
+			// height
+			renderTargets.getCurrentHeight());
+	}
+
 	@Override
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content excluding the hand, as required.
 		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		copyDepthTexture();
 		GlStateManager._bindTexture(0);
 	}
 
@@ -558,7 +575,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// all non-translucent content, as required.
 		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		copyDepthTexture();
 		GlStateManager._bindTexture(0);
 
 		centerDepthSampler.updateSample();
