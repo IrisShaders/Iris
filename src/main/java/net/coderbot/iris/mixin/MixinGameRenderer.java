@@ -91,8 +91,6 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getPositionColorTexShader
-
 	@Inject(method = "getPositionTexShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isSky()) {
@@ -104,7 +102,7 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getPositionTexColorShader", at = @At("HEAD"), cancellable = true)
+	@Inject(method = {"getPositionTexColorShader", "getPositionColorTexShader"}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (isSky()) {
 			override(ShaderKey.SKY_TEXTURED_COLOR, cir);
