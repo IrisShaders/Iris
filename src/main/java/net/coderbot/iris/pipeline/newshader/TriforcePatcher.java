@@ -266,6 +266,7 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
+		applyIntelHd4000Workaround(transformations);
 
 		return transformations.toString();
 	}
@@ -362,8 +363,7 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
 		}
 
-		// Just being careful
-		transformations.define("ftransform", "iris_ftransform");
+		applyIntelHd4000Workaround(transformations);
 
 		return transformations.toString();
 	}
@@ -417,7 +417,28 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
+		applyIntelHd4000Workaround(transformations);
+
 		return transformations.toString();
+	}
+
+	private static void applyIntelHd4000Workaround(StringTransformations transformations) {
+		// This is a driver bug workaround that seems to be needed on HD 4000 and HD 2500 drivers.
+		//
+		// Without this, they will see the call to ftransform() without taking into account the fact that we've defined
+		// the function ourselves, and thus will allocate attribute location 0 to gl_Vertex since the driver thinks that
+		// we are referencing gl_Vertex by calling the compatibility-profile ftransform() function - despite using a
+		// core profile shader version where that function does not exist.
+		//
+		// Then, when we try to bind the attribute locations for our vertex format, the shader will fail to link.
+		// By renaming the function, we avoid the driver bug here, since it no longer thinks that we're trying
+		// to call the compatibility profile fransform() function.
+		//
+		// See: https://github.com/IrisShaders/Iris/issues/441
+		//
+		// Note that this happens after we've added our ftransform function - so that both all the calls and our
+		// function are renamed in one go.
+		transformations.define("ftransform", "iris_ftransform");
 	}
 
 	private static void addAlphaTest(StringTransformations transformations, ShaderType type, AlphaTest alpha) {
