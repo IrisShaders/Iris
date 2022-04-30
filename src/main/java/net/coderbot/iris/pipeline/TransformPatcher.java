@@ -1,7 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import com.google.common.collect.ImmutableSet;
-
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.pattern.*;
 
@@ -18,20 +16,12 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
  * transformation.
  * 
- * A separate TransformationManager is created for each ShaderType.
- * That makes each of them more efficient as they don't need to run unnecessary
- * transformation phases.
- * 
- * NOTE: This patcher expects the string to not contain any (!) preprocessor
- * directives. The only allowed ones are #extension and #pragma as they are
- * considered "parsed" directives. If any other directive appears in the string,
- * it will throw.
+ * NOTE: This patcher expects (and ensures) that the string doesn't contain any
+ * (!) preprocessor directives. The only allowed ones are #extension and #pragma
+ * as they are considered "parsed" directives. If any other directive appears in
+ * the string, it will throw.
  * 
  * TODO: JCPP has to be configured to remove preprocessor directives entirely
- * 
- * TODO: good examples for more complex transformation in triforce patcher?
- * ideas: BuiltinUniformReplacementTransformer, defines/replacements with loops,
- * replacements that account for whitespace like the one for gl_TextureMatrix
  */
 public class TransformPatcher extends Patcher {
 
@@ -118,12 +108,9 @@ public class TransformPatcher extends Patcher {
 
 		// setup the transformations and even loose phases if necessary
 		TransformationPhase<Parameters> detectReserved = new SearchTerminalsImpl<Parameters>(SearchTerminals.IDENTIFIER,
-				ImmutableSet.of(
-						new ThrowTargetImpl<Parameters>(
-								"moj_import", "Iris shader programs may not use moj_import directives."),
-						new ThrowTargetImpl<Parameters>(
-								"iris_",
-								"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))) {
+				new ThrowTargetImpl<Parameters>(
+						"iris_",
+						"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported.")) {
 			{
 				allowInexactMatches();
 			}
@@ -206,6 +193,14 @@ public class TransformPatcher extends Patcher {
 
 		// #region patchSodiumTerrain
 		// see SodiumTerrainPipeline for the original patcher
+		Transformation<Parameters> wrapFTransform = WrapIdentifier.<Parameters>withExternalDeclaration(
+				"ftransform",
+				"iris_ftransform",
+				"iris_ftransform",
+				InjectionPoint.BEFORE_FUNCTIONS,
+				"vec4 iris_ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+		// TODO: the other wrappers
+
 		Transformation<Parameters> wrapModelViewMatrix = WrapIdentifier.<Parameters>withExternalDeclaration(
 				"gl_ModelViewMatrix",
 				"u_ModelViewMatrix",
@@ -270,10 +265,11 @@ public class TransformPatcher extends Patcher {
 				// patchSodiumTerrain
 				if (patch == Patch.SODIUM_TERRAIN) {
 					if (type == ShaderType.VERTEX) {
-						//TODO: some of these are shared with the fragment shader patcher
+						// TODO: the vertex-exclusive transformations
+						addEndDependent(wrapFTransform);
 					}
 
-					if (type == ShaderType.FRAGMENT) {
+					if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
 						addEndDependent(wrapModelViewMatrix);
 						addEndDependent(wrapModelViewProjectionMatrix);
 						addEndDependent(wrapNormalMatrix);
