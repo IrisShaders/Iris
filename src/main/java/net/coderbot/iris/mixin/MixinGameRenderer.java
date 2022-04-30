@@ -148,7 +148,7 @@ public class MixinGameRenderer {
 	private static void iris$overridePositionTexColorNormalShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_CLOUDS, cir);
-		} else {
+		} else if (isRenderingWorld()) {
 			override(ShaderKey.CLOUDS, cir);
 		}
 	}
@@ -255,7 +255,7 @@ public class MixinGameRenderer {
 			"getRendertypeArmorEntityGlintShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideGlintShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if(isRenderingWorld()) {
+		if (isRenderingWorld()) {
 			override(ShaderKey.GLINT, cir);
 		}
 	}
@@ -377,15 +377,8 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = {
-			"getRendertypeEndGatewayShader",
-			"getRendertypeEndPortalShader"
-	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideEndPortalShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if(!ShadowRenderer.ACTIVE) {
-			override(ShaderKey.BLOCK_ENTITY, cir);
-		}
-	}
+	// ignored: getRendertypeEndGatewayShader (we replace the end portal rendering for shaders)
+	// ignored: getRendertypeEndPortalShader (we replace the end portal rendering for shaders)
 
 	@Inject(method = {
 			"getRendertypeLinesShader"
