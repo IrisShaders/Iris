@@ -95,7 +95,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final AlphaTestOverride alphaTestOverride;
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
-	private final boolean packHasIndirectSunBounceGi;
 	private final boolean shouldRenderTerrain;
 	private final boolean shouldRenderTranslucent;
 	private final boolean shouldRenderEntities;
@@ -125,7 +124,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	public ShadowRenderer(WorldRenderingPipeline pipeline, ProgramSource shadow, PackDirectives directives,
                           Supplier<ImmutableSet<Integer>> flipped, RenderTargets gbufferRenderTargets,
-                          AbstractTexture normals, AbstractTexture specular, IntSupplier noise, ProgramSet programSet,
+                          AbstractTexture normals, AbstractTexture specular, IntSupplier noise,
 													Object2ObjectMap<String, IntSupplier> customTextureIds) {
 		this.pipeline = pipeline;
 		this.profiler = Minecraft.getInstance().getProfiler();
@@ -179,22 +178,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			this.alphaTestOverride = null;
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
-		}
-
-		ProgramSource[] composite = programSet.getComposite();
-
-		if (composite.length > 0) {
-			String fsh = composite[0].getFragmentSource().orElse("");
-
-			// Detect the sun-bounce GI in SEUS Renewed and SEUS v11.
-			// TODO: This is very hacky, we need a better way to detect sun-bounce GI.
-			this.packHasIndirectSunBounceGi = fsh.contains("GI_QUALITY") && fsh.contains("GI_RENDER_RESOLUTION")
-				&& fsh.contains("GI_RADIUS")
-				&& fsh.contains("#define GI\t// Indirect lighting from sunlight.")
-				&& !fsh.contains("//#define GI\t// Indirect lighting from sunlight.")
-				&& !fsh.contains("// #define GI\t// Indirect lighting from sunlight.");
-		} else {
-			this.packHasIndirectSunBounceGi = false;
 		}
 
 		this.sunPathRotation = directives.getSunPathRotation();
@@ -348,17 +331,15 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
 		String distanceInfo;
 		String cullingInfo;
-		if ((packCullingState == OptionalBoolean.FALSE || packHasVoxelization || packHasIndirectSunBounceGi) && packCullingState != OptionalBoolean.TRUE) {
+		if ((packCullingState == OptionalBoolean.FALSE || packHasVoxelization) && packCullingState != OptionalBoolean.TRUE) {
 			double distance = halfPlaneLength * renderMultiplier;
 
 			String reason;
 
 			if (packCullingState == OptionalBoolean.FALSE) {
 				reason = "(set by shader pack)";
-			} else if (packHasVoxelization) {
+			} else /*if (packHasVoxelization)*/ {
 				reason = "(voxelization detected)";
-			} else {
-				reason = "(indirect sunlight GI detected)";
 			}
 
 			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
