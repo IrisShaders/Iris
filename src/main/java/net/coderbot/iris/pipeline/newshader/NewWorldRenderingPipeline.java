@@ -342,7 +342,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return createShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
-				key.isFullbright());
+				key.shouldIgnoreLightmap());
 	}
 
 	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
@@ -370,7 +370,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		FallbackShader shader = NewShaderTests.createFallback(name, beforeTranslucent, afterTranslucent,
 				key.getAlphaTest(), key.getVertexFormat(), null, this, key.getFogMode(),
-				key.hasDiffuseLighting(), key.isIntensity(), key.isFullbright());
+				key.hasDiffuseLighting(), key.isIntensity(), key.shouldIgnoreLightmap());
 
 		loadedShaders.add(shader);
 
@@ -383,7 +383,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return createShadowShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(),
-				key.isFullbright());
+				key.shouldIgnoreLightmap());
 	}
 
 	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
@@ -391,7 +391,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		FallbackShader shader = NewShaderTests.createFallback(name, framebuffer, framebuffer,
 				key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
-				key.hasDiffuseLighting(), key.isIntensity(), key.isFullbright());
+				key.hasDiffuseLighting(), key.isIntensity(), key.shouldIgnoreLightmap());
 
 		loadedShaders.add(shader);
 
