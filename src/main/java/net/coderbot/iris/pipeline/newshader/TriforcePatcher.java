@@ -46,10 +46,6 @@ public class TriforcePatcher {
 
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 		transformations.define("gl_FogFragCoord", "iris_FogFragCoord");
-		// Attempt to fix Intel HD 4000 by not directly using the name gl_Vertex
-		transformations.replaceExact("gl_Vertex", "iris_Vertex");
-		// Fix any shaders using vertex ID
-		transformations.define("iris_VertexID", "gl_VertexID");
 
 		// TODO: This doesn't handle geometry shaders... How do we do that?
 		if (type == ShaderType.VERTEX) {
