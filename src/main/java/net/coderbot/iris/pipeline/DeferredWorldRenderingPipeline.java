@@ -99,6 +99,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final CustomTextureManager customTextureManager;
 	private final AbstractTexture whitePixel;
 	private final FrameUpdateNotifier updateNotifier;
+	private final CenterDepthSampler centerDepthSampler;
 
 	private final ImmutableSet<Integer> flippedBeforeShadow;
 	private final ImmutableSet<Integer> flippedAfterPrepare;
@@ -174,7 +175,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		CenterDepthSampler centerDepthSampler = new CenterDepthSampler(renderTargets);
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		this.shadowMapResolution = programs.getPackDirectives().getShadowDirectives().getResolution();
 
