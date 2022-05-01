@@ -100,7 +100,7 @@ public class MixinLevelRenderer {
 
 	@Inject(method = RENDER_SKY,
 		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
-	private void iris$renderSky$beginNormalSky(PoseStack arg, Matrix4f arg2, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$renderSky$beginNormalSky(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		// None of the vanilla sky is rendered until after this call, so if anything is rendered before, it's
 		// CUSTOM_SKY.
 		pipeline.setPhase(WorldRenderingPhase.SKY);
