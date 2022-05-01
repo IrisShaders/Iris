@@ -47,6 +47,7 @@ import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
+import net.minecraft.client.renderer.GameRenderer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -900,15 +901,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
-		if (skyType != DimensionSpecialEffects.SkyType.NONE) {
+		if (skyType != DimensionSpecialEffects.SkyType.NORMAL) {
 			RenderSystem.disableTexture();
 			RenderSystem.depthMask(false);
 			pushProgram(GbufferProgram.SKY_BASIC);
 
 			Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
-			RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
+			RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z, 1.0f);
 
-			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView());
+			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
 
 			popProgram(GbufferProgram.SKY_BASIC);
 			RenderSystem.depthMask(true);

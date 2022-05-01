@@ -20,6 +20,7 @@ import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.ClearPass;
 import net.coderbot.iris.pipeline.ClearPassCreator;
 import net.coderbot.iris.pipeline.CustomTextureManager;
+import net.coderbot.iris.pipeline.HorizonRenderer;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
@@ -47,6 +48,7 @@ import net.coderbot.iris.vendored.joml.Vector4f;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL15C;
@@ -89,6 +91,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
 	public boolean isBeforeTranslucent;
+
+	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
@@ -496,6 +500,26 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		main.bindWrite(true);
 
 		isBeforeTranslucent = true;
+
+		setPhase(WorldRenderingPhase.SKY);
+
+		// Render our horizon box before actual sky rendering to avoid being broken by mods that do weird things
+		// while rendering the sky.
+		//
+		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
+		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
+
+		if (skyType != DimensionSpecialEffects.SkyType.NORMAL) {
+			RenderSystem.disableTexture();
+			RenderSystem.depthMask(false);
+
+			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
+
+			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
+
+			RenderSystem.depthMask(true);
+			RenderSystem.enableTexture();
+		}
 	}
 
 	@Override

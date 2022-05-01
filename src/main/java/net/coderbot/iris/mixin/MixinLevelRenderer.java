@@ -48,12 +48,6 @@ public class MixinLevelRenderer {
 	private Minecraft minecraft;
 
 	@Unique
-	private HorizonRenderer horizonRenderer = new HorizonRenderer();
-
-	@Unique
-	private int previousViewDistance;
-
-	@Unique
 	private WorldRenderingPipeline pipeline;
 
 	// Begin shader rendering after buffers have been cleared.
@@ -74,12 +68,6 @@ public class MixinLevelRenderer {
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
-
-		if (previousViewDistance != minecraft.options.renderDistance) {
-			horizonRenderer.close();
-			horizonRenderer = new HorizonRenderer();
-			previousViewDistance = minecraft.options.renderDistance;
-		}
 
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 		pipeline.beginLevelRendering();
@@ -111,7 +99,7 @@ public class MixinLevelRenderer {
 
 	@Inject(method = RENDER_SKY,
 		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
-	private void iris$renderSky$beginNormalSky(PoseStack poseStack, float tickDelta, CallbackInfo callback) {
+	private void iris$renderSky$beginNormalSky(PoseStack arg, Matrix4f arg2, float f, Runnable runnable, CallbackInfo ci) {
 		// None of the vanilla sky is rendered until after this call, so if anything is rendered before, it's
 		// CUSTOM_SKY.
 		pipeline.setPhase(WorldRenderingPhase.SKY);
