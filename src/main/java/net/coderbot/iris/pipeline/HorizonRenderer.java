@@ -1,12 +1,12 @@
-package net.coderbot.iris;
+package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11;
 
@@ -42,9 +42,7 @@ public class HorizonRenderer {
 	 */
 	private static final double SIN_22_5 = Math.sin(Math.toRadians(22.5));
 
-	public static final HorizonRenderer INSTANCE = new HorizonRenderer();
-
-	private HorizonRenderer() {
+	public HorizonRenderer() {
 	}
 
 	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {
@@ -108,6 +106,24 @@ public class HorizonRenderer {
 		}
 	}
 
+	private void buildTopPlane(VertexConsumer consumer, int radius) {
+		// You might be tempted to try to combine this with buildBottomPlane to avoid code duplication,
+		// but that won't work since the winding order has to be reversed or else one of the planes will be
+		// discarded by back face culling.
+		for (int x = -radius; x <= radius; x += 64) {
+			for (int z = -radius; z <= radius; z += 64) {
+				consumer.vertex(x + 64, TOP, z);
+				consumer.endVertex();
+				consumer.vertex(x + 64, TOP, z + 64);
+				consumer.endVertex();
+				consumer.vertex(x, TOP, z + 64);
+				consumer.endVertex();
+				consumer.vertex(x, TOP, z);
+				consumer.endVertex();
+			}
+		}
+	}
+
 	private void buildHorizon(VertexConsumer consumer) {
 		int radius = getRenderDistanceInBlocks();
 
@@ -119,6 +135,10 @@ public class HorizonRenderer {
 
 		buildRegularOctagonalPrism(consumer, radius);
 
+		// Replicate the vanilla top plane since we can't assume that it'll be rendered.
+		// TODO: Remove vanilla top plane
+		buildTopPlane(consumer, 384);
+
 		// Always make the bottom plane have a radius of 384, to match the top plane.
 		buildBottomPlane(consumer, 384);
 	}
@@ -127,7 +147,7 @@ public class HorizonRenderer {
 		return Minecraft.getInstance().options.renderDistance * 16;
 	}
 
-	public void renderHorizon(PoseStack poseStack) {
+	public void renderHorizon(Matrix4f matrix) {
 		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
 		// Build the horizon quads into a buffer
@@ -138,7 +158,7 @@ public class HorizonRenderer {
 		// Render the horizon buffer
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
-		RenderSystem.multMatrix(poseStack.last().pose());
+		RenderSystem.multMatrix(matrix);
 		BufferUploader.end(buffer);
 		RenderSystem.popMatrix();
 	}
