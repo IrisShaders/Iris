@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
-public class TextureColorUtil {
+public class TextureManipulationUtil {
 	private static int colorFillFBO = -1;
 
 	public static void fillWithColor(int textureId, int maxLevel, int rgba) {

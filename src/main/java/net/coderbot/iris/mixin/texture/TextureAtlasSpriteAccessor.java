@@ -28,10 +28,10 @@ public interface TextureAtlasSpriteAccessor {
 	void setFrame(int frame);
 
 	@Accessor("subFrame")
-    int getSubFrame();
+	int getSubFrame();
 
 	@Accessor("subFrame")
-    void setSubFrame(int subFrame);
+	void setSubFrame(int subFrame);
 
 	@Invoker("upload")
 	void callUpload(int frameIndex);

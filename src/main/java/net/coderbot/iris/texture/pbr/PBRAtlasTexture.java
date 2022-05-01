@@ -2,8 +2,8 @@ package net.coderbot.iris.texture.pbr;
 
 import com.mojang.blaze3d.platform.TextureUtil;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
-import net.coderbot.iris.texture.util.TextureColorUtil;
-import net.coderbot.iris.texture.util.TextureSavingUtil;
+import net.coderbot.iris.texture.util.TextureExporter;
+import net.coderbot.iris.texture.util.TextureManipulationUtil;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -61,7 +61,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 	public void upload(int atlasWidth, int atlasHeight, int mipLevel) {
 		int glId = getId();
 		TextureUtil.prepareImage(glId, mipLevel, atlasWidth, atlasHeight);
-		TextureColorUtil.fillWithColor(glId, mipLevel, type.getDefaultValue());
+		TextureManipulationUtil.fillWithColor(glId, mipLevel, type.getDefaultValue());
 
 		for (TextureAtlasSprite sprite : sprites.values()) {
 			try {
@@ -88,7 +88,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 		}
 
 		if (PBRTextureManager.DEBUG) {
-			TextureSavingUtil.saveTextures("atlas", id.getNamespace() + "_" + id.getPath().replaceAll("/", "_"), glId, mipLevel, atlasWidth, atlasHeight);
+			TextureExporter.exportTextures("atlas", id.getNamespace() + "_" + id.getPath().replaceAll("/", "_"), glId, mipLevel, atlasWidth, atlasHeight);
 		}
 	}
 

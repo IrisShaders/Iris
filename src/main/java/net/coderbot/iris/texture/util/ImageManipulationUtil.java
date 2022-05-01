@@ -64,7 +64,7 @@ public class ImageManipulationUtil {
 					int colorTR = image.getPixelRGBA(x1, y0);
 					int colorBL = image.getPixelRGBA(x0, y1);
 					int colorBR = image.getPixelRGBA(x1, y1);
-	
+
 					finalColor = blendColor(colorTL, colorTR, colorBL, colorBR, weightTL, weightTR, weightBL, weightBR);
 				} else if (x0valid & x1valid) {
 					float leftWeight = (x1 + 0.5f) - unscaledX;
