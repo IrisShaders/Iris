@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Extends the ParticleManager class to allow multiple phases of particle rendering.
+ * Extends the ParticleEngine class to allow multiple phases of particle rendering.
  *
  * This is used to enable the rendering of known-opaque particles much earlier than other particles, most notably before
  * translucent content. Normally, particles behind translucent blocks are not visible on Fancy graphics, and a user must
@@ -50,11 +50,11 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 	@Final
 	private static List<ParticleRenderType> RENDER_ORDER;
 
-	private static final List<ParticleRenderType> OPAQUE_PARTICLE_TEXTURE_SHEETS;
+	private static final List<ParticleRenderType> OPAQUE_PARTICLE_RENDER_TYPES;
 
 	static {
-		OPAQUE_PARTICLE_TEXTURE_SHEETS = ImmutableList.of(
-				IrisParticleRenderTypes.OPAQUE_TERRAIN_SHEET,
+		OPAQUE_PARTICLE_RENDER_TYPES = ImmutableList.of(
+				IrisParticleRenderTypes.OPAQUE_TERRAIN,
 				ParticleRenderType.PARTICLE_SHEET_OPAQUE,
 				ParticleRenderType.PARTICLE_SHEET_LIT,
 				ParticleRenderType.CUSTOM,
@@ -71,12 +71,12 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 			List<ParticleRenderType> toRender = new ArrayList<>(RENDER_ORDER);
 
 			// Remove all known opaque particle texture sheets.
-			toRender.removeAll(OPAQUE_PARTICLE_TEXTURE_SHEETS);
+			toRender.removeAll(OPAQUE_PARTICLE_RENDER_TYPES);
 
 			return toRender;
 		} else if (phase == ParticleRenderingPhase.OPAQUE) {
 			// Render only opaque particle sheets
-			return OPAQUE_PARTICLE_TEXTURE_SHEETS;
+			return OPAQUE_PARTICLE_RENDER_TYPES;
 		} else {
 			// Don't override particle rendering
 			return RENDER_ORDER;

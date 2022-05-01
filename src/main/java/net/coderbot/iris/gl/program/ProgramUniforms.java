@@ -184,6 +184,11 @@ public class ProgramUniforms {
 			for (int index = 0; index < activeUniforms; index++) {
 				String name = IrisRenderSystem.getActiveUniform(program, index, 128, sizeBuf, typeBuf);
 
+				if (name.isEmpty()) {
+					// No further information available.
+					continue;
+				}
+
 				int size = sizeBuf.get(0);
 				int type = typeBuf.get(0);
 
@@ -295,9 +300,9 @@ public class ProgramUniforms {
 		} else if (type == GL20C.GL_FLOAT_VEC2) {
 			typeName = "vec2";
 		} else if (type == GL20C.GL_INT_VEC2) {
-			typeName = "vec2i";
+			typeName = "ivec2";
 		} else if (type == GL20C.GL_INT_VEC4) {
-			typeName = "vec4i";
+			typeName = "ivec4";
 		} else if (type == GL20C.GL_SAMPLER_3D) {
 			typeName = "sampler3D";
 		} else if (type == GL20C.GL_SAMPLER_2D) {

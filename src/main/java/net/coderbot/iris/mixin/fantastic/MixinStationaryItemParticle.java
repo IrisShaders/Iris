@@ -21,17 +21,17 @@ public class MixinStationaryItemParticle {
 
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void iris$resolveTranslucency(ClientLevel clientLevel, double d, double e, double f, BlockState blockState, CallbackInfo ci) {
-			RenderType layer = ItemBlockRenderTypes.getChunkRenderType(blockState);
+			RenderType type = ItemBlockRenderTypes.getChunkRenderType(blockState);
 
-			if (layer == RenderType.solid() || layer == RenderType.cutout() || layer == RenderType.cutoutMipped()) {
+			if (type == RenderType.solid() || type == RenderType.cutout() || type == RenderType.cutoutMipped()) {
 				isOpaque = true;
 		}
 	}
 
 	@Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
-	private void iris$overrideParticleSheet(CallbackInfoReturnable<ParticleRenderType> cir) {
+	private void iris$overrideParticleRenderType(CallbackInfoReturnable<ParticleRenderType> cir) {
 		if (isOpaque) {
-			cir.setReturnValue(IrisParticleRenderTypes.OPAQUE_TERRAIN_SHEET);
+			cir.setReturnValue(IrisParticleRenderTypes.OPAQUE_TERRAIN);
 		}
 	}
 }

@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
@@ -50,12 +49,6 @@ public class MixinLevelRenderer {
 	private Minecraft minecraft;
 
 	@Unique
-	private HorizonRenderer horizonRenderer = new HorizonRenderer();
-
-	@Unique
-	private int previousViewDistance;
-
-	@Unique
 	private WorldRenderingPipeline pipeline;
 
 	// Begin shader rendering after buffers have been cleared.
@@ -68,7 +61,7 @@ public class MixinLevelRenderer {
 									   Matrix4f projection, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid()) {
 			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
-					" didn't work. This is a bug! Please report it to the Iris developers.");
+				" didn't work. This is a bug! Please report it to the Iris developers.");
 		}
 
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
@@ -76,12 +69,6 @@ public class MixinLevelRenderer {
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
-
-		if (previousViewDistance != minecraft.options.getEffectiveRenderDistance()) {
-			horizonRenderer.close();
-			horizonRenderer = new HorizonRenderer();
-			previousViewDistance = minecraft.options.getEffectiveRenderDistance();
-		}
 
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 		pipeline.beginLevelRendering();
@@ -105,22 +92,18 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY))
 	private void iris$beginSky(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.setPhase(WorldRenderingPhase.SKY);
+		// Use CUSTOM_SKY until levelFogColor is called as a heuristic to catch FabricSkyboxes.
+		pipeline.setPhase(WorldRenderingPhase.CUSTOM_SKY);
 		// TODO: Move the injection instead
 		RenderSystem.setShader(GameRenderer::getPositionShader);
 	}
 
 	@Inject(method = RENDER_SKY,
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
-	private void iris$renderSky$drawHorizon(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo callback) {
-		RenderSystem.depthMask(false);
-
-		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
-		RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z, 1.0F);
-
-		horizonRenderer.renderHorizon(poseStack.last().pose().copy(), projectionMatrix.copy(), GameRenderer.getPositionShader());
-
-		RenderSystem.depthMask(true);
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
+	private void iris$renderSky$beginNormalSky(PoseStack arg, Matrix4f arg2, float f, Runnable runnable, CallbackInfo ci) {
+		// None of the vanilla sky is rendered until after this call, so if anything is rendered before, it's
+		// CUSTOM_SKY.
+		pipeline.setPhase(WorldRenderingPhase.SKY);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;SUN_LOCATION:Lnet/minecraft/resources/ResourceLocation;"))

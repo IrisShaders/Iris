@@ -46,6 +46,8 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
+import net.minecraft.client.renderer.GameRenderer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -138,6 +140,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 
 	private boolean isBeforeTranslucent;
+
+	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
@@ -779,13 +783,32 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		}
 	}
 
+	private void copyDepthTexture() {
+		// Note: Use copyTexSubImage2D, since that will not re-allocate the target texture's storage,
+		// even though we copy the whole depth texture. This might make the copy be a bit faster.
+		GlStateManager._glCopyTexSubImage2D(
+			// target
+			GL20C.GL_TEXTURE_2D,
+			// level
+			0,
+			// xoffset, yoffset
+			0, 0,
+			// x, y
+			0, 0,
+			// width
+			renderTargets.getCurrentWidth(),
+			// height
+			renderTargets.getCurrentHeight());
+	}
+
 	@Override
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content without the hand, as required.
+
 		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		copyDepthTexture();
 		GlStateManager._bindTexture(0);
 	}
 
@@ -797,7 +820,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// all non-translucent content, as required.
 		baseline.bind();
 		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
+		copyDepthTexture();
 		GlStateManager._bindTexture(0);
 
 		centerDepthSampler.updateSample();
@@ -869,6 +892,29 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.
 		pushProgram(GbufferProgram.BASIC);
+
+		setPhase(WorldRenderingPhase.SKY);
+
+		// Render our horizon box before actual sky rendering to avoid being broken by mods that do weird things
+		// while rendering the sky.
+		//
+		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
+		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
+
+		if (skyType != DimensionSpecialEffects.SkyType.NONE) {
+			RenderSystem.disableTexture();
+			RenderSystem.depthMask(false);
+			pushProgram(GbufferProgram.SKY_BASIC);
+
+			Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
+			RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z, 1.0f);
+
+			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
+
+			popProgram(GbufferProgram.SKY_BASIC);
+			RenderSystem.depthMask(true);
+			RenderSystem.enableTexture();
+		}
 	}
 
 	@Override

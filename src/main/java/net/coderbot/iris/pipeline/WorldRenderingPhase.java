@@ -4,7 +4,7 @@ public enum WorldRenderingPhase {
 	NONE,
 	SKY,
 	SUNSET,
-	CUSTOM_SKY, // Unused, just here to match OptiFine ordinals
+	CUSTOM_SKY,
 	SUN,
 	MOON,
 	STARS,

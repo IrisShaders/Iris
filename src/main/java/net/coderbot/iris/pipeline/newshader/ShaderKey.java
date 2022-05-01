@@ -11,71 +11,73 @@ import java.util.Locale;
 public enum ShaderKey {
 	// if you auto-format this and destroy all the manual indentation, I'll steal your kneecaps
 
-	BASIC                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION,                    FogMode.ENABLED),
-	BASIC_COLOR            (ProgramId.Basic,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR,              FogMode.OFF    ),
-	TEXTURED               (ProgramId.Textured,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,                FogMode.OFF    ),
-	TEXTURED_COLOR         (ProgramId.Textured,    AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR,          FogMode.OFF    ),
-	SKY_BASIC              (ProgramId.SkyBasic,    AlphaTests.OFF,             DefaultVertexFormat.POSITION,                    FogMode.ENABLED),
-	SKY_BASIC_COLOR        (ProgramId.SkyBasic,    AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_COLOR,              FogMode.OFF    ),
-	SKY_TEXTURED           (ProgramId.SkyTextured, AlphaTests.OFF,             DefaultVertexFormat.POSITION_TEX,                FogMode.OFF    ),
-	SKY_TEXTURED_COLOR     (ProgramId.SkyTextured, AlphaTests.OFF,             DefaultVertexFormat.POSITION_TEX_COLOR,          FogMode.OFF    ),
-	CLOUDS                 (ProgramId.Clouds,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,   FogMode.ENABLED),
-	TERRAIN_SOLID          (ProgramId.Terrain,     AlphaTests.OFF,             IrisVertexFormats.TERRAIN,                       FogMode.ENABLED),
-	TERRAIN_CUTOUT         (ProgramId.Terrain,     AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.ENABLED),
-	TERRAIN_CUTOUT_MIPPED  (ProgramId.Terrain,     AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.ENABLED),
-	TERRAIN_TRANSLUCENT    (ProgramId.Water,       AlphaTests.OFF,             IrisVertexFormats.TERRAIN,                       FogMode.ENABLED),
-	ENTITIES_SOLID         (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	ENTITIES_SOLID_DIFFUSE (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	ENTITIES_SOLID_BRIGHT  (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	ENTITIES_CUTOUT        (ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	ENTITIES_CUTOUT_DIFFUSE(ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	ENTITIES_EYES          (ProgramId.SpiderEyes,  AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	HAND_CUTOUT            (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	HAND_CUTOUT_BRIGHT     (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	HAND_CUTOUT_DIFFUSE    (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	HAND_TRANSLUCENT       (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	HAND_WATER_BRIGHT      (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	HAND_WATER_DIFFUSE     (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	LIGHTNING              (ProgramId.Entities,    AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,              FogMode.ENABLED),
-	LEASH                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.ENABLED),
-	PARTICLES              (ProgramId.TexturedLit, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.ENABLED),
-	WEATHER                (ProgramId.Weather,     AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.ENABLED),
-	CRUMBLING              (ProgramId.DamagedBlock,AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.BLOCK,                       FogMode.OFF    ),
-	TEXT                   (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED),
-	TEXT_INTENSITY         (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.ENABLED),
-	BLOCK_ENTITY           (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	BLOCK_ENTITY_BRIGHT    (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	BLOCK_ENTITY_DIFFUSE   (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.ENABLED),
-	BEACON                 (ProgramId.BeaconBeam,  AlphaTests.OFF,             DefaultVertexFormat.BLOCK,                       FogMode.ENABLED),
-	GLINT                  (ProgramId.ArmorGlint,  AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,                FogMode.ENABLED),
-	LINES                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.ENABLED),
+	BASIC                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	BASIC_COLOR            (ProgramId.Basic,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR,              FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	TEXTURED               (ProgramId.Textured,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,                FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	TEXTURED_COLOR         (ProgramId.Textured,    AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR,          FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SKY_BASIC              (ProgramId.SkyBasic,    AlphaTests.OFF,             DefaultVertexFormat.POSITION,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	SKY_BASIC_COLOR        (ProgramId.SkyBasic,    AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_COLOR,              FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SKY_TEXTURED           (ProgramId.SkyTextured, AlphaTests.OFF,             DefaultVertexFormat.POSITION_TEX,                FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SKY_TEXTURED_COLOR     (ProgramId.SkyTextured, AlphaTests.OFF,             DefaultVertexFormat.POSITION_TEX_COLOR,          FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	CLOUDS                 (ProgramId.Clouds,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,   FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	TERRAIN_SOLID          (ProgramId.Terrain,     AlphaTests.OFF,             IrisVertexFormats.TERRAIN,                       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	TERRAIN_CUTOUT         (ProgramId.Terrain,     AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	TERRAIN_CUTOUT_MIPPED  (ProgramId.Terrain,     AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	TERRAIN_TRANSLUCENT    (ProgramId.Water,       AlphaTests.OFF,             IrisVertexFormats.TERRAIN,                       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	ENTITIES_SOLID         (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	ENTITIES_SOLID_DIFFUSE (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
+	ENTITIES_SOLID_BRIGHT  (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
+	ENTITIES_CUTOUT        (ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	ENTITIES_CUTOUT_DIFFUSE(ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
+	ENTITIES_EYES          (ProgramId.SpiderEyes,  AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
+	HAND_CUTOUT            (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	HAND_CUTOUT_BRIGHT     (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
+	HAND_CUTOUT_DIFFUSE    (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
+	HAND_TRANSLUCENT       (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	HAND_WATER_BRIGHT      (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
+	HAND_WATER_DIFFUSE     (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
+	LIGHTNING              (ProgramId.Entities,    AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,              FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	LEASH                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	PARTICLES              (ProgramId.TexturedLit, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	WEATHER                (ProgramId.Weather,     AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	CRUMBLING              (ProgramId.DamagedBlock,AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.BLOCK,                       FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	TEXT                   (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	TEXT_INTENSITY         (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	BLOCK_ENTITY           (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	BLOCK_ENTITY_BRIGHT    (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
+	BLOCK_ENTITY_DIFFUSE   (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
+	BEACON                 (ProgramId.BeaconBeam,  AlphaTests.OFF,             DefaultVertexFormat.BLOCK,                       FogMode.PER_FRAGMENT, LightingModel.FULLBRIGHT),
+	GLINT                  (ProgramId.ArmorGlint,  AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,                FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	LINES                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 
 	// Note: These must be at the very end.
-	SHADOW_TERRAIN_CUTOUT  (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.OFF    ),
-	SHADOW_ENTITIES_CUTOUT (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.OFF    ),
-	SHADOW_BEACON_BEAM     (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.BLOCK,                       FogMode.OFF    ),
-	SHADOW_BASIC           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION,      				FogMode.OFF    ),
-	SHADOW_BASIC_COLOR     (ProgramId.Shadow,      AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR,       		FogMode.OFF    ),
-	SHADOW_TEX             (ProgramId.Shadow,      AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,       			FogMode.OFF    ),
-	SHADOW_TEX_COLOR       (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR,       	FogMode.OFF    ),
-	SHADOW_CLOUDS          (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,   FogMode.OFF    ),
-	SHADOW_LINES           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.OFF    ),
-	SHADOW_LEASH           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.OFF    ),
-	SHADOW_LIGHTNING       (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,     			FogMode.OFF    ),
-	SHADOW_PARTICLES       (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,	     			FogMode.OFF    ),
-	SHADOW_TEXT           (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF    ),
-	SHADOW_TEXT_INTENSITY (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF    );
+	SHADOW_TERRAIN_CUTOUT  (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_ENTITIES_CUTOUT (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_BEACON_BEAM     (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.BLOCK,                       FogMode.OFF,          LightingModel.FULLBRIGHT),
+	SHADOW_BASIC           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION,      				FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_BASIC_COLOR     (ProgramId.Shadow,      AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR,       		FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_TEX             (ProgramId.Shadow,      AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,       			FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_TEX_COLOR       (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR,       	FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_CLOUDS          (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,   FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_LINES           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_LEASH           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_LIGHTNING       (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,     			FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_PARTICLES       (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,	     			FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_TEXT           (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_TEXT_INTENSITY (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF,          LightingModel.LIGHTMAP  );
 
 	private final ProgramId program;
 	private final AlphaTest alphaTest;
 	private final VertexFormat vertexFormat;
 	private final FogMode fogMode;
+	private final LightingModel lightingModel;
 
-	ShaderKey(ProgramId program, AlphaTest alphaTest, VertexFormat vertexFormat, FogMode fogMode) {
+	ShaderKey(ProgramId program, AlphaTest alphaTest, VertexFormat vertexFormat, FogMode fogMode, LightingModel lightingModel) {
 		this.program = program;
 		this.alphaTest = alphaTest;
 		this.vertexFormat = vertexFormat;
 		this.fogMode = fogMode;
+		this.lightingModel = lightingModel;
 	}
 
 	public ProgramId getProgram() {
@@ -107,16 +109,17 @@ public enum ShaderKey {
 	}
 
 	public boolean hasDiffuseLighting() {
-		return this == ENTITIES_CUTOUT_DIFFUSE || this == ENTITIES_SOLID_DIFFUSE || this == BLOCK_ENTITY_DIFFUSE
-				|| this == HAND_CUTOUT_DIFFUSE || this == HAND_WATER_DIFFUSE;
+		return lightingModel == LightingModel.DIFFUSE || lightingModel == LightingModel.DIFFUSE_LM;
 	}
 
-	public boolean isBeaconBeam() {
-		return this == BEACON || this == SHADOW_BEACON_BEAM;
+	public boolean shouldIgnoreLightmap() {
+		return lightingModel == LightingModel.FULLBRIGHT || lightingModel == LightingModel.DIFFUSE;
 	}
-
-	public boolean isFullbright() {
-		return isBeaconBeam() || this == ENTITIES_EYES || this == ENTITIES_SOLID_BRIGHT || this == HAND_CUTOUT_BRIGHT
-			|| this == HAND_WATER_BRIGHT || this == BLOCK_ENTITY_BRIGHT;
+	
+	enum LightingModel {
+		FULLBRIGHT,
+		LIGHTMAP,
+		DIFFUSE,
+		DIFFUSE_LM
 	}
 }

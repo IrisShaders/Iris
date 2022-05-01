@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
@@ -79,7 +80,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
 	private final OptionalBoolean packCullingState;
 	public boolean packHasVoxelization;
-	private final boolean packHasIndirectSunBounceGi;
 	private final boolean shouldRenderTerrain;
 	private final boolean shouldRenderTranslucent;
 	private final boolean shouldRenderEntities;
@@ -144,22 +144,6 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		} else {
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
-		}
-
-		ProgramSource[] composite = set.getComposite();
-
-		if (composite.length > 0) {
-			String fsh = composite[0].getFragmentSource().orElse("");
-
-			// Detect the sun-bounce GI in SEUS Renewed and SEUS v11.
-			// TODO: This is very hacky, we need a better way to detect sun-bounce GI.
-			this.packHasIndirectSunBounceGi = fsh.contains("GI_QUALITY") && fsh.contains("GI_RENDER_RESOLUTION")
-				&& fsh.contains("GI_RADIUS")
-				&& fsh.contains("#define GI\t// Indirect lighting from sunlight.")
-				&& !fsh.contains("//#define GI\t// Indirect lighting from sunlight.")
-				&& !fsh.contains("// #define GI\t// Indirect lighting from sunlight.");
-		} else {
-			this.packHasIndirectSunBounceGi = false;
 		}
 
 		this.sunPathRotation = directives.getSunPathRotation();
@@ -290,17 +274,15 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
 		String distanceInfo;
 		String cullingInfo;
-		if ((packCullingState == OptionalBoolean.FALSE || packHasVoxelization || packHasIndirectSunBounceGi) && packCullingState != OptionalBoolean.TRUE) {
+		if ((packCullingState == OptionalBoolean.FALSE || packHasVoxelization) && packCullingState != OptionalBoolean.TRUE) {
 			double distance = halfPlaneLength * renderMultiplier;
 
 			String reason;
 
 			if (packCullingState == OptionalBoolean.FALSE) {
 				reason = "(set by shader pack)";
-			} else if (packHasVoxelization) {
+			} else /*if (packHasVoxelization)*/ {
 				reason = "(voxelization detected)";
-			} else {
-				reason = "(indirect sunlight GI detected)";
 			}
 
 			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
@@ -638,6 +620,25 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		return renderedEntities.size();
 	}
 
+	// Copied from DeferredWorldRenderingPipeline
+	private void copyDepthTexture() {
+		// Note: Use copyTexSubImage2D, since that will not re-allocate the target texture's storage,
+		// even though we copy the whole depth texture. This might make the copy be a bit faster.
+		GlStateManager._glCopyTexSubImage2D(
+			// target
+			GL20C.GL_TEXTURE_2D,
+			// level
+			0,
+			// xoffset, yoffset
+			0, 0,
+			// x, y
+			0, 0,
+			// width
+			resolution,
+			// height
+			resolution);
+	}
+
 	private void copyPreTranslucentDepth(LevelRendererAccessor levelRenderer) {
 		levelRenderer.getLevel().getProfiler().popPush("translucent depth copy");
 
@@ -646,7 +647,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		targets.getFramebuffer().bindAsReadBuffer();
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
-		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, resolution, resolution, 0);
+		copyDepthTexture();
 		RenderSystem.bindTexture(0);
 	}
 

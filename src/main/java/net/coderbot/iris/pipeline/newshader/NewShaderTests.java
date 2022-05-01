@@ -32,7 +32,7 @@ public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isBeacon,
+										NewWorldRenderingPipeline parent, FogMode fogMode,
 										boolean isFullbright) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
@@ -141,11 +141,11 @@ public class NewShaderTests {
 										GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
 										VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 										NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
-										boolean intensityTex, boolean isBeacon, boolean isFullbright) throws IOException {
+										boolean intensityTex, boolean isFullbright) throws IOException {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting, isBeacon);
-		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isBeacon);
+		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting);
+		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex);
 
 		String shaderJsonString = "{\n" +
 				"    \"blend\": {\n" +
