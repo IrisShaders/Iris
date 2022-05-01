@@ -1,6 +1,5 @@
 package net.coderbot.iris.mixin;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
@@ -9,12 +8,10 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.HandRenderer;
-import net.coderbot.iris.pipeline.HorizonRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
-import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -47,9 +44,6 @@ public class MixinLevelRenderer {
 
 	@Unique
 	private WorldRenderingPipeline pipeline;
-
-	@Unique
-	private HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	// Begin shader rendering after buffers have been cleared.
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
@@ -95,7 +89,8 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY))
 	private void iris$beginSky(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.setPhase(WorldRenderingPhase.SKY);
+		// Use CUSTOM_SKY until levelFogColor is called as a heuristic to catch FabricSkyboxes.
+		pipeline.setPhase(WorldRenderingPhase.CUSTOM_SKY);
 		pipeline.pushProgram(GbufferProgram.SKY_TEXTURED);
 		skyTextureEnabled = true;
 	}
@@ -116,15 +111,10 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderSky",
 		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
-	private void iris$renderSky$drawHorizon(PoseStack poseStack, float tickDelta, CallbackInfo callback) {
-		RenderSystem.depthMask(false);
-
-		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
-		RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
-
-		horizonRenderer.renderHorizon(poseStack);
-
-		RenderSystem.depthMask(true);
+	private void iris$renderSky$beginNormalSky(PoseStack poseStack, float tickDelta, CallbackInfo callback) {
+		// None of the vanilla sky is rendered until after this call, so if anything is rendered before, it's
+		// CUSTOM_SKY.
+		pipeline.setPhase(WorldRenderingPhase.SKY);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;SUN_LOCATION:Lnet/minecraft/resources/ResourceLocation;"))

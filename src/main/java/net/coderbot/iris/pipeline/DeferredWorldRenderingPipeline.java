@@ -45,6 +45,7 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -137,6 +138,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 
 	private boolean isBeforeTranslucent;
+
+	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
@@ -889,6 +892,29 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.
 		pushProgram(GbufferProgram.BASIC);
+
+		setPhase(WorldRenderingPhase.SKY);
+
+		// Render our horizon box before actual sky rendering to avoid being broken by mods that do weird things
+		// while rendering the sky.
+		//
+		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
+		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
+
+		if (skyType != DimensionSpecialEffects.SkyType.NONE) {
+			RenderSystem.disableTexture();
+			RenderSystem.depthMask(false);
+			pushProgram(GbufferProgram.SKY_BASIC);
+
+			Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
+			RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
+
+			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView());
+
+			popProgram(GbufferProgram.SKY_BASIC);
+			RenderSystem.depthMask(true);
+			RenderSystem.enableTexture();
+		}
 	}
 
 	@Override
