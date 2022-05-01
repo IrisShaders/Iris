@@ -901,7 +901,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
-		if (skyType != DimensionSpecialEffects.SkyType.NORMAL) {
+		if (skyType != DimensionSpecialEffects.SkyType.NONE) {
 			RenderSystem.disableTexture();
 			RenderSystem.depthMask(false);
 			pushProgram(GbufferProgram.SKY_BASIC);

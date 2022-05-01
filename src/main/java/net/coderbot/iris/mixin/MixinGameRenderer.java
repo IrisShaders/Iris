@@ -396,6 +396,7 @@ public class MixinGameRenderer {
 
 		if (pipeline != null) {
 			switch (pipeline.getPhase()) {
+				case CUSTOM_SKY:
 				case SKY:
 				case SUNSET:
 				case SUN:
