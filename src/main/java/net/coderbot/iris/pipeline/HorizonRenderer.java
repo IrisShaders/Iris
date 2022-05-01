@@ -1,12 +1,12 @@
-package net.coderbot.iris;
+package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11;
 
@@ -125,7 +125,7 @@ public class HorizonRenderer {
 		return Minecraft.getInstance().options.renderDistance * 16;
 	}
 
-	public void renderHorizon(PoseStack poseStack) {
+	public void renderHorizon(Matrix4f matrix) {
 		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
 		// Build the horizon quads into a buffer
@@ -136,7 +136,7 @@ public class HorizonRenderer {
 		// Render the horizon buffer
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
-		RenderSystem.multMatrix(poseStack.last().pose());
+		RenderSystem.multMatrix(matrix);
 		BufferUploader.end(buffer);
 		RenderSystem.popMatrix();
 	}
