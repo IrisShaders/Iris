@@ -320,8 +320,8 @@ public class ShadowRenderer {
 
 		// note: destFb is null since we never end up getting a strategy that requires the target framebuffer
 		// this is a bit of an assumption but it works for now
-		DepthCopyStrategy.fastest(false).copy(getRenderTargets().getFramebuffer(), getDepthTextureId(), null,
-			getDepthTextureNoTranslucentsId(), resolution, resolution);
+		DepthCopyStrategy.fastest(false).copy(targets.getFramebuffer(), targets.getDepthTexture().getTextureId(), null,
+			targets.getDepthTextureNoTranslucents().getTextureId(), resolution, resolution);
 	}
 
 	private void renderEntities(LevelRendererAccessor levelRenderer, Frustum frustum, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
