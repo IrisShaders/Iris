@@ -28,6 +28,8 @@ public class RenderTargets {
 	private int cachedHeight;
 	private boolean fullClearRequired;
 
+	private boolean destroyed;
+
 	public RenderTargets(int width, int height, int depthTexture, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
 		targets = new RenderTarget[renderTargets.size()];
 

@@ -15,7 +15,7 @@ public class MixinGlStateManager_DepthBufferTracking {
 	@Inject(method = "_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V", at = @At("HEAD"))
 	private static void iris$onTexImage2D(int target, int level, int internalformat, int width, int height, int border,
 										  int format, int type, @Nullable IntBuffer pixels, CallbackInfo ci) {
-		DepthBufferTracker.INSTANCE.trackTexImage2D(GlStateManager.getActiveTextureName(), internalformat);
+		DepthBufferTracker.INSTANCE.trackTexImage2D(GlStateManagerAccessor.getActiveTexture(), internalformat);
 	}
 
 	@Inject(method = "_deleteTexture(I)V", at = @At("HEAD"))

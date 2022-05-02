@@ -15,6 +15,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.ClearPass;
@@ -32,6 +33,7 @@ import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.DepthBufferTracker;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -133,7 +135,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
-		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programSet.getPackDirectives().getRenderTargetDirectives());
+		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+		int depthTextureId = main.getDepthTextureId();
+		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+
+		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programSet.getPackDirectives().getShadowDirectives();
@@ -470,7 +476,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		updateNotifier.onNewFrame();
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$isDepthBufferDirty(), main.getDepthTextureId(), main.width, main.height);
+		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$isDepthBufferDirty(), main.getDepthTextureId(), main.width, main.height, DepthBufferTracker.INSTANCE.getFormat(main.getDepthTextureId()));
 		((Blaze3dRenderTargetExt) main).iris$clearDepthBufferDirtyFlag();
 
 		final ImmutableList<ClearPass> passes;

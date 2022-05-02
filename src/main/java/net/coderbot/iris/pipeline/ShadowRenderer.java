@@ -26,6 +26,7 @@ import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
