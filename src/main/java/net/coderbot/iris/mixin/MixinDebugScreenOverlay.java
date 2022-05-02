@@ -19,26 +19,26 @@ import java.util.Objects;
 @Mixin(DebugScreenOverlay.class)
 public abstract class MixinDebugScreenOverlay {
 	@Unique
-	private static final List<BufferPoolMXBean> pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
+	private static final List<BufferPoolMXBean> iris$pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
 
 	@Unique
-	private static final BufferPoolMXBean directPool;
+	private static final BufferPoolMXBean iris$directPool;
 
 	static {
 		BufferPoolMXBean found = null;
 
-		for (BufferPoolMXBean pool : pools) {
+		for (BufferPoolMXBean pool : iris$pools) {
 			if (pool.getName().equals("direct")) {
 				found = pool;
 				break;
 			}
 		}
 
-		directPool = Objects.requireNonNull(found);
+		iris$directPool = Objects.requireNonNull(found);
 	}
 
     @Inject(method = "getSystemInformation", at = @At("RETURN"))
-    private void appendShaderPackText(CallbackInfoReturnable<List<String>> cir) {
+    private void iris$appendShaderPackText(CallbackInfoReturnable<List<String>> cir) {
         List<String> messages = cir.getReturnValue();
 
 		messages.add("");
@@ -54,15 +54,15 @@ public abstract class MixinDebugScreenOverlay {
 			messages.add("[" + Iris.MODNAME + "] Shaders are disabled");
 		}
 
-		messages.add(3, "Direct Buffers: +" + humanReadableByteCountBin(directPool.getMemoryUsed()));
+		messages.add(3, "Direct Buffers: +" + iris$humanReadableByteCountBin(iris$directPool.getMemoryUsed()));
 
 		if (!Iris.isSodiumInstalled()) {
-			messages.add(3, "Native Memory: +" + humanReadableByteCountBin(getNativeMemoryUsage()));
+			messages.add(3, "Native Memory: +" + iris$humanReadableByteCountBin(iris$getNativeMemoryUsage()));
 		}
 	}
 
 	@Inject(method = "getGameInformation", at = @At("RETURN"))
-	private void appendShadowDebugText(CallbackInfoReturnable<List<String>> cir) {
+	private void iris$appendShadowDebugText(CallbackInfoReturnable<List<String>> cir) {
 		List<String> messages = cir.getReturnValue();
 
 		if (!Iris.isSodiumInstalled() && Iris.getCurrentPack().isPresent()) {
@@ -74,7 +74,8 @@ public abstract class MixinDebugScreenOverlay {
 	}
 
 	// stackoverflow.com/a/3758880
-	private static String humanReadableByteCountBin(long bytes) {
+	@Unique
+	private static String iris$humanReadableByteCountBin(long bytes) {
 		long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
 		if (absB < 1024) {
 			return bytes + " B";
@@ -90,7 +91,8 @@ public abstract class MixinDebugScreenOverlay {
 	}
 
 	// From Sodium
-	private static long getNativeMemoryUsage() {
+	@Unique
+	private static long iris$getNativeMemoryUsage() {
 			return ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed();
 	}
 }

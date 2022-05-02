@@ -23,6 +23,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -33,6 +34,7 @@ import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.DepthBufferTracker;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -136,7 +138,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
-		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programs.getPackDirectives().getRenderTargetDirectives());
+		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
+
+		int depthTextureId = mainTarget.getDepthTextureId();
+		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+
+		this.renderTargets = new RenderTargets(mainTarget.width, mainTarget.height, depthTextureId,
+			depthBufferFormat, programs.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
+
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programs.getPackDirectives().getShadowDirectives();
@@ -775,7 +784,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
 
-		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), main.getDepthTextureId(), main.width, main.height);
+		int depthTextureId = main.getDepthTextureId();
+		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+
+		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), depthTextureId, main.width,
+			main.height, depthBufferFormat);
 
 		mainExt.iris$clearDepthBufferDirtyFlag();
 
@@ -799,33 +812,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		}
 	}
 
-	private void copyDepthTexture() {
-		// Note: Use copyTexSubImage2D, since that will not re-allocate the target texture's storage,
-		// even though we copy the whole depth texture. This might make the copy be a bit faster.
-		GlStateManager._glCopyTexSubImage2D(
-			// target
-			GL20C.GL_TEXTURE_2D,
-			// level
-			0,
-			// xoffset, yoffset
-			0, 0,
-			// x, y
-			0, 0,
-			// width
-			renderTargets.getCurrentWidth(),
-			// height
-			renderTargets.getCurrentHeight());
-	}
-
 	@Override
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content without the hand, as required.
-
-		baseline.bind();
-		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		copyDepthTexture();
-		GlStateManager._bindTexture(0);
+		renderTargets.copyPreHandDepth();
 	}
 
 	@Override
@@ -834,10 +825,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
-		baseline.bind();
-		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		copyDepthTexture();
-		GlStateManager._bindTexture(0);
+		renderTargets.copyPreTranslucentDepth();
 
 		centerDepthSampler.updateSample();
 
