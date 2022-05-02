@@ -27,7 +27,7 @@ public class MixinRenderTarget implements Blaze3dRenderTargetExt {
 		iris$colorDirty = true;
 	}
 
-	@Inject(method = "createBuffers()V", at = @At(value = "INVOKE", target = "com/mojang/blaze3d/platform/GlStateManager._bindTexture (I)V"))
+	@Inject(method = "createBuffers(IIZ)V", at = @At(value = "INVOKE", target = "com/mojang/blaze3d/platform/GlStateManager._bindTexture (I)V"))
 	private void iris$onCreateDepthBuffer(int width, int height, boolean checkError, CallbackInfo ci) {
 		DepthBufferTracker.INSTANCE.trackDepthBuffer(this.depthBufferId);
 	}
