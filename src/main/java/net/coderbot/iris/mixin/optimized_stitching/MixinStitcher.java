@@ -46,7 +46,7 @@ public class MixinStitcher {
 
 		boolean growWidth;
 		if (canFitWidth & canFitHeight) {
-			// Effective size calculation moved from head to be inside else block
+			// Effective size calculation moved from head to be inside if block
 			int effectiveWidth = Mth.smallestEncompassingPowerOfTwo(storageX);
 			int effectiveHeight = Mth.smallestEncompassingPowerOfTwo(storageY);
 			boolean wouldGrowEffectiveWidth = effectiveWidth != newEffectiveWidth;
