@@ -1,5 +1,6 @@
 package net.coderbot.iris.gl.texture;
 
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL30C;
 
 public enum DepthBufferFormat {
@@ -18,7 +19,8 @@ public enum DepthBufferFormat {
 		this.combinedStencil = combinedStencil;
 	}
 
-	public DepthBufferFormat fromGlEnum(int glenum) {
+	@Nullable
+	public static DepthBufferFormat fromGlEnum(int glenum) {
 		switch (glenum) {
 			case GL30C.GL_DEPTH_COMPONENT: return DepthBufferFormat.DEPTH;
 			case GL30C.GL_DEPTH_COMPONENT16: return DepthBufferFormat.DEPTH16;
@@ -28,7 +30,7 @@ public enum DepthBufferFormat {
 			case GL30C.GL_DEPTH_STENCIL: return DepthBufferFormat.DEPTH_STENCIL;
 			case GL30C.GL_DEPTH24_STENCIL8: return DepthBufferFormat.DEPTH24_STENCIL8;
 			case GL30C.GL_DEPTH32F_STENCIL8: return DepthBufferFormat.DEPTH32F_STENCIL8;
-			default: throw new IllegalArgumentException("Unrecognized depth buffer format : " + glenum);
+			default: return null;
 		}
 	}
 

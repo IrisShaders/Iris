@@ -28,6 +28,7 @@ import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.DepthBufferTracker;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -171,10 +172,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
-		// TODO: Detect depth buffer format
-		DepthBufferFormat depthBufferFormat = DepthBufferFormat.DEPTH;
+		int depthTextureId = mainTarget.getDepthTextureId();
+		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
 
-		this.renderTargets = new RenderTargets(mainTarget.width, mainTarget.height, mainTarget.getDepthTextureId(),
+		this.renderTargets = new RenderTargets(mainTarget.width, mainTarget.height, depthTextureId,
 			depthBufferFormat, programs.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
 
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
@@ -766,10 +767,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
 
-		// TODO: Detect depth buffer format
-		DepthBufferFormat depthBufferFormat = DepthBufferFormat.DEPTH;
+		int depthTextureId = main.getDepthTextureId();
+		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
 
-		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), main.getDepthTextureId(), main.width,
+		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), depthTextureId, main.width,
 			main.height, depthBufferFormat);
 
 		mainExt.iris$clearDepthBufferDirtyFlag();
