@@ -27,7 +27,7 @@ public class MixinGlStateManager_AtlasTracking {
 
 	@Inject(method = "_bindTexture(I)V", at = @At("HEAD"))
 	private static void iris$onBindTexture(int id, CallbackInfo ci) {
-		if (activeTexture == 0 && atlasTextureListener != null) {
+		if (activeTexture == 0 && atlasTextureListener != null && !TextureAtlasTracker.IS_FETCHING_SIZE) {
 			atlasTextureListener.run();
 		}
 	}
