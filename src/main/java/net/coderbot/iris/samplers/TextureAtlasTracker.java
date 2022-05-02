@@ -10,6 +10,10 @@ import org.lwjgl.opengl.GL20C;
 import java.util.WeakHashMap;
 
 public class TextureAtlasTracker {
+	// Allows us to signal to MixinGlStateManager_AtlasTracking that we are currently trying to figure out the
+	// size of a texture, and that it shouldn't send texture bind notifications.
+	public static boolean IS_FETCHING_SIZE = false;
+
 	public static final TextureAtlasTracker INSTANCE = new TextureAtlasTracker();
 
 	private final WeakHashMap<Integer, TextureAtlas> atlases;
@@ -65,6 +69,8 @@ public class TextureAtlasTracker {
 	 * @author Kroppeb
 	 */
 	private void fetchAtlasSizeFromGlState(TextureAtlas atlas) {
+		IS_FETCHING_SIZE = true;
+
 		// Keep track of what texture was bound before
 		int existingGlId = GlStateManager._getInteger(GL20C.GL_TEXTURE_BINDING_2D);
 
@@ -78,5 +84,7 @@ public class TextureAtlasTracker {
 
 		// Make sure to re-bind the previous texture to avoid issues.
 		RenderSystem.bindTexture(existingGlId);
+
+		IS_FETCHING_SIZE = false;
 	}
 }

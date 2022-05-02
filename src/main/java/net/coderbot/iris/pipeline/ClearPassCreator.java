@@ -61,12 +61,12 @@ public class ClearPassCreator {
 					startIndex++;
 				}
 
-				// only clear depth if this is the first clear pass
+				// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
 				clearPasses.add(new ClearPass(clearColor,
-						renderTargets.createFramebufferWritingToAlt(clearBuffers), clearPasses.isEmpty()));
+						renderTargets.createFramebufferWritingToAlt(clearBuffers)));
 
 				clearPasses.add(new ClearPass(clearColor,
-						renderTargets.createFramebufferWritingToMain(clearBuffers), false));
+						renderTargets.createFramebufferWritingToMain(clearBuffers)));
 			}
 		});
 

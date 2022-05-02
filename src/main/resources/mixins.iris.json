@@ -24,6 +24,7 @@
     "MixinGlStateManager_AtlasTracking",
     "MixinGlStateManager_AlphaTestOverride",
     "MixinGlStateManager_BlendOverride",
+    "MixinGlStateManager_DepthBufferTracking",
     "MixinGlUniform",
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
