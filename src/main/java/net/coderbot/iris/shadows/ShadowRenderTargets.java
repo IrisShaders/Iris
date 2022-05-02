@@ -6,6 +6,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
+import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
@@ -40,8 +41,8 @@ public class ShadowRenderTargets {
 		targets = new int[formats.length];
 		GlStateManager._genTextures(targets);
 
-		depthTexture = new DepthTexture(resolution, resolution);
-		noTranslucents = new DepthTexture(resolution, resolution);
+		depthTexture = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
+		noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 
 		this.framebuffer = new GlFramebuffer();
 
