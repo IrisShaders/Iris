@@ -25,7 +25,7 @@ public interface DepthCopyStrategy {
 		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
 			sourceFb.bindAsReadBuffer();
 
-			int previousTexture = GlStateManagerAccessor.getActiveTexture();
+			int previousTexture = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
 			RenderSystem.bindTexture(destTexture);
 
 			GlStateManager._glCopyTexSubImage2D(
