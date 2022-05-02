@@ -587,10 +587,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content excluding the hand, as required.
-		baseline.bind();
-		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		copyDepthTexture();
-		GlStateManager._bindTexture(0);
+		renderTargets.copyPreHandDepth();
 	}
 
 	@Override
@@ -603,10 +600,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
-		baseline.bind();
-		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		copyDepthTexture();
-		GlStateManager._bindTexture(0);
+		renderTargets.copyPreTranslucentDepth();
 
 		centerDepthSampler.updateSample();
 
