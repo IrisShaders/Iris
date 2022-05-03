@@ -810,7 +810,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// all non-translucent content, as required.
 		renderTargets.copyPreTranslucentDepth();
 
-		centerDepthSampler.updateSample();
 
 		deferredRenderer.renderAll();
 		Program.unbind();
@@ -926,6 +925,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		isRenderingWorld = false;
 		phase = WorldRenderingPhase.NONE;
 		programStackLog.clear();
+
+		centerDepthSampler.updateSample();
 
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
