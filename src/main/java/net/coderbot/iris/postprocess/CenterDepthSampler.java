@@ -15,12 +15,9 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.minecraft.client.Minecraft;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL13C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL21C;
 
 import java.nio.ByteBuffer;
 
@@ -41,48 +38,80 @@ public class CenterDepthSampler {
 	public CenterDepthSampler(RenderTargets renderTargets) {
 		fakeNotifier = new FrameUpdateNotifier();
 
-		// NB: This will always be one frame behind compared to the current frame.
-		// That's probably for the best, since it can help avoid some pipeline stalls.
-		// We're still going to get stalls, though.
-		centerDepthSmooth = new SmoothedFloat(1.0f, 1.0f, this::sampleCenterDepth, fakeNotifier);
-
 		this.renderTargets = renderTargets;
 
-		this.texture = GlStateManager._genTexture();
-		this.framebuffer = new GlFramebuffer();
+		// NB: This will always be one frame behind compared to the current frame.
+		if (supportsPBO()) {
+			this.texture = GlStateManager._genTexture();
+			this.framebuffer = new GlFramebuffer();
 
-		this.quadBuffer = getQuadBuffer();
+			this.quadBuffer = getQuadBuffer();
 
-		RenderSystem.bindTexture(texture);
-		setupColorTexture(renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight());
-		RenderSystem.bindTexture(0);
+			RenderSystem.bindTexture(texture);
+			setupColorTexture(renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight());
+			RenderSystem.bindTexture(0);
 
-		this.framebuffer.addColorAttachment(0, texture);
-		ProgramBuilder builder = ProgramBuilder.begin("centerDepthSmooth", "#version 120\n" +
-			" varying vec2 screenCoord; \n" +
-			" void main() { gl_Position = ftransform(); screenCoord = (gl_MultiTexCoord0).xy; }", null, "#version 120\n" +
-			" varying vec2 screenCoord; \n" +
-			" uniform sampler2D depth; \n" +
-			" void main() { gl_FragData[0] = vec4(texture2D(depth, screenCoord).r, 0.0, 0.0, 1.0); }", ImmutableSet.of());
-		builder.addDefaultSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
-		this.program = builder.build();
+			this.framebuffer.addColorAttachment(0, texture);
+			ProgramBuilder builder = ProgramBuilder.begin("centerDepthSmooth", "#version 120\n" +
+				" varying vec2 screenCoord; \n" +
+				" void main() { gl_Position = ftransform(); screenCoord = (gl_MultiTexCoord0).xy; }", null, "#version 120\n" +
+				" varying vec2 screenCoord; \n" +
+				" uniform sampler2D depth; \n" +
+				" void main() { gl_FragData[0] = vec4(texture2D(depth, screenCoord).r, 0.0, 0.0, 1.0); }", ImmutableSet.of());
+			builder.addDefaultSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
+			this.program = builder.build();
 
-		pboIds = new int[2];
-		GL30C.glGenBuffers(pboIds);
+			pboIds = new int[2];
+			GL21C.glGenBuffers(pboIds);
 
-		for (int pbo : pboIds) {
-			GL30C.glBindBuffer(GL30C.GL_PIXEL_PACK_BUFFER, pbo);
-			GL30C.glBufferData(GL30C.GL_PIXEL_PACK_BUFFER, 4, GL30C.GL_STREAM_READ);
+			for (int pbo : pboIds) {
+				GL21C.glBindBuffer(GL21C.GL_PIXEL_PACK_BUFFER, pbo);
+				GL21C.glBufferData(GL21C.GL_PIXEL_PACK_BUFFER, 4, GL21C.GL_STREAM_READ);
+			}
+
+			GL21C.glBindBuffer(GL21C.GL_PIXEL_PACK_BUFFER, 0);
+
+			centerDepthSmooth = new SmoothedFloat(1.0f, 1.0f, this::sampleCenterDepthPBO, fakeNotifier);
+		} else {
+			centerDepthSmooth = new SmoothedFloat(1.0f, 1.0f, this::sampleCenterDepthOld, fakeNotifier);
+			this.program = null;
+			this.framebuffer = null;
+			this.texture = 0;
+			this.pboIds = null;
 		}
-
-		GL30C.glBindBuffer(GL30C.GL_PIXEL_PACK_BUFFER, 0);
 	}
 
 	public void updateSample() {
 		fakeNotifier.onNewFrame();
 	}
 
-	private float sampleCenterDepth() {
+	private boolean supportsPBO() {
+		return GL.getCapabilities().OpenGL30 && (GL.getCapabilities().GL_ARB_pixel_buffer_object || GL.getCapabilities().GL_EXT_pixel_buffer_object);
+	}
+
+	private float sampleCenterDepthOld() {
+		if (hasFirstSample && (!everRetrieved)) {
+			// If the shaderpack isn't reading center depth values, don't bother sampling it
+			// This improves performance with most shaderpacks
+			return 0.0f;
+		}
+
+		hasFirstSample = true;
+
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+
+		float[] depthValue = new float[1];
+		// Read a single pixel from the depth buffer
+		// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
+		IrisRenderSystem.readPixels(
+			renderTargets.getCurrentWidth() / 2, renderTargets.getCurrentHeight() / 2, 1, 1,
+			GL21C.GL_DEPTH_COMPONENT, GL21C.GL_FLOAT, depthValue
+		);
+
+		return depthValue[0];
+	}
+
+	private float sampleCenterDepthPBO() {
 		if (hasFirstSample && (!everRetrieved)) {
 			// If the shaderpack isn't reading center depth values, don't bother sampling it
 			// This improves performance with most shaderpacks
@@ -109,10 +138,10 @@ public class CenterDepthSampler {
 
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
-		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, quadBuffer);
+		GlStateManager._glBindBuffer(GL21C.GL_ARRAY_BUFFER, quadBuffer);
 		DefaultVertexFormat.POSITION_TEX.setupBufferState(0L);
 
-		GlStateManager._drawArrays(GL20C.GL_POINTS, 0, 1);
+		GlStateManager._drawArrays(GL21C.GL_POINTS, 0, 1);
 
 		FullScreenQuadRenderer.end();
 
@@ -126,28 +155,28 @@ public class CenterDepthSampler {
 		float depthValue = 0;
 		// Read a single pixel from the depth buffer
 		// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
-		GL30C.glBindBuffer(GL30C.GL_PIXEL_PACK_BUFFER, pboIds[index]);
+		GL21C.glBindBuffer(GL21C.GL_PIXEL_PACK_BUFFER, pboIds[index]);
 		IrisRenderSystem.readPixels(
 			renderTargets.getCurrentWidth() / 2, renderTargets.getCurrentHeight() / 2, 1, 1,
-			GL43C.GL_RED, GL43C.GL_FLOAT, null
+			GL21C.GL_RED, GL21C.GL_FLOAT, null
 		);
 
-		GL30C.glBindBuffer(GL30C.GL_PIXEL_PACK_BUFFER, pboIds[nextIndex]);
-		ByteBuffer buffer = GL30C.glMapBuffer(GL30C.GL_PIXEL_PACK_BUFFER, GL30C.GL_READ_ONLY);
+		GL21C.glBindBuffer(GL21C.GL_PIXEL_PACK_BUFFER, pboIds[nextIndex]);
+		ByteBuffer buffer = GL21C.glMapBuffer(GL21C.GL_PIXEL_PACK_BUFFER, GL21C.GL_READ_ONLY);
 		depthValue = buffer.getFloat();
-		GL30C.glUnmapBuffer(GL30C.GL_PIXEL_PACK_BUFFER);
-		GL30C.glBindBuffer(GL30C.GL_PIXEL_PACK_BUFFER, 0);
+		GL21C.glUnmapBuffer(GL21C.GL_PIXEL_PACK_BUFFER);
+		GL21C.glBindBuffer(GL21C.GL_PIXEL_PACK_BUFFER, 0);
 
 		return depthValue;
 	}
 
 	public void setupColorTexture(int width, int height) {
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_MIN_FILTER, GL21C.GL_LINEAR);
+		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_MAG_FILTER, GL21C.GL_LINEAR);
+		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_S, GL21C.GL_CLAMP_TO_EDGE);
+		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_T, GL21C.GL_CLAMP_TO_EDGE);
 
-		GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, InternalTextureFormat.R32F.getGlFormat(), width, height, 0, PixelFormat.RED.getGlFormat(), PixelType.FLOAT.getGlFormat(), null);
+		GlStateManager._texImage2D(GL21C.GL_TEXTURE_2D, 0, InternalTextureFormat.R32F.getGlFormat(), width, height, 0, PixelFormat.RED.getGlFormat(), PixelType.FLOAT.getGlFormat(), null);
 	}
 
 	private int getQuadBuffer() {
@@ -159,9 +188,9 @@ public class CenterDepthSampler {
 
 		int buffer = GlStateManager._glGenBuffers();
 
-		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, buffer);
-		IrisRenderSystem.bufferData(GL20C.GL_ARRAY_BUFFER, vertices, GL20C.GL_STATIC_DRAW);
-		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
+		GlStateManager._glBindBuffer(GL21C.GL_ARRAY_BUFFER, buffer);
+		IrisRenderSystem.bufferData(GL21C.GL_ARRAY_BUFFER, vertices, GL21C.GL_STATIC_DRAW);
+		GlStateManager._glBindBuffer(GL21C.GL_ARRAY_BUFFER, 0);
 
 		return buffer;
 	}
@@ -172,10 +201,10 @@ public class CenterDepthSampler {
 	}
 
 	public void destroy() {
-		GL30C.glDeleteBuffers(pboIds);
+		GL21C.glDeleteBuffers(pboIds);
 		GlStateManager._deleteTexture(texture);
 		framebuffer.destroy();
-		GL30C.glDeleteBuffers(quadBuffer);
+		GL21C.glDeleteBuffers(quadBuffer);
 		program.destroy();
 	}
 }
