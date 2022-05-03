@@ -34,16 +34,6 @@ public class MixinRenderTarget implements Blaze3dRenderTargetExt {
 		DepthBufferTracker.INSTANCE.trackDepthBuffer(this.depthBufferId);
 	}
 
-	@ModifyArg(method = "createBuffers", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"), index = 2)
-	private int iris$use16(int internalformat) {
-		if (internalformat == GL43C.GL_DEPTH_COMPONENT) {
-			// If a format is not automatically selected, we need to select 32-bit float-based and hope for the best.
-			// **Do not** use 16 bit! It looks fine normally, but far away objects start having major precision issues.
-			internalformat = GL43C.GL_DEPTH_COMPONENT32F;
-		}
-		return internalformat;
-	}
-
 	@Override
 	public boolean iris$isDepthBufferDirty() {
 		return iris$depthDirty;
