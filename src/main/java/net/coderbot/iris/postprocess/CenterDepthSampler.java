@@ -201,10 +201,12 @@ public class CenterDepthSampler {
 	}
 
 	public void destroy() {
-		GL21C.glDeleteBuffers(pboIds);
-		GlStateManager._deleteTexture(texture);
-		framebuffer.destroy();
-		GL21C.glDeleteBuffers(quadBuffer);
-		program.destroy();
+		if (supportsPBO()) {
+			GL21C.glDeleteBuffers(pboIds);
+			GlStateManager._deleteTexture(texture);
+			framebuffer.destroy();
+			GL21C.glDeleteBuffers(quadBuffer);
+			program.destroy();
+		}
 	}
 }
