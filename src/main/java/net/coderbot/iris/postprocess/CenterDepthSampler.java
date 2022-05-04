@@ -34,7 +34,6 @@ public class CenterDepthSampler {
 	private int index;
 	private int nextIndex;
 	private final int[] pboIds;
-	private int quadBuffer;
 	public CenterDepthSampler(RenderTargets renderTargets) {
 		fakeNotifier = new FrameUpdateNotifier();
 
@@ -44,8 +43,6 @@ public class CenterDepthSampler {
 		if (supportsPBO()) {
 			this.texture = GlStateManager._genTexture();
 			this.framebuffer = new GlFramebuffer();
-
-			this.quadBuffer = getQuadBuffer();
 
 			RenderSystem.bindTexture(texture);
 			setupColorTexture(renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight());
@@ -123,27 +120,7 @@ public class CenterDepthSampler {
 		this.framebuffer.bind();
 		this.program.use();
 
-		RenderSystem.disableDepthTest();
-
-		RenderSystem.matrixMode(GL11.GL_PROJECTION);
-		RenderSystem.pushMatrix();
-		RenderSystem.loadIdentity();
-		// scale the quad from [0, 1] to [-1, 1]
-		RenderSystem.translatef(-1.0F, -1.0F, 0.0F);
-		RenderSystem.scalef(2.0F, 2.0F, 0.0F);
-
-		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
-		RenderSystem.pushMatrix();
-		RenderSystem.loadIdentity();
-
-		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-
-		GlStateManager._glBindBuffer(GL21C.GL_ARRAY_BUFFER, quadBuffer);
-		DefaultVertexFormat.POSITION_TEX.setupBufferState(0L);
-
-		GlStateManager._drawArrays(GL21C.GL_POINTS, 0, 1);
-
-		FullScreenQuadRenderer.end();
+		FullScreenQuadRenderer.INSTANCE.render();
 
 		GlStateManager._glUseProgram(0);
 
@@ -205,7 +182,6 @@ public class CenterDepthSampler {
 			GL21C.glDeleteBuffers(pboIds);
 			GlStateManager._deleteTexture(texture);
 			framebuffer.destroy();
-			GL21C.glDeleteBuffers(quadBuffer);
 			program.destroy();
 		}
 	}
