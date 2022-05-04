@@ -34,6 +34,15 @@ public enum DepthBufferFormat {
 		}
 	}
 
+	public static DepthBufferFormat fromGlEnumOrDefault(int glenum) {
+		DepthBufferFormat format = fromGlEnum(glenum);
+		if (format == null) {
+			// yolo, just assume it's GL_DEPTH_COMPONENT
+			return DepthBufferFormat.DEPTH;
+		}
+		return format;
+	}
+
 	public int getGlInternalFormat() {
 		switch (this) {
 			case DEPTH:

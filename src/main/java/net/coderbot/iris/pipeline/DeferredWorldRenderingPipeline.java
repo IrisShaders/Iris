@@ -28,7 +28,6 @@ import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.samplers.DepthBufferTracker;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -40,6 +39,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.texture.TextureInfoCache;
 import net.coderbot.iris.texture.pbr.PBRTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.coderbot.iris.texunits.TextureUnit;
@@ -177,7 +177,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
 		int depthTextureId = mainTarget.getDepthTextureId();
-		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		this.renderTargets = new RenderTargets(mainTarget.width, mainTarget.height, depthTextureId,
 			depthBufferFormat, programs.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
@@ -777,7 +778,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
 
 		int depthTextureId = main.getDepthTextureId();
-		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), depthTextureId, main.width,
 			main.height, depthBufferFormat);

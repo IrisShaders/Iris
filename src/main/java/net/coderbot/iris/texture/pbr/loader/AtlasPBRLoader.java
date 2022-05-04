@@ -6,7 +6,8 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.texture.AnimationMetadataSectionAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
-import net.coderbot.iris.texture.AtlasInfoGatherer;
+import net.coderbot.iris.texture.TextureInfoCache;
+import net.coderbot.iris.texture.TextureInfoCache.TextureInfo;
 import net.coderbot.iris.texture.format.TextureFormat;
 import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.coderbot.iris.texture.mipmap.ChannelMipmapGenerator;
@@ -39,9 +40,10 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 	@Override
 	public void load(TextureAtlas atlas, ResourceManager resourceManager, PBRTextureConsumer pbrTextureConsumer) {
-		int atlasWidth = AtlasInfoGatherer.getWidth(atlas);
-		int atlasHeight = AtlasInfoGatherer.getHeight(atlas);
-		int mipLevel = AtlasInfoGatherer.getMipLevel(atlas);
+		TextureInfo textureInfo = TextureInfoCache.INSTANCE.getInfo(atlas.getId());
+		int atlasWidth = textureInfo.getWidth();
+		int atlasHeight = textureInfo.getHeight();
+		int mipLevel = fetchAtlasMipLevel(atlas);
 
 		PBRAtlasTexture normalAtlas = null;
 		PBRAtlasTexture specularAtlas = null;
@@ -79,6 +81,11 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 				pbrTextureConsumer.acceptSpecularTexture(specularAtlas);
 			}
 		}
+	}
+
+	private static int fetchAtlasMipLevel(TextureAtlas atlas) {
+		TextureAtlasSprite missingSprite = atlas.getSprite(MissingTextureAtlasSprite.getLocation());
+		return ((TextureAtlasSpriteAccessor) missingSprite).getMainImage().length - 1;
 	}
 
 	@Nullable
