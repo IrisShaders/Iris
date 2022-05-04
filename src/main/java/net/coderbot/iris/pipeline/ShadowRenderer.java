@@ -2,7 +2,6 @@ package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -19,6 +18,7 @@ import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.layer.GbufferProgram;
@@ -429,34 +429,16 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		RenderSystem.viewport(0, 0, client.getMainRenderTarget().width, client.getMainRenderTarget().height);
 	}
 
-	// Copied from DeferredWorldRenderingPipeline
-	private void copyDepthTexture() {
-		// Note: Use copyTexSubImage2D, since that will not re-allocate the target texture's storage,
-		// even though we copy the whole depth texture. This might make the copy be a bit faster.
-		GlStateManager._glCopyTexSubImage2D(
-			// target
-			GL20C.GL_TEXTURE_2D,
-			// level
-			0,
-			// xoffset, yoffset
-			0, 0,
-			// x, y
-			0, 0,
-			// width
-			resolution,
-			// height
-			resolution);
-	}
-
 	private void copyPreTranslucentDepth() {
 		profiler.popPush("translucent depth copy");
 
 		// Copy the content of the depth texture before rendering translucent content.
 		// This is needed for the shadowtex0 / shadowtex1 split.
-		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
-		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
-		copyDepthTexture();
-		RenderSystem.bindTexture(0);
+
+		// note: destFb is null since we never end up getting a strategy that requires the target framebuffer
+		// this is a bit of an assumption but it works for now
+		DepthCopyStrategy.fastest(false).copy(getRenderTargets().getFramebuffer(), getDepthTextureId(), null,
+			getDepthTextureNoTranslucentsId(), resolution, resolution);
 	}
 
 	private void renderEntities(LevelRendererAccessor levelRenderer, Frustum frustum, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
