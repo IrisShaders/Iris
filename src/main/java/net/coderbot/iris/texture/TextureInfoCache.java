@@ -67,15 +67,15 @@ public class TextureInfoCache {
 		}
 
 		public int getWidth() {
-			if (internalFormat == -1) {
-				internalFormat = fetchLevelParameter(GL20C.GL_TEXTURE_WIDTH);
+			if (width == -1) {
+				width = fetchLevelParameter(GL20C.GL_TEXTURE_WIDTH);
 			}
 			return width;
 		}
 
 		public int getHeight() {
-			if (internalFormat == -1) {
-				internalFormat = fetchLevelParameter(GL20C.GL_TEXTURE_HEIGHT);
+			if (height == -1) {
+				height = fetchLevelParameter(GL20C.GL_TEXTURE_HEIGHT);
 			}
 			return height;
 		}
