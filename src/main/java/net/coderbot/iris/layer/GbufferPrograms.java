@@ -82,6 +82,14 @@ public class GbufferPrograms {
 		}
 	}
 
+	public static void setOverridePhase(WorldRenderingPhase phase) {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null) {
+			pipeline.setOverridePhase(phase);
+		}
+	}
+
 	public static void runPhaseChangeNotifier() {
 		if (phaseChangeListener != null) {
 			phaseChangeListener.run();

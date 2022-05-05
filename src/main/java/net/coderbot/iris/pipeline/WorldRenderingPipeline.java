@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
+import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -19,8 +20,10 @@ public interface WorldRenderingPipeline {
 
 	void beginSodiumTerrainRendering();
 	void endSodiumTerrainRendering();
+	void setOverridePhase(WorldRenderingPhase phase);
 	void setPhase(WorldRenderingPhase phase);
 	void setInputs(InputAvailability availability);
+	void setSpecialCondition(SpecialCondition special);
 	void syncProgram();
 	RenderTargetStateListener getRenderTargetStateListener();
 

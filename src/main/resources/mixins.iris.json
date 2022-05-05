@@ -45,6 +45,7 @@
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",
     "math.MixinMatrix4f",
+    "rendertype.MixinRenderStateShard_Tagging",
     "rendertype.MixinRenderType_FixEyesTranslucency",
     "rendertype.MixinRenderType_FixTerrainAlpha",
     "rendertype.RenderStateShardAccessor",

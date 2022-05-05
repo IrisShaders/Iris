@@ -13,6 +13,7 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.ProgramTable;
 import net.coderbot.iris.gbuffer_overrides.matching.RenderCondition;
+import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
@@ -124,8 +125,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private Pass current = null;
 
+	private WorldRenderingPhase overridePhase = null;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NONE;
 	private InputAvailability inputs = new InputAvailability(false, false, false);
+	private SpecialCondition special = null;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -433,7 +436,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			return RenderCondition.SHADOW;
 		}
 
-		// TODO: Special stages (entity_eyes, destroy, glint, beacon_beam)
+		if (special != null) {
+			if (special == SpecialCondition.BEACON_BEAM) {
+				return RenderCondition.BEACON_BEAM;
+			} else if (special == SpecialCondition.ENTITY_EYES) {
+				return RenderCondition.ENTITY_EYES;
+			} else if (special == SpecialCondition.GLINT) {
+				return RenderCondition.GLINT;
+			}
+		}
 
 		switch (phase) {
 			case NONE:
@@ -483,11 +494,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		}
 
 		if (sodiumTerrainRendering) {
-			beginPass(table.match(getCondition(phase), new InputAvailability(true, true, false)));
+			beginPass(table.match(getCondition(getPhase()), new InputAvailability(true, true, false)));
 			return;
 		}
 
-		beginPass(table.match(getCondition(phase), inputs));
+		beginPass(table.match(getCondition(getPhase()), inputs));
 	}
 
 	public void beginPass(Pass pass) {
@@ -892,6 +903,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		isMainBound = true;
 		isPostChain = false;
 		phase = WorldRenderingPhase.NONE;
+		overridePhase = null;
 		HandRenderer.INSTANCE.getBufferSource().resetDrawCalls();
 
 		checkWorld();
@@ -945,6 +957,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		isRenderingWorld = false;
 		phase = WorldRenderingPhase.NONE;
+		overridePhase = null;
 
 		isRenderingFullScreenPass = true;
 
@@ -966,6 +979,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	@Override
 	public WorldRenderingPhase getPhase() {
+		if (overridePhase != null) {
+			return overridePhase;
+		}
+
 		return phase;
 	}
 
@@ -991,6 +1008,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	@Override
+	public void setOverridePhase(WorldRenderingPhase phase) {
+		this.overridePhase = phase;
+
+		GbufferPrograms.runPhaseChangeNotifier();
+	}
+
+	@Override
 	public void setPhase(WorldRenderingPhase phase) {
 		this.phase = phase;
 
@@ -1000,6 +1024,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	@Override
 	public void setInputs(InputAvailability availability) {
 		this.inputs = availability;
+	}
+
+	@Override
+	public void setSpecialCondition(SpecialCondition special) {
+		this.special = special;
 	}
 
 	@Override
