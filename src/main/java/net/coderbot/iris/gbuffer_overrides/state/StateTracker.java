@@ -14,13 +14,9 @@ public class StateTracker {
 	// OverlayStateShard / TextureUnit.OVERLAY
 	public boolean overlaySampler;
 
-	public boolean texAttribute;
-	public boolean lightmapAttribute;
-	public boolean overlayAttribute;
-
 	public InputAvailability getInputs() {
-		return new InputAvailability(texAttribute && albedoSampler,
-				lightmapAttribute && lightmapSampler,
-				overlaySampler && overlayAttribute);
+		return new InputAvailability(albedoSampler,
+				lightmapSampler,
+				overlaySampler);
 	}
 }

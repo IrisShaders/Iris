@@ -61,8 +61,7 @@
     "statelisteners.MixinGlStateManager",
     "state_tracking.MixinGlStateManager",
     "state_tracking.MixinPostChain",
-    "state_tracking.MixinRenderTarget",
-    "state_tracking.MixinVertexFormat"
+    "state_tracking.MixinRenderTarget"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -850,8 +850,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		RenderSystem.enableBlend();
 		RenderSystem.enableAlphaTest();
 
-		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
-		Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
+		// note: we are careful not to touch the lightmap texture unit or overlay color texture unit here,
+		// so we don't need to do anything to restore them if needed.
+		//
+		// Previous versions of the code tried to "restore" things by enabling the lightmap & overlay color
+		// but that actually broke rendering of clouds and rain by making them appear red in the case of
+		// a pack not overriding those shader programs.
+		//
+		// Not good!
 
 		isRenderingFullScreenPass = false;
 	}
