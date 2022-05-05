@@ -1,6 +1,7 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -8,14 +9,18 @@ import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 public class GbufferPrograms {
 	private static boolean entities;
 	private static boolean blockEntities;
+	private static boolean outline;
 	private static Runnable phaseChangeListener;
 
-	public static void beginEntities() {
-		if (entities || blockEntities) {
-			throw new IllegalStateException("GbufferPrograms in weird state, tried to call beginEntities when entities = "
-					+ entities + ", blockEntities = " + blockEntities);
+	private static void checkReentrancy() {
+		if (entities || blockEntities || outline) {
+			throw new IllegalStateException("GbufferPrograms in weird state, tried to call begin function when entities = "
+				+ entities + ", blockEntities = " + blockEntities + ", outline = " + outline);
 		}
+	}
 
+	public static void beginEntities() {
+		checkReentrancy();
 		setPhase(WorldRenderingPhase.ENTITIES);
 		entities = true;
 	}
@@ -29,13 +34,23 @@ public class GbufferPrograms {
 		entities = false;
 	}
 
-	public static void beginBlockEntities() {
+	public static void beginOutline() {
+		checkReentrancy();
+		setPhase(WorldRenderingPhase.OUTLINE);
+		outline = true;
+	}
 
-		if (entities || blockEntities) {
-			throw new IllegalStateException("GbufferPrograms in weird state, tried to call beginBlockEntities when entities = "
-					+ entities + ", blockEntities = " + blockEntities);
+	public static void endOutline() {
+		if (!outline) {
+			throw new IllegalStateException("GbufferPrograms in weird state, tried to call endOutline when outline = false");
 		}
 
+		setPhase(WorldRenderingPhase.NONE);
+		outline = false;
+	}
+
+	public static void beginBlockEntities() {
+		checkReentrancy();
 		setPhase(WorldRenderingPhase.BLOCK_ENTITIES);
 		blockEntities = true;
 	}
@@ -71,6 +86,14 @@ public class GbufferPrograms {
 		if (phaseChangeListener != null) {
 			phaseChangeListener.run();
 		}
+	}
+
+	public static void setupSpecialRenderCondition(SpecialCondition override) {
+		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setSpecialCondition(override));
+	}
+
+	public static void teardownSpecialRenderCondition(SpecialCondition override) {
+		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setSpecialCondition(null));
 	}
 
 	static {
