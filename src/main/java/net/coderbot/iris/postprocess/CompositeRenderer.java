@@ -13,7 +13,9 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.pipeline.patcher.CompositeDepthTransformer;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
@@ -212,8 +214,8 @@ public class CompositeRenderer {
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), CompositeDepthTransformer.patch(source.getVertexSource().orElse(null)), CompositeDepthTransformer.patch(source.getGeometrySource().orElse(null)),
+				CompositeDepthTransformer.patch(source.getFragmentSource().orElse(null)), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -235,7 +237,7 @@ public class CompositeRenderer {
 
 		// TODO: Don't duplicate this with FinalPassRenderer
 		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
-		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
+		builder.addDynamicSampler(centerDepthSampler::getCenterDepthSmoothSample, "iris_centerDepthSmooth");
 
 		return builder.build();
 	}

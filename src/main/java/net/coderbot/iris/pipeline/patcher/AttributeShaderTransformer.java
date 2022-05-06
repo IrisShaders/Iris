@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline;
+package net.coderbot.iris.pipeline.patcher;
 
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
