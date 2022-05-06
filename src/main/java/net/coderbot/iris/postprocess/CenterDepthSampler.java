@@ -54,8 +54,18 @@ public class CenterDepthSampler {
 		builder.addDynamicSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
 		builder.addDynamicSampler(() -> altTexture, "altDepth");
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
-		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife / 0.1) / Math.log(2))));
+		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife * 0.1) / LN2)));
 		this.program = builder.build();
+	}
+
+	private static final double LN2 = Math.log(2);
+
+	private float computeDecay(float halfLife) {
+		// Compute the decay constant from the half life
+		// https://en.wikipedia.org/wiki/Exponential_decay#Measuring_rates_of_decay
+		// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
+		// k = 1 / τ
+		return (float) (1.0f / (halfLife / LN2));
 	}
 
 	public void updateSample() {
