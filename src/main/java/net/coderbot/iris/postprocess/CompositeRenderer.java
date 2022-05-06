@@ -13,8 +13,6 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
-import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.patcher.CompositeDepthTransformer;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
@@ -237,7 +235,7 @@ public class CompositeRenderer {
 
 		// TODO: Don't duplicate this with FinalPassRenderer
 		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
-		builder.addDynamicSampler(centerDepthSampler::getCenterDepthSmoothSample, "iris_centerDepthSmooth");
+		builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
 
 		return builder.build();
 	}

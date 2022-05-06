@@ -3,8 +3,6 @@ package net.coderbot.iris.postprocess;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -16,18 +14,12 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
-import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 
-import java.nio.ByteBuffer;
-
 public class CenterDepthSampler {
-	private SmoothedFloat centerDepthSmooth;
 	private final RenderTargets renderTargets;
 	private boolean hasFirstSample;
 	private boolean everRetrieved;
@@ -36,50 +28,39 @@ public class CenterDepthSampler {
 	private final GlFramebuffer framebuffer;
 	private final int texture;
 	private final int altTexture;
-
-	private int index;
-	private int nextIndex;
 	public CenterDepthSampler(RenderTargets renderTargets) {
 		fakeNotifier = new FrameUpdateNotifier();
 
 		this.renderTargets = renderTargets;
 
 		// NB: This will always be one frame behind compared to the current frame.
-		if (GL.getCapabilities().OpenGL30) {
-			this.texture = GlStateManager._genTexture();
-			this.altTexture = GlStateManager._genTexture();
-			this.framebuffer = new GlFramebuffer();
+		this.texture = GlStateManager._genTexture();
+		this.altTexture = GlStateManager._genTexture();
+		this.framebuffer = new GlFramebuffer();
 
-			fakeNotifier.addListener(this::sampleCenterDepthPBO);
+		fakeNotifier.addListener(this::sampleCenterDepthPBO);
 
-			RenderSystem.bindTexture(texture);
-			setupColorTexture();
-			RenderSystem.bindTexture(altTexture);
-			setupColorTexture();
-			RenderSystem.bindTexture(0);
+		// Fall back to a less precise format if the system doesn't support OpenGL 3
+		InternalTextureFormat format = GL.getCapabilities().OpenGL30 ? InternalTextureFormat.R32F : InternalTextureFormat.RGB16;
+		RenderSystem.bindTexture(texture);
+		setupColorTexture(format);
+		RenderSystem.bindTexture(altTexture);
+		setupColorTexture(format);
+		RenderSystem.bindTexture(0);
 
-			this.framebuffer.addColorAttachment(0, texture);
-			ProgramBuilder builder = ProgramBuilder.begin("centerDepthSmooth", "#version 120\n" +
-				" varying vec2 screenCoord; \n" +
-				" void main() { gl_Position = ftransform(); screenCoord = (gl_MultiTexCoord0).xy; }", null, "#version 120\n" +
-				" varying vec2 screenCoord; \n" +
-				" uniform sampler2D depth; \n" +
-				" uniform sampler2D altDepth; \n" +
-				" uniform float lastFrameTime; \n" +
-				" uniform float decay; \n" +
-				" void main() { float currentDepth = texture2D(depth, vec2(0.5)).r; float decay2 = 1.0 - exp(-decay * lastFrameTime); gl_FragColor = vec4(mix(texture2D(altDepth, vec2(0.5)).r, currentDepth, decay2), 0, 0, 0); }", ImmutableSet.of());
-			builder.addDynamicSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
-			builder.addDynamicSampler(() -> altTexture, "altDepth");
-			builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
-			builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "decay", () -> computeDecay(0.1F));
-			this.program = builder.build();
-		} else {
-			centerDepthSmooth = new SmoothedFloat(1.0f, 1.0f, this::sampleCenterDepthOld, fakeNotifier);
-			this.program = null;
-			this.framebuffer = null;
-			this.texture = 0;
-			this.altTexture = 0;
-		}
+		this.framebuffer.addColorAttachment(0, texture);
+		ProgramBuilder builder = ProgramBuilder.begin("centerDepthSmooth", "#version 120\n" +
+			" void main() { gl_Position = ftransform(); }", null, "#version 120\n" +
+			" uniform sampler2D depth; \n" +
+			" uniform sampler2D altDepth; \n" +
+			" uniform float lastFrameTime; \n" +
+			" uniform float decay; \n" +
+			" void main() { float currentDepth = texture2D(depth, vec2(0.5)).r; float decay2 = 1.0 - exp(-decay * lastFrameTime); gl_FragColor = vec4(mix(texture2D(altDepth, vec2(0.5)).r, currentDepth, decay2), 0, 0, 0); }", ImmutableSet.of());
+		builder.addDynamicSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
+		builder.addDynamicSampler(() -> altTexture, "altDepth");
+		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
+		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "decay", () -> computeDecay(0.1F));
+		this.program = builder.build();
 	}
 
 	private static final double LN2 = Math.log(2);
@@ -96,33 +77,11 @@ public class CenterDepthSampler {
 		fakeNotifier.onNewFrame();
 	}
 
-	private float sampleCenterDepthOld() {
+	private void sampleCenterDepthPBO() {
 		if (hasFirstSample && (!everRetrieved)) {
 			// If the shaderpack isn't reading center depth values, don't bother sampling it
 			// This improves performance with most shaderpacks
-			return 0.0f;
-		}
-
-		hasFirstSample = true;
-
-		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
-
-		float[] depthValue = new float[1];
-		// Read a single pixel from the depth buffer
-		// TODO: glReadPixels forces a full pipeline stall / flush, and probably isn't too great for performance
-		IrisRenderSystem.readPixels(
-			renderTargets.getCurrentWidth() / 2, renderTargets.getCurrentHeight() / 2, 1, 1,
-			GL21C.GL_DEPTH_COMPONENT, GL21C.GL_FLOAT, depthValue
-		);
-
-		return depthValue[0];
-	}
-
-	private float sampleCenterDepthPBO() {
-		if (hasFirstSample && (!everRetrieved)) {
-			// If the shaderpack isn't reading center depth values, don't bother sampling it
-			// This improves performance with most shaderpacks
-			return 0.0f;
+			return;
 		}
 
 		hasFirstSample = true;
@@ -146,34 +105,18 @@ public class CenterDepthSampler {
 
 		//Reset viewport
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
-		return 0F;
 	}
 
-	public void setupColorTexture() {
+	public void setupColorTexture(InternalTextureFormat format) {
 		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_MIN_FILTER, GL21C.GL_LINEAR);
 		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_MAG_FILTER, GL21C.GL_LINEAR);
 		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_S, GL21C.GL_CLAMP_TO_EDGE);
 		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_T, GL21C.GL_CLAMP_TO_EDGE);
 
-		GlStateManager._texImage2D(GL21C.GL_TEXTURE_2D, 0, InternalTextureFormat.R32F.getGlFormat(), 3, 3, 0, PixelFormat.RED.getGlFormat(), PixelType.FLOAT.getGlFormat(), null);
+		GlStateManager._texImage2D(GL21C.GL_TEXTURE_2D, 0, format.getGlFormat(), 3, 3, 0, format.getPixelFormat().getGlFormat(), PixelType.FLOAT.getGlFormat(), null);
 	}
 
-	private int getQuadBuffer() {
-		float[] vertices = new float[] {
-			// Vertex 0: Top right corner
-			0.5F, 0.5F, 0.0F,
-			0.5F, 0.5F,
-		};
-
-		int buffer = GlStateManager._glGenBuffers();
-
-		GlStateManager._glBindBuffer(GL21C.GL_ARRAY_BUFFER, buffer);
-		IrisRenderSystem.bufferData(GL21C.GL_ARRAY_BUFFER, vertices, GL21C.GL_STATIC_DRAW);
-		GlStateManager._glBindBuffer(GL21C.GL_ARRAY_BUFFER, 0);
-
-		return buffer;
-	}
-	public int getCenterDepthSmoothSample() {
+	public int getCenterDepthTexture() {
 		everRetrieved = true;
 
 		return altTexture;
