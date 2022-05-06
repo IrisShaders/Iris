@@ -13,6 +13,7 @@ public class PackDirectives {
 	private int noiseTextureResolution;
 	private float sunPathRotation;
 	private float ambientOcclusionLevel;
+	private float centerDepthHalfLife;
 	private boolean areCloudsEnabled;
 	private boolean underwaterOverlay;
 	private boolean vignette;
@@ -29,6 +30,7 @@ public class PackDirectives {
 		noiseTextureResolution = 256;
 		sunPathRotation = 0.0F;
 		ambientOcclusionLevel = 1.0F;
+		centerDepthHalfLife = 1.0F;
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -64,6 +66,10 @@ public class PackDirectives {
 
 	public float getAmbientOcclusionLevel() {
 		return ambientOcclusionLevel;
+	}
+
+	public float getCenterDepthHalfLife() {
+		return centerDepthHalfLife;
 	}
 
 	public boolean areCloudsEnabled() {
@@ -114,6 +120,9 @@ public class PackDirectives {
 
 		directives.acceptConstFloatDirective("ambientOcclusionLevel",
 				ambientOcclusionLevel -> this.ambientOcclusionLevel = ambientOcclusionLevel);
+
+		directives.acceptConstFloatDirective("centerDepthHalflife",
+			centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
 
 	}
 

@@ -223,7 +223,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
+		this.centerDepthSampler = new CenterDepthSampler(programs.getPackDirectives().getCenterDepthHalfLife());
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();

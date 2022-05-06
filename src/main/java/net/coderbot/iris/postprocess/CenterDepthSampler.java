@@ -8,10 +8,8 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
@@ -20,7 +18,6 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL21C;
 
 public class CenterDepthSampler {
-	private final RenderTargets renderTargets;
 	private boolean hasFirstSample;
 	private boolean everRetrieved;
 	private final FrameUpdateNotifier fakeNotifier;
@@ -28,10 +25,8 @@ public class CenterDepthSampler {
 	private final GlFramebuffer framebuffer;
 	private final int texture;
 	private final int altTexture;
-	public CenterDepthSampler(RenderTargets renderTargets) {
+	public CenterDepthSampler(float halfLife) {
 		fakeNotifier = new FrameUpdateNotifier();
-
-		this.renderTargets = renderTargets;
 
 		// NB: This will always be one frame behind compared to the current frame.
 		this.texture = GlStateManager._genTexture();
@@ -59,18 +54,8 @@ public class CenterDepthSampler {
 		builder.addDynamicSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
 		builder.addDynamicSampler(() -> altTexture, "altDepth");
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
-		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "decay", () -> computeDecay(0.1F));
+		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife / 0.1) / Math.log(2))));
 		this.program = builder.build();
-	}
-
-	private static final double LN2 = Math.log(2);
-
-	private float computeDecay(float halfLife) {
-		// Compute the decay constant from the half life
-		// https://en.wikipedia.org/wiki/Exponential_decay#Measuring_rates_of_decay
-		// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
-		// k = 1 / τ
-		return (float) (1.0f / (halfLife / LN2));
 	}
 
 	public void updateSample() {
