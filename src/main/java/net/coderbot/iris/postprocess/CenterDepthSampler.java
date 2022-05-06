@@ -123,11 +123,9 @@ public class CenterDepthSampler {
 	}
 
 	public void destroy() {
-		if (GL.getCapabilities().OpenGL30) {
-			GlStateManager._deleteTexture(texture);
-			GlStateManager._deleteTexture(altTexture);
-			framebuffer.destroy();
-			program.destroy();
-		}
+		GlStateManager._deleteTexture(texture);
+		GlStateManager._deleteTexture(altTexture);
+		framebuffer.destroy();
+		program.destroy();
 	}
 }
