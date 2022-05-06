@@ -18,22 +18,17 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL21C;
 
 public class CenterDepthSampler {
+	private static final double LN2 = Math.log(2);
 	private boolean hasFirstSample;
 	private boolean everRetrieved;
-	private final FrameUpdateNotifier fakeNotifier;
 	private final Program program;
 	private final GlFramebuffer framebuffer;
 	private final int texture;
 	private final int altTexture;
 	public CenterDepthSampler(float halfLife) {
-		fakeNotifier = new FrameUpdateNotifier();
-
-		// NB: This will always be one frame behind compared to the current frame.
 		this.texture = GlStateManager._genTexture();
 		this.altTexture = GlStateManager._genTexture();
 		this.framebuffer = new GlFramebuffer();
-
-		fakeNotifier.addListener(this::sampleCenterDepthPBO);
 
 		// Fall back to a less precise format if the system doesn't support OpenGL 3
 		InternalTextureFormat format = GL.getCapabilities().OpenGL30 ? InternalTextureFormat.R32F : InternalTextureFormat.RGB16;
@@ -58,21 +53,7 @@ public class CenterDepthSampler {
 		this.program = builder.build();
 	}
 
-	private static final double LN2 = Math.log(2);
-
-	private float computeDecay(float halfLife) {
-		// Compute the decay constant from the half life
-		// https://en.wikipedia.org/wiki/Exponential_decay#Measuring_rates_of_decay
-		// https://en.wikipedia.org/wiki/Exponential_smoothing#Time_constant
-		// k = 1 / τ
-		return (float) (1.0f / (halfLife / LN2));
-	}
-
-	public void updateSample() {
-		fakeNotifier.onNewFrame();
-	}
-
-	private void sampleCenterDepthPBO() {
+	public void sampleCenterDepth() {
 		if (hasFirstSample && (!everRetrieved)) {
 			// If the shaderpack isn't reading center depth values, don't bother sampling it
 			// This improves performance with most shaderpacks

@@ -928,7 +928,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		phase = WorldRenderingPhase.NONE;
 		programStackLog.clear();
 
-		centerDepthSampler.updateSample();
+		centerDepthSampler.sampleCenterDepth();
 
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
