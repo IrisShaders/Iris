@@ -31,7 +31,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         if (!Objects.equals(currentType, renderType)) {
             if (currentType != null) {
                 if (shouldSortOnUpload(currentType)) {
-                    buffer.sortQuads(0, 0, 0);
+                    buffer.setQuadSortOrigin(0, 0, 0);
                 }
 
                 buffer.end();
@@ -62,7 +62,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         usedTypes.add(currentType);
 
         if (shouldSortOnUpload(currentType)) {
-            buffer.sortQuads(0, 0, 0);
+            buffer.setQuadSortOrigin(0, 0, 0);
         }
 
         buffer.end();
@@ -73,10 +73,10 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         for (RenderType type : usedTypes) {
             Pair<BufferBuilder.DrawState, ByteBuffer> pair = buffer.popNextBuffer();
 
-            BufferBuilder.DrawState drawState = pair.getFirst();
+            BufferBuilder.DrawState parameters = pair.getFirst();
             ByteBuffer slice = pair.getSecond();
 
-            segments.add(new BufferSegment(slice, drawState, type));
+            segments.add(new BufferSegment(slice, parameters, type));
         }
 
         usedTypes.clear();

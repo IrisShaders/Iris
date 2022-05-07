@@ -299,6 +299,11 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 			return true;
 		}
+
+		@Override
+		public Component getNarration() {
+			return new TranslatableComponent("narrator.select", text);
+		}
 	}
 
 	public static class ElementRowEntry extends BaseEntry {
@@ -351,6 +356,11 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 		@Override
 		public boolean mouseReleased(double mouseX, double mouseY, int button) {
 			return this.widgets.get(getHoveredWidget((int) mouseX)).mouseReleased(mouseX, mouseY, button);
+		}
+
+		@Override
+		public Component getNarration() {
+			return new TranslatableComponent("narrator.select");
 		}
 	}
 }

@@ -8,8 +8,6 @@ import java.util.OptionalLong;
 
 @Mixin(DimensionType.class)
 public interface DimensionTypeAccessor {
-
 	@Accessor
 	OptionalLong getFixedTime();
-
 }

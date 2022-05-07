@@ -28,6 +28,8 @@ public class RenderTargets {
 	private int cachedHeight;
 	private boolean fullClearRequired;
 
+	private boolean destroyed;
+
 	public RenderTargets(int width, int height, int depthTexture, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
 		targets = new RenderTarget[renderTargets.size()];
 
@@ -64,6 +66,8 @@ public class RenderTargets {
 	}
 
 	public void destroy() {
+		destroyed = true;
+
 		for (GlFramebuffer owned : ownedFramebuffers) {
 			owned.destroy();
 		}
@@ -81,6 +85,10 @@ public class RenderTargets {
 	}
 
 	public RenderTarget get(int index) {
+		if (destroyed) {
+			throw new IllegalStateException("Tried to use destroyed RenderTargets");
+		}
+
 		return targets[index];
 	}
 
@@ -89,6 +97,10 @@ public class RenderTargets {
 	}
 
 	public DepthTexture getDepthTextureNoTranslucents() {
+		if (destroyed) {
+			throw new IllegalStateException("Tried to use destroyed RenderTargets");
+		}
+
 		return noTranslucents;
 	}
 

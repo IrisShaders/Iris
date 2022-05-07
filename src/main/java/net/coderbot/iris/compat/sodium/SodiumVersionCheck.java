@@ -11,15 +11,12 @@ public class SodiumVersionCheck {
 	// If you forget to edit the download links you'll cause the support team a bunch
 	// of pain. So don't forget!
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
-			// Official 0.2.0
-			AllowedSodiumVersion.exact("0.2.0+build.4",
-					"https://www.curseforge.com/minecraft/mc-mods/sodium/files/3488820"),
+			// Official 0.3.4
+			AllowedSodiumVersion.exact("0.3.4+build.13",
+					"https://www.curseforge.com/minecraft/mc-mods/sodium/files/3605275"),
 
-			// ReplayMod's existing compatible forked 0.2.0 version
-			AllowedSodiumVersion.prefix("0.2.0+rev.f42b4ca"),
-
-			// For future use by ReplayMod
-			AllowedSodiumVersion.prefix("0.2.0+replaymod")
+			// For use by ReplayMod
+			AllowedSodiumVersion.prefix("0.3.4+replaymod")
 	);
 
 	public static String getDownloadLink() {

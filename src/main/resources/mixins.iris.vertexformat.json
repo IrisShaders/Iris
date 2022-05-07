@@ -6,8 +6,6 @@
   "client": [
     "MixinBufferBuilder",
     "MixinVertexFormatElement",
-    "MixinGlStateManager",
-    "MixinVertexBuffer",
     "MixinVertexFormat",
     "block_rendering.MixinBufferBuilder_SeparateAo",
     "block_rendering.MixinChunkRebuildTask",

@@ -33,7 +33,7 @@ public class HandRenderer {
 
 		// We need to scale the matrix by 0.125 so the hand doesn't clip through blocks.
 		Matrix4f scaleMatrix = Matrix4f.createScaleMatrix(1F, 1F, DEPTH);
-		scaleMatrix.multiply(gameRenderer.getProjectionMatrix(camera, tickDelta, false));
+		scaleMatrix.multiply(gameRenderer.getProjectionMatrix(((GameRendererAccessor) gameRenderer).invokeGetFov(camera, tickDelta, false)));
 		gameRenderer.resetProjectionMatrix(scaleMatrix);
 
 		pose.pose().setIdentity();

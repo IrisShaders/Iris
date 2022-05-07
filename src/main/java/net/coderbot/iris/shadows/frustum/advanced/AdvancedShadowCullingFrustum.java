@@ -279,7 +279,6 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		this.z = cameraZ;
 	}
 
-	@Override
 	public boolean isVisible(AABB aabb) {
 		if (boxCuller != null && boxCuller.isCulled(aabb)) {
 			return false;

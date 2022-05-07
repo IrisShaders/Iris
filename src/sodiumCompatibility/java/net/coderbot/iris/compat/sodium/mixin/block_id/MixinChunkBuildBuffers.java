@@ -41,11 +41,9 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
     @Redirect(method = "init", remap = false, at = @At(value = "INVOKE",
             target = "me/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType.createBufferWriter (" +
                         "Lme/jellysquid/mods/sodium/client/model/vertex/buffer/VertexBufferView;" +
-                        "Z" +
                     ")Lme/jellysquid/mods/sodium/client/model/vertex/VertexSink;", remap = false))
-    private VertexSink iris$redirectWriterCreation(ChunkVertexType vertexType,
-                                                   VertexBufferView buffer, boolean direct) {
-        VertexSink sink = vertexType.createBufferWriter(buffer, direct);
+    private VertexSink iris$redirectWriterCreation(ChunkVertexType vertexType, VertexBufferView buffer) {
+        VertexSink sink = vertexType.createBufferWriter(buffer);
 
         if (sink instanceof MaterialIdAwareVertexWriter) {
             ((MaterialIdAwareVertexWriter) sink).iris$setIdHolder(idHolder);

@@ -1,7 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
-import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
@@ -29,7 +29,7 @@ public class MatrixUniform extends Uniform {
 			cachedValue.store(buffer);
 			buffer.rewind();
 
-			IrisRenderSystem.uniformMatrix4fv(location, false, buffer);
+			RenderSystem.glUniformMatrix4(location, false, buffer);
 		}
 	}
 }

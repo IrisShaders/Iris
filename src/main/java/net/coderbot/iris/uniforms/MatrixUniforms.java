@@ -57,6 +57,7 @@ public final class MatrixUniforms {
 			Matrix4f copy = parent.get().copy();
 
 			FloatBuffer buffer = FloatBuffer.allocate(16);
+
 			copy.store(buffer);
 			buffer.rewind();
 

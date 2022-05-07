@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin.shadows;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.minecraft.client.Camera;
@@ -15,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Prevent nearby chunks from being rebuilt on the main thread in the shadow pass. Aside from causing  FPS to tank,
+ * Prevent nearby chunks from being rebuilt on the main thread in the shadow pass. Aside from causing FPS to tank,
  * this also causes weird chunk corruption! It's critical to make sure that it's disabled as a result.
  *
  * This patch is not relevant with Sodium installed since Sodium has a completely different build path for terrain
@@ -29,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinPreventRebuildNearInShadowPass {
 	@Shadow
 	@Final
-	private ObjectList<LevelRenderer.RenderChunkInfo> renderChunks;
+	private ObjectArrayList<LevelRenderer.RenderChunkInfo> renderChunks;
 
 	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
 	@Inject(method = "setupRender",
@@ -38,8 +39,7 @@ public class MixinPreventRebuildNearInShadowPass {
 					args = "ldc=rebuildNear"),
 			cancellable = true,
 			require = 0)
-	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum,
-													 int frame, boolean spectator, CallbackInfo callback) {
+	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo callback) {
 		if (ShadowRenderer.ACTIVE) {
 			for (LevelRenderer.RenderChunkInfo chunk : this.renderChunks) {
 				ShadowRenderer.visibleBlockEntities.addAll(((ChunkInfoAccessor) chunk).getChunk().getCompiledChunk().getRenderableBlockEntities());

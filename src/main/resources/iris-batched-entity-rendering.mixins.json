@@ -9,7 +9,6 @@
     "MixinBufferBuilder_SegmentRendering",
     "MixinRenderBuffers",
     "MixinDebugScreenOverlay",
-    "MixinTheEndPortalRenderer",
     "MixinBufferSource",
     "MixinCompositeRenderType",
     "MixinLevelRenderer",

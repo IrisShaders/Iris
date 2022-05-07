@@ -22,8 +22,7 @@ public class NonCullingFrustum extends Frustum {
 		return false;
 	}
 
-	@Override
-	public boolean isVisible(AABB aabb) {
+	public boolean isVisible(AABB box) {
 		return true;
 	}
 }

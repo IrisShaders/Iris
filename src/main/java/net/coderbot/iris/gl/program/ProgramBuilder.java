@@ -20,20 +20,28 @@ import java.util.function.IntSupplier;
 public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder, ImageHolder {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
-	public static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
-		.define(StandardMacros.getOsString())
-		.define("MC_VERSION", StandardMacros.getMcVersion())
-		.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
-		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
-		.define(StandardMacros.getRenderer())
-		.define(StandardMacros.getVendor())
-		.define("MC_RENDER_QUALITY", "1.0")
-		.define("MC_SHADOW_QUALITY", "1.0")
-		.define("MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH))
-		.defineAll(StandardMacros.getIrisDefines())
-		.defineAll(StandardMacros.getGlExtensions())
-		.defineAll(StandardMacros.getRenderStages())
-		.build();
+	public static final ShaderConstants MACRO_CONSTANTS;
+
+	static {
+		try {
+			MACRO_CONSTANTS = ShaderConstants.builder()
+					.define(StandardMacros.getOsString())
+					.define("MC_VERSION", StandardMacros.getMcVersion())
+					.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
+					.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
+					.define(StandardMacros.getRenderer())
+					.define(StandardMacros.getVendor())
+					.define("MC_RENDER_QUALITY", "1.0")
+					.define("MC_SHADOW_QUALITY", "1.0")
+					.define("MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH))
+					.defineAll(StandardMacros.getIrisDefines())
+					.defineAll(StandardMacros.getGlExtensions())
+					.defineAll(StandardMacros.getRenderStages())
+					.build();
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to initialize StandardMacros!", e);
+		}
+	}
 
 	private final int program;
 	private final ProgramSamplers.Builder samplers;

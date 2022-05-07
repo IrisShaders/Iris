@@ -16,7 +16,9 @@ import net.coderbot.iris.gbuffer_overrides.matching.RenderCondition;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.AlphaTestStorage;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
@@ -28,11 +30,13 @@ import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
+import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.DepthBufferTracker;
@@ -47,6 +51,7 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -57,6 +62,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
+import net.minecraft.client.renderer.GameRenderer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
@@ -175,13 +181,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programs.getPackDirectives().shouldUseSeparateAo());
 
 		// Don't clobber anything in texture unit 0. It probably won't cause issues, but we're just being cautious here.
-		GlStateManager._activeTexture(GL20C.GL_TEXTURE2);
+		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE2);
 
 		customTextureManager = new CustomTextureManager(programs.getPackDirectives(), programs.getPack().getCustomTextureDataMap(), programs.getPack().getCustomNoiseTexture());
 
 		whitePixel = new NativeImageBackedSingleColorTexture(255, 255, 255, 255);
 
-		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0);
 
 		this.flippedBeforeShadow = ImmutableSet.of();
 
@@ -377,9 +383,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			return builder.build();
 		};
 
+
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
-			shadowRenderer == null ? null : createShadowTerrainSamplers, createTerrainImages,
-			shadowRenderer == null ? null : createShadowTerrainImages);
+			shadowRenderTargets == null ? null : createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedAfterPrepare, flippedAfterTranslucent,
+			shadowRenderTargets != null ? shadowRenderTargets.getFramebuffer() : null);
 	}
 
 	private void checkWorld() {
@@ -555,7 +562,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private Pass createPassInner(ProgramBuilder builder, IdMap map, ProgramDirectives programDirectives,
 								 PackDirectives packDirectives, InputAvailability availability, boolean shadow) {
 
-		CommonUniforms.addCommonUniforms(builder, map, packDirectives, updateNotifier);
+		CommonUniforms.addCommonUniforms(builder, map, packDirectives, updateNotifier, null);
 
 		Supplier<ImmutableSet<Integer>> flipped;
 
@@ -611,7 +618,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		builder.bindAttributeLocation(12, "mc_midTexCoord");
 		builder.bindAttributeLocation(13, "at_tangent");
 
-		AlphaTestOverride alphaTestOverride = programDirectives.getAlphaTestOverride().orElse(null);
+		AlphaTest alphaTestOverride = programDirectives.getAlphaTestOverride().orElse(null);
 
 		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
 				programDirectives.getBlendModeOverride(), shadow);
@@ -654,13 +661,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		private final GlFramebuffer framebufferBeforeTranslucents;
 		private final GlFramebuffer framebufferAfterTranslucents;
 		@Nullable
-		private final AlphaTestOverride alphaTestOverride;
+		private final AlphaTest alphaTestOverride;
 		@Nullable
 		private final BlendModeOverride blendModeOverride;
 		private final boolean shadowViewport;
 
 		private Pass(@Nullable Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents,
-					 @Nullable AlphaTestOverride alphaTestOverride, @Nullable BlendModeOverride blendModeOverride, boolean shadowViewport) {
+					 @Nullable AlphaTest alphaTestOverride, @Nullable BlendModeOverride blendModeOverride, boolean shadowViewport) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
@@ -688,10 +695,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			}
 
 			if (alphaTestOverride != null) {
-				alphaTestOverride.apply();
+				AlphaTestStorage.overrideAlphaTest(alphaTestOverride);
 			} else {
 				// Previous program on the stack might have applied an override
-				AlphaTestOverride.restore();
+				AlphaTestStorage.restoreAlphaTest();
 			}
 
 			if (blendModeOverride != null) {
@@ -704,7 +711,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		public void stopUsing() {
 			if (alphaTestOverride != null) {
-				AlphaTestOverride.restore();
+				AlphaTestStorage.restoreAlphaTest();
 			}
 
 			if (blendModeOverride != null) {
@@ -848,7 +855,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		deferredRenderer.renderAll();
 
 		RenderSystem.enableBlend();
-		RenderSystem.enableAlphaTest();
 
 		// note: we are careful not to touch the lightmap texture unit or overlay color texture unit here,
 		// so we don't need to do anything to restore them if needed.
@@ -941,9 +947,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			RenderSystem.depthMask(false);
 
 			Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
-			RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
+			RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z, 1.0f);
 
-			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView());
+			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
 
 			RenderSystem.depthMask(true);
 			RenderSystem.enableTexture();

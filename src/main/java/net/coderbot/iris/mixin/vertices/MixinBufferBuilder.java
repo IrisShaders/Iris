@@ -69,7 +69,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	public abstract void putShort(int i, short s);
 
 	@Inject(method = "begin", at = @At("HEAD"))
-	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
+	private void iris$onBegin(VertexFormat.Mode drawMode, VertexFormat format, CallbackInfo ci) {
 		extending = IrisApi.getInstance().isShaderPackInUse() && (format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN || format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY);
 		vertexCount = 0;
 
@@ -79,15 +79,15 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	}
 
 	@Inject(method = "begin", at = @At("RETURN"))
-	private void iris$afterBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
+	private void iris$afterBegin(VertexFormat.Mode drawMode, VertexFormat format, CallbackInfo ci) {
 		if (extending) {
 			this.format = (format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY) ? IrisVertexFormats.ENTITY : IrisVertexFormats.TERRAIN;
 			this.currentElement = this.format.getElements().get(0);
 		}
 	}
 
-	@Inject(method = "discard", at = @At("HEAD"))
-	private void iris$onReset(CallbackInfo ci) {
+	@Inject(method = "discard()V", at = @At("HEAD"))
+	private void iris$onDiscard(CallbackInfo ci) {
 		extending = false;
 		vertexCount = 0;
 	}

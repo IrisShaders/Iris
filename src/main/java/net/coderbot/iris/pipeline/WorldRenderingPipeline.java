@@ -12,7 +12,7 @@ import java.util.OptionalInt;
 
 public interface WorldRenderingPipeline {
 	void beginLevelRendering();
-	void renderShadows(LevelRendererAccessor levelRenderer, Camera camera);
+	void renderShadows(LevelRendererAccessor worldRenderer, Camera camera);
 	void addDebugText(List<String> messages);
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
 

@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager_AlphaTestOverride {
-	@Inject(method = "_disableAlphaTest", at = @At("HEAD"), cancellable = true)
+	//@Inject(method = "_disableAlphaTest", at = @At("HEAD"), cancellable = true)
 	private static void iris$alphaTestDisableLock(CallbackInfo ci) {
 		if (AlphaTestStorage.isAlphaTestLocked()) {
 			AlphaTestStorage.deferAlphaTestToggle(false);
@@ -17,7 +17,7 @@ public class MixinGlStateManager_AlphaTestOverride {
 		}
 	}
 
-	@Inject(method = "_enableAlphaTest", at = @At("HEAD"), cancellable = true)
+	//@Inject(method = "_enableAlphaTest", at = @At("HEAD"), cancellable = true)
 	private static void iris$alphaTestEnableLock(CallbackInfo ci) {
 		if (AlphaTestStorage.isAlphaTestLocked()) {
 			AlphaTestStorage.deferAlphaTestToggle(true);
@@ -25,7 +25,7 @@ public class MixinGlStateManager_AlphaTestOverride {
 		}
 	}
 
-	@Inject(method = "_alphaFunc", at = @At("HEAD"), cancellable = true)
+	//@Inject(method = "_alphaFunc", at = @At("HEAD"), cancellable = true)
 	private static void iris$alphaFuncLock(int function, float reference, CallbackInfo ci) {
 		if (AlphaTestStorage.isAlphaTestLocked()) {
 			AlphaTestStorage.deferAlphaFunc(function, reference);

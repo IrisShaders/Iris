@@ -6,6 +6,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.AlertScreen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -29,6 +30,14 @@ public class MixinTitleScreen {
 			reason = "iris.sodium.failure.reason.incompatible";
 		} else {
 			return;
+		}
+
+		if (Iris.isSodiumInvalid()) {
+			Minecraft.getInstance().setScreen(new AlertScreen(
+					Minecraft.getInstance()::stop,
+					new TranslatableComponent("iris.sodium.failure.title").withStyle(ChatFormatting.RED),
+					new TranslatableComponent("iris.sodium.failure.reason"),
+					new TranslatableComponent("menu.quit")));
 		}
 
 		Minecraft.getInstance().setScreen(new ConfirmScreen(

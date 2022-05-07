@@ -5,6 +5,11 @@ public class BuiltinUniformReplacementTransformer {
 
 	private static final String NORMALIZED_PLACEHOLDER = "iris_NormalizedLightmapCoords";
 
+	public BuiltinUniformReplacementTransformer() {
+		// TODO: I don't think that this is the same as vanilla!
+		this.normalizedLightmapCoords = "(gl_MultiTexCoord1.xy)";
+	}
+
 	public BuiltinUniformReplacementTransformer(float lightmapScale) {
 		// TODO: I don't think that this is the same as vanilla!
 		this.normalizedLightmapCoords = "(gl_MultiTexCoord1.xy * " + lightmapScale + ")";

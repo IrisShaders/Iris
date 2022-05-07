@@ -10,33 +10,25 @@ public abstract class QuadViewTerrain extends QuadView {
 	int stride;
 
 	public float x(int index) {
-		return normalizeVertexPositionShortAsFloat(getShort(writePointer - stride * (3L - index)));
+		return XHFPModelVertexType.decodePosition(getShort(writePointer - stride * (3 - index)));
 	}
 
 	public float y(int index) {
-		return normalizeVertexPositionShortAsFloat(getShort(writePointer + 2 - stride * (3L - index)));
+		return XHFPModelVertexType.decodePosition(getShort(writePointer + 2 - stride * (3 - index)));
 	}
 
 	public float z(int index) {
-		return normalizeVertexPositionShortAsFloat(getShort(writePointer + 4 - stride * (3L - index)));
+		return XHFPModelVertexType.decodePosition(getShort(writePointer + 4 - stride * (3 - index)));
 	}
 
 	@Override
 	public float u(int index) {
-		return normalizeVertexTextureShortAsFloat(getShort(writePointer + 12 - stride * (3L - index)));
+		return XHFPModelVertexType.decodeBlockTexture(getShort(writePointer + 12 - stride * (3 - index)));
 	}
 
 	@Override
 	public float v(int index) {
-		return normalizeVertexTextureShortAsFloat(getShort(writePointer + 14 - stride * (3L - index)));
-	}
-
-	private static float normalizeVertexTextureShortAsFloat(short value) {
-		return (value & 0xFFFF) * (1.0f / 32768.0f);
-	}
-
-	private static float normalizeVertexPositionShortAsFloat(short value) {
-		return (value & 0xFFFF) * (1.0f / 65535.0f);
+		return XHFPModelVertexType.decodeBlockTexture(getShort(writePointer + 14 - stride * (3 - index)));
 	}
 
 	abstract short getShort(long writePointer);

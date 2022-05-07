@@ -16,14 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(VertexFormat.class)
 public class MixinVertexFormat {
 	@Inject(method = "setupBufferState", at = @At("HEAD"), cancellable = true)
-	private void iris$onSetupBufferState(long pointer, CallbackInfo ci) {
+	private void iris$onSetupBufferState(CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			if ((Object) this == DefaultVertexFormat.BLOCK) {
-				IrisVertexFormats.TERRAIN.setupBufferState(pointer);
+				IrisVertexFormats.TERRAIN.setupBufferState();
 
 				ci.cancel();
 			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
-				IrisVertexFormats.ENTITY.setupBufferState(pointer);
+				IrisVertexFormats.ENTITY.setupBufferState();
 
 				ci.cancel();
 			}

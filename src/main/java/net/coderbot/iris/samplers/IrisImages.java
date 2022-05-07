@@ -37,10 +37,25 @@ public class IrisImages {
 
 	public static boolean hasShadowImages(ImageHolder images) {
 		// TODO: Generalize
+		if (images == null) {
+			return false;
+		}
 		return images.hasImage("shadowcolorimg0") || images.hasImage("shadowcolorimg1");
 	}
 
+	public static boolean hasRenderTargetImages(ImageHolder images, RenderTargets targets) {
+		for (int i = 0; i < targets.getRenderTargetCount(); i++) {
+			if (images != null && images.hasImage("colorimg" + i)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static void addShadowColorImages(ImageHolder images, ShadowRenderTargets shadowRenderTargets) {
+		if (images == null) {
+			return;
+		}
 		for (int i = 0; i < shadowRenderTargets.getNumColorTextures(); i++) {
 			final int index = i;
 

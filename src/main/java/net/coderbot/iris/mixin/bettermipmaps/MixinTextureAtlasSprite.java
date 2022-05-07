@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin.bettermipmaps;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Final;
@@ -17,10 +18,6 @@ public class MixinTextureAtlasSprite {
 	// Generate some color tables for gamma correction.
 	private static final float[] SRGB_TO_LINEAR = new float[256];
 
-	@Shadow
-	@Final
-	private TextureAtlasSprite.Info info;
-
 	static {
 		for (int i = 0; i < 256; i++) {
 			SRGB_TO_LINEAR[i] = (float) Math.pow(i / 255.0, 2.2);
@@ -36,8 +33,8 @@ public class MixinTextureAtlasSprite {
 	// can remain minimal. Being less dependent on specific details of Fabric is good, since it means we can be more
 	// cross-platform.
 	@ModifyVariable(method = "<init>", at = @At(value = "INVOKE",
-		target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;generateMipLevels(Lcom/mojang/blaze3d/platform/NativeImage;I)[Lcom/mojang/blaze3d/platform/NativeImage;"))
-	private NativeImage iris$beforeGenerateMipLevels(NativeImage nativeImage) {
+		target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;generateMipLevels(Lcom/mojang/blaze3d/platform/NativeImage;I)[Lcom/mojang/blaze3d/platform/NativeImage;"), argsOnly = true)
+	private NativeImage iris$beforeGenerateMipLevels(NativeImage nativeImage, TextureAtlas arg, TextureAtlasSprite.Info info) {
 		// We're injecting after the "info" field has been set, so this is safe even though we're in a constructor.
 		ResourceLocation name = Objects.requireNonNull(info).name();
 
@@ -46,6 +43,7 @@ public class MixinTextureAtlasSprite {
 			// apparently.
 			return nativeImage;
 		}
+
 
 		iris$fillInTransparentPixelColors(nativeImage);
 

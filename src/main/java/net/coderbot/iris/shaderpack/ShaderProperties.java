@@ -10,7 +10,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
-import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -67,7 +67,7 @@ public class ShaderProperties {
 	private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
 	// TODO: private Map<String, String> optifineVersionRequirements;
 	// TODO: Parse custom uniforms / variables
-	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, AlphaTest> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new Object2ObjectOpenHashMap<>();
@@ -145,7 +145,7 @@ public class ShaderProperties {
 
 			handlePassDirective("alphaTest.", key, value, pass -> {
 				if ("off".equals(value)) {
-					alphaTestOverrides.put(pass, AlphaTestOverride.OFF);
+					alphaTestOverrides.put(pass, AlphaTest.ALWAYS);
 					return;
 				}
 
@@ -174,7 +174,7 @@ public class ShaderProperties {
 					return;
 				}
 
-				alphaTestOverrides.put(pass, new AlphaTestOverride(new AlphaTest(function.get(), reference)));
+				alphaTestOverrides.put(pass, new AlphaTest(function.get(), reference));
 			});
 
 			handlePassDirective("blend.", key, value, pass -> {
@@ -449,12 +449,12 @@ public class ShaderProperties {
 		return shadowCulling;
 	}
 
-	public OptionalBoolean getParticlesBeforeDeferred() {
-		return particlesBeforeDeferred;
+	public Object2ObjectMap<String, AlphaTest> getAlphaTestOverrides() {
+		return alphaTestOverrides;
 	}
 
-	public Object2ObjectMap<String, AlphaTestOverride> getAlphaTestOverrides() {
-		return alphaTestOverrides;
+	public OptionalBoolean getParticlesBeforeDeferred() {
+		return particlesBeforeDeferred;
 	}
 
 	public Object2FloatMap<String> getViewportScaleOverrides() {

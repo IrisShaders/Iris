@@ -155,6 +155,7 @@ public class ShadowMatrices {
 
 		private static float[] toFloatArray(Matrix4f matrix4f) {
 			FloatBuffer buffer = FloatBuffer.allocate(16);
+
 			matrix4f.store(buffer);
 
 			return buffer.array();

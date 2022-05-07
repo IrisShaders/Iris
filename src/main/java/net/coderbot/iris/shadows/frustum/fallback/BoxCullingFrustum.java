@@ -14,15 +14,8 @@ public class BoxCullingFrustum extends Frustum {
 		this.boxCuller = boxCuller;
 	}
 
-	@Override
 	public void prepare(double cameraX, double cameraY, double cameraZ) {
 		boxCuller.setPosition(cameraX, cameraY, cameraZ);
-	}
-
-	// for Sodium
-	// TODO: Better way to do this... Maybe we shouldn't be using a frustum for the box culling in the first place!
-	public boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return !boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	// For Immersive Portals
@@ -33,8 +26,7 @@ public class BoxCullingFrustum extends Frustum {
 		return false;
 	}
 
-	@Override
-	public boolean isVisible(AABB aabb) {
-		return !boxCuller.isCulled(aabb);
+	public boolean isVisible(AABB box) {
+		return !boxCuller.isCulled(box);
 	}
 }

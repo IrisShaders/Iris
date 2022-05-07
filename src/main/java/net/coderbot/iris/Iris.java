@@ -8,10 +8,10 @@ import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
-import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.PipelineManager;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -601,8 +601,9 @@ public class Iris {
 
 		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
+		// We use DeferredWorldRenderingPipeline on 1.16, and NewWorldRendering pipeline on 1.17 when rendering shaders.
 		try {
-			return new DeferredWorldRenderingPipeline(programs);
+			return new NewWorldRenderingPipeline(programs);
 		} catch (Exception e) {
 			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
@@ -663,7 +664,7 @@ public class Iris {
 	public static boolean isSodiumInvalid() {
 		return sodiumInvalid;
   }
-  
+
 	public static boolean isSodiumInstalled() {
 		return sodiumInstalled;
 	}

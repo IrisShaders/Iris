@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.ProgressOption;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
-
 import java.io.IOException;
 
 public class IrisVideoSettings {
@@ -43,11 +42,23 @@ public class IrisVideoSettings {
 
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
+		if (pipeline != null) {
+			d = pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(d);
+		}
+
+		if (d <= 0.0) {
+			return new TranslatableComponent("options.generic_value", new TranslatableComponent("options.iris.shadowDistance"), "0 (disabled)");
+		} else {
+			return new TranslatableComponent("options.generic_value",
+					new TranslatableComponent("options.iris.shadowDistance"),
+					new TranslatableComponent("options.chunks", d));
+		}
+	}, client -> {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
 		Component tooltip;
 
 		if (pipeline != null) {
-			d = pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(d);
-
 			if (pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent()) {
 				tooltip = DISABLED_TOOLTIP;
 			} else {
@@ -57,14 +68,6 @@ public class IrisVideoSettings {
 			tooltip = ENABLED_TOOLTIP;
 		}
 
-		option.setTooltip(Minecraft.getInstance().font.split(tooltip, 200));
-
-		if (d <= 0.0) {
-			return new TranslatableComponent("options.generic_value", new TranslatableComponent("options.iris.shadowDistance"), "0 (disabled)");
-		} else {
-			return new TranslatableComponent("options.generic_value",
-					new TranslatableComponent("options.iris.shadowDistance"),
-					new TranslatableComponent("options.chunks", d));
-		}
+		return Minecraft.getInstance().font.split(tooltip, 200);
 	});
 }

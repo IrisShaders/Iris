@@ -43,7 +43,7 @@
 
   "depends": {
     "fabricloader": ">=0.12.3",
-    "minecraft": "1.16.5",
+    "minecraft": "1.17.x",
     "fabric-resource-loader-v0": ">=0.3.2",
     "fabric-key-binding-api-v1": ">=1.0.1",
     "fabric-api-base": ">=0.4.0",
@@ -56,9 +56,12 @@
     "batchedentityrendering": "*",
     "canvas": "*",
     "optifabric": "*",
-    "imm_ptl_core": "*",
-    "immersive_portals": "*",
-    "physicsmod": "<2.6.6",
-    "fadeinchunks": "*"
+    "worldeditcui": "*"
+  },
+
+  "custom": {
+    "sodium:options": {
+      "mixin.features.sky": false
+    }
   }
 }

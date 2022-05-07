@@ -24,7 +24,6 @@
 
 package io.github.prospector.modmenu.api;
 
-
 import net.minecraft.client.gui.screens.Screen;
 
 /**

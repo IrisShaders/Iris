@@ -6,13 +6,17 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.pipeline.newshader.FogMode;
+import net.coderbot.iris.pipeline.newshader.TriforcePatcher;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -23,8 +27,11 @@ import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
+import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.IrisInternalUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
@@ -32,6 +39,10 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntSupplier;
@@ -133,7 +144,6 @@ public class FinalPassRenderer {
 
 	public void renderFinalPass() {
 		RenderSystem.disableBlend();
-		RenderSystem.disableAlphaTest();
 		RenderSystem.depthMask(false);
 
 		final com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
@@ -178,7 +188,7 @@ public class FinalPassRenderer {
 			finalPass.program.use();
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 
-			FullScreenQuadRenderer.end();
+			FullScreenQuadRenderer.INSTANCE.end();
 		} else {
 			// If there are no passes, we somehow need to transfer the content of the Iris color render targets into
 			// the main Minecraft framebuffer.
@@ -216,6 +226,8 @@ public class FinalPassRenderer {
 
 			RenderSystem.bindTexture(swapPass.targetTexture);
 			GlStateManager._glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
+			RenderSystem.bindTexture(0);
+			GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
@@ -266,15 +278,22 @@ public class FinalPassRenderer {
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 								  Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
-		// TODO: Properly handle empty shaders
-		Objects.requireNonNull(source.getVertexSource());
-		Objects.requireNonNull(source.getFragmentSource());
+		String vertex = TriforcePatcher.patchComposite(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
+
+		String geometry = null;
+		if (source.getGeometrySource().isPresent()) {
+			geometry = TriforcePatcher.patchComposite(source.getGeometrySource().orElseThrow(RuntimeException::new), ShaderType.GEOMETRY);
+		}
+
+		String fragment = TriforcePatcher.patchComposite(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
+
 		Objects.requireNonNull(flipped);
+
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
+					IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -282,7 +301,7 @@ public class FinalPassRenderer {
 
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, FogMode.OFF);
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
@@ -296,6 +315,20 @@ public class FinalPassRenderer {
 		// TODO: Don't duplicate this with CompositeRenderer
 		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
+
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+
+			try {
+				Files.write(debugOutDir.resolve(source.getName() + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
+				if (source.getGeometrySource().isPresent()) {
+					Files.write(debugOutDir.resolve(source.getName() + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
+				}
+				Files.write(debugOutDir.resolve(source.getName() + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+			} catch (IOException e) {
+				Iris.logger.warn("Failed to write debug patched shader source", e);
+			}
+		}
 
 		return builder.build();
 	}

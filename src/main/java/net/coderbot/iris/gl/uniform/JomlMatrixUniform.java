@@ -1,6 +1,6 @@
 package net.coderbot.iris.gl.uniform;
 
-import net.coderbot.iris.gl.IrisRenderSystem;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.vendored.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 
@@ -29,7 +29,7 @@ public class JomlMatrixUniform extends Uniform {
 			cachedValue.get(buffer);
 			buffer.rewind();
 
-			IrisRenderSystem.uniformMatrix4fv(location, false, buffer);
+			RenderSystem.glUniformMatrix4(location, false, buffer);
 		}
 	}
 }

@@ -9,7 +9,7 @@ public class BuiltinReplacementUniforms {
 	private static final Matrix4f lightmapTextureMatrix;
 
 	static {
-		// This mimics the transformations done in LightmapTextureManager to the GL_TEXTURE matrix.
+		// This mimics the transformations done in LightTexture to the GL_TEXTURE matrix.
 		lightmapTextureMatrix = new Matrix4f();
 		lightmapTextureMatrix.setIdentity();
 		lightmapTextureMatrix.multiply(0.00390625f);
@@ -18,8 +18,8 @@ public class BuiltinReplacementUniforms {
 
 	public static void addBuiltinReplacementUniforms(UniformHolder uniforms) {
 		uniforms.uniformMatrix(UniformUpdateFrequency.ONCE, "iris_LightmapTextureMatrix", () -> {
-			Iris.logger.warn("A shader appears to require the lightmap texture matrix even after transformations have occurred");
-			Iris.logger.warn("Iris handles this correctly but it indicates that the shader is doing weird things with lightmap coordinates");
+			// Iris.logger.warn("A shader appears to require the lightmap texture matrix even after transformations have occurred");
+			// Iris.logger.warn("Iris handles this correctly but it indicates that the shader is doing weird things with lightmap coordinates");
 
 			return lightmapTextureMatrix;
 		});

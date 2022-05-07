@@ -157,7 +157,7 @@ public class ProgramUniforms {
 
 		@Override
 		public OptionalInt location(String name, UniformType type) {
-			int id = IrisRenderSystem.getUniformLocation(program, name);
+			int id = GlStateManager._glGetUniformLocation(program, name);
 
 			if (id == -1) {
 				return OptionalInt.empty();
@@ -221,6 +221,11 @@ public class ProgramUniforms {
 							Iris.logger.error("[" + this.name + "] Wrong uniform type for externally-managed uniform " + name + ": " + externalProvided + " is provided but the program expects " + expectedName + ".");
 						}
 
+						continue;
+					}
+
+					if (name.startsWith("Chunks[")) {
+						// explicitly filter out Chunks[] UBO stuff
 						continue;
 					}
 

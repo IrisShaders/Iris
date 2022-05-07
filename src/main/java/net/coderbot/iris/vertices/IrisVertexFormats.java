@@ -1,6 +1,6 @@
 package net.coderbot.iris.vertices;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
@@ -18,29 +18,29 @@ public class IrisVertexFormats {
 		MID_TEXTURE_ELEMENT = new VertexFormatElement(12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
 		TANGENT_ELEMENT = new VertexFormatElement(13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
 
-		ImmutableList.Builder<VertexFormatElement> terrainElements = ImmutableList.builder();
-		ImmutableList.Builder<VertexFormatElement> entityElements = ImmutableList.builder();
+		ImmutableMap.Builder<String, VertexFormatElement> terrainElements = ImmutableMap.builder();
+		ImmutableMap.Builder<String, VertexFormatElement> entityElements = ImmutableMap.builder();
 
-		terrainElements.add(DefaultVertexFormat.ELEMENT_POSITION);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_COLOR);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_UV0);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_UV2);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_NORMAL);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_PADDING);
-		terrainElements.add(ENTITY_ELEMENT);
-		terrainElements.add(MID_TEXTURE_ELEMENT);
-		terrainElements.add(TANGENT_ELEMENT);
+		terrainElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION);
+		terrainElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR);
+		terrainElements.put("UV0", DefaultVertexFormat.ELEMENT_UV);
+		terrainElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2);
+		terrainElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL);
+		terrainElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING);
+		terrainElements.put("mc_Entity", ENTITY_ELEMENT);
+		terrainElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT);
+		terrainElements.put("at_tangent", TANGENT_ELEMENT);
 
-		entityElements.add(DefaultVertexFormat.ELEMENT_POSITION);
-		entityElements.add(DefaultVertexFormat.ELEMENT_COLOR);
-		entityElements.add(DefaultVertexFormat.ELEMENT_UV0);
-		entityElements.add(DefaultVertexFormat.ELEMENT_UV1);
-		entityElements.add(DefaultVertexFormat.ELEMENT_UV2);
-		entityElements.add(DefaultVertexFormat.ELEMENT_NORMAL);
-		entityElements.add(DefaultVertexFormat.ELEMENT_PADDING);
-		entityElements.add(ENTITY_ELEMENT);
-		entityElements.add(MID_TEXTURE_ELEMENT);
-		entityElements.add(TANGENT_ELEMENT);
+		entityElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION);
+		entityElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR);
+		entityElements.put("UV0", DefaultVertexFormat.ELEMENT_UV);
+		entityElements.put("UV1", DefaultVertexFormat.ELEMENT_UV1);
+		entityElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2);
+		entityElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL);
+		entityElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING);
+		entityElements.put("mc_Entity", ENTITY_ELEMENT);
+		entityElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT);
+		entityElements.put("at_tangent", TANGENT_ELEMENT);
 
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());

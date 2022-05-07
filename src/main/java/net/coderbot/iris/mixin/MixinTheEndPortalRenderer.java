@@ -30,18 +30,13 @@ public class MixinTheEndPortalRenderer {
 	private static final float BLUE = 0.2f;
 
 	@Shadow
-	protected float getOffset() {
+	protected float getOffsetUp() {
 		return 0.75F;
 	}
 
-	@Unique
-	protected float getOffsetUp() {
-		return getOffset();
-	}
-
-	@Unique
+	@Shadow
 	protected float getOffsetDown() {
-		return 0.0F;
+		return 0.375F;
 	}
 
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)

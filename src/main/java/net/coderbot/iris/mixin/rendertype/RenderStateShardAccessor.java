@@ -8,9 +8,4 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface RenderStateShardAccessor {
 	@Accessor("name")
 	String getName();
-
-	@Accessor("TRANSLUCENT_TRANSPARENCY")
-	static RenderStateShard.TransparencyStateShard getTranslucentTransparency() {
-		return null;
-	}
 }

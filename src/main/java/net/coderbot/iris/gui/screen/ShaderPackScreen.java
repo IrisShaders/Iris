@@ -90,6 +90,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		super.render(poseStack, mouseX, mouseY, delta);
 
+		super.render(poseStack, mouseX, mouseY, delta);
+
 		drawCenteredString(poseStack, this.font, this.title, (int)(this.width * 0.5), 8, 0xFFFFFF);
 
 		if (notificationDialog != null && notificationDialogTimer > 0) {
@@ -131,8 +133,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		int topCenter = this.width / 2 - 76;
 		boolean inWorld = this.minecraft.level != null;
 
-		this.children.remove(this.shaderPackList);
-		this.children.remove(this.shaderOptionList);
+		this.removeWidget(this.shaderPackList);
+		this.removeWidget(this.shaderOptionList);
 
 		this.shaderPackList = new ShaderPackSelectionList(this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
 
@@ -155,27 +157,27 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			}
 		}
 
+		this.clearWidgets();
+
 		if (optionMenuOpen && shaderOptionList != null) {
-			this.children.add(shaderOptionList);
+			this.addRenderableWidget(shaderOptionList);
 		} else {
-			this.children.add(shaderPackList);
+			this.addRenderableWidget(shaderPackList);
 		}
 
-		this.buttons.clear();
-
-		this.addButton(new Button(bottomCenter + 104, this.height - 27, 100, 20,
+		this.addRenderableWidget(new Button(bottomCenter + 104, this.height - 27, 100, 20,
 			CommonComponents.GUI_DONE, button -> onClose()));
 
-		this.addButton(new Button(bottomCenter, this.height - 27, 100, 20,
+		this.addRenderableWidget(new Button(bottomCenter, this.height - 27, 100, 20,
 			new TranslatableComponent("options.iris.apply"), button -> this.applyChanges()));
 
-		this.addButton(new Button(bottomCenter - 104, this.height - 27, 100, 20,
+		this.addRenderableWidget(new Button(bottomCenter - 104, this.height - 27, 100, 20,
 			CommonComponents.GUI_CANCEL, button -> this.dropChangesAndClose()));
 
-		this.addButton(new Button(topCenter - 78, this.height - 51, 152, 20,
+		this.addRenderableWidget(new Button(topCenter - 78, this.height - 51, 152, 20,
 			new TranslatableComponent("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
 
-		this.screenSwitchButton = this.addButton(new Button(topCenter + 78, this.height - 51, 152, 20,
+		this.screenSwitchButton = this.addRenderableWidget(new Button(topCenter + 78, this.height - 51, 152, 20,
 			new TranslatableComponent("options.iris.shaderPackList"), button -> {
 				this.optionMenuOpen = !this.optionMenuOpen;
 				this.init();

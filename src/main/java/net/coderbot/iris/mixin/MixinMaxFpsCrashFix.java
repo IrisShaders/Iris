@@ -14,13 +14,13 @@ import org.spongepowered.asm.mixin.injection.Slice;
 @Mixin(Options.class)
 public abstract class MixinMaxFpsCrashFix {
 	@Redirect(
-		method = "load",
-		at = @At(value = "INVOKE", target = "Ljava/lang/Integer;parseInt(Ljava/lang/String;)I"),
+		method = "processOptions",
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options$FieldAccess;process(Ljava/lang/String;I)I"),
 		slice = @Slice(from = @At(value = "CONSTANT", args = "stringValue=maxFps"), to = @At(value = "CONSTANT", args = "stringValue=difficulty")),
 		allow = 1
 	)
-	private int iris$resetFramerateLimit(String string) {
-		int original = Integer.parseInt(string);
+	private int iris$resetFramerateLimit(Options.FieldAccess instance, String name, int nullValue) {
+		int original = instance.process(name, nullValue);
 
 		if (original == 0) {
 			// Return the default value of framerateLimit

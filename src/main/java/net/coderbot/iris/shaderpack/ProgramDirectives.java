@@ -4,7 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.coderbot.iris.gl.blending.AlphaTestOverride;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,13 +23,13 @@ public class ProgramDirectives {
 	private final int[] drawBuffers;
 	private final float viewportScale;
 	@Nullable
-	private final AlphaTestOverride alphaTestOverride;
+	private final AlphaTest alphaTestOverride;
 	@Nullable
 	private final BlendModeOverride blendModeOverride;
 	private final ImmutableSet<Integer> mipmappedBuffers;
 	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
-	private ProgramDirectives(int[] drawBuffers, float viewportScale, @Nullable AlphaTestOverride alphaTestOverride,
+	private ProgramDirectives(int[] drawBuffers, float viewportScale, @Nullable AlphaTest alphaTestOverride,
 							 @Nullable BlendModeOverride blendModeOverride, ImmutableSet<Integer> mipmappedBuffers,
 							 ImmutableMap<Integer, Boolean> explicitFlips) {
 		this.drawBuffers = drawBuffers;
@@ -156,7 +160,7 @@ public class ProgramDirectives {
 		return viewportScale;
 	}
 
-	public Optional<AlphaTestOverride> getAlphaTestOverride() {
+	public Optional<AlphaTest> getAlphaTestOverride() {
 		return Optional.ofNullable(alphaTestOverride);
 	}
 
