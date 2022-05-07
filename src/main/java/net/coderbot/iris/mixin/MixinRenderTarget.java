@@ -2,7 +2,9 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
+import net.coderbot.iris.samplers.DepthBufferTracker;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -13,6 +15,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(RenderTarget.class)
 public class MixinRenderTarget implements Blaze3dRenderTargetExt {
+	@Shadow
+	private int depthBufferId;
+
 	private boolean iris$depthDirty = false;
 	private boolean iris$colorDirty = false;
 
@@ -20,6 +25,11 @@ public class MixinRenderTarget implements Blaze3dRenderTargetExt {
 	private void iris$onDestroyBuffers(CallbackInfo ci) {
 		iris$depthDirty = true;
 		iris$colorDirty = true;
+	}
+
+	@Inject(method = "createBuffers(IIZ)V", at = @At(value = "INVOKE", target = "com/mojang/blaze3d/platform/GlStateManager._bindTexture (I)V"))
+	private void iris$onCreateDepthBuffer(int width, int height, boolean checkError, CallbackInfo ci) {
+		DepthBufferTracker.INSTANCE.trackDepthBuffer(this.depthBufferId);
 	}
 
 	@Override

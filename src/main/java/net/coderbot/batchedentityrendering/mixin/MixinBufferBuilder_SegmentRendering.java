@@ -1,5 +1,7 @@
 package net.coderbot.batchedentityrendering.mixin;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.batchedentityrendering.impl.BufferBuilderExt;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;

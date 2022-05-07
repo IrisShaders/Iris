@@ -6,6 +6,7 @@ import com.mojang.datafixers.util.Pair;
 import net.coderbot.batchedentityrendering.mixin.RenderTypeAccessor;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,37 +17,37 @@ import java.util.Objects;
 
 public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTrackingBuffer {
     private final BufferBuilder buffer;
-    private RenderType currentLayer;
+    private RenderType currentType;
 	private List<BufferSegment> buffers;
 
     public SegmentedBufferBuilder() {
         // 2 MB initial allocation
         this.buffer = new BufferBuilder(512 * 1024);
 		this.buffers = new ArrayList<>();
-        this.currentLayer = null;
+        this.currentType = null;
     }
 
     @Override
-    public VertexConsumer getBuffer(RenderType renderLayer) {
-        if (!Objects.equals(currentLayer, renderLayer)) {
-            if (currentLayer != null) {
-                if (isTranslucent(currentLayer)) {
+    public VertexConsumer getBuffer(RenderType renderType) {
+        if (!Objects.equals(currentType, renderType)) {
+            if (currentType != null) {
+                if (shouldSortOnUpload(currentType)) {
                     buffer.setQuadSortOrigin(0, 0, 0);
                 }
 
-                buffers.add(new BufferSegment(buffer.end(), currentLayer));
+                buffers.add(new BufferSegment(buffer.end(), currentType));
             }
 
-            buffer.begin(renderLayer.mode(), renderLayer.format());
+            buffer.begin(renderType.mode(), renderType.format());
 
-            currentLayer = renderLayer;
+            currentType = renderType;
         }
 
         // Use duplicate vertices to break up triangle strips
         // https://developer.apple.com/library/archive/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/Art/degenerate_triangle_strip_2x.png
         // This works by generating zero-area triangles that don't end up getting rendered.
         // TODO: How do we handle DEBUG_LINE_STRIP?
-        if (RenderLayerUtil.isTriangleStripDrawMode(currentLayer)) {
+        if (RenderTypeUtil.isTriangleStripDrawMode(currentType)) {
             ((BufferBuilderExt) buffer).splitStrip();
         }
 
@@ -54,17 +55,17 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
     }
 
     public List<BufferSegment> getSegments() {
-        if (currentLayer == null) {
+        if (currentType == null) {
             return Collections.emptyList();
         }
 
-        if (isTranslucent(currentLayer)) {
+        if (isTranslucent(currentType)) {
             buffer.setQuadSortOrigin(0, 0, 0);
         }
 
-		buffers.add(new BufferSegment(buffer.end(), currentLayer));
+		buffers.add(new BufferSegment(buffer.end(), currentType));
 
-        currentLayer = null;
+		currentType = null;
 
 		List<BufferSegment> finalSegments = new ArrayList<>(buffers);
 
@@ -73,8 +74,8 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         return finalSegments;
     }
 
-    private static boolean isTranslucent(RenderType layer) {
-        return ((RenderTypeAccessor) layer).shouldSortOnUpload();
+    private static boolean shouldSortOnUpload(RenderType type) {
+        return ((RenderTypeAccessor) type).shouldSortOnUpload();
     }
 
     @Override

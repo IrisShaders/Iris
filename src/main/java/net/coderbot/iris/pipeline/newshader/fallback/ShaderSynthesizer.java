@@ -6,7 +6,7 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
 public class ShaderSynthesizer {
 	public static String vsh(boolean hasChunkOffset, ShaderAttributeInputs inputs, FogMode fogMode,
-							 boolean entityLighting, boolean beacomBeam) {
+							 boolean entityLighting) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
@@ -121,7 +121,7 @@ public class ShaderSynthesizer {
 		}
 
 		// Fog
-		if (fogMode == FogMode.ENABLED && !beacomBeam) {
+		if (fogMode == FogMode.PER_VERTEX) {
 			shader.append("out float vertexDistance;\n");
 
 			main.append("    vertexDistance = length((ModelViewMat * vec4(");
@@ -147,8 +147,7 @@ public class ShaderSynthesizer {
 		return shader.toString();
 	}
 
-	public static String fsh(ShaderAttributeInputs inputs, FogMode fogMode, AlphaTest alphaTest, boolean intensityTex,
-							 boolean beacomBeam) {
+	public static String fsh(ShaderAttributeInputs inputs, FogMode fogMode, AlphaTest alphaTest, boolean intensityTex) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
@@ -185,16 +184,16 @@ public class ShaderSynthesizer {
 			main.append("    color *= texture(Sampler2, lightCoord);\n");
 		}
 
-		if (fogMode == FogMode.ENABLED) {
+		if (fogMode == FogMode.PER_VERTEX || fogMode == FogMode.PER_FRAGMENT) {
 			shader.append("uniform vec4 FogColor;\n");
 			shader.append("uniform float FogStart;\n");
 			shader.append("uniform float FogEnd;\n");
 
-			if (!beacomBeam) {
+			if (fogMode == FogMode.PER_VERTEX) {
 				// Use vertex distances, close enough
 				shader.append("in float vertexDistance;\n");
 				main.append("float fragmentDistance = vertexDistance;\n");
-			} else {
+			} else /*if (fogMode == FogMode.PER_FRAGMENT)*/ {
 				// Use fragment distances since beam vertices are very far apart
 				shader.append("uniform mat4 ProjMat;\n");
 				main.append("float fragmentDistance = -ProjMat[3].z / ((gl_FragCoord.z) * -2.0 + 1.0 - ProjMat[2].z);\n");
