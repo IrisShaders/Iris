@@ -120,6 +120,10 @@ public class PackDirectives {
 		return shadowDirectives;
 	}
 
+	private static float clamp(float val, float lo, float hi) {
+		return Math.max(lo, Math.min(hi, val));
+	}
+
 	public void acceptDirectivesFrom(DirectiveHolder directives) {
 		renderTargetDirectives.acceptDirectives(directives);
 		shadowDirectives.acceptDirectives(directives);
@@ -131,7 +135,7 @@ public class PackDirectives {
 				sunPathRotation -> this.sunPathRotation = sunPathRotation);
 
 		directives.acceptConstFloatDirective("ambientOcclusionLevel",
-				ambientOcclusionLevel -> this.ambientOcclusionLevel = ambientOcclusionLevel);
+				ambientOcclusionLevel -> this.ambientOcclusionLevel = clamp(ambientOcclusionLevel, 0.0f, 1.0f));
 
 		directives.acceptConstFloatDirective("wetnessHalflife",
 			wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
