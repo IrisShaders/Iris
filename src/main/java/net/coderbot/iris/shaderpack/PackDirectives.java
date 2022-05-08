@@ -13,6 +13,9 @@ public class PackDirectives {
 	private int noiseTextureResolution;
 	private float sunPathRotation;
 	private float ambientOcclusionLevel;
+	private float wetnessHalfLife;
+	private float drynessHalfLife;
+	private float eyeBrightnessHalfLife;
 	private float centerDepthHalfLife;
 	private boolean areCloudsEnabled;
 	private boolean underwaterOverlay;
@@ -30,6 +33,9 @@ public class PackDirectives {
 		noiseTextureResolution = 256;
 		sunPathRotation = 0.0F;
 		ambientOcclusionLevel = 1.0F;
+		wetnessHalfLife = 600.0f;
+		drynessHalfLife = 200.0f;
+		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
@@ -66,6 +72,18 @@ public class PackDirectives {
 
 	public float getAmbientOcclusionLevel() {
 		return ambientOcclusionLevel;
+	}
+
+	public float getWetnessHalfLife() {
+		return wetnessHalfLife;
+	}
+
+	public float getDrynessHalfLife() {
+		return drynessHalfLife;
+	}
+
+	public float getEyeBrightnessHalfLife() {
+		return eyeBrightnessHalfLife;
 	}
 
 	public float getCenterDepthHalfLife() {
@@ -121,9 +139,17 @@ public class PackDirectives {
 		directives.acceptConstFloatDirective("ambientOcclusionLevel",
 				ambientOcclusionLevel -> this.ambientOcclusionLevel = ambientOcclusionLevel);
 
+		directives.acceptConstFloatDirective("wetnessHalflife",
+			wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
+
+		directives.acceptConstFloatDirective("drynessHalflife",
+			wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
+
+		directives.acceptConstFloatDirective("eyeBrightnessHalflife",
+			eyeBrightnessHalfLife -> this.eyeBrightnessHalfLife = eyeBrightnessHalfLife);
+
 		directives.acceptConstFloatDirective("centerDepthHalflife",
 			centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
-
 	}
 
 	public ImmutableMap<Integer, Boolean> getExplicitFlips(String pass) {
