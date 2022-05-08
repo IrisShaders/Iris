@@ -18,7 +18,7 @@ import java.util.Map;
 public class IdMapTest {
 	private static final Map<NamespacedId, BlockRenderType> EXPECTED_LAYERS;
 	private static final Int2ObjectMap<List<BlockEntry>> EXPECTED_BLOCKS;
-	
+
 	static {
 		EXPECTED_LAYERS = new HashMap<>();
 
@@ -41,14 +41,14 @@ public class IdMapTest {
 				new BlockEntry(new NamespacedId("minecraft", "blue_stained_glass"), new HashMap<>()),
 				new BlockEntry(new NamespacedId("minecraft", "white_stained_glass"), new HashMap<>())));
 	}
-	
+
 	@Test
 	void testLoadIdMaps() {
 		ShaderPack shaderPack;
 
 		// ensure that we can actually load the shader pack
 		try {
-			shaderPack = new ShaderPack(IrisTests.getTestShaderPackPath("id_maps"));
+			shaderPack = new ShaderPack(IrisTests.getTestShaderPackPath("id_maps"), IrisTests.TEST_ENVIRONMENT_DEFINES);
 		} catch (Exception e) {
 			Assertions.fail("Couldn't load test shader pack id_maps", e);
 			return;

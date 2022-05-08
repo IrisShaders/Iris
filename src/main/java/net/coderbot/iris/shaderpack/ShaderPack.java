@@ -8,9 +8,6 @@ import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.shader.GlShader;
-import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
@@ -63,8 +60,8 @@ public class ShaderPack {
 	private final ProfileSet.ProfileResult profile;
 	private final String profileInfo;
 
-	public ShaderPack(Path root) throws IOException {
-		this(root, Collections.emptyMap());
+	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException {
+		this(root, Collections.emptyMap(), environmentDefines);
 	}
 
 	/**
@@ -75,7 +72,7 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, Iterable<StringPair> environmentDefines) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
@@ -113,7 +110,7 @@ public class ShaderPack {
 		graph = this.shaderPackOptions.getIncludes();
 
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
-				.map(source -> new ShaderProperties(source, shaderPackOptions))
+				.map(source -> new ShaderProperties(source, shaderPackOptions, environmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
@@ -168,13 +165,14 @@ public class ShaderPack {
 				builder.append('\n');
 			}
 
-			// Apply shader environment defines / constants
-			// TODO: Write our own code pathways for this
-			ShaderConstants constants = ProgramBuilder.MACRO_CONSTANTS;
-			String source = GlShader.processShader(builder.toString(), constants);
-
-			// Apply GLSL preprocessor to source
-			source = JcppProcessor.glslPreprocessSource(source);
+			// Apply GLSL preprocessor to source, while making environment defines available.
+			//
+			// This uses similar techniques to the *.properties preprocessor to avoid actually putting
+			// #define statements in the actual source - instead, we tell the preprocessor about them
+			// directly. This removes one obstacle to accurate reporting of line numbers for errors,
+			// though there exist many more (such as relocating all #extension directives and similar things)
+			String source = builder.toString();
+			source = JcppProcessor.glslPreprocessSource(source, environmentDefines);
 
 			return source;
 		};
@@ -188,7 +186,7 @@ public class ShaderPack {
 		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
 				shaderProperties, this);
 
-		this.idMap = new IdMap(root, shaderPackOptions);
+		this.idMap = new IdMap(root, shaderPackOptions, environmentDefines);
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
