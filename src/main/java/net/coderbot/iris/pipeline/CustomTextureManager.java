@@ -8,12 +8,16 @@ import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.texture.pbr.PBRTextureHolder;
+import net.coderbot.iris.texture.pbr.PBRTextureManager;
+import net.coderbot.iris.texture.pbr.PBRType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -75,24 +79,55 @@ public class CustomTextureManager {
 
 			return texture::getId;
 		} else if (textureData instanceof CustomTextureData.ResourceData) {
-			CustomTextureData.ResourceData resourceData = ((CustomTextureData.ResourceData) textureData);
+			CustomTextureData.ResourceData resourceData = (CustomTextureData.ResourceData) textureData;
 			String namespace = resourceData.getNamespace();
 			String location = resourceData.getLocation();
 
-			ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+			String withoutExtension;
+			int extensionIndex = FilenameUtils.indexOfExtension(location);
+			if (extensionIndex != -1) {
+				withoutExtension = location.substring(0, extensionIndex);
+			} else {
+				withoutExtension = location;
+			}
+			PBRType pbrType = PBRType.fromFileLocation(withoutExtension);
+
 			TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
-			// NB: We have to re-query the TextureManager for the texture object every time. This is because the
-			//     AbstractTexture object could be removed / deleted from the TextureManager on resource reloads,
-			//     and we could end up holding on to a deleted texture unless we added special code to handle resource
-			//     reloads. Re-fetching the texture from the TextureManager every time is the most robust approach for
-			//     now.
-			return () -> {
-				AbstractTexture texture = textureManager.getTexture(textureLocation);
+			if (pbrType == null) {
+				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
 
-				// TODO: Should we give something else if the texture isn't there? This will need some thought
-				return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
-			};
+				// NB: We have to re-query the TextureManager for the texture object every time. This is because the
+				//     AbstractTexture object could be removed / deleted from the TextureManager on resource reloads,
+				//     and we could end up holding on to a deleted texture unless we added special code to handle resource
+				//     reloads. Re-fetching the texture from the TextureManager every time is the most robust approach for
+				//     now.
+				return () -> {
+					AbstractTexture texture = textureManager.getTexture(textureLocation);
+
+					// TODO: Should we give something else if the texture isn't there? This will need some thought
+					return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
+				};
+			} else {
+				location = location.substring(0, extensionIndex - pbrType.getSuffix().length()) + location.substring(extensionIndex);
+				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+
+				return () -> {
+					AbstractTexture texture = textureManager.getTexture(textureLocation);
+
+					if (texture != null) {
+						int id = texture.getId();
+						PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
+						switch (pbrType) {
+						case NORMAL:
+							return pbrHolder.getNormalTexture().getId();
+						case SPECULAR:
+							return pbrHolder.getSpecularTexture().getId();
+						}
+					}
+					return MissingTextureAtlasSprite.getTexture().getId();
+				};
+			}
 		} else {
 			throw new IllegalArgumentException("Unable to handle custom texture data " + textureData);
 		}
