@@ -8,9 +8,6 @@ import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.shader.GlShader;
-import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
@@ -24,6 +21,8 @@ import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.shaderpack.transform.StringTransformations;
+import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.jetbrains.annotations.Nullable;
@@ -63,8 +62,8 @@ public class ShaderPack {
 	private final ProfileSet.ProfileResult profile;
 	private final String profileInfo;
 
-	public ShaderPack(Path root) throws IOException {
-		this(root, Collections.emptyMap());
+	public ShaderPack(Path root, Iterable<String> environmentDefines) throws IOException {
+		this(root, Collections.emptyMap(), environmentDefines);
 	}
 
 	/**
@@ -75,7 +74,7 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, Iterable<String> environmentDefines) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
@@ -168,10 +167,17 @@ public class ShaderPack {
 				builder.append('\n');
 			}
 
-			// Apply shader environment defines / constants
-			// TODO: Write our own code pathways for this
-			ShaderConstants constants = ProgramBuilder.MACRO_CONSTANTS;
-			String source = GlShader.processShader(builder.toString(), constants);
+			// Inject environment #define directives
+			StringBuilder defines = new StringBuilder();
+
+			for (String environmentDefine : environmentDefines) {
+				defines.append(environmentDefine);
+				defines.append('\n');
+			}
+
+			StringTransformations macroTransformations = new StringTransformations(builder.toString());
+			macroTransformations.injectLine(Transformations.InjectionPoint.DEFINES, defines.toString());
+			String source = macroTransformations.toString();
 
 			// Apply GLSL preprocessor to source
 			source = JcppProcessor.glslPreprocessSource(source);

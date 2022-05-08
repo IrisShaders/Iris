@@ -1,11 +1,14 @@
 package net.coderbot.iris.gl.shader;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
+import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20C;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -22,6 +26,39 @@ public class StandardMacros {
 
 	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)(.*)");
 
+	private static void define(List<String> defines, String key) {
+		defines.add("#define " + key);
+	}
+
+	private static void define(List<String> defines, String key, String value) {
+		defines.add("#define " + key + " " + value);
+	}
+
+	public static Iterable<String> createStandardEnvironmentDefines() {
+		ArrayList<String> standardDefines = new ArrayList<>();
+
+		define(standardDefines, getOsString());
+		define(standardDefines, "MC_VERSION", StandardMacros.getMcVersion());
+		define(standardDefines, "MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION));
+		define(standardDefines, "MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION));
+		define(standardDefines, StandardMacros.getRenderer());
+		define(standardDefines, StandardMacros.getVendor());
+		define(standardDefines, "MC_RENDER_QUALITY", "1.0");
+		define(standardDefines, "MC_SHADOW_QUALITY", "1.0");
+		define(standardDefines, "MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH));
+
+		for (String irisDefine : getIrisDefines()) {
+			define(standardDefines, irisDefine);
+		}
+
+		for (String glExtension : getGlExtensions()) {
+			define(standardDefines, glExtension);
+		}
+
+		getRenderStages().forEach((stage, index) -> define(standardDefines, stage, index));
+
+		return ImmutableList.copyOf(standardDefines);
+	}
 
 	/**
 	 * Gets the current mc version String in a 5 digit format
@@ -143,13 +180,17 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L735-L738">Optifine Doc</a>
 	 * @return list of activated extensions prefixed with "MC_"
 	 */
-	public static List<String> getGlExtensions() {
+	public static Set<String> getGlExtensions() {
 		String[] extensions = Objects.requireNonNull(GlStateManager._getString(GL11.GL_EXTENSIONS)).split("\\s+");
 
 		// TODO note that we do not add extensions based on if the shader uses them and if they are supported
 		// see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
 
-		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toList());
+		// NB: Use Collectors.toSet(). In some cases, there are duplicate extensions in the extension list.
+		// RenderDoc is one example - it causes the GL_KHR_debug extension to appear twice:
+		//
+		// https://github.com/IrisShaders/Iris/issues/971
+		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toSet());
 	}
 
 	/**
