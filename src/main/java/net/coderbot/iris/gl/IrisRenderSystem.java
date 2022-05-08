@@ -7,7 +7,6 @@ import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
 
@@ -82,16 +81,6 @@ public class IrisRenderSystem {
 	public static int getUniformLocation(int programId, String name) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		return GL30C.glGetUniformLocation(programId, name);
-	}
-
-	public static void blitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, int mask, int filter) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
-	}
-
-	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
 	}
 
 	public static String getProgramInfoLog(int program) {

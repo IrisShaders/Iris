@@ -18,6 +18,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -25,7 +26,9 @@ import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
+import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.DepthBufferTracker;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -44,7 +47,7 @@ import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -138,6 +141,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 	private boolean isBeforeTranslucent;
 
+	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
+
 	private final float sunPathRotation;
 	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
@@ -165,7 +170,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		this.allPasses = new ArrayList<>();
 
-		this.renderTargets = new RenderTargets(Minecraft.getInstance().getMainRenderTarget(), programs.getPackDirectives().getRenderTargetDirectives());
+		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
+
+		int depthTextureId = mainTarget.getDepthTextureId();
+		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+
+		this.renderTargets = new RenderTargets(mainTarget.width, mainTarget.height, depthTextureId,
+			depthBufferFormat, programs.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
+
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programs.getPackDirectives().getShadowDirectives();
@@ -184,6 +196,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		BlockRenderingSettings.INSTANCE.setBlockStateIds(
 				BlockMaterialMapping.createBlockStateIdMap(programs.getPack().getIdMap().getBlockProperties()));
+		BlockRenderingSettings.INSTANCE.setBlockTypeIds(BlockMaterialMapping.createBlockTypeMap(programs.getPack().getIdMap().getBlockRenderTypeMap()));
 
 		BlockRenderingSettings.INSTANCE.setEntityIds(programs.getPack().getIdMap().getEntityIdMap());
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programs.getPackDirectives().getAmbientOcclusionLevel());
@@ -203,13 +216,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 			shadowMapRenderer = new ShadowRenderer(this, programs.getShadow().orElse(null),
 					programs.getPackDirectives(), () -> flippedBeforeShadow, renderTargets,
 					customTextureManager.getNormals(), customTextureManager.getSpecular(), customTextureManager.getNoiseTexture(),
-					programs, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
+					customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 			createShadowMapRenderer = () -> {};
 		};
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets, updateNotifier);
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
@@ -342,7 +355,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		this.phase = WorldRenderingPhase.NONE;
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
-				createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages);
+			shadowMapRenderer instanceof EmptyShadowMapRenderer || shadowMapRenderer == null ? null : createShadowTerrainSamplers,
+			createTerrainImages, createShadowTerrainImages);
 	}
 
 	private void checkWorld() {
@@ -751,7 +765,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		renderTargets.resizeIfNeeded(main.width, main.height);
+		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
+
+		int depthTextureId = main.getDepthTextureId();
+		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+
+		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), depthTextureId, main.width,
+			main.height, depthBufferFormat);
+
+		mainExt.iris$clearDepthBufferDirtyFlag();
 
 		final ImmutableList<ClearPass> passes;
 
@@ -777,10 +799,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content without the hand, as required.
-		baseline.bind();
-		GlStateManager._bindTexture(renderTargets.getDepthTextureNoHand().getTextureId());
-		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
-		GlStateManager._bindTexture(0);
+		renderTargets.copyPreHandDepth();
 	}
 
 	@Override
@@ -789,10 +808,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
-		baseline.bind();
-		GlStateManager._bindTexture(renderTargets.getDepthTextureNoTranslucents().getTextureId());
-		IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, GL20C.GL_DEPTH_COMPONENT, 0, 0, renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight(), 0);
-		GlStateManager._bindTexture(0);
+		renderTargets.copyPreTranslucentDepth();
+
+		centerDepthSampler.updateSample();
 
 		deferredRenderer.renderAll();
 		Program.unbind();
@@ -862,6 +880,29 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// Default to rendering with BASIC for all unknown content.
 		// This probably isn't the best approach, but it works for now.
 		pushProgram(GbufferProgram.BASIC);
+
+		setPhase(WorldRenderingPhase.SKY);
+
+		// Render our horizon box before actual sky rendering to avoid being broken by mods that do weird things
+		// while rendering the sky.
+		//
+		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
+		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
+
+		if (skyType != DimensionSpecialEffects.SkyType.NONE) {
+			RenderSystem.disableTexture();
+			RenderSystem.depthMask(false);
+			pushProgram(GbufferProgram.SKY_BASIC);
+
+			Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
+			RenderSystem.color3f((float) fogColor.x, (float) fogColor.y, (float) fogColor.z);
+
+			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView());
+
+			popProgram(GbufferProgram.SKY_BASIC);
+			RenderSystem.depthMask(true);
+			RenderSystem.enableTexture();
+		}
 	}
 
 	@Override

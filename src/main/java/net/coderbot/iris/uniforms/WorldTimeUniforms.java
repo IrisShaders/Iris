@@ -1,13 +1,13 @@
 package net.coderbot.iris.uniforms;
 
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
-
-import java.util.Objects;
-
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+
+import java.util.Objects;
+
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public final class WorldTimeUniforms {
 	private WorldTimeUniforms() {

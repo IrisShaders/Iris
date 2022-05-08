@@ -13,10 +13,10 @@ public class ClearPass {
 	private final GlFramebuffer framebuffer;
 	private final int clearFlags;
 
-	public ClearPass(Vector4f color, GlFramebuffer framebuffer, boolean clearDepth) {
+	public ClearPass(Vector4f color, GlFramebuffer framebuffer) {
 		this.color = color;
 		this.framebuffer = framebuffer;
-		this.clearFlags = GL21C.GL_COLOR_BUFFER_BIT | (clearDepth ? GL21C.GL_DEPTH_BUFFER_BIT : 0);
+		this.clearFlags = GL21C.GL_COLOR_BUFFER_BIT;
 	}
 
 	public void execute(Vector4f defaultClearColor) {

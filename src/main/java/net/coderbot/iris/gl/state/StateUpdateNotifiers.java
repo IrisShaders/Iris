@@ -9,6 +9,8 @@ import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
 public class StateUpdateNotifiers {
 	public static ValueUpdateNotifier fogToggleNotifier;
 	public static ValueUpdateNotifier fogModeNotifier;
+	public static ValueUpdateNotifier fogStartNotifier;
+	public static ValueUpdateNotifier fogEndNotifier;
 	public static ValueUpdateNotifier fogDensityNotifier;
 	public static ValueUpdateNotifier blendFuncNotifier;
 	public static ValueUpdateNotifier atlasTextureNotifier;

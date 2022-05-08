@@ -1,8 +1,5 @@
 package net.coderbot.iris.uniforms;
 
-import java.util.Objects;
-import java.util.function.IntSupplier;
-
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
@@ -37,6 +34,9 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Objects;
+import java.util.function.IntSupplier;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
@@ -84,14 +84,13 @@ public final class CommonUniforms {
 
 		uniforms.uniform1i("renderStage", () -> GbufferPrograms.getCurrentPhase().ordinal(), StateUpdateNotifiers.phaseChangeNotifier);
 
-		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier);
+		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier, directives);
 	}
 
-	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier){
+	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier, PackDirectives directives) {
 		ExternallyManagedUniforms.addExternallyManagedUniforms116(uniforms);
 
-		// TODO: Parse the value of const float eyeBrightnessHalflife from the shaderpack's fragment shader configuration
-		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(10.0f, 10.0f, CommonUniforms::getEyeBrightness, updateNotifier);
+		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(directives.getEyeBrightnessHalfLife(), directives.getEyeBrightnessHalfLife(), CommonUniforms::getEyeBrightness, updateNotifier);
 
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
@@ -112,8 +111,7 @@ public final class CommonUniforms {
 				return new Vector2i((int) smoothed.x(),(int) smoothed.y());
 			})
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-			// TODO: Parse the value of const float wetnessHalfLife and const float drynessHalfLife from the shaderpack's fragment shader configuration
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(600f, 600f, CommonUniforms::getRainStrength, updateNotifier))
+			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
 			.uniform3d(PER_FRAME, "fogColor", CapturedRenderingState.INSTANCE::getFogColor);
 	}
@@ -260,4 +258,7 @@ public final class CommonUniforms {
 		}
 	}
 
+	static {
+		GbufferPrograms.init();
+	}
 }

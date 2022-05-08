@@ -1,11 +1,11 @@
 package net.coderbot.iris.gl.texture;
 
-import java.util.Optional;
-
 import net.coderbot.iris.gl.GlVersion;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL31C;
+
+import java.util.Optional;
 
 public enum InternalTextureFormat {
 	// Default

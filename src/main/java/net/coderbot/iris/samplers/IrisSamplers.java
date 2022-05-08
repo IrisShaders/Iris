@@ -9,6 +9,7 @@ import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.texunits.TextureUnit;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -121,13 +122,13 @@ public class IrisSamplers {
 	}
 
 	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
-		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId, "depthtex0");
+		samplers.addDynamicSampler(renderTargets::getDepthTexture, "depthtex0");
 		// TODO: Should depthtex2 be made available to gbuffer / shadow programs?
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, "depthtex1");
 	}
 
 	public static void addCompositeSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
-		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId,
+		samplers.addDynamicSampler(renderTargets::getDepthTexture,
 				"gdepthtex", "depthtex0");
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId,
 				"depthtex1");

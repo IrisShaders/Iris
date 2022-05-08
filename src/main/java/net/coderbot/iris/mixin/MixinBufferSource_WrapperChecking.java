@@ -1,7 +1,5 @@
 package net.coderbot.iris.mixin;
 
-import java.util.Set;
-
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.InnerWrappedRenderType;
@@ -14,6 +12,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Set;
 
 @Mixin(MultiBufferSource.BufferSource.class)
 public class MixinBufferSource_WrapperChecking {

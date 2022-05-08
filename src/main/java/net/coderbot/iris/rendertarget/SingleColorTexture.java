@@ -10,7 +10,6 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
 public class SingleColorTexture extends GlResource {
 	public SingleColorTexture(int red, int green, int blue, int alpha) {
