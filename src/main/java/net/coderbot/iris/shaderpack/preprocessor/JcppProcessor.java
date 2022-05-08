@@ -1,13 +1,15 @@
 package net.coderbot.iris.shaderpack.preprocessor;
 
+import net.coderbot.iris.shaderpack.StringPair;
 import org.anarres.cpp.Feature;
+import org.anarres.cpp.LexerException;
 import org.anarres.cpp.Preprocessor;
 import org.anarres.cpp.StringLexerSource;
 import org.anarres.cpp.Token;
 
 public class JcppProcessor {
 	// Derived from GlShader from Canvas, licenced under LGPL
-	public static String glslPreprocessSource(String source) {
+	public static String glslPreprocessSource(String source, Iterable<StringPair> environmentDefines) {
 		if (source.contains(GlslCollectingListener.VERSION_MARKER)
 				|| source.contains(GlslCollectingListener.EXTENSION_MARKER)) {
 			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
@@ -30,6 +32,18 @@ public class JcppProcessor {
 
 		@SuppressWarnings("resource")
 		final Preprocessor pp = new Preprocessor();
+
+		// Add the values of the environment defines without actually modifying the source code
+		// of the shader program, one step down the road of having accurate line number reporting
+		// in errors...
+		try {
+			for (StringPair envDefine : environmentDefines) {
+				pp.addMacro(envDefine.getKey(), envDefine.getValue());
+			}
+		} catch (LexerException e) {
+			throw new RuntimeException("Unexpected LexerException processing macros", e);
+		}
+
 		pp.setListener(listener);
 		pp.addInput(new StringLexerSource(source, true));
 		pp.addFeature(Feature.KEEPCOMMENTS);

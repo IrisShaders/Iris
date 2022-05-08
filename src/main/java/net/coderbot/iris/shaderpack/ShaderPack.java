@@ -21,8 +21,6 @@ import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
-import net.coderbot.iris.shaderpack.transform.StringTransformations;
-import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import org.jetbrains.annotations.Nullable;
@@ -167,23 +165,14 @@ public class ShaderPack {
 				builder.append('\n');
 			}
 
-			// Inject environment #define directives
-			StringBuilder defines = new StringBuilder();
-
-			for (StringPair environmentDefine : environmentDefines) {
-				defines.append("#define ");
-				defines.append(environmentDefine.getKey());
-				defines.append(' ');
-				defines.append(environmentDefine.getValue());
-				defines.append('\n');
-			}
-
-			StringTransformations macroTransformations = new StringTransformations(builder.toString());
-			macroTransformations.injectLine(Transformations.InjectionPoint.DEFINES, defines.toString());
-			String source = macroTransformations.toString();
-
-			// Apply GLSL preprocessor to source
-			source = JcppProcessor.glslPreprocessSource(source);
+			// Apply GLSL preprocessor to source, while making environment defines available.
+			//
+			// This uses similar techniques to the *.properties preprocessor to avoid actually putting
+			// #define statements in the actual source - instead, we tell the preprocessor about them
+			// directly. This removes one obstacle to accurate reporting of line numbers for errors,
+			// though there exist many more (such as relocating all #extension directives and similar things)
+			String source = builder.toString();
+			source = JcppProcessor.glslPreprocessSource(source, environmentDefines);
 
 			return source;
 		};
