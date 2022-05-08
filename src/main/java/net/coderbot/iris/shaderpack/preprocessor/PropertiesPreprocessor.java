@@ -1,7 +1,7 @@
 package net.coderbot.iris.shaderpack.preprocessor;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.shader.StandardMacros;
+import net.coderbot.iris.shaderpack.StringPair;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.LexerException;
@@ -9,6 +9,7 @@ import org.anarres.cpp.Preprocessor;
 import org.anarres.cpp.StringLexerSource;
 import org.anarres.cpp.Token;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class PropertiesPreprocessor {
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
-	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions) {
+	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
 		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER)) {
 			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
 		}
@@ -26,28 +27,32 @@ public class PropertiesPreprocessor {
 		List<String> booleanValues = getBooleanValues(shaderPackOptions);
 		Map<String, String> stringValues = getStringValues(shaderPackOptions);
 
-		@SuppressWarnings("resource")
-		final Preprocessor pp = new Preprocessor();
-		try {
+		try (Preprocessor pp = new Preprocessor()) {
 			for (String value : booleanValues) {
 				pp.addMacro(value);
 			}
-			pp.addMacro("MC_VERSION", StandardMacros.getMcVersion());
-		} catch (LexerException e) {
-				e.printStackTrace();
-		}
-		stringValues.forEach((name, value) -> {
-			try {
-				pp.addMacro(name, value);
-			} catch (LexerException e) {
-				e.printStackTrace();
-			}
-		});
 
-		return process(pp, source);
+			for (StringPair envDefine : environmentDefines) {
+				pp.addMacro(envDefine.getKey(), envDefine.getValue());
+			}
+
+			stringValues.forEach((name, value) -> {
+				try {
+					pp.addMacro(name, value);
+				} catch (LexerException e) {
+					e.printStackTrace();
+				}
+			});
+
+			return process(pp, source);
+		} catch (IOException e) {
+			throw new RuntimeException("Unexpected IOException while processing macros", e);
+		} catch (LexerException e) {
+			throw new RuntimeException("Unexpected LexerException processing macros", e);
+		}
 	}
 
-	public static String preprocessSource(String source) {
+	public static String preprocessSource(String source, Iterable<StringPair> environmentDefines) {
 		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER)) {
 			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
 		}
@@ -55,7 +60,9 @@ public class PropertiesPreprocessor {
 		Preprocessor preprocessor = new Preprocessor();
 
 		try {
-			preprocessor.addMacro("MC_VERSION", StandardMacros.getMcVersion());
+			for (StringPair envDefine : environmentDefines) {
+				preprocessor.addMacro(envDefine.getKey(), envDefine.getValue());
+			}
 		} catch (LexerException e) {
 			e.printStackTrace();
 		}

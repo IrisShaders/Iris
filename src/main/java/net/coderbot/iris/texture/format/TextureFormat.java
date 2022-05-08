@@ -2,13 +2,14 @@ package net.coderbot.iris.texture.format;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.IrisRenderSystem;
-import net.coderbot.iris.gl.shader.MacroBuilder;
 import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
 import net.coderbot.iris.texture.pbr.PBRType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public interface TextureFormat {
@@ -17,17 +18,21 @@ public interface TextureFormat {
 	@Nullable
 	String getVersion();
 
-	default void addMacros(MacroBuilder builder) {
-		String macroName = getName().toUpperCase(Locale.ROOT).replaceAll("-", "_");
-		String macro = "MC_TEXTURE_FORMAT_" + macroName;
-		builder.define(macro);
+	default List<String> getDefines() {
+		List<String> defines = new ArrayList<>();
+
+		String defineName = getName().toUpperCase(Locale.ROOT).replaceAll("-", "_");
+		String define = "MC_TEXTURE_FORMAT_" + defineName;
+		defines.add(define);
 
 		String version = getVersion();
 		if (version != null) {
-			String macroVersion = version.replaceAll("[.-]", "_");
-			String versionMacro = macro + "_" + macroVersion;
-			builder.define(versionMacro);
+			String defineVersion = version.replaceAll("[.-]", "_");
+			String versionDefine = define + "_" + defineVersion;
+			defines.add(versionDefine);
 		}
+
+		return defines;
 	}
 
 	/**

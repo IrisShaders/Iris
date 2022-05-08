@@ -344,7 +344,7 @@ public class Iris {
 		resetShaderPackOptions = false;
 
 		try {
-			currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createDefines());
+			currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createStandardEnvironmentDefines());
 
 			MutableOptionValues changedConfigsValues = currentPack.getShaderPackOptions().getOptionValues().mutableCopy();
 
@@ -667,7 +667,7 @@ public class Iris {
 	public static boolean isSodiumInvalid() {
 		return sodiumInvalid;
   }
-  
+
 	public static boolean isSodiumInstalled() {
 		return sodiumInstalled;
 	}
