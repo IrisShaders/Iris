@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * alone shaves over 60kB off the released JAR size.</p>
  */
 @Mixin(Minecraft.class)
-public class MixinMinecraft {
+public class MixinMinecraft_Keybinds {
 	@Shadow
 	private ProfilerFiller profiler;
 
