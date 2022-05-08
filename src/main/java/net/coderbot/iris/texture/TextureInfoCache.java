@@ -1,7 +1,8 @@
 package net.coderbot.iris.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 
@@ -10,20 +11,16 @@ import java.nio.IntBuffer;
 public class TextureInfoCache {
 	public static final TextureInfoCache INSTANCE = new TextureInfoCache();
 
-	// Using the nullary ctor or 0 causes errors
-	private final ObjectArrayList<TextureInfo> cache = new ObjectArrayList<>(ObjectArrayList.DEFAULT_INITIAL_CAPACITY);
+	private final Int2ObjectMap<TextureInfo> cache = new Int2ObjectOpenHashMap<>();
 
 	private TextureInfoCache() {
 	}
 
 	public TextureInfo getInfo(int id) {
-		if (id >= cache.size()) {
-			cache.size(id + 1);
-		}
 		TextureInfo info = cache.get(id);
 		if (info == null) {
 			info = new TextureInfo(id);
-			cache.set(id, info);
+			cache.put(id, info);
 		}
 		return info;
 	}
@@ -40,9 +37,7 @@ public class TextureInfoCache {
 	}
 
 	public void onDeleteTexture(int id) {
-		if (id < cache.size()) {
-			cache.set(id, null);
-		}
+		cache.remove(id);
 	}
 
 	public static class TextureInfo {

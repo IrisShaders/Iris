@@ -1,6 +1,7 @@
 package net.coderbot.iris.texture.pbr;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.texture.TextureTracker;
@@ -16,8 +17,7 @@ public class PBRTextureManager {
 
 	public static final boolean DEBUG = System.getProperty("iris.pbr.debug") != null;
 
-	// Using the nullary ctor or 0 causes errors
-	private final ObjectArrayList<PBRTextureHolder> holders = new ObjectArrayList<>(ObjectArrayList.DEFAULT_INITIAL_CAPACITY);
+	private final Int2ObjectMap<PBRTextureHolder> holders = new Int2ObjectOpenHashMap<>();
 	private final PBRTextureConsumerImpl consumer = new PBRTextureConsumerImpl();
 
 	private NativeImageBackedSingleColorTexture defaultNormalTexture;
@@ -44,23 +44,18 @@ public class PBRTextureManager {
 	}
 
 	public PBRTextureHolder getHolder(int id) {
-		if (id < holders.size()) {
-			PBRTextureHolder holder = holders.get(id);
-			if (holder != null) {
-				return holder;
-			}
+		PBRTextureHolder holder = holders.get(id);
+		if (holder == null) {
+			return defaultHolder;
 		}
-		return defaultHolder;
+		return holder;
 	}
 
 	public PBRTextureHolder getOrLoadHolder(int id) {
-		if (id >= holders.size()) {
-			holders.size(id + 1);
-		}
 		PBRTextureHolder holder = holders.get(id);
 		if (holder == null) {
 			holder = loadHolder(id);
-			holders.set(id, holder);
+			holders.put(id, holder);
 		}
 		return holder;
 	}
@@ -98,17 +93,15 @@ public class PBRTextureManager {
 	}
 
 	public void onDeleteTexture(int id) {
-		if (id < holders.size()) {
-			PBRTextureHolder holder = holders.set(id, null);
-			if (holder != null) {
-				closeHolder(holder);
-			}
+		PBRTextureHolder holder = holders.remove(id);
+		if (holder != null) {
+			closeHolder(holder);
 		}
 	}
 
 	public void clear() {
-		for (PBRTextureHolder holder : holders) {
-			if (holder != null && holder != defaultHolder) {
+		for (PBRTextureHolder holder : holders.values()) {
+			if (holder != defaultHolder) {
 				closeHolder(holder);
 			}
 		}
