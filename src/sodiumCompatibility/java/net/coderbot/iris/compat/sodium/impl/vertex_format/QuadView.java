@@ -76,9 +76,13 @@ public abstract class QuadView {
 		// tx ty tz
 		// nx ny nz
 
+		// Be very careful when writing out complex multi-step calculations
+		// such as vector cross products! The calculation for pbitangentz
+		// used to be broken because it multiplied values in the wrong order.
+
 		float pbitangentx = tangenty * normalZ - tangentz * normalY;
 		float pbitangenty = -(tangentx * normalZ - tangentz * normalX);
-		float pbitangentz = tangentx * normalX - tangenty * normalY;
+		float pbitangentz = tangentx * normalY - tangenty * normalX;
 
 		float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
 		float tangentW;
