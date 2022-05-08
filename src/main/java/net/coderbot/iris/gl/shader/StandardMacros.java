@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
+import net.coderbot.iris.shaderpack.StringPair;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import org.lwjgl.opengl.GL11;
@@ -26,16 +27,16 @@ public class StandardMacros {
 
 	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)(.*)");
 
-	private static void define(List<String> defines, String key) {
-		defines.add("#define " + key);
+	private static void define(List<StringPair> defines, String key) {
+		defines.add(new StringPair(key, ""));
 	}
 
-	private static void define(List<String> defines, String key, String value) {
-		defines.add("#define " + key + " " + value);
+	private static void define(List<StringPair> defines, String key, String value) {
+		defines.add(new StringPair(key, value));
 	}
 
-	public static Iterable<String> createStandardEnvironmentDefines() {
-		ArrayList<String> standardDefines = new ArrayList<>();
+	public static Iterable<StringPair> createStandardEnvironmentDefines() {
+		ArrayList<StringPair> standardDefines = new ArrayList<>();
 
 		define(standardDefines, getOsString());
 		define(standardDefines, "MC_VERSION", StandardMacros.getMcVersion());

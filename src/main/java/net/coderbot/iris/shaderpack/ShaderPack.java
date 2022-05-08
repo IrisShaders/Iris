@@ -62,7 +62,7 @@ public class ShaderPack {
 	private final ProfileSet.ProfileResult profile;
 	private final String profileInfo;
 
-	public ShaderPack(Path root, Iterable<String> environmentDefines) throws IOException {
+	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException {
 		this(root, Collections.emptyMap(), environmentDefines);
 	}
 
@@ -74,7 +74,7 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs, Iterable<String> environmentDefines) throws IOException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, Iterable<StringPair> environmentDefines) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
@@ -112,7 +112,7 @@ public class ShaderPack {
 		graph = this.shaderPackOptions.getIncludes();
 
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
-				.map(source -> new ShaderProperties(source, shaderPackOptions))
+				.map(source -> new ShaderProperties(source, shaderPackOptions, environmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
@@ -170,8 +170,11 @@ public class ShaderPack {
 			// Inject environment #define directives
 			StringBuilder defines = new StringBuilder();
 
-			for (String environmentDefine : environmentDefines) {
-				defines.append(environmentDefine);
+			for (StringPair environmentDefine : environmentDefines) {
+				defines.append("#define ");
+				defines.append(environmentDefine.getKey());
+				defines.append(' ');
+				defines.append(environmentDefine.getValue());
 				defines.append('\n');
 			}
 
@@ -194,7 +197,7 @@ public class ShaderPack {
 		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
 				shaderProperties, this);
 
-		this.idMap = new IdMap(root, shaderPackOptions);
+		this.idMap = new IdMap(root, shaderPackOptions, environmentDefines);
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
