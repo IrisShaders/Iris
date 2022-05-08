@@ -1,12 +1,10 @@
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
@@ -31,8 +29,6 @@ import io.github.coolcrabs.brachyura.project.java.BuildModule;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
 import io.github.coolcrabs.brachyura.util.Util;
-import net.fabricmc.accesswidener.AccessWidenerReader;
-import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -87,17 +83,6 @@ public class Buildscript extends SimpleFabricProject {
 	protected FabricModule createModule() {
 		return new IrisFabricModule(context.get());
 	}
-
-	@Override
-    public Consumer<AccessWidenerVisitor> getAw() {
-        return v -> {
-            try {
-                new AccessWidenerReader(v).read(Files.newBufferedReader(getResourcesDir().resolve("iris.accesswidener")), Namespaces.NAMED);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-    }
 
     @Override
     public void getModDependencies(ModDependencyCollector d) {
