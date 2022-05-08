@@ -17,7 +17,7 @@ public class MixinWindow {
 	private void iris$enableDebugContext(WindowEventHandler arg, ScreenManager arg2, DisplayData arg3, String string, String string2, CallbackInfo ci) {
 		if (Iris.getIrisConfig().isDebugEnabled()) {
 			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE);
-			Iris.logger.warn("OpenGL debug context activated.");
+			Iris.logger.info("OpenGL debug context activated.");
 		}
 	}
 }
