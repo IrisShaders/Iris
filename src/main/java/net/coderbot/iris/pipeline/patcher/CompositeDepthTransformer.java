@@ -17,7 +17,7 @@ public class CompositeDepthTransformer {
 		StringTransformations transformations = new StringTransformations(source);
 
 		// replace original declaration (fragile!!! we need glsl-transformer to do this robustly)
-		// if entityColor is not declared as a uniform, we don't make it available
+		// if centerDepthSmooth is not declared as a uniform, we don't make it available
 		transformations.replaceRegex("uniform\\s+float\\s+centerDepthSmooth;", "uniform sampler2D iris_centerDepthSmooth;");
 		if (transformations.contains("uniform sampler2D iris_centerDepthSmooth")) {
 			transformations.define("centerDepthSmooth", "texture2D(iris_centerDepthSmooth, vec2(0.5)).r");

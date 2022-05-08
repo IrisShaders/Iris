@@ -10,11 +10,9 @@ import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL21C;
 
 public class CenterDepthSampler {
@@ -25,6 +23,7 @@ public class CenterDepthSampler {
 	private final GlFramebuffer framebuffer;
 	private final int texture;
 	private final int altTexture;
+
 	public CenterDepthSampler(float halfLife) {
 		this.texture = GlStateManager._genTexture();
 		this.altTexture = GlStateManager._genTexture();
@@ -65,18 +64,17 @@ public class CenterDepthSampler {
 		this.framebuffer.bind();
 		this.program.use();
 
-		RenderSystem.viewport(0, 0, 3, 3);
+		RenderSystem.viewport(0, 0, 1, 1);
 
 		FullScreenQuadRenderer.INSTANCE.render();
 
 		GlStateManager._glUseProgram(0);
 
-		GL11C.glDisable(GL11C.GL_SCISSOR_TEST);
-
 		this.framebuffer.bind();
 
 		GlStateManager._bindTexture(altTexture);
-		DepthCopyStrategy.fastest(false).copy(this.framebuffer, texture, null, altTexture, 3, 3);
+		// The API contract of DepthCopyStrategy claims it can only copy depth, however the 2 non-stencil methods used are entirely capable of copying color as of now.
+		DepthCopyStrategy.fastest(false).copy(this.framebuffer, texture, null, altTexture, 1, 1);
 		GlStateManager._bindTexture(0);
 
 		//Reset viewport
@@ -89,7 +87,7 @@ public class CenterDepthSampler {
 		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_S, GL21C.GL_CLAMP_TO_EDGE);
 		RenderSystem.texParameter(GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_T, GL21C.GL_CLAMP_TO_EDGE);
 
-		GlStateManager._texImage2D(GL21C.GL_TEXTURE_2D, 0, format.getGlFormat(), 3, 3, 0, format.getPixelFormat().getGlFormat(), PixelType.FLOAT.getGlFormat(), null);
+		GlStateManager._texImage2D(GL21C.GL_TEXTURE_2D, 0, format.getGlFormat(), 1, 1, 0, format.getPixelFormat().getGlFormat(), PixelType.FLOAT.getGlFormat(), null);
 	}
 
 	public int getCenterDepthTexture() {
