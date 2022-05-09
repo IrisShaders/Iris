@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.mixin.LightTextureAccessor;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
@@ -83,6 +84,12 @@ public class CustomTextureManager {
 			ownedTextures.add(texture);
 
 			return texture::getId;
+		} else if (textureData instanceof CustomTextureData.LightmapMarker) {
+			// Special code path for the light texture. While shader packs hardcode the primary light texture, it's
+			// possible that a mod will create a different light texture, so this code path is robust to that.
+			return () ->
+				((LightTextureAccessor) Minecraft.getInstance().gameRenderer.lightTexture())
+					.getLightTexture().getId();
 		} else if (textureData instanceof CustomTextureData.ResourceData) {
 			CustomTextureData.ResourceData resourceData = ((CustomTextureData.ResourceData) textureData);
 			String namespace = resourceData.getNamespace();
