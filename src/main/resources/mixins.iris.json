@@ -35,7 +35,6 @@
     "MixinRenderTarget",
     "MixinTheEndPortalRenderer",
     "MixinTitleScreen",
-    "MixinMaxFpsCrashFix",
     "MixinTweakFarPlane",
     "MixinWindow",
     "MixinCrashReport",
