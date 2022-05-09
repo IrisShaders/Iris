@@ -250,7 +250,11 @@ public class ShaderPack {
 				Iris.logger.warn("Resource location " + path + " contained more than two parts?");
 			}
 
-			customTextureData = new CustomTextureData.ResourceData(parts[0], parts[1]);
+			if (parts[0].equals("minecraft") && (parts[1].equals("dynamic/lightmap_1") || parts[1].equals("dynamic/light_map_1"))) {
+				customTextureData = new CustomTextureData.LightmapMarker();
+			} else {
+				customTextureData = new CustomTextureData.ResourceData(parts[0], parts[1]);
+			}
 		} else {
 			// TODO: Make sure the resulting path is within the shaderpack?
 			if (path.startsWith("/")) {

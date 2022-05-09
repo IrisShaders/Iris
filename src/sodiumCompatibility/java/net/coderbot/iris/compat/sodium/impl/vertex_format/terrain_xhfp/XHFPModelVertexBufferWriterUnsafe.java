@@ -10,14 +10,14 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.NormalHelper;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
+import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
+
 public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, MaterialIdAwareVertexWriter {
     private MaterialIdHolder idHolder;
 
     public XHFPModelVertexBufferWriterUnsafe(VertexBufferView backingBuffer) {
         super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
     }
-
-    private static final int STRIDE = 36;
 
     int vertexCount = 0;
     float uSum;
@@ -67,7 +67,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 
 		vertexCount++;
 		// NB: uSum and vSum must already be incremented outside of this function.
-		
+
 		MemoryUtil.memPutShort(i + 0, XHFPModelVertexType.encodePosition(posX));
 		MemoryUtil.memPutShort(i + 2, XHFPModelVertexType.encodePosition(posY));
 		MemoryUtil.memPutShort(i + 4, XHFPModelVertexType.encodePosition(posZ));
@@ -116,7 +116,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 			// Implementation based on the algorithm found here:
 			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-			currentQuad.setup(writePointer, XHFPModelVertexType.STRIDE);
+			currentQuad.setup(writePointer, STRIDE);
 			NormalHelper.computeFaceNormal(normal, currentQuad);
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 

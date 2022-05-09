@@ -18,7 +18,7 @@ public interface WorldRenderingPipeline {
 
 	void setPhase(WorldRenderingPhase phase);
 
-    void beginShadowRender();
+	void beginShadowRender();
 	void endShadowRender();
 
 	void beginHand();

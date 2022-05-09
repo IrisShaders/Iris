@@ -73,13 +73,24 @@ public class PropertiesPreprocessor {
 	private static String process(Preprocessor preprocessor, String source) {
 		preprocessor.setListener(new PropertiesCommentListener());
 		PropertyCollectingListener listener = new PropertyCollectingListener();
-		source = source.replaceAll("([a-zA-Z]+\\.[a-zA-Z0-9]+)", "#warning IRIS_PASSTHROUGH $1");
 		preprocessor.setListener(listener);
 
 		// Not super efficient, but this removes trailing whitespace on lines, fixing an issue with whitespace after
 		// line continuations (see PreprocessorTest#testWeirdPropertiesLineContinuation)
 		// Required for Voyager Shader
-		source = Arrays.stream(source.split("\\R")).map(String::trim).collect(Collectors.joining("\n"));
+		source = Arrays.stream(source.split("\\R")).map(String::trim)
+			.map(line -> {
+				if (line.startsWith("#")) {
+					// In PropertyCollectingListener we suppress "unknown preprocessor directive errors" and
+					// assume the line to be a comment, since in .properties files `#` also functions as a comment
+					// marker.
+					return line;
+				} else {
+					// This is a hack to ensure that non-macro lines don't have any preprocessing applied...
+					// In properties files, we don't substitute #define values except on macro lines.
+					return "#warning IRIS_PASSTHROUGH " + line;
+				}
+			}).collect(Collectors.joining("\n")) + "\n";
 
 		preprocessor.addInput(new StringLexerSource(source, true));
 		preprocessor.addFeature(Feature.KEEPCOMMENTS);
