@@ -11,11 +11,6 @@ public interface GlStateManagerAccessor {
 		throw new UnsupportedOperationException("Not accessed");
 	}
 
-	@Accessor("FOG")
-	static GlStateManager.FogState getFOG() {
-		throw new UnsupportedOperationException("Not accessed");
-	}
-
 	@Accessor("activeTexture")
 	static int getActiveTexture() {
 		throw new UnsupportedOperationException("Not accessed");
