@@ -15,23 +15,23 @@ import java.nio.IntBuffer;
 
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager {
-	@Inject(method = "_bindTexture(I)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glBindTexture(II)V", shift = Shift.AFTER, remap = false))
+	@Inject(method = "_bindTexture(I)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glBindTexture(II)V", shift = Shift.AFTER), remap = false)
 	private static void iris$onBindTexture(int id, CallbackInfo ci) {
 		TextureTracker.INSTANCE.onBindTexture(id);
 	}
 
-	@Inject(method = "_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V", at = @At("TAIL"))
+	@Inject(method = "_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V", at = @At("TAIL"), remap = false)
 	private static void iris$onTexImage2D(int target, int level, int internalformat, int width, int height, int border,
 										  int format, int type, @Nullable IntBuffer pixels, CallbackInfo ci) {
 		TextureInfoCache.INSTANCE.onTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 	}
 
-	@Inject(method = "_deleteTexture(I)V", at = @At("TAIL"))
+	@Inject(method = "_deleteTexture(I)V", at = @At("TAIL"), remap = false)
 	private static void iris$onDeleteTexture(int id, CallbackInfo ci) {
 		iris$onDeleteTexture(id);
 	}
 
-	@Inject(method = "_deleteTextures([I)V", at = @At("TAIL"))
+	@Inject(method = "_deleteTextures([I)V", at = @At("TAIL"), remap = false)
 	private static void iris$onDeleteTextures(int[] ids, CallbackInfo ci) {
 		for (int id : ids) {
 			iris$onDeleteTexture(id);
