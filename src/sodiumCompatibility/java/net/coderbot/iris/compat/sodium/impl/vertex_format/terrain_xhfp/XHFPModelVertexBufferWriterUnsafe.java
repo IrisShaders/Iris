@@ -11,14 +11,14 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.NormalHelper;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
+import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
+
 public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, MaterialIdAwareVertexWriter {
     private MaterialIdHolder idHolder;
 
     public XHFPModelVertexBufferWriterUnsafe(VertexBufferView backingBuffer) {
         super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
     }
-
-    private static final int STRIDE = 36;
 
     int vertexCount = 0;
     float uSum;
@@ -98,7 +98,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             // Implementation based on the algorithm found here:
             // https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-			currentQuad.setup(i, 36);
+            currentQuad.setup(i, STRIDE);
 			NormalHelper.computeFaceNormal(normal, currentQuad);
             int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
