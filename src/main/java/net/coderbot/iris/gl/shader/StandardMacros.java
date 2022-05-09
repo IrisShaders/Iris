@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class StandardMacros {
-
 	private static final Pattern SEMVER_PATTERN = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)\\.*(?<bugfix>\\d*)(.*)");
 
 	private static void define(List<StringPair> defines, String key) {
@@ -39,25 +38,26 @@ public class StandardMacros {
 	public static Iterable<StringPair> createStandardEnvironmentDefines() {
 		ArrayList<StringPair> standardDefines = new ArrayList<>();
 
+		define(standardDefines, "MC_VERSION", getMcVersion());
+		define(standardDefines, "MC_GL_VERSION", getGlVersion(GL20C.GL_VERSION));
+		define(standardDefines, "MC_GLSL_VERSION", getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION));
 		define(standardDefines, getOsString());
-		define(standardDefines, "MC_VERSION", StandardMacros.getMcVersion());
-		define(standardDefines, "MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION));
-		define(standardDefines, "MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION));
-		define(standardDefines, StandardMacros.getRenderer());
-		define(standardDefines, StandardMacros.getVendor());
-		define(standardDefines, "MC_RENDER_QUALITY", "1.0");
-		define(standardDefines, "MC_SHADOW_QUALITY", "1.0");
-		define(standardDefines, "MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH));
-
-		for (String irisDefine : getIrisDefines()) {
-			define(standardDefines, irisDefine);
-		}
+		define(standardDefines, getVendor());
+		define(standardDefines, getRenderer());
 
 		for (String glExtension : getGlExtensions()) {
 			define(standardDefines, glExtension);
 		}
 
+		define(standardDefines, "MC_RENDER_QUALITY", "1.0");
+		define(standardDefines, "MC_SHADOW_QUALITY", "1.0");
+		define(standardDefines, "MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH));
+
 		getRenderStages().forEach((stage, index) -> define(standardDefines, stage, index));
+
+		for (String irisDefine : getIrisDefines()) {
+			define(standardDefines, irisDefine);
+		}
 
 		return ImmutableList.copyOf(standardDefines);
 	}
@@ -105,27 +105,6 @@ public class StandardMacros {
 	}
 
 	/**
-	 * Returns the current OS String
-	 *
-	 * @return the string based on the current OS
-	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714">Optifine Doc</a>
-	 */
-	public static String getOsString() {
-		switch (Util.getPlatform()) {
-			case OSX:
-				return "MC_OS_MAC";
-			case LINUX:
-				return "MC_OS_LINUX";
-			case WINDOWS:
-				return "MC_OS_WINDOWS";
-			case SOLARIS: // Note: Optifine doesn't have a macro for Solaris. https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714
-			case UNKNOWN:
-			default:
-				return "MC_OS_UNKNOWN";
-		}
-	}
-
-	/**
 	 * Returns the current GL Version using regex
 	 *
 	 * @param name the name of the gl attribute to parse
@@ -156,7 +135,6 @@ public class StandardMacros {
 		}
 
 		return major + minor + bugfix;
-
 	}
 
 	/**
@@ -176,51 +154,53 @@ public class StandardMacros {
 	}
 
 	/**
-	 * Returns the list of currently enabled GL extensions
-	 * This is done by calling {@link GL11#glGetString} with the arg {@link GL11#GL_EXTENSIONS}
+	 * Returns the current OS String
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L735-L738">Optifine Doc</a>
-	 * @return list of activated extensions prefixed with "MC_"
+	 * @return the string based on the current OS
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714">Optifine Doc</a>
 	 */
-	public static Set<String> getGlExtensions() {
-		// In OpenGL Core, we must use a new way of retrieving extensions.
-		int numExtensions = GL30C.glGetInteger(GL30C.GL_NUM_EXTENSIONS);
-
-		String[] extensions = new String[numExtensions];
-
-		for (int i = 0; i < numExtensions; i++) {
-			extensions[i] = GL30C.glGetStringi(GL30C.GL_EXTENSIONS, i);
+	public static String getOsString() {
+		switch (Util.getPlatform()) {
+			case OSX:
+				return "MC_OS_MAC";
+			case LINUX:
+				return "MC_OS_LINUX";
+			case WINDOWS:
+				return "MC_OS_WINDOWS";
+			case SOLARIS: // Note: Optifine doesn't have a macro for Solaris. https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714
+			case UNKNOWN:
+			default:
+				return "MC_OS_UNKNOWN";
 		}
-
-		// TODO note that we do not add extensions based on if the shader uses them and if they are supported
-		// see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
-
-		// NB: Use Collectors.toSet(). In some cases, there are duplicate extensions in the extension list.
-		// RenderDoc is one example - it causes the GL_KHR_debug extension to appear twice:
-		//
-		// https://github.com/IrisShaders/Iris/issues/971
-		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toSet());
 	}
 
 	/**
-	 * Returns the list of Iris-exclusive uniforms supported in the current version of Iris.
+	 * Returns a string indicating the graphics card being used
 	 *
-	 * @return List of definitions corresponding to the uniform names prefixed with "MC_"
+	 * @return the graphics card prefixed with "MC_GL_VENDOR_"
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L716-L723">Optifine Doc</a>
 	 */
-	public static List<String> getIrisDefines() {
-		List<String> defines = new ArrayList<>();
-		// All Iris-exclusive uniforms should have a corresponding definition here. Example:
-		// defines.add("MC_UNIFORM_DRAGON_DEATH_PROGRESS");
-
-		return defines;
+	public static String getVendor() {
+		String vendor = Objects.requireNonNull(GlUtil.getVendor()).toLowerCase(Locale.ROOT);
+		if (vendor.startsWith("ati")) {
+			return "MC_GL_VENDOR_ATI";
+		} else if (vendor.startsWith("intel")) {
+			return "MC_GL_VENDOR_INTEL";
+		} else if (vendor.startsWith("nvidia")) {
+			return "MC_GL_VENDOR_NVIDIA";
+		} else if (vendor.startsWith("amd")) {
+			return "MC_GL_VENDOR_AMD";
+		} else if (vendor.startsWith("x.org")) {
+			return "MC_GL_VENDOR_XORG";
+		}
+		return "MC_GL_VENDOR_OTHER";
 	}
 
 	/**
 	 * Returns the graphics driver being used
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L725-L733">Optifine Doc</a>
-	 *
 	 * @return graphics driver prefixed with "MC_GL_RENDERER_"
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L725-L733">Optifine Doc</a>
 	 */
 	public static String getRenderer() {
 		String renderer = Objects.requireNonNull(GlUtil.getRenderer()).toLowerCase(Locale.ROOT);
@@ -249,27 +229,32 @@ public class StandardMacros {
 	}
 
 	/**
-	 * Returns a string indicating the graphics card being used
+	 * Returns the list of currently enabled GL extensions
+	 * This is done by calling {@link GL11#glGetString} with the arg {@link GL11#GL_EXTENSIONS}
 	 *
-	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L716-L723"></a>
-	 *
-	 * @return the graphics card prefixed with "MC_GL_VENDOR_"
+	 * @return list of activated extensions prefixed with "MC_"
+	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L735-L738">Optifine Doc</a>
 	 */
-	public static String getVendor() {
-		String vendor = Objects.requireNonNull(GlUtil.getVendor()).toLowerCase(Locale.ROOT);
-		if (vendor.startsWith("ati")) {
-			return "MC_GL_VENDOR_ATI";
-		} else if (vendor.startsWith("intel")) {
-			return "MC_GL_VENDOR_INTEL";
-		} else if (vendor.startsWith("nvidia")) {
-			return "MC_GL_VENDOR_NVIDIA";
-		} else if (vendor.startsWith("amd")) {
-			return "MC_GL_VENDOR_AMD";
-		} else if (vendor.startsWith("x.org")) {
-			return "MC_GL_VENDOR_XORG";
+	public static Set<String> getGlExtensions() {
+		// In OpenGL Core, we must use a new way of retrieving extensions.
+		int numExtensions = GL30C.glGetInteger(GL30C.GL_NUM_EXTENSIONS);
+
+		String[] extensions = new String[numExtensions];
+
+		for (int i = 0; i < numExtensions; i++) {
+			extensions[i] = GL30C.glGetStringi(GL30C.GL_EXTENSIONS, i);
 		}
-		return "MC_GL_VENDOR_OTHER";
+
+		// TODO note that we do not add extensions based on if the shader uses them and if they are supported
+		// see https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt#L738
+
+		// NB: Use Collectors.toSet(). In some cases, there are duplicate extensions in the extension list.
+		// RenderDoc is one example - it causes the GL_KHR_debug extension to appear twice:
+		//
+		// https://github.com/IrisShaders/Iris/issues/971
+		return Arrays.stream(extensions).map(s -> "MC_" + s).collect(Collectors.toSet());
 	}
+
 
 	public static Map<String, String> getRenderStages() {
 		Map<String, String> stages = new HashMap<>();
@@ -277,5 +262,18 @@ public class StandardMacros {
 			stages.put("MC_RENDER_STAGE_" + phase.name(), String.valueOf(phase.ordinal()));
 		}
 		return stages;
+	}
+
+	/**
+	 * Returns the list of Iris-exclusive uniforms supported in the current version of Iris.
+	 *
+	 * @return List of definitions corresponding to the uniform names prefixed with "MC_"
+	 */
+	public static List<String> getIrisDefines() {
+		List<String> defines = new ArrayList<>();
+		// All Iris-exclusive uniforms should have a corresponding definition here. Example:
+		// defines.add("MC_UNIFORM_DRAGON_DEATH_PROGRESS");
+
+		return defines;
 	}
 }

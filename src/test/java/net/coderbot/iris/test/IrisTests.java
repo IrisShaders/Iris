@@ -1,13 +1,24 @@
 package net.coderbot.iris.test;
 
 import com.google.common.collect.ImmutableList;
+import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.StringPair;
+import org.junit.jupiter.api.Assertions;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class IrisTests {
+	public static ShaderPack loadPackOrFail(String name) {
+		try {
+			return new ShaderPack(IrisTests.getTestShaderPackPath(name), TEST_ENVIRONMENT_DEFINES);
+		} catch (Exception e) {
+			Assertions.fail("Couldn't load test shader pack " + name, e);
+			throw new AssertionError();
+		}
+	}
+
 	public static Path getTestShaderPackPath(String name) {
 		try {
 			return Paths.get(IrisTests.class.getResource("/shaderpacks/" + name + "/shaders/").toURI());
