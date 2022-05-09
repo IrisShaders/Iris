@@ -8,6 +8,10 @@ public class NativeImageBackedSingleColorTexture extends DynamicTexture {
 		super(create(NativeImage.combine(alpha, blue, green, red)));
 	}
 
+	public NativeImageBackedSingleColorTexture(int rgba) {
+		this(rgba >> 24 & 0xFF, rgba >> 16 & 0xFF, rgba >> 8 & 0xFF, rgba & 0xFF);
+	}
+
 	private static NativeImage create(int color) {
 		NativeImage image = new NativeImage(NativeImage.Format.RGBA, 1, 1, false);
 

@@ -31,6 +31,7 @@ public class CustomTextureManager {
 	/**
 	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
 	 * leaks.
+	 * Make sure any textures added to this list call releaseId from the close method.
 	 */
 	private final List<AbstractTexture> ownedTextures = new ArrayList<>();
 
@@ -84,7 +85,7 @@ public class CustomTextureManager {
 
 			return texture::getId;
 		} else if (textureData instanceof CustomTextureData.ResourceData) {
-			CustomTextureData.ResourceData resourceData = ((CustomTextureData.ResourceData) textureData);
+			CustomTextureData.ResourceData resourceData = (CustomTextureData.ResourceData) textureData;
 			String namespace = resourceData.getNamespace();
 			String location = resourceData.getLocation();
 
