@@ -47,10 +47,11 @@ public class MixinStitcher {
 		// Iris start
 		boolean growWidth;
 		/*
-		 * Iris short-circuits the logic if only one dimension can fit,
-		 * but vanilla does not. This can potentially lead to maxHeight
-		 * not being respected. Plus, doing it this way makes the code
-		 * easier to understand.
+		 * Vanilla performs logic that can result in the atlas height
+		 * exceeding the maximum allowed value. The easiest solution
+		 * is employed here - short-circuiting the logic if only one
+		 * dimension can fit. This entirely prevents the issue and has
+		 * the bonus of making the code easier to understand.
 		 */
 		if (canFitWidth & canFitHeight) {
 			// Effective size calculation moved from head to be inside if block
