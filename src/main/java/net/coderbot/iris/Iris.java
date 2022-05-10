@@ -33,6 +33,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -54,6 +55,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -676,7 +678,8 @@ public class Iris {
 
 	public static Component getUpdateMessage() {
 		if (shouldShowUpdateMessage) {
-			MutableComponent component = new TextComponent(updateInfo.updateInfo);
+			String languageCode = Minecraft.getInstance().options.languageCode;
+			MutableComponent component = new TextComponent(updateInfo.updateInfo.containsKey(languageCode) ? updateInfo.updateInfo.get(languageCode) : updateInfo.updateInfo.get("en_US"));
 			return component.append(new TextComponent(usedIrisInstaller ? "the Iris Installer." : updateInfo.modHost + ".").withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? updateInfo.installer : updateInfo.modDownload)).withUnderlined(true)));
 		} else {
 			return null;
