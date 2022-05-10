@@ -1,6 +1,7 @@
 package net.coderbot.iris;
 
 import com.google.common.base.Throwables;
+import com.google.gson.Gson;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -26,16 +27,22 @@ import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.Version;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.FileSystem;
@@ -72,6 +79,7 @@ public class Iris {
 	private static boolean sodiumInvalid;
 	private static boolean sodiumInstalled;
 	private static boolean initialized;
+	private static boolean usedIrisInstaller;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
@@ -86,7 +94,8 @@ public class Iris {
 	// behavior is more concrete and therefore is more likely to repair a user's issues
 	private static boolean resetShaderPackOptions = false;
 
-	private static String IRIS_VERSION;
+	private static Version IRIS_VERSION;
+	private static UpdateInfo updateInfo;
 
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
@@ -114,7 +123,25 @@ public class Iris {
 		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
 				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
 
-		IRIS_VERSION = iris.getMetadata().getVersion().getFriendlyString();
+		IRIS_VERSION = iris.getMetadata().getVersion();
+
+		int simpleVersion = iris.getMetadata().getCustomValue("simpleVersion").getAsNumber().intValue();
+
+		iris.getOrigin().getPaths().forEach(path -> {
+			if (!usedIrisInstaller && path.toAbsolutePath().toString().contains("iris-reserved")) {
+				usedIrisInstaller = true;
+			}
+		});
+
+		Gson gson = new Gson();
+		try {
+			updateInfo = gson.fromJson(new FileReader(FabricLoader.getInstance().getGameDir().resolve("irisupdate.json").toFile()), UpdateInfo.class);
+			if (updateInfo.simpleVersion > simpleVersion) {
+				logger.warn("New update detected, showing update message!");
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {
@@ -551,6 +578,7 @@ public class Iris {
 		loadShaderpack();
 	}
 
+
 	/**
 	 * Destroys and deallocates all created OpenGL resources. Useful as part of a reload.
 	 */
@@ -640,9 +668,17 @@ public class Iris {
 			return "Version info unknown!";
 		}
 
-		return IRIS_VERSION;
+		return IRIS_VERSION.getFriendlyString();
 	}
 
+	public static Component getUpdateMessage() {
+		if (updateInfo != null) {
+			MutableComponent component = new TextComponent(updateInfo.clearVersion + " has released, " + updateInfo.updateInfo + " Download it at ");
+			return component.append(new TextComponent(usedIrisInstaller ? "the Iris Installer." : "Modrinth.").withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? updateInfo.installer : updateInfo.modDownload)).withUnderlined(true)));
+		} else {
+			return null;
+		}
+	}
 	public static String getFormattedVersion() {
 		ChatFormatting color;
 		String version = getVersion();
