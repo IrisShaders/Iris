@@ -39,6 +39,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.dimension.DimensionType;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -96,6 +97,7 @@ public class Iris {
 
 	private static Version IRIS_VERSION;
 	private static UpdateInfo updateInfo;
+	private static boolean shouldShowUpdateMessage;
 
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
@@ -136,7 +138,8 @@ public class Iris {
 		Gson gson = new Gson();
 		try {
 			updateInfo = gson.fromJson(new FileReader(FabricLoader.getInstance().getGameDir().resolve("irisupdate.json").toFile()), UpdateInfo.class);
-			if (updateInfo.simpleVersion > simpleVersion) {
+			if (updateInfo.simpleVersion > simpleVersion && ArrayUtils.contains(updateInfo.versionSupport, Integer.parseInt(StandardMacros.getMcVersion()))) {
+				shouldShowUpdateMessage = true;
 				logger.warn("New update detected, showing update message!");
 			}
 		} catch (IOException e) {
@@ -672,9 +675,9 @@ public class Iris {
 	}
 
 	public static Component getUpdateMessage() {
-		if (updateInfo != null) {
-			MutableComponent component = new TextComponent(updateInfo.clearVersion + " has released, " + updateInfo.updateInfo + " Download it at ");
-			return component.append(new TextComponent(usedIrisInstaller ? "the Iris Installer." : "Modrinth.").withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? updateInfo.installer : updateInfo.modDownload)).withUnderlined(true)));
+		if (shouldShowUpdateMessage) {
+			MutableComponent component = new TextComponent(updateInfo.updateInfo);
+			return component.append(new TextComponent(usedIrisInstaller ? "the Iris Installer." : updateInfo.modHost + ".").withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? updateInfo.installer : updateInfo.modDownload)).withUnderlined(true)));
 		} else {
 			return null;
 		}
