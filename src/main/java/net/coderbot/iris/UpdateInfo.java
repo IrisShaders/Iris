@@ -9,5 +9,4 @@ public class UpdateInfo {
 	public String modHost;
 	public String modDownload;
 	public String installer;
-	public int[] versionSupport;
 }

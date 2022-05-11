@@ -2,6 +2,8 @@ package net.coderbot.iris;
 
 import com.google.common.base.Throwables;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -44,9 +46,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
@@ -59,6 +65,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
@@ -98,7 +106,7 @@ public class Iris {
 	private static boolean resetShaderPackOptions = false;
 
 	private static Version IRIS_VERSION;
-	private static UpdateInfo updateInfo;
+	private static CompletableFuture<UpdateInfo> updateInfo;
 	private static boolean shouldShowUpdateMessage;
 
 	/**
@@ -137,17 +145,6 @@ public class Iris {
 			}
 		});
 
-		Gson gson = new Gson();
-		try {
-			updateInfo = gson.fromJson(new FileReader(FabricLoader.getInstance().getGameDir().resolve("irisupdate.json").toFile()), UpdateInfo.class);
-			if (updateInfo.simpleVersion > simpleVersion && ArrayUtils.contains(updateInfo.versionSupport, Integer.parseInt(StandardMacros.getMcVersion()))) {
-				shouldShowUpdateMessage = true;
-				logger.warn("New update detected, showing update message!");
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {
 				Files.createDirectories(getShaderpacksDirectory());
@@ -165,6 +162,28 @@ public class Iris {
 			logger.error("Failed to initialize Iris configuration, default values will be used instead");
 			logger.error("", e);
 		}
+
+		updateInfo = CompletableFuture.supplyAsync(() -> {
+			if (!irisConfig.shouldDisableUpdateMessage()) {
+				try {
+					try (InputStream in = new URL("https://raw.githubusercontent.com/IMS212/Iris-Installer-Files/master/updateindex.json").openStream()) {
+						String updateIndex = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
+						InputStream updateInfoStream = new URL(updateIndex).openStream();
+						UpdateInfo updateInfo = new Gson().fromJson(new InputStreamReader(updateInfoStream), UpdateInfo.class);
+						updateInfoStream.close();
+						if (updateInfo.simpleVersion > simpleVersion) {
+							shouldShowUpdateMessage = true;
+							logger.warn("New update detected, showing update message!");
+							return updateInfo;
+						}
+					}
+				} catch (IOException e) {
+					Iris.logger.error("Failed to get update info!", e);
+				}
+			}
+			return null;
+		});
+
 
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
@@ -677,10 +696,19 @@ public class Iris {
 	}
 
 	public static Component getUpdateMessage() {
-		if (shouldShowUpdateMessage) {
-			String languageCode = Minecraft.getInstance().options.languageCode;
-			MutableComponent component = new TextComponent(updateInfo.updateInfo.containsKey(languageCode) ? updateInfo.updateInfo.get(languageCode) : updateInfo.updateInfo.get("en_US"));
-			return component.append(new TextComponent(usedIrisInstaller ? "the Iris Installer." : updateInfo.modHost + ".").withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? updateInfo.installer : updateInfo.modDownload)).withUnderlined(true)));
+		if (updateInfo.isDone()) {
+			UpdateInfo info;
+			try {
+				info = updateInfo.get();
+				if (info == null) {
+					return null;
+				}
+			} catch (InterruptedException | ExecutionException e) {
+				throw new RuntimeException(e);
+			}
+			String languageCode = Minecraft.getInstance().options.languageCode.toLowerCase(Locale.ROOT);
+			MutableComponent component = new TextComponent(info.updateInfo.containsKey(languageCode) ? info.updateInfo.get(languageCode) : info.updateInfo.get("en_us"));
+			return component.append(new TextComponent(usedIrisInstaller ? "the Iris Installer." : info.modHost + ".").withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true)));
 		} else {
 			return null;
 		}

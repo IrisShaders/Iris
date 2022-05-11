@@ -31,12 +31,18 @@ public class IrisConfig {
 	 */
 	private boolean enableDebug;
 
+	/**
+	 * If the update notification should be disabled or not.
+	 */
+	private boolean disableUpdateMessage;
+
 	private final Path propertiesPath;
 
 	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;
 		enableShaders = true;
 		enableDebug = false;
+		disableUpdateMessage = false;
 		this.propertiesPath = propertiesPath;
 	}
 
@@ -94,6 +100,10 @@ public class IrisConfig {
 		return enableDebug;
 	}
 
+	public boolean shouldDisableUpdateMessage() {
+		return disableUpdateMessage;
+	}
+
 	public void setDebugEnabled(boolean enabled) {
 		enableDebug = enabled;
 	}
@@ -121,7 +131,8 @@ public class IrisConfig {
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
-		enableDebug = !"false".equals(properties.getProperty("enableDebug"));
+		enableDebug = "true".equals(properties.getProperty("enableDebug"));
+		disableUpdateMessage = "true".equals(properties.getProperty("disableUpdateMessage"));
 		try {
 			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("maxShadowRenderDistance", "32"));
 		} catch (NumberFormatException e) {
@@ -147,6 +158,7 @@ public class IrisConfig {
 		properties.setProperty("shaderPack", getShaderPackName().orElse(""));
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
 		properties.setProperty("enableDebug", enableDebug ? "true" : "false");
+		properties.setProperty("disableUpdateMessage", disableUpdateMessage ? "true" : "false");
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
