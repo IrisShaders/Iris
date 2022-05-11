@@ -268,7 +268,6 @@ public class Iris {
 				if (minecraft.player != null) {
 					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
 				}
-
 				setShadersDisabled();
 				currentPackName = "(off) [fallback, check your logs for errors]";
 			}
@@ -707,8 +706,17 @@ public class Iris {
 				throw new RuntimeException(e);
 			}
 			String languageCode = Minecraft.getInstance().options.languageCode.toLowerCase(Locale.ROOT);
-			MutableComponent component = new TextComponent(info.updateInfo.containsKey(languageCode) ? info.updateInfo.get(languageCode) : info.updateInfo.get("en_us"));
-			return component.append(new TextComponent(usedIrisInstaller ? "the Iris Installer." : info.modHost + ".").withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true)));
+			String originalText = info.updateInfo.containsKey(languageCode) ? info.updateInfo.get(languageCode) : info.updateInfo.get("en_us");
+			String[] textParts = originalText.split("\\{link}");
+			if (textParts.length > 1) {
+				MutableComponent component1 = new TextComponent(textParts[0]);
+				MutableComponent component2 = new TextComponent(textParts[1]);
+				MutableComponent link = new TextComponent(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
+				return component1.append(link).append(component2);
+			} else {
+				MutableComponent link = new TextComponent(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
+				return new TextComponent(textParts[0]).append(link);
+			}
 		} else {
 			return null;
 		}
