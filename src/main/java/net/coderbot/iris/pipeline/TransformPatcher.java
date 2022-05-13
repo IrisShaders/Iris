@@ -9,7 +9,6 @@ import io.github.douira.glsl_transformer.core.*;
 import io.github.douira.glsl_transformer.core.target.*;
 import io.github.douira.glsl_transformer.print.filter.*;
 import io.github.douira.glsl_transformer.transform.*;
-import io.github.douira.glsl_transformer.transform.TransformationPhase.InjectionPoint;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**
@@ -64,13 +63,17 @@ public class TransformPatcher extends Patcher {
 		}
 	}
 
-	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifierExternalDeclaration<R> {
+	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifier<R> {
 		protected abstract String getMainContent();
 
 		@Override
-		protected String getInjectionContent() {
-			// inserts the alpha test, it is not null because it shouldn't be
-			return "void main() { " + getMainContent() + "\nirisMain(); }";
+		protected String getDetectionResult() {
+			return "irisMain";
+		}
+
+		@Override
+		protected String getWrapTarget() {
+			return "main";
 		}
 
 		@Override
@@ -79,13 +82,9 @@ public class TransformPatcher extends Patcher {
 		}
 
 		@Override
-		protected String getWrapResultDynamic() {
-			return "irisMain";
-		}
-
-		@Override
-		protected String getWrapTargetDynamic() {
-			return "main";
+		protected String getInjectionExternalDeclaration() {
+			// inserts the alpha test, it is not null because it shouldn't be
+			return "void main() { " + getMainContent() + "\nirisMain(); }";
 		}
 	}
 
@@ -107,17 +106,15 @@ public class TransformPatcher extends Patcher {
 		};
 
 		// setup the transformations and even loose phases if necessary
-		TransformationPhase<Parameters> detectReserved = new SearchTerminalsImpl<Parameters>(SearchTerminals.IDENTIFIER,
-				new ThrowTargetImpl<Parameters>(
-						"iris_",
-						"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported.")) {
-			{
-				allowInexactMatches();
-			}
-		};
+		LifecycleUser<Parameters> detectReserved = new SearchTerminals<Parameters>()
+				.singleTarget(
+						new ThrowTargetImpl<Parameters>(
+								"iris_",
+								"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))
+				.requireFullMatch(false);
 
 		// #region patchAttributes
-		Transformation<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
+		LifecycleUser<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
 				addEndDependent(new WalkPhase<Parameters>() {
@@ -140,7 +137,7 @@ public class TransformPatcher extends Patcher {
 				});
 
 				if (getJobParameters().type == ShaderType.GEOMETRY) {
-					chainDependent(new SearchTerminalsImpl<Parameters>(
+					chainDependent(new SearchTerminals<Parameters>().singleTarget(
 							new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)));
 				}
 
@@ -167,7 +164,7 @@ public class TransformPatcher extends Patcher {
 			}
 		};
 
-		Transformation<Parameters> wrapOverlay = new MainWrapperDynamic<Parameters>() {
+		LifecycleUser<Parameters> wrapOverlay = new MainWrapperDynamic<Parameters>() {
 			@Override
 			protected String getMainContent() {
 				return getJobParameters().type == ShaderType.VERTEX
@@ -175,53 +172,43 @@ public class TransformPatcher extends Patcher {
 								"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);"
 						: "entityColorGS = entityColor[0];";
 			}
-
-			@Override
-			protected boolean isActiveDynamic() {
-				return true;
-			}
 		};
 
-		TransformationPhase<Parameters> renameEntityColorFragment = new SearchTerminalsImpl<Parameters>(
-				new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS")) {
+		LifecycleUser<Parameters> renameEntityColorFragment = new SearchTerminals<Parameters>() {
 			@Override
-			protected boolean isActive() {
+			public boolean isActive() {
 				return ((AttributeParameters) getJobParameters()).hasGeometry;
 			}
-		};
+		}.singleTarget(new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS"));
+
 		// #endregion patchAttributes
 
 		// #region patchSodiumTerrain
 		// see SodiumTerrainPipeline for the original patcher
-		Transformation<Parameters> wrapFTransform = WrapIdentifier.<Parameters>withExternalDeclaration(
-				"ftransform",
-				"iris_ftransform",
-				"iris_ftransform",
-				InjectionPoint.BEFORE_FUNCTIONS,
-				"vec4 iris_ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+		LifecycleUser<Parameters> wrapFTransform = new WrapIdentifier<Parameters>()
+				.wrapTarget("fTransform")
+				.detectionResult("iris_ftransform")
+				.injectionLocation(InjectionPoint.BEFORE_FUNCTIONS)
+				.injectionExternalDeclaration("vec4 iris_ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		// TODO: the other wrappers
 
-		Transformation<Parameters> wrapModelViewMatrix = WrapIdentifier.<Parameters>withExternalDeclaration(
-				"gl_ModelViewMatrix",
-				"u_ModelViewMatrix",
-				"u_ModelViewMatrix",
-				InjectionPoint.BEFORE_DECLARATIONS,
-				"uniform mat4 u_ModelViewMatrix;");
-		Transformation<Parameters> wrapModelViewProjectionMatrix = WrapIdentifier
-				.<Parameters>withExternalDeclaration(
-						"gl_ModelViewProjectionMatrix",
-						"u_ModelViewProjectionMatrix",
-						"u_ModelViewProjectionMatrix",
-						InjectionPoint.BEFORE_DECLARATIONS,
-						"uniform mat4 u_ModelViewProjectionMatrix;");
-		Transformation<Parameters> wrapNormalMatrix = WrapIdentifier
-				.<Parameters>withExternalDeclaration(
-						"gl_NormalMatrix",
-						"u_NormalMatrix",
-						"mat3(u_NormalMatrix)",
-						InjectionPoint.BEFORE_DECLARATIONS,
-						"uniform mat4 u_NormalMatrix;");
-		Transformation<Parameters> replaceTextureMatrix = new Transformation<Parameters>() {
+		LifecycleUser<Parameters> wrapModelViewMatrix = new WrapIdentifier<Parameters>()
+				.wrapTarget("gl_ModelViewMatrix")
+				.detectionResult("u_ModelViewMatrix")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclaration("uniform mat4 u_ModelViewMatrix;");
+		LifecycleUser<Parameters> wrapModelViewProjectionMatrix = new WrapIdentifier<Parameters>()
+				.wrapTarget("gl_ModelViewProjectionMatrix")
+				.detectionResult("u_ModelViewProjectionMatrix")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclaration("uniform mat4 u_ModelViewProjectionMatrix;");
+		LifecycleUser<Parameters> wrapNormalMatrix = new WrapIdentifier<Parameters>()
+				.wrapTarget("gl_NormalMatrix")
+				.detectionResult("u_NormalMatrix")
+				.parsedReplacement("mat3(u_NormalMatrix)")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclaration("uniform mat4 u_NormalMatrix;");
+		LifecycleUser<Parameters> replaceTextureMatrix = new Transformation<Parameters>() {
 			{
 				addEndDependent(new WalkPhase<Parameters>() {
 					ParseTreePattern textureMatrixPattern;
