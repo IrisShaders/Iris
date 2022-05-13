@@ -11,26 +11,25 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
+import net.coderbot.iris.vendored.joml.Matrix4f;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL21C;
 
 public class CenterDepthSampler {
 	private static final double LN2 = Math.log(2);
-	private boolean hasFirstSample;
-	private boolean everRetrieved;
 	private final Program program;
 	private final GlFramebuffer framebuffer;
 	private final int texture;
 	private final int altTexture;
+	private boolean hasFirstSample;
+	private boolean everRetrieved;
 
 	public CenterDepthSampler(float halfLife) {
 		this.texture = GlStateManager._genTexture();
 		this.altTexture = GlStateManager._genTexture();
 		this.framebuffer = new GlFramebuffer();
 
-		// Fall back to a less precise format if the system doesn't support OpenGL 3
-		InternalTextureFormat format = GL.getCapabilities().OpenGL30 ? InternalTextureFormat.R32F : InternalTextureFormat.RGB16;
+		InternalTextureFormat format = InternalTextureFormat.R32F;
 		RenderSystem.bindTexture(texture);
 		setupColorTexture(format);
 		RenderSystem.bindTexture(altTexture);
@@ -38,17 +37,22 @@ public class CenterDepthSampler {
 		RenderSystem.bindTexture(0);
 
 		this.framebuffer.addColorAttachment(0, texture);
-		ProgramBuilder builder = ProgramBuilder.begin("centerDepthSmooth", "#version 120\n" +
-			" void main() { gl_Position = ftransform(); }", null, "#version 120\n" +
+		ProgramBuilder builder = ProgramBuilder.begin("centerDepthSmooth", "#version 150 core\n" +
+			"in vec3 iris_Position;" +
+			"uniform mat4 projection;" +
+			"void main() { gl_Position = projection * vec4(iris_Position, 1.0); }", null, "#version 150 core\n" +
 			" uniform sampler2D depth; \n" +
 			" uniform sampler2D altDepth; \n" +
 			" uniform float lastFrameTime; \n" +
 			" uniform float decay; \n" +
-			" void main() { float currentDepth = texture2D(depth, vec2(0.5)).r; float decay2 = 1.0 - exp(-decay * lastFrameTime); gl_FragColor = vec4(mix(texture2D(altDepth, vec2(0.5)).r, currentDepth, decay2), 0, 0, 0); }", ImmutableSet.of());
+			" out vec4 iris_fragColor; \n" +
+			" void main() { float currentDepth = texture(depth, vec2(0.5)).r; float decay2 = 1.0 - exp(-decay * lastFrameTime); iris_fragColor = vec4(mix(texture(altDepth, vec2(0.5)).r, currentDepth, decay2), 0, 0, 0); }", ImmutableSet.of());
 		builder.addDynamicSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
 		builder.addDynamicSampler(() -> altTexture, "altDepth");
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
 		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife * 0.1) / LN2)));
+		// TODO: can we just do this for all composites?
+		builder.uniformJomlMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
 		this.program = builder.build();
 	}
 

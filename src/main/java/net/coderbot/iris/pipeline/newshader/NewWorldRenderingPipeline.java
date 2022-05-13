@@ -175,7 +175,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
+		this.centerDepthSampler = new CenterDepthSampler(programSet.getPackDirectives().getCenterDepthHalfLife());
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
@@ -590,8 +590,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// all non-translucent content, as required.
 		renderTargets.copyPreTranslucentDepth();
 
-		centerDepthSampler.updateSample();
-
 		deferredRenderer.renderAll();
 
 		RenderSystem.enableBlend();
@@ -616,6 +614,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void finalizeLevelRendering() {
 		isRenderingWorld = false;
+		centerDepthSampler.sampleCenterDepth();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 	}
