@@ -82,6 +82,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ShadowRenderTargets shadowRenderTargets;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
 
+	private WorldRenderingPhase overridePhase = null;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NONE;
 
 	private final Set<ShaderInstance> loadedShaders;
@@ -483,6 +484,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public WorldRenderingPhase getPhase() {
+		if (overridePhase != null) {
+			return overridePhase;
+		}
+
 		return phase;
 	}
 
@@ -498,7 +503,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void setOverridePhase(WorldRenderingPhase phase) {
-
+		this.overridePhase = phase;
 	}
 
 	@Override
