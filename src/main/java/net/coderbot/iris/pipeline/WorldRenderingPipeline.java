@@ -22,9 +22,7 @@ public interface WorldRenderingPipeline {
 	void endSodiumTerrainRendering();
 	void setOverridePhase(WorldRenderingPhase phase);
 	void setPhase(WorldRenderingPhase phase);
-	void setInputs(InputAvailability availability);
 	void setSpecialCondition(SpecialCondition special);
-	void syncProgram();
 	RenderTargetStateListener getRenderTargetStateListener();
 
 	void beginHand();

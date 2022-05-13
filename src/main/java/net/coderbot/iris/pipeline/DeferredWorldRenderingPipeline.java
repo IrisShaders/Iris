@@ -1000,7 +1000,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	boolean sodiumTerrainRendering = false;
 
-	@Override
+	//@Override
 	public void syncProgram() {
 		matchPass();
 	}
@@ -1033,7 +1033,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		GbufferPrograms.runPhaseChangeNotifier();
 	}
 
-	@Override
+	//@Override
 	public void setInputs(InputAvailability availability) {
 		this.inputs = availability;
 	}

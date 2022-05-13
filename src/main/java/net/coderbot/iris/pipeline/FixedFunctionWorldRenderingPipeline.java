@@ -67,7 +67,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 
 	}
 
-	@Override
+	//@Override
 	public void setInputs(InputAvailability availability) {
 
 	}
@@ -77,7 +77,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 
 	}
 
-	@Override
+	//@Override
 	public void syncProgram() {
 
 	}

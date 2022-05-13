@@ -14,6 +14,7 @@ import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.samplers.IrisSamplers;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL32C;
 
 public class IrisChunkShaderInterface {
 	@Nullable
@@ -52,9 +53,9 @@ public class IrisChunkShaderInterface {
 
 	public void setup() {
 		// See IrisSamplers#addLevelSamplers
-		RenderSystem.activeTexture(IrisSamplers.ALBEDO_TEXTURE_UNIT);
+		RenderSystem.activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.ALBEDO_TEXTURE_UNIT);
 		RenderSystem.bindTexture(RenderSystem.getShaderTexture(0));
-		RenderSystem.activeTexture(IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
+		RenderSystem.activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
 		RenderSystem.bindTexture(RenderSystem.getShaderTexture(2));
 
 		if (blendModeOverride != null) {

@@ -507,17 +507,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public void setInputs(InputAvailability availability) {
-		// no-op
-	}
-
-	@Override
 	public void setSpecialCondition(SpecialCondition special) {
-		// no-op
-	}
-
-	@Override
-	public void syncProgram() {
 		// no-op
 	}
 

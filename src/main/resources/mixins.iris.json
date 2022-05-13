@@ -68,7 +68,6 @@
     "statelisteners.MixinGlStateManager",
     "statelisteners.MixinRenderSystem",
     "DimensionTypeAccessor",
-    "state_tracking.MixinGlStateManager",
     "state_tracking.MixinPostChain",
     "state_tracking.MixinRenderTarget"
   ],
