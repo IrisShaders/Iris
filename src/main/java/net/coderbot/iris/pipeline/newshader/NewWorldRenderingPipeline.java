@@ -33,7 +33,6 @@ import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.samplers.DepthBufferTracker;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -43,6 +42,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.EmptyShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.texture.TextureInfoCache;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
@@ -137,7 +137,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		int depthTextureId = main.getDepthTextureId();
-		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
@@ -174,7 +175,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
+		this.centerDepthSampler = new CenterDepthSampler(programSet.getPackDirectives().getCenterDepthHalfLife());
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
@@ -476,7 +477,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		updateNotifier.onNewFrame();
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$isDepthBufferDirty(), main.getDepthTextureId(), main.width, main.height, DepthBufferTracker.INSTANCE.getFormat(main.getDepthTextureId()));
+
+		int depthTextureId = main.getDepthTextureId();
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
+
+		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$isDepthBufferDirty(), depthTextureId, main.width, main.height, depthBufferFormat);
 		((Blaze3dRenderTargetExt) main).iris$clearDepthBufferDirtyFlag();
 
 		final ImmutableList<ClearPass> passes;
@@ -565,24 +571,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	}
 
-	private void copyDepthTexture() {
-		// Note: Use copyTexSubImage2D, since that will not re-allocate the target texture's storage,
-		// even though we copy the whole depth texture. This might make the copy be a bit faster.
-		GlStateManager._glCopyTexSubImage2D(
-			// target
-			GL20C.GL_TEXTURE_2D,
-			// level
-			0,
-			// xoffset, yoffset
-			0, 0,
-			// x, y
-			0, 0,
-			// width
-			renderTargets.getCurrentWidth(),
-			// height
-			renderTargets.getCurrentHeight());
-	}
-
 	@Override
 	public void beginHand() {
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
@@ -601,8 +589,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
 		renderTargets.copyPreTranslucentDepth();
-
-		centerDepthSampler.updateSample();
 
 		deferredRenderer.renderAll();
 
@@ -628,6 +614,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void finalizeLevelRendering() {
 		isRenderingWorld = false;
+		centerDepthSampler.sampleCenterDepth();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 	}

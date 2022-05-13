@@ -7,11 +7,14 @@ import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.coderbot.iris.pipeline.newshader.FogMode;
-import net.coderbot.iris.samplers.TextureAtlasTracker;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.texture.TextureInfoCache;
+import net.coderbot.iris.texture.TextureInfoCache.TextureInfo;
+import net.coderbot.iris.texture.TextureTracker;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
 import net.coderbot.iris.vendored.joml.Vector2f;
@@ -22,6 +25,8 @@ import net.coderbot.iris.vendored.joml.Vector4i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -32,7 +37,6 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FogType;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Objects;
@@ -44,6 +48,9 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
+	private static final Vector2i ZERO_VECTOR_2i = new Vector2i();
+	private static final Vector4i ZERO_VECTOR_4i = new Vector4i(0, 0, 0, 0);
+	private static final Vector3d ZERO_VECTOR_3d = new Vector3d();
 
 	private CommonUniforms() {
 		// no construction allowed
@@ -65,21 +72,29 @@ public final class CommonUniforms {
 
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
+		//
+		// Note: on 1.17+ we don't need to reset this when textures are bound, since
+		// the shader will always be setup (and therefore uniforms will be re-uploaded)
+		// after the texture is changed and before rendering starts.
 		uniforms.uniform2i("atlasSize", () -> {
 			int glId = RenderSystem.getShaderTexture(0);
 
-			Vec2 atlasSize = TextureAtlasTracker.INSTANCE.getAtlasSize(glId);
+			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
+			if (texture instanceof TextureAtlas) {
+				TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
+				return new Vector2i(info.getWidth(), info.getHeight());
+			}
 
-			return new Vector2i((int) atlasSize.x, (int) atlasSize.y);
-		}, StateUpdateNotifiers.atlasTextureNotifier);
+			return ZERO_VECTOR_2i;
+		}, listener -> {});
 
 		uniforms.uniform4i("blendFunc", () -> {
-			GlStateManager.BlendState blend = net.coderbot.iris.mixin.GlStateManagerAccessor.getBLEND();
+			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND();
 
 			if (((BooleanStateAccessor) blend.mode).isEnabled()) {
 				return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
 			} else {
-				return new Vector4i(0, 0, 0, 0);
+				return ZERO_VECTOR_4i;
 			}
 		}, StateUpdateNotifiers.blendFuncNotifier);
 
@@ -118,7 +133,7 @@ public final class CommonUniforms {
 
 	private static Vector3d getSkyColor() {
 		if (client.level == null || client.cameraEntity == null) {
-			return new Vector3d();
+			return ZERO_VECTOR_3d;
 		}
 
 		return JomlConversions.fromVec3(client.level.getSkyColor(client.cameraEntity.position(),
@@ -146,7 +161,7 @@ public final class CommonUniforms {
 			return 0.0F;
 		}
 
-		return ((LocalPlayer)client.cameraEntity).getCurrentMood();
+		return ((LocalPlayer) client.cameraEntity).getCurrentMood();
 	}
 
 	static float getRainStrength() {
@@ -159,7 +174,7 @@ public final class CommonUniforms {
 
 	private static Vector2i getEyeBrightness() {
 		if (client.cameraEntity == null || client.level == null) {
-			return new Vector2i(0, 0);
+			return ZERO_VECTOR_2i;
 		}
 
 		Vec3 feet = client.cameraEntity.position();

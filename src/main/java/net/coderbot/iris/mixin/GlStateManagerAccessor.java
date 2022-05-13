@@ -6,11 +6,18 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(GlStateManager.class)
 public interface GlStateManagerAccessor {
-	@Accessor("activeTexture")
-	static int getActiveTexture() { throw new UnsupportedOperationException("not accessed"); }
-
 	@Accessor("BLEND")
 	static GlStateManager.BlendState getBLEND() {
+		throw new UnsupportedOperationException("Not accessed");
+	}
+
+	@Accessor("activeTexture")
+	static int getActiveTexture() {
+		throw new UnsupportedOperationException("Not accessed");
+	}
+
+	@Accessor("TEXTURES")
+	static GlStateManager.TextureState[] getTEXTURES() {
 		throw new UnsupportedOperationException("Not accessed");
 	}
 }

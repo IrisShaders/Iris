@@ -18,6 +18,16 @@ import java.nio.IntBuffer;
 public class IrisRenderSystem {
 	private static Matrix4f backupProjection;
 
+	public static void getIntegerv(int pname, int[] params) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL32C.glGetIntegerv(pname, params);
+	}
+
+	public static void getFloatv(int pname, float[] params) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL32C.glGetFloatv(pname, params);
+	}
+
 	public static void generateMipmaps(int mipmapTarget) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glGenerateMipmap(mipmapTarget);
@@ -28,9 +38,9 @@ public class IrisRenderSystem {
 		GL32C.glBindAttribLocation(program, index, name);
 	}
 
-	public static void texImage2D(int i, int j, int k, int l, int m, int n, int o, int p, @Nullable ByteBuffer byteBuffer) {
+	public static void texImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GL32C.glTexImage2D(i, j, k, l, m, n, o, p, byteBuffer);
+		GL32C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 	}
 
 	public static void uniform1f(int location, float v0) {
@@ -111,6 +121,11 @@ public class IrisRenderSystem {
 	public static void detachShader(int program, int shader) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glDetachShader(program, shader);
+	}
+
+	public static int getTexParameteri(int target, int pname) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		return GL32C.glGetTexParameteri(target, pname);
 	}
 
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
