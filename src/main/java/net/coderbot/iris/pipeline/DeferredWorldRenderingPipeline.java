@@ -22,6 +22,7 @@ import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferProgram;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -222,7 +223,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
+		this.centerDepthSampler = new CenterDepthSampler(programs.getPackDirectives().getCenterDepthHalfLife());
 
 		Supplier<ShadowMapRenderer> shadowMapRendererSupplier = () -> {
 			createShadowMapRenderer.run();
@@ -705,6 +706,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		compositeRenderer.destroy();
 		deferredRenderer.destroy();
 		finalPassRenderer.destroy();
+		centerDepthSampler.destroy();
 
 		// Make sure that any custom framebuffers are not bound before destroying render targets
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
@@ -812,7 +814,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		// all non-translucent content, as required.
 		renderTargets.copyPreTranslucentDepth();
 
-		centerDepthSampler.updateSample();
 
 		deferredRenderer.renderAll();
 		Program.unbind();
@@ -928,6 +929,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		isRenderingWorld = false;
 		phase = WorldRenderingPhase.NONE;
 		programStackLog.clear();
+
+		centerDepthSampler.sampleCenterDepth();
 
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
