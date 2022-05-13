@@ -134,7 +134,7 @@ public class NewShaderTests {
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-		}, isFullbright, parent);
+		}, isFullbright, parent, inputs);
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,

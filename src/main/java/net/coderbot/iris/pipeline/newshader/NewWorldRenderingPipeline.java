@@ -774,4 +774,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public float getSunPathRotation() {
 		return sunPathRotation;
 	}
+
+	protected AbstractTexture getWhitePixel() {
+		return whitePixel;
+	}
 }
