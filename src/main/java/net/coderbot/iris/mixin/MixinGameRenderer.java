@@ -210,6 +210,7 @@ public class MixinGameRenderer {
 			"getRendertypeEntityCutoutShader",
 			"getRendertypeEntityCutoutNoCullShader",
 			"getRendertypeEntityCutoutNoCullZOffsetShader",
+			"getRendertypeEntityDecalShader",
 			"getRendertypeEntitySmoothCutoutShader",
 			"getRendertypeEntityTranslucentShader",
 			"getRendertypeEntityTranslucentCullShader",
@@ -303,7 +304,6 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getRenderTypeEntityDecalShader (uses entity diffuse lighting)
 	// TODO: getRenderTypeEntityAlphaShader (weird alpha test behavior!!!)
 
 	// NOTE: getRenderTypeOutlineShader should not be overriden.

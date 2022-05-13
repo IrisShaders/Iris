@@ -36,7 +36,7 @@ public enum ShaderKey {
 	HAND_TRANSLUCENT       (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	HAND_WATER_BRIGHT      (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
 	HAND_WATER_DIFFUSE     (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
-	LIGHTNING              (ProgramId.Entities,    AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,              FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	LIGHTNING              (ProgramId.Entities,    AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,              FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
 	LEASH                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	PARTICLES              (ProgramId.TexturedLit, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	WEATHER                (ProgramId.Weather,     AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
@@ -61,7 +61,7 @@ public enum ShaderKey {
 	SHADOW_CLOUDS          (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL,   FogMode.OFF,          LightingModel.LIGHTMAP  ),
 	SHADOW_LINES           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.OFF,          LightingModel.LIGHTMAP  ),
 	SHADOW_LEASH           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.OFF,          LightingModel.LIGHTMAP  ),
-	SHADOW_LIGHTNING       (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,     			FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_LIGHTNING       (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,     			FogMode.OFF,          LightingModel.FULLBRIGHT),
 	SHADOW_PARTICLES       (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,	     			FogMode.OFF,          LightingModel.LIGHTMAP  ),
 	SHADOW_TEXT           (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF,          LightingModel.LIGHTMAP  ),
 	SHADOW_TEXT_INTENSITY (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.OFF,          LightingModel.LIGHTMAP  );
