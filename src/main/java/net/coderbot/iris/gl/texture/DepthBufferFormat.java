@@ -2,6 +2,7 @@ package net.coderbot.iris.gl.texture;
 
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 public enum DepthBufferFormat {
 	DEPTH(false),
@@ -74,10 +75,12 @@ public enum DepthBufferFormat {
 		switch (this) {
 			case DEPTH:
 			case DEPTH16:
+				return GL43C.GL_UNSIGNED_SHORT;
 			case DEPTH24:
 			case DEPTH32:
+				return GL43C.GL_UNSIGNED_INT;
 			case DEPTH32F:
-				return GL30C.GL_UNSIGNED_BYTE;
+				return GL30C.GL_FLOAT;
 			case DEPTH_STENCIL:
 			case DEPTH24_STENCIL8:
 				return GL30C.GL_UNSIGNED_INT_24_8;
