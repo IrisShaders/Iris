@@ -8,6 +8,8 @@ import net.minecraft.client.Minecraft;
 public class CapturedRenderingState {
 	public static final CapturedRenderingState INSTANCE = new CapturedRenderingState();
 
+	private static final Vector3d ZERO_VECTOR_3d = new Vector3d();
+
 	private Matrix4f gbufferModelView;
 	private Matrix4f gbufferProjection;
 	private Vector3d fogColor;
@@ -39,7 +41,7 @@ public class CapturedRenderingState {
 
 	public Vector3d getFogColor() {
 		if (Minecraft.getInstance().level == null || fogColor == null) {
-			return new Vector3d();
+			return ZERO_VECTOR_3d;
 		}
 
 		return fogColor;
