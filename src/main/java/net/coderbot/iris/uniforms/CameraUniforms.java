@@ -43,8 +43,8 @@ public class CameraUniforms {
 		 * a noticeable change in shader animations and similar. 1000024 is the number used by Optifine for walking (however this is too much, so we choose 30000),
 		 * with an extra 1024 check for if the user has teleported between camera positions.
 		 */
-		private static final double walkRange = 30000;
-		private static final double tpRange = 1000;
+		private static final double WALK_RANGE = 30000;
+		private static final double TP_RANGE = 1000;
 
 		private Vector3d previousCameraPosition = new Vector3d();
 		private Vector3d currentCameraPosition = new Vector3d();
@@ -76,9 +76,9 @@ public class CameraUniforms {
 		}
 
 		private static double getShift(double value, double prevValue) {
-			if (Math.abs(value) > walkRange || Math.abs(value - prevValue) > tpRange) {
-				// Only shift by increments of walkRange - this is required for some packs (like SEUS PTGI) to work properly
-				return -(value - (value % walkRange));
+			if (Math.abs(value) > WALK_RANGE || Math.abs(value - prevValue) > TP_RANGE) {
+				// Only shift by increments of WALK_RANGE - this is required for some packs (like SEUS PTGI) to work properly
+				return -(value - (value % WALK_RANGE));
 			} else {
 				return 0.0;
 			}
