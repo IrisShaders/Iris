@@ -1,5 +1,7 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.stream.*;
+
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.pattern.*;
 
@@ -190,24 +192,79 @@ public class TransformPatcher extends Patcher {
 				.detectionResult("iris_ftransform")
 				.injectionLocation(InjectionPoint.BEFORE_FUNCTIONS)
 				.injectionExternalDeclaration("vec4 iris_ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
-		// TODO: the other wrappers
+
+		LifecycleUser<Parameters> wrapVertex = new WrapIdentifier<Parameters>() {
+			@Override
+			protected ActivatableLifecycleUser<Parameters> getWrapResultDetector() {
+				return new SearchTerminals<Parameters>()
+						.targets(
+								Stream.of("a_Pos", "u_ModelScale", "d_ModelOffset")
+										.map((detect) -> new WrapThrowTargetImpl<Parameters>(detect))
+										.collect(Collectors.toList()));
+			}
+
+			@Override
+			protected ActivatableLifecycleUser<Parameters> getInjector() {
+				return RunPhase.withInjectExternalDeclarations(injectionLocation(),
+						"attribute vec3 a_Pos;",
+						"uniform vec3 u_ModelScale;",
+						"attribute vec4 d_ModelOffset;");
+			}
+		}
+				.wrapTarget("gl_Vertex")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
+
+		LifecycleUser<Parameters> wrapMultiTexCoord = new WrapIdentifier<Parameters>() {
+			@Override
+			protected ActivatableLifecycleUser<Parameters> getWrapResultDetector() {
+				return new SearchTerminals<Parameters>()
+						.targets(
+								Stream.of("a_TexCoord", "u_TextureScale")
+										.map((detect) -> new WrapThrowTargetImpl<Parameters>(detect))
+										.collect(Collectors.toList()));
+			}
+
+			@Override
+			protected ActivatableLifecycleUser<Parameters> getInjector() {
+				return RunPhase.withInjectExternalDeclarations(injectionLocation(),
+						"uniform vec2 u_TextureScale;",
+						"attribute vec2 a_TexCoord;");
+			}
+		}
+				.wrapTarget("gl_MultiTexCoord0")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
+
+		LifecycleUser<Parameters> wrapColor = new WrapIdentifier<Parameters>()
+				.wrapTarget("gl_Color")
+				.detectionResult("a_Color")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclaration("attribute vec4 a_Color;");
+
+		LifecycleUser<Parameters> wrapNormal = new WrapIdentifier<Parameters>()
+				.wrapTarget("gl_Normal")
+				.detectionResult("a_Normal")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclaration("attribute vec3 a_Normal;");
 
 		LifecycleUser<Parameters> wrapModelViewMatrix = new WrapIdentifier<Parameters>()
 				.wrapTarget("gl_ModelViewMatrix")
 				.detectionResult("u_ModelViewMatrix")
 				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 				.injectionExternalDeclaration("uniform mat4 u_ModelViewMatrix;");
+
 		LifecycleUser<Parameters> wrapModelViewProjectionMatrix = new WrapIdentifier<Parameters>()
 				.wrapTarget("gl_ModelViewProjectionMatrix")
 				.detectionResult("u_ModelViewProjectionMatrix")
 				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 				.injectionExternalDeclaration("uniform mat4 u_ModelViewProjectionMatrix;");
+
 		LifecycleUser<Parameters> wrapNormalMatrix = new WrapIdentifier<Parameters>()
 				.wrapTarget("gl_NormalMatrix")
 				.detectionResult("u_NormalMatrix")
 				.parsedReplacement("mat3(u_NormalMatrix)")
 				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 				.injectionExternalDeclaration("uniform mat4 u_NormalMatrix;");
+
 		LifecycleUser<Parameters> replaceTextureMatrix = new Transformation<Parameters>() {
 			{
 				addEndDependent(new WalkPhase<Parameters>() {
@@ -252,8 +309,15 @@ public class TransformPatcher extends Patcher {
 				// patchSodiumTerrain
 				if (patch == Patch.SODIUM_TERRAIN) {
 					if (type == ShaderType.VERTEX) {
-						// TODO: the vertex-exclusive transformations
 						addEndDependent(wrapFTransform);
+						addEndDependent(wrapVertex);
+						// gl_Vertex should be replaced after ftransform since it uses gl_Vertex itself
+						addDependent(wrapFTransform, wrapVertex);
+						addEndDependent(wrapMultiTexCoord);
+						addEndDependent(wrapColor);
+						addEndDependent(wrapNormal);
+
+						//TODO implement BuiltinUniformReplacementTransformer
 					}
 
 					if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
@@ -269,13 +333,19 @@ public class TransformPatcher extends Patcher {
 		manager.setParseTokenFilter(parseTokenFilter);
 	}
 
+	private String transform(String source, Parameters parameters) {
+		String result = manager.transform(source, parameters);
+		// TODO: optionally logging here
+		return result;
+	}
+
 	@Override
 	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
-		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
+		return transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
 	}
 
 	@Override
 	public String patchSodiumTerrainInternal(String source, ShaderType type) {
-		return manager.transform(source, new Parameters(Patch.SODIUM_TERRAIN, type));
+		return transform(source, new Parameters(Patch.SODIUM_TERRAIN, type));
 	}
 }
