@@ -199,7 +199,7 @@ public class TransformPatcher extends Patcher {
 				return new SearchTerminals<Parameters>()
 						.targets(
 								Stream.of("a_Pos", "u_ModelScale", "d_ModelOffset")
-										.map((detect) -> new WrapThrowTargetImpl<Parameters>(detect))
+										.map(WrapThrowTargetImpl<Parameters>::new)
 										.collect(Collectors.toList()));
 			}
 
