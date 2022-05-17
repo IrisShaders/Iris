@@ -13,6 +13,6 @@ public class IrisExclusiveUniforms {
 
 
 	private static float getThunderStrength() {
-		return Minecraft.getInstance().level.getThunderLevel(CapturedRenderingState.INSTANCE.getTickDelta()
+		return Minecraft.getInstance().level.getThunderLevel(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 }
