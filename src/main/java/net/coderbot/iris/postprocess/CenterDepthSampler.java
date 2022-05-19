@@ -11,9 +11,14 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 import net.coderbot.iris.vendored.joml.Matrix4f;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL21C;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class CenterDepthSampler {
 	private static final double LN2 = Math.log(2);
@@ -37,16 +42,16 @@ public class CenterDepthSampler {
 		RenderSystem.bindTexture(0);
 
 		this.framebuffer.addColorAttachment(0, texture);
-		ProgramBuilder builder = ProgramBuilder.begin("centerDepthSmooth", "#version 150 core\n" +
-			"in vec3 iris_Position;" +
-			"uniform mat4 projection;" +
-			"void main() { gl_Position = projection * vec4(iris_Position, 1.0); }", null, "#version 150 core\n" +
-			" uniform sampler2D depth; \n" +
-			" uniform sampler2D altDepth; \n" +
-			" uniform float lastFrameTime; \n" +
-			" uniform float decay; \n" +
-			" out vec4 iris_fragColor; \n" +
-			" void main() { float currentDepth = texture(depth, vec2(0.5)).r; float decay2 = 1.0 - exp(-decay * lastFrameTime); iris_fragColor = vec4(mix(texture(altDepth, vec2(0.5)).r, currentDepth, decay2), 0, 0, 0); }", ImmutableSet.of());
+		ProgramBuilder builder = null;
+
+		try {
+			Path path = FabricLoader.getInstance().getModContainer("iris")
+				.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPaths().get(0);
+			builder = ProgramBuilder.begin("centerDepthSmooth", new String(Files.readAllBytes(path.resolve("centerDepth.vsh"))), null, new String(Files.readAllBytes(path.resolve("centerDepth.fsh"))), ImmutableSet.of());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
 		builder.addDynamicSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
 		builder.addDynamicSampler(() -> altTexture, "altDepth");
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
