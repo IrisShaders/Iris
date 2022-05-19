@@ -70,33 +70,33 @@ public class SodiumTerrainPipeline {
 		});
 
 		if (terrainVertex != null) {
-			// terrainVertex = transformVertexShader(terrainVertex);
-			terrainVertex = Patcher.INSTANCE.patchSodiumTerrain(terrainVertex, ShaderType.VERTEX);
+			terrainVertex = transformVertexShader(terrainVertex);
+			// terrainVertex = Patcher.INSTANCE.patchSodiumTerrain(terrainVertex, ShaderType.VERTEX);
 		}
 
 		if (translucentVertex != null) {
-			// translucentVertex = transformVertexShader(translucentVertex);
-			translucentVertex = Patcher.INSTANCE.patchSodiumTerrain(translucentVertex, ShaderType.VERTEX);
+			translucentVertex = transformVertexShader(translucentVertex);
+			// translucentVertex = Patcher.INSTANCE.patchSodiumTerrain(translucentVertex, ShaderType.VERTEX);
 		}
 
 		if (shadowVertex != null) {
-			// shadowVertex = transformVertexShader(shadowVertex);
-			shadowVertex = Patcher.INSTANCE.patchSodiumTerrain(shadowVertex, ShaderType.VERTEX);
+			shadowVertex = transformVertexShader(shadowVertex);
+			// shadowVertex = Patcher.INSTANCE.patchSodiumTerrain(shadowVertex, ShaderType.VERTEX);
 		}
 
 		if (terrainFragment != null) {
-			// terrainFragment = transformFragmentShader(terrainFragment);
-			terrainFragment = Patcher.INSTANCE.patchSodiumTerrain(terrainFragment, ShaderType.FRAGMENT);
+			terrainFragment = transformFragmentShader(terrainFragment);
+			// terrainFragment = Patcher.INSTANCE.patchSodiumTerrain(terrainFragment, ShaderType.FRAGMENT);
 		}
 		
 		if (translucentFragment != null) {
-			// translucentFragment = transformFragmentShader(translucentFragment);
-			translucentFragment = Patcher.INSTANCE.patchSodiumTerrain(translucentFragment, ShaderType.FRAGMENT);
+			translucentFragment = transformFragmentShader(translucentFragment);
+			// translucentFragment = Patcher.INSTANCE.patchSodiumTerrain(translucentFragment, ShaderType.FRAGMENT);
 		}
 		
 		if (shadowFragment != null) {
-			// shadowFragment = transformFragmentShader(shadowFragment);
-			shadowFragment = Patcher.INSTANCE.patchSodiumTerrain(shadowFragment, ShaderType.FRAGMENT);
+			shadowFragment = transformFragmentShader(shadowFragment);
+			// shadowFragment = Patcher.INSTANCE.patchSodiumTerrain(shadowFragment, ShaderType.FRAGMENT);
 		}
 
 		this.createTerrainSamplers = createTerrainSamplers;

@@ -4,7 +4,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.*;
 
 public class AttributeShaderTransformer {
-	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
+	public static String patch(String source, ShaderType type, boolean hasGeometry) {
 		if (source.contains("iris_")) {
 			throw new IllegalStateException("Shader is attempting to exploit internal Iris code!");
 		}

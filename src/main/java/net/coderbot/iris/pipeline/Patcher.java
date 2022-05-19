@@ -24,19 +24,11 @@ public abstract class Patcher {
 		return patched;
 	}
 
-	public final String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+	public final String patchExample(String source, ShaderType type, Object thing) {
 		return inspectPatch(source,
-				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
-				() -> patchAttributesInternal(source, type, hasGeometry));
+				"TYPE: " + type + " THING: " + thing,
+				() -> patchExampleInternal(source, type,thing ));
 	}
 
-	public final String patchSodiumTerrain(String source, ShaderType type) {
-		return inspectPatch(source,
-				"TYPE: " + type,
-				() -> patchSodiumTerrainInternal(source, type));
-	}
-
-	protected abstract String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry);
-
-	protected abstract String patchSodiumTerrainInternal(String source, ShaderType type);
+	protected abstract String patchExampleInternal(String source, ShaderType type, Object thing);
 }
