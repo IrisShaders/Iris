@@ -9,8 +9,7 @@ import io.github.douira.glsl_transformer.transform.*;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**
- * The transform patcher (triforce 2) uses glsl-transformer to do shader
- * transformation.
+ * The transform patcher uses glsl-transformer to do shader transformation.
  * 
  * NOTE: This patcher expects (and ensures) that the string doesn't contain any
  * (!) preprocessor directives. The only allowed ones are #extension and #pragma
