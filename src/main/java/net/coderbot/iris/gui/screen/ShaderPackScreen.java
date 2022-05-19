@@ -52,6 +52,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private static final int COMMENT_PANEL_WIDTH = 314;
 
 	private final Screen parent;
+	private final MutableComponent irisTextComponent;
 
 	private ShaderPackSelectionList shaderPackList;
 
@@ -70,11 +71,29 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private boolean optionMenuOpen = false;
 
 	private boolean dropChanges = false;
+	private static String development = "Development Environment";
+	private MutableComponent developmentComponent;
+	private MutableComponent updateComponent;
 
 	public ShaderPackScreen(Screen parent) {
 		super(new TranslatableComponent("options.iris.shaderPackSelection.title"));
 
 		this.parent = parent;
+
+		String irisName = Iris.MODNAME + " " + Iris.getVersion();
+
+		if (irisName.contains("-development-environment")) {
+			this.developmentComponent = new TextComponent("Development Environment").withStyle(ChatFormatting.GOLD);
+			irisName = irisName.replace("-development-environment", "");
+		}
+
+		this.irisTextComponent = new TextComponent(irisName).withStyle(ChatFormatting.GRAY);
+
+		if (Iris.getUpdateMessage() != null) {
+			this.updateComponent = new TextComponent("New update available!").withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.UNDERLINE);
+			irisTextComponent.append(new TextComponent("(outdated)").withStyle(ChatFormatting.RED));
+		}
+
 		refreshForChangedPack();
 	}
 
@@ -127,26 +146,21 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}
 		TOP_LAYER_RENDER_QUEUE.clear();
 
-
-		String irisName = ChatFormatting.GRAY + Iris.MODNAME + " " + Iris.getVersion();
-		boolean shouldBumpIrisName = false;
-
-		if (irisName.contains("-development-environment")) {
-			shouldBumpIrisName = true;
-			irisName = irisName.replace("-development-environment", "");
-			drawString(poseStack, this.font, ChatFormatting.GOLD + "Development Environment", 2, this.height - 10, 0xFFFFFF);
-		} else if (Iris.getUpdateMessage() != null) {
-			shouldBumpIrisName = true;
-			drawString(poseStack, this.font, ChatFormatting.GREEN.toString() + ChatFormatting.UNDERLINE + "New update available!", 2, this.height - 10, 0xFFFFFF);
+		if (this.developmentComponent != null) {
+			this.font.drawShadow(poseStack, developmentComponent, 2, this.height - 10, 0xFFFFFF);
+			this.font.drawShadow(poseStack, irisTextComponent, 2, this.height - 20, 0xFFFFFF);
+		} else if (this.updateComponent != null) {
+			this.font.drawShadow(poseStack, updateComponent, 2, this.height - 10, 0xFFFFFF);
+			this.font.drawShadow(poseStack, irisTextComponent, 2, this.height - 20, 0xFFFFFF);
+		} else {
+			this.font.drawShadow(poseStack, irisTextComponent, 2, this.height - 10, 0xFFFFFF);
 		}
-
-		drawString(poseStack, this.font, irisName + (Iris.getUpdateMessage() != null ? ChatFormatting.RED + " (outdated)" : ""), 2, this.height - (shouldBumpIrisName ? 20 : 10), 0xFFFFFF);
 	}
 
 	@Override
 	public boolean mouseClicked(double d, double e, int i) {
 		int widthValue = this.font.width("New update available!");
-		if (d < widthValue && e > (this.height - 10) && e < this.height) {
+		if (this.updateComponent != null && d < widthValue && e > (this.height - 10) && e < this.height) {
 			this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
 				if (bl) {
 					Util.getPlatform().openUri(Iris.getUpdateLink());
