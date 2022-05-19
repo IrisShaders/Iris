@@ -12,6 +12,8 @@ import net.coderbot.iris.vendored.joml.Vector3f;
 
 import java.nio.ByteBuffer;
 
+import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
+
 public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implements ModelVertexSink, MaterialIdAwareVertexWriter {
 	private MaterialIdHolder idHolder;
 
@@ -19,11 +21,9 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
 	}
 
-	private static final int STRIDE = XHFPModelVertexType.STRIDE;
-
-	int vertexCount = 0;
-	float uSum;
-	float vSum;
+    int vertexCount = 0;
+    float uSum;
+    float vSum;
 
 	private final QuadViewTerrain.QuadViewTerrainNio currentQuad = new QuadViewTerrain.QuadViewTerrainNio();
 	private final Vector3f normal = new Vector3f();
@@ -129,7 +129,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			// Implementation based on the algorithm found here:
 			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-			currentQuad.setup(buffer, writeOffset, XHFPModelVertexType.STRIDE);
+            currentQuad.setup(buffer, writeOffset, STRIDE);
             NormalHelper.computeFaceNormal(normal, currentQuad);
             int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 

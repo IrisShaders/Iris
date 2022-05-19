@@ -3,8 +3,9 @@ package net.coderbot.iris.pipeline.newshader;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.AttributeShaderTransformer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
+import net.coderbot.iris.pipeline.patcher.CompositeDepthTransformer;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -113,7 +114,6 @@ public class TriforcePatcher {
 		patchCommon(transformations, type);
 
 		if (inputs.hasOverlay()) {
-			// TODO: Change this once we implement 1.17 geometry shader support!
 			AttributeShaderTransformer.patch(transformations, type, hasGeometry);
 		}
 
@@ -372,6 +372,8 @@ public class TriforcePatcher {
 	public static String patchComposite(String source, ShaderType type) {
 		StringTransformations transformations = new StringTransformations(source);
 		patchCommon(transformations, type);
+
+		transformations = CompositeDepthTransformer.patch(transformations);
 
 		// TODO: More solid way to handle texture matrices
 		// TODO: Provide these values with uniforms

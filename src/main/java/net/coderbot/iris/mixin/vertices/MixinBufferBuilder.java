@@ -238,9 +238,13 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		// tx ty tz
 		// nx ny nz
 
+		// Be very careful when writing out complex multi-step calculations
+		// such as vector cross products! The calculation for pbitangentz
+		// used to be broken because it multiplied values in the wrong order.
+
 		float pbitangentx =   tangenty * normal.z - tangentz * normal.y;
 		float pbitangenty = -(tangentx * normal.z - tangentz * normal.x);
-		float pbitangentz =   tangentx * normal.x - tangenty * normal.y;
+		float pbitangentz =   tangentx * normal.y - tangenty * normal.x;
 
 		float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
 		float tangentW;
