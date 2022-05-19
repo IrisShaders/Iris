@@ -63,6 +63,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
@@ -139,7 +140,7 @@ public class Iris {
 
 		int simpleVersion = iris.getMetadata().getCustomValue("simpleVersion").getAsNumber().intValue();
 
-		if (Minecraft.getInstance().getLaunchedVersion().contains("iris")) {
+		if (Objects.equals(System.getProperty("iris.installer", "false"), "true")) {
 			usedIrisInstaller = true;
 		}
 
