@@ -40,7 +40,7 @@
   "options.iris.back": "Tagasi",
   "options.iris.reset": "Lähtesta",
   "options.iris.reset.tooltip": "Lähtestad KÕIK valikud ja rakendad?",
-  "options.iris.reset.tooltip.holdShift": "Lähtestamiseks hoia SHIFTi ja klõpsa",
+  "options.iris.reset.tooltip.holdShift": "Lähtestamiseks hoia Shifti ja klõpsa",
   "options.iris.importSettings.tooltip": "Impordi seadistused failist",
   "options.iris.exportSettings.tooltip": "Ekspordi rakendatud seadistused faili",
   "options.iris.setToDefault": "Seadistad valiku vaikeväärtusele?",
