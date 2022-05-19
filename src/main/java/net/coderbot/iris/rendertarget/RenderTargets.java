@@ -125,6 +125,12 @@ public class RenderTargets {
 			// based on what I've seen of the spec, though - it seems like deleting a texture
 			// automatically detaches it from its framebuffers.
 			for (GlFramebuffer framebuffer : ownedFramebuffers) {
+				if (framebuffer == noHandDestFb || framebuffer == noTranslucentsDestFb) {
+					// NB: Do not change the depth attachment of these framebuffers
+					// as it is intentionally different
+					continue;
+				}
+
 				framebuffer.addDepthAttachment(newDepthTextureId);
 			}
 		}
