@@ -5,7 +5,7 @@
   "iris.shaders.debug.enabled": "Отладка включена, ведение журнала будет более подробным.",
   "iris.shaders.debug.disabled": "Отладка отключена.",
   "iris.shaders.debug.failure": "Невозможно включить отладку, ваш компьютер не поддерживает необходимые функции.",
-  "iris.shaders.debug.restart": "У вас нет контекста отладки. Перезапустите, чтобы включить отладку."
+  "iris.shaders.debug.restart": "У вас нет контекста отладки. Перезапустите, чтобы включить отладку.",
   "iris.keybind.reload": "Перезагрузить шейдеры",
   "iris.keybind.shaderPackSelection": "Экран выбора шейдеров",
   "iris.keybind.toggleShaders": "Переключить шейдеры",

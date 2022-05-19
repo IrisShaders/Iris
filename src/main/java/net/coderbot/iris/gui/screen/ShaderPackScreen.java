@@ -12,6 +12,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
@@ -124,6 +125,16 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			render.run();
 		}
 		TOP_LAYER_RENDER_QUEUE.clear();
+
+
+		String irisName = ChatFormatting.GRAY + Iris.MODNAME + " " + Iris.getVersion();
+		boolean isDevelopmentEnvironment = false;
+		if (irisName.contains("-development-environment")) {
+			isDevelopmentEnvironment = true;
+			irisName = irisName.replace("-development-environment", "");
+			drawString(poseStack, this.font, ChatFormatting.GOLD + "Development Environment", 2, this.height - 10, 0xFFFFFF);
+		}
+		drawString(poseStack, this.font, irisName, 2, this.height - (isDevelopmentEnvironment ? 20 : 10), 0xFFFFFF);
 	}
 
 	@Override
