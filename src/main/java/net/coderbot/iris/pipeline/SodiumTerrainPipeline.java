@@ -4,7 +4,6 @@ import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
-import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
