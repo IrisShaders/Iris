@@ -139,11 +139,9 @@ public class Iris {
 
 		int simpleVersion = iris.getMetadata().getCustomValue("simpleVersion").getAsNumber().intValue();
 
-		iris.getOrigin().getPaths().forEach(path -> {
-			if (!usedIrisInstaller && path.toAbsolutePath().toString().contains("iris-reserved")) {
-				usedIrisInstaller = true;
-			}
-		});
+		if (Minecraft.getInstance().getLaunchedVersion().contains("iris")) {
+			usedIrisInstaller = true;
+		}
 
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {
