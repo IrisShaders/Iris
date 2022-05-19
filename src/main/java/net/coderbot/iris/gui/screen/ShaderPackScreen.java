@@ -14,7 +14,10 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -126,13 +129,32 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 
 		String irisName = ChatFormatting.GRAY + Iris.MODNAME + " " + Iris.getVersion();
-		boolean isDevelopmentEnvironment = false;
+		boolean shouldBumpIrisName = false;
+
 		if (irisName.contains("-development-environment")) {
-			isDevelopmentEnvironment = true;
+			shouldBumpIrisName = true;
 			irisName = irisName.replace("-development-environment", "");
 			drawString(poseStack, this.font, ChatFormatting.GOLD + "Development Environment", 2, this.height - 10, 0xFFFFFF);
+		} else if (Iris.getUpdateMessage() != null) {
+			shouldBumpIrisName = true;
+			drawString(poseStack, this.font, ChatFormatting.GREEN.toString() + ChatFormatting.UNDERLINE + "New update available!", 2, this.height - 10, 0xFFFFFF);
 		}
-		drawString(poseStack, this.font, irisName, 2, this.height - (isDevelopmentEnvironment ? 20 : 10), 0xFFFFFF);
+
+		drawString(poseStack, this.font, irisName + (Iris.getUpdateMessage() != null ? ChatFormatting.RED + " (outdated)" : ""), 2, this.height - (shouldBumpIrisName ? 20 : 10), 0xFFFFFF);
+	}
+
+	@Override
+	public boolean mouseClicked(double d, double e, int i) {
+		int widthValue = this.font.width("New update available!");
+		if (d < widthValue && e > (this.height - 10) && e < this.height) {
+			this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
+				if (bl) {
+					Util.getPlatform().openUri(Iris.getUpdateLink());
+				}
+				this.minecraft.setScreen(this);
+			}, Iris.getUpdateLink(), true));
+		}
+		return super.mouseClicked(d, e, i);
 	}
 
 	@Override

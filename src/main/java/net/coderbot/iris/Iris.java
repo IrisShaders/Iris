@@ -721,6 +721,18 @@ public class Iris {
 			return null;
 		}
 	}
+
+	public static String getUpdateLink() {
+		if (updateInfo.isDone()) {
+			try {
+				return usedIrisInstaller ? updateInfo.get().installer : updateInfo.get().modDownload;
+			} catch (InterruptedException | ExecutionException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return null;
+	}
+
 	public static String getFormattedVersion() {
 		ChatFormatting color;
 		String version = getVersion();
