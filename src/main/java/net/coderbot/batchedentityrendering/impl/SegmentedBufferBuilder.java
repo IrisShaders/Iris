@@ -59,7 +59,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
             return Collections.emptyList();
         }
 
-        if (isTranslucent(currentType)) {
+        if (shouldSortOnUpload(currentType)) {
             buffer.setQuadSortOrigin(0, 0, 0);
         }
 
