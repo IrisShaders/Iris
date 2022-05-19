@@ -87,12 +87,12 @@ public class SodiumTerrainPipeline {
 			terrainFragment = transformFragmentShader(terrainFragment);
 			// terrainFragment = Patcher.INSTANCE.patchSodiumTerrain(terrainFragment, ShaderType.FRAGMENT);
 		}
-		
+
 		if (translucentFragment != null) {
 			translucentFragment = transformFragmentShader(translucentFragment);
 			// translucentFragment = Patcher.INSTANCE.patchSodiumTerrain(translucentFragment, ShaderType.FRAGMENT);
 		}
-		
+
 		if (shadowFragment != null) {
 			shadowFragment = transformFragmentShader(shadowFragment);
 			// shadowFragment = Patcher.INSTANCE.patchSodiumTerrain(shadowFragment, ShaderType.FRAGMENT);
