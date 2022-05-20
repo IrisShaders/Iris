@@ -18,7 +18,7 @@ public class PipelineManager {
 	private static PipelineManager instance;
 	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
 	private final Map<DimensionId, WorldRenderingPipeline> pipelinesPerDimension = new HashMap<>();
-	private WorldRenderingPipeline pipeline;
+	private WorldRenderingPipeline pipeline = new FixedFunctionWorldRenderingPipeline();
 	private boolean sodiumShaderReloadNeeded;
 
 	public PipelineManager(Function<DimensionId, WorldRenderingPipeline> pipelineFactory) {
@@ -79,6 +79,17 @@ public class PipelineManager {
 		return instance;
 	}
 
+	/**
+	 * Destroys all the current pipelines.
+	 *
+	 * <p>This method is <b>EXTREMELY DANGEROUS!</b> It is a huge potential source of hard-to-trace inconsistencies
+	 * in program state. You must make sure that you <i>immediately</i> re-prepare the pipeline after destroying
+	 * it to prevent the program from falling into an inconsistent state.</p>
+	 *
+	 * <p>In particular, </p>
+	 *
+	 * @see <a href="https://github.com/IrisShaders/Iris/issues/1330">this GitHub issue</a>
+	 */
 	public void destroyPipeline() {
 		pipelinesPerDimension.forEach((dimensionId, pipeline) -> {
 			Iris.logger.info("Destroying pipeline {}", dimensionId);

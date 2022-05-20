@@ -549,6 +549,12 @@ public class Iris {
 
 		// Load the new shaderpack
 		loadShaderpack();
+
+		// Very important - we need to re-create the pipeline straight away.
+		// https://github.com/IrisShaders/Iris/issues/1330
+		if (Minecraft.getInstance().level != null) {
+			Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
+		}
 	}
 
 	/**
