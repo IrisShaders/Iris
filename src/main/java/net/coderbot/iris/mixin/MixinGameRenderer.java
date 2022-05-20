@@ -181,20 +181,13 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getRendertypeTranslucentShader", at = @At("HEAD"), cancellable = true)
+	@Inject(method = {
+		"getRendertypeTranslucentShader",
+		"getRendertypeTranslucentNoCrumblingShader",
+		"getRendertypeTranslucentMovingBlockShader",
+		"getRendertypeTripwireShader"
+	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
-			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else if (shouldOverrideShaders()) {
-			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
-		}
-	}
-
-	// getRenderTypeTranslucentMovingBlockShader, getRenderTypeTranslucentNoCrumblingShader
-
-	@Inject(method = "getRendertypeTripwireShader", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideTripwireShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
