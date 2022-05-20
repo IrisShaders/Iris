@@ -11,7 +11,6 @@ import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.BufferBuilderPolygonView;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
-import net.coderbot.iris.vertices.TriView;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
@@ -165,7 +164,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		midV /= vertexAmount;
 
 		if (vertexAmount == 3) {
-			NormalHelper.computeFaceNormal(normal, (TriView) polygon);
+			NormalHelper.computeFaceNormalTri(normal, polygon);
 		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
 		}

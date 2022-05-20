@@ -113,7 +113,7 @@ public abstract class NormalHelper {
 	 *
 	 * <p>Assumes counter-clockwise winding order, which is the norm.
 	 */
-	public static void computeFaceNormal(@NotNull Vector3f saveTo, TriView t) {
+	public static void computeFaceNormalTri(@NotNull Vector3f saveTo, TriView t) {
 //		final Direction nominalFace = q.nominalFace();
 //
 //		if (GeometryHelper.isQuadParallelToFace(nominalFace, q)) {
