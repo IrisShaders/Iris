@@ -75,7 +75,7 @@ import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline {
+public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline, RenderTargetStateListener {
 	private final RenderTargets renderTargets;
 	private final ShaderMap shaderMap;
 
@@ -119,6 +119,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 	private boolean destroyed = false;
 	private boolean isRenderingWorld;
+	private boolean isMainBound;
 
 	@Nullable
 	private final ShadowRenderer shadowRenderer;
@@ -520,7 +521,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public RenderTargetStateListener getRenderTargetStateListener() {
-		return RenderTargetStateListener.NOP;
+		return this;
 	}
 
 	@Override
@@ -578,6 +579,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// If we forget to do this, then weird lines appear at the top of the screen and the right of the screen
 		// on Sildur's Vibrant Shaders.
 		main.bindWrite(true);
+		isMainBound = true;
 
 		isBeforeTranslucent = true;
 
@@ -762,8 +764,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public boolean isRenderingWorld() {
-		return isRenderingWorld;
+	public boolean shouldOverrideShaders() {
+		return isRenderingWorld && isMainBound;
 	}
 
 	@Override
@@ -783,5 +785,20 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	protected AbstractTexture getWhitePixel() {
 		return whitePixel;
+	}
+
+	@Override
+	public void beginPostChain() {
+
+	}
+
+	@Override
+	public void endPostChain() {
+
+	}
+
+	@Override
+	public void setIsMainBound(boolean bound) {
+		isMainBound = bound;
 	}
 }
