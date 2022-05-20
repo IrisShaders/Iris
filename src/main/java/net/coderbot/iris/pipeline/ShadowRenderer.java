@@ -506,7 +506,11 @@ public class ShadowRenderer {
 
 		// Always schedule a terrain update
 		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
+		// We have to ensure that we don't regenerate clouds every frame, since that's what needsUpdate ends up doing.
+		// This took up to 10% of the frame time before we applied this fix! That's really bad!
+		boolean regenerateClouds = levelRenderer.shouldRegenerateClouds();
 		((LevelRenderer) levelRenderer).needsUpdate();
+		levelRenderer.setShouldRegenerateClouds(regenerateClouds);
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
 		levelRenderer.invokeSetupRender(playerCamera, terrainFrustumHolder.getFrustum(), false, levelRenderer.getFrameId(), false);
