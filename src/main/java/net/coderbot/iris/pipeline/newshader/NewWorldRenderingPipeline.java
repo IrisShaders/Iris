@@ -330,6 +330,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programSet.getPackDirectives().getAmbientOcclusionLevel());
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(programSet.getPackDirectives().shouldUseSeparateAo());
+		BlockRenderingSettings.INSTANCE.setUseExtendedVertexFormat(true);
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programSet.getPackDirectives().getRenderTargetDirectives());
