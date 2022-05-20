@@ -58,7 +58,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private ByteBuffer buffer;
 
 	@Shadow
-	private int mode;
+	private VertexFormat.Mode mode;
 
 	@Shadow
 	private VertexFormat format;
@@ -124,7 +124,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 		vertexCount++;
 
-		if (mode == GL11.GL_QUADS && vertexCount == 4 || mode == GL11.GL_TRIANGLES && vertexCount == 3) {
+		if (mode == VertexFormat.Mode.QUADS && vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && vertexCount == 3) {
 			fillExtendedData(vertexCount);
 		}
 	}

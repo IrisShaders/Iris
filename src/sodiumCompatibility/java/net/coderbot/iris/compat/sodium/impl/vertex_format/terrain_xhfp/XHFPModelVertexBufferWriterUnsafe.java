@@ -50,10 +50,10 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		this.flush();
 	}
 
-    @Override
-    public void writeQuad(float x, float y, float z, int color, float u, float v, int light) {
-        uSum += u;
-        vSum += v;
+	@Override
+	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light, int chunkId) {
+		uSum += u;
+		vSum += v;
 
 		short materialId = idHolder.id;
 		short renderType = idHolder.renderType;
