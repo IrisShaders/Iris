@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline.newshader.fallback;
 
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.pipeline.newshader.AlphaTests;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
@@ -63,7 +64,7 @@ public class ShaderSynthesizer {
 		}
 
 		// Vertex Color
-		shader.append("out vec4 vertexColor;\n");
+		shader.append("out vec4 iris_vertexColor;\n");
 		shader.append("uniform vec4 ColorModulator;\n");
 
 		// Vertex Normal
@@ -88,19 +89,19 @@ public class ShaderSynthesizer {
 
 				shader.append("in vec3 Normal;\n");
 
-				main.append("    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color * ColorModulator);\n");
+				main.append("    iris_vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color * ColorModulator);\n");
 			} else if (inputs.isNewLines()) {
 				shader.append("in vec3 Normal;\n");
-				main.append("    vertexColor = Color * ColorModulator;\n");
+				main.append("    iris_vertexColor = Color * ColorModulator;\n");
 			} else {
-				main.append("    vertexColor = Color * ColorModulator;\n");
+				main.append("    iris_vertexColor = Color * ColorModulator;\n");
 			}
 		} else if (inputs.hasColor()) {
 			shader.append("in vec4 Color;\n");
 
-			main.append("    vertexColor = Color * ColorModulator;\n");
+			main.append("    iris_vertexColor = Color * ColorModulator;\n");
 		} else {
-			main.append("    vertexColor = ColorModulator;\n");
+			main.append("    iris_vertexColor = ColorModulator;\n");
 		}
 
 		// Overlay Color
@@ -154,7 +155,8 @@ public class ShaderSynthesizer {
 		shader.append("#version 150 core\n");
 
 		shader.append("out vec4 fragColor;\n");
-		shader.append("in vec4 vertexColor;\n");
+		shader.append("uniform float iris_currentAlphaTest;\n");
+		shader.append("in vec4 iris_vertexColor;\n");
 
 		if (inputs.hasTex()) {
 			shader.append("uniform sampler2D Sampler0;\n");
@@ -166,9 +168,13 @@ public class ShaderSynthesizer {
 				main.append(".rrrr");
 			}
 
-			main.append(" * vertexColor;\n");
+			if (alphaTest == AlphaTests.VERTEX_ALPHA) {
+				main.append(" * vec4(iris_vertexColor.rgb, 1);\n");
+			} else {
+				main.append(" * iris_vertexColor;\n");
+			}
 		} else {
-			main.append("    vec4 color = vertexColor;\n");
+			main.append("    vec4 color = iris_vertexColor;\n");
 		}
 
 		if (inputs.hasOverlay()) {

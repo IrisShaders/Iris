@@ -21,6 +21,9 @@ public class CapturedRenderingState {
 	private int currentRenderedEntity = -1;
 	private Runnable entityIdListener = null;
 
+	private float currentAlphaTest;
+	private Runnable alphaTestListener = null;
+
 	private CapturedRenderingState() {
 	}
 
@@ -98,5 +101,20 @@ public class CapturedRenderingState {
 
 	public int getCurrentRenderedEntity() {
 		return currentRenderedEntity;
+	}
+
+    public float getCurrentAlphaTest() {
+		return currentAlphaTest;
+    }
+
+	public void setCurrentAlphaTest(float alphaTest) {
+		this.currentAlphaTest = alphaTest;
+		if (this.alphaTestListener != null) {
+			this.alphaTestListener.run();
+		}
+	}
+
+	public ValueUpdateNotifier getAlphaTestNotifier() {
+		return listener -> this.alphaTestListener = listener;
 	}
 }

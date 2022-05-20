@@ -6,6 +6,7 @@ import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageHolder;
@@ -14,6 +15,7 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
@@ -36,6 +38,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	GlFramebuffer baseline;
 	BlendModeOverride blendModeOverride;
 	HashMap<String, IntSupplier> dynamicSamplers;
+	AlphaTest alphaTest;
 	private ProgramImages currentImages;
 	private Program geometry;
 	private boolean isFullbright;
@@ -43,7 +46,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
-						  GlFramebuffer baseline, BlendModeOverride blendModeOverride,
+						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
 						  Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright,
 						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs) throws IOException {
 		super(resourceFactory, string, vertexFormat);
@@ -59,6 +62,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.baseline = baseline;
 		this.blendModeOverride = blendModeOverride;
 		this.dynamicSamplers = new HashMap<>();
+		this.alphaTest = alphaTest;
 		this.parent = parent;
 		this.imageBuilder = ProgramImages.builder(programId);
 		this.currentImages = null;
@@ -82,12 +86,16 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 			BlendModeOverride.restore();
 		}
 
+		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(0);
+
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
 	@Override
 	public void apply() {
 		dynamicSamplers.forEach((name, supplier) -> this.addIrisSampler(name, supplier.getAsInt()));
+
+		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest.getReference());
 
 		if (!inputs.hasTex()) {
 			setSampler("Sampler0", parent.getWhitePixel().getId());

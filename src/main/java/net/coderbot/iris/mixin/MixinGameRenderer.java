@@ -298,6 +298,12 @@ public class MixinGameRenderer {
 
 	// TODO: getRenderTypeEntityAlphaShader (weird alpha test behavior!!!)
 
+	@Inject(method = "getRendertypeEntityAlphaShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityAlphaShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (!ShadowRenderer.ACTIVE) {
+			override(ShaderKey.ENTITIES_ALPHA, cir);
+		}
+	}
 	// NOTE: getRenderTypeOutlineShader should not be overriden.
 
 	@Inject(method = {

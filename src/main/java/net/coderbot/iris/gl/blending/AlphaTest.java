@@ -1,5 +1,7 @@
 package net.coderbot.iris.gl.blending;
 
+import net.coderbot.iris.pipeline.newshader.AlphaTests;
+
 public class AlphaTest {
 	public static final AlphaTest ALWAYS = new AlphaTest(AlphaTestFunction.ALWAYS, 0.0f);
 
@@ -16,15 +18,19 @@ public class AlphaTest {
 	}
 
 	public String toExpression(String alphaAccessor, String indentation) {
+		String expr = function.getExpression();
+
 		if (function == AlphaTestFunction.ALWAYS) {
 			return "// alpha test disabled\n";
+		} else if (this == AlphaTests.VERTEX_ALPHA) {
+			return indentation + "if (!(" + alphaAccessor + " > iris_vertexColor.a)) {\n" +
+				indentation + "    discard;\n" +
+				indentation + "}\n";
 		} else if (function == AlphaTestFunction.NEVER) {
 			return "discard;\n";
 		}
 
-		String expr = function.getExpression();
-
-		return indentation + "if (!(" + alphaAccessor + " " + expr + " " + reference + ")) {\n" +
+		return indentation + "if (!(" + alphaAccessor + " " + expr + " iris_currentAlphaTest)) {\n" +
 				indentation + "    discard;\n" +
 				indentation + "}\n";
 	}
