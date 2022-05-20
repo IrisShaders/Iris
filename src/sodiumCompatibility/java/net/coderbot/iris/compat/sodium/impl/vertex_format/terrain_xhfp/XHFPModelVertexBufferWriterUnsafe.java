@@ -7,25 +7,25 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexUtil;
 import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.NormalHelper;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vertices.NormalHelper;
 import org.lwjgl.system.MemoryUtil;
 
 import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
 public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, MaterialIdAwareVertexWriter {
+    private final QuadViewTerrain.QuadViewTerrainUnsafe quad = new QuadViewTerrain.QuadViewTerrainUnsafe();
+    private final Vector3f normal = new Vector3f();
+
     private MaterialIdHolder idHolder;
+
+    private int vertexCount;
+    private float uSum;
+    private float vSum;
 
     public XHFPModelVertexBufferWriterUnsafe(VertexBufferView backingBuffer) {
         super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
     }
-
-    int vertexCount = 0;
-    float uSum;
-    float vSum;
-
-    private final QuadViewTerrain.QuadViewTerrainUnsafe currentQuad = new QuadViewTerrain.QuadViewTerrainUnsafe();
-    private final Vector3f normal = new Vector3f();
 
     @Override
     public void writeQuad(float x, float y, float z, int color, float u, float v, int light) {
@@ -70,6 +70,8 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		MemoryUtil.memPutShort(i + 34, renderType);
 
         if (vertexCount == 4) {
+            vertexCount = 0;
+
             // TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
 
             // NB: Be careful with the math here! A previous bug was caused by midU going negative as a short, which
@@ -90,7 +92,6 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             MemoryUtil.memPutInt(i + 20 - STRIDE * 2, midTexCoord);
             MemoryUtil.memPutInt(i + 20 - STRIDE * 3, midTexCoord);
 
-            vertexCount = 0;
             uSum = 0;
             vSum = 0;
 
@@ -98,8 +99,8 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             // Implementation based on the algorithm found here:
             // https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-            currentQuad.setup(i, STRIDE);
-			NormalHelper.computeFaceNormal(normal, currentQuad);
+            quad.setup(i, STRIDE);
+			NormalHelper.computeFaceNormal(normal, quad);
             int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
             MemoryUtil.memPutInt(i + 28, packedNormal);
@@ -107,7 +108,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             MemoryUtil.memPutInt(i + 28 - STRIDE * 2, packedNormal);
             MemoryUtil.memPutInt(i + 28 - STRIDE * 3, packedNormal);
 
-            int tangent = currentQuad.computeTangent(normal.x(), normal.y(), normal.z());
+            int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, quad);
 
             MemoryUtil.memPutInt(i + 24, tangent);
             MemoryUtil.memPutInt(i + 24 - STRIDE, tangent);
