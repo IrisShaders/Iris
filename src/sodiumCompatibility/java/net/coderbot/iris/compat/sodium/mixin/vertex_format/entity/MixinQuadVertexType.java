@@ -8,8 +8,8 @@ import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexType
 import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.writer.QuadVertexBufferWriterNio;
 import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.writer.QuadVertexBufferWriterUnsafe;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer.EntityVertexBufferWriterNio;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer.EntityVertexBufferWriterUnsafe;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertexBufferWriterNio;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertexBufferWriterUnsafe;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
