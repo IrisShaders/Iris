@@ -511,6 +511,8 @@ public class ShadowRenderer {
 
 		visibleBlockEntities = null;
 		ACTIVE = false;
+
+		levelRenderer.getLevel().getProfiler().pop();
 		levelRenderer.getLevel().getProfiler().popPush("updatechunks");
 	}
 
