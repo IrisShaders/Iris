@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "plugin": "net.coderbot.iris.compat.lightoverlay.mixin.IrisLightOverlayCompatMixinPlugin",
+  "package": "net.coderbot.iris.compat.lightoverlay.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinChunkData",
+    "MixinLightOverlay"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

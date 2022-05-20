@@ -22,6 +22,7 @@
     "MixinGlStateManager_AmdCrashFix",
     "MixinGlStateManager_AlphaTestOverride",
     "MixinGlStateManager_BlendOverride",
+    "MixinGlStateManager_DepthColorOverride",
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
@@ -30,7 +31,6 @@
     "MixinMinecraft_PipelineManagement",
     "MixinModelViewBobbing",
     "MixinOptions_Entrypoint",
-    "MixinBufferSource_WrapperChecking",
     "MixinParticleEngine",
     "MixinRenderSystem",
     "MixinRenderTarget",
@@ -45,8 +45,9 @@
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",
     "math.MixinMatrix4f",
-    "rendertype.MixinFixEyesTranslucency",
-    "rendertype.MixinRenderType",
+    "rendertype.MixinRenderStateShard_Tagging",
+    "rendertype.MixinRenderType_FixEyesTranslucency",
+    "rendertype.MixinRenderType_FixTerrainAlpha",
     "rendertype.RenderStateShardAccessor",
     "rendertype.RenderTypeAccessor",
     "shadows.ChunkInfoAccessor",
@@ -59,11 +60,9 @@
     "statelisteners.MixinGlStateManager",
     "texture.MixinAbstractTexture",
     "texture.MixinGlStateManager",
-    "texunits.MixinBufferVertexConsumer",
-    "texunits.MixinDefaultVertexFormat",
-    "texunits.MixinGlStateManager",
-    "texunits.MixinLightTexture",
-    "texunits.MixinOverlayTexture"
+    "state_tracking.MixinGlStateManager",
+    "state_tracking.MixinPostChain",
+    "state_tracking.MixinRenderTarget"
   ],
   "injectors": {
     "defaultRequire": 1
