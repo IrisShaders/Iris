@@ -4,16 +4,25 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.shader.StandardMacros;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.time.DateUtils;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -36,11 +45,26 @@ public class UpdateChecker {
 		this.info = CompletableFuture.supplyAsync(() -> {
 			if (!irisConfig.shouldDisableUpdateMessage()) {
 				try {
+					File updateFile = FabricLoader.getInstance().getGameDir().resolve("irisUpdateInfo.json").toFile();
+					if (DateUtils.isSameDay(new Date(), new Date(updateFile.lastModified()))) {
+						Iris.logger.warn("Cached update file detected, using that!");
+						UpdateInfo updateInfo = new Gson().fromJson(FileUtils.readFileToString(updateFile, StandardCharsets.UTF_8), UpdateInfo.class);
+						if (updateInfo.simpleVersion > simpleVersion) {
+							shouldShowUpdateMessage = true;
+							Iris.logger.warn("New update detected, showing update message!");
+							return updateInfo;
+						} else {
+							return null;
+						}
+					}
+
 					try (InputStream in = new URL("https://raw.githubusercontent.com/IMS212/Iris-Installer-Files/master/updateindex.json").openStream()) {
 						String updateIndex = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
-						InputStream updateInfoStream = new URL(updateIndex).openStream();
-						UpdateInfo updateInfo = new Gson().fromJson(new InputStreamReader(updateInfoStream), UpdateInfo.class);
-						updateInfoStream.close();
+						String json = IOUtils.toString(new URL(updateIndex), StandardCharsets.UTF_8);
+						UpdateInfo updateInfo = new Gson().fromJson(json, UpdateInfo.class);
+						BufferedWriter writer = new BufferedWriter(new FileWriter(updateFile));
+						writer.write(json);
+						writer.close();
 						if (updateInfo.simpleVersion > simpleVersion) {
 							shouldShowUpdateMessage = true;
 							Iris.logger.warn("New update detected, showing update message!");
