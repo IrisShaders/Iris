@@ -1,7 +1,6 @@
 package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
@@ -56,17 +55,17 @@ import java.util.List;
 import java.util.Objects;
 
 public class ShadowRenderer {
+	public static Matrix4f MODELVIEW;
+	public static Matrix4f PROJECTION;
+	public static List<BlockEntity> visibleBlockEntities;
+	public static boolean ACTIVE = false;
 	private final float halfPlaneLength;
 	private final float renderDistanceMultiplier;
 	private final float entityShadowDistanceMultiplier;
 	private final int resolution;
 	private final float intervalSize;
 	private final Float fov;
-	public static Matrix4f MODELVIEW;
-	public static Matrix4f PROJECTION;
-
 	private final ShadowRenderTargets targets;
-
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean shouldRenderTerrain;
@@ -74,14 +73,9 @@ public class ShadowRenderer {
 	private final boolean shouldRenderEntities;
 	private final boolean shouldRenderBlockEntities;
 	private final float sunPathRotation;
-
 	private final RenderBuffers buffers;
 	private final RenderBuffersExt renderBuffersExt;
-
-	public static List<BlockEntity> visibleBlockEntities;
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
-
-	public static boolean ACTIVE = false;
 	private final String debugStringOverall;
 	private FrustumHolder terrainFrustumHolder;
 	private FrustumHolder entityFrustumHolder;
@@ -138,12 +132,55 @@ public class ShadowRenderer {
 		configureSamplingSettings(shadowDirectives);
 	}
 
+	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
+		// Determine the camera position
+		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
+
+		double cameraX = cameraPos.x;
+		double cameraY = cameraPos.y;
+		double cameraZ = cameraPos.z;
+
+		// Set up our modelview matrix stack
+		PoseStack modelView = new PoseStack();
+		ShadowMatrices.createModelViewMatrix(modelView.last().pose(), getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
+
+		return modelView;
+	}
+
+	private static ClientLevel getLevel() {
+		return Objects.requireNonNull(Minecraft.getInstance().level);
+	}
+
+	private static float getSkyAngle() {
+		return getLevel().getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
+	private static float getSunAngle() {
+		float skyAngle = getSkyAngle();
+
+		if (skyAngle < 0.75F) {
+			return skyAngle + 0.25F;
+		} else {
+			return skyAngle - 0.75F;
+		}
+	}
+
+	private static float getShadowAngle() {
+		float shadowAngle = getSunAngle();
+
+		if (!CelestialUniforms.isDay()) {
+			shadowAngle -= 0.5F;
+		}
+
+		return shadowAngle;
+	}
+
 	private void configureSamplingSettings(PackShadowDirectives shadowDirectives) {
 		final ImmutableList<PackShadowDirectives.DepthSamplingSettings> depthSamplingSettings =
-				shadowDirectives.getDepthSamplingSettings();
+			shadowDirectives.getDepthSamplingSettings();
 
 		final ImmutableList<PackShadowDirectives.SamplingSettings> colorSamplingSettings =
-				shadowDirectives.getColorSamplingSettings();
+			shadowDirectives.getColorSamplingSettings();
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
 
@@ -206,21 +243,6 @@ public class ShadowRenderer {
 		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
 	}
 
-	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
-		// Determine the camera position
-		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
-
-		double cameraX = cameraPos.x;
-		double cameraY = cameraPos.y;
-		double cameraZ = cameraPos.z;
-
-		// Set up our modelview matrix stack
-		PoseStack modelView = new PoseStack();
-		ShadowMatrices.createModelViewMatrix(modelView.last().pose(), getShadowAngle(), intervalSize, sunPathRotation, cameraX, cameraY, cameraZ);
-
-		return modelView;
-	}
-
 	private FrustumHolder createShadowFrustum(float renderMultiplier, FrustumHolder holder) {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
 		String distanceInfo;
@@ -238,7 +260,7 @@ public class ShadowRenderer {
 
 			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
 				distanceInfo = Minecraft.getInstance().options.renderDistance * 16
-						+ " blocks (capped by normal render distance)";
+					+ " blocks (capped by normal render distance)";
 				cullingInfo = "disabled " + reason;
 				return holder.setInfo(new NonCullingFrustum(), distanceInfo, cullingInfo);
 			} else {
@@ -260,7 +282,7 @@ public class ShadowRenderer {
 
 			if (distance >= Minecraft.getInstance().options.renderDistance * 16) {
 				distanceInfo = Minecraft.getInstance().options.renderDistance * 16
-						+ " blocks (capped by normal render distance)";
+					+ " blocks (capped by normal render distance)";
 				boxCuller = null;
 			} else {
 				distanceInfo = distance + " blocks " + setter;
@@ -278,7 +300,7 @@ public class ShadowRenderer {
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
 			Vector3f shadowLightVectorFromOrigin =
-					new Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
+				new Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
 
 			shadowLightVectorFromOrigin.normalize();
 
@@ -566,7 +588,7 @@ public class ShadowRenderer {
 		messages.add("[" + Iris.MODNAME + "] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
 		messages.add("[" + Iris.MODNAME + "] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
 		messages.add("[" + Iris.MODNAME + "] Shadow Terrain: " + debugStringTerrain
-				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
+			+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 		messages.add("[" + Iris.MODNAME + "] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[" + Iris.MODNAME + "] Shadow Block Entities: " + getBlockEntitiesDebugString());
 
@@ -582,34 +604,6 @@ public class ShadowRenderer {
 
 	private String getBlockEntitiesDebugString() {
 		return shouldRenderBlockEntities ? (renderedShadowBlockEntities + "/" + Minecraft.getInstance().level.blockEntityList.size()) : "disabled by pack";
-	}
-
-	private static ClientLevel getLevel() {
-		return Objects.requireNonNull(Minecraft.getInstance().level);
-	}
-
-	private static float getSkyAngle() {
-		return getLevel().getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
-	}
-
-	private static float getSunAngle() {
-		float skyAngle = getSkyAngle();
-
-		if (skyAngle < 0.75F) {
-			return skyAngle + 0.25F;
-		} else {
-			return skyAngle - 0.75F;
-		}
-	}
-
-	private static float getShadowAngle() {
-		float shadowAngle = getSunAngle();
-
-		if (!CelestialUniforms.isDay()) {
-			shadowAngle -= 0.5F;
-		}
-
-		return shadowAngle;
 	}
 
 	private static class MipmapPass {
