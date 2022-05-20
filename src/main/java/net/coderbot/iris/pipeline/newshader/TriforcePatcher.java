@@ -114,7 +114,7 @@ public class TriforcePatcher {
 		patchCommon(transformations, type);
 
 		if (inputs.hasOverlay()) {
-			AttributeShaderTransformer.patch(transformations, type, hasGeometry);
+			AttributeShaderTransformer.patchOverlayColor(transformations, type, hasGeometry);
 		}
 
 		addAlphaTest(transformations, type, alpha);
@@ -137,8 +137,12 @@ public class TriforcePatcher {
 				transformations.define("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
+			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
+			// See https://github.com/IrisShaders/Iris/issues/1149
+			transformations.define("gl_MultiTexCoord2", "gl_MultiTexCoord1");
+
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other texture coordinates are not valid inputs.
-			for (int i = 2; i < 8; i++) {
+			for (int i = 3; i < 8; i++) {
 				transformations.define("gl_MultiTexCoord" + i, " vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 		}

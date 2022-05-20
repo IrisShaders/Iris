@@ -1,11 +1,39 @@
 package net.coderbot.iris.pipeline.patcher;
 
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class AttributeShaderTransformer {
-	public static StringTransformations patch(StringTransformations transformations, ShaderType type, boolean hasGeometry) {
+	public static String patch(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
+		if (source.contains("iris_")) {
+			throw new IllegalStateException("Shader is attempting to exploit internal Iris code!");
+		}
+
+		StringTransformations transformations = new StringTransformations(source);
+
+		if (!inputs.lightmap) {
+			transformations.replaceExact("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
+			transformations.replaceExact("gl_MultiTexCoord2", "vec4(240.0, 240.0, 0.0, 1.0)");
+		} else {
+			transformations.replaceExact("gl_MultiTexCoord1", "gl_MultiTexCoord2");
+		}
+
+		if (!inputs.texture) {
+			transformations.define("gl_MultiTexCoord0", "vec4(240.0, 240.0, 0.0, 1.0)");
+		}
+
+		patchTextureMatrices(transformations, inputs.lightmap);
+
+		if (inputs.overlay) {
+			patchOverlayColor(transformations, type, hasGeometry);
+		}
+
+		return transformations.toString();
+	}
+
+	public static void patchOverlayColor(StringTransformations transformations, ShaderType type, boolean hasGeometry) {
 		// Add entity color -> overlay color attribute support.
 		if (type == ShaderType.VERTEX) {
 			// delete original declaration (fragile!!! we need glsl-transformer to do this robustly)
@@ -19,18 +47,18 @@ public class AttributeShaderTransformer {
 
 			// Create our own main function to wrap the existing main function, so that we can pass through the overlay color at the
 			// end to the geometry or fragment stage.
-			if (transformations.contains("irisMain")) {
-				throw new IllegalStateException("Shader already contains \"irisMain\"???");
+			if (transformations.contains("irisMain_overlayColor")) {
+				throw new IllegalStateException("Shader already contains \"irisMain_overlayColor\"???");
 			}
 
-			transformations.replaceExact("main", "irisMain");
+			transformations.replaceExact("main", "irisMain_overlayColor");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in ivec2 iris_UV1;\n");
 
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
-					"	vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);\n" +
+				"	vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);\n" +
 					"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
 					"\n" +
-					"    irisMain();\n" +
+					"    irisMain_overlayColor();\n" +
 					"}");
 		} else if (type == ShaderType.GEOMETRY) {
 			// delete original declaration (fragile!!! we need glsl-transformer to do this robustly)
@@ -66,7 +94,34 @@ public class AttributeShaderTransformer {
 				transformations.replaceExact("entityColor", "entityColorGS");
 			}
 		}
+	}
 
-		return transformations;
+	private static void patchTextureMatrices(StringTransformations transformations, boolean hasLightmap) {
+		transformations.replaceExact("gl_TextureMatrix", "iris_TextureMatrix");
+
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float iris_ONE_OVER_256 = 0.00390625;\n");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;\n");
+
+		if (hasLightmap) {
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4 iris_LightmapTextureMatrix = gl_TextureMatrix[2];\n");
+		} else {
+			// column major
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4 iris_LightmapTextureMatrix =" +
+					"mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
+					"     0.0, iris_ONE_OVER_256, 0.0, 0.0," +
+					"     0.0, 0.0, iris_ONE_OVER_256, 0.0," +
+					"     iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_256);");
+		}
+
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4 iris_TextureMatrix[8] = mat4[8](" +
+				"gl_TextureMatrix[0]," +
+				"iris_LightmapTextureMatrix," +
+				"mat4(1.0)," +
+				"mat4(1.0)," +
+				"mat4(1.0)," +
+				"mat4(1.0)," +
+				"mat4(1.0)," +
+				"mat4(1.0)" +
+				");\n");
 	}
 }

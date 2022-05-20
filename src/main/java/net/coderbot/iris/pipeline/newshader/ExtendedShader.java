@@ -39,8 +39,13 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	private ProgramImages currentImages;
 	private Program geometry;
 	private boolean isFullbright;
+	private final ShaderAttributeInputs inputs;
 
-	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright, NewWorldRenderingPipeline parent) throws IOException {
+	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
+						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
+						  GlFramebuffer baseline, BlendModeOverride blendModeOverride,
+						  Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright,
+						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
@@ -58,6 +63,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.imageBuilder = ProgramImages.builder(programId);
 		this.currentImages = null;
 		this.isFullbright = isFullbright;
+		this.inputs = inputs;
 
 		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
 		this.intensitySwizzle = getName().contains("intensity");
@@ -82,6 +88,14 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	@Override
 	public void apply() {
 		dynamicSamplers.forEach((name, supplier) -> this.addIrisSampler(name, supplier.getAsInt()));
+
+		if (!inputs.hasTex()) {
+			setSampler("Sampler0", parent.getWhitePixel().getId());
+		}
+
+		if (!inputs.hasLight()) {
+			setSampler("Sampler2", parent.getWhitePixel().getId());
+		}
 
 		super.apply();
 		uniforms.update();

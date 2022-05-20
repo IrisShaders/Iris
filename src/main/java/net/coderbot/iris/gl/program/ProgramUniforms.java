@@ -138,6 +138,8 @@ public class ProgramUniforms {
 
 		@Override
 		public Builder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform) {
+			Objects.requireNonNull(uniform);
+
 			switch (updateFrequency) {
 				case ONCE:
 					once.put(locations.get(uniform.getLocation()), uniform);
@@ -266,6 +268,9 @@ public class ProgramUniforms {
 
 		@Override
 		public Builder addDynamicUniform(Uniform uniform, ValueUpdateNotifier notifier) {
+			Objects.requireNonNull(uniform);
+			Objects.requireNonNull(notifier);
+
 			dynamic.put(locations.get(uniform.getLocation()), uniform);
 			notifiersToReset.add(notifier);
 

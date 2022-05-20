@@ -46,7 +46,9 @@
     "fabricloader": ">=0.12.3",
     "minecraft": "1.18.x",
     "fabric-resource-loader-v0": ">=0.3.2",
-    "fabric-key-binding-api-v1": ">=1.0.1"
+    "fabric-key-binding-api-v1": ">=1.0.1",
+    "fabric-api-base": ">=0.4.0",
+    "fabric-command-api-v1": ">=1.1.3"
   },
 
   "breaks": {

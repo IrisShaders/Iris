@@ -13,6 +13,7 @@
     "MixinBlockStateBehavior",
     "MixinClientLanguage",
     "MixinDebugScreenOverlay",
+    "MixinTheEndPortalRenderer",
     "MixinEntityRenderDispatcher",
     "MixinFogRenderer",
     "MixinGameRenderer",
@@ -33,6 +34,7 @@
     "MixinMinecraft_PipelineManagement",
     "MixinModelViewBobbing",
     "MixinOptions_Entrypoint",
+    "MixinParticleEngine",
     "MixinRenderSystem",
     "MixinRenderTarget",
     "MixinShaderInstance",
@@ -49,8 +51,8 @@
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",
     "math.MixinMatrix4f",
-    "rendertype.MixinFixEyesTranslucency",
-    "rendertype.MixinRenderType",
+    "rendertype.MixinRenderStateShard_Tagging",
+    "rendertype.MixinRenderType_FixEyesTranslucency",
     "rendertype.RenderTypeAccessor",
     "rendertype.RenderStateShardAccessor",
     "rendertype.RenderTypeAccessor",
@@ -64,7 +66,9 @@
     "statelisteners.MixinGlStateManager",
     "statelisteners.MixinRenderSystem",
     "texture.MixinAbstractTexture",
-    "texture.MixinGlStateManager"
+    "texture.MixinGlStateManager",
+    "state_tracking.MixinPostChain",
+    "state_tracking.MixinRenderTarget"
   ],
   "injectors": {
     "defaultRequire": 1
