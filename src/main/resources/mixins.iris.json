@@ -22,6 +22,7 @@
     "MixinGlStateManager_AlphaTestOverride",
     "MixinGlStateManager_BlendOverride",
     "MixinGlStateManager_DepthColorOverride",
+    "MixinGlStateManager_FramebufferBinding",
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
