@@ -1048,12 +1048,4 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	private boolean isRenderingShadow = false;
-
-	@Override
-	public void beginShadowRender() {
-	}
-
-	@Override
-	public void endShadowRender() {
-	}
 }
