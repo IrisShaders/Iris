@@ -7,31 +7,31 @@ import java.nio.ByteBuffer;
 
 public abstract class QuadViewEntity implements QuadView {
 	long writePointer;
-	int stride = 48;
+	int stride;
 
 	@Override
 	public float x(int index) {
-		return getFloat(writePointer - stride * (4L - index));
+		return getFloat(writePointer - stride * (3L - index));
 	}
 
 	@Override
 	public float y(int index) {
-		return getFloat(writePointer + 4 - stride * (4L - index));
+		return getFloat(writePointer + 4 - stride * (3L - index));
 	}
 
 	@Override
 	public float z(int index) {
-		return getFloat(writePointer + 8 - stride * (4L - index));
+		return getFloat(writePointer + 8 - stride * (3L - index));
 	}
 
 	@Override
 	public float u(int index) {
-		return getFloat(writePointer + 16 - stride * (4L - index));
+		return getFloat(writePointer + 16 - stride * (3L - index));
 	}
 
 	@Override
 	public float v(int index) {
-		return getFloat(writePointer + 20 - stride * (4L - index));
+		return getFloat(writePointer + 20 - stride * (3L - index));
 	}
 
 	abstract float getFloat(long writePointer);
