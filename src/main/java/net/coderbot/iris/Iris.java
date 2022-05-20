@@ -91,7 +91,6 @@ public class Iris {
 	private static boolean sodiumInvalid;
 	private static boolean sodiumInstalled;
 	private static boolean initialized;
-	private static boolean usedIrisInstaller;
 
 	private static PipelineManager pipelineManager;
 	private static IrisConfig irisConfig;
@@ -107,8 +106,7 @@ public class Iris {
 	private static boolean resetShaderPackOptions = false;
 
 	private static Version IRIS_VERSION;
-	private static CompletableFuture<UpdateInfo> updateInfo;
-	private static boolean shouldShowUpdateMessage;
+	private static UpdateChecker updateChecker;
 
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
@@ -140,9 +138,7 @@ public class Iris {
 
 		int simpleVersion = iris.getMetadata().getCustomValue("simpleVersion").getAsNumber().intValue();
 
-		if (Objects.equals(System.getProperty("iris.installer", "false"), "true")) {
-			usedIrisInstaller = true;
-		}
+		this.updateChecker = new UpdateChecker(simpleVersion);
 
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {
@@ -162,27 +158,7 @@ public class Iris {
 			logger.error("", e);
 		}
 
-		updateInfo = CompletableFuture.supplyAsync(() -> {
-			if (!irisConfig.shouldDisableUpdateMessage()) {
-				try {
-					try (InputStream in = new URL("https://raw.githubusercontent.com/IMS212/Iris-Installer-Files/master/updateindex.json").openStream()) {
-						String updateIndex = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
-						InputStream updateInfoStream = new URL(updateIndex).openStream();
-						UpdateInfo updateInfo = new Gson().fromJson(new InputStreamReader(updateInfoStream), UpdateInfo.class);
-						updateInfoStream.close();
-						if (updateInfo.simpleVersion > simpleVersion) {
-							shouldShowUpdateMessage = true;
-							logger.warn("New update detected, showing update message!");
-							return updateInfo;
-						}
-					}
-				} catch (IOException e) {
-					Iris.logger.error("Failed to get update info!", e);
-				}
-			}
-			return null;
-		});
-
+		this.updateChecker.checkForUpdates(irisConfig);
 
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
@@ -691,51 +667,16 @@ public class Iris {
 		return irisConfig;
 	}
 
+	public static UpdateChecker getUpdateChecker() {
+		return updateChecker;
+	}
+
 	public static String getVersion() {
 		if (IRIS_VERSION == null) {
 			return "Version info unknown!";
 		}
 
 		return IRIS_VERSION.getFriendlyString();
-	}
-
-	public static Component getUpdateMessage() {
-		if (updateInfo.isDone()) {
-			UpdateInfo info;
-			try {
-				info = updateInfo.get();
-				if (info == null) {
-					return null;
-				}
-			} catch (InterruptedException | ExecutionException e) {
-				throw new RuntimeException(e);
-			}
-			String languageCode = Minecraft.getInstance().options.languageCode.toLowerCase(Locale.ROOT);
-			String originalText = info.updateInfo.containsKey(languageCode) ? info.updateInfo.get(languageCode) : info.updateInfo.get("en_us");
-			String[] textParts = originalText.split("\\{link}");
-			if (textParts.length > 1) {
-				MutableComponent component1 = new TextComponent(textParts[0]);
-				MutableComponent component2 = new TextComponent(textParts[1]);
-				MutableComponent link = new TextComponent(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
-				return component1.append(link).append(component2);
-			} else {
-				MutableComponent link = new TextComponent(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
-				return new TextComponent(textParts[0]).append(link);
-			}
-		} else {
-			return null;
-		}
-	}
-
-	public static String getUpdateLink() {
-		if (updateInfo.isDone()) {
-			try {
-				return usedIrisInstaller ? updateInfo.get().installer : updateInfo.get().modDownload;
-			} catch (InterruptedException | ExecutionException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return null;
 	}
 
 	public static String getFormattedVersion() {
