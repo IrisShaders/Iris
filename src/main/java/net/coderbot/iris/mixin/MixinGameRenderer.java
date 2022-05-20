@@ -191,6 +191,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
+		} else if (isBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
