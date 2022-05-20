@@ -2,7 +2,7 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,6 +21,7 @@ public class MixinSodiumWorldRenderer {
                                 "Lme/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType;" +
                             ")Lme/jellysquid/mods/sodium/client/render/chunk/ChunkRenderBackend;"))
     private ChunkVertexType iris$overrideVertexType(ChunkVertexType vertexType) {
-        return Iris.isPackActive() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
+        return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()
+			? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
     }
 }

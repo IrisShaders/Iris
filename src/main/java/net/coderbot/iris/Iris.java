@@ -26,7 +26,6 @@ import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -673,10 +672,6 @@ public class Iris {
 
 	public static boolean isSodiumInstalled() {
 		return sodiumInstalled;
-	}
-
-	public static boolean isPackActive() {
-		return IrisApi.getInstance().isShaderPackInUse();
 	}
 
 	public static Path getShaderpacksDirectory() {
