@@ -1,6 +1,5 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
-import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
 import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexSink;
@@ -19,7 +18,7 @@ public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe imp
 	private float vSum;
 
 	public EntityVertexBufferWriterUnsafe(VertexBufferView backingBuffer) {
-		super(backingBuffer, VanillaVertexTypes.QUADS);
+		super(backingBuffer, ExtendedQuadVertexType.INSTANCE);
 	}
 
 	@Override

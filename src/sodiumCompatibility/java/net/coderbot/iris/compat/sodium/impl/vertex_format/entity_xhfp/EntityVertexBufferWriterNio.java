@@ -1,6 +1,5 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
-import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
 import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexSink;
@@ -20,7 +19,7 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 	private float vSum;
 
 	public EntityVertexBufferWriterNio(VertexBufferView backingBuffer) {
-		super(backingBuffer, VanillaVertexTypes.QUADS);
+		super(backingBuffer, ExtendedQuadVertexType.INSTANCE);
 	}
 
 	@Override
