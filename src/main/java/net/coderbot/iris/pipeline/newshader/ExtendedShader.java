@@ -38,7 +38,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	GlFramebuffer baseline;
 	BlendModeOverride blendModeOverride;
 	HashMap<String, IntSupplier> dynamicSamplers;
-	AlphaTest alphaTest;
+	float alphaTest;
 	private ProgramImages currentImages;
 	private Program geometry;
 	private boolean isFullbright;
@@ -62,7 +62,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.baseline = baseline;
 		this.blendModeOverride = blendModeOverride;
 		this.dynamicSamplers = new HashMap<>();
-		this.alphaTest = alphaTest;
+		this.alphaTest = alphaTest.getReference();
 		this.parent = parent;
 		this.imageBuilder = ProgramImages.builder(programId);
 		this.currentImages = null;
@@ -86,8 +86,6 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 			BlendModeOverride.restore();
 		}
 
-		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(0);
-
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
@@ -95,7 +93,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	public void apply() {
 		dynamicSamplers.forEach((name, supplier) -> this.addIrisSampler(name, supplier.getAsInt()));
 
-		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest.getReference());
+		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest);
 
 		if (!inputs.hasTex()) {
 			setSampler("Sampler0", parent.getWhitePixel().getId());

@@ -31,6 +31,6 @@ public class IrisInternalUniforms {
 			return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
 		}, notifier -> {});
 
-		uniforms.uniform1f("iris_currentAlphaTest", CapturedRenderingState.INSTANCE::getCurrentAlphaTest, CapturedRenderingState.INSTANCE.getAlphaTestNotifier());
+		uniforms.uniform1f("iris_currentAlphaTest", CapturedRenderingState.INSTANCE::getCurrentAlphaTest, notifier -> {});
 	}
 }

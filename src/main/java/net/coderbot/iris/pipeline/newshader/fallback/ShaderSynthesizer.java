@@ -89,6 +89,7 @@ public class ShaderSynthesizer {
 
 				shader.append("in vec3 Normal;\n");
 
+				// minecraft_mix_light just passes through the original alpha value, so it's safe here.
 				main.append("    iris_vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color * ColorModulator);\n");
 			} else if (inputs.isNewLines()) {
 				shader.append("in vec3 Normal;\n");
@@ -174,7 +175,11 @@ public class ShaderSynthesizer {
 				main.append(" * iris_vertexColor;\n");
 			}
 		} else {
-			main.append("    vec4 color = iris_vertexColor;\n");
+			if (alphaTest == AlphaTests.VERTEX_ALPHA) {
+				main.append("vec4 color = vec4(iris_vertexColor.rgb, 1);\n");
+			} else {
+				main.append("vec4 color = iris_vertexColor;\n");
+			}
 		}
 
 		if (inputs.hasOverlay()) {
