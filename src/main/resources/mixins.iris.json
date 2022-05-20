@@ -21,6 +21,7 @@
     "MixinGlStateManager_AmdCrashFix",
     "MixinGlStateManager_AlphaTestOverride",
     "MixinGlStateManager_BlendOverride",
+    "MixinGlStateManager_DepthColorOverride",
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
