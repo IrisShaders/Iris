@@ -101,6 +101,9 @@ public class MixinLevelRenderer {
 	private void iris$beginSky(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
 		// Use CUSTOM_SKY until levelFogColor is called as a heuristic to catch FabricSkyboxes.
 		pipeline.setPhase(WorldRenderingPhase.CUSTOM_SKY);
+
+		// We've changed the phase, but vanilla doesn't update the shader program at this point before rendering stuff,
+		// so we need to manually refresh the shader program so that the correct shader override gets applied.
 		// TODO: Move the injection instead
 		RenderSystem.setShader(GameRenderer::getPositionShader);
 	}
