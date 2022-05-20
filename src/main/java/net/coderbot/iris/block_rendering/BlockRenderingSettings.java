@@ -20,6 +20,7 @@ public class BlockRenderingSettings {
 	private float ambientOcclusionLevel;
 	private boolean disableDirectionalShading;
 	private boolean useSeparateAo;
+	private boolean useExtendedVertexFormat;
 
 	public BlockRenderingSettings() {
 		reloadRequired = false;
@@ -28,6 +29,7 @@ public class BlockRenderingSettings {
 		ambientOcclusionLevel = 1.0F;
 		disableDirectionalShading = false;
 		useSeparateAo = false;
+		useExtendedVertexFormat = false;
 	}
 
 	public boolean isReloadRequired() {
@@ -114,5 +116,18 @@ public class BlockRenderingSettings {
 
 		this.reloadRequired = true;
 		this.useSeparateAo = useSeparateAo;
+	}
+
+	public boolean shouldUseExtendedVertexFormat() {
+		return useExtendedVertexFormat;
+	}
+
+	public void setUseExtendedVertexFormat(boolean useExtendedVertexFormat) {
+		if (useExtendedVertexFormat == this.useExtendedVertexFormat) {
+			return;
+		}
+
+		this.reloadRequired = true;
+		this.useExtendedVertexFormat = useExtendedVertexFormat;
 	}
 }

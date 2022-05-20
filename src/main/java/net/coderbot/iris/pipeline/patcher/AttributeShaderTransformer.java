@@ -13,6 +13,8 @@ public class AttributeShaderTransformer {
 
 		StringTransformations transformations = new StringTransformations(source);
 
+		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both ways to refer to the lightmap texture coordinate.
+		// See https://github.com/IrisShaders/Iris/issues/1149
 		if (!inputs.lightmap) {
 			transformations.replaceExact("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
 			transformations.replaceExact("gl_MultiTexCoord2", "vec4(240.0, 240.0, 0.0, 1.0)");
