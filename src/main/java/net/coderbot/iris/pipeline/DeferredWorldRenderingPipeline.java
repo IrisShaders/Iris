@@ -28,6 +28,7 @@ import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -35,7 +36,6 @@ import net.coderbot.iris.postprocess.FinalPassRenderer;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.samplers.DepthBufferTracker;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.IdMap;
@@ -48,6 +48,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
+import net.coderbot.iris.texture.TextureInfoCache;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -110,8 +111,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 
-	private boolean isBeforeTranslucent;
-
 	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	private final float sunPathRotation;
@@ -127,6 +126,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private WorldRenderingPhase overridePhase = null;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NONE;
+	private boolean isBeforeTranslucent;
 	private InputAvailability inputs = new InputAvailability(false, false, false);
 	private SpecialCondition special = null;
 
@@ -144,7 +144,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
 		int depthTextureId = mainTarget.getDepthTextureId();
-		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		this.renderTargets = new RenderTargets(mainTarget.width, mainTarget.height, depthTextureId,
 			depthBufferFormat, programs.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
@@ -187,7 +188,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets);
+		this.centerDepthSampler = new CenterDepthSampler(programs.getPackDirectives().getCenterDepthHalfLife());
 
 		this.shadowMapResolution = programs.getPackDirectives().getShadowDirectives().getResolution();
 
@@ -724,6 +725,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		}
 	}
 
+	@Override
 	public void destroy() {
 		BlendModeOverride.restore();
 		AlphaTestOverride.restore();
@@ -736,6 +738,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		compositeRenderer.destroy();
 		deferredRenderer.destroy();
 		finalPassRenderer.destroy();
+		centerDepthSampler.destroy();
 
 		// Make sure that any custom framebuffers are not bound before destroying render targets
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
@@ -796,7 +799,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		Blaze3dRenderTargetExt mainExt = (Blaze3dRenderTargetExt) main;
 
 		int depthTextureId = main.getDepthTextureId();
-		DepthBufferFormat depthBufferFormat = DepthBufferTracker.INSTANCE.getFormat(depthTextureId);
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), depthTextureId, main.width,
 			main.height, depthBufferFormat);
@@ -838,7 +842,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		// all non-translucent content, as required.
 		renderTargets.copyPreTranslucentDepth();
 
-		centerDepthSampler.updateSample();
 
 		// needed to remove blend mode overrides and similar
 		beginPass(null);
@@ -967,6 +970,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		isRenderingFullScreenPass = true;
 
+		centerDepthSampler.sampleCenterDepth();
+
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 
@@ -1044,9 +1049,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private boolean isRenderingShadow = false;
 
+	@Override
 	public void beginShadowRender() {
 	}
 
+	@Override
 	public void endShadowRender() {
 	}
 }

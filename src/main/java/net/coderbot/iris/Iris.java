@@ -7,6 +7,7 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
+import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
@@ -340,7 +341,7 @@ public class Iris {
 		resetShaderPackOptions = false;
 
 		try {
-			currentPack = new ShaderPack(shaderPackPath, changedConfigs);
+			currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createStandardEnvironmentDefines());
 
 			MutableOptionValues changedConfigsValues = currentPack.getShaderPackOptions().getOptionValues().mutableCopy();
 
@@ -663,7 +664,7 @@ public class Iris {
 	public static boolean isSodiumInvalid() {
 		return sodiumInvalid;
   }
-  
+
 	public static boolean isSodiumInstalled() {
 		return sodiumInstalled;
 	}

@@ -44,6 +44,7 @@ public class ShaderProperties {
 	private OptionalBoolean shadowTerrain = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowTranslucent = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowEntities = OptionalBoolean.DEFAULT;
+	private OptionalBoolean shadowPlayer = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowBlockEntities = OptionalBoolean.DEFAULT;
 	private OptionalBoolean underwaterOverlay = OptionalBoolean.DEFAULT;
 	private OptionalBoolean sun = OptionalBoolean.DEFAULT;
@@ -79,8 +80,8 @@ public class ShaderProperties {
 	}
 
 	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
-	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions) {
-		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions);
+	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
+		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions, environmentDefines);
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
@@ -111,6 +112,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "shadowTerrain", bool -> shadowTerrain = bool);
 			handleBooleanDirective(key, value, "shadowTranslucent", bool -> shadowTranslucent = bool);
 			handleBooleanDirective(key, value, "shadowEntities", bool -> shadowEntities = bool);
+			handleBooleanDirective(key, value, "shadowPlayer", bool -> shadowPlayer = bool);
 			handleBooleanDirective(key, value, "shadowBlockEntities", bool -> shadowBlockEntities = bool);
 			handleBooleanDirective(key, value, "underwaterOverlay", bool -> underwaterOverlay = bool);
 			handleBooleanDirective(key, value, "sun", bool -> sun = bool);
@@ -391,6 +393,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getShadowEntities() {
 		return shadowEntities;
+	}
+
+	public OptionalBoolean getShadowPlayer() {
+		return shadowPlayer;
 	}
 
 	public OptionalBoolean getShadowBlockEntities() {

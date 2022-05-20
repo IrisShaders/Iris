@@ -16,6 +16,7 @@ public class PackDirectives {
 	private float wetnessHalfLife;
 	private float drynessHalfLife;
 	private float eyeBrightnessHalfLife;
+	private float centerDepthHalfLife;
 	private boolean areCloudsEnabled;
 	private boolean underwaterOverlay;
 	private boolean vignette;
@@ -35,6 +36,7 @@ public class PackDirectives {
 		wetnessHalfLife = 600.0f;
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
+		centerDepthHalfLife = 1.0F;
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -84,6 +86,10 @@ public class PackDirectives {
 		return eyeBrightnessHalfLife;
 	}
 
+	public float getCenterDepthHalfLife() {
+		return centerDepthHalfLife;
+	}
+
 	public boolean areCloudsEnabled() {
 		return areCloudsEnabled;
 	}
@@ -120,6 +126,10 @@ public class PackDirectives {
 		return shadowDirectives;
 	}
 
+	private static float clamp(float val, float lo, float hi) {
+		return Math.max(lo, Math.min(hi, val));
+	}
+
 	public void acceptDirectivesFrom(DirectiveHolder directives) {
 		renderTargetDirectives.acceptDirectives(directives);
 		shadowDirectives.acceptDirectives(directives);
@@ -131,7 +141,7 @@ public class PackDirectives {
 				sunPathRotation -> this.sunPathRotation = sunPathRotation);
 
 		directives.acceptConstFloatDirective("ambientOcclusionLevel",
-				ambientOcclusionLevel -> this.ambientOcclusionLevel = ambientOcclusionLevel);
+				ambientOcclusionLevel -> this.ambientOcclusionLevel = clamp(ambientOcclusionLevel, 0.0f, 1.0f));
 
 		directives.acceptConstFloatDirective("wetnessHalflife",
 			wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
@@ -142,6 +152,8 @@ public class PackDirectives {
 		directives.acceptConstFloatDirective("eyeBrightnessHalflife",
 			eyeBrightnessHalfLife -> this.eyeBrightnessHalfLife = eyeBrightnessHalfLife);
 
+		directives.acceptConstFloatDirective("centerDepthHalflife",
+			centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
 	}
 
 	public ImmutableMap<Integer, Boolean> getExplicitFlips(String pass) {

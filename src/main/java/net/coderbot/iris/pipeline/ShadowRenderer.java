@@ -71,6 +71,7 @@ public class ShadowRenderer {
 	private final boolean shouldRenderTerrain;
 	private final boolean shouldRenderTranslucent;
 	private final boolean shouldRenderEntities;
+	private final boolean shouldRenderPlayer;
 	private final boolean shouldRenderBlockEntities;
 	private final float sunPathRotation;
 	private final RenderBuffers buffers;
@@ -99,6 +100,7 @@ public class ShadowRenderer {
 		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain();
 		this.shouldRenderTranslucent = shadowDirectives.shouldRenderTranslucent();
 		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities();
+		this.shouldRenderPlayer = shadowDirectives.shouldRenderPlayer();
 		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities();
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
@@ -381,6 +383,38 @@ public class ShadowRenderer {
 		profiler.pop();
 	}
 
+	private void renderPlayerEntity(LevelRendererAccessor levelRenderer, Frustum frustum, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
+		EntityRenderDispatcher dispatcher = levelRenderer.getEntityRenderDispatcher();
+
+		profiler.push("cull");
+
+		Entity player = Minecraft.getInstance().player;
+
+		if (!dispatcher.shouldRender(player, frustum, cameraX, cameraY, cameraZ) || player.isSpectator()) {
+			return;
+		}
+
+		profiler.popPush("build geometry");
+
+		if (!player.getPassengers().isEmpty()) {
+			for (int i = 0; i < player.getPassengers().size(); i++) {
+				levelRenderer.invokeRenderEntity(player.getPassengers().get(i), cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
+				renderedShadowEntities++;
+			}
+		}
+
+		if (player.getVehicle() != null) {
+			levelRenderer.invokeRenderEntity(player.getVehicle(), cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
+			renderedShadowEntities++;
+		}
+
+		levelRenderer.invokeRenderEntity(player, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
+
+		renderedShadowEntities++;
+
+		profiler.pop();
+	}
+
 	private void renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum) {
 		profiler.push("build blockentities");
 
@@ -531,6 +565,8 @@ public class ShadowRenderer {
 
 		if (shouldRenderEntities) {
 			renderEntities(levelRenderer, entityShadowFrustum, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
+		} else if (shouldRenderPlayer) {
+			renderPlayerEntity(levelRenderer, entityShadowFrustum, bufferSource, modelView, cameraX, cameraY, cameraZ, tickDelta);
 		}
 
 		if (shouldRenderBlockEntities) {
@@ -592,14 +628,14 @@ public class ShadowRenderer {
 		messages.add("[" + Iris.MODNAME + "] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[" + Iris.MODNAME + "] Shadow Block Entities: " + getBlockEntitiesDebugString());
 
-		if (buffers instanceof DrawCallTrackingRenderBuffers && shouldRenderEntities) {
+		if (buffers instanceof DrawCallTrackingRenderBuffers && (shouldRenderEntities || shouldRenderPlayer)) {
 			DrawCallTrackingRenderBuffers drawCallTracker = (DrawCallTrackingRenderBuffers) buffers;
 			messages.add("[" + Iris.MODNAME + "] Shadow Entity Batching: " + BatchingDebugMessageHelper.getDebugMessage(drawCallTracker));
 		}
 	}
 
 	private String getEntitiesDebugString() {
-		return shouldRenderEntities ? (renderedShadowEntities + "/" + Minecraft.getInstance().level.getEntityCount()) : "disabled by pack";
+		return (shouldRenderEntities || shouldRenderPlayer) ? (renderedShadowEntities + "/" + Minecraft.getInstance().level.getEntityCount()) : "disabled by pack";
 	}
 
 	private String getBlockEntitiesDebugString() {

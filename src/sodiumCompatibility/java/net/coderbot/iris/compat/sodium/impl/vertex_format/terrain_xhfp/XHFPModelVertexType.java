@@ -15,7 +15,8 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisGlVertexAttributeF
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements ChunkVertexType {
-    public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, 36)
+    public static final int STRIDE = 36;
+    public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
 			.addElement(ChunkMeshAttribute.POSITION, 0, GlVertexAttributeFormat.UNSIGNED_SHORT, 3, false)
 			.addElement(ChunkMeshAttribute.COLOR, 8, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true)
 			.addElement(ChunkMeshAttribute.TEXTURE, 12, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false)

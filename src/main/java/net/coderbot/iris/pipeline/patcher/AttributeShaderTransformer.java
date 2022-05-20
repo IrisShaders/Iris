@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline;
+package net.coderbot.iris.pipeline.patcher;
 
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
