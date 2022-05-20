@@ -122,7 +122,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_BRIGHT : ShaderKey.HAND_WATER_BRIGHT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY_BRIGHT, cir);
 		} else if (isRenderingWorld()) {
 			override(ShaderKey.ENTITIES_SOLID_BRIGHT, cir);
@@ -210,6 +210,7 @@ public class MixinGameRenderer {
 			"getRendertypeEntityCutoutShader",
 			"getRendertypeEntityCutoutNoCullShader",
 			"getRendertypeEntityCutoutNoCullZOffsetShader",
+			"getRendertypeEntityDecalShader",
 			"getRendertypeEntitySmoothCutoutShader",
 			"getRendertypeEntityTranslucentShader",
 			"getRendertypeEntityTranslucentCullShader",
@@ -222,7 +223,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
 		} else if (isRenderingWorld()) {
 			override(ShaderKey.ENTITIES_CUTOUT_DIFFUSE, cir);
@@ -238,7 +239,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT : ShaderKey.HAND_TRANSLUCENT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY, cir);
 		} else if (isRenderingWorld()) {
 			override(ShaderKey.ENTITIES_CUTOUT, cir);
@@ -270,7 +271,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
 		} else if (isRenderingWorld()) {
 			override(ShaderKey.ENTITIES_SOLID_DIFFUSE, cir);
@@ -287,7 +288,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT : ShaderKey.HAND_TRANSLUCENT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY, cir);
 		} else if (isRenderingWorld()) {
 			override(ShaderKey.ENTITIES_SOLID, cir);
@@ -303,7 +304,6 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getRenderTypeEntityDecalShader (uses entity diffuse lighting)
 	// TODO: getRenderTypeEntityAlphaShader (weird alpha test behavior!!!)
 
 	// NOTE: getRenderTypeOutlineShader should not be overriden.
@@ -315,7 +315,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY, cir);
 		} else if (isRenderingWorld()) {
 			override(ShaderKey.ENTITIES_EYES, cir);
@@ -391,6 +391,12 @@ public class MixinGameRenderer {
 		}
 	}
 
+	private static boolean isBlockEntities() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		return pipeline != null && pipeline.getPhase() == WorldRenderingPhase.BLOCK_ENTITIES;
+	}
+	
 	private static boolean isSky() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 

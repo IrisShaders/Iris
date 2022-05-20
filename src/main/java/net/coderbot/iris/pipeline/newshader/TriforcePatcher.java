@@ -114,7 +114,7 @@ public class TriforcePatcher {
 		patchCommon(transformations, type);
 
 		if (inputs.hasOverlay()) {
-			AttributeShaderTransformer.patch(transformations, type, hasGeometry);
+			AttributeShaderTransformer.patchOverlayColor(transformations, type, hasGeometry);
 		}
 
 		addAlphaTest(transformations, type, alpha);
