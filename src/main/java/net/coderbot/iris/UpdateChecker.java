@@ -16,9 +16,11 @@ import net.minecraft.network.chat.TextComponent;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,18 +57,18 @@ public class UpdateChecker {
 			try {
 				File updateFile = FabricLoader.getInstance().getGameDir().resolve("irisUpdateInfo.json").toFile();
 				if (DateUtils.isSameDay(new Date(), new Date(updateFile.lastModified()))) {
-					Iris.logger.warn("Cached update file detected, using that!");
+					Iris.logger.warn("[Iris Update Check] Cached update file detected, using that!");
 					UpdateInfo updateInfo = new Gson().fromJson(FileUtils.readFileToString(updateFile, StandardCharsets.UTF_8), UpdateInfo.class);
 					try {
 						if (currentVersion.compareTo(SemanticVersion.parse(updateInfo.semanticVersion)) < 0) {
 							shouldShowUpdateMessage = true;
-							Iris.logger.warn("New update detected, showing update message!");
+							Iris.logger.warn("[Iris Update Check] New update detected, showing update message!");
 							return updateInfo;
 						} else {
 							return null;
 						}
 					} catch (VersionParsingException e) {
-						Iris.logger.error("Caught a VersionParsingException while parsing semantic versions!", e);
+						Iris.logger.error("[Iris Update Check] Caught a VersionParsingException while parsing semantic versions!", e);
 					}
 				}
 
@@ -80,22 +82,25 @@ public class UpdateChecker {
 					try {
 						if (currentVersion.compareTo(SemanticVersion.parse(updateInfo.semanticVersion)) < 0) {
 							shouldShowUpdateMessage = true;
-							Iris.logger.warn("New update detected, showing update message!");
+							Iris.logger.info("[Iris Update Check] New update detected, showing update message!");
 							return updateInfo;
 						} else {
 							return null;
 						}
 					} catch (VersionParsingException e) {
-						Iris.logger.error("Caught a VersionParsingException while parsing semantic versions!", e);
+						Iris.logger.error("[Iris Update Check] Caught a VersionParsingException while parsing semantic versions!", e);
 					}
 				}
+			} catch(FileNotFoundException e) {
+				Iris.logger.warn("[Iris Update Check] Unable to download " + e.getMessage());
 			} catch (IOException e) {
-				Iris.logger.error("Failed to get update info!", e);
+				Iris.logger.warn("[Iris Update Check] Failed to get update info!", e);
 			}
 			return null;
 		});
 	}
 
+	@Nullable
 	public UpdateInfo getUpdateInfo() {
 		if (info != null && info.isDone()) {
 			try {
@@ -111,6 +116,10 @@ public class UpdateChecker {
 	public Optional<Component> getUpdateMessage() {
 		if (shouldShowUpdateMessage) {
 			UpdateInfo info = getUpdateInfo();
+
+			if (info == null) {
+				return Optional.empty();
+			}
 
 			String languageCode = Minecraft.getInstance().options.languageCode.toLowerCase(Locale.ROOT);
 			String originalText = info.updateInfo.containsKey(languageCode) ? info.updateInfo.get(languageCode) : info.updateInfo.get("en_us");
@@ -135,7 +144,7 @@ public class UpdateChecker {
 
 			return Optional.of(usedIrisInstaller ? info.installer : info.modDownload);
 		} else {
-			return null;
+			return Optional.empty();
 		}
 	}
 }

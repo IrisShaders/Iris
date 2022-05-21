@@ -17,8 +17,11 @@ public class MixinClientPacketListener {
 
 	@Inject(method = "handleLogin", at = @At("TAIL"))
 	private void iris$showUpdateMessage(ClientboundLoginPacket arg, CallbackInfo ci) {
-		if (this.minecraft.player != null && Iris.getUpdateChecker().getUpdateMessage().isPresent()) {
-			this.minecraft.player.displayClientMessage(Iris.getUpdateChecker().getUpdateMessage().get(), false);
+		if (this.minecraft.player == null) {
+			return;
 		}
+
+		Iris.getUpdateChecker().getUpdateMessage().ifPresent(msg ->
+			this.minecraft.player.displayClientMessage(msg, false));
 	}
 }
