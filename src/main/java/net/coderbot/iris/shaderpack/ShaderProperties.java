@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -71,7 +72,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTest> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
-	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new Object2ObjectOpenHashMap<>();
+	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
@@ -221,10 +222,8 @@ public class ShaderProperties {
 
 				TextureStage stage = optionalTextureStage.get();
 
-				Object2ObjectMap<String, String> customTexturePropertyMap = customTextures.getOrDefault(stage, new Object2ObjectOpenHashMap<>());
-				customTexturePropertyMap.put(samplerName, value);
-
-				customTextures.put(stage, customTexturePropertyMap);
+				customTextures.computeIfAbsent(stage, _stage -> new Object2ObjectOpenHashMap<>())
+						.put(samplerName, value);
 			});
 
 			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
@@ -471,7 +470,7 @@ public class ShaderProperties {
 		return blendModeOverrides;
 	}
 
-	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
+	public EnumMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
 		return customTextures;
 	}
 

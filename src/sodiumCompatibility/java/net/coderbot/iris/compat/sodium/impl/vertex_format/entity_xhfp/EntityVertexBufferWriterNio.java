@@ -1,24 +1,25 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.writer;
+package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
-import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNio;
 import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexSink;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.coderbot.iris.vertices.NormalHelper;
 
 import java.nio.ByteBuffer;
 
 public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implements QuadVertexSink {
-	private final QuadViewEntity.QuadViewEntityNio quad = new QuadViewEntity.QuadViewEntityNio();
 	private static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
-	private float midU = 0;
-	private float midV = 0;
+
+	private final QuadViewEntity.QuadViewEntityNio quad = new QuadViewEntity.QuadViewEntityNio();
+
 	private int vertexCount;
+	private float uSum;
+	private float vSum;
 
 	public EntityVertexBufferWriterNio(VertexBufferView backingBuffer) {
-		super(backingBuffer, VanillaVertexTypes.QUADS);
+		super(backingBuffer, ExtendedQuadVertexType.INSTANCE);
 	}
 
 	@Override
@@ -27,8 +28,8 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 		ByteBuffer buffer = this.byteBuffer;
 
 		vertexCount++;
-		midU += u;
-		midV += v;
+		uSum += u;
+		vSum += v;
 
 		buffer.putFloat(i, x);
 		buffer.putFloat(i + 4, y);
@@ -42,37 +43,32 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 		buffer.putShort(i + 36, (short) -1);
 		buffer.putShort(i + 38, (short) -1);
 
+		if (vertexCount == 4) {
+			this.endQuad(Norm3b.unpackX(normal), Norm3b.unpackY(normal), Norm3b.unpackZ(normal));
+		}
 
 		this.advance();
-
-		if (vertexCount == 4) {
-			this.endQuad(vertexCount, Norm3b.unpackX(normal), Norm3b.unpackY(normal), Norm3b.unpackZ(normal));
-		}
 	}
 
-	public void endQuad(int length, float normalX, float normalY, float normalZ) {
+	private void endQuad(float normalX, float normalY, float normalZ) {
 		this.vertexCount = 0;
-		ByteBuffer buffer = this.byteBuffer;
+
 		int i = this.writeOffset;
+		ByteBuffer buffer = this.byteBuffer;
+
+		uSum *= 0.25;
+		vSum *= 0.25;
 
 		quad.setup(buffer, i, STRIDE);
+		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
-		int tangent = quad.computeTangent(normalX, normalY, normalZ);
-
-		for (int vertex = 0; vertex < length; vertex++) {
-			buffer.putInt(i - 4 - STRIDE * vertex, tangent);
+		for (int vertex = 0; vertex < 4; vertex++) {
+			buffer.putFloat(i + 40 - STRIDE * vertex, uSum);
+			buffer.putFloat(i + 44 - STRIDE * vertex, vSum);
+			buffer.putInt(i + 48 - STRIDE * vertex, tangent);
 		}
 
-		midU *= 0.25;
-		midV *= 0.25;
-
-		for (int vertex = 0; vertex < length; vertex++) {
-			buffer.putFloat(i - 12 - STRIDE * vertex, midU);
-			buffer.putFloat(i - 8 - STRIDE * vertex, midV);
-		}
-
-		midU = 0;
-		midV = 0;
-		vertexCount = 0;
+		uSum = 0;
+		vSum = 0;
 	}
 }

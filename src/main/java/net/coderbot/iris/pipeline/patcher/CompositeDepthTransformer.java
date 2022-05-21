@@ -1,8 +1,6 @@
 package net.coderbot.iris.pipeline.patcher;
 
-import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
-import net.coderbot.iris.shaderpack.transform.Transformations;
 
 public class CompositeDepthTransformer {
 	public static StringTransformations patch(StringTransformations source) {
