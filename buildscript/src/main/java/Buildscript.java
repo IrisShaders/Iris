@@ -127,7 +127,8 @@ public class Buildscript extends SimpleFabricProject {
 		String build_id = System.getenv("GITHUB_RUN_NUMBER");
 
 		if (build_id != null) {
-			return baseVersion + "build." + build_id;
+			// We don't want any suffix if we're doing a Github Release.
+			return baseVersion;
 		}
 
 		String commitHash = "";
