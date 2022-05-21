@@ -22,7 +22,7 @@ public class MixinVertexFormat {
 				IrisVertexFormats.TERRAIN.setupBufferState(pointer);
 
 				ci.cancel();
-			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
+			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				IrisVertexFormats.ENTITY.setupBufferState(pointer);
 
 				ci.cancel();
@@ -37,7 +37,7 @@ public class MixinVertexFormat {
 				IrisVertexFormats.TERRAIN.clearBufferState();
 
 				ci.cancel();
-			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
+			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				IrisVertexFormats.ENTITY.clearBufferState();
 
 				ci.cancel();

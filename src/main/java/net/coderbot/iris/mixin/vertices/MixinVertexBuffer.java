@@ -29,7 +29,7 @@ public class MixinVertexBuffer {
 			// Needless to say, that is not good if you don't like access violation crashes!
 			if (format == DefaultVertexFormat.BLOCK) {
 				this.format = IrisVertexFormats.TERRAIN;
-			} else if (format == DefaultVertexFormat.NEW_ENTITY) {
+			} else if (format == DefaultVertexFormat.NEW_ENTITY || format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				this.format = IrisVertexFormats.ENTITY;
 			}
 		}
