@@ -691,7 +691,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				RenderSystem.viewport(0, 0, main.width, main.height);
 			}
 
-			if (program != null) {
+			if (program != null && !sodiumTerrainRendering) {
 				program.use();
 			}
 
