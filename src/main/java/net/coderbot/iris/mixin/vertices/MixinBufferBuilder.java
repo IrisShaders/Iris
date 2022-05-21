@@ -9,6 +9,7 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.BufferBuilderPolygonView;
+import net.coderbot.iris.vertices.ExtendingBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +27,7 @@ import java.nio.ByteBuffer;
  * Dynamically and transparently extends the vanilla vertex formats with additional data
  */
 @Mixin(BufferBuilder.class)
-public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder  {
+public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockSensitiveBufferBuilder, ExtendingBufferBuilder {
 	@Unique
 	private boolean extending;
 
@@ -70,11 +71,24 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private @Nullable VertexFormatElement currentElement;
 
 	@Shadow
+	public abstract void begin(int drawMode, VertexFormat vertexFormat);
+
+	@Shadow
 	public abstract void putShort(int i, short s);
+
+	@Unique
+	private boolean iris$shouldNotExtend = false;
+
+	@Override
+	public void iris$beginWithoutExtending(int drawMode, VertexFormat vertexFormat) {
+		iris$shouldNotExtend = true;
+		begin(drawMode, vertexFormat);
+		iris$shouldNotExtend = false;
+	}
 
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void iris$onBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
-		boolean shouldExtend = BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat();
+		boolean shouldExtend = (!iris$shouldNotExtend) && BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat();
 		extending = shouldExtend && (format == DefaultVertexFormat.BLOCK || format == IrisVertexFormats.TERRAIN || format == DefaultVertexFormat.NEW_ENTITY || format == IrisVertexFormats.ENTITY);
 		vertexCount = 0;
 
