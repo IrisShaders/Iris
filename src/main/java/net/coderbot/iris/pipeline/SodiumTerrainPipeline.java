@@ -70,33 +70,27 @@ public class SodiumTerrainPipeline {
 		});
 
 		if (terrainVertex != null) {
-			// terrainVertex = transformVertexShader(terrainVertex);
-			terrainVertex = Patcher.INSTANCE.patchSodiumTerrain(terrainVertex, ShaderType.VERTEX);
+			terrainVertex = TransformPatcher.patchSodiumTerrain(terrainVertex, ShaderType.VERTEX);
 		}
 
 		if (translucentVertex != null) {
-			// translucentVertex = transformVertexShader(translucentVertex);
-			translucentVertex = Patcher.INSTANCE.patchSodiumTerrain(translucentVertex, ShaderType.VERTEX);
+			translucentVertex = TransformPatcher.patchSodiumTerrain(translucentVertex, ShaderType.VERTEX);
 		}
 
 		if (shadowVertex != null) {
-			// shadowVertex = transformVertexShader(shadowVertex);
-			shadowVertex = Patcher.INSTANCE.patchSodiumTerrain(shadowVertex, ShaderType.VERTEX);
+			shadowVertex = TransformPatcher.patchSodiumTerrain(shadowVertex, ShaderType.VERTEX);
 		}
 
 		if (terrainFragment != null) {
-			// terrainFragment = transformFragmentShader(terrainFragment);
-			terrainFragment = Patcher.INSTANCE.patchSodiumTerrain(terrainFragment, ShaderType.FRAGMENT);
+			terrainFragment = TransformPatcher.patchSodiumTerrain(terrainFragment, ShaderType.FRAGMENT);
 		}
-		
+
 		if (translucentFragment != null) {
-			// translucentFragment = transformFragmentShader(translucentFragment);
-			translucentFragment = Patcher.INSTANCE.patchSodiumTerrain(translucentFragment, ShaderType.FRAGMENT);
+			translucentFragment = TransformPatcher.patchSodiumTerrain(translucentFragment, ShaderType.FRAGMENT);
 		}
-		
+
 		if (shadowFragment != null) {
-			// shadowFragment = transformFragmentShader(shadowFragment);
-			shadowFragment = Patcher.INSTANCE.patchSodiumTerrain(shadowFragment, ShaderType.FRAGMENT);
+			shadowFragment = TransformPatcher.patchSodiumTerrain(shadowFragment, ShaderType.FRAGMENT);
 		}
 
 		this.createTerrainSamplers = createTerrainSamplers;
@@ -105,7 +99,7 @@ public class SodiumTerrainPipeline {
 		this.createShadowImages = createShadowImages;
 	}
 
-	private static String transformVertexShader(String base) {
+	public static String transformVertexShader(String base) {
 		StringTransformations transformations = new StringTransformations(base);
 
 		String injections = "attribute vec3 a_Pos; // The position of the vertex\n" +
@@ -150,7 +144,7 @@ public class SodiumTerrainPipeline {
 		return transformations.toString();
 	}
 
-	private static String transformFragmentShader(String base) {
+	public static String transformFragmentShader(String base) {
 		StringTransformations transformations = new StringTransformations(base);
 
 		String injections =

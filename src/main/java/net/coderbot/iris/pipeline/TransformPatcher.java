@@ -1,16 +1,22 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.function.*;
 import java.util.stream.*;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.pattern.*;
+import org.apache.logging.log4j.*;
 
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.*;
+import io.github.douira.glsl_transformer.ast.StringNode;
 import io.github.douira.glsl_transformer.core.*;
 import io.github.douira.glsl_transformer.core.target.*;
 import io.github.douira.glsl_transformer.print.filter.*;
 import io.github.douira.glsl_transformer.transform.*;
+import io.github.douira.glsl_transformer.tree.*;
+import io.github.douira.glsl_transformer.util.CompatUtil;
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**
@@ -24,9 +30,9 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * 
  * TODO: JCPP has to be configured to remove preprocessor directives entirely
  */
-public class TransformPatcher extends Patcher {
-
-	private TransformationManager<Parameters> manager;
+public class TransformPatcher {
+	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
+	static private TransformationManager<Parameters> manager;
 
 	private static enum Patch {
 		ATTRIBUTES, SODIUM_TERRAIN
@@ -90,7 +96,7 @@ public class TransformPatcher extends Patcher {
 		}
 	}
 
-	{
+	static {
 		/**
 		 * PREV TODO: Only do the NewLines patches if the source code isn't from
 		 * gbuffers_lines
@@ -265,7 +271,7 @@ public class TransformPatcher extends Patcher {
 				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 				.injectionExternalDeclaration("uniform mat4 u_NormalMatrix;");
 
-		LifecycleUser<Parameters> replaceTextureMatrix = new Transformation<Parameters>() {
+		LifecycleUser<Parameters> replaceTextureMatrix0 = new Transformation<Parameters>() {
 			{
 				addEndDependent(new WalkPhase<Parameters>() {
 					ParseTreePattern textureMatrixPattern;
@@ -283,6 +289,130 @@ public class TransformPatcher extends Patcher {
 						}
 					}
 				});
+			}
+		};
+
+		/**
+		 * Implements BuiltinUniformReplacementTransformer and does a little more. Note
+		 * that the main walk phase uses the fact that the order of invocation is
+		 * enterMemberAccessExpression, enterMultiplicativeExpression,
+		 * enterArrayAccessExpression in the targeted expression.
+		 */
+		LifecycleUser<Parameters> replaceBuiltinUniforms = new Transformation<Parameters>() {
+			static final String lightmapCoordsExpression = "a_LightCoord";
+			static final String irisLightmapTexMat = "iris_LightmapTextureMatrix";
+			static final String texCoordFallbackReplacement = "vec4(" + lightmapCoordsExpression + " * 255.0, 0.0, 1.0)";
+
+			boolean needsLightmapTexMatInjection;
+
+			@Override
+			public void resetState() {
+				needsLightmapTexMatInjection = false;
+			}
+
+			{
+				// make sure the lightmap coords expression doesn't exist in the code yet
+				addEndDependent(new SearchTerminals<Parameters>().targets(CompatUtil.listOf(
+						new WrapThrowTargetImpl<>(lightmapCoordsExpression),
+						new WrapThrowTargetImpl<>(irisLightmapTexMat))));
+
+				// find accesses to gl_TextureMatrix[1] or gl_TextureMatrix[2] in combination
+				// with gl_MultiTexCoord1 or gl_MultiTexCoord2 and replace them with
+				// lightmapCoordsExpression or a vector wrapper depending on the context
+				chainDependent(new WalkPhase<Parameters>() {
+					ParseTreePattern accessPattern;
+					ParseTreePattern bareMultPattern;
+					ParseTreePattern extraPattern;
+					ParseTreePattern textureMatrixPattern;
+
+					private void checkPatternMatch(ParseTreePattern pattern, ExtendedContext ctx,
+							Consumer<ParseTreeMatch> action) {
+						ParseTreeMatch match = pattern.match(ctx);
+						if (match.succeeded()) {
+							String texCoord = match.get("texCoord").getText();
+							String texMatrixIndex = match.get("texMatrixIndex").getText();
+							if ((texCoord.equals("gl_MultiTexCoord1") || texCoord.equals("gl_MultiTexCoord2"))
+									&& (texMatrixIndex.equals("1") || texMatrixIndex.equals("2"))) {
+								action.accept(match);
+							}
+						}
+					}
+
+					@Override
+					public void init() {
+						accessPattern = compilePattern(
+								"(gl_TextureMatrix[<texMatrixIndex:expression>] * <texCoord:IDENTIFIER>).<member:IDENTIFIER>",
+								GLSLParser.RULE_expression);
+						bareMultPattern = compilePattern(
+								"gl_TextureMatrix[<texMatrixIndex:expression>] * <texCoord:IDENTIFIER>",
+								GLSLParser.RULE_expression);
+						extraPattern = compilePattern("<texCoord:IDENTIFIER>.xy / 255.0", GLSLParser.RULE_expression);
+						textureMatrixPattern = compilePattern("gl_TextureMatrix[<texMatrixIndex:expression>]",
+								GLSLParser.RULE_expression);
+					}
+
+					@Override
+					public void enterMemberAccessExpression(MemberAccessExpressionContext ctx) {
+						checkPatternMatch(accessPattern, ctx, (match) -> {
+							String member = match.get("member").getText();
+							if (member.equals("st") || member.equals("xy")) {
+								replaceNode(ctx, lightmapCoordsExpression, GLSLParser::expression);
+							} else if (member.equals("s")) {
+								replaceNode(ctx, lightmapCoordsExpression + ".s", GLSLParser::expression);
+							}
+						});
+					}
+
+					@Override
+					public void enterMultiplicativeExpression(MultiplicativeExpressionContext ctx) {
+						checkPatternMatch(bareMultPattern, ctx, (match) -> replaceNode(
+								ctx, "vec4(" + lightmapCoordsExpression + ", 0.0, 1.0)", GLSLParser::expression));
+
+						// PREV NOTE
+						// NB: Technically this isn't a correct transformation (it changes the values
+						// slightly), however the shader code being replaced isn't correct to begin with
+						// since it doesn't properly apply the centering / scaling transformation like
+						// gl_TextureMatrix[1] would. Therefore, I think this is acceptable.
+						// This code shows up in Sildur's shaderpacks.
+						ParseTreeMatch match = extraPattern.match(ctx);
+						if (match.succeeded()) {
+							String texCoord = match.get("texCoord").getText();
+							if (texCoord.equals("gl_MultiTexCoord1") || texCoord.equals("gl_MultiTexCoord2")) {
+								replaceNode(ctx, lightmapCoordsExpression, GLSLParser::expression);
+							}
+						}
+					}
+
+					@Override
+					public void enterArrayAccessExpression(ArrayAccessExpressionContext ctx) {
+						ParseTreeMatch match = textureMatrixPattern.match(ctx);
+						if (match.succeeded()) {
+							String texMatrixIndex = match.get("texMatrixIndex").getText();
+							if (texMatrixIndex.equals("1") || texMatrixIndex.equals("2")) {
+								replaceNode(ctx, new StringNode(irisLightmapTexMat));
+								needsLightmapTexMatInjection = true;
+							}
+						}
+					}
+				});
+
+				chainDependent(new RunPhase<Parameters>() {
+					@Override
+					protected void run(TranslationUnitContext ctx) {
+						injectExternalDeclaration(InjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
+					}
+
+					@Override
+					public boolean isActive() {
+						return needsLightmapTexMatInjection;
+					}
+				});
+
+				chainConcurrentDependent(new SearchTerminals<Parameters>().targets(CompatUtil.listOf(
+						new ParsedReplaceTargetImpl<>("gl_MultiTexCoord1",
+								texCoordFallbackReplacement, GLSLParser::expression),
+						new ParsedReplaceTargetImpl<>("gl_MultiTexCoord2",
+								texCoordFallbackReplacement, GLSLParser::expression))));
 			}
 		};
 		// #endregion patchSodiumTerrain
@@ -316,15 +446,14 @@ public class TransformPatcher extends Patcher {
 						addEndDependent(wrapMultiTexCoord);
 						addEndDependent(wrapColor);
 						addEndDependent(wrapNormal);
-
-						//TODO implement BuiltinUniformReplacementTransformer
+						addEndDependent(replaceBuiltinUniforms);
 					}
 
 					if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
 						addEndDependent(wrapModelViewMatrix);
 						addEndDependent(wrapModelViewProjectionMatrix);
 						addEndDependent(wrapNormalMatrix);
-						addEndDependent(replaceTextureMatrix);
+						addEndDependent(replaceTextureMatrix0);
 					}
 				}
 			}
@@ -333,19 +462,48 @@ public class TransformPatcher extends Patcher {
 		manager.setParseTokenFilter(parseTokenFilter);
 	}
 
-	private String transform(String source, Parameters parameters) {
-		String result = manager.transform(source, parameters);
-		// TODO: optionally logging here
-		return result;
+	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher) {
+		if (source == null) {
+			return null;
+		}
+
+		if (IrisLogging.ENABLE_SPAM) {
+			LOGGER.debug("INPUT: " + source + " END INPUT");
+		}
+
+		long time = System.currentTimeMillis();
+		String patched = patcher.get();
+
+		if (IrisLogging.ENABLE_SPAM) {
+			LOGGER.debug("INFO: " + patchInfo);
+			LOGGER.debug("TIME: patching took " + (System.currentTimeMillis() - time) + "ms");
+			LOGGER.debug("PATCHED: " + patched + " END PATCHED");
+		}
+		return patched;
 	}
 
-	@Override
-	public String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
-		return transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
+	private static String transform(String source, Parameters parameters) {
+		return manager.transform(source, parameters);
 	}
 
-	@Override
-	public String patchSodiumTerrainInternal(String source, ShaderType type) {
-		return transform(source, new Parameters(Patch.SODIUM_TERRAIN, type));
+	/**
+	 * AttributeShaderTransformer.patchAttributesInternal(source, type,
+	 * hasGeometry)
+	 */
+	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+		return inspectPatch(source,
+				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
+				() -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry)));
+	}
+
+	/**
+	 * type == ShaderType.VERTEX ?
+	 * SodiumTerrainPipeline.transformVertexShader(source) :
+	 * SodiumTerrainPipeline.transformFragmentShader(source)
+	 */
+	public static String patchSodiumTerrain(String source, ShaderType type) {
+		return inspectPatch(source,
+				"TYPE: " + type,
+				() -> transform(source, new Parameters(Patch.SODIUM_TERRAIN, type)));
 	}
 }

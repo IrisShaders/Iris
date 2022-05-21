@@ -576,9 +576,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 	private Pass createEntityPass(ProgramSource source) {
 		// TODO: Properly handle empty shaders
 		String geometry = source.getGeometrySource().orElse(null);
-		String vertex = Patcher.INSTANCE.patchAttributes(source.getVertexSource().orElseThrow(NullPointerException::new),
+		String vertex = TransformPatcher.patchAttributes(source.getVertexSource().orElseThrow(NullPointerException::new),
 				ShaderType.VERTEX, geometry != null);
-		String fragment = Patcher.INSTANCE.patchAttributes(source.getFragmentSource().orElseThrow(NullPointerException::new),
+		String fragment = TransformPatcher.patchAttributes(source.getFragmentSource().orElseThrow(NullPointerException::new),
 				ShaderType.FRAGMENT, geometry != null);
 
 		ProgramBuilder builder;
