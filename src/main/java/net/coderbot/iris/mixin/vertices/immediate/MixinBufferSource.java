@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(MultiBufferSource.BufferSource.class)
 public class MixinBufferSource {
-	@Redirect(method = "getBuffer(Lnet/minecraft/client/renderer/RenderType;)Lcom/mojang/blaze3d/vertex/VertexConsumer;",
+	@Redirect(method = "getBuffer",
 		at = @At(value = "INVOKE",
 			target = "com/mojang/blaze3d/vertex/BufferBuilder.begin (Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
 	private void iris$redirectBegin(BufferBuilder bufferBuilder, VertexFormat.Mode drawMode, VertexFormat vertexFormat) {
