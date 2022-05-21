@@ -152,7 +152,8 @@ public class TriforcePatcher {
 		if (inputs.hasColor()) {
 			// TODO: Handle the fragment / geometry shader here
 			if (alpha == AlphaTests.VERTEX_ALPHA) {
-				transformations.define("gl_Color", "vec4((iris_Color * iris_ColorModulator).rgb, 1)");
+				// iris_ColorModulator.a should be applied regardless of the alpha test state.
+				transformations.define("gl_Color", "vec4((iris_Color * iris_ColorModulator).rgb, iris_ColorModulator.a)");
 			} else {
 				transformations.define("gl_Color", "(iris_Color * iris_ColorModulator)");
 			}
@@ -161,11 +162,8 @@ public class TriforcePatcher {
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 iris_Color;");
 			}
 		} else {
-			if (alpha == AlphaTests.VERTEX_ALPHA) {
-				transformations.define("gl_Color", "vec4(iris_ColorModulator.rgb, 1)");
-			} else {
-				transformations.define("gl_Color", "iris_ColorModulator");
-			}
+			// iris_ColorModulator should be applied regardless of the alpha test state.
+			transformations.define("gl_Color", "iris_ColorModulator");
 		}
 
 		if (type == ShaderType.VERTEX) {
