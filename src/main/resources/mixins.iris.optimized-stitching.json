@@ -4,7 +4,7 @@
   "package": "net.coderbot.iris.mixin.optimized_stitching",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinStitcher",
+    "MixinStitcher"
   ],
   "injectors": {
     "defaultRequire": 1
