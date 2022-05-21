@@ -1,26 +1,63 @@
-> ### Q. What shaders have been tested and are working with Iris? 
+# What shaders have been tested and are working with Iris?
 
-#### A. The following shaders have been tested and work well:
+## The following shaders have been tested and work well:
+
+### BSL and derivatives
+
+* [BSL Shaders](https://bitslablab.com/bslshaders/)
 
 * [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
 
 * [Prismarine Shaders](https://www.curseforge.com/minecraft/customization/prismarine-shader)
 
-* [BSL Shaders](https://bitslablab.com/bslshaders/)
+* [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
 
+### SEUS and derivatives
+
+NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drivers.
+
+* [SEUS V11](https://www.sonicether.com/seus/)
+* [SEUS Renewed](https://www.sonicether.com/seus/)
+* [SEUS PTGI](https://www.sonicether.com/seus)
+  * SEUS PTGI HRR 3 has major issues with entities but otherwise works: https://github.com/IrisShaders/Iris/issues/1446
 * [Continuum 1.3](https://continuum.graphics/downloads)
 
-* [Continuum 2.0.4](https://continuum.graphics/downloads)
 
-* SEUS (NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drivers)
-   * [SEUS V11](https://www.sonicether.com/seus/)
-   * [SEUS Renewed](https://www.sonicether.com/seus/)
-   * [SEUS PTGI E12 / HRR 2.1](https://www.sonicether.com/seus)
-       * SEUS PTGI HRR 3 is not currently supported.
+### Sildur's Shaders
 
 * [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
 
 * [Sildur's Vibrant Shaders](https://sildurs-shaders.github.io/)
+
+
+### projectLUMA and derivatives
+
+* [projectLUMA](https://www.curseforge.com/minecraft/customization/projectluma)
+* [Sora Shaders v1.12](https://www.curseforge.com/minecraft/customization/sora-shaders) (Number edit of LUMA. Works well though)
+
+
+### Legacy Chocapic and derivatives
+
+"Modern Chocapic" (Chocapic v7-v9) is not supported on Iris yet, but Chocapic v4-v6 work.
+
+* [Chocapic v4 - v6](https://www.mediafire.com/folder/qs3lb60h0zw6t/Older_versions)
+* [Triliton's Shaders](https://www.curseforge.com/minecraft/customization/trilitons-shaders)
+* [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
+
+
+### Continuum
+
+The paid versions are not supported, but Continuum 2.0.4 works decently.
+
+* [Continuum 2.0.4](https://continuum.graphics/downloads)
+
+
+### Other
+
+* [Super Duper Vanilla Shaders](https://www.curseforge.com/minecraft/customization/super-duper-vanilla-shaders)
+  * Supported in Iris 1.2.5
+
+* [Oceano Shaders 3.0](https://www.curseforge.com/minecraft/customization/oceano-shaders)
 
 * [Skylec v4.0](https://www.curseforge.com/minecraft/customization/skylec-shader)
 
@@ -28,13 +65,31 @@
 
 * [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
 
-* [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
+* [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus)
 
-#### The following shaders have been tested and work with some minor issues:
 
-* [Project Luma](https://www.curseforge.com/minecraft/customization/projectluma) (End doesn't render properly)
-  * [Sora Shaders v1.12](https://www.curseforge.com/minecraft/customization/sora-shaders) (Number edit of LUMA. Works well though)
+# Shaders that do not work on Iris
 
-* [Triliton V8](https://www.curseforge.com/minecraft/customization/trilitons-shaders) (Lighting broken - shadow everywhere)
+These shaders are broken on Iris, but are very popular, so we've listed them here. In addition, all paid shader packs do not work on Iris.
 
-* [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus) (Broken Clouds in 1.16, No sky on 1.17)
+This is not a complete list, but is just for people trying to control-F their favorite shader.
+
+- Chocapic v7-v9
+- Chocapic High Performance ("Toaster") Shaders
+- All shaders made by RRe36
+  - Kappa
+  - KappaPT
+  - Nostalgia
+  - NostalgiaVX
+  - Potato
+  - Simplicissimus
+  - SoftVoxels
+  - UShader
+  - VanillaPlus
+- MakeUp - Ultra Fast
+- Voyager Shaders
+- All shaders made by DrDesten
+  - DrDestens MinecraftShaders
+  - Stracciatella
+- Voxlementary
+- Lux Shader
