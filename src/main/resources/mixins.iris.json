@@ -12,6 +12,7 @@
     "ProgramTypeAccessor",
     "MixinBlockStateBehavior",
     "MixinClientLanguage",
+    "MixinClientPacketListener",
     "MixinDebugScreenOverlay",
     "MixinTheEndPortalRenderer",
     "MixinEntityRenderDispatcher",
