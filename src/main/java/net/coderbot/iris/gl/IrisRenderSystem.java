@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
@@ -91,6 +92,11 @@ public class IrisRenderSystem {
 	public static int getUniformLocation(int programId, String name) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		return GL30C.glGetUniformLocation(programId, name);
+	}
+
+	public static void texParameteriv(int target, int pname, int[] params) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL11C.glTexParameteriv(target, pname, params);
 	}
 
 	public static String getProgramInfoLog(int program) {

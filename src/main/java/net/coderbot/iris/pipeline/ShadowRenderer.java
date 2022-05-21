@@ -46,6 +46,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -208,6 +209,12 @@ public class ShadowRenderer {
 			// We have to do this or else shadow hardware filtering breaks entirely!
 			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
 		}
+
+		// Workaround for issues with old shader packs like Chocapic v4.
+		// They expected the driver to put the depth value in z, but it's supposed to only
+		// be available in r. So we set up the swizzle to fix that.
+		IrisRenderSystem.texParameteriv(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+			new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_ONE });
 
 		configureSampler(glTextureId, settings);
 	}
