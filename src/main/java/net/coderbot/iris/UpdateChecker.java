@@ -72,7 +72,7 @@ public class UpdateChecker {
 					}
 				}
 
-				try (InputStream in = new URL("https://github.com/IrisShaders/Iris-Installer-Files/releases/latest/download/updateIndex.json").openStream()) {
+				try (InputStream in = new URL("https://github.com/IrisShaders/Iris-Update-Index/releases/latest/download/updateIndex.json").openStream()) {
 					String updateIndex;
 					try {
 						updateIndex = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
