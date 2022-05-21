@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -107,7 +108,7 @@ public class UpdateChecker {
 		return null;
 	}
 
-	public Component getUpdateMessage() {
+	public Optional<Component> getUpdateMessage() {
 		if (shouldShowUpdateMessage) {
 			UpdateInfo info = getUpdateInfo();
 
@@ -118,21 +119,21 @@ public class UpdateChecker {
 				MutableComponent component1 = new TextComponent(textParts[0]);
 				MutableComponent component2 = new TextComponent(textParts[1]);
 				MutableComponent link = new TextComponent(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
-				return component1.append(link).append(component2);
+				return Optional.of(component1.append(link).append(component2));
 			} else {
 				MutableComponent link = new TextComponent(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
-				return new TextComponent(textParts[0]).append(link);
+				return Optional.of(new TextComponent(textParts[0]).append(link));
 			}
 		} else {
-			return null;
+			return Optional.empty();
 		}
 	}
 
-	public String getUpdateLink() {
+	public Optional<String> getUpdateLink() {
 		if (shouldShowUpdateMessage) {
 			UpdateInfo info = getUpdateInfo();
 
-			return usedIrisInstaller ? info.installer : info.modDownload;
+			return Optional.of(usedIrisInstaller ? info.installer : info.modDownload);
 		} else {
 			return null;
 		}

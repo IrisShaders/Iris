@@ -163,10 +163,10 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		if (this.updateComponent != null && d < widthValue && e > (this.height - 10) && e < this.height) {
 			this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
 				if (bl) {
-					Util.getPlatform().openUri(Iris.getUpdateChecker().getUpdateLink());
+					Iris.getUpdateChecker().getUpdateLink().ifPresent(Util.getPlatform()::openUri);
 				}
 				this.minecraft.setScreen(this);
-			}, Iris.getUpdateChecker().getUpdateLink(), true));
+			}, Iris.getUpdateChecker().getUpdateLink().orElse(""), true));
 		}
 		return super.mouseClicked(d, e, i);
 	}
