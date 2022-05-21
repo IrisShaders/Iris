@@ -151,12 +151,18 @@ public class TriforcePatcher {
 
 		if (inputs.hasColor()) {
 			// TODO: Handle the fragment / geometry shader here
-			transformations.define("gl_Color", "(iris_Color * iris_ColorModulator)");
+			if (alpha == AlphaTests.VERTEX_ALPHA) {
+				// iris_ColorModulator.a should be applied regardless of the alpha test state.
+				transformations.define("gl_Color", "vec4((iris_Color * iris_ColorModulator).rgb, iris_ColorModulator.a)");
+			} else {
+				transformations.define("gl_Color", "(iris_Color * iris_ColorModulator)");
+			}
 
 			if (type == ShaderType.VERTEX) {
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 iris_Color;");
 			}
 		} else {
+			// iris_ColorModulator should be applied regardless of the alpha test state.
 			transformations.define("gl_Color", "iris_ColorModulator");
 		}
 
@@ -452,6 +458,8 @@ public class TriforcePatcher {
 			if (transformations.contains("irisMain")) {
 				throw new IllegalStateException("Shader already contains \"irisMain\"???");
 			}
+
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_currentAlphaTest;");
 
 			// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
 			// end.
