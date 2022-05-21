@@ -20,8 +20,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinBufferSource {
 	@Redirect(method = "getBuffer(Lnet/minecraft/client/renderer/RenderType;)Lcom/mojang/blaze3d/vertex/VertexConsumer;",
 		at = @At(value = "INVOKE",
-			target = "com/mojang/blaze3d/vertex/BufferBuilder.begin (ILcom/mojang/blaze3d/vertex/VertexFormat;)V"))
-	private void iris$redirectBegin(BufferBuilder bufferBuilder, int drawMode, VertexFormat vertexFormat) {
+			target = "com/mojang/blaze3d/vertex/BufferBuilder.begin (Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
+	private void iris$redirectBegin(BufferBuilder bufferBuilder, VertexFormat.Mode drawMode, VertexFormat vertexFormat) {
 		if (iris$notRenderingLevel()) {
 			((ExtendingBufferBuilder) bufferBuilder).iris$beginWithoutExtending(drawMode, vertexFormat);
 		} else {
