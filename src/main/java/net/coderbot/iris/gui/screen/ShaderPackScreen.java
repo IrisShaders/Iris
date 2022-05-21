@@ -88,7 +88,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		this.irisTextComponent = new TextComponent(irisName).withStyle(ChatFormatting.GRAY);
 
-		if (Iris.getUpdateChecker().getUpdateMessage() != null) {
+		if (Iris.getUpdateChecker().getUpdateMessage().isPresent()) {
 			this.updateComponent = new TextComponent("New update available!").withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.UNDERLINE);
 			irisTextComponent.append(new TextComponent(" (outdated)").withStyle(ChatFormatting.RED));
 		}
@@ -429,7 +429,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	@Override
 	public void onClose() {
 		if (!dropChanges) {
-			// TODO: Don't apply changes unnecessarily
 			applyChanges();
 		} else {
 			discardChanges();
@@ -461,10 +460,16 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			Iris.clearShaderPackOptionQueue();
 		}
 
-		Iris.getIrisConfig().setShaderPackName(name);
-
 		boolean enabled = this.shaderPackList.getTopButtonRow().shadersEnabled;
-		IrisApi.getInstance().getConfig().setShadersEnabledAndApply(enabled);
+
+		String previousPackName = Iris.getIrisConfig().getShaderPackName().orElse(null);
+		boolean previousShadersEnabled = Iris.getIrisConfig().areShadersEnabled();
+
+		// Only reload if the pack would be different from before, or shaders were toggled, or options were changed.
+		if (!name.equals(previousPackName) || enabled != previousShadersEnabled || !Iris.getShaderPackOptionQueue().isEmpty()) {
+			Iris.getIrisConfig().setShaderPackName(name);
+			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(enabled);
+		}
 
 		refreshForChangedPack();
 	}
