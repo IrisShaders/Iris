@@ -14,7 +14,7 @@ import io.github.douira.glsl_transformer.core.*;
 import io.github.douira.glsl_transformer.core.target.*;
 import io.github.douira.glsl_transformer.print.filter.*;
 import io.github.douira.glsl_transformer.transform.*;
-import io.github.douira.glsl_transformer.tree.*;
+import io.github.douira.glsl_transformer.tree.ExtendedContext;
 import io.github.douira.glsl_transformer.util.CompatUtil;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.shader.ShaderType;
@@ -218,6 +218,7 @@ public class TransformPatcher {
 			}
 		}
 				.wrapTarget("gl_Vertex")
+				.parsedReplacement("vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)")
 				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
 
 		LifecycleUser<Parameters> wrapMultiTexCoord = new WrapIdentifier<Parameters>() {
@@ -238,6 +239,7 @@ public class TransformPatcher {
 			}
 		}
 				.wrapTarget("gl_MultiTexCoord0")
+				.parsedReplacement("vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)")
 				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
 
 		LifecycleUser<Parameters> wrapColor = new WrapIdentifier<Parameters>()
