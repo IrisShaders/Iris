@@ -22,7 +22,7 @@ public class MixinBufferBuilder_ExtendedVertexFormatCompat {
 	private VertexFormat format;
 
 	@ModifyVariable(method = "createSink(Lme/jellysquid/mods/sodium/client/model/vertex/type/VertexType;)Lme/jellysquid/mods/sodium/client/model/vertex/VertexSink;",
-		at = @At("HEAD"))
+		at = @At("HEAD"), remap = false)
 	private VertexType<?> iris$createSink(VertexType<?> type) {
 		if (type instanceof QuadVertexType && format == IrisVertexFormats.ENTITY) {
 			return ExtendedQuadVertexType.INSTANCE;
