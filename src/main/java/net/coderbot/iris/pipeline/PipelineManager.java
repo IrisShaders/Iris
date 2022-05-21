@@ -36,7 +36,10 @@ public class PipelineManager {
 			sodiumShaderReloadNeeded = true;
 
 			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
-				Minecraft.getInstance().levelRenderer.allChanged();
+				if (Minecraft.getInstance().levelRenderer != null) {
+					Minecraft.getInstance().levelRenderer.allChanged();
+				}
+
 				BlockRenderingSettings.INSTANCE.clearReloadRequired();
 			}
 		} else {

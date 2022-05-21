@@ -197,6 +197,23 @@ public class Iris {
 		loadShaderpack();
 	}
 
+	/**
+	 * Called when the title screen is initialized for the first time.
+	 */
+	public static void onLoadingComplete() {
+		if (!initialized) {
+			Iris.logger.warn("Iris::onLoadingComplete was called, but Iris::onEarlyInitialize was not called." +
+				" Trying to avoid a crash but this is an odd state.");
+			return;
+		}
+
+		// Initialize the pipeline now so that we don't increase world loading time. Just going to guess that
+		// the player is in the overworld.
+		// See: https://github.com/IrisShaders/Iris/issues/323
+		lastDimension = DimensionId.OVERWORLD;
+		Iris.getPipelineManager().preparePipeline(DimensionId.OVERWORLD);
+	}
+
 	public static void handleKeybinds(Minecraft minecraft) {
 		if (reloadKeybind.consumeClick()) {
 			try {
