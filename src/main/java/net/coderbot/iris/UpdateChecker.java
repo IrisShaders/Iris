@@ -5,6 +5,9 @@ import com.google.gson.JsonParser;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.SemanticVersion;
+import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.api.VersionParsingException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -29,58 +32,71 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class UpdateChecker {
-	private final int simpleVersion;
+	private final Version currentVersion;
 	private CompletableFuture<UpdateInfo> info;
 	private boolean shouldShowUpdateMessage;
 	private boolean usedIrisInstaller;
 
-	public UpdateChecker(int simpleVersion) {
-		this.simpleVersion = simpleVersion;
+	public UpdateChecker(Version currentVersion) {
+		this.currentVersion = currentVersion;
 		if (Objects.equals(System.getProperty("iris.installer", "false"), "true")) {
 			usedIrisInstaller = true;
 		}
 	}
 
 	public void checkForUpdates(IrisConfig irisConfig) {
+		if (irisConfig.shouldDisableUpdateMessage()) {
+			shouldShowUpdateMessage = false;
+			return;
+		}
+
 		this.info = CompletableFuture.supplyAsync(() -> {
-			if (!irisConfig.shouldDisableUpdateMessage()) {
-				try {
-					File updateFile = FabricLoader.getInstance().getGameDir().resolve("irisUpdateInfo.json").toFile();
-					if (DateUtils.isSameDay(new Date(), new Date(updateFile.lastModified()))) {
-						Iris.logger.warn("Cached update file detected, using that!");
-						UpdateInfo updateInfo = new Gson().fromJson(FileUtils.readFileToString(updateFile, StandardCharsets.UTF_8), UpdateInfo.class);
-						if (updateInfo.simpleVersion > simpleVersion) {
+			try {
+				File updateFile = FabricLoader.getInstance().getGameDir().resolve("irisUpdateInfo.json").toFile();
+				if (DateUtils.isSameDay(new Date(), new Date(updateFile.lastModified()))) {
+					Iris.logger.warn("Cached update file detected, using that!");
+					UpdateInfo updateInfo = new Gson().fromJson(FileUtils.readFileToString(updateFile, StandardCharsets.UTF_8), UpdateInfo.class);
+					try {
+						if (currentVersion.compareTo(SemanticVersion.parse(updateInfo.semanticVersion)) < 0) {
 							shouldShowUpdateMessage = true;
 							Iris.logger.warn("New update detected, showing update message!");
 							return updateInfo;
 						} else {
 							return null;
 						}
+					} catch (VersionParsingException e) {
+						Iris.logger.error("Caught a VersionParsingException while parsing semantic versions!", e);
 					}
+				}
 
-					try (InputStream in = new URL("https://raw.githubusercontent.com/IMS212/Iris-Installer-Files/master/updateindex.json").openStream()) {
-						String updateIndex = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
-						String json = IOUtils.toString(new URL(updateIndex), StandardCharsets.UTF_8);
-						UpdateInfo updateInfo = new Gson().fromJson(json, UpdateInfo.class);
-						BufferedWriter writer = new BufferedWriter(new FileWriter(updateFile));
-						writer.write(json);
-						writer.close();
-						if (updateInfo.simpleVersion > simpleVersion) {
+				try (InputStream in = new URL("https://raw.githubusercontent.com/IMS212/Iris-Installer-Files/master/updateindex.json").openStream()) {
+					String updateIndex = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
+					String json = IOUtils.toString(new URL(updateIndex), StandardCharsets.UTF_8);
+					UpdateInfo updateInfo = new Gson().fromJson(json, UpdateInfo.class);
+					BufferedWriter writer = new BufferedWriter(new FileWriter(updateFile));
+					writer.write(json);
+					writer.close();
+					try {
+						if (currentVersion.compareTo(SemanticVersion.parse(updateInfo.semanticVersion)) < 0) {
 							shouldShowUpdateMessage = true;
 							Iris.logger.warn("New update detected, showing update message!");
 							return updateInfo;
+						} else {
+							return null;
 						}
+					} catch (VersionParsingException e) {
+						Iris.logger.error("Caught a VersionParsingException while parsing semantic versions!", e);
 					}
-				} catch (IOException e) {
-					Iris.logger.error("Failed to get update info!", e);
 				}
+			} catch (IOException e) {
+				Iris.logger.error("Failed to get update info!", e);
 			}
 			return null;
 		});
 	}
 
 	public UpdateInfo getUpdateInfo() {
-		if (info.isDone()) {
+		if (info != null && info.isDone()) {
 			try {
 				return info.get();
 			} catch (InterruptedException | ExecutionException e) {
@@ -113,8 +129,12 @@ public class UpdateChecker {
 	}
 
 	public String getUpdateLink() {
-		UpdateInfo info = getUpdateInfo();
+		if (shouldShowUpdateMessage) {
+			UpdateInfo info = getUpdateInfo();
 
-		return usedIrisInstaller ? info.installer : info.modDownload;
+			return usedIrisInstaller ? info.installer : info.modDownload;
+		} else {
+			return null;
+		}
 	}
 }

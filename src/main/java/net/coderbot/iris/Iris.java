@@ -1,9 +1,6 @@
 package net.coderbot.iris;
 
 import com.google.common.base.Throwables;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -30,29 +27,17 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.dimension.DimensionType;
-import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
@@ -61,13 +46,9 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
@@ -136,9 +117,7 @@ public class Iris {
 
 		IRIS_VERSION = iris.getMetadata().getVersion();
 
-		int simpleVersion = iris.getMetadata().getCustomValue("simpleVersion").getAsNumber().intValue();
-
-		this.updateChecker = new UpdateChecker(simpleVersion);
+		this.updateChecker = new UpdateChecker(IRIS_VERSION);
 
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {
@@ -212,7 +191,7 @@ public class Iris {
 			return;
 		}
 
-		setDebug(irisConfig.isDebugEnabled());
+		setDebug(irisConfig.areDebugOptionsEnabled());
 
 		// Only load the shader pack when we can access OpenGL
 		loadShaderpack();
