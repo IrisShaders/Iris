@@ -70,7 +70,7 @@ public class UpdateChecker {
 					}
 				}
 
-				try (InputStream in = new URL("https://raw.githubusercontent.com/IMS212/Iris-Installer-Files/master/updateindex.json").openStream()) {
+				try (InputStream in = new URL("https://github.com/IrisShaders/Iris-Installer-Files/releases/latest/download/updateIndex.json").openStream()) {
 					String updateIndex = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
 					String json = IOUtils.toString(new URL(updateIndex), StandardCharsets.UTF_8);
 					UpdateInfo updateInfo = new Gson().fromJson(json, UpdateInfo.class);
