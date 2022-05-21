@@ -13,6 +13,8 @@ public class AttributeShaderTransformer {
 
 		StringTransformations transformations = new StringTransformations(source);
 
+		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both ways to refer to the lightmap texture coordinate.
+		// See https://github.com/IrisShaders/Iris/issues/1149
 		if (!inputs.lightmap) {
 			transformations.replaceExact("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
 			transformations.replaceExact("gl_MultiTexCoord2", "vec4(240.0, 240.0, 0.0, 1.0)");
@@ -44,6 +46,7 @@ public class AttributeShaderTransformer {
 			//       needed for the pass-through behavior.
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D iris_overlay;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 entityColor;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 iris_vertexColor;");
 
 			// Create our own main function to wrap the existing main function, so that we can pass through the overlay color at the
 			// end to the geometry or fragment stage.
@@ -57,6 +60,7 @@ public class AttributeShaderTransformer {
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
 				"	vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);\n" +
 					"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
+					"	iris_vertexColor = iris_Color;\n" +
 					"\n" +
 					"    irisMain_overlayColor();\n" +
 					"}");
@@ -72,6 +76,8 @@ public class AttributeShaderTransformer {
 			//       needed for the pass-through behavior.
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 entityColorGS;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 entityColor[];");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 iris_vertexColorGS;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 iris_vertexColor[];");
 
 			// Create our own main function to wrap the existing main function, so that we can pass through the overlay color at the
 			// end to the fragment stage.
@@ -82,6 +88,7 @@ public class AttributeShaderTransformer {
 			transformations.replaceExact("main", "irisMain");
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
 					"	 entityColorGS = entityColor[0];\n" +
+					"	 iris_vertexColorGS = iris_vertexColor[0];\n" +
 					"    irisMain();\n" +
 					"}");
 		} else if (type == ShaderType.FRAGMENT) {
@@ -89,9 +96,11 @@ public class AttributeShaderTransformer {
 			// if entityColor is not declared as a uniform, we don't make it available
 			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "in vec4 entityColor;");
 
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 iris_vertexColor;");
 			if (hasGeometry) {
 				// Different output name to avoid a name collision in the goemetry shader.
 				transformations.replaceExact("entityColor", "entityColorGS");
+				transformations.replaceExact("iris_vertexColor", "iris_vertexColorGS");
 			}
 		}
 	}

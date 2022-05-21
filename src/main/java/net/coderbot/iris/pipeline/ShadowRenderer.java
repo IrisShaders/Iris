@@ -65,7 +65,6 @@ public class ShadowRenderer {
 	public static Matrix4f MODELVIEW;
 
 	private final ShadowRenderTargets targets;
-
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
 	private final boolean shouldRenderTerrain;
@@ -74,7 +73,6 @@ public class ShadowRenderer {
 	private final boolean shouldRenderPlayer;
 	private final boolean shouldRenderBlockEntities;
 	private final float sunPathRotation;
-
 	private final RenderBuffers buffers;
 	private final RenderBuffersExt renderBuffersExt;
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
@@ -176,10 +174,10 @@ public class ShadowRenderer {
 
 	private void configureSamplingSettings(PackShadowDirectives shadowDirectives) {
 		final ImmutableList<PackShadowDirectives.DepthSamplingSettings> depthSamplingSettings =
-				shadowDirectives.getDepthSamplingSettings();
+			shadowDirectives.getDepthSamplingSettings();
 
 		final ImmutableList<PackShadowDirectives.SamplingSettings> colorSamplingSettings =
-				shadowDirectives.getColorSamplingSettings();
+			shadowDirectives.getColorSamplingSettings();
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
 
@@ -301,7 +299,7 @@ public class ShadowRenderer {
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
 			Vector3f shadowLightVectorFromOrigin =
-					new Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
+				new Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
 
 			shadowLightVectorFromOrigin.normalize();
 
@@ -366,7 +364,11 @@ public class ShadowRenderer {
 
 		// Always schedule a terrain update
 		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
+		// We have to ensure that we don't regenerate clouds every frame, since that's what needsUpdate ends up doing.
+		// This took up to 10% of the frame time before we applied this fix! That's really bad!
+		boolean regenerateClouds = levelRenderer.shouldRegenerateClouds();
 		((LevelRenderer) levelRenderer).needsUpdate();
+		levelRenderer.setShouldRegenerateClouds(regenerateClouds);
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
 		levelRenderer.invokeSetupRender(playerCamera, terrainFrustumHolder.getFrustum(), false, false);
@@ -629,7 +631,7 @@ public class ShadowRenderer {
 		messages.add("[" + Iris.MODNAME + "] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
 		messages.add("[" + Iris.MODNAME + "] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
 		messages.add("[" + Iris.MODNAME + "] Shadow Terrain: " + debugStringTerrain
-				+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
+			+ (shouldRenderTerrain ? "" : " (no terrain) ") + (shouldRenderTranslucent ? "" : "(no translucent)"));
 		messages.add("[" + Iris.MODNAME + "] Shadow Entities: " + getEntitiesDebugString());
 		messages.add("[" + Iris.MODNAME + "] Shadow Block Entities: " + getBlockEntitiesDebugString());
 

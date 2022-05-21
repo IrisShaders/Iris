@@ -24,6 +24,7 @@ public enum ShaderKey {
 	TERRAIN_CUTOUT         (ProgramId.Terrain,     AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	TERRAIN_CUTOUT_MIPPED  (ProgramId.Terrain,     AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	TERRAIN_TRANSLUCENT    (ProgramId.Water,       AlphaTests.OFF,             IrisVertexFormats.TERRAIN,                       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	ENTITIES_ALPHA         (ProgramId.Entities,    AlphaTests.VERTEX_ALPHA,    IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	ENTITIES_SOLID         (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	ENTITIES_SOLID_DIFFUSE (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
 	ENTITIES_SOLID_BRIGHT  (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
@@ -115,7 +116,7 @@ public enum ShaderKey {
 	public boolean shouldIgnoreLightmap() {
 		return lightingModel == LightingModel.FULLBRIGHT || lightingModel == LightingModel.DIFFUSE;
 	}
-	
+
 	enum LightingModel {
 		FULLBRIGHT,
 		LIGHTMAP,

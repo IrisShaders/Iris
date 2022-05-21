@@ -8,5 +8,5 @@ public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
 	FrameUpdateNotifier getFrameUpdateNotifier();
 	void destroy();
 
-	boolean isRenderingWorld();
+	boolean shouldOverrideShaders();
 }
