@@ -591,7 +591,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
-		if (skyType != DimensionSpecialEffects.SkyType.NONE) {
+		if (skyType == DimensionSpecialEffects.SkyType.NORMAL) {
 			RenderSystem.disableTexture();
 			RenderSystem.depthMask(false);
 
