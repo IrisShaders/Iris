@@ -12,7 +12,7 @@ This release was developed by coderbot & IMS with additional help from Pepper.
 
 - Added update checker (IMS)
     - The Iris version is now displayed in the lower left corner of the shader pack selection screen.
-    - The update checker can be disabled in shaders.properties for people making modpacks or using their own mod updater.
+    - The update checker can be disabled in iris.properties for people making modpacks or using their own mod updater.
     - We added this because we kept on discovering people using really ancient versions of Iris and missing out on bug fixes and even features like shader configuration.
 
 
