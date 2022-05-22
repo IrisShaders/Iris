@@ -78,11 +78,6 @@ public class IrisRenderSystem {
 		GL32C.glTexParameteriv(target, pname, params);
 	}
 
-	public static void texParameteriv(int target, int pname, int[] params) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL11C.glTexParameteriv(target, pname, params);
-	}
-
 	public static String getProgramInfoLog(int program) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		return GL32C.glGetProgramInfoLog(program);
