@@ -10,7 +10,7 @@ This release was developed by coderbot & IMS with additional help from Pepper.
 
 **⬇ Download the release here: https://irisshaders.net/download.html**
 
-Here's what's changed since 1.1.4:
+Here's what's changed since 1.2.4:
 
 - ✅ Added an update checker so that people don't keep on running massively outdated Iris versions
 - 📷 Massive performance improvements when Depth of Field is enabled
