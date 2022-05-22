@@ -146,6 +146,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		this.renderTargets = new RenderTargets(mainTarget.width, mainTarget.height, depthTextureId,
+			((Blaze3dRenderTargetExt) mainTarget).iris$getDepthBufferVersion(),
 			depthBufferFormat, programs.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
 
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
@@ -801,10 +802,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		renderTargets.resizeIfNeeded(mainExt.iris$isDepthBufferDirty(), depthTextureId, main.width,
+		renderTargets.resizeIfNeeded(mainExt.iris$getDepthBufferVersion(), depthTextureId, main.width,
 			main.height, depthBufferFormat);
-
-		mainExt.iris$clearDepthBufferDirtyFlag();
 
 		final ImmutableList<ClearPass> passes;
 
