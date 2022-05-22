@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
@@ -25,6 +26,7 @@ import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
 import io.github.coolcrabs.brachyura.processing.ProcessingSink;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
+import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.project.java.BuildModule;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
@@ -41,6 +43,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
     static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = false;
+	static final String MC_VERSION = "1.16.5";
 	static final String customSodiumName = "";
 
 	private static final String[] SOURCE_SETS = new String[] {
@@ -56,7 +59,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion("1.16.5");
+		return Minecraft.getVersion(MC_VERSION);
 	}
 
 	@Override
@@ -96,6 +99,17 @@ public class Buildscript extends SimpleFabricProject {
 			}
 		}
     }
+
+	@Override
+	public String getMavenGroup() {
+		return "net.coderbot.iris_mc" + (MC_VERSION.replace('.', '_'));
+	}
+
+	@Override
+	public void getTasks(Consumer<Task> p) {
+		super.getTasks(p);
+		super.getPublishTasks(p);
+	}
 
 	private Path[] getDirs(String subdirectory) {
 		List<Path> paths = new ArrayList<>();
