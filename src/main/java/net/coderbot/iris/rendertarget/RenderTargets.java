@@ -30,7 +30,9 @@ public class RenderTargets {
 
 	private boolean destroyed;
 
-	public RenderTargets(int width, int height, int depthTexture, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
+	private int cachedDepthBufferVersion;
+
+	public RenderTargets(int width, int height, int depthTexture, int depthBufferVersion, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
 		targets = new RenderTarget[renderTargets.size()];
 
 		renderTargets.forEach((index, settings) -> {
@@ -49,6 +51,7 @@ public class RenderTargets {
 
 		this.cachedWidth = width;
 		this.cachedHeight = height;
+		this.cachedDepthBufferVersion = depthBufferVersion;
 
 		this.ownedFramebuffers = new ArrayList<>();
 
@@ -108,10 +111,12 @@ public class RenderTargets {
 		return noHand;
 	}
 
-	public void resizeIfNeeded(boolean recreateDepth, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat) {
-		if (newDepthTextureId != currentDepthTexture) {
+	public void resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat) {
+		boolean recreateDepth = false;
+		if (cachedDepthBufferVersion != newDepthBufferVersion) {
 			recreateDepth = true;
 			currentDepthTexture = newDepthTextureId;
+			cachedDepthBufferVersion = newDepthBufferVersion;
 		}
 
 		boolean sizeChanged = newWidth != cachedWidth || newHeight != cachedHeight;
