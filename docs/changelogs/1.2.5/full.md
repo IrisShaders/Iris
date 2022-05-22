@@ -21,7 +21,7 @@ This release was developed by coderbot & IMS with additional help from Pepper.
 - Fixed the first world load taking more time than it should (coderbot)
 - Fixed an unnecessary freeze when closing the shader pack GUI even if not switching packs or changing settings (coderbot)
 - Implemented some optimizations increasing FPS by as much as 20%-40% in some CPU limited situations (coderbot)
-    - Avoided redundant glBindFramebuffer and glUseFramebuffer calls
+    - Avoided redundant glBindFramebuffer and glUseProgram calls
     - Avoided an oversight causing vanilla clouds to be rebuilt every frame caused by shadow map rendering
     - The extended vertex format is now disabled for most things outside of world rendering
 - Implemented a massive speedup for depth-of-field effects, DoF now has a near-zero performance impact (IMS)
