@@ -11,14 +11,14 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL21C;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 public class CenterDepthSampler {
 	private static final double LN2 = Math.log(2);
@@ -43,12 +43,13 @@ public class CenterDepthSampler {
 		RenderSystem.bindTexture(0);
 
 		this.framebuffer.addColorAttachment(0, texture);
-		ProgramBuilder builder = null;
+		ProgramBuilder builder;
 
 		try {
-			Path path = FabricLoader.getInstance().getModContainer("iris")
-				.orElseThrow(() -> new RuntimeException("Failed to get the mod container for Iris!")).getRootPaths().get(0);
-			builder = ProgramBuilder.begin("centerDepthSmooth", new String(Files.readAllBytes(path.resolve("centerDepth.vsh"))), null, new String(Files.readAllBytes(path.resolve("centerDepth.fsh"))), ImmutableSet.of());
+			String fsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.fsh"))), StandardCharsets.UTF_8);
+			String vsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.vsh"))), StandardCharsets.UTF_8);
+
+			builder = ProgramBuilder.begin("centerDepthSmooth", vsh, null, fsh, ImmutableSet.of());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
