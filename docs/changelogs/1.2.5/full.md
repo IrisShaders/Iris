@@ -21,8 +21,8 @@ This release was developed by coderbot & IMS with additional help from Pepper.
 - Fixed the first world load taking more time than it should (coderbot)
 - Fixed an unnecessary freeze when closing the shader pack GUI even if not switching packs or changing settings (coderbot)
 - Implemented some optimizations increasing FPS by as much as 20%-40% in some CPU limited situations (coderbot)
-    - Avoided redundant glBindFramebuffer and glUseFramebuffer
-    - Avoided an oversight causing vanilla clouds to be rebuild every frame caused by shadow map rendering
+    - Avoided redundant glBindFramebuffer and glUseFramebuffer calls
+    - Avoided an oversight causing vanilla clouds to be rebuilt every frame caused by shadow map rendering
     - The extended vertex format is now disabled for most things outside of world rendering
 - Implemented a massive speedup for depth-of-field effects, DoF now has a near-zero performance impact (IMS)
 - Optimized texture atlas stitching to reduce VRAM usage in some cases, even with shaders (Pepper)
@@ -41,7 +41,7 @@ This release was developed by coderbot & IMS with additional help from Pepper.
 - Fixed a number of issues with preprocessing of .properties files (coderbot)
 - Fixed vertex tangent vectors in some cases, fixes stone appearing black on SEUS PTGI HRR 3 and some other issues (Pepper)
 - Fixed an issue where OpenGL debugging would be enabled by default, which caused significant log spam in some cases (IMS)
-- Improved the robustness of shader skybox rendering, fixes some massive brokeness with sky rendering in custom dimensions or with custom skyboxes (coderbot)
+- Improved the robustness of shader skybox rendering, fixes some massive brokenness with sky rendering in custom dimensions or with custom skyboxes (coderbot)
     - Iris also no longer renders the shader skybox with shaders disabled, fixes an issue with Distant Horizons
 - Fixed small issues with First Person Model entity shadows (coderbot)
 - Removed IrisRenderLayerWrapper on all versions, fixes compatibility with some mods like Arcanus and Requiem
@@ -88,13 +88,13 @@ This release was developed by coderbot & IMS with additional help from Pepper.
 ## 1.17 and 1.18 specific fixes:
 
 - Fixed white dots appearing on the screen and other weirdness (IMS)
-    - This was caused by non-overriden shader programs writing to the depth buffer
+    - This was caused by non-overridden shader programs writing to the depth buffer
 - Fixed slime blocks disappearing while being moved by pistons (IMS)
 - Fixed enderman eyes not being colored (coderbot)
 - Fixed an issue when using RenderDoc (coderbot)
 - Fixed an issue where shaders would not apply on old nvidia drivers on 1.17+ (IMS)
 - Fixed an issue where shaders would not apply on Intel Windows drivers for HD 4000, HD 2500, and similar cards on 1.17+ (coderbot)
-- Fixed the ingame profiler breaking when using a shader pack with a shadow pass
+- Fixed the in-game profiler breaking when using a shader pack with a shadow pass
 
 
 ## Translations
