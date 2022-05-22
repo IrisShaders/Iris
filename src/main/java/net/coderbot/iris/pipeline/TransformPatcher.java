@@ -15,7 +15,6 @@ import io.github.douira.glsl_transformer.core.target.*;
 import io.github.douira.glsl_transformer.print.filter.*;
 import io.github.douira.glsl_transformer.transform.*;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
-import io.github.douira.glsl_transformer.util.CompatUtil;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.shader.ShaderType;
 
@@ -32,7 +31,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
  */
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
-	static private TransformationManager<Parameters> manager;
+	private static TransformationManager<Parameters> manager;
 
 	private static enum Patch {
 		ATTRIBUTES, SODIUM_TERRAIN
@@ -314,9 +313,9 @@ public class TransformPatcher {
 
 			{
 				// make sure the lightmap coords expression doesn't exist in the code yet
-				addEndDependent(new SearchTerminals<Parameters>().targets(CompatUtil.listOf(
-						new WrapThrowTargetImpl<>(lightmapCoordsExpression),
-						new WrapThrowTargetImpl<>(irisLightmapTexMat))));
+				addEndDependent(new SearchTerminals<Parameters>()
+						.addTarget(new WrapThrowTargetImpl<>(lightmapCoordsExpression))
+						.addTarget(new WrapThrowTargetImpl<>(irisLightmapTexMat)));
 
 				// find accesses to gl_TextureMatrix[1] or gl_TextureMatrix[2] in combination
 				// with gl_MultiTexCoord1 or gl_MultiTexCoord2 and replace them with
@@ -410,11 +409,11 @@ public class TransformPatcher {
 					}
 				});
 
-				chainConcurrentDependent(new SearchTerminals<Parameters>().targets(CompatUtil.listOf(
-						new ParsedReplaceTargetImpl<>("gl_MultiTexCoord1",
-								texCoordFallbackReplacement, GLSLParser::expression),
-						new ParsedReplaceTargetImpl<>("gl_MultiTexCoord2",
-								texCoordFallbackReplacement, GLSLParser::expression))));
+				chainConcurrentDependent(new SearchTerminals<Parameters>()
+						.addTarget(new ParsedReplaceTargetImpl<>("gl_MultiTexCoord1",
+								texCoordFallbackReplacement, GLSLParser::expression))
+						.addTarget(new ParsedReplaceTargetImpl<>("gl_MultiTexCoord2",
+								texCoordFallbackReplacement, GLSLParser::expression)));
 			}
 		};
 		// #endregion patchSodiumTerrain
