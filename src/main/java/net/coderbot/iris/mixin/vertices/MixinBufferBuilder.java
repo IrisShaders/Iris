@@ -130,7 +130,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			return;
 		}
 
-		if (injectNormal && currentElement.getUsage() == VertexFormatElement.Usage.NORMAL) {
+		if (injectNormal && currentElement == DefaultVertexFormat.ELEMENT_NORMAL) {
 			this.putInt(0, 0);
 			this.nextElement();
 		}
