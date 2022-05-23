@@ -155,7 +155,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
+		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programSet.getPackDirectives().getShadowDirectives();
@@ -551,8 +551,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$isDepthBufferDirty(), depthTextureId, main.width, main.height, depthBufferFormat);
-		((Blaze3dRenderTargetExt) main).iris$clearDepthBufferDirtyFlag();
+		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthTextureId, main.width, main.height, depthBufferFormat);
 
 		final ImmutableList<ClearPass> passes;
 

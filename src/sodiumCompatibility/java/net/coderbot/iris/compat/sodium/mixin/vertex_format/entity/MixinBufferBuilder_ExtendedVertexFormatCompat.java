@@ -28,7 +28,9 @@ public class MixinBufferBuilder_ExtendedVertexFormatCompat {
 		if (format == IrisVertexFormats.ENTITY) {
 			if (type == VanillaVertexTypes.QUADS) {
 				return ExtendedQuadVertexType.INSTANCE;
-			} else if (type == VanillaVertexTypes.GLYPHS) {
+			}
+		} else if (format == IrisVertexFormats.TERRAIN) {
+			if (type == VanillaVertexTypes.GLYPHS) {
 				return ExtendedGlyphVertexType.INSTANCE;
 			}
 		}

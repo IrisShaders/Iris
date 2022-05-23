@@ -296,8 +296,6 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getRenderTypeEntityAlphaShader (weird alpha test behavior!!!)
-
 	@Inject(method = "getRendertypeEntityAlphaShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityAlphaShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (!ShadowRenderer.ACTIVE) {
@@ -358,6 +356,8 @@ public class MixinGameRenderer {
 	private static void iris$overrideTextShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TEXT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(ShaderKey.HAND_TEXT, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT, cir);
 		}
@@ -370,6 +370,8 @@ public class MixinGameRenderer {
 	private static void iris$overrideTextIntensityShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TEXT_INTENSITY, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(ShaderKey.HAND_TEXT_INTENSITY, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT_INTENSITY, cir);
 		}
