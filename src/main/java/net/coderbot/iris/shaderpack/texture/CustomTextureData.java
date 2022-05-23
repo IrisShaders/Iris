@@ -27,6 +27,18 @@ public abstract class CustomTextureData {
 		}
 	}
 
+	public static final class LightmapMarker extends CustomTextureData {
+		@Override
+		public boolean equals(Object obj) {
+			return obj.getClass() == this.getClass();
+		}
+
+		@Override
+		public int hashCode() {
+			return 33;
+		}
+	}
+
 	public static final class ResourceData extends CustomTextureData {
 		private final String namespace;
 		private final String location;

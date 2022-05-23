@@ -34,6 +34,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class ShaderPack {
 
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
-	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
+	private final EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new EnumMap<>(TextureStage.class);
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
 	private final OptionMenuContainer menuContainer;
@@ -250,7 +251,11 @@ public class ShaderPack {
 				Iris.logger.warn("Resource location " + path + " contained more than two parts?");
 			}
 
-			customTextureData = new CustomTextureData.ResourceData(parts[0], parts[1]);
+			if (parts[0].equals("minecraft") && (parts[1].equals("dynamic/lightmap_1") || parts[1].equals("dynamic/light_map_1"))) {
+				customTextureData = new CustomTextureData.LightmapMarker();
+			} else {
+				customTextureData = new CustomTextureData.ResourceData(parts[0], parts[1]);
+			}
 		} else {
 			// TODO: Make sure the resulting path is within the shaderpack?
 			if (path.startsWith("/")) {
@@ -342,7 +347,7 @@ public class ShaderPack {
 		return idMap;
 	}
 
-	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> getCustomTextureDataMap() {
+	public EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> getCustomTextureDataMap() {
 		return customTextureDataMap;
 	}
 

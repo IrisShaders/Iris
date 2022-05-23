@@ -12,7 +12,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
-import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.pipeline.patcher.CompositeDepthTransformer;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -22,7 +22,7 @@ import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shadows.ShadowMapRenderer;
+import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Minecraft;
@@ -46,6 +46,7 @@ public class FinalPassRenderer {
 	private final GlFramebuffer baseline;
 	private final GlFramebuffer colorHolder;
 	private int lastColorTextureId;
+	private int lastColorTextureVersion;
 	private final IntSupplier noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
@@ -55,7 +56,7 @@ public class FinalPassRenderer {
 	public FinalPassRenderer(ProgramSet pack, RenderTargets renderTargets, IntSupplier noiseTexture,
 							 FrameUpdateNotifier updateNotifier, ImmutableSet<Integer> flippedBuffers,
 							 CenterDepthSampler centerDepthSampler,
-							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier,
+							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
 							 Object2ObjectMap<String, IntSupplier> customTextureIds,
 							 ImmutableSet<Integer> flippedAtLeastOnce) {
 		this.updateNotifier = updateNotifier;
@@ -72,7 +73,7 @@ public class FinalPassRenderer {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 
-			pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowMapRendererSupplier);
+			pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
 			pass.stageReadsFromAlt = flippedBuffers;
 			pass.mipmappedBuffers = directives.getMipmappedBuffers();
 
@@ -88,6 +89,7 @@ public class FinalPassRenderer {
 		this.baseline = renderTargets.createGbufferFramebuffer(flippedBuffers, new int[] {0});
 		this.colorHolder = new GlFramebuffer();
 		this.lastColorTextureId = Minecraft.getInstance().getMainRenderTarget().getColorTextureId();
+		this.lastColorTextureVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getColorBufferVersion();
 		this.colorHolder.addColorAttachment(0, lastColorTextureId);
 
 		// TODO: We don't actually fully swap the content, we merely copy it from alt to main
@@ -153,8 +155,8 @@ public class FinalPassRenderer {
 		//
 		// This is not a concern for depthtex1 / depthtex2 since the copy call extracts the depth values, and the
 		// shader pack only ever uses them to read the depth values.
-		if (((Blaze3dRenderTargetExt) main).iris$isColorBufferDirty() || main.getColorTextureId() != lastColorTextureId) {
-			((Blaze3dRenderTargetExt) main).iris$clearColorBufferDirtyFlag();
+		if (((Blaze3dRenderTargetExt) main).iris$getColorBufferVersion() != lastColorTextureVersion || main.getColorTextureId() != lastColorTextureId) {
+			lastColorTextureVersion = ((Blaze3dRenderTargetExt) main).iris$getColorBufferVersion();
 			this.lastColorTextureId = main.getColorTextureId();
 			colorHolder.addColorAttachment(0, lastColorTextureId);
 		}
@@ -265,7 +267,7 @@ public class FinalPassRenderer {
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
-								  Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
+								  Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
 		// TODO: Properly handle empty shaders
 		Objects.requireNonNull(source.getVertexSource());
 		Objects.requireNonNull(source.getFragmentSource());
@@ -273,8 +275,8 @@ public class FinalPassRenderer {
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), source.getVertexSource().orElse(null), source.getGeometrySource().orElse(null),
-				source.getFragmentSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), CompositeDepthTransformer.patch(source.getVertexSource().orElse(null)), CompositeDepthTransformer.patch(source.getGeometrySource().orElse(null)),
+				CompositeDepthTransformer.patch(source.getFragmentSource().orElse(null)), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -289,13 +291,12 @@ public class FinalPassRenderer {
 		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRendererSupplier.get());
-			IrisImages.addShadowColorImages(builder, shadowMapRendererSupplier.get());
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get());
+			IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get());
 		}
 
 		// TODO: Don't duplicate this with CompositeRenderer
-		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
-		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
+		builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
 
 		return builder.build();
 	}

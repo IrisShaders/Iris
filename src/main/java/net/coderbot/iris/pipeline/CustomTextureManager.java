@@ -1,8 +1,10 @@
 package net.coderbot.iris.pipeline;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.mixin.LightTextureAccessor;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
@@ -21,12 +23,13 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.IntSupplier;
 
 public class CustomTextureManager {
-	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new Object2ObjectOpenHashMap<>();
+	private final EnumMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new EnumMap<>(TextureStage.class);
 	private final IntSupplier noise;
 
 	/**
@@ -37,7 +40,7 @@ public class CustomTextureManager {
 	private final List<AbstractTexture> ownedTextures = new ArrayList<>();
 
 	public CustomTextureManager(PackDirectives packDirectives,
-								Object2ObjectMap<TextureStage,Object2ObjectMap<String, CustomTextureData>> customTextureDataMap,
+								EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap,
 								Optional<CustomTextureData> customNoiseTextureData) {
 		customTextureDataMap.forEach((textureStage, customTextureStageDataMap) -> {
 			Object2ObjectMap<String, IntSupplier> customTextureIds = new Object2ObjectOpenHashMap<>();
@@ -78,6 +81,12 @@ public class CustomTextureManager {
 			ownedTextures.add(texture);
 
 			return texture::getId;
+		} else if (textureData instanceof CustomTextureData.LightmapMarker) {
+			// Special code path for the light texture. While shader packs hardcode the primary light texture, it's
+			// possible that a mod will create a different light texture, so this code path is robust to that.
+			return () ->
+				((LightTextureAccessor) Minecraft.getInstance().gameRenderer.lightTexture())
+					.getLightTexture().getId();
 		} else if (textureData instanceof CustomTextureData.ResourceData) {
 			CustomTextureData.ResourceData resourceData = (CustomTextureData.ResourceData) textureData;
 			String namespace = resourceData.getNamespace();
@@ -133,8 +142,12 @@ public class CustomTextureManager {
 		}
 	}
 
-	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, IntSupplier>> getCustomTextureIdMap() {
+	public EnumMap<TextureStage, Object2ObjectMap<String, IntSupplier>> getCustomTextureIdMap() {
 		return customTextureIdMap;
+	}
+
+	public Object2ObjectMap<String, IntSupplier> getCustomTextureIdMap(TextureStage stage) {
+		return customTextureIdMap.getOrDefault(stage, Object2ObjectMaps.emptyMap());
 	}
 
 	public IntSupplier getNoiseTexture() {

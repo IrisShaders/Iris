@@ -8,6 +8,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.lwjgl.opengl.GL20C;
 
@@ -34,11 +35,15 @@ public class ProgramSamplers {
 			initializer = null;
 		}
 
+		// We need to keep the active texture intact, since if we mess it up
+		// in the middle of RenderType setup, bad things will happen.
+		int activeTexture = GlStateManagerAccessor.getActiveTexture();
+
 		for (SamplerBinding samplerBinding : samplerBindings) {
 			samplerBinding.update();
 		}
 
-		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE0 + activeTexture);
 	}
 
 	public static Builder builder(int program, Set<Integer> reservedTextureUnits) {

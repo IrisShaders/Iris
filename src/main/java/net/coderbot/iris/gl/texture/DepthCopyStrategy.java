@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.system.MemoryUtil;
 
 public interface DepthCopyStrategy {
 	// FB -> T
@@ -103,7 +104,13 @@ public interface DepthCopyStrategy {
 	}
 
 	static DepthCopyStrategy fastest(boolean combinedStencilRequired) {
-		if (GL.getCapabilities().OpenGL43) {
+		// Check whether glCopyImageSubData is available by checking the function directly...
+		// Gl.getCapabilities().OpenGL43 can be false even if OpenGL 4.3 functions are supported,
+		// because Minecraft requests an OpenGL 3.2 forward compatible function.
+		//
+		// Perhaps calling GL43.isAvailable would be a different option, but we only need one
+		// function, so we just check for that function.
+		if (GL.getCapabilities().glCopyImageSubData != MemoryUtil.NULL) {
 			return new Gl43CopyImage();
 		}
 

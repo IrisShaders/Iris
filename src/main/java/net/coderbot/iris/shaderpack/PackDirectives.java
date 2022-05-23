@@ -16,6 +16,7 @@ public class PackDirectives {
 	private float wetnessHalfLife;
 	private float drynessHalfLife;
 	private float eyeBrightnessHalfLife;
+	private float centerDepthHalfLife;
 	private boolean areCloudsEnabled;
 	private boolean underwaterOverlay;
 	private boolean vignette;
@@ -35,6 +36,7 @@ public class PackDirectives {
 		wetnessHalfLife = 600.0f;
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
+		centerDepthHalfLife = 1.0F;
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -82,6 +84,10 @@ public class PackDirectives {
 
 	public float getEyeBrightnessHalfLife() {
 		return eyeBrightnessHalfLife;
+	}
+
+	public float getCenterDepthHalfLife() {
+		return centerDepthHalfLife;
 	}
 
 	public boolean areCloudsEnabled() {
@@ -146,6 +152,8 @@ public class PackDirectives {
 		directives.acceptConstFloatDirective("eyeBrightnessHalflife",
 			eyeBrightnessHalfLife -> this.eyeBrightnessHalfLife = eyeBrightnessHalfLife);
 
+		directives.acceptConstFloatDirective("centerDepthHalflife",
+			centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
 	}
 
 	public ImmutableMap<Integer, Boolean> getExplicitFlips(String pass) {

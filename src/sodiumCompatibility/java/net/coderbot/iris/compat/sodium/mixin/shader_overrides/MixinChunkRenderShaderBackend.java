@@ -71,6 +71,7 @@ public class MixinChunkRenderShaderBackend implements ChunkRenderBackendExt {
 
         this.override = irisChunkProgramOverrides.getProgramOverride(device, pass);
 
+		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::beginSodiumTerrainRendering);
         begin(poseStack);
     }
 
@@ -90,6 +91,7 @@ public class MixinChunkRenderShaderBackend implements ChunkRenderBackendExt {
     @Inject(method = "end", at = @At("RETURN"))
     private void iris$onEnd(PoseStack poseStack, CallbackInfo ci) {
         ProgramUniforms.clearActiveUniforms();
+		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::endSodiumTerrainRendering);
     }
 
     @Inject(method = "delete", at = @At("HEAD"), remap = false)
