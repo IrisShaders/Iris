@@ -358,6 +358,8 @@ public class MixinGameRenderer {
 	private static void iris$overrideTextShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TEXT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(ShaderKey.HAND_TEXT, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT, cir);
 		}
@@ -370,6 +372,8 @@ public class MixinGameRenderer {
 	private static void iris$overrideTextIntensityShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TEXT_INTENSITY, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(ShaderKey.HAND_TEXT_INTENSITY, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT_INTENSITY, cir);
 		}
