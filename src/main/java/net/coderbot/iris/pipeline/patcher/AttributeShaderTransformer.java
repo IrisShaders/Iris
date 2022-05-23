@@ -32,6 +32,18 @@ public class AttributeShaderTransformer {
 			patchOverlayColor(transformations, type, hasGeometry);
 		}
 
+		if (transformations.contains("gl_MultiTexCoord3") && !transformations.contains("mc_midTexCoord")
+			&& type == ShaderType.VERTEX) {
+			// gl_MultiTexCoord3 is a super legacy alias of mc_midTexCoord. We don't do this replacement if
+			// we think mc_midTexCoord could be defined just we can't handle an existing declaration robustly.
+			//
+			// But basically the proper way to do this is to define mc_midTexCoord only if it's not defined, and if
+			// it is defined, figure out its type, then replace all occurrences of gl_MultiTexCoord3 with the correct
+			// conversion from mc_midTexCoord's declared type to vec4.
+			transformations.replaceExact("gl_MultiTexCoord3", "mc_midTexCoord");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "attribute vec4 mc_midTexCoord;");
+		}
+
 		return transformations.toString();
 	}
 

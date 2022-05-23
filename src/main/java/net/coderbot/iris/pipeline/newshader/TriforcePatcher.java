@@ -141,8 +141,19 @@ public class TriforcePatcher {
 			// See https://github.com/IrisShaders/Iris/issues/1149
 			transformations.define("gl_MultiTexCoord2", "gl_MultiTexCoord1");
 
-			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other texture coordinates are not valid inputs.
-			for (int i = 3; i < 8; i++) {
+			if (transformations.contains("gl_MultiTexCoord3") && !transformations.contains("mc_midTexCoord")) {
+				// gl_MultiTexCoord3 is a super legacy alias of mc_midTexCoord. We don't do this replacement if
+				// we think mc_midTexCoord could be defined just we can't handle an existing declaration robustly.
+				//
+				// But basically the proper way to do this is to define mc_midTexCoord only if it's not defined, and if
+				// it is defined, figure out its type, then replace all occurrences of gl_MultiTexCoord3 with the correct
+				// conversion from mc_midTexCoord's declared type to vec4.
+				transformations.replaceExact("gl_MultiTexCoord3", "mc_midTexCoord");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "attribute vec4 mc_midTexCoord;");
+			}
+
+			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture coordinates are not valid inputs.
+			for (int i = 4; i < 8; i++) {
 				transformations.define("gl_MultiTexCoord" + i, " vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 		}
