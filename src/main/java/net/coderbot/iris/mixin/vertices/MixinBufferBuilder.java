@@ -102,9 +102,9 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Inject(method = "begin", at = @At("RETURN"))
 	private void iris$afterBegin(VertexFormat.Mode drawMode, VertexFormat format, CallbackInfo ci) {
 		if (extending) {
-			this.format = (format == DefaultVertexFormat.BLOCK)
-				? IrisVertexFormats.TERRAIN
-				: IrisVertexFormats.ENTITY;
+			this.format = (format == DefaultVertexFormat.NEW_ENTITY)
+				? IrisVertexFormats.ENTITY
+				: IrisVertexFormats.TERRAIN;
 			this.currentElement = this.format.getElements().get(0);
 		}
 	}
@@ -123,14 +123,6 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 		fastFormat = false;
 		fullFormat = false;
-	}
-
-	@Inject(method = "nextElement", at = @At("RETURN"))
-	private void iris$beforeNextElement(CallbackInfo ci) {
-		if (injectOverlayAndNormal && currentElement == DefaultVertexFormat.ELEMENT_UV1) {
-			this.putInt(0, OverlayTexture.NO_OVERLAY);
-			nextElement();
-		}
 	}
 
 	@Inject(method = "endVertex", at = @At("HEAD"))
