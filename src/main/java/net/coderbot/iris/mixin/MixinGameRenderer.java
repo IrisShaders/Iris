@@ -296,8 +296,6 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getRenderTypeEntityAlphaShader (weird alpha test behavior!!!)
-
 	@Inject(method = "getRendertypeEntityAlphaShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityAlphaShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (!ShadowRenderer.ACTIVE) {
