@@ -50,7 +50,7 @@ This release was developed by coderbot & IMS with additional help from Pepper.
 - Added compatibility for Lifts monitors (coderbot, IMS)
 - Added some basic compatibility for Litematica (coderbot)
 - Fixed rendering issues with Light Overlay (coderbot)
-
+- Commands have been removed due to issues with the Fabric Maven (IMS)
 
 ## Newly-compatible shader packs
 
