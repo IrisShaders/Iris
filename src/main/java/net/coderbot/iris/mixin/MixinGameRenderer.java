@@ -324,9 +324,9 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_EYES_TRANS, cir);
 		}
 	}

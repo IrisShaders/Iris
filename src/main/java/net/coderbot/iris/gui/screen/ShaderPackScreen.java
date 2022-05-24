@@ -82,15 +82,15 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		String irisName = Iris.MODNAME + " " + Iris.getVersion();
 
 		if (irisName.contains("-development-environment")) {
-			this.developmentComponent = new TextComponent("Development Environment").withStyle(ChatFormatting.GOLD);
+			this.developmentComponent = Component.literal("Development Environment").withStyle(ChatFormatting.GOLD);
 			irisName = irisName.replace("-development-environment", "");
 		}
 
-		this.irisTextComponent = new TextComponent(irisName).withStyle(ChatFormatting.GRAY);
+		this.irisTextComponent = Component.literal(irisName).withStyle(ChatFormatting.GRAY);
 
 		if (Iris.getUpdateChecker().getUpdateMessage().isPresent()) {
-			this.updateComponent = new TextComponent("New update available!").withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.UNDERLINE);
-			irisTextComponent.append(new TextComponent(" (outdated)").withStyle(ChatFormatting.RED));
+			this.updateComponent = Component.literal("New update available!").withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.UNDERLINE);
+			irisTextComponent.append(Component.literal(" (outdated)").withStyle(ChatFormatting.RED));
 		}
 
 		refreshForChangedPack();
