@@ -26,11 +26,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer {
-    @Shadow(remap = false)
-    private ChunkRenderManager<?> chunkRenderManager;
+	@Shadow(remap = false)
+	private ChunkRenderManager<?> chunkRenderManager;
 
-    @Unique
-    private boolean wasRenderingShadows = false;
+	@Unique
+	private boolean wasRenderingShadows = false;
 
 	@Shadow(remap = false)
 	private double lastCameraX, lastCameraY, lastCameraZ, lastCameraPitch, lastCameraYaw;
@@ -64,16 +64,16 @@ public class MixinSodiumWorldRenderer {
 		iris$swapLastCameraYaw = tmp;
 	}
 
-    @Unique
-    private void iris$ensureStateSwapped() {
-        if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+	@Unique
+	private void iris$ensureStateSwapped() {
+		if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			if (this.chunkRenderManager instanceof SwappableChunkRenderManager) {
-                ((SwappableChunkRenderManager) this.chunkRenderManager).iris$swapVisibilityState();
+				((SwappableChunkRenderManager) this.chunkRenderManager).iris$swapVisibilityState();
 				swapCachedCameraPositions();
-            }
+			}
 
-            wasRenderingShadows = true;
-        } else if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			wasRenderingShadows = true;
+		} else if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			if (this.chunkRenderManager instanceof SwappableChunkRenderManager) {
 				((SwappableChunkRenderManager) this.chunkRenderManager).iris$swapVisibilityState();
 				swapCachedCameraPositions();
@@ -81,7 +81,7 @@ public class MixinSodiumWorldRenderer {
 
 			wasRenderingShadows = false;
 		}
-    }
+	}
 
 	@Inject(method = "updateChunks", at = @At("RETURN"))
 	private void iris$captureVisibleBlockEntities(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo ci) {
@@ -90,47 +90,47 @@ public class MixinSodiumWorldRenderer {
 		}
 	}
 
-    @Inject(method = "scheduleTerrainUpdate()V", remap = false,
-            at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/client/render/chunk/ChunkRenderManager.markDirty ()V",
-                    remap = false))
-    private void iris$ensureStateSwappedBeforeMarkDirty(CallbackInfo ci) {
-        iris$ensureStateSwapped();
-    }
+	@Inject(method = "scheduleTerrainUpdate()V", remap = false,
+			at = @At(value = "INVOKE",
+					target = "me/jellysquid/mods/sodium/client/render/chunk/ChunkRenderManager.markDirty ()V",
+					remap = false))
+	private void iris$ensureStateSwappedBeforeMarkDirty(CallbackInfo ci) {
+		iris$ensureStateSwapped();
+	}
 
-    // note: inject after the reload() check, but before the markDirty() call. This injection point was chosen just
-    //       because it's relatively solid and is in between those two calls.
-    @Inject(method = "updateChunks", remap = false,
-            at = @At(value = "FIELD",
-                     target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
-                     ordinal = 0,
-                     remap = false))
-    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, Frustum frustum, boolean hasForcedFrustum,
+	// note: inject after the reload() check, but before the markDirty() call. This injection point was chosen just
+	//       because it's relatively solid and is in between those two calls.
+	@Inject(method = "updateChunks", remap = false,
+			at = @At(value = "FIELD",
+					 target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
+					 ordinal = 0,
+					 remap = false))
+	private void iris$ensureStateSwappedInUpdateChunks(Camera camera, Frustum frustum, boolean hasForcedFrustum,
 													   int frame, boolean spectator, CallbackInfo ci) {
-        iris$ensureStateSwapped();
-    }
+		iris$ensureStateSwapped();
+	}
 
-    @Redirect(method = "updateChunks", remap = false,
-            at = @At(value = "FIELD",
-                    target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
-                    ordinal = 0,
-                    remap = false))
-    private double iris$forceChunkGraphRebuildInShadowPass(SodiumWorldRenderer worldRenderer) {
-        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            // Returning NaN forces the comparison with the current camera to return false, making SodiumWorldRenderer
-            // think that the chunk graph always needs to be rebuilt. This is generally true in the shadow map pass,
-            // unless time is frozen.
-            //
-            // TODO: Detect when the sun/moon isn't moving
-            return Double.NaN;
-        } else {
-            return lastCameraX;
-        }
-    }
+	@Redirect(method = "updateChunks", remap = false,
+			at = @At(value = "FIELD",
+					target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
+					ordinal = 0,
+					remap = false))
+	private double iris$forceChunkGraphRebuildInShadowPass(SodiumWorldRenderer worldRenderer) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			// Returning NaN forces the comparison with the current camera to return false, making SodiumWorldRenderer
+			// think that the chunk graph always needs to be rebuilt. This is generally true in the shadow map pass,
+			// unless time is frozen.
+			//
+			// TODO: Detect when the sun/moon isn't moving
+			return Double.NaN;
+		} else {
+			return lastCameraX;
+		}
+	}
 
-    @Inject(method = "drawChunkLayer",  remap = false, at = @At("HEAD"))
-    private void iris$beforeDrawChunkLayer(RenderType renderType, PoseStack poseStack, double x, double y,
+	@Inject(method = "drawChunkLayer",  remap = false, at = @At("HEAD"))
+	private void iris$beforeDrawChunkLayer(RenderType renderType, PoseStack poseStack, double x, double y,
 										   double z, CallbackInfo ci) {
-        iris$ensureStateSwapped();
-    }
+		iris$ensureStateSwapped();
+	}
 }

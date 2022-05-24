@@ -21,39 +21,39 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(ChunkRenderRebuildTask.class)
 public class MixinChunkRenderRebuildTask {
-    @Redirect(method = "performBuild", at = @At(value = "INVOKE",
-            target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getChunkRenderType (" +
-                        "Lnet/minecraft/world/level/block/state/BlockState;" +
-                    ")Lnet/minecraft/client/renderer/RenderType;"))
-    private RenderType iris$wrapGetBlockLayer(BlockState blockState, ChunkRenderCacheLocal cache,
+	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
+			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getChunkRenderType (" +
+						"Lnet/minecraft/world/level/block/state/BlockState;" +
+					")Lnet/minecraft/client/renderer/RenderType;"))
+	private RenderType iris$wrapGetBlockLayer(BlockState blockState, ChunkRenderCacheLocal cache,
 											  ChunkBuildBuffers buffers, CancellationSource cancellationSource) {
-        if (buffers instanceof ChunkBuildBuffersExt) {
-            ((ChunkBuildBuffersExt) buffers).iris$setMaterialId(blockState, (short) -1);
-        }
+		if (buffers instanceof ChunkBuildBuffersExt) {
+			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(blockState, (short) -1);
+		}
 
-        return ItemBlockRenderTypes.getChunkRenderType(blockState);
-    }
+		return ItemBlockRenderTypes.getChunkRenderType(blockState);
+	}
 
-    @Redirect(method = "performBuild", at = @At(value = "INVOKE",
-            target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getRenderLayer (" +
-                        "Lnet/minecraft/world/level/material/FluidState;" +
-                    ")Lnet/minecraft/client/renderer/RenderType;"))
-    private RenderType iris$wrapGetFluidLayer(FluidState fluidState, ChunkRenderCacheLocal cache,
+	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
+			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getRenderLayer (" +
+						"Lnet/minecraft/world/level/material/FluidState;" +
+					")Lnet/minecraft/client/renderer/RenderType;"))
+	private RenderType iris$wrapGetFluidLayer(FluidState fluidState, ChunkRenderCacheLocal cache,
 											  ChunkBuildBuffers buffers, CancellationSource cancellationSource) {
-        if (buffers instanceof ChunkBuildBuffersExt) {
-            // All fluids have a ShadersMod render type of 1, to match behavior of Minecraft 1.7 and earlier.
-            ((ChunkBuildBuffersExt) buffers).iris$setMaterialId(fluidState.createLegacyBlock(), (short) 1);
-        }
+		if (buffers instanceof ChunkBuildBuffersExt) {
+			// All fluids have a ShadersMod render type of 1, to match behavior of Minecraft 1.7 and earlier.
+			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(fluidState.createLegacyBlock(), (short) 1);
+		}
 
-        return ItemBlockRenderTypes.getRenderLayer(fluidState);
-    }
+		return ItemBlockRenderTypes.getRenderLayer(fluidState);
+	}
 
-    @Inject(method = "performBuild",
-            at = @At(value = "INVOKE", target = "net/minecraft/world/level/block/Block.isEntityBlock()Z"))
-    private void iris$resetId(ChunkRenderCacheLocal cache, ChunkBuildBuffers buffers,
-                              CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult<?>> cir) {
-        if (buffers instanceof ChunkBuildBuffersExt) {
-            ((ChunkBuildBuffersExt) buffers).iris$resetMaterialId();
-        }
-    }
+	@Inject(method = "performBuild",
+			at = @At(value = "INVOKE", target = "net/minecraft/world/level/block/Block.isEntityBlock()Z"))
+	private void iris$resetId(ChunkRenderCacheLocal cache, ChunkBuildBuffers buffers,
+							  CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult<?>> cir) {
+		if (buffers instanceof ChunkBuildBuffersExt) {
+			((ChunkBuildBuffersExt) buffers).iris$resetMaterialId();
+		}
+	}
 }

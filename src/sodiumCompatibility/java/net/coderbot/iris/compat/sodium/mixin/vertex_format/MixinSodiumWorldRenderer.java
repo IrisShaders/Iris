@@ -13,15 +13,15 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
  */
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer {
-    @ModifyArg(method = "initRenderer()V", remap = false,
-            at = @At(value = "INVOKE", remap = false,
-                    target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.createChunkRenderBackend (" +
-                                "Lme/jellysquid/mods/sodium/client/gl/device/RenderDevice;" +
-                                "Lme/jellysquid/mods/sodium/client/gui/SodiumGameOptions;" +
-                                "Lme/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType;" +
-                            ")Lme/jellysquid/mods/sodium/client/render/chunk/ChunkRenderBackend;"))
-    private ChunkVertexType iris$overrideVertexType(ChunkVertexType vertexType) {
-        return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()
+	@ModifyArg(method = "initRenderer()V", remap = false,
+			at = @At(value = "INVOKE", remap = false,
+					target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.createChunkRenderBackend (" +
+								"Lme/jellysquid/mods/sodium/client/gl/device/RenderDevice;" +
+								"Lme/jellysquid/mods/sodium/client/gui/SodiumGameOptions;" +
+								"Lme/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType;" +
+							")Lme/jellysquid/mods/sodium/client/render/chunk/ChunkRenderBackend;"))
+	private ChunkVertexType iris$overrideVertexType(ChunkVertexType vertexType) {
+		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()
 			? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
-    }
+	}
 }

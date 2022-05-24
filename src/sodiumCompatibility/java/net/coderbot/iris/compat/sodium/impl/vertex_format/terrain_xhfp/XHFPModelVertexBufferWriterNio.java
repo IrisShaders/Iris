@@ -15,55 +15,55 @@ import java.nio.ByteBuffer;
 import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
 public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implements ModelVertexSink, MaterialIdAwareVertexWriter {
-    private final QuadViewTerrain.QuadViewTerrainNio quad = new QuadViewTerrain.QuadViewTerrainNio();
-    private final Vector3f normal = new Vector3f();
+	private final QuadViewTerrain.QuadViewTerrainNio quad = new QuadViewTerrain.QuadViewTerrainNio();
+	private final Vector3f normal = new Vector3f();
 
-    private MaterialIdHolder idHolder;
+	private MaterialIdHolder idHolder;
 
-    private int vertexCount;
-    private float uSum;
-    private float vSum;
+	private int vertexCount;
+	private float uSum;
+	private float vSum;
 
-    public XHFPModelVertexBufferWriterNio(VertexBufferView backingBuffer) {
-        super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
-    }
+	public XHFPModelVertexBufferWriterNio(VertexBufferView backingBuffer) {
+		super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
+	}
 
-    @Override
-    public void writeQuad(float x, float y, float z, int color, float u, float v, int light) {
-        uSum += u;
-        vSum += v;
+	@Override
+	public void writeQuad(float x, float y, float z, int color, float u, float v, int light) {
+		uSum += u;
+		vSum += v;
 
-        short materialId = idHolder.id;
-        short renderType = idHolder.renderType;
+		short materialId = idHolder.id;
+		short renderType = idHolder.renderType;
 
-        this.writeQuadInternal(
-                ModelVertexUtil.denormalizeVertexPositionFloatAsShort(x),
-                ModelVertexUtil.denormalizeVertexPositionFloatAsShort(y),
-                ModelVertexUtil.denormalizeVertexPositionFloatAsShort(z),
-                color,
-                ModelVertexUtil.denormalizeVertexTextureFloatAsShort(u),
-                ModelVertexUtil.denormalizeVertexTextureFloatAsShort(v),
-                ModelVertexUtil.encodeLightMapTexCoord(light),
-                materialId,
-                renderType
-        );
-    }
+		this.writeQuadInternal(
+				ModelVertexUtil.denormalizeVertexPositionFloatAsShort(x),
+				ModelVertexUtil.denormalizeVertexPositionFloatAsShort(y),
+				ModelVertexUtil.denormalizeVertexPositionFloatAsShort(z),
+				color,
+				ModelVertexUtil.denormalizeVertexTextureFloatAsShort(u),
+				ModelVertexUtil.denormalizeVertexTextureFloatAsShort(v),
+				ModelVertexUtil.encodeLightMapTexCoord(light),
+				materialId,
+				renderType
+		);
+	}
 
-    private void writeQuadInternal(short x, short y, short z, int color, short u, short v, int light, short materialId,
-                                   short renderType) {
-        int i = this.writeOffset;
+	private void writeQuadInternal(short x, short y, short z, int color, short u, short v, int light, short materialId,
+								   short renderType) {
+		int i = this.writeOffset;
 
-        vertexCount++;
-        // NB: uSum and vSum must already be incremented outside of this function.
+		vertexCount++;
+		// NB: uSum and vSum must already be incremented outside of this function.
 
-        ByteBuffer buffer = this.byteBuffer;
-        buffer.putShort(i, x);
-        buffer.putShort(i + 2, y);
-        buffer.putShort(i + 4, z);
-        buffer.putInt(i + 8, color);
-        buffer.putShort(i + 12, u);
-        buffer.putShort(i + 14, v);
-        buffer.putInt(i + 16, light);
+		ByteBuffer buffer = this.byteBuffer;
+		buffer.putShort(i, x);
+		buffer.putShort(i + 2, y);
+		buffer.putShort(i + 4, z);
+		buffer.putInt(i + 8, color);
+		buffer.putShort(i + 12, u);
+		buffer.putShort(i + 14, v);
+		buffer.putInt(i + 16, light);
 		// NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
 		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
 		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
@@ -71,58 +71,58 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		buffer.putShort(i + 32, materialId);
 		buffer.putShort(i + 34, renderType);
 
-        if (vertexCount == 4) {
-            vertexCount = 0;
+		if (vertexCount == 4) {
+			vertexCount = 0;
 
-            // TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
+			// TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
 
-            // NB: Be careful with the math here! A previous bug was caused by midU going negative as a short, which
-            // was sign-extended into midTexCoord, causing midV to have garbage (likely NaN data). If you're touching
-            // this code, be aware of that, and don't introduce those kinds of bugs!
-            //
-            // Also note that OpenGL takes shorts in the range of [0, 65535] and transforms them linearly to [0.0, 1.0],
-            // so multiply by 65535, not 65536.
-            //
-            // TODO: Does this introduce precision issues? Do we need to fall back to floats here? This might break
-            // with high resolution texture packs.
-            int midU = (int)(65535.0F * Math.min(uSum * 0.25f, 1.0f)) & 0xFFFF;
-            int midV = (int)(65535.0F * Math.min(vSum * 0.25f, 1.0f)) & 0xFFFF;
-            int midTexCoord = (midV << 16) | midU;
+			// NB: Be careful with the math here! A previous bug was caused by midU going negative as a short, which
+			// was sign-extended into midTexCoord, causing midV to have garbage (likely NaN data). If you're touching
+			// this code, be aware of that, and don't introduce those kinds of bugs!
+			//
+			// Also note that OpenGL takes shorts in the range of [0, 65535] and transforms them linearly to [0.0, 1.0],
+			// so multiply by 65535, not 65536.
+			//
+			// TODO: Does this introduce precision issues? Do we need to fall back to floats here? This might break
+			// with high resolution texture packs.
+			int midU = (int)(65535.0F * Math.min(uSum * 0.25f, 1.0f)) & 0xFFFF;
+			int midV = (int)(65535.0F * Math.min(vSum * 0.25f, 1.0f)) & 0xFFFF;
+			int midTexCoord = (midV << 16) | midU;
 
-            buffer.putInt(i + 20, midTexCoord);
-            buffer.putInt(i + 20 - STRIDE, midTexCoord);
-            buffer.putInt(i + 20 - STRIDE * 2, midTexCoord);
-            buffer.putInt(i + 20 - STRIDE * 3, midTexCoord);
+			buffer.putInt(i + 20, midTexCoord);
+			buffer.putInt(i + 20 - STRIDE, midTexCoord);
+			buffer.putInt(i + 20 - STRIDE * 2, midTexCoord);
+			buffer.putInt(i + 20 - STRIDE * 3, midTexCoord);
 
-            uSum = 0;
-            vSum = 0;
+			uSum = 0;
+			vSum = 0;
 
-            // normal computation
-            // Implementation based on the algorithm found here:
-            // https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
+			// normal computation
+			// Implementation based on the algorithm found here:
+			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-            quad.setup(buffer, i, STRIDE);
-            NormalHelper.computeFaceNormal(normal, quad);
-            int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+			quad.setup(buffer, i, STRIDE);
+			NormalHelper.computeFaceNormal(normal, quad);
+			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
-            buffer.putInt(i + 28, packedNormal);
-            buffer.putInt(i + 28 - STRIDE, packedNormal);
-            buffer.putInt(i + 28 - STRIDE * 2, packedNormal);
-            buffer.putInt(i + 28 - STRIDE * 3, packedNormal);
+			buffer.putInt(i + 28, packedNormal);
+			buffer.putInt(i + 28 - STRIDE, packedNormal);
+			buffer.putInt(i + 28 - STRIDE * 2, packedNormal);
+			buffer.putInt(i + 28 - STRIDE * 3, packedNormal);
 
-            int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, quad);
+			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, quad);
 
-            buffer.putInt(i + 24, tangent);
-            buffer.putInt(i + 24 - STRIDE, tangent);
-            buffer.putInt(i + 24 - STRIDE * 2, tangent);
-            buffer.putInt(i + 24 - STRIDE * 3, tangent);
-        }
+			buffer.putInt(i + 24, tangent);
+			buffer.putInt(i + 24 - STRIDE, tangent);
+			buffer.putInt(i + 24 - STRIDE * 2, tangent);
+			buffer.putInt(i + 24 - STRIDE * 3, tangent);
+		}
 
-        this.advance();
-    }
+		this.advance();
+	}
 
-    @Override
-    public void iris$setIdHolder(MaterialIdHolder holder) {
-        this.idHolder = holder;
-    }
+	@Override
+	public void iris$setIdHolder(MaterialIdHolder holder) {
+		this.idHolder = holder;
+	}
 }

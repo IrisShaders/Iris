@@ -13,14 +13,14 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  */
 @Mixin(GameRendererContext.class)
 public class MixinGameRendererContext {
-    @Redirect(method = "getModelViewProjectionMatrix",
-            at = @At(value = "INVOKE",
-                    target = "com/mojang/math/Matrix4f.copy ()Lcom/mojang/math/Matrix4f;"))
-    private static Matrix4f iris$useShadowProjectionMatrix(Matrix4f matrix) {
-        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            return ShadowRenderingState.getShadowOrthoMatrix();
-        } else {
-            return matrix.copy();
-        }
-    }
+	@Redirect(method = "getModelViewProjectionMatrix",
+			at = @At(value = "INVOKE",
+					target = "com/mojang/math/Matrix4f.copy ()Lcom/mojang/math/Matrix4f;"))
+	private static Matrix4f iris$useShadowProjectionMatrix(Matrix4f matrix) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			return ShadowRenderingState.getShadowOrthoMatrix();
+		} else {
+			return matrix.copy();
+		}
+	}
 }

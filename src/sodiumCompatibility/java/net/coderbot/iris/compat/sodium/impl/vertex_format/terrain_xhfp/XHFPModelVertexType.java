@@ -15,8 +15,8 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisGlVertexAttributeF
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements ChunkVertexType {
-    public static final int STRIDE = 36;
-    public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
+	public static final int STRIDE = 36;
+	public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
 			.addElement(ChunkMeshAttribute.POSITION, 0, GlVertexAttributeFormat.UNSIGNED_SHORT, 3, false)
 			.addElement(ChunkMeshAttribute.COLOR, 8, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true)
 			.addElement(ChunkMeshAttribute.TEXTURE, 12, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false)
@@ -27,36 +27,36 @@ public class XHFPModelVertexType implements ChunkVertexType {
 			.addElement(IrisChunkMeshAttributes.BLOCK_ID, 32, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false)
 			.build();
 
-    public static final float MODEL_SCALE = (32.0f / 65536.0f);
-    public static final float TEXTURE_SCALE = (1.0f / 32768.0f);
+	public static final float MODEL_SCALE = (32.0f / 65536.0f);
+	public static final float TEXTURE_SCALE = (1.0f / 32768.0f);
 
-    @Override
-    public ModelVertexSink createFallbackWriter(VertexConsumer consumer) {
-        throw new UnsupportedOperationException();
-    }
+	@Override
+	public ModelVertexSink createFallbackWriter(VertexConsumer consumer) {
+		throw new UnsupportedOperationException();
+	}
 
-    @Override
-    public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-        return direct ? new XHFPModelVertexBufferWriterUnsafe(buffer) : new XHFPModelVertexBufferWriterNio(buffer);
-    }
+	@Override
+	public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
+		return direct ? new XHFPModelVertexBufferWriterUnsafe(buffer) : new XHFPModelVertexBufferWriterNio(buffer);
+	}
 
-    @Override
-    public BlittableVertexType<ModelVertexSink> asBlittable() {
-        return this;
-    }
+	@Override
+	public BlittableVertexType<ModelVertexSink> asBlittable() {
+		return this;
+	}
 
-    @Override
-    public GlVertexFormat<ChunkMeshAttribute> getCustomVertexFormat() {
-        return VERTEX_FORMAT;
-    }
+	@Override
+	public GlVertexFormat<ChunkMeshAttribute> getCustomVertexFormat() {
+		return VERTEX_FORMAT;
+	}
 
-    @Override
-    public float getModelScale() {
-        return MODEL_SCALE;
-    }
+	@Override
+	public float getModelScale() {
+		return MODEL_SCALE;
+	}
 
-    @Override
-    public float getTextureScale() {
-        return TEXTURE_SCALE;
-    }
+	@Override
+	public float getTextureScale() {
+		return TEXTURE_SCALE;
+	}
 }
