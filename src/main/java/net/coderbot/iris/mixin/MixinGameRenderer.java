@@ -6,8 +6,6 @@ import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
-import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
@@ -35,7 +33,6 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
-import java.util.function.Function;
 
 @Mixin(GameRenderer.class)
 public class MixinGameRenderer {
@@ -74,7 +71,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SKY_BASIC, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_BASIC, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.BASIC, cir);
 		}
 	}
@@ -85,7 +82,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SKY_BASIC_COLOR, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_BASIC_COLOR, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.BASIC_COLOR, cir);
 		}
 	}
@@ -96,7 +93,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SKY_TEXTURED, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TEX, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXTURED, cir);
 		}
 	}
@@ -107,7 +104,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.SKY_TEXTURED_COLOR, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TEX_COLOR, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXTURED_COLOR, cir);
 		}
 	}
@@ -121,9 +118,9 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_BRIGHT : ShaderKey.HAND_WATER_BRIGHT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY_BRIGHT, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_SOLID_BRIGHT, cir);
 		}
 	}
@@ -136,7 +133,7 @@ public class MixinGameRenderer {
 			override(ShaderKey.WEATHER, cir);
 		} else if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_PARTICLES, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.PARTICLES, cir);
 		}
 	}
@@ -147,7 +144,7 @@ public class MixinGameRenderer {
 	private static void iris$overridePositionTexColorNormalShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_CLOUDS, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.CLOUDS, cir);
 		}
 	}
@@ -159,7 +156,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_SOLID, cir);
 		}
 	}
@@ -169,7 +166,7 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_CUTOUT_MIPPED, cir);
 		}
 	}
@@ -178,29 +175,24 @@ public class MixinGameRenderer {
 	private static void iris$overrideCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_CUTOUT, cir);
 		}
 	}
 
-	@Inject(method = "getRendertypeTranslucentShader", at = @At("HEAD"), cancellable = true)
+	@Inject(method = {
+		"getRendertypeTranslucentShader",
+		"getRendertypeTranslucentNoCrumblingShader",
+		"getRendertypeTranslucentMovingBlockShader",
+		"getRendertypeTripwireShader"
+	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else if (isRenderingWorld()) {
-			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
-		}
-	}
-
-	// getRenderTypeTranslucentMovingBlockShader, getRenderTypeTranslucentNoCrumblingShader
-
-	@Inject(method = "getRendertypeTripwireShader", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideTripwireShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
-			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else if (isRenderingWorld()) {
+		} else if (isBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
 	}
@@ -209,6 +201,7 @@ public class MixinGameRenderer {
 			"getRendertypeEntityCutoutShader",
 			"getRendertypeEntityCutoutNoCullShader",
 			"getRendertypeEntityCutoutNoCullZOffsetShader",
+			"getRendertypeEntityDecalShader",
 			"getRendertypeEntitySmoothCutoutShader",
 			"getRendertypeEntityTranslucentShader",
 			"getRendertypeEntityTranslucentCullShader",
@@ -221,9 +214,9 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_CUTOUT_DIFFUSE, cir);
 		}
 	}
@@ -237,9 +230,9 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT : ShaderKey.HAND_TRANSLUCENT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_CUTOUT, cir);
 		}
 	}
@@ -254,7 +247,7 @@ public class MixinGameRenderer {
 			"getRendertypeArmorEntityGlintShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideGlintShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isRenderingWorld()) {
+		if (shouldOverrideShaders()) {
 			override(ShaderKey.GLINT, cir);
 		}
 	}
@@ -269,9 +262,9 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_SOLID_DIFFUSE, cir);
 		}
 	}
@@ -286,9 +279,9 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT : ShaderKey.HAND_TRANSLUCENT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_SOLID, cir);
 		}
 	}
@@ -297,14 +290,17 @@ public class MixinGameRenderer {
 	private static void iris$overrideBeaconBeamShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_BEACON_BEAM, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.BEACON, cir);
 		}
 	}
 
-	// TODO: getRenderTypeEntityDecalShader (uses entity diffuse lighting)
-	// TODO: getRenderTypeEntityAlphaShader (weird alpha test behavior!!!)
-
+	@Inject(method = "getRendertypeEntityAlphaShader", at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityAlphaShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (!ShadowRenderer.ACTIVE) {
+			override(ShaderKey.ENTITIES_ALPHA, cir);
+		}
+	}
 	// NOTE: getRenderTypeOutlineShader should not be overriden.
 
 	@Inject(method = {
@@ -314,9 +310,9 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
-		} else if (GbufferPrograms.isRenderingBlockEntities()) {
+		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_EYES, cir);
 		}
 	}
@@ -341,7 +337,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideLeashShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_LEASH, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.LEASH, cir);
 		}
 	}
@@ -352,7 +348,7 @@ public class MixinGameRenderer {
 	private static void iris$overrideLightningShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_LIGHTNING, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.LIGHTNING, cir);
 		}
 	}
@@ -361,7 +357,7 @@ public class MixinGameRenderer {
 			"getRendertypeCrumblingShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideCrumblingShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isRenderingWorld() && !ShadowRenderer.ACTIVE) {
+		if (shouldOverrideShaders() && !ShadowRenderer.ACTIVE) {
 			override(ShaderKey.CRUMBLING, cir);
 		}
 	}
@@ -373,7 +369,9 @@ public class MixinGameRenderer {
 	private static void iris$overrideTextShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TEXT, cir);
-		} else if (isRenderingWorld()) {
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(ShaderKey.HAND_TEXT, cir);
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT, cir);
 		}
 	}
@@ -385,7 +383,9 @@ public class MixinGameRenderer {
 	private static void iris$overrideTextIntensityShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TEXT_INTENSITY, cir);
-		} else if (isRenderingWorld()) {
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(ShaderKey.HAND_TEXT_INTENSITY, cir);
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT_INTENSITY, cir);
 		}
 	}
@@ -399,9 +399,15 @@ public class MixinGameRenderer {
 	private static void iris$overrideLinesShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_LINES, cir);
-		} else if (isRenderingWorld()) {
+		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.LINES, cir);
 		}
+	}
+
+	private static boolean isBlockEntities() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		return pipeline != null && pipeline.getPhase() == WorldRenderingPhase.BLOCK_ENTITIES;
 	}
 
 	private static boolean isSky() {
@@ -434,11 +440,11 @@ public class MixinGameRenderer {
 		}
 	}
 
-	private static boolean isRenderingWorld() {
+	private static boolean shouldOverrideShaders() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).isRenderingWorld();
+			return ((CoreWorldRenderingPipeline) pipeline).shouldOverrideShaders();
 		} else {
 			return false;
 		}

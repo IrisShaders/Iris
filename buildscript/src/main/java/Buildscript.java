@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
@@ -25,6 +26,7 @@ import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
 import io.github.coolcrabs.brachyura.processing.ProcessingSink;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
+import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.project.java.BuildModule;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
@@ -39,9 +41,10 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Constants;
 
 public class Buildscript extends SimpleFabricProject {
-	static final boolean SODIUM = true;
+    static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String customSodiumName = "sodium-fabric-mc22w17a-0.4.1+rev.a0e71d8-dirty.jar";
+	static final String MC_VERSION = "1.19-pre2";
+	static final String customSodiumName = "sodium-fabric-mc1.19-pre2-0.4.1+rev.f4237a3.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
 		"main",
@@ -56,7 +59,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion("22w19a");
+		return Minecraft.getVersion(MC_VERSION);
 	}
 
 	@Override
@@ -108,6 +111,17 @@ public class Buildscript extends SimpleFabricProject {
 		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 	}
 
+	@Override
+	public String getMavenGroup() {
+		return "net.coderbot.iris_mc" + (MC_VERSION.replace('.', '_'));
+	}
+
+	@Override
+	public void getTasks(Consumer<Task> p) {
+		super.getTasks(p);
+		super.getPublishTasks(p);
+	}
+
 	private Path[] getDirs(String subdirectory) {
 		List<Path> paths = new ArrayList<>();
 
@@ -138,7 +152,8 @@ public class Buildscript extends SimpleFabricProject {
 		String build_id = System.getenv("GITHUB_RUN_NUMBER");
 
 		if (build_id != null) {
-			return baseVersion + "build." + build_id;
+			// We don't want any suffix if we're doing a Github Release.
+			return baseVersion;
 		}
 
 		String commitHash = "";

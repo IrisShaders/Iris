@@ -22,6 +22,8 @@ public class CapturedRenderingState {
 	private int currentRenderedEntity = -1;
 	private Runnable entityIdListener = null;
 
+	private float currentAlphaTest;
+
 	private CapturedRenderingState() {
 	}
 
@@ -99,6 +101,14 @@ public class CapturedRenderingState {
 
 	public int getCurrentRenderedEntity() {
 		return currentRenderedEntity;
+	}
+
+    public float getCurrentAlphaTest() {
+		return currentAlphaTest;
+    }
+
+	public void setCurrentAlphaTest(float alphaTest) {
+		this.currentAlphaTest = alphaTest;
 	}
 
 	public float getDarknessLightFactor() {

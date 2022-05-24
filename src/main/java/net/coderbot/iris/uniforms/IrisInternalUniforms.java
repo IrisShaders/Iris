@@ -1,6 +1,7 @@
 package net.coderbot.iris.uniforms;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.vendored.joml.Vector4f;
@@ -29,5 +30,7 @@ public class IrisInternalUniforms {
 			// ensure that the minimum value is 0.0
 			return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
 		}, notifier -> {});
+
+		uniforms.uniform1f("iris_currentAlphaTest", CapturedRenderingState.INSTANCE::getCurrentAlphaTest, notifier -> {});
 	}
 }
