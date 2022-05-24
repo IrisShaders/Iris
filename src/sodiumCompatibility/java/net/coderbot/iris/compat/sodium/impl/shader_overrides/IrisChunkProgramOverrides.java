@@ -115,6 +115,7 @@ public class IrisChunkProgramOverrides {
         GlShader geomShader = createGeometryShader(pass, pipeline);
         GlShader fragShader = createFragmentShader(pass, pipeline);
 		BlendModeOverride blendOverride = getBlendOverride(pass, pipeline);
+		float alpha = getAlpha(pass, pipeline);
 
         if (vertShader == null || fragShader == null) {
             if (vertShader != null) {
@@ -157,7 +158,7 @@ public class IrisChunkProgramOverrides {
 						ShaderBindingContextExt contextExt = (ShaderBindingContextExt) shader;
 
 						return new IrisChunkShaderInterface(handle, contextExt, pipeline,
-								pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, blendOverride);
+								pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, blendOverride, alpha);
 					});
         } finally {
             vertShader.delete();
@@ -168,7 +169,19 @@ public class IrisChunkProgramOverrides {
         }
     }
 
-    private SodiumTerrainPipeline getSodiumTerrainPipeline() {
+	private float getAlpha(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+		if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
+			return pipeline.getShadowAlpha();
+		} else if (pass == IrisTerrainPass.GBUFFER_SOLID || pass == IrisTerrainPass.GBUFFER_CUTOUT) {
+			return pipeline.getTerrainCutoutAlpha();
+		} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+			return pipeline.getTranslucentAlpha();
+		} else {
+			throw new IllegalArgumentException("Unknown pass type " + pass);
+		}
+	}
+
+	private SodiumTerrainPipeline getSodiumTerrainPipeline() {
 		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (worldRenderingPipeline != null) {
