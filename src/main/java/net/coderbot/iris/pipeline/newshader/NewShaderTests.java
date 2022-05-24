@@ -180,6 +180,7 @@ public class NewShaderTests {
 				"        { \"name\": \"FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"FogDensity\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"FogIsExp2\", \"type\": \"int\", \"count\": 1, \"values\": [ 0 ] },\n" +
+				"        { \"name\": \"AlphaTestValue\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
 				"        { \"name\": \"LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
 				"        { \"name\": \"FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
@@ -197,7 +198,7 @@ public class NewShaderTests {
 		}
 
 		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
-				writingToAfterTranslucent, blendModeOverride, parent);
+				writingToAfterTranslucent, blendModeOverride, alpha.getReference(), parent);
 	}
 
 	private static class IrisProgramResourceFactory implements ResourceProvider {
