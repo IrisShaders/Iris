@@ -68,13 +68,25 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
 		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
 		// TODO: can we pack this into one short?
-		buffer.putShort(i + 32, materialId);
-		buffer.putShort(i + 34, renderType);
+		buffer.putShort(i + 36, materialId);
+		buffer.putShort(i + 38, renderType);
 
 		if (vertexCount == 4) {
 			vertexCount = 0;
 
-			// TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
+			// FIXME
+			// The following logic is incorrect because OpenGL denormalizes shorts by dividing by 65535. The atlas is
+			// based on power-of-two values and so a normalization factor that is not a power of two causes the values
+			// used in the shader to be off by enough to cause visual errors. These are most noticeable on 1.18 with POM
+			// on block edges.
+			//
+			// The only reliable way that this can be fixed is to apply the same shader transformations to midTexCoord
+			// as Sodium does to the regular texture coordinates - dividing them by the correct power-of-two value inside
+			// of the shader instead of letting OpenGL value normalization do the division. However, this requires
+			// fragile patching that is not yet possible.
+			//
+			// As a temporary solution, the normalized shorts have been replaced with regular floats, but this takes up
+			// an extra 4 bytes per vertex.
 
 			// NB: Be careful with the math here! A previous bug was caused by midU going negative as a short, which
 			// was sign-extended into midTexCoord, causing midV to have garbage (likely NaN data). If you're touching
@@ -85,14 +97,22 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			//
 			// TODO: Does this introduce precision issues? Do we need to fall back to floats here? This might break
 			// with high resolution texture packs.
-			int midU = (int)(65535.0F * Math.min(uSum * 0.25f, 1.0f)) & 0xFFFF;
-			int midV = (int)(65535.0F * Math.min(vSum * 0.25f, 1.0f)) & 0xFFFF;
-			int midTexCoord = (midV << 16) | midU;
+//			int midU = (int)(65535.0F * Math.min(uSum * 0.25f, 1.0f)) & 0xFFFF;
+//			int midV = (int)(65535.0F * Math.min(vSum * 0.25f, 1.0f)) & 0xFFFF;
+//			int midTexCoord = (midV << 16) | midU;
 
-			buffer.putInt(i + 20, midTexCoord);
-			buffer.putInt(i + 20 - STRIDE, midTexCoord);
-			buffer.putInt(i + 20 - STRIDE * 2, midTexCoord);
-			buffer.putInt(i + 20 - STRIDE * 3, midTexCoord);
+			uSum *= 0.25f;
+			vSum *= 0.25f;
+
+			buffer.putFloat(i + 20, uSum);
+			buffer.putFloat(i + 20 - STRIDE, uSum);
+			buffer.putFloat(i + 20 - STRIDE * 2, uSum);
+			buffer.putFloat(i + 20 - STRIDE * 3, uSum);
+
+			buffer.putFloat(i + 24, vSum);
+			buffer.putFloat(i + 24 - STRIDE, vSum);
+			buffer.putFloat(i + 24 - STRIDE * 2, vSum);
+			buffer.putFloat(i + 24 - STRIDE * 3, vSum);
 
 			uSum = 0;
 			vSum = 0;
@@ -105,17 +125,17 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			NormalHelper.computeFaceNormal(normal, quad);
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
-			buffer.putInt(i + 28, packedNormal);
-			buffer.putInt(i + 28 - STRIDE, packedNormal);
-			buffer.putInt(i + 28 - STRIDE * 2, packedNormal);
-			buffer.putInt(i + 28 - STRIDE * 3, packedNormal);
+			buffer.putInt(i + 32, packedNormal);
+			buffer.putInt(i + 32 - STRIDE, packedNormal);
+			buffer.putInt(i + 32 - STRIDE * 2, packedNormal);
+			buffer.putInt(i + 32 - STRIDE * 3, packedNormal);
 
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, quad);
 
-			buffer.putInt(i + 24, tangent);
-			buffer.putInt(i + 24 - STRIDE, tangent);
-			buffer.putInt(i + 24 - STRIDE * 2, tangent);
-			buffer.putInt(i + 24 - STRIDE * 3, tangent);
+			buffer.putInt(i + 28, tangent);
+			buffer.putInt(i + 28 - STRIDE, tangent);
+			buffer.putInt(i + 28 - STRIDE * 2, tangent);
+			buffer.putInt(i + 28 - STRIDE * 3, tangent);
 		}
 
 		this.advance();
