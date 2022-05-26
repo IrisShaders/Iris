@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.Collection;
 import java.util.function.*;
 import java.util.stream.*;
 
@@ -15,6 +16,7 @@ import io.github.douira.glsl_transformer.core.target.*;
 import io.github.douira.glsl_transformer.print.filter.*;
 import io.github.douira.glsl_transformer.transform.*;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
+import io.github.douira.glsl_transformer.util.CompatUtil;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.shader.ShaderType;
 
@@ -74,8 +76,13 @@ public class TransformPatcher {
 		protected abstract String getMainContent();
 
 		@Override
-		protected String getDetectionResult() {
-			return "irisMain";
+		protected Collection<String> getDetectionResults() {
+			return CompatUtil.listOf("irisMain");
+		}
+
+		@Override
+		protected Collection<String> getInjectionExternalDeclarations() {
+			return CompatUtil.listOf("void main() { " + getMainContent() + "\nirisMain(); }");
 		}
 
 		@Override
@@ -86,12 +93,6 @@ public class TransformPatcher {
 		@Override
 		protected InjectionPoint getInjectionLocation() {
 			return InjectionPoint.BEFORE_EOF;
-		}
-
-		@Override
-		protected String getInjectionExternalDeclaration() {
-			// inserts the alpha test, it is not null because it shouldn't be
-			return "void main() { " + getMainContent() + "\nirisMain(); }";
 		}
 	}
 
