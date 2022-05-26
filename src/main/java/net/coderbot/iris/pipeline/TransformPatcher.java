@@ -20,6 +20,7 @@ import io.github.douira.glsl_transformer.util.CompatUtil;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
@@ -499,9 +500,14 @@ public class TransformPatcher {
 	 * hasGeometry, inputs)
 	 */
 	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
-		return inspectPatch(source,
-				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
-				() -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry, inputs)));
+		// return inspectPatch(source,
+		// "TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
+		// () -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type,
+		// hasGeometry, inputs)));
+
+		// routing through original patcher until changes to AttributeShaderTransformer
+		// can be caught up in TransformPatcher
+		return AttributeShaderTransformer.patch(source, type, hasGeometry, inputs);
 	}
 
 	/**
