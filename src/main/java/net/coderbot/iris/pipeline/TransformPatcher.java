@@ -18,6 +18,7 @@ import io.github.douira.glsl_transformer.transform.*;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
 import io.github.douira.glsl_transformer.util.CompatUtil;
 import net.coderbot.iris.IrisLogging;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**
@@ -65,10 +66,12 @@ public class TransformPatcher {
 
 	private static class AttributeParameters extends Parameters {
 		public final boolean hasGeometry;
+		public final InputAvailability inputs;
 
-		public AttributeParameters(Patch patch, ShaderType type, boolean hasGeometry) {
+		public AttributeParameters(Patch patch, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
 			super(patch, type);
 			this.hasGeometry = hasGeometry;
+			this.inputs = inputs;
 		}
 	}
 
@@ -492,13 +495,13 @@ public class TransformPatcher {
 	}
 
 	/**
-	 * AttributeShaderTransformer.patchAttributesInternal(source, type,
-	 * hasGeometry)
+	 * AttributeShaderTransformer.patch(source, type,
+	 * hasGeometry, inputs)
 	 */
-	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
 		return inspectPatch(source,
 				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
-				() -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry)));
+				() -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry, inputs)));
 	}
 
 	/**
