@@ -8,8 +8,8 @@ import me.jellysquid.mods.sodium.client.gl.shader.ShaderBindingPoint;
  * NB: Make sure this doesn't collide with anything in {@link me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints}
  */
 public class IrisChunkShaderBindingPoints {
-    public static final ShaderBindingPoint BLOCK_ID = new ShaderBindingPoint(5);
-    public static final ShaderBindingPoint MID_TEX_COORD = new ShaderBindingPoint(6);
-    public static final ShaderBindingPoint TANGENT = new ShaderBindingPoint(7);
-    public static final ShaderBindingPoint NORMAL = new ShaderBindingPoint(8);
+	public static final ShaderBindingPoint BLOCK_ID = new ShaderBindingPoint(5);
+	public static final ShaderBindingPoint MID_TEX_COORD = new ShaderBindingPoint(6);
+	public static final ShaderBindingPoint TANGENT = new ShaderBindingPoint(7);
+	public static final ShaderBindingPoint NORMAL = new ShaderBindingPoint(8);
 }

@@ -11,7 +11,8 @@
     "MixinVertexFormat",
     "block_rendering.MixinBufferBuilder_SeparateAo",
     "block_rendering.MixinChunkRebuildTask",
-    "block_rendering.MixinClientLevel"
+    "block_rendering.MixinClientLevel",
+    "immediate.MixinBufferSource"
   ],
   "injectors": {
     "defaultRequire": 1

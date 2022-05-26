@@ -11,17 +11,17 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ChunkRenderManager.class)
 public class MixinChunkRenderManager {
-    @Redirect(method = "renderLayer",
-            at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/client/render/chunk/ChunkRenderBackend.begin (" +
-                                "Lcom/mojang/blaze3d/vertex/PoseStack;" +
-                            ")V"))
-    private void iris$backendBeginExt(ChunkRenderBackend<?> backend, PoseStack poseStack,
+	@Redirect(method = "renderLayer",
+			at = @At(value = "INVOKE",
+					target = "me/jellysquid/mods/sodium/client/render/chunk/ChunkRenderBackend.begin (" +
+								"Lcom/mojang/blaze3d/vertex/PoseStack;" +
+							")V"))
+	private void iris$backendBeginExt(ChunkRenderBackend<?> backend, PoseStack poseStack,
 									  PoseStack poseStackArg, BlockRenderPass pass, double x, double y, double z) {
-        if (backend instanceof ChunkRenderBackendExt) {
-            ((ChunkRenderBackendExt) backend).iris$begin(poseStack, pass);
-        } else {
-            backend.begin(poseStack);
-        }
-    }
+		if (backend instanceof ChunkRenderBackendExt) {
+			((ChunkRenderBackendExt) backend).iris$begin(poseStack, pass);
+		} else {
+			backend.begin(poseStack);
+		}
+	}
 }

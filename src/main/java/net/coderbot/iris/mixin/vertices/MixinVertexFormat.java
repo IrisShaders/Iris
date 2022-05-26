@@ -2,23 +2,23 @@ package net.coderbot.iris.mixin.vertices;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.vertices.ImmediateState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
-import net.irisshaders.iris.api.v0.IrisApi;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Redirect all attempts to render with POSITION_COLOR_TEXTURE_LIGHT_NORMAL to render with the properly extended vertex
- * format.
+ * Ensures that the correct state for the extended vertex format is set up when needed.
  */
 @Mixin(VertexFormat.class)
 public class MixinVertexFormat {
 	@Inject(method = "setupBufferState", at = @At("HEAD"), cancellable = true)
 	private void iris$onSetupBufferState(long pointer, CallbackInfo ci) {
-		if (IrisApi.getInstance().isShaderPackInUse()) {
-			if ((Object) this == DefaultVertexFormat.BLOCK) {
+		if (BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
+			if ((Object) this == DefaultVertexFormat.BLOCK || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				IrisVertexFormats.TERRAIN.setupBufferState(pointer);
 
 				ci.cancel();
@@ -32,8 +32,8 @@ public class MixinVertexFormat {
 
 	@Inject(method = "clearBufferState", at = @At("HEAD"), cancellable = true)
 	private void iris$onClearBufferState(CallbackInfo ci) {
-		if (IrisApi.getInstance().isShaderPackInUse()) {
-			if ((Object) this == DefaultVertexFormat.BLOCK) {
+		if (BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
+			if ((Object) this == DefaultVertexFormat.BLOCK || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				IrisVertexFormats.TERRAIN.clearBufferState();
 
 				ci.cancel();

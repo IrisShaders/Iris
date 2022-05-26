@@ -22,30 +22,30 @@ import java.util.List;
  */
 @Mixin(SodiumOptionsGUI.class)
 public class MixinSodiumOptionsGUI extends Screen {
-    @Shadow(remap = false)
-    @Final
-    private List<OptionPage> pages;
+	@Shadow(remap = false)
+	@Final
+	private List<OptionPage> pages;
 
-    @Unique
-    private OptionPage shaderPacks;
+	@Unique
+	private OptionPage shaderPacks;
 
-    // make compiler happy
-    protected MixinSodiumOptionsGUI(Component title) {
-        super(title);
-    }
+	// make compiler happy
+	protected MixinSodiumOptionsGUI(Component title) {
+		super(title);
+	}
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void iris$onInit(Screen prevScreen, CallbackInfo ci) {
-        String shaderPacksTranslated = new TranslatableComponent("options.iris.shaderPackSelection").getString();
-        shaderPacks = new OptionPage(shaderPacksTranslated, ImmutableList.of());
-        pages.add(shaderPacks);
-    }
+	@Inject(method = "<init>", at = @At("RETURN"))
+	private void iris$onInit(Screen prevScreen, CallbackInfo ci) {
+		String shaderPacksTranslated = new TranslatableComponent("options.iris.shaderPackSelection").getString();
+		shaderPacks = new OptionPage(shaderPacksTranslated, ImmutableList.of());
+		pages.add(shaderPacks);
+	}
 
-    @Inject(method = "setPage", at = @At("HEAD"), remap = false, cancellable = true)
-    private void iris$onSetPage(OptionPage page, CallbackInfo ci) {
-        if (page == shaderPacks) {
-            minecraft.setScreen(new ShaderPackScreen(this));
-            ci.cancel();
-        }
-    }
+	@Inject(method = "setPage", at = @At("HEAD"), remap = false, cancellable = true)
+	private void iris$onSetPage(OptionPage page, CallbackInfo ci) {
+		if (page == shaderPacks) {
+			minecraft.setScreen(new ShaderPackScreen(this));
+			ci.cancel();
+		}
+	}
 }
