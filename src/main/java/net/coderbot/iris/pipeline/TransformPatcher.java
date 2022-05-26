@@ -410,6 +410,9 @@ public class TransformPatcher {
 					}
 				});
 
+				chainConcurrentDependent(
+						RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_FUNCTIONS, "attribute vec2 a_LightCoord;"));
+
 				chainConcurrentDependent(new SearchTerminals<Parameters>()
 						.addTarget(new ParsedReplaceTargetImpl<>("gl_MultiTexCoord1",
 								texCoordFallbackReplacement, GLSLParser::expression))
