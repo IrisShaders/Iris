@@ -76,6 +76,10 @@ public class TransformPatcher {
 		}
 	}
 
+	/**
+	 * Users of this transformation have to insert irisMain(); themselves because it
+	 * can appear at varying positions in the new string.
+	 */
 	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifier<R> {
 		protected abstract String getMainContent();
 
