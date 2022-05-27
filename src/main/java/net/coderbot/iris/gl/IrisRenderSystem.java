@@ -49,6 +49,11 @@ public class IrisRenderSystem {
 		GL30C.glUniformMatrix4fv(location, transpose, matrix);
 	}
 
+	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
+	}
+
 	public static void uniform1f(int location, float v0) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glUniform1f(location, v0);

@@ -41,12 +41,12 @@ public class ShadowRenderTargets {
 		targets = new int[formats.length];
 		GlStateManager._genTextures(targets);
 
-		depthTexture = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
-		noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
+		depthTexture = new DepthTexture(resolution, resolution, null, DepthBufferFormat.DEPTH);
 
 		this.framebuffer = new GlFramebuffer();
 
 		framebuffer.addDepthAttachment(depthTexture.getTextureId());
+
 
 		for (int i = 0; i < formats.length; i++) {
 			InternalTextureFormat format = formats[i];
@@ -54,7 +54,7 @@ public class ShadowRenderTargets {
 			RenderSystem.bindTexture(targets[i]);
 
 			GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, format.getGlFormat(), resolution, resolution, 0,
-					PixelFormat.RGBA.getGlFormat(), PixelType.UNSIGNED_BYTE.getGlFormat(), NULL_BUFFER);
+				PixelFormat.RGBA.getGlFormat(), PixelType.UNSIGNED_BYTE.getGlFormat(), NULL_BUFFER);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_BORDER);
@@ -65,6 +65,8 @@ public class ShadowRenderTargets {
 		}
 
 		framebuffer.drawBuffers(drawBuffers);
+
+		noTranslucents = new DepthTexture(resolution, resolution, this.framebuffer, DepthBufferFormat.DEPTH);
 
 		RenderSystem.bindTexture(0);
 	}
