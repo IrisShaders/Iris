@@ -80,27 +80,19 @@ public class TransformPatcher {
 	 * Users of this transformation have to insert irisMain(); themselves because it
 	 * can appear at varying positions in the new string.
 	 */
-	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifier<R> {
+	private static abstract class MainWrapper<R extends Parameters> extends WrapIdentifier<R> {
 		protected abstract String getMainContent();
 
-		@Override
-		protected Collection<String> getDetectionResults() {
-			return CompatUtil.listOf("irisMain");
+		{
+			detectionResult("irisMain");
+			wrapTarget("main");
+			injectionLocation(InjectionPoint.BEFORE_EOF);
+			injectionExternalDeclarations(CachePolicy.ON_JOB);
 		}
 
 		@Override
 		protected Collection<String> getInjectionExternalDeclarations() {
 			return CompatUtil.listOf("void main() { " + getMainContent() + " }");
-		}
-
-		@Override
-		protected String getWrapTarget() {
-			return "main";
-		}
-
-		@Override
-		protected InjectionPoint getInjectionLocation() {
-			return InjectionPoint.BEFORE_EOF;
 		}
 	}
 
@@ -180,7 +172,7 @@ public class TransformPatcher {
 			}
 		};
 
-		LifecycleUser<Parameters> wrapOverlay = new MainWrapperDynamic<Parameters>() {
+		LifecycleUser<Parameters> wrapOverlay = new MainWrapper<Parameters>() {
 			@Override
 			protected String getMainContent() {
 				return getJobParameters().type == ShaderType.VERTEX
