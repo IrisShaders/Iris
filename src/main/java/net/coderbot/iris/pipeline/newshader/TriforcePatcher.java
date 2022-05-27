@@ -10,13 +10,8 @@ import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransform
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
-public class TriforcePatcher extends Patcher {
-	@Override
-	protected String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
-		return AttributeShaderTransformer.patch(new StringTransformations(source), type, hasGeometry).toString();
-	}
-
-	void patchCommon(StringTransformations transformations, ShaderType type) {
+public class TriforcePatcher {
+	public static void patchCommon(StringTransformations transformations, ShaderType type) {
 		// TODO: Only do the NewLines patches if the source code isn't from gbuffers_lines
 
 		if (transformations.contains("moj_import")) {
@@ -113,8 +108,7 @@ public class TriforcePatcher extends Patcher {
 		//System.out.println(transformations.toString());
 	}
 
-	@Override
-	protected String patchVanillaInternal(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean hasGeometry) {
+	public static String patchVanilla(String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean hasGeometry) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type);
@@ -298,8 +292,7 @@ public class TriforcePatcher extends Patcher {
 		return transformations.toString();
 	}
 
-	@Override
-	protected String patchSodiumInternal(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
+	public static String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type);
@@ -396,8 +389,7 @@ public class TriforcePatcher extends Patcher {
 		return transformations.toString();
 	}
 
-	@Override
-	protected String patchCompositeInternal(String source, ShaderType type) {
+	public static String patchComposite(String source, ShaderType type) {
 		StringTransformations transformations = new StringTransformations(source);
 		patchCommon(transformations, type);
 
@@ -491,7 +483,7 @@ public class TriforcePatcher extends Patcher {
 		}
 	}
 
-	void fixVersion(Transformations transformations) {
+	private static void fixVersion(Transformations transformations) {
 		String prefix = transformations.getPrefix();
 		int split = prefix.indexOf("#version");
 		String beforeVersion = prefix.substring(0, split);
