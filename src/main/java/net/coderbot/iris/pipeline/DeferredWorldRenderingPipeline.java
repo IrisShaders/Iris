@@ -544,9 +544,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow) {
 		// TODO: Properly handle empty shaders
 		String geometry = source.getGeometrySource().orElse(null);
-		String vertex = AttributeShaderTransformer.patch(source.getVertexSource().orElseThrow(NullPointerException::new),
+		String vertex = TransformPatcher.patchAttributes(source.getVertexSource().orElseThrow(NullPointerException::new),
 				ShaderType.VERTEX, geometry != null, availability);
-		String fragment = AttributeShaderTransformer.patch(source.getFragmentSource().orElseThrow(NullPointerException::new),
+		String fragment = TransformPatcher.patchAttributes(source.getFragmentSource().orElseThrow(NullPointerException::new),
 				ShaderType.FRAGMENT, geometry != null, availability);
 
 		ProgramBuilder builder;
