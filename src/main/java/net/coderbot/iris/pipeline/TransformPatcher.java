@@ -16,7 +16,7 @@ import io.github.douira.glsl_transformer.core.*;
 import io.github.douira.glsl_transformer.core.target.*;
 import io.github.douira.glsl_transformer.print.filter.*;
 import io.github.douira.glsl_transformer.transform.*;
-import io.github.douira.glsl_transformer.transform.TransformationPhase.InjectionPoint;
+import io.github.douira.glsl_transformer.transform.InjectionPoint;
 import io.github.douira.glsl_transformer.tree.*;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
