@@ -28,6 +28,7 @@ public class CenterDepthSampler {
 	private final GlFramebuffer framebuffer;
 	private final int texture;
 	private final int altTexture;
+	private final int depthFormat;
 
 	public CenterDepthSampler(float halfLife) {
 		this.texture = GlStateManager._genTexture();
@@ -41,6 +42,8 @@ public class CenterDepthSampler {
 		RenderSystem.bindTexture(altTexture);
 		setupColorTexture(format);
 		RenderSystem.bindTexture(0);
+
+		this.depthFormat = format.getGlFormat();
 
 		this.framebuffer.addColorAttachment(0, texture);
 		ProgramBuilder builder;
@@ -83,7 +86,7 @@ public class CenterDepthSampler {
 
 		GlStateManager._bindTexture(altTexture);
 		// The API contract of DepthCopyStrategy claims it can only copy depth, however the 2 non-stencil methods used are entirely capable of copying color as of now.
-		DepthCopyStrategy.fastest(false).copy(this.framebuffer, texture, null, altTexture, 1, 1);
+		DepthCopyStrategy.fastest(false).copy(this.framebuffer, texture, null, altTexture, depthFormat,  1, 1);
 		GlStateManager._bindTexture(0);
 
 		//Reset viewport

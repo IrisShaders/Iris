@@ -5,6 +5,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
+import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -154,12 +155,12 @@ public class RenderTargets {
 
 	public void copyPreTranslucentDepth() {
 		copyStrategy.copy(depthSourceFb, getDepthTexture(), noTranslucentsDestFb, noTranslucents.getTextureId(),
-			getCurrentWidth(), getCurrentHeight());
+			GL30C.GL_DEPTH_COMPONENT, getCurrentWidth(), getCurrentHeight());
 	}
 
 	public void copyPreHandDepth() {
 		copyStrategy.copy(depthSourceFb, getDepthTexture(), noHandDestFb, noHand.getTextureId(),
-			getCurrentWidth(), getCurrentHeight());
+			GL30C.GL_DEPTH_COMPONENT, getCurrentWidth(), getCurrentHeight());
 	}
 
 	public boolean isFullClearRequired() {

@@ -1,15 +1,23 @@
 package net.coderbot.iris.gl.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
+import net.minecraft.Util;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.system.MemoryUtil;
 
+import java.util.Locale;
+
 public interface DepthCopyStrategy {
+	boolean needsMesaWorkaround = (GlUtil.getRenderer().toLowerCase(Locale.ROOT).contains("amd") || GlUtil.getRenderer().toLowerCase(Locale.ROOT).contains("radeon")) && Util.getPlatform().equals(Util.OS.LINUX);
+
 	// FB -> T
 	class Gl20CopyTexture implements DepthCopyStrategy {
 		private Gl20CopyTexture() {
@@ -22,10 +30,10 @@ public interface DepthCopyStrategy {
 		}
 
 		@Override
-		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
+		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int internalFormat, int width, int height) {
 			sourceFb.bindAsReadBuffer();
 
-			int previousTexture = GlStateManager.getActiveTextureName();
+			int previousTexture = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 			RenderSystem.bindTexture(destTexture);
 
 			GlStateManager._glCopyTexSubImage2D(
@@ -58,7 +66,7 @@ public interface DepthCopyStrategy {
 		}
 
 		@Override
-		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
+		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int internalFormat, int width, int height) {
 			sourceFb.bindAsReadBuffer();
 			destFb.bindAsDrawBuffer();
 
@@ -66,6 +74,26 @@ public interface DepthCopyStrategy {
 				0, 0, width, height,
 				GL30C.GL_DEPTH_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT,
 				GL30C.GL_NEAREST);
+		}
+	}
+
+	class Gl20FallbackCopyTexImage2D implements DepthCopyStrategy {
+		private Gl20FallbackCopyTexImage2D() {
+			// private
+		}
+
+		@Override
+		public boolean needsDestFramebuffer() {
+			return false;
+		}
+
+		@Override
+		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int internalFormat, int width, int height) {
+			sourceFb.bindAsReadBuffer();
+			RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
+			RenderSystem.bindTexture(destTexture);
+			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, internalFormat, 0, 0, width, height, 0);
+			RenderSystem.bindTexture(0);
 		}
 	}
 
@@ -82,7 +110,7 @@ public interface DepthCopyStrategy {
 		}
 
 		@Override
-		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
+		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int internalFormat, int width, int height) {
 			GL43C.glCopyImageSubData(
 				sourceTexture,
 				GL43C.GL_TEXTURE_2D,
@@ -104,6 +132,12 @@ public interface DepthCopyStrategy {
 	}
 
 	static DepthCopyStrategy fastest(boolean combinedStencilRequired) {
+		// TODO: Figure out the underlying issue (possible Mesa bug?) and fix
+		// This is a temporary workaround for other copy methods not working on Mesa
+		if (needsMesaWorkaround) {
+			return new Gl20FallbackCopyTexImage2D();
+		}
+
 		// Check whether glCopyImageSubData is available by checking the function directly...
 		// Gl.getCapabilities().OpenGL43 can be false even if OpenGL 4.3 functions are supported,
 		// because Minecraft requests an OpenGL 3.2 forward compatible function.
@@ -131,5 +165,5 @@ public interface DepthCopyStrategy {
 	 * @param destFb The destination framebuffer. If {@link #needsDestFramebuffer()} returns false, then this param
 	 *               will not be used, and it can be null.
 	 */
-	void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height);
+	void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int internalFormat, int width, int height);
 }
