@@ -1,7 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.*;
@@ -16,8 +16,9 @@ import io.github.douira.glsl_transformer.core.*;
 import io.github.douira.glsl_transformer.core.target.*;
 import io.github.douira.glsl_transformer.print.filter.*;
 import io.github.douira.glsl_transformer.transform.*;
-import io.github.douira.glsl_transformer.transform.InjectionPoint;
 import io.github.douira.glsl_transformer.tree.*;
+import io.github.douira.glsl_transformer.util.CompatUtil;
+import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
@@ -42,10 +43,9 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
  * replacements that account for whitespace like the one for gl_TextureMatrix
  */
 
-public class TransformPatcher extends Patcher {
-	private static final Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
-
-	private TransformationManager<Parameters> manager;
+public class TransformPatcher {
+	private static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
+	private static TransformationManager<Parameters> manager;
 
 	private static enum Patch {
 		ATTRIBUTES, VANILLA_REGULAR, VANILLA_WITH_ATTRIBUTE_TRANSFORM, SODIUM, COMPOSITE
@@ -143,31 +143,31 @@ public class TransformPatcher extends Patcher {
 	 * Users of this transformation have to insert irisMain(); themselves because it
 	 * can appear at varying positions in the new string.
 	 */
-	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifierExternalDeclaration<R> {
+	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifier<R> {
 		protected abstract String getMainContent();
 
 		@Override
-		protected String getInjectionContent() {
-			return "void main() { " + getMainContent() + "}";
+		protected Collection<String> getDetectionResults() {
+			return CompatUtil.listOf("irisMain");
+		}
+
+		@Override
+		protected Collection<String> getInjectionExternalDeclarations() {
+			return CompatUtil.listOf("void main() { " + getMainContent() + " }");
+		}
+
+		@Override
+		protected String getWrapTarget() {
+			return "main";
 		}
 
 		@Override
 		protected InjectionPoint getInjectionLocation() {
 			return InjectionPoint.BEFORE_EOF;
 		}
-
-		@Override
-		protected String getWrapResultDynamic() {
-			return "irisMain";
-		}
-
-		@Override
-		protected String getWrapTargetDynamic() {
-			return "main";
-		}
 	}
 
-	{
+	static {
 		/**
 		 * PREV TODO: Only do the NewLines patches if the source code isn't from
 		 * gbuffers_lines
@@ -185,19 +185,15 @@ public class TransformPatcher extends Patcher {
 		};
 
 		// setup the transformations and even loose phases if necessary
-		TransformationPhase<Parameters> detectReserved = new SearchTerminalsImpl<Parameters>(SearchTerminals.IDENTIFIER,
-				ImmutableSet.of(
-						new ThrowTargetImpl<Parameters>(
-								"moj_import", "Iris shader programs may not use moj_import directives."),
+		LifecycleUser<Parameters> detectReserved = new SearchTerminals<Parameters>()
+				.singleTarget(
 						new ThrowTargetImpl<Parameters>(
 								"iris_",
-								"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))) {
-			{
-				allowInexactMatches();
-			}
-		};
+								"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))
+				.requireFullMatch(false);
 
-		Transformation<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
+		// #region patchAttributes
+		LifecycleUser<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
 				addEndDependent(new WalkPhase<Parameters>() {
@@ -220,7 +216,7 @@ public class TransformPatcher extends Patcher {
 				});
 
 				if (getJobParameters().type == ShaderType.GEOMETRY) {
-					chainDependent(new SearchTerminalsImpl<Parameters>(
+					chainDependent(new SearchTerminals<Parameters>().singleTarget(
 							new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)));
 				}
 
@@ -230,17 +226,16 @@ public class TransformPatcher extends Patcher {
 						switch (getJobParameters().type) {
 							case VERTEX:
 								injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
-										"out vec4 entityColor;",
 										"uniform sampler2D iris_overlay;",
-										"in ivec2 iris_UV1;");
+										"varying vec4 entityColor;");
 								break;
 							case GEOMETRY:
 								injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
-										"in vec4 entityColor[];",
-										"out vec4 entityColorGS;");
+										"out vec4 entityColorGS;",
+										"in vec4 entityColor[];");
 								break;
 							case FRAGMENT:
-								injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec4 entityColor;");
+								injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
 								break;
 						}
 					}
@@ -248,29 +243,23 @@ public class TransformPatcher extends Patcher {
 			}
 		};
 
-		Transformation<Parameters> wrapOverlay = new MainWrapperDynamic<Parameters>() {
+		LifecycleUser<Parameters> wrapOverlay = new MainWrapperDynamic<Parameters>() {
 			@Override
 			protected String getMainContent() {
-				return (getJobParameters().type == ShaderType.VERTEX
-						? "	vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);\n" +
-								"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n"
-						: "	 entityColorGS = entityColor[0];\n")
-						+ "  irisMain();\n";
-			}
-
-			@Override
-			protected boolean isActiveDynamic() {
-				return true;
+				return getJobParameters().type == ShaderType.VERTEX
+						? "vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[2] * gl_MultiTexCoord2).xy);\n" +
+								"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\nirisMain();"
+						: "entityColorGS = entityColor[0];\nirisMain();";
 			}
 		};
 
-		TransformationPhase<Parameters> renameEntityColorFragment = new SearchTerminalsImpl<Parameters>(
-				new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS")) {
+		LifecycleUser<Parameters> renameEntityColorFragment = new SearchTerminals<Parameters>() {
 			@Override
-			protected boolean isActive() {
+			public boolean isActive() {
 				return ((AttributeParameters) getJobParameters()).hasGeometry;
 			}
-		};
+		}.singleTarget(new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS"));
+		// #endregion patchAttributes
 
 		TransformationPhase<Parameters> fixVersion = new RunPhase<Parameters>() {
 			@Override
@@ -1126,32 +1115,60 @@ public class TransformPatcher extends Patcher {
 		manager.setParseTokenFilter(parseTokenFilter);
 	}
 
-	@Override
-	protected String patchAttributesInternal(String source, ShaderType type, boolean hasGeometry) {
-		return manager.transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry));
+	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher) {
+		if (source == null) {
+			return null;
+		}
+
+		if (IrisLogging.ENABLE_SPAM) {
+			LOGGER.debug("INPUT: " + source + " END INPUT");
+		}
+
+		long time = System.currentTimeMillis();
+		String patched = patcher.get();
+
+		if (IrisLogging.ENABLE_SPAM) {
+			LOGGER.debug("INFO: " + patchInfo);
+			LOGGER.debug("TIME: patching took " + (System.currentTimeMillis() - time) + "ms");
+			LOGGER.debug("PATCHED: " + patched + " END PATCHED");
+		}
+		return patched;
 	}
 
-	@Override
-	protected String patchVanillaInternal(
-			String source, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
-			ShaderAttributeInputs inputs, boolean hasGeometry) {
-		return manager.transform(source,
+	private static String transform(String source, Parameters parameters) {
+		return manager.transform(source, parameters);
+	}
+
+	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+		return inspectPatch(source,
+				" TYPE: " + type + "HAS_GEOMETRY: " + hasGeometry,
+				() -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry)));
+	}
+
+	public static String patchVanilla(
+			String source, ShaderType type, AlphaTest alpha,
+			boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean hasGeometry) {
+		return inspectPatch(source,
+				" TYPE: " + type + "HAS_GEOMETRY: " + hasGeometry,
+				() -> transform(source,
 				new VanillaParameters(
 						inputs.hasOverlay() ? Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM : Patch.VANILLA_REGULAR,
 						type, alpha, hasChunkOffset, inputs, hasGeometry));
 	}
 
-	@Override
-	protected String patchSodiumInternal(
-			String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale) {
-		return manager.transform(source,
-				new SodiumParameters(Patch.SODIUM,
-						type, alpha, inputs, positionScale, positionOffset, textureScale));
+	public static String patchSodium(
+			String source, ShaderType type, AlphaTest alpha,
+			ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
+		return inspectPatch(source,
+				" TYPE: " + type,
+				() -> transform(source,
+						new SodiumParameters(Patch.SODIUM,
+								type, alpha, inputs, positionScale, positionOffset, textureScale)));
 	}
 
-	@Override
-	protected String patchCompositeInternal(String source, ShaderType type) {
-		return manager.transform(source, new Parameters(Patch.COMPOSITE, type));
+	public static String patchComposite(String source, ShaderType type) {
+		return inspectPatch(source,
+				" TYPE: " + type,
+				() -> transform(source, new Parameters(Patch.COMPOSITE, type)));
 	}
 }
