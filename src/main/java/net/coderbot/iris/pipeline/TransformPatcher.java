@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.pattern.*;
@@ -139,39 +139,33 @@ public class TransformPatcher {
 		COLOR, DATA, CUSTOM
 	}
 
+	private enum ModelViewMatrixType {
+		CHUNK_OFFSET, NEW_LINES, DEFAULT
+	}
+
 	/**
 	 * Users of this transformation have to insert irisMain(); themselves because it
 	 * can appear at varying positions in the new string.
 	 */
-	private static abstract class MainWrapperDynamic<R extends Parameters> extends WrapIdentifier<R> {
+	private static abstract class MainWrapper<R extends Parameters> extends WrapIdentifier<R> {
 		protected abstract String getMainContent();
 
-		@Override
-		protected Collection<String> getDetectionResults() {
-			return CompatUtil.listOf("irisMain");
+		{
+			detectionResult("irisMain");
+			wrapTarget("main");
+			injectionLocation(InjectionPoint.BEFORE_EOF);
+			injectionExternalDeclarations(CachePolicy.ON_JOB);
 		}
 
 		@Override
 		protected Collection<String> getInjectionExternalDeclarations() {
 			return CompatUtil.listOf("void main() { " + getMainContent() + " }");
 		}
-
-		@Override
-		protected String getWrapTarget() {
-			return "main";
-		}
-
-		@Override
-		protected InjectionPoint getInjectionLocation() {
-			return InjectionPoint.BEFORE_EOF;
-		}
 	}
 
 	static {
-		/**
-		 * PREV TODO: Only do the NewLines patches if the source code isn't from
-		 * gbuffers_lines
-		 */
+		// PREV TODO: Only do the NewLines patches if the source code isn't from
+		// gbuffers_lines
 
 		TokenFilter<Parameters> parseTokenFilter = new ChannelFilter<Parameters>(TokenChannel.PREPROCESSOR) {
 			@Override
@@ -186,12 +180,17 @@ public class TransformPatcher {
 
 		// setup the transformations and even loose phases if necessary
 		LifecycleUser<Parameters> detectReserved = new SearchTerminals<Parameters>()
-				.singleTarget(
+				.addTarget(
 						new ThrowTargetImpl<Parameters>(
 								"iris_",
 								"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))
+				.addTarget(
+						new ThrowTargetImpl<Parameters>(
+								"moj_import",
+								"Iris shader programs may not use moj_import directives."))
 				.requireFullMatch(false);
 
+		// TODO: update patchAttributes to current regex-based parser's behavior
 		// #region patchAttributes
 		LifecycleUser<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
 			@Override
@@ -243,7 +242,7 @@ public class TransformPatcher {
 			}
 		};
 
-		LifecycleUser<Parameters> wrapOverlay = new MainWrapperDynamic<Parameters>() {
+		LifecycleUser<Parameters> wrapOverlay = new MainWrapper<Parameters>() {
 			@Override
 			protected String getMainContent() {
 				return getJobParameters().type == ShaderType.VERTEX
@@ -258,10 +257,11 @@ public class TransformPatcher {
 			public boolean isActive() {
 				return ((AttributeParameters) getJobParameters()).hasGeometry;
 			}
-		}.singleTarget(new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS"));
+		}
+				.singleTarget(new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS"));
 		// #endregion patchAttributes
 
-		TransformationPhase<Parameters> fixVersion = new RunPhase<Parameters>() {
+		LifecycleUser<Parameters> fixVersion = new RunPhase<Parameters>() {
 			@Override
 			protected void run(TranslationUnitContext ctx) {
 				VersionStatementContext versionStatement = ctx.versionStatement();
@@ -295,15 +295,18 @@ public class TransformPatcher {
 			}
 		};
 
+		// #region patchCommon
 		/**
 		 * PREV NOTE:
 		 * This must be defined and valid in all shader passes, including composite
 		 * passes. A shader that relies on this behavior is SEUS v11 - it reads
 		 * gl_Fog.color and breaks if it is not properly defined.
 		 */
-		Transformation<Parameters> wrapFogSetup = WrapIdentifier.fromTerminal(
-				"gl_Fog", "iris_Fog",
-				RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+		LifecycleUser<Parameters> wrapFogSetup = new WrapIdentifier<Parameters>()
+				.wrapTarget("gl_Fog")
+				.detectionResult("iris_Fog")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclarations(CompatUtil.listOf(
 						"uniform float iris_FogDensity;",
 						"uniform float iris_FogStart;",
 						"uniform float iris_FogEnd;",
@@ -312,53 +315,59 @@ public class TransformPatcher {
 						"iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));"));
 
 		// PREV TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
-		Transformation<Parameters> wrapFogFragCoord = WrapIdentifier.fromTerminal(
-				"gl_FogFragCoord", "iris_FogFragCoord",
-				new RunPhase<Parameters>() {
-					@Override
-					protected void run(TranslationUnitContext ctx) {
-						// PREV TODO: This doesn't handle geometry shaders... How do we do that?
-						if (getJobParameters().type == ShaderType.VERTEX) {
-							injectExternalDeclaration(
-									InjectionPoint.BEFORE_DECLARATIONS, "out float iris_FogFragCoord;");
-						} else if (getJobParameters().type == ShaderType.FRAGMENT) {
-							injectExternalDeclaration(
-									InjectionPoint.BEFORE_DECLARATIONS, "in float iris_FogFragCoord;");
-						}
-					}
-				});
+		// PREV TODO: This doesn't handle geometry shaders... How do we do that?
+		// NOTE: expects VERTEX or FRAGMENT
+		LifecycleUser<Parameters> wrapFogFragCoord = new WrapIdentifier<Parameters>() {
+			@Override
+			protected Collection<String> getInjectionExternalDeclarations() {
+				if (getJobParameters().type == ShaderType.VERTEX) {
+					return CompatUtil.listOf("out float iris_FogFragCoord;");
+				} else if (getJobParameters().type == ShaderType.FRAGMENT) {
+					return CompatUtil.listOf("in float iris_FogFragCoord;");
+				}
+				throw new IllegalStateException("Unexpected shader type: " + getJobParameters().type);
+			}
+		}
+				.wrapTarget("gl_FogFragCoord")
+				.detectionResult("iris_FogFragCoord")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclarations(CachePolicy.ON_FIXED_PARAMETER_CHANGE);
 
 		/**
 		 * PREV TODO: This is incorrect and is just the bare minimum needed for SEUS v11
 		 * & Renewed to compile. It works because they don't actually use gl_FrontColor
 		 * even though they write to it.
 		 */
-		Transformation<Parameters> wrapFrontColor = WrapIdentifier.fromTerminal(
-				"gl_FrontColor", "iris_FrontColor",
-				RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_FrontColor;"));
+		LifecycleUser<Parameters> wrapFrontColor = new WrapIdentifier<Parameters>()
+				.wrapTarget("gl_FrontColor")
+				.detectionResult("iris_FrontColor")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclaration("vec4 iris_FrontColor;");
 
-		// TOOD: this is not implemented yet for now as it's quite involved
-		// fixes locations of outs in fragment shaders (to be called fixFragLayouts)
+		// TODO: the following procedure is not implemented yet for now as it's quite
+		// involved. It fixes locations of outs in fragment shaders
+		// (to be called fixFragLayouts)
 		// 1. find all the outs and determine their location
 		// 2. check if there is a single non-located out that could receive location
 		// 3. add location 0 to that declaration
 
-		TransformationPhase<Parameters> replaceStorageQualifierVertex = new SearchTerminalsImpl<Parameters>(
-				SearchTerminals.ANY_TYPE) {
+		LifecycleUser<Parameters> replaceStorageQualifierVertex = new Transformation<Parameters>() {
 			{
-				addReplacementTerminal("attribute", "in");
-				addReplacementTerminal("varying", "out");
-			}
-		};
-		TransformationPhase<Parameters> replaceStorageQualifierFragment = new SearchTerminalsImpl<Parameters>(
-				SearchTerminals.ANY_TYPE) {
-			{
-				addReplacementTerminal("varying", "in");
+				addEndDependent(new SearchTerminals<Parameters>()
+						.terminalTokenType(GLSLParser.ATTRIBUTE)
+						.singleTarget(new TerminalReplaceTargetImpl<Parameters>("attribute", "in")));
+				addEndDependent(new SearchTerminals<Parameters>()
+						.terminalTokenType(GLSLParser.VARYING)
+						.singleTarget(new TerminalReplaceTargetImpl<Parameters>("varying", "out")));
 			}
 		};
 
+		LifecycleUser<Parameters> replaceStorageQualifierFragment = new SearchTerminals<Parameters>()
+				.terminalTokenType(GLSLParser.VARYING)
+				.singleTarget(new TerminalReplaceTargetImpl<Parameters>("varying", "in"));
+
 		// PREV TODO: Add similar functions for all legacy texture sampling functions
-		TransformationPhase<Parameters> injectTextureFunctions = RunPhase.withInjectExternalDeclarations(
+		LifecycleUser<Parameters> injectTextureFunctions = RunPhase.withInjectExternalDeclarations(
 				InjectionPoint.BEFORE_DECLARATIONS,
 				"vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
 				"vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
@@ -372,18 +381,20 @@ public class TransformPatcher {
 				"vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }",
 				"vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }");
 
+		// #endregion patchCommon
+
 		/**
 		 * PREV NOTE:
 		 * GLSL 1.50 Specification, Section 8.7:
 		 * In all functions below, the bias parameter is optional for fragment shaders.
 		 * The bias parameter is not accepted in a vertex or geometry shader.
 		 */
-		TransformationPhase<Parameters> injectTextureFunctionsFragment = RunPhase.withInjectExternalDeclarations(
+		LifecycleUser<Parameters> injectTextureFunctionsFragment = RunPhase.withInjectExternalDeclarations(
 				InjectionPoint.BEFORE_DECLARATIONS,
 				"vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
 				"vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
 
-		Transformation<Parameters> wrapFragColorOutput = new Transformation<Parameters>() {
+		LifecycleUser<Parameters> wrapFragColorOutput = new Transformation<Parameters>() {
 			private FragColorOutput type;
 			private boolean usesFragColor;
 			private boolean usesFragData;
@@ -443,13 +454,13 @@ public class TransformPatcher {
 
 					// always run the before walk to update the possible variable
 					@Override
-					protected boolean isActiveBeforeWalk() {
+					public boolean isActiveBeforeWalk() {
 						return true;
 					}
 
 					// only run the walk and after walk if using custom is possible at all
 					@Override
-					protected boolean isActive() {
+					public boolean isActive() {
 						return usesCustomPossible;
 					}
 
@@ -475,18 +486,17 @@ public class TransformPatcher {
 					}
 				});
 
-				// detect use of gl_FragColor
-				addEndDependent(new SearchTerminalsImpl<Parameters>(
-						new HandlerTargetImpl<Parameters>("gl_FragColor") {
-							@Override
-							public void handleResult(TreeMember node, String match) {
-								usesFragColor = true;
-							}
-						}));
-
-				// detect use of gl_FragData
-				addEndDependent(new SearchTerminalsImpl<Parameters>(
-						new HandlerTargetImpl<Parameters>("gl_FragData") {
+				addEndDependent(new SearchTerminals<Parameters>()
+						// detect use of gl_FragColor
+						.addTarget(
+								new HandlerTargetImpl<Parameters>("gl_FragColor") {
+									@Override
+									public void handleResult(TreeMember node, String match) {
+										usesFragColor = true;
+									}
+								})
+						// detect use of gl_FragData
+						.addTarget(new HandlerTargetImpl<Parameters>("gl_FragData") {
 							@Override
 							public void handleResult(TreeMember node, String match) {
 								usesFragData = true;
@@ -502,9 +512,9 @@ public class TransformPatcher {
 
 				// if we are doing custom, check if any of the declared names are being used
 				// (and if they are being used multiple times)
-				prependDependency(new SearchTerminalsDynamic<Parameters>() {
+				prependDependency(new SearchTerminals<Parameters>() {
 					@Override
-					protected Collection<HandlerTarget<Parameters>> getTargetsDynamic() {
+					protected Collection<HandlerTarget<Parameters>> getTargets() {
 						return declaredCustomNames.stream()
 								.map(name -> new HandlerTargetImpl<Parameters>(name) {
 									@Override
@@ -527,39 +537,33 @@ public class TransformPatcher {
 					// only run the walk if there are any names to find but run the after walk for
 					// determining the final frag color type
 					@Override
-					protected boolean isActiveAtWalk() {
+					public boolean isActive() {
 						return usesCustomPossible;
 					}
-
-					@Override
-					protected boolean isActiveAfterWalk() {
-						return true;
-					}
-
-					@Override
-					protected void afterWalk(TranslationUnitContext ctx) {
-						// check if any declared custom names were actually used
-						usesCustom = usedCustomName != null;
-						usesCustomPossible = usesCustom;
-
-						// throw if it's being used together with one of the other two methods
-						// we know that only one of the two can be true at this point
-						if (usesCustom && (usesFragColor || usesFragData)) {
-							throw new SemanticException("Custom color outputs can't be used at the same time as "
-									+ (usesFragColor ? "gl_FragColor" : "gl_FragData") + "!");
-						}
-
-						// finally it's clear which one method is being used
-						type = usesFragColor
-								? FragColorOutput.COLOR
-								: usesFragData
-										? FragColorOutput.DATA
-										: FragColorOutput.CUSTOM;
-
-						fragColorWrapResult = type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData";
-						fragColorWrapTarget = type == FragColorOutput.COLOR ? "gl_FragColor" : "gl_FragData";
-					}
 				});
+
+				prependDependency(RunPhase.withRun(() -> {
+					// check if any declared custom names were actually used
+					usesCustom = usedCustomName != null;
+					usesCustomPossible = usesCustom;
+
+					// throw if it's being used together with one of the other two methods
+					// we know that only one of the two can be true at this point
+					if (usesCustom && (usesFragColor || usesFragData)) {
+						throw new SemanticException("Custom color outputs can't be used at the same time as "
+								+ (usesFragColor ? "gl_FragColor" : "gl_FragData") + "!");
+					}
+
+					// finally it's clear which one method is being used
+					type = usesFragColor
+							? FragColorOutput.COLOR
+							: usesFragData
+									? FragColorOutput.DATA
+									: FragColorOutput.CUSTOM;
+
+					fragColorWrapResult = type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData";
+					fragColorWrapTarget = type == FragColorOutput.COLOR ? "gl_FragColor" : "gl_FragData";
+				}));
 
 				/**
 				 * 2. wrap their use: create a new output like
@@ -567,33 +571,38 @@ public class TransformPatcher {
 				 * (throw if the replacement target is present already)
 				 * 3. redirect gl_Frag* to the newly created output (replace identifiers)
 				 */
-				chainConcurrentDependent(new WrapIdentifierExternalDeclaration<Parameters>() {
+				chainConcurrentDependent(new WrapIdentifier<Parameters>() {
 					@Override
-					protected String getInjectionContent() {
-						return "out vec4 " + (type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData[8]")
-								+ ";";
+					protected Collection<String> getDetectionResults() {
+						return CompatUtil.listOf(fragColorWrapResult);
 					}
 
 					@Override
-					protected String getWrapResultDynamic() {
-						return fragColorWrapResult;
+					protected Collection<String> getInjectionExternalDeclarations() {
+						return CompatUtil.listOf(
+								"out vec4 "
+										+ (type == FragColorOutput.COLOR ? "iris_FragColor" : "iris_FragData[8]")
+										+ ";");
 					}
 
 					@Override
-					protected String getWrapTargetDynamic() {
+					protected String getWrapTarget() {
 						return fragColorWrapTarget;
 					}
 
 					@Override
-					protected boolean isActiveDynamic() {
+					public boolean isActive() {
 						return type == FragColorOutput.COLOR || type == FragColorOutput.DATA;
 					}
-				});
+				}
+						.detectionResults(CachePolicy.ON_JOB)
+						.injectionExternalDeclarations(CachePolicy.ON_FIXED_PARAMETER_CHANGE)
+						.wrapTarget(CachePolicy.ON_FIXED_PARAMETER_CHANGE));
 
 				/**
 				 * 4. if alpha test is given, apply it with iris_FragColor/iris_FragData[0].
 				 **/
-				chainConcurrentDependent(new MainWrapperDynamic<Parameters>() {
+				chainConcurrentDependent(new MainWrapper<Parameters>() {
 					@Override
 					protected String getMainContent() {
 						return getJobParameters().getAlphaTest().toExpression(
@@ -601,7 +610,7 @@ public class TransformPatcher {
 					}
 
 					@Override
-					protected boolean isActiveDynamic() {
+					public boolean isActive() {
 						Patch patch = getJobParameters().patch;
 						return (patch == Patch.VANILLA_REGULAR || patch == Patch.SODIUM)
 								&& getJobParameters().getAlphaTest() != null;
@@ -610,19 +619,18 @@ public class TransformPatcher {
 			}
 		};
 
-		Transformation<Parameters> wrapProjMatrixVanilla = WrapIdentifier.<Parameters>withExternalDeclaration(
-				"gl_ProjectionMatrix", "iris_ProjMat", "iris_ProjMat",
-				InjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ProjMat;");
+		LifecycleUser<Parameters> wrapProjMatrixVanilla = new WrapIdentifier<Parameters>()
+				.wrapTarget("gl_ProjectionMatrix")
+				.detectionResult("iris_ProjMat")
+				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionExternalDeclaration("uniform mat4 iris_ProjMat;");
 
-		Transformation<Parameters> replaceExcessMultiTexCoord = new Transformation<Parameters>(
-				new SearchTerminalsImpl<Parameters>(
-						new TerminalReplaceTargetImpl<>("gl_MultiTexCoord", "vec4(0.0, 0.0, 0.0, 1.0)")) {
-					{
-						allowInexactMatches();
-					}
-				});
+		LifecycleUser<Parameters> replaceExcessMultiTexCoord = new SearchTerminals<Parameters>()
+				.singleTarget(
+						new TerminalReplaceTargetImpl<>("gl_MultiTexCoord", "vec4(0.0, 0.0, 0.0, 1.0)"))
+				.requireFullMatch(false);
 
-		Transformation<Parameters> wrapAttributeInputsVanillaVertex = new Transformation<Parameters>() {
+		LifecycleUser<Parameters> wrapAttributeInputsVanillaVertex = new Transformation<Parameters>() {
 			boolean hasTex;
 			boolean hasLight;
 			boolean hasNormalAndIsNotNewLines;
@@ -636,22 +644,15 @@ public class TransformPatcher {
 			}
 
 			{
-				addEndDependent(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV0")) {
-					@Override
-					protected boolean isActive() {
-						return hasTex;
-					}
-				});
-				addEndDependent(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_UV2")) {
-					@Override
-					protected boolean isActive() {
-						return hasLight;
-					}
-				});
+				addEndDependent(new SearchTerminals<Parameters>()
+						.singleTarget(new WrapThrowTargetImpl<Parameters>("iris_UV0"))
+						.activation(() -> hasTex));
+				addEndDependent(new SearchTerminals<Parameters>()
+						.singleTarget(new WrapThrowTargetImpl<Parameters>("iris_UV2"))
+						.activation(() -> hasLight));
 
-				prependDependency(new SearchTerminalsImpl<Parameters>() {
-					{
-						addTarget(new ParsedReplaceTarget<Parameters>("gl_MultiTexCoord0") {
+				prependDependency(new SearchTerminals<Parameters>()
+						.addTarget(new ParsedReplaceTarget<Parameters>("gl_MultiTexCoord0") {
 							@Override
 							protected String getNewContent(TreeMember node, String match) {
 								return hasTex ? "vec4(iris_UV0, 0.0, 1.0)" : "vec4(0.5, 0.5, 0.0, 1.0)";
@@ -662,8 +663,8 @@ public class TransformPatcher {
 									String match) {
 								return GLSLParser::expression;
 							}
-						});
-						addTarget(new ParsedReplaceTarget<Parameters>("gl_MultiTexCoord1") {
+						})
+						.addTarget(new ParsedReplaceTarget<Parameters>("gl_MultiTexCoord1") {
 							@Override
 							protected String getNewContent(TreeMember node, String match) {
 								return hasLight ? "vec4(iris_UV2, 0.0, 1.0)" : "vec4(240.0, 240.0, 0.0, 1.0)";
@@ -674,8 +675,8 @@ public class TransformPatcher {
 									String match) {
 								return GLSLParser::expression;
 							}
-						});
-						addTarget(new ParsedReplaceTarget<Parameters>("gl_Normal") {
+						})
+						.addTarget(new ParsedReplaceTarget<Parameters>("gl_Normal") {
 							@Override
 							protected String getNewContent(TreeMember node, String match) {
 								// the source is a little confusing
@@ -687,43 +688,26 @@ public class TransformPatcher {
 									String match) {
 								return GLSLParser::expression;
 							}
-						});
-					}
-				});
+						}));
 
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
 						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec2 iris_UV0;");
 					}
-
-					@Override
-					protected boolean isActive() {
-						return hasTex;
-					}
-				});
+				}.activation(() -> hasTex));
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
 						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in ivec2 iris_UV2;");
 					}
-
-					@Override
-					protected boolean isActive() {
-						return hasLight;
-					}
-				});
+				}.activation(() -> hasLight));
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
 						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
 					}
-
-					@Override
-					protected boolean isActive() {
-						return hasNormalAndIsNotNewLines;
-					}
-				});
+				}.activation(() -> hasNormalAndIsNotNewLines));
 
 				chainConcurrentDependent(replaceExcessMultiTexCoord);
 			}
@@ -741,20 +725,19 @@ public class TransformPatcher {
 			}
 
 			{
-				addEndDependent(
-						new SearchTerminalsImpl<Parameters>(
-								new WrapThrowTargetImpl<Parameters>("iris_ColorModulator")));
-				addEndDependent(new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_Color")) {
+				addEndDependent(new SearchTerminals<Parameters>().singleTarget(
+						new WrapThrowTargetImpl<Parameters>("iris_ColorModulator")));
+				addEndDependent(new SearchTerminals<Parameters>() {
 					@Override
-					protected boolean isActive() {
+					public boolean isActive() {
 						return hasColor;
 					}
-				});
+				}.singleTarget(new WrapThrowTargetImpl<Parameters>("iris_Color")));
 
 				prependDependency(new Transformation<Parameters>() {
 					{
 						addEndDependent(
-								new SearchTerminalsImpl<Parameters>(new ParsedReplaceTarget<Parameters>("gl_Color") {
+								new SearchTerminals<Parameters>().singleTarget(new ParsedReplaceTarget<Parameters>("gl_Color") {
 									@Override
 									protected String getNewContent(TreeMember node, String match) {
 										return hasColor ? "(iris_Color * iris_ColorModulator)" : "iris_ColorModulator";
@@ -785,11 +768,9 @@ public class TransformPatcher {
 			}
 
 			{
-				addEndDependent(
-						new SearchTerminalsImpl<Parameters>(new WrapThrowTargetImpl<Parameters>("iris_TextureMat")));
-				addEndDependent(
-						new SearchTerminalsImpl<Parameters>(
-								new WrapThrowTargetImpl<Parameters>("iris_LightmapTextureMatrix")));
+				addEndDependent(new SearchTerminals<Parameters>()
+						.addTarget(new WrapThrowTargetImpl<Parameters>("iris_TextureMat"))
+						.addTarget(new WrapThrowTargetImpl<Parameters>("iris_LightmapTextureMatrix")));
 
 				prependDependency(new WalkPhase<Parameters>() {
 					ParseTreePattern pattern;
@@ -828,7 +809,7 @@ public class TransformPatcher {
 					}
 
 					@Override
-					protected boolean isActive() {
+					public boolean isActive() {
 						return replacementHappened;
 					}
 				});
@@ -841,32 +822,27 @@ public class TransformPatcher {
 			String modelViewMatrixResult;
 			ModelViewMatrixType type;
 
-			enum ModelViewMatrixType {
-				CHUNK_OFFSET, NEW_LINES, DEFAULT
-			}
-
 			{
-				addEndDependent(new SearchTerminalsDynamic<Parameters>() {
-					// determine the model view matrix result and what the mode is
-					@Override
-					protected void beforeWalk(TranslationUnitContext ctx) {
-						VanillaParameters vanillaParameters = (VanillaParameters) getJobParameters();
-						if (vanillaParameters.hasChunkOffset) {
-							modelViewMatrixResult = "(iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))";
-							type = ModelViewMatrixType.CHUNK_OFFSET;
-						} else if (vanillaParameters.inputs.isNewLines()) {
-							modelViewMatrixResult = "(iris_VIEW_SCALE * iris_ModelViewMat)";
-							type = ModelViewMatrixType.NEW_LINES;
-						} else {
-							modelViewMatrixResult = "iris_ModelViewMat";
-							type = ModelViewMatrixType.DEFAULT;
-						}
+				// determine the model view matrix result and what the mode is
+				addEndDependent(RunPhase.withRun(() -> {
+					VanillaParameters vanillaParameters = (VanillaParameters) getJobParameters();
+					if (vanillaParameters.hasChunkOffset) {
+						modelViewMatrixResult = "(iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))";
+						type = ModelViewMatrixType.CHUNK_OFFSET;
+					} else if (vanillaParameters.inputs.isNewLines()) {
+						modelViewMatrixResult = "(iris_VIEW_SCALE * iris_ModelViewMat)";
+						type = ModelViewMatrixType.NEW_LINES;
+					} else {
+						modelViewMatrixResult = "iris_ModelViewMat";
+						type = ModelViewMatrixType.DEFAULT;
 					}
+				}));
 
-					// detect pre-existing injection results
+				// detect pre-existing injection results
+				chainDependent(new SearchTerminals<Parameters>() {
 					@Override
-					protected Collection<HandlerTarget<Parameters>> getTargetsDynamic() {
-						Collection<HandlerTarget<Parameters>> targets = new ArrayList<>();
+					protected Collection<HandlerTarget<Parameters>> getTargets() {
+						Collection<HandlerTarget<Parameters>> targets = new ArrayList<>(3);
 						targets.add(new WrapThrowTargetImpl<Parameters>("iris_ModelViewMat"));
 
 						if (type == ModelViewMatrixType.CHUNK_OFFSET) {
@@ -879,46 +855,49 @@ public class TransformPatcher {
 
 						return targets;
 					}
-				});
+				}.targets(CachePolicy.ON_JOB));
 
 				// do variable replacements
-				chainDependent(new SearchTerminalsImpl<>(ImmutableList.of(
-						new ParsedReplaceTarget<>("gl_ModelViewMatrix") {
-							@Override
-							protected String getNewContent(TreeMember node, String match) {
-								return modelViewMatrixResult;
-							}
+				chainDependent(new SearchTerminals<Parameters>()
+						.addTarget(
+								new ParsedReplaceTarget<Parameters>("gl_ModelViewMatrix") {
+									@Override
+									protected String getNewContent(TreeMember node, String match) {
+										return modelViewMatrixResult;
+									}
 
-							@Override
-							protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node,
-									String match) {
-								return GLSLParser::expression;
-							}
-						},
-						new ParsedReplaceTarget<>("gl_NormalMatrix") {
-							@Override
-							protected String getNewContent(TreeMember node, String match) {
-								return "mat3(transpose(inverse(" + modelViewMatrixResult + ")))";
-							}
+									@Override
+									protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node,
+											String match) {
+										return GLSLParser::expression;
+									}
+								})
+						.addTarget(
+								new ParsedReplaceTarget<Parameters>("gl_NormalMatrix") {
+									@Override
+									protected String getNewContent(TreeMember node, String match) {
+										return "mat3(transpose(inverse(" + modelViewMatrixResult + ")))";
+									}
 
-							@Override
-							protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node,
-									String match) {
-								return GLSLParser::expression;
-							}
-						},
-						new ParsedReplaceTarget<>("gl_ModelViewProjectionMatrix") {
-							@Override
-							protected String getNewContent(TreeMember node, String match) {
-								return "(gl_ProjectionMatrix * " + modelViewMatrixResult + ")";
-							}
+									@Override
+									protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node,
+											String match) {
+										return GLSLParser::expression;
+									}
+								})
+						.addTarget(
+								new ParsedReplaceTarget<Parameters>("gl_ModelViewProjectionMatrix") {
+									@Override
+									protected String getNewContent(TreeMember node, String match) {
+										return "(gl_ProjectionMatrix * " + modelViewMatrixResult + ")";
+									}
 
-							@Override
-							protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node,
-									String match) {
-								return GLSLParser::expression;
-							}
-						})));
+									@Override
+									protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node,
+											String match) {
+										return GLSLParser::expression;
+									}
+								}));
 
 				// do fixed and conditional injections
 				chainConcurrentDependent(new RunPhase<Parameters>() {
@@ -963,15 +942,16 @@ public class TransformPatcher {
 							: "vec4(iris_Position, 1.0)";
 				}));
 
-				chainDependent(new SearchTerminalsImpl<Parameters>(new ParsedReplaceTarget<Parameters>("gl_Vertex") {
-					protected String getNewContent(TreeMember node, String match) {
-						return glVertexResult;
-					}
+				chainDependent(new SearchTerminals<Parameters>()
+						.singleTarget(new ParsedReplaceTarget<Parameters>("gl_Vertex") {
+							protected String getNewContent(TreeMember node, String match) {
+								return glVertexResult;
+							}
 
-					protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
-						return GLSLParser::expression;
-					}
-				}));
+							protected Function<GLSLParser, ExtendedContext> getParseMethod(TreeMember node, String match) {
+								return GLSLParser::expression;
+							}
+						}));
 
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
@@ -981,12 +961,12 @@ public class TransformPatcher {
 					}
 
 					@Override
-					protected boolean isActive() {
+					public boolean isActive() {
 						return isNewLines;
 					}
 				});
 
-				chainConcurrentDependent(new MainWrapperDynamic<Parameters>() {
+				chainConcurrentDependent(new MainWrapper<Parameters>() {
 					{
 						chainDependency(RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
 								"uniform vec2 iris_ScreenSize;",
@@ -1031,7 +1011,7 @@ public class TransformPatcher {
 					}
 
 					@Override
-					protected boolean isActiveDynamic() {
+					public boolean isActive() {
 						return isNewLines;
 					}
 				});
@@ -1151,9 +1131,9 @@ public class TransformPatcher {
 		return inspectPatch(source,
 				" TYPE: " + type + "HAS_GEOMETRY: " + hasGeometry,
 				() -> transform(source,
-				new VanillaParameters(
-						inputs.hasOverlay() ? Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM : Patch.VANILLA_REGULAR,
-						type, alpha, hasChunkOffset, inputs, hasGeometry));
+						new VanillaParameters(
+								inputs.hasOverlay() ? Patch.VANILLA_WITH_ATTRIBUTE_TRANSFORM : Patch.VANILLA_REGULAR,
+								type, alpha, hasChunkOffset, inputs, hasGeometry)));
 	}
 
 	public static String patchSodium(
