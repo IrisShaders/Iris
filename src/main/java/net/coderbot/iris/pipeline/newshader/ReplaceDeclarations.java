@@ -1,21 +1,14 @@
 package net.coderbot.iris.pipeline.newshader;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
-import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
+import org.antlr.v4.runtime.tree.pattern.*;
 
 import io.github.douira.glsl_transformer.GLSLParser;
-import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
-import io.github.douira.glsl_transformer.GLSLParser.FunctionHeaderContext;
-import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
-import io.github.douira.glsl_transformer.GLSLParser.VariableIdentifierContext;
+import io.github.douira.glsl_transformer.GLSLParser.*;
 import io.github.douira.glsl_transformer.core.SemanticException;
-import io.github.douira.glsl_transformer.transform.JobParameters;
-import io.github.douira.glsl_transformer.transform.Transformation;
-import io.github.douira.glsl_transformer.transform.WalkPhase;
+import io.github.douira.glsl_transformer.transform.*;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
 
 //TODO: treat each found declaration with the same location=0 as the same declaration and replace all of them identically
@@ -112,7 +105,7 @@ public class ReplaceDeclarations<T extends JobParameters> extends Transformation
 
     chainDependent(new WalkPhase<T>() {
       @Override
-      protected boolean isActive() {
+      public boolean isActive() {
         return !declarations.isEmpty();
       }
 
