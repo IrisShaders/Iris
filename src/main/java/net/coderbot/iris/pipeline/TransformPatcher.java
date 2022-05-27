@@ -17,9 +17,11 @@ import io.github.douira.glsl_transformer.transform.*;
 import io.github.douira.glsl_transformer.tree.*;
 import io.github.douira.glsl_transformer.util.CompatUtil;
 import net.coderbot.iris.IrisLogging;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
@@ -77,12 +79,21 @@ public class TransformPatcher {
 		}
 	}
 
-	private static class AttributeParameters extends Parameters {
+	private static class OverlayParameters extends Parameters {
 		public final boolean hasGeometry;
 
-		public AttributeParameters(Patch patch, ShaderType type, boolean hasGeometry) {
+		public OverlayParameters(Patch patch, ShaderType type, boolean hasGeometry) {
 			super(patch, type);
 			this.hasGeometry = hasGeometry;
+		}
+	}
+
+	private static class AttributeParameters extends OverlayParameters {
+		public final InputAvailability inputAvailability;
+
+		public AttributeParameters(Patch patch, ShaderType type, boolean hasGeometry, InputAvailability inputAvailability) {
+			super(patch, type, hasGeometry);
+			this.inputAvailability = inputAvailability;
 		}
 	}
 
@@ -91,7 +102,7 @@ public class TransformPatcher {
 	 * can cast the job parameter object to AttributeParameters without issues even
 	 * if it's actually a VanillaParameters instance.
 	 */
-	private static class VanillaParameters extends AttributeParameters {
+	private static class VanillaParameters extends OverlayParameters {
 		public final AlphaTest alpha;
 		public final boolean hasChunkOffset;
 		public final ShaderAttributeInputs inputs;
@@ -1117,10 +1128,12 @@ public class TransformPatcher {
 		return manager.transform(source, parameters);
 	}
 
-	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry) {
+	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
 		return inspectPatch(source,
 				" TYPE: " + type + "HAS_GEOMETRY: " + hasGeometry,
-				() -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry)));
+				() -> AttributeShaderTransformer.patch(source, type, hasGeometry, inputs));
+		// () -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type,
+		// hasGeometry, inputs)));
 	}
 
 	public static String patchVanilla(
