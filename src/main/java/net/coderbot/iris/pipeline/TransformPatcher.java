@@ -491,29 +491,22 @@ public class TransformPatcher {
 		return manager.transform(source, parameters);
 	}
 
-	/**
-	 * AttributeShaderTransformer.patch(source, type,
-	 * hasGeometry, inputs)
-	 */
 	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
-		// return inspectPatch(source,
-		// "TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
+		return inspectPatch(source,
+				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
+				// routing through original patcher until changes to AttributeShaderTransformer
+				// can be caught up in TransformPatcher
+				() -> AttributeShaderTransformer.patch(source, type, hasGeometry, inputs));
 		// () -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type,
 		// hasGeometry, inputs)));
-
-		// routing through original patcher until changes to AttributeShaderTransformer
-		// can be caught up in TransformPatcher
-		return AttributeShaderTransformer.patch(source, type, hasGeometry, inputs);
 	}
 
-	/**
-	 * type == ShaderType.VERTEX ?
-	 * SodiumTerrainPipeline.transformVertexShader(source) :
-	 * SodiumTerrainPipeline.transformFragmentShader(source)
-	 */
 	public static String patchSodiumTerrain(String source, ShaderType type) {
 		return inspectPatch(source,
 				"TYPE: " + type,
 				() -> transform(source, new Parameters(Patch.SODIUM_TERRAIN, type)));
+		// () -> type == ShaderType.VERTEX
+		// ? SodiumTerrainPipeline.transformVertexShader(source)
+		// : SodiumTerrainPipeline.transformFragmentShader(source));
 	}
 }
