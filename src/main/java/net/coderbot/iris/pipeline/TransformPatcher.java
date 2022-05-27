@@ -86,7 +86,7 @@ public class TransformPatcher {
 
 		@Override
 		protected Collection<String> getInjectionExternalDeclarations() {
-			return CompatUtil.listOf("void main() { " + getMainContent() + "\nirisMain(); }");
+			return CompatUtil.listOf("void main() { " + getMainContent() + " }");
 		}
 
 		@Override
@@ -181,8 +181,8 @@ public class TransformPatcher {
 			protected String getMainContent() {
 				return getJobParameters().type == ShaderType.VERTEX
 						? "vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[2] * gl_MultiTexCoord2).xy);\n" +
-								"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);"
-						: "entityColorGS = entityColor[0];";
+								"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\nirisMain();"
+						: "entityColorGS = entityColor[0];\nirisMain();";
 			}
 		};
 
