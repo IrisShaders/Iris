@@ -4,6 +4,7 @@ import me.jellysquid.mods.sodium.client.gl.attribute.BufferVertexFormat;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkModelVertexFormats;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +17,6 @@ public class MixinRenderRegionArenas {
 					target = "me/jellysquid/mods/sodium/client/gl/attribute/BufferVertexFormat.getStride ()I",
 					remap = false))
 	private int iris$useExtendedStride(BufferVertexFormat format) {
-		return Iris.isPackActive() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP.getBufferVertexFormat().getStride() : ChunkModelVertexFormats.DEFAULT.getBufferVertexFormat().getStride();
+		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP.getBufferVertexFormat().getStride() : ChunkModelVertexFormats.DEFAULT.getBufferVertexFormat().getStride();
 	}
 }

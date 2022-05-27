@@ -7,6 +7,7 @@ import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.RegionChunkRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
 import org.apache.commons.lang3.ArrayUtils;
@@ -24,10 +25,10 @@ public class MixinRegionChunkRenderer {
 	@Final
 	@Mutable
 	private GlVertexAttributeBinding[] vertexAttributeBindings;
-	
+
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void iris$onInit(RenderDevice device, ChunkVertexType vertexType, CallbackInfo ci) {
-		if (!Iris.isPackActive()) {
+		if (!BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()) {
 			return;
 		}
 

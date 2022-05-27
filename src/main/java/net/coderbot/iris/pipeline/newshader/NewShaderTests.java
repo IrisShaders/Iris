@@ -26,7 +26,7 @@ public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isBeacon,
+										NewWorldRenderingPipeline parent, FogMode fogMode,
 										boolean isFullbright) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
@@ -122,23 +122,23 @@ public class NewShaderTests {
 			Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
 		}
 
-		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, uniforms -> {
+		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, alpha, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, fogMode);
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-		}, isFullbright, parent);
+		}, isFullbright, parent, inputs);
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
 										VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 										NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
-										boolean intensityTex, boolean isBeacon, boolean isFullbright) throws IOException {
+										boolean intensityTex, boolean isFullbright) throws IOException {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting, isBeacon);
-		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isBeacon);
+		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting);
+		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex);
 
 		String shaderJsonString = "{\n" +
 				"    \"blend\": {\n" +

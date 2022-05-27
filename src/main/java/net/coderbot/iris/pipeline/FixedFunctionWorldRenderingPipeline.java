@@ -2,7 +2,9 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.layer.GbufferProgram;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
+import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
+import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
@@ -16,6 +18,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(false);
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(1.0f);
+		BlockRenderingSettings.INSTANCE.setUseExtendedVertexFormat(false);
 	}
 
 	@Override
@@ -46,18 +49,43 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public void beginSodiumTerrainRendering() {
+
+	}
+
+	@Override
+	public void endSodiumTerrainRendering() {
+
+	}
+
+	@Override
+	public void setOverridePhase(WorldRenderingPhase phase) {
+
+	}
+
+	@Override
 	public void setPhase(WorldRenderingPhase phase) {
 
 	}
 
-	@Override
-	public void beginShadowRender() {
-		// stub: nothing to do here
+	//@Override
+	public void setInputs(InputAvailability availability) {
+
 	}
 
 	@Override
-	public void endShadowRender() {
-		// stub: nothing to do here
+	public void setSpecialCondition(SpecialCondition special) {
+
+	}
+
+	//@Override
+	public void syncProgram() {
+
+	}
+
+	@Override
+	public RenderTargetStateListener getRenderTargetStateListener() {
+		return RenderTargetStateListener.NOP;
 	}
 
 	@Override
@@ -67,16 +95,6 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 
 	@Override
 	public void beginTranslucents() {
-		// stub: nothing to do here
-	}
-
-	@Override
-	public void pushProgram(GbufferProgram program) {
-		// stub: nothing to do here
-	}
-
-	@Override
-	public void popProgram(GbufferProgram program) {
 		// stub: nothing to do here
 	}
 

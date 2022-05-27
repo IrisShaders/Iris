@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.coderbot.iris.mixin.optimized_stitching",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinStitcher"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -35,13 +35,20 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isDry", new SmoothedFloat(20, 10, () -> getRawPrecipitation() == 0 ? 1 : 0, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isRainy", new SmoothedFloat(20, 10, () -> getRawPrecipitation() == 1 ? 1 : 0, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isSnowy", new SmoothedFloat(20, 10, () -> getRawPrecipitation() == 2 ? 1 : 0, updateNotifier));
-		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isEyeInCave", CommonUniforms.isEyeInWater() == 0 ? eyeInCave : () -> 0);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isEyeInCave", () -> CommonUniforms.isEyeInWater() == 0 ? eyeInCave.getAsFloat() : 0);
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "velocity", () -> getVelocity(tracker));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "starter", getStarter(tracker, updateNotifier));
 		// The following uniforms are Project Reimagined specific.
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeSmooth", new SmoothedFloat(5, 5, SystemTimeUniforms.TIMER::getLastFrameTime, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "eyeBrightnessM", new SmoothedFloat(5, 5, HardcodedCustomUniforms::getEyeBrightnessM, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "rainFactor", rainStrengthS);
+
+		// The following uniforms are specific to Super Duper Vanilla Shaders.
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "day", HardcodedCustomUniforms::getDay);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "night", HardcodedCustomUniforms::getNight);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "dawnDusk", HardcodedCustomUniforms::getDawnDusk);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "shdFade", HardcodedCustomUniforms::getShdFade);
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "isPrecipitationRain", new SmoothedFloat(6, 6, () -> (getRawPrecipitation() == 1 && tracker.getCurrentCameraPosition().y < 96.0f) ? 1 : 0, updateNotifier));
 	}
 
 	private static float getEyeInCave() {
@@ -138,5 +145,26 @@ public class HardcodedCustomUniforms {
 
 	private static float frac(float value) {
 		return java.lang.Math.abs(value % 1);
+	}
+
+	private static float getAdjTime() {
+		return Math.abs(((((WorldTimeUniforms.getWorldDayTime()) / 1000.0f) + 6.0f) % 24.0f) - 12.0f);
+	}
+
+	private static float getDay() {
+		return Math.clamp(0.0f, 1.0f, 5.4f - getAdjTime());
+	}
+
+	private static float getNight() {
+		return Math.clamp(0.0f, 1.0f, getAdjTime() - 6.0f);
+	}
+
+	private static float getDawnDusk() {
+		return (1.0f - getDay()) - getNight();
+	}
+
+
+	private static float getShdFade() {
+		return (float) Math.clamp(0.0, 1.0, 1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.225) * 40.0);
 	}
 }

@@ -1,5 +1,7 @@
 package net.coderbot.batchedentityrendering.mixin;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.batchedentityrendering.impl.BufferBuilderExt;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
@@ -9,8 +11,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.VertexFormat;
+
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -36,19 +37,19 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
     private int totalUploadedBytes;
 
     @Override
-    public void setupBufferSlice(ByteBuffer buffer, BufferBuilder.DrawState parameters) {
+    public void setupBufferSlice(ByteBuffer buffer, BufferBuilder.DrawState drawState) {
         // add the buffer slice
         this.buffer = buffer;
 
         // add our singular parameter
         this.drawStates.clear();
-        this.drawStates.add(parameters);
+        this.drawStates.add(drawState);
 
         // should be zero, just making sure
         this.lastPoppedStateIndex = 0;
 
         // configure the build start (to avoid a warning message) and element offset (probably not important)
-		this.totalRenderedBytes = Mth.roundToward(parameters.bufferSize(), 4);
+		this.totalRenderedBytes = Mth.roundToward(drawState.bufferSize(), 4);
 		this.nextElementByte = this.totalRenderedBytes;
 
         // should be zero, just making sure

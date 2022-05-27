@@ -26,8 +26,17 @@ import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.*;
 import net.coderbot.iris.shaderpack.*;
-import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.uniforms.*;
+import net.coderbot.iris.samplers.IrisImages;
+import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
+import net.coderbot.iris.shaderpack.ProgramDirectives;
+import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shadows.ShadowRenderTargets;
+import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.IrisInternalUniforms;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 
@@ -44,7 +53,7 @@ public class CompositeRenderer {
 	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, RenderTargets renderTargets,
 							 IntSupplier noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
-							 Supplier<ShadowMapRenderer> shadowMapRendererSupplier,
+							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
 							 Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips) {
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
@@ -77,7 +86,7 @@ public class CompositeRenderer {
 			ImmutableSet<Integer> flipped = bufferFlipper.snapshot();
 			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
-			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowMapRendererSupplier);
+			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
@@ -202,7 +211,7 @@ public class CompositeRenderer {
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
-														   Supplier<ShadowMapRenderer> shadowMapRendererSupplier) {
+														   Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
 		String vertex = Patcher.INSTANCE.patchComposite(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
 
 		String geometry = null;
@@ -232,13 +241,12 @@ public class CompositeRenderer {
 		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowMapRendererSupplier.get());
-			IrisImages.addShadowColorImages(builder, shadowMapRendererSupplier.get());
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get());
+			IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get());
 		}
 
 		// TODO: Don't duplicate this with FinalPassRenderer
-		// TODO: Parse the value of const float centerDepthSmoothHalflife from the shaderpack's fragment shader configuration
-		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "centerDepthSmooth", this.centerDepthSampler::getCenterDepthSmoothSample);
+		builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
 
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");

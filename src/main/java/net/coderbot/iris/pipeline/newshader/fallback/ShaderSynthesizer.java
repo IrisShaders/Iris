@@ -1,12 +1,13 @@
 package net.coderbot.iris.pipeline.newshader.fallback;
 
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.pipeline.newshader.AlphaTests;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
 public class ShaderSynthesizer {
 	public static String vsh(boolean hasChunkOffset, ShaderAttributeInputs inputs, FogMode fogMode,
-							 boolean entityLighting, boolean beacomBeam) {
+							 boolean entityLighting) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
@@ -63,7 +64,7 @@ public class ShaderSynthesizer {
 		}
 
 		// Vertex Color
-		shader.append("out vec4 vertexColor;\n");
+		shader.append("out vec4 iris_vertexColor;\n");
 		shader.append("uniform vec4 ColorModulator;\n");
 
 		// Vertex Normal
@@ -88,19 +89,20 @@ public class ShaderSynthesizer {
 
 				shader.append("in vec3 Normal;\n");
 
-				main.append("    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color * ColorModulator);\n");
+				// minecraft_mix_light just passes through the original alpha value, so it's safe here.
+				main.append("    iris_vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color * ColorModulator);\n");
 			} else if (inputs.isNewLines()) {
 				shader.append("in vec3 Normal;\n");
-				main.append("    vertexColor = Color * ColorModulator;\n");
+				main.append("    iris_vertexColor = Color * ColorModulator;\n");
 			} else {
-				main.append("    vertexColor = Color * ColorModulator;\n");
+				main.append("    iris_vertexColor = Color * ColorModulator;\n");
 			}
 		} else if (inputs.hasColor()) {
 			shader.append("in vec4 Color;\n");
 
-			main.append("    vertexColor = Color * ColorModulator;\n");
+			main.append("    iris_vertexColor = Color * ColorModulator;\n");
 		} else {
-			main.append("    vertexColor = ColorModulator;\n");
+			main.append("    iris_vertexColor = ColorModulator;\n");
 		}
 
 		// Overlay Color
@@ -121,7 +123,7 @@ public class ShaderSynthesizer {
 		}
 
 		// Fog
-		if (fogMode == FogMode.ENABLED && !beacomBeam) {
+		if (fogMode == FogMode.PER_VERTEX) {
 			shader.append("out float vertexDistance;\n");
 
 			main.append("    vertexDistance = length((ModelViewMat * vec4(");
@@ -147,15 +149,15 @@ public class ShaderSynthesizer {
 		return shader.toString();
 	}
 
-	public static String fsh(ShaderAttributeInputs inputs, FogMode fogMode, AlphaTest alphaTest, boolean intensityTex,
-							 boolean beacomBeam) {
+	public static String fsh(ShaderAttributeInputs inputs, FogMode fogMode, AlphaTest alphaTest, boolean intensityTex) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
 		shader.append("#version 150 core\n");
 
 		shader.append("out vec4 fragColor;\n");
-		shader.append("in vec4 vertexColor;\n");
+		shader.append("uniform float iris_currentAlphaTest;\n");
+		shader.append("in vec4 iris_vertexColor;\n");
 
 		if (inputs.hasTex()) {
 			shader.append("uniform sampler2D Sampler0;\n");
@@ -167,9 +169,17 @@ public class ShaderSynthesizer {
 				main.append(".rrrr");
 			}
 
-			main.append(" * vertexColor;\n");
+			if (alphaTest == AlphaTests.VERTEX_ALPHA) {
+				main.append(" * vec4(iris_vertexColor.rgb, 1);\n");
+			} else {
+				main.append(" * iris_vertexColor;\n");
+			}
 		} else {
-			main.append("    vec4 color = vertexColor;\n");
+			if (alphaTest == AlphaTests.VERTEX_ALPHA) {
+				main.append("vec4 color = vec4(iris_vertexColor.rgb, 1);\n");
+			} else {
+				main.append("vec4 color = iris_vertexColor;\n");
+			}
 		}
 
 		if (inputs.hasOverlay()) {
@@ -185,16 +195,16 @@ public class ShaderSynthesizer {
 			main.append("    color *= texture(Sampler2, lightCoord);\n");
 		}
 
-		if (fogMode == FogMode.ENABLED) {
+		if (fogMode == FogMode.PER_VERTEX || fogMode == FogMode.PER_FRAGMENT) {
 			shader.append("uniform vec4 FogColor;\n");
 			shader.append("uniform float FogStart;\n");
 			shader.append("uniform float FogEnd;\n");
 
-			if (!beacomBeam) {
+			if (fogMode == FogMode.PER_VERTEX) {
 				// Use vertex distances, close enough
 				shader.append("in float vertexDistance;\n");
 				main.append("float fragmentDistance = vertexDistance;\n");
-			} else {
+			} else /*if (fogMode == FogMode.PER_FRAGMENT)*/ {
 				// Use fragment distances since beam vertices are very far apart
 				shader.append("uniform mat4 ProjMat;\n");
 				main.append("float fragmentDistance = -ProjMat[3].z / ((gl_FragCoord.z) * -2.0 + 1.0 - ProjMat[2].z);\n");
