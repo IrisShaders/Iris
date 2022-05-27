@@ -4,8 +4,6 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
-
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.pattern.*;
 import org.apache.logging.log4j.*;
@@ -190,6 +188,40 @@ public class TransformPatcher {
 								"Iris shader programs may not use moj_import directives."))
 				.requireFullMatch(false);
 
+		LifecycleUser<Parameters> fixVersion = new RunPhase<Parameters>() {
+			@Override
+			protected void run(TranslationUnitContext ctx) {
+				VersionStatementContext versionStatement = ctx.versionStatement();
+				if (versionStatement == null) {
+					throw new IllegalStateException("Missing the version statement!");
+				}
+
+				String profile = Optional.ofNullable(versionStatement.NR_IDENTIFIER())
+						.map(terminal -> terminal.getText())
+						.orElse("");
+				int version = Integer.parseInt(versionStatement.NR_INTCONSTANT().getText());
+
+				if (profile.equals("core")) {
+					throw new IllegalStateException(
+							"Transforming a shader that is already built against the core profile???");
+				}
+
+				if (version >= 200) {
+					if (!profile.equals("compatibility")) {
+						throw new IllegalStateException(
+								"Expected \"compatibility\" after the GLSL version: #version " + version + " "
+										+ profile);
+					}
+				} else {
+					version = 150;
+				}
+				profile = "core";
+
+				replaceNode(versionStatement, "#version " + version + " " + profile + "\n",
+						GLSLParser::versionStatement);
+			}
+		};
+
 		// TODO: update patchAttributes to current regex-based parser's behavior
 		// #region patchAttributes
 		LifecycleUser<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
@@ -260,40 +292,6 @@ public class TransformPatcher {
 		}
 				.singleTarget(new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS"));
 		// #endregion patchAttributes
-
-		LifecycleUser<Parameters> fixVersion = new RunPhase<Parameters>() {
-			@Override
-			protected void run(TranslationUnitContext ctx) {
-				VersionStatementContext versionStatement = ctx.versionStatement();
-				if (versionStatement == null) {
-					throw new IllegalStateException("Missing the version statement!");
-				}
-
-				String profile = Optional.ofNullable(versionStatement.NR_IDENTIFIER())
-						.map(terminal -> terminal.getText())
-						.orElse("");
-				int version = Integer.parseInt(versionStatement.NR_INTCONSTANT().getText());
-
-				if (profile.equals("core")) {
-					throw new IllegalStateException(
-							"Transforming a shader that is already built against the core profile???");
-				}
-
-				if (version >= 200) {
-					if (!profile.equals("compatibility")) {
-						throw new IllegalStateException(
-								"Expected \"compatibility\" after the GLSL version: #version " + version + " "
-										+ profile);
-					}
-				} else {
-					version = 150;
-				}
-				profile = "core";
-
-				replaceNode(versionStatement, "#version " + version + " " + profile + "\n",
-						GLSLParser::versionStatement);
-			}
-		};
 
 		// #region patchCommon
 		/**
