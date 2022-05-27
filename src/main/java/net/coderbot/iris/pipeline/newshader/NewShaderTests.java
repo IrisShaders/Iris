@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import net.coderbot.iris.gl.blending.*;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.Patcher;
+import net.coderbot.iris.pipeline.TransformPatcher;
 import net.coderbot.iris.pipeline.newshader.fallback.*;
 import net.coderbot.iris.shaderpack.*;
 import net.coderbot.iris.uniforms.*;
@@ -19,8 +19,7 @@ import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceProvider;
+import net.minecraft.server.packs.resources.*;
 
 public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
@@ -36,11 +35,11 @@ public class NewShaderTests {
 		boolean hasGeometry = false;
 		if (source.getGeometrySource().isPresent()) {
 			hasGeometry = true;
-			geometry = Patcher.INSTANCE.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs, true);
+			geometry = TransformPatcher.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs, true);
 		}
 
-		String vertex = Patcher.INSTANCE.patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs, hasGeometry);
-		String fragment = Patcher.INSTANCE.patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs, hasGeometry);
+		String vertex = TransformPatcher.patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs, hasGeometry);
+		String fragment = TransformPatcher.patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs, hasGeometry);
 
 		StringBuilder shaderJson = new StringBuilder("{\n" +
 				"    \"blend\": {\n" +
