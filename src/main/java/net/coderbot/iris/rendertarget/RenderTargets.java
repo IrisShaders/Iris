@@ -137,11 +137,7 @@ public class RenderTargets {
 					continue;
 				}
 
-				if (currentDepthFormat.isCombinedStencil()) {
-					framebuffer.addDepthStencilAttachment(newDepthTextureId);
-				} else {
-					framebuffer.addDepthAttachment(newDepthTextureId);
-				}
+				framebuffer.addDepthAttachment(newDepthTextureId);
 			}
 		}
 
