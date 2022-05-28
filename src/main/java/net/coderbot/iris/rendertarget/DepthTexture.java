@@ -6,6 +6,7 @@ import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL20C;
@@ -31,8 +32,9 @@ public class DepthTexture extends GlResource {
 			copyTexture.bindAsReadBuffer();
 			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, format.getGlInternalFormat(), 0, 0, width, height, 0);
 		} else {
-			GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, format.getGlInternalFormat(), width, height, 0,
-				format.getGlType(), format.getGlFormat(), null);
+			// NB: This isn't correct, but it's much better than garbage data being written to shadowtex0.
+			Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, format.getGlInternalFormat(), 0, 0, width, height, 0);
 		}
 
 		GlStateManager._bindTexture(0);
