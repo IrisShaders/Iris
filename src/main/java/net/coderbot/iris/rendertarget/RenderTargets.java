@@ -111,6 +111,7 @@ public class RenderTargets {
 		boolean depthFormatChanged = newDepthFormat != currentDepthFormat;
 
 		if (depthFormatChanged) {
+			currentDepthFormat = newDepthFormat;
 			// Might need a new copy strategy
 			copyStrategy = DepthCopyStrategy.fastest(currentDepthFormat.isCombinedStencil());
 		}
@@ -136,7 +137,11 @@ public class RenderTargets {
 					continue;
 				}
 
-				framebuffer.addDepthAttachment(newDepthTextureId);
+				if (currentDepthFormat.isCombinedStencil()) {
+					framebuffer.addDepthStencilAttachment(newDepthTextureId);
+				} else {
+					framebuffer.addDepthAttachment(newDepthTextureId);
+				}
 			}
 		}
 
