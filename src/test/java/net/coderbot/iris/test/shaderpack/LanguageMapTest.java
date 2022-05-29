@@ -15,7 +15,7 @@ public class LanguageMapTest {
 
 		// ensure that we can actually load the shader pack
 		try {
-			shaderPack = new ShaderPack(IrisTests.getTestShaderPackPath("language_maps"));
+			shaderPack = new ShaderPack(IrisTests.getTestShaderPackPath("language_maps"), IrisTests.TEST_ENVIRONMENT_DEFINES);
 		} catch (Exception e) {
 			Assertions.fail("Couldn't load test shader pack language_maps", e);
 			return;

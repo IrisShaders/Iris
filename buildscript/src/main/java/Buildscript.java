@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -27,12 +26,11 @@ import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
 import io.github.coolcrabs.brachyura.processing.ProcessingSink;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
+import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.project.java.BuildModule;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
 import io.github.coolcrabs.brachyura.util.Util;
-import net.fabricmc.accesswidener.AccessWidenerReader;
-import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -45,6 +43,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
     static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = false;
+	static final String MC_VERSION = "1.16.5";
 	static final String customSodiumName = "";
 
 	private static final String[] SOURCE_SETS = new String[] {
@@ -60,7 +59,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion("1.16.5");
+		return Minecraft.getVersion(MC_VERSION);
 	}
 
 	@Override
@@ -83,17 +82,6 @@ public class Buildscript extends SimpleFabricProject {
 		return new IrisFabricModule(context.get());
 	}
 
-	@Override
-    public Consumer<AccessWidenerVisitor> getAw() {
-        return v -> {
-            try {
-                new AccessWidenerReader(v).read(Files.newBufferedReader(getResourcesDir().resolve("iris.accesswidener")), Namespaces.NAMED);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-    }
-
     @Override
     public void getModDependencies(ModDependencyCollector d) {
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
@@ -101,7 +89,6 @@ public class Buildscript extends SimpleFabricProject {
 		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.8+3cc0f0907d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.5+3cc0f0907d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.0+3cc0f0907d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-command-api-v1", "1.1.3+3cc0f0907d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 
 		if (SODIUM) {
 			if (CUSTOM_SODIUM) {
@@ -111,6 +98,17 @@ public class Buildscript extends SimpleFabricProject {
 			}
 		}
     }
+
+	@Override
+	public String getMavenGroup() {
+		return "net.coderbot.iris_mc" + (MC_VERSION.replace('.', '_'));
+	}
+
+	@Override
+	public void getTasks(Consumer<Task> p) {
+		super.getTasks(p);
+		super.getPublishTasks(p);
+	}
 
 	private Path[] getDirs(String subdirectory) {
 		List<Path> paths = new ArrayList<>();
@@ -142,7 +140,8 @@ public class Buildscript extends SimpleFabricProject {
 		String build_id = System.getenv("GITHUB_RUN_NUMBER");
 
 		if (build_id != null) {
-			return baseVersion + "build." + build_id;
+			// We don't want any suffix if we're doing a Github Release.
+			return baseVersion;
 		}
 
 		String commitHash = "";

@@ -53,14 +53,14 @@ public class IdMap {
 	 */
 	private Map<NamespacedId, BlockRenderType> blockRenderTypeMap;
 
-	IdMap(Path shaderPath, ShaderPackOptions shaderPackOptions) {
-		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions)
+	IdMap(Path shaderPath, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
+		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions, environmentDefines)
 			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
-		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions)
+		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions, environmentDefines)
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
-		loadProperties(shaderPath, "block.properties", shaderPackOptions).ifPresent(blockProperties -> {
+		loadProperties(shaderPath, "block.properties", shaderPackOptions, environmentDefines).ifPresent(blockProperties -> {
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});
@@ -81,13 +81,14 @@ public class IdMap {
 	/**
 	 * Loads properties from a properties file in a shaderpack path
 	 */
-	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions) {
+	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions,
+													   Iterable<StringPair> environmentDefines) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions);
+		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines);
 
 		StringReader propertiesReader = new StringReader(processed);
 

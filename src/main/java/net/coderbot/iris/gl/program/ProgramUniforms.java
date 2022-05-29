@@ -138,6 +138,8 @@ public class ProgramUniforms {
 
 		@Override
 		public Builder addUniform(UniformUpdateFrequency updateFrequency, Uniform uniform) {
+			Objects.requireNonNull(uniform);
+
 			switch (updateFrequency) {
 				case ONCE:
 					once.put(locations.get(uniform.getLocation()), uniform);
@@ -183,6 +185,11 @@ public class ProgramUniforms {
 
 			for (int index = 0; index < activeUniforms; index++) {
 				String name = IrisRenderSystem.getActiveUniform(program, index, 128, sizeBuf, typeBuf);
+
+				if (name.isEmpty()) {
+					// No further information available.
+					continue;
+				}
 
 				int size = sizeBuf.get(0);
 				int type = typeBuf.get(0);
@@ -256,6 +263,9 @@ public class ProgramUniforms {
 
 		@Override
 		public Builder addDynamicUniform(Uniform uniform, ValueUpdateNotifier notifier) {
+			Objects.requireNonNull(uniform);
+			Objects.requireNonNull(notifier);
+
 			dynamic.put(locations.get(uniform.getLocation()), uniform);
 			notifiersToReset.add(notifier);
 
@@ -290,7 +300,9 @@ public class ProgramUniforms {
 		} else if (type == GL20C.GL_FLOAT_VEC2) {
 			typeName = "vec2";
 		} else if (type == GL20C.GL_INT_VEC2) {
-			typeName = "vec2i";
+			typeName = "ivec2";
+		} else if (type == GL20C.GL_INT_VEC4) {
+			typeName = "ivec4";
 		} else if (type == GL20C.GL_SAMPLER_3D) {
 			typeName = "sampler3D";
 		} else if (type == GL20C.GL_SAMPLER_2D) {
@@ -322,7 +334,7 @@ public class ProgramUniforms {
 		} else if (type == GL20C.GL_FLOAT_VEC4) {
 			return UniformType.VEC4;
 		} else if (type == GL20C.GL_INT_VEC4) {
-			return null;
+			return UniformType.VEC4I;
 		} else if (type == GL20C.GL_FLOAT_MAT3) {
 			return null;
 		} else if (type == GL20C.GL_FLOAT_VEC3) {

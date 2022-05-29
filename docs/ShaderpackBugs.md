@@ -57,11 +57,3 @@ This file tracks some bugs in shader packs that might appear to be Iris issues, 
       -	float parm0,parm1,parm2,parm3,parm4,parm5 = 0.0;
       +	float parm0 = 0.0,parm1 = 0.0,parm2 = 0.0,parm3 = 0.0,parm4 = 0.0,parm5 = 0.0;
       ```
-* Shadows don't work
-    * Diagnosis: Table 3.20 in section 3.9.2 of the OpenGL 3.3 Core Profile specification states clearly that when
-      the base internal format of a texture is RED / DEPTH_COMPONENT, which is true in the case of a shadow texture,
-      then the Y/G and Z/B components of the output of a sampler function are 0.0. However, Chocapic v4 accesses the
-      Z/B component to get the depth value. While this may have worked on older drivers, it no longer appears to work
-      on modern drivers.
-    * Workaround: Replace all occurrences of expressions along the lines of `texture2D(shadow, ...).z` with
-      `texture2D(shadow, ...).r`

@@ -5,7 +5,6 @@ import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.shadows.ShadowMapRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 
 import java.util.function.IntSupplier;
@@ -39,10 +38,6 @@ public class IrisImages {
 	public static boolean hasShadowImages(ImageHolder images) {
 		// TODO: Generalize
 		return images.hasImage("shadowcolorimg0") || images.hasImage("shadowcolorimg1");
-	}
-
-	public static void addShadowColorImages(ImageHolder images, ShadowMapRenderer shadowMapRenderer) {
-		addShadowColorImages(images, shadowMapRenderer.getRenderTargets());
 	}
 
 	public static void addShadowColorImages(ImageHolder images, ShadowRenderTargets shadowRenderTargets) {

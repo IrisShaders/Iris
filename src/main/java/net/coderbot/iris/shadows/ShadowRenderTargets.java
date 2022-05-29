@@ -3,6 +3,7 @@ package net.coderbot.iris.shadows;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
@@ -40,8 +41,8 @@ public class ShadowRenderTargets {
 		targets = new int[formats.length];
 		GlStateManager._genTextures(targets);
 
-		depthTexture = new DepthTexture(resolution, resolution);
-		noTranslucents = new DepthTexture(resolution, resolution);
+		depthTexture = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
+		noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 
 		this.framebuffer = new GlFramebuffer();
 
