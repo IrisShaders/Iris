@@ -111,6 +111,7 @@ public class RenderTargets {
 		boolean depthFormatChanged = newDepthFormat != currentDepthFormat;
 
 		if (depthFormatChanged) {
+			currentDepthFormat = newDepthFormat;
 			// Might need a new copy strategy
 			copyStrategy = DepthCopyStrategy.fastest(currentDepthFormat.isCombinedStencil());
 		}
