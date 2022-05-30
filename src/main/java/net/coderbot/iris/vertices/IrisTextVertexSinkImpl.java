@@ -83,6 +83,7 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 			vSum = 0;
 		}
 
+		buffer.position(buffer.position() + STRIDE);
 		elementOffset += STRIDE;
 	}
 }
