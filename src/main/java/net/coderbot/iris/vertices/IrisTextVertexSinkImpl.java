@@ -37,10 +37,10 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 
 	@Override
 	public void quad(float minX, float minY, float maxX, float maxY, float z, int color, float minU, float minV, float maxU, float maxV, int light) {
-		vertex(minX, minY, 0.0F, color, minU, minV, light);
-		vertex(minX, maxY, 0.0F, color, minU, maxV, light);
-		vertex(maxX, maxY, 0.0F, color, maxU, maxV, light);
-		vertex(maxX, minY, 0.0F, color, maxU, minV, light);
+		vertex(minX, minY, z, color, minU, minV, light);
+		vertex(minX, maxY, z, color, minU, maxV, light);
+		vertex(maxX, maxY, z, color, maxU, maxV, light);
+		vertex(maxX, minY, z, color, maxU, minV, light);
 	}
 
 	private void vertex(float x, float y, float z, int color, float u, float v, int light) {
