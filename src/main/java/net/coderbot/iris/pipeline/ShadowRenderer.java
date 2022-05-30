@@ -403,21 +403,25 @@ public class ShadowRenderer {
 
 		profiler.popPush("build geometry");
 
+		int shadowEntities = 0;
+
 		if (!player.getPassengers().isEmpty()) {
 			for (int i = 0; i < player.getPassengers().size(); i++) {
 				levelRenderer.invokeRenderEntity(player.getPassengers().get(i), cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
-				renderedShadowEntities++;
+				shadowEntities++;
 			}
 		}
 
 		if (player.getVehicle() != null) {
 			levelRenderer.invokeRenderEntity(player.getVehicle(), cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
-			renderedShadowEntities++;
+			shadowEntities++;
 		}
 
 		levelRenderer.invokeRenderEntity(player, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
 
-		renderedShadowEntities++;
+		shadowEntities++;
+
+		renderedShadowEntities = shadowEntities;
 
 		profiler.pop();
 	}
