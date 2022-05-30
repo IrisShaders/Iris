@@ -2,24 +2,28 @@ package net.coderbot.iris.vertices;
 
 import com.mojang.blaze3d.platform.MemoryTracker;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import me.jellysquid.mods.sodium.client.gl.attribute.BufferVertexFormat;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexBufferWriterUnsafe;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
+import net.coderbot.iris.vendored.joml.Vector3f;
 import net.irisshaders.iris.api.v0.IrisTextVertexSink;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.util.function.IntFunction;
 
-public class IrisTextVertexSinkImpl implements IrisTextVertexSink, VertexBufferView {
+public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	static VertexFormat format = IrisVertexFormats.TERRAIN;
 	private final ByteBuffer buffer;
 	private int vertexCount;
-	private int elementOffset;
-	private GlyphVertexBufferWriterUnsafe drain;
+	private final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
+	private final Vector3f saveNormal = new Vector3f();
+	private long elementOffset;
+	int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
+	private float uSum;
+	private float vSum;
 
 	public IrisTextVertexSinkImpl(int maxQuadSize, IntFunction<ByteBuffer> buffer) {
 		this.buffer = buffer.apply(format.getVertexSize() * 4 * maxQuadSize);
-		this.drain = new GlyphVertexBufferWriterUnsafe(this);
+		this.elementOffset = MemoryUtil.memAddress(this.buffer);
 	}
 
 	@Override
@@ -29,40 +33,49 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink, VertexBufferV
 
 	@Override
 	public void quad(float minX, float minY, float maxX, float maxY, float z, int color, float minU, float minV, float maxU, float maxV, int light) {
-		drain.writeGlyph(minX, minY, 0.0F, color, minU, minV, light);
-		drain.writeGlyph(minX, maxY, 0.0F, color, minU, maxV, light);
-		drain.writeGlyph(maxX, maxY, 0.0F, color, maxU, maxV, light);
-		drain.writeGlyph(maxX, minY, 0.0F, color, maxU, minV, light);
+		vertex(minX, minY, 0.0F, color, minU, minV, light);
+		vertex(minX, maxY, 0.0F, color, minU, maxV, light);
+		vertex(maxX, maxY, 0.0F, color, maxU, maxV, light);
+		vertex(maxX, minY, 0.0F, color, maxU, minV, light);
 	}
 
-	@Override
-	public void flush() {
-		drain.flush();
-	}
+	private void vertex(float x, float y, float z, int color, float u, float v, int light) {
+		vertexCount++;
+		uSum += u;
+		vSum += v;
 
-	@Override
-	public boolean ensureBufferCapacity(int i) {
-		return false;
-	}
+		long i = elementOffset;
 
-	@Override
-	public ByteBuffer getDirectBuffer() {
-		return buffer;
-	}
+		MemoryUtil.memPutFloat(i, x);
+		MemoryUtil.memPutFloat(i + 4, y);
+		MemoryUtil.memPutFloat(i + 8, z);
+		MemoryUtil.memPutInt(i + 12, color);
+		MemoryUtil.memPutFloat(i + 16, u);
+		MemoryUtil.memPutFloat(i + 20, v);
+		MemoryUtil.memPutInt(i + 24, light);
 
-	@Override
-	public int getWriterPosition() {
-		return this.elementOffset;
-	}
+		if (vertexCount == 4) {
+			vertexCount = 0;
+			uSum *= 0.25;
+			vSum *= 0.25;
+			quad.setup(elementOffset, IrisVertexFormats.TERRAIN.getVertexSize());
 
-	@Override
-	public void flush(int i, BufferVertexFormat bufferVertexFormat) {
-		this.vertexCount += vertexCount;
-		this.elementOffset += vertexCount * format.getVertexSize();
-	}
+			NormalHelper.computeFaceNormal(saveNormal, quad);
+			float normalX = saveNormal.x;
+			float normalY = saveNormal.y;
+			float normalZ = saveNormal.z;
+			int normal = NormalHelper.packNormal(saveNormal, 0.0F);
 
-	@Override
-	public BufferVertexFormat getVertexFormat() {
-		return BufferVertexFormat.from(format);
+			int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
+
+			for (long vertex = 0; vertex < 4; vertex++) {
+				MemoryUtil.memPutFloat(i + 36 - STRIDE * vertex, uSum);
+				MemoryUtil.memPutFloat(i + 40 - STRIDE * vertex, vSum);
+				MemoryUtil.memPutInt(i + 28 - STRIDE * vertex, normal);
+				MemoryUtil.memPutInt(i + 44 - STRIDE * vertex, tangent);
+			}
+		}
+
+		elementOffset += STRIDE;
 	}
 }
