@@ -1,6 +1,5 @@
 package net.coderbot.iris.vertices;
 
-import com.mojang.blaze3d.platform.MemoryTracker;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import net.coderbot.iris.vendored.joml.Vector3f;
@@ -13,11 +12,11 @@ import java.util.function.IntFunction;
 public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	static VertexFormat format = IrisVertexFormats.TERRAIN;
 	private final ByteBuffer buffer;
-	private int vertexCount;
 	private final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
 	private final Vector3f saveNormal = new Vector3f();
+	private static final int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
+	private int vertexCount;
 	private long elementOffset;
-	int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
 	private float uSum;
 	private float vSum;
 
@@ -29,6 +28,11 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	@Override
 	public VertexFormat getUnderlyingVertexFormat() {
 		return format;
+	}
+
+	@Override
+	public ByteBuffer getUnderlyingByteBuffer() {
+		return buffer;
 	}
 
 	@Override
