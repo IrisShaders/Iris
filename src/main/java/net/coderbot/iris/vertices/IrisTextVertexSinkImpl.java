@@ -74,6 +74,9 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 				MemoryUtil.memPutInt(i + 28 - STRIDE * vertex, normal);
 				MemoryUtil.memPutInt(i + 44 - STRIDE * vertex, tangent);
 			}
+
+			uSum = 0;
+			vSum = 0;
 		}
 
 		elementOffset += STRIDE;
