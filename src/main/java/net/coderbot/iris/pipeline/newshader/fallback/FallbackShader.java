@@ -25,11 +25,6 @@ public class FallbackShader extends ShaderInstance {
 	@Nullable
 	private final Uniform FOG_IS_EXP2;
 
-	@Nullable
-	private final Uniform ALPHA_TEST_VALUE;
-
-	private final float alphaValue;
-
 	public FallbackShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  BlendModeOverride blendModeOverride, float alphaValue, NewWorldRenderingPipeline parent) throws IOException {
@@ -39,11 +34,15 @@ public class FallbackShader extends ShaderInstance {
 		this.blendModeOverride = blendModeOverride;
 		this.writingToBeforeTranslucent = writingToBeforeTranslucent;
 		this.writingToAfterTranslucent = writingToAfterTranslucent;
-		this.alphaValue = alphaValue;
 
 		this.FOG_DENSITY = this.getUniform("FogDensity");
 		this.FOG_IS_EXP2 = this.getUniform("FogIsExp2");
-		this.ALPHA_TEST_VALUE = this.getUniform("AlphaTestValue");
+
+		Uniform ALPHA_TEST_VALUE = this.getUniform("AlphaTestValue");
+
+		if (ALPHA_TEST_VALUE != null) {
+			ALPHA_TEST_VALUE.set(alphaValue);
+		}
 	}
 
 	@Override
@@ -69,10 +68,6 @@ public class FallbackShader extends ShaderInstance {
 				FOG_DENSITY.set(0.0F);
 				FOG_IS_EXP2.set(0);
 			}
-		}
-
-		if (ALPHA_TEST_VALUE != null) {
-			ALPHA_TEST_VALUE.set(alphaValue);
 		}
 
 		super.apply();

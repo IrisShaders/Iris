@@ -117,7 +117,7 @@ public class IrisChunkProgramOverrides {
         GlShader geomShader = createGeometryShader(pass, pipeline);
         GlShader fragShader = createFragmentShader(pass, pipeline);
 		BlendModeOverride blendOverride = getBlendOverride(pass, pipeline);
-		float alpha = getAlpha(pass, pipeline);
+		float alpha = getAlphaReference(pass, pipeline);
 
         if (vertShader == null || fragShader == null) {
             if (vertShader != null) {
@@ -171,7 +171,7 @@ public class IrisChunkProgramOverrides {
         }
     }
 
-	private float getAlpha(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+	private float getAlphaReference(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
 		if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
 			return pipeline.getShadowAlpha().orElse(AlphaTests.ONE_TENTH_ALPHA).getReference();
 		} else if (pass == IrisTerrainPass.GBUFFER_SOLID || pass == IrisTerrainPass.GBUFFER_CUTOUT) {
