@@ -44,9 +44,6 @@ public class RenderTargets {
 		this.currentDepthFormat = depthFormat;
 		this.copyStrategy = DepthCopyStrategy.fastest(currentDepthFormat.isCombinedStencil());
 
-		this.noTranslucents = new DepthTexture(width, height, currentDepthFormat);
-		this.noHand = new DepthTexture(width, height, currentDepthFormat);
-
 		this.cachedWidth = width;
 		this.cachedHeight = height;
 		this.cachedDepthBufferVersion = depthBufferVersion;
@@ -58,6 +55,9 @@ public class RenderTargets {
 		fullClearRequired = true;
 
 		this.depthSourceFb = createFramebufferWritingToMain(new int[] {0});
+
+		this.noTranslucents = new DepthTexture(width, height, depthSourceFb, currentDepthFormat);
+		this.noHand = new DepthTexture(width, height, depthSourceFb, currentDepthFormat);
 
 		this.noTranslucentsDestFb = createFramebufferWritingToMain(new int[] {0});
 		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
@@ -116,12 +116,6 @@ public class RenderTargets {
 			copyStrategy = DepthCopyStrategy.fastest(currentDepthFormat.isCombinedStencil());
 		}
 
-		if (depthFormatChanged || sizeChanged)  {
-			// Reallocate depth buffers
-			noTranslucents.resize(newWidth, newHeight, newDepthFormat);
-			noHand.resize(newWidth, newHeight, newDepthFormat);
-		}
-
 		if (recreateDepth) {
 			// Re-attach the depth textures with the new depth texture ID, since Minecraft re-creates
 			// the depth texture when resizing its render targets.
@@ -139,6 +133,12 @@ public class RenderTargets {
 
 				framebuffer.addDepthAttachment(newDepthTextureId);
 			}
+		}
+
+		if (depthFormatChanged || sizeChanged)  {
+			// Reallocate depth buffers
+			noTranslucents.resize(newWidth, newHeight, depthSourceFb, newDepthFormat);
+			noHand.resize(newWidth, newHeight, depthSourceFb, newDepthFormat);
 		}
 
 		if (sizeChanged) {
