@@ -2,14 +2,17 @@ package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
+import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
+import org.lwjgl.opengl.GL20C;
 
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -25,8 +28,10 @@ public class ShadowRenderTargets {
 	private final DepthTexture noTranslucents;
 
 	private final GlFramebuffer framebuffer;
+	private final int resolution;
 
 	private static final IntBuffer NULL_BUFFER = null;
+	private boolean firstTranslucentCopy;
 
 	public ShadowRenderTargets(int resolution, InternalTextureFormat[] formats) {
 		if (formats.length > MAX_SHADOW_RENDER_TARGETS) {
@@ -35,18 +40,18 @@ public class ShadowRenderTargets {
 		}
 
 		this.formats = Arrays.copyOf(formats, formats.length);
+		this.resolution = resolution;
 
 		int[] drawBuffers = new int[formats.length];
 
 		targets = new int[formats.length];
 		GlStateManager._genTextures(targets);
 
-		depthTexture = new DepthTexture(resolution, resolution, null, DepthBufferFormat.DEPTH);
+		depthTexture = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 
 		this.framebuffer = new GlFramebuffer();
 
 		framebuffer.addDepthAttachment(depthTexture.getTextureId());
-
 
 		for (int i = 0; i < formats.length; i++) {
 			InternalTextureFormat format = formats[i];
@@ -66,9 +71,28 @@ public class ShadowRenderTargets {
 
 		framebuffer.drawBuffers(drawBuffers);
 
-		noTranslucents = new DepthTexture(resolution, resolution, this.framebuffer, DepthBufferFormat.DEPTH);
+		noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
+
+		this.firstTranslucentCopy = true;
 
 		RenderSystem.bindTexture(0);
+	}
+
+	public void copyPreTranslucentDepth() {
+		// Copy the content of the depth texture before rendering translucent content.
+		// This is needed for the shadowtex0 / shadowtex1 split.
+
+		// note: destFb is null since we never end up getting a strategy that requires the target framebuffer
+		// this is a bit of an assumption but it works for now
+		if (firstTranslucentCopy) {
+			firstTranslucentCopy = false;
+			RenderSystem.bindTexture(noTranslucents.getTextureId());
+			framebuffer.bindAsReadBuffer();
+			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, DepthBufferFormat.DEPTH.getGlInternalFormat(), 0, 0, resolution, resolution, 0);
+		} else {
+			DepthCopyStrategy.fastest(false).copy(framebuffer, depthTexture.getTextureId(), null,
+				noTranslucents.getTextureId(), resolution, resolution);
+		}
 	}
 
 	public GlFramebuffer getFramebuffer() {

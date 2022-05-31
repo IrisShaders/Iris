@@ -346,13 +346,7 @@ public class ShadowRenderer {
 	private void copyPreTranslucentDepth() {
 		profiler.popPush("translucent depth copy");
 
-		// Copy the content of the depth texture before rendering translucent content.
-		// This is needed for the shadowtex0 / shadowtex1 split.
-
-		// note: destFb is null since we never end up getting a strategy that requires the target framebuffer
-		// this is a bit of an assumption but it works for now
-		DepthCopyStrategy.fastest(false).copy(targets.getFramebuffer(), targets.getDepthTexture().getTextureId(), null,
-			targets.getDepthTextureNoTranslucents().getTextureId(), resolution, resolution);
+		targets.copyPreTranslucentDepth();
 	}
 
 	private void renderEntities(LevelRendererAccessor levelRenderer, Frustum frustum, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
