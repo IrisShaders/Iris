@@ -69,6 +69,9 @@ public class RenderTargets {
 
 		this.noHandDestFb = createFramebufferWritingToMain(new int[] {0});
 		this.noHandDestFb.addDepthAttachment(this.noHand.getTextureId());
+
+		this.translucentDepthDirty = true;
+		this.handDepthDirty = true;
 	}
 
 	public void destroy() {
