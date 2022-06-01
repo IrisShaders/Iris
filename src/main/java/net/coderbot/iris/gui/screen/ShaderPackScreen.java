@@ -467,8 +467,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		String previousPackName = Iris.getIrisConfig().getShaderPackName().orElse(null);
 		boolean previousShadersEnabled = Iris.getIrisConfig().areShadersEnabled();
 
-		// Only reload if the pack would be different from before, or shaders were toggled, or options were changed.
-		if (!name.equals(previousPackName) || enabled != previousShadersEnabled || !Iris.getShaderPackOptionQueue().isEmpty()) {
+		// Only reload if the pack would be different from before, or shaders were toggled, or options were changed, or if we're about to reset options.
+		if (!name.equals(previousPackName) || enabled != previousShadersEnabled || !Iris.getShaderPackOptionQueue().isEmpty() || Iris.shouldResetShaderPackOptionsOnNextReload()) {
 			Iris.getIrisConfig().setShaderPackName(name);
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(enabled);
 		}
