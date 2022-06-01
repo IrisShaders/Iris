@@ -2,6 +2,7 @@ package net.coderbot.iris;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.fabricmc.loader.api.FabricLoader;
@@ -27,6 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
@@ -58,7 +60,14 @@ public class UpdateChecker {
 				File updateFile = FabricLoader.getInstance().getGameDir().resolve("irisUpdateInfo.json").toFile();
 				if (DateUtils.isSameDay(new Date(), new Date(updateFile.lastModified()))) {
 					Iris.logger.warn("[Iris Update Check] Cached update file detected, using that!");
-					UpdateInfo updateInfo = new Gson().fromJson(FileUtils.readFileToString(updateFile, StandardCharsets.UTF_8), UpdateInfo.class);
+					UpdateInfo updateInfo;
+					try {
+						updateInfo = new Gson().fromJson(FileUtils.readFileToString(updateFile, StandardCharsets.UTF_8), UpdateInfo.class);
+					} catch (JsonSyntaxException | NullPointerException e) {
+						Iris.logger.error("[Iris Update Check] Cached file invalid, will delete!", e);
+						Files.delete(updateFile.toPath());
+						return null;
+					}
 					try {
 						if (currentVersion.compareTo(SemanticVersion.parse(updateInfo.semanticVersion)) < 0) {
 							shouldShowUpdateMessage = true;

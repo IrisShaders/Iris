@@ -622,16 +622,10 @@ public class ShadowRenderer {
 	private void copyPreTranslucentDepth(LevelRendererAccessor levelRenderer) {
 		levelRenderer.getLevel().getProfiler().popPush("translucent depth copy");
 
-		// Copy the content of the depth texture before rendering translucent content.
-		// This is needed for the shadowtex0 / shadowtex1 split.
-
-		// note: destFb is null since we never end up getting a strategy that requires the target framebuffer
-		// this is a bit of an assumption but it works for now
-		DepthCopyStrategy.fastest(false).copy(targets.getFramebuffer(), targets.getDepthTexture().getTextureId(), null,
-			targets.getDepthTextureNoTranslucents().getTextureId(), resolution, resolution);
+		targets.copyPreTranslucentDepth();
 	}
 
-	public void addDebugText(List<String> messages) {
+		public void addDebugText(List<String> messages) {
 		messages.add("[" + Iris.MODNAME + "] Shadow Maps: " + debugStringOverall);
 		messages.add("[" + Iris.MODNAME + "] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
 		messages.add("[" + Iris.MODNAME + "] Shadow Culling Terrain: " + terrainFrustumHolder.getCullingInfo() + " Entity: " + entityFrustumHolder.getCullingInfo());
