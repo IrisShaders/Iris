@@ -22,7 +22,6 @@ import net.coderbot.iris.shaderpack.option.OptionSet;
 import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
@@ -152,7 +151,8 @@ public class Iris {
 	}
 
 	private void setupCommands(Minecraft instance) {
-		ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("iris").then(ClientCommandManager.literal("debug").then(
+		// TODO: Add back commands when Fabric Maven stops dying
+		/*ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("iris").then(ClientCommandManager.literal("debug").then(
 			ClientCommandManager.argument("enabled", BoolArgumentType.bool()).executes(context -> {
 				boolean enable = BoolArgumentType.getBool(context, "enabled");
 
@@ -181,7 +181,7 @@ public class Iris {
 			}
 
 			return 0;
-		})));
+		})));*/
 	}
 
 	/**
@@ -562,6 +562,10 @@ public class Iris {
 
 	public static void resetShaderPackOptionsOnNextReload() {
 		resetShaderPackOptions = true;
+	}
+
+	public static boolean shouldResetShaderPackOptionsOnNextReload() {
+		return resetShaderPackOptions;
 	}
 
 	public static void reload() throws IOException {

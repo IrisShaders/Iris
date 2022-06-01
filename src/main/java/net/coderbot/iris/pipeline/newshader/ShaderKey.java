@@ -47,6 +47,8 @@ public enum ShaderKey {
 	CRUMBLING              (ProgramId.DamagedBlock,AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.BLOCK,                       FogMode.OFF,          LightingModel.LIGHTMAP  ),
 	TEXT                   (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	TEXT_INTENSITY         (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	TEXT_BE                (ProgramId.Block,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	TEXT_INTENSITY_BE      (ProgramId.Block,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	BLOCK_ENTITY           (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	BLOCK_ENTITY_BRIGHT    (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
 	BLOCK_ENTITY_DIFFUSE   (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
@@ -101,7 +103,7 @@ public enum ShaderKey {
 	}
 
 	public boolean isIntensity() {
-		return this == TEXT_INTENSITY || this == SHADOW_TEXT_INTENSITY;
+		return this == TEXT_INTENSITY || this == TEXT_INTENSITY_BE || this == SHADOW_TEXT_INTENSITY;
 	}
 
 	public String getName() {

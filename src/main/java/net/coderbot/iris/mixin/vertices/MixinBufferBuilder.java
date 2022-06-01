@@ -12,7 +12,6 @@ import net.coderbot.iris.vertices.BufferBuilderPolygonView;
 import net.coderbot.iris.vertices.ExtendingBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,7 +41,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private final Vector3f normal = new Vector3f();
 
 	@Unique
-	private boolean injectOverlayAndNormal;
+	private boolean injectNormal;
 
 	@Unique
 	private short currentBlock;
@@ -95,7 +94,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		vertexCount = 0;
 
 		if (extending) {
-			injectOverlayAndNormal = format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP;
+			injectNormal = format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP;
 		}
 	}
 
@@ -131,7 +130,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			return;
 		}
 
-		if (injectOverlayAndNormal) {
+		if (injectNormal && currentElement == DefaultVertexFormat.ELEMENT_NORMAL) {
 			this.putInt(0, 0);
 			this.nextElement();
 		}
