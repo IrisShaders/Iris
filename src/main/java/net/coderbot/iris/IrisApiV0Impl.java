@@ -19,7 +19,7 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public int getMinorApiRevision() {
-		return 0;
+		return 1;
 	}
 
 	@Override
