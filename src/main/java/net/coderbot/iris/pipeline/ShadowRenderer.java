@@ -346,13 +346,7 @@ public class ShadowRenderer {
 	private void copyPreTranslucentDepth() {
 		profiler.popPush("translucent depth copy");
 
-		// Copy the content of the depth texture before rendering translucent content.
-		// This is needed for the shadowtex0 / shadowtex1 split.
-
-		// note: destFb is null since we never end up getting a strategy that requires the target framebuffer
-		// this is a bit of an assumption but it works for now
-		DepthCopyStrategy.fastest(false).copy(targets.getFramebuffer(), targets.getDepthTexture().getTextureId(), null,
-			targets.getDepthTextureNoTranslucents().getTextureId(), resolution, resolution);
+		targets.copyPreTranslucentDepth();
 	}
 
 	private void renderEntities(LevelRendererAccessor levelRenderer, Frustum frustum, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, double cameraX, double cameraY, double cameraZ, float tickDelta) {
@@ -403,21 +397,25 @@ public class ShadowRenderer {
 
 		profiler.popPush("build geometry");
 
+		int shadowEntities = 0;
+
 		if (!player.getPassengers().isEmpty()) {
 			for (int i = 0; i < player.getPassengers().size(); i++) {
 				levelRenderer.invokeRenderEntity(player.getPassengers().get(i), cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
-				renderedShadowEntities++;
+				shadowEntities++;
 			}
 		}
 
 		if (player.getVehicle() != null) {
 			levelRenderer.invokeRenderEntity(player.getVehicle(), cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
-			renderedShadowEntities++;
+			shadowEntities++;
 		}
 
 		levelRenderer.invokeRenderEntity(player, cameraX, cameraY, cameraZ, tickDelta, modelView, bufferSource);
 
-		renderedShadowEntities++;
+		shadowEntities++;
+
+		renderedShadowEntities = shadowEntities;
 
 		profiler.pop();
 	}
