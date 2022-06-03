@@ -43,8 +43,8 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
     static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String MC_VERSION = "1.19-pre2";
-	static final String customSodiumName = "sodium-fabric-mc1.19-pre2-0.4.1+rev.f4237a3.jar";
+	static final String MC_VERSION = "1.19-rc2";
+	static final String customSodiumName = "sodium-fabric-mc1.19-pre5-0.4.1+rev.9d14ef6.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
 		"main",
@@ -140,7 +140,7 @@ public class Buildscript extends SimpleFabricProject {
 	}
 
 	private final Lazy<String> computeVersionLazy = new Lazy<>(() -> {
-		String baseVersion = super.getVersion().replace("development-environment", "");
+		String baseVersion = super.getVersion().replace("-development-environment", "");
 
 		String build_id = System.getenv("GITHUB_RUN_NUMBER");
 
@@ -163,7 +163,7 @@ public class Buildscript extends SimpleFabricProject {
 			e.printStackTrace();
 		}
 
-		return baseVersion + commitHash + (isDirty ? "-dirty" : "");
+		return baseVersion;
 	});
 
 	@Override

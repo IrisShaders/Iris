@@ -165,7 +165,7 @@ public final class CommonUniforms {
 			MobEffectInstance darkness = ((LivingEntity) cameraEntity).getEffect(MobEffects.DARKNESS);
 
 			if (darkness != null && darkness.getFactorData().isPresent()) {
-				return darkness.getFactorData().get().getFactor(CapturedRenderingState.INSTANCE.getTickDelta());
+				return darkness.getFactorData().get().getFactor((LivingEntity) cameraEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 			}
 		}
 

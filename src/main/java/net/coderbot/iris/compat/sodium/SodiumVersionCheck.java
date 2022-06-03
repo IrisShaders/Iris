@@ -12,7 +12,7 @@ public class SodiumVersionCheck {
 	// of pain. So don't forget!
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
 			// Dev version
-			AllowedSodiumVersion.exact("0.4.1+rev.f4237a3",
+			AllowedSodiumVersion.exact("0.4.1+rev.9d14ef6",
 					"https://modrinth.com/mod/sodium/version/mc1.19-0.4.1"),
 
 			// For use by ReplayMod
