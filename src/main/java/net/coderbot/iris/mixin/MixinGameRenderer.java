@@ -358,6 +358,8 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_TEXT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(ShaderKey.HAND_TEXT, cir);
+		} else if (isBlockEntities()) {
+			override(ShaderKey.TEXT_BE, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT, cir);
 		}
@@ -372,6 +374,8 @@ public class MixinGameRenderer {
 			override(ShaderKey.SHADOW_TEXT_INTENSITY, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(ShaderKey.HAND_TEXT_INTENSITY, cir);
+		} else if (isBlockEntities()) {
+			override(ShaderKey.TEXT_INTENSITY_BE, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT_INTENSITY, cir);
 		}
