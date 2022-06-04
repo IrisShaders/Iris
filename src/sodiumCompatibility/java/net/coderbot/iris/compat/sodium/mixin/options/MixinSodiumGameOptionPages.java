@@ -20,43 +20,43 @@ import org.spongepowered.asm.mixin.injection.Slice;
  */
 @Mixin(SodiumGameOptionPages.class)
 public class MixinSodiumGameOptionPages {
-    @Shadow(remap = false)
-    @Final
-    private static MinecraftOptionsStorage vanillaOpts;
+	@Shadow(remap = false)
+	@Final
+	private static MinecraftOptionsStorage vanillaOpts;
 
-    @Redirect(method = "general", remap = false,
-            slice = @Slice(
-                    from = @At(value = "CONSTANT", args = "stringValue=View Distance"),
-                    to = @At(value = "CONSTANT", args = "stringValue=Brightness")
-            ),
-            at = @At(value = "INVOKE", remap = false,
-                    target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
-                            "Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
-                            ")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
-            allow = 1)
-    private static OptionGroup.Builder iris$addMaxShadowDistanceOption(OptionGroup.Builder builder,
-                                                                       Option<?> candidate) {
-        builder.add(candidate);
-        builder.add(IrisSodiumOptions.createMaxShadowDistanceSlider(vanillaOpts));
+	@Redirect(method = "general", remap = false,
+			slice = @Slice(
+					from = @At(value = "CONSTANT", args = "stringValue=View Distance"),
+					to = @At(value = "CONSTANT", args = "stringValue=Brightness")
+			),
+			at = @At(value = "INVOKE", remap = false,
+					target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
+							"Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
+							")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
+			allow = 1)
+	private static OptionGroup.Builder iris$addMaxShadowDistanceOption(OptionGroup.Builder builder,
+																	   Option<?> candidate) {
+		builder.add(candidate);
+		builder.add(IrisSodiumOptions.createMaxShadowDistanceSlider(vanillaOpts));
 
-        return builder;
-    }
+		return builder;
+	}
 
-    @ModifyArg(method = "quality", remap = false,
-            slice = @Slice(
-                    from = @At(value = "CONSTANT", args = "stringValue=Graphics Quality"),
-                    to = @At(value = "CONSTANT", args = "stringValue=Clouds Quality")
-            ),
-            at = @At(value = "INVOKE", remap = false,
-                    target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
-                                "Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
-                            ")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
-            allow = 1)
-    private static Option<?> iris$replaceGraphicsQualityButton(Option<?> candidate) {
-        if (!Iris.getIrisConfig().areShadersEnabled() && GlStateManager.supportsFramebufferBlit()) {
-            return candidate;
-        } else {
-            return IrisSodiumOptions.createLimitedVideoSettingsButton(vanillaOpts);
-        }
-    }
+	@ModifyArg(method = "quality", remap = false,
+			slice = @Slice(
+					from = @At(value = "CONSTANT", args = "stringValue=Graphics Quality"),
+					to = @At(value = "CONSTANT", args = "stringValue=Clouds Quality")
+			),
+			at = @At(value = "INVOKE", remap = false,
+					target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
+								"Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
+							")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
+			allow = 1)
+	private static Option<?> iris$replaceGraphicsQualityButton(Option<?> candidate) {
+		if (!Iris.getIrisConfig().areShadersEnabled() && GlStateManager.supportsFramebufferBlit()) {
+			return candidate;
+		} else {
+			return IrisSodiumOptions.createLimitedVideoSettingsButton(vanillaOpts);
+		}
+	}
 }

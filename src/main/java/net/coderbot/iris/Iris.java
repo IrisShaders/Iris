@@ -563,6 +563,10 @@ public class Iris {
 		resetShaderPackOptions = true;
 	}
 
+	public static boolean shouldResetShaderPackOptionsOnNextReload() {
+		return resetShaderPackOptions;
+	}
+
 	public static void reload() throws IOException {
 		// allows shaderpacks to be changed at runtime
 		irisConfig.initialize();

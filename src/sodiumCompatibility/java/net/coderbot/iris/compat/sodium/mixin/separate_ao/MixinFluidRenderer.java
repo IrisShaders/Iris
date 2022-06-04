@@ -19,25 +19,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(FluidRenderer.class)
 public class MixinFluidRenderer {
-    @Unique
-    private boolean useSeparateAo;
+	@Unique
+	private boolean useSeparateAo;
 
-    @Inject(method = "render", remap = false, at = @At("HEAD"))
-    private void iris$cacheSeparateAoSetting(BlockAndTintGetter level, FluidState fluidState, BlockPos pos,
+	@Inject(method = "render", remap = false, at = @At("HEAD"))
+	private void iris$cacheSeparateAoSetting(BlockAndTintGetter level, FluidState fluidState, BlockPos pos,
 											 ChunkModelBuffers buffers, CallbackInfoReturnable<Boolean> cir) {
-        this.useSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
-    }
+		this.useSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
+	}
 
-    @Redirect(method = "calculateQuadColors", remap = false,
-            at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/util/color/ColorABGR.mul (IF)I", remap = false))
-    private int iris$applySeparateAo(int color, float ao) {
-        if (useSeparateAo) {
-            color &= 0x00FFFFFF;
-            color |= ((int) (ao * 255.0f)) << 24;
-        } else {
-            color = ColorABGR.mul(color, ao);
-        }
+	@Redirect(method = "calculateQuadColors", remap = false,
+			at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/util/color/ColorABGR.mul (IF)I", remap = false))
+	private int iris$applySeparateAo(int color, float ao) {
+		if (useSeparateAo) {
+			color &= 0x00FFFFFF;
+			color |= ((int) (ao * 255.0f)) << 24;
+		} else {
+			color = ColorABGR.mul(color, ao);
+		}
 
-        return color;
-    }
+		return color;
+	}
 }

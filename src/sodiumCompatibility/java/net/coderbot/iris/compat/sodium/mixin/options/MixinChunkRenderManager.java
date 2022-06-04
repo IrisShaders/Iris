@@ -12,15 +12,15 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  */
 @Mixin(ChunkRenderManager.class)
 public class MixinChunkRenderManager {
-    @Redirect(method = "setup", remap = false,
-            at = @At(value = "FIELD",
-                    target = "me/jellysquid/mods/sodium/client/gui/SodiumGameOptions$AdvancedSettings.useFogOcclusion : Z",
-                    remap = false))
-    private boolean iris$disableFogOcclusion(SodiumGameOptions.AdvancedSettings settings) {
-        if (Iris.getCurrentPack().isPresent()) {
-            return false;
-        } else {
-            return settings.useFogOcclusion;
-        }
-    }
+	@Redirect(method = "setup", remap = false,
+			at = @At(value = "FIELD",
+					target = "me/jellysquid/mods/sodium/client/gui/SodiumGameOptions$AdvancedSettings.useFogOcclusion : Z",
+					remap = false))
+	private boolean iris$disableFogOcclusion(SodiumGameOptions.AdvancedSettings settings) {
+		if (Iris.getCurrentPack().isPresent()) {
+			return false;
+		} else {
+			return settings.useFogOcclusion;
+		}
+	}
 }

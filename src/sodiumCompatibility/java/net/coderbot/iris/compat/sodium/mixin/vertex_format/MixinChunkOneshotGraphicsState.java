@@ -16,42 +16,42 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(ChunkOneshotGraphicsState.class)
 public abstract class MixinChunkOneshotGraphicsState {
-    @Unique
-    private GlVertexFormat<ChunkMeshAttribute> vertexFormat;
+	@Unique
+	private GlVertexFormat<ChunkMeshAttribute> vertexFormat;
 
-    @ModifyArg(method = "upload", remap = false,
-            at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/client/gl/device/CommandList.uploadData (" +
-                                "Lme/jellysquid/mods/sodium/client/gl/buffer/GlMutableBuffer;" +
-                                "Lme/jellysquid/mods/sodium/client/gl/buffer/VertexData;" +
-                            ")V",
-                    remap = false))
-    @SuppressWarnings("unchecked")
-    private VertexData iris$captureVertexFormat(VertexData vertexData) {
-        vertexFormat = (GlVertexFormat<ChunkMeshAttribute>) vertexData.format;
+	@ModifyArg(method = "upload", remap = false,
+			at = @At(value = "INVOKE",
+					target = "me/jellysquid/mods/sodium/client/gl/device/CommandList.uploadData (" +
+								"Lme/jellysquid/mods/sodium/client/gl/buffer/GlMutableBuffer;" +
+								"Lme/jellysquid/mods/sodium/client/gl/buffer/VertexData;" +
+							")V",
+					remap = false))
+	@SuppressWarnings("unchecked")
+	private VertexData iris$captureVertexFormat(VertexData vertexData) {
+		vertexFormat = (GlVertexFormat<ChunkMeshAttribute>) vertexData.format;
 
-        return vertexData;
-    }
+		return vertexData;
+	}
 
-    @ModifyArg(method = "upload", remap = false,
-            at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/client/gl/tessellation/TessellationBinding.<init> (" +
-                                "Lme/jellysquid/mods/sodium/client/gl/buffer/GlBuffer;" +
-                                "[Lme/jellysquid/mods/sodium/client/gl/attribute/GlVertexAttributeBinding;" +
-                                "Z" +
-                            ")V",
-                    remap = false,
-                    ordinal = 0))
-    private GlVertexAttributeBinding[] iris$addAdditionalBindings(GlVertexAttributeBinding[] base) {
-        return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? ArrayUtils.addAll(base,
-                new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
-                        vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
-                new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
-                        vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
-                new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
-                        vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
-                new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
-                        vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))
-        ) : base;
-    }
+	@ModifyArg(method = "upload", remap = false,
+			at = @At(value = "INVOKE",
+					target = "me/jellysquid/mods/sodium/client/gl/tessellation/TessellationBinding.<init> (" +
+								"Lme/jellysquid/mods/sodium/client/gl/buffer/GlBuffer;" +
+								"[Lme/jellysquid/mods/sodium/client/gl/attribute/GlVertexAttributeBinding;" +
+								"Z" +
+							")V",
+					remap = false,
+					ordinal = 0))
+	private GlVertexAttributeBinding[] iris$addAdditionalBindings(GlVertexAttributeBinding[] base) {
+		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? ArrayUtils.addAll(base,
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))
+		) : base;
+	}
 }

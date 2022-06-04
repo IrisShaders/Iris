@@ -12,17 +12,17 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(ShaderType.class)
 public class MixinShaderType {
 	@SuppressWarnings("target")
-    @Shadow(remap = false)
-    @Final
-    @Mutable
-    private static ShaderType[] $VALUES;
+	@Shadow(remap = false)
+	@Final
+	@Mutable
+	private static ShaderType[] $VALUES;
 
-    static {
-        int baseOrdinal = $VALUES.length;
+	static {
+		int baseOrdinal = $VALUES.length;
 
-        IrisShaderTypes.GEOMETRY
-                = ShaderTypeAccessor.createShaderType("GEOMETRY", baseOrdinal, GL32C.GL_GEOMETRY_SHADER);
+		IrisShaderTypes.GEOMETRY
+				= ShaderTypeAccessor.createShaderType("GEOMETRY", baseOrdinal, GL32C.GL_GEOMETRY_SHADER);
 
-        $VALUES = ArrayUtils.addAll($VALUES, IrisShaderTypes.GEOMETRY);
-    }
+		$VALUES = ArrayUtils.addAll($VALUES, IrisShaderTypes.GEOMETRY);
+	}
 }
