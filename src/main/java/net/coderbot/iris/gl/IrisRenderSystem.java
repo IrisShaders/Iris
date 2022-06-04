@@ -44,7 +44,7 @@ public class IrisRenderSystem {
 	}
 
 	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
 	}
 
