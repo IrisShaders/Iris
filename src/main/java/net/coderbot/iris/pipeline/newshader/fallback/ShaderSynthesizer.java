@@ -156,7 +156,7 @@ public class ShaderSynthesizer {
 		shader.append("#version 150 core\n");
 
 		shader.append("out vec4 fragColor;\n");
-		shader.append("uniform float iris_currentAlphaTest;\n");
+		shader.append("uniform float AlphaTestValue;\n");
 		shader.append("in vec4 iris_vertexColor;\n");
 
 		if (inputs.hasTex()) {
@@ -232,7 +232,7 @@ public class ShaderSynthesizer {
 		// void main
 		shader.append("void main() {\n");
 		shader.append(main);
-		shader.append(alphaTest.toExpression("fragColor.a", "    "));
+		shader.append(alphaTest.toExpression("fragColor.a", "AlphaTestValue", "    "));
 		shader.append("}\n");
 
 		return shader.toString();

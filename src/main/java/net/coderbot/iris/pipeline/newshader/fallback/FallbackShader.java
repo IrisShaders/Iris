@@ -27,7 +27,7 @@ public class FallbackShader extends ShaderInstance {
 
 	public FallbackShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
-						  BlendModeOverride blendModeOverride, NewWorldRenderingPipeline parent) throws IOException {
+						  BlendModeOverride blendModeOverride, float alphaValue, NewWorldRenderingPipeline parent) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		this.parent = parent;
@@ -37,6 +37,12 @@ public class FallbackShader extends ShaderInstance {
 
 		this.FOG_DENSITY = this.getUniform("FogDensity");
 		this.FOG_IS_EXP2 = this.getUniform("FogIsExp2");
+
+		Uniform ALPHA_TEST_VALUE = this.getUniform("AlphaTestValue");
+
+		if (ALPHA_TEST_VALUE != null) {
+			ALPHA_TEST_VALUE.set(alphaValue);
+		}
 	}
 
 	@Override
