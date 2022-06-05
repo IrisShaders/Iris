@@ -23,12 +23,12 @@ public interface IrisTextVertexSink {
 	 * @param x2 Right-most x coordinate of the quad
 	 * @param y2 Bottom Y coordinate of the quad
 	 * @param z Z coordinate of the quad
-	 * @param rgba Integer-packed RGBA value
+	 * @param color Integer-packed ABGR value, with the equation {@code int color = ((int) (a * 255.0F) & 0xFF) << 24 | ((int) (b * 255.0F) & 0xFF) << 16 | ((int) (g * 255.0F) & 0xFF) << 8 | ((int) (r * 255.0F) & 0xFF)}
 	 * @param u1 Top-left U coordinate of the quad texture
 	 * @param v1 Top-left V coordinate of the quad texture
 	 * @param u2 Bottom-right U coordinate of the quad texture
 	 * @param v2 Bottom right V coordinate of the quad texture
 	 * @param light Integer packed light coordinate
 	 */
-	void quad(float x1, float y1, float x2, float y2, float z, int rgba, float u1, float v1, float u2, float v2, int light);
+	void quad(float x1, float y1, float x2, float y2, float z, int color, float u1, float v1, float u2, float v2, int light);
 }
