@@ -194,7 +194,7 @@ public class TransformPatcher {
 		// #region patchSodiumTerrain
 		// see SodiumTerrainPipeline for the original patcher
 		LifecycleUser<Parameters> wrapFTransform = new WrapIdentifier<Parameters>()
-				.wrapTarget("fTransform")
+				.wrapTarget("ftransform")
 				.detectionResult("iris_ftransform")
 				.injectionLocation(InjectionPoint.BEFORE_FUNCTIONS)
 				.injectionExternalDeclaration("vec4 iris_ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
