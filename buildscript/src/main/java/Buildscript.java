@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
@@ -146,12 +147,12 @@ public class Buildscript extends SimpleFabricProject {
 	}
 
 	private final Lazy<String> computeVersionLazy = new Lazy<>(() -> {
-		String baseVersion = super.getVersion().replace("development-environment", "");
+		String baseVersion = super.getVersion().replace("-development-environment", "");
 
 		String build_id = System.getenv("GITHUB_RUN_NUMBER");
 
-		if (build_id != null) {
-			// We don't want any suffix if we're doing a Github Release.
+		if (Objects.equals(System.getProperty("iris.release", "false"), "true")) {
+			// We don't want any suffix if we're doing a publish.
 			return baseVersion;
 		}
 
@@ -169,7 +170,11 @@ public class Buildscript extends SimpleFabricProject {
 			e.printStackTrace();
 		}
 
-		return baseVersion + commitHash + (isDirty ? "-dirty" : "");
+		if (build_id != null) {
+			return baseVersion + "-build." + build_id + "-" + commitHash;
+		} else {
+			return baseVersion + "-" + commitHash + (isDirty ? "-dirty" : "");
+		}
 	});
 
 	@Override
