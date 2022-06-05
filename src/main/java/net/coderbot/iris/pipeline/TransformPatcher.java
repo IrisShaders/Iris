@@ -300,7 +300,7 @@ public class TransformPatcher {
 		 * enterMemberAccessExpression, enterMultiplicativeExpression,
 		 * enterArrayAccessExpression in the targeted expression.
 		 */
-		LifecycleUser<Parameters> replaceBuiltinUniforms = new Transformation<Parameters>() {
+		LifecycleUser<Parameters> replaceLightmapForSodium = new Transformation<Parameters>() {
 			static final String lightmapCoordsExpression = "a_LightCoord";
 			static final String irisLightmapTexMat = "iris_LightmapTextureMatrix";
 			static final String texCoordFallbackReplacement = "vec4(" + lightmapCoordsExpression + " * 255.0, 0.0, 1.0)";
@@ -451,7 +451,7 @@ public class TransformPatcher {
 						addEndDependent(wrapMultiTexCoord);
 						addEndDependent(wrapColor);
 						addEndDependent(wrapNormal);
-						addEndDependent(replaceBuiltinUniforms);
+						addEndDependent(replaceLightmapForSodium);
 					}
 
 					if (type == ShaderType.VERTEX || type == ShaderType.FRAGMENT) {
