@@ -20,8 +20,8 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	private float uSum;
 	private float vSum;
 
-	public IrisTextVertexSinkImpl(int maxQuadSize, IntFunction<ByteBuffer> buffer) {
-		this.buffer = buffer.apply(format.getVertexSize() * 4 * maxQuadSize);
+	public IrisTextVertexSinkImpl(int maxQuadCount, IntFunction<ByteBuffer> buffer) {
+		this.buffer = buffer.apply(format.getVertexSize() * 4 * maxQuadCount);
 		this.elementOffset = MemoryUtil.memAddress(this.buffer);
 	}
 
@@ -59,6 +59,7 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 		MemoryUtil.memPutInt(i + 24, light);
 
 		if (vertexCount == 4) {
+			// TODO: compute this at the head of quad()
 			vertexCount = 0;
 			uSum *= 0.25;
 			vSum *= 0.25;

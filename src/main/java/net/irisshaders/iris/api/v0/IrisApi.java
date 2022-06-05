@@ -100,6 +100,8 @@ public interface IrisApi {
 
 	/**
 	 * Gets a text vertex sink to render into.
+	 * @param maxQuadCount Maximum amount of quads that will be rendered with this sink
+	 * @param bufferProvider An IntFunction that can provide a {@code ByteBuffer} with at minimum the bytes provided by the input parameter
 	 * @since API 0.1
 	 */
 	IrisTextVertexSink createTextVertexSink(int maxQuadCount, IntFunction<ByteBuffer> bufferProvider);
