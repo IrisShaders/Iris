@@ -11,7 +11,7 @@ public interface IrisTextVertexSink {
 	 */
 	VertexFormat getUnderlyingVertexFormat();
 	/**
-	 * Gets the underlying vertex format used for rendering text in the current sink.
+	 * Gets the underlying buffer used for rendering text in the current sink.
 	 * @return a valid {@code ByteBuffer}
 	 */
 	ByteBuffer getUnderlyingByteBuffer();
