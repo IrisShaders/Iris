@@ -135,7 +135,7 @@ public class Buildscript extends SimpleFabricProject {
 	}
 
 	private final Lazy<String> computeVersionLazy = new Lazy<>(() -> {
-		String baseVersion = super.getVersion().replace("development-environment", "");
+		String baseVersion = super.getVersion().replace("-development-environment", "");
 
 		String build_id = System.getenv("GITHUB_RUN_NUMBER");
 
@@ -158,7 +158,7 @@ public class Buildscript extends SimpleFabricProject {
 			e.printStackTrace();
 		}
 
-		return baseVersion + commitHash + (isDirty ? "-dirty" : "");
+		return baseVersion + "-" + commitHash + (isDirty ? "-dirty" : "");
 	});
 
 	@Override
