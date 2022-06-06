@@ -15,6 +15,9 @@ This release was developed by coderbot & IMS with additional help from Pepper.
     - The update checker can be disabled in iris.properties for people making modpacks or using their own mod updater.
     - We added this because we kept on discovering people using really ancient versions of Iris and missing out on bug fixes and even features like shader configuration.
 
+- Added a text sink API
+    - This is needed to render text in-world with shaders.
+
 
 ## Performance
 
