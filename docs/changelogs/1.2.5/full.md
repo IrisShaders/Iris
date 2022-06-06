@@ -51,6 +51,7 @@ This release was developed by coderbot & IMS with additional help from Pepper.
 - Added some basic compatibility for Litematica (coderbot)
 - Fixed rendering issues with Light Overlay (coderbot)
 - Commands have been removed due to issues with the Fabric Maven (IMS)
+- Use floats for midTexCoord in terrain XHFP (Pepper)
 
 ## Newly-compatible shader packs
 
