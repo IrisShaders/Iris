@@ -56,7 +56,8 @@
     "batchedentityrendering": "*",
     "canvas": "*",
     "optifabric": "*",
-    "worldeditcui": "*"
+    "worldeditcui": "*",
+    "immersive_portals": "<=1.4.2"
   },
 
   "custom": {
