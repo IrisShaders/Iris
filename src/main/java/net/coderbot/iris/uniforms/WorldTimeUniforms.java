@@ -1,7 +1,9 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
+import net.coderbot.iris.shaderpack.DimensionId;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 
@@ -27,6 +29,10 @@ public final class WorldTimeUniforms {
 
 	static int getWorldDayTime() {
 		long timeOfDay = getWorld().getDayTime();
+
+		if (Iris.getCurrentDimension() == DimensionId.END || Iris.getCurrentDimension() == DimensionId.NETHER) {
+			return (int) (timeOfDay % 24000L);
+		}
 
 		long dayTime = ((DimensionTypeAccessor) getWorld().dimensionType()).getFixedTime()
 																		  .orElse(timeOfDay % 24000L);
