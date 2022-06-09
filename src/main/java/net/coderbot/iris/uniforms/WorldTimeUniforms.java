@@ -32,7 +32,7 @@ public final class WorldTimeUniforms {
 
 		if (Iris.getCurrentDimension() == DimensionId.END || Iris.getCurrentDimension() == DimensionId.NETHER) {
 			// If the dimension is the nether or the end, don't override the fixed time.
-			// This was an oversight in versions before and including 1.2.5 causing inconsistencies.
+			// This was an oversight in versions before and including 1.2.5 causing inconsistencies, such as Complementary's ender beams not moving.
 			return (int) (timeOfDay % 24000L);
 		}
 
