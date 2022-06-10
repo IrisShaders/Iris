@@ -26,6 +26,12 @@ import io.github.douira.glsl_transformer.tree.TreeMember;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
 
+/**
+ * Replaces what AttributeShaderTransformer does but using glsl-transformer to
+ * do it more robustly.
+ * 
+ * TODO: Breaks shadows on Complementary
+ */
 class AttributeTransformation extends Transformation<Parameters> {
 	{
 		addEndDependent(replaceMultiTexCoord);
