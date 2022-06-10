@@ -2,10 +2,11 @@ package net.coderbot.iris.pipeline.transform;
 
 import java.util.Collection;
 
+import com.google.common.collect.ImmutableList;
+
 import io.github.douira.glsl_transformer.core.CachePolicy;
 import io.github.douira.glsl_transformer.core.WrapIdentifier;
 import io.github.douira.glsl_transformer.transform.InjectionPoint;
-import io.github.douira.glsl_transformer.util.CompatUtil;
 
 /**
  * Users of this transformation have to insert irisMain(); themselves because it
@@ -23,6 +24,6 @@ abstract class MainWrapper<R extends Parameters> extends WrapIdentifier<R> {
 
 	@Override
 	protected Collection<String> getInjectionExternalDeclarations() {
-		return CompatUtil.listOf("void main() { " + getMainContent() + " }");
+		return ImmutableList.of("void main() { " + getMainContent() + " }");
 	}
 }
