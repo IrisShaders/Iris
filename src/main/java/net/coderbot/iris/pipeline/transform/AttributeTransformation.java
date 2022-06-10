@@ -11,6 +11,7 @@ import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.core.CachePolicy;
+import io.github.douira.glsl_transformer.core.CachingSupplier;
 import io.github.douira.glsl_transformer.core.SearchTerminals;
 import io.github.douira.glsl_transformer.core.target.HandlerTarget;
 import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
@@ -26,38 +27,26 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 class AttributeTransformation extends Transformation<Parameters> {
-	@Override
-	protected void setupGraph() {
-		ShaderType type = getJobParameters().type;
-
-		addEndDependent(replaceMultiTexCoord12);
-		addEndDependent(replaceMultiTexCoord0);
-		if (type == ShaderType.VERTEX) {
-			addEndDependent(replaceMultiTexCoord3);
-		}
-
-		// patchTextureMatrices
-		addEndDependent(replaceGlTextureMatrix);
-		addEndDependent(textureMatrixInjections);
-
-		// TODO: patchOverlayColor
-
-		addEndDependent(replaceEntityColorDeclaration);
-
-		if (type == ShaderType.VERTEX || type == ShaderType.GEOMETRY) {
-			addEndDependent(wrapOverlay);
-		} else if (type == ShaderType.FRAGMENT) {
-			addEndDependent(renameEntityColorFragment);
-		}
+	{
+		addEndDependent(replaceMultiTexCoord);
+		addEndDependent(patchOverlayColor);
+		addEndDependent(patchTextureMatrices);
 	}
 
-	static final LifecycleUser<Parameters> replaceMultiTexCoord12;
-	static final LifecycleUser<Parameters> replaceMultiTexCoord0;
-	static final LifecycleUser<Parameters> replaceMultiTexCoord3;
+	static final LifecycleUser<Parameters> replaceMultiTexCoord = new Transformation<Parameters>() {
+		@Override
+		protected void setupGraph() {
+			ShaderType type = getJobParameters().type;
 
-	static {
+			addEndDependent(replaceMultiTexCoord12);
+			addEndDependent(replaceMultiTexCoord0);
+			if (type == ShaderType.VERTEX) {
+				addEndDependent(replaceMultiTexCoord3);
+			}
+		}
+
 		String multiTexCoordReplacement = "vec4(240.0, 240.0, 0.0, 1.0)";
-		replaceMultiTexCoord12 = new SearchTerminals<Parameters>() {
+		final LifecycleUser<Parameters> replaceMultiTexCoord12 = new SearchTerminals<Parameters>() {
 			@Override
 			protected Collection<HandlerTarget<Parameters>> getTargets() {
 				InputAvailability inputs = ((AttributeParameters) getJobParameters()).inputs;
@@ -72,7 +61,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 			}
 		}.targets(CachePolicy.ON_JOB);
 
-		replaceMultiTexCoord0 = new SearchTerminals<Parameters>() {
+		final LifecycleUser<Parameters> replaceMultiTexCoord0 = new SearchTerminals<Parameters>() {
 			@Override
 			protected Collection<HandlerTarget<Parameters>> getTargets() {
 				InputAvailability inputs = ((AttributeParameters) getJobParameters()).inputs;
@@ -98,7 +87,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 
 		// this implementation mirrors the current "simple" one from
 		// AttributeShaderTransformer and doesn't do any type things
-		replaceMultiTexCoord3 = new Transformation<Parameters>() {
+		final LifecycleUser<Parameters> replaceMultiTexCoord3 = new Transformation<Parameters>() {
 			private boolean foundMixTexCoord3;
 			private boolean foundMCMidTexCoord;
 
@@ -136,15 +125,13 @@ class AttributeTransformation extends Transformation<Parameters> {
 				return foundMixTexCoord3 && !foundMCMidTexCoord;
 			}
 		};
-	}
+	};
 
-	static final LifecycleUser<Parameters> replaceGlTextureMatrix;
-	static final LifecycleUser<Parameters> textureMatrixInjections;
+	static final LifecycleUser<Parameters> patchTextureMatrices = new Transformation<Parameters>() {
 
-	static {
-		replaceGlTextureMatrix = new SearchTerminals<Parameters>()
+		final LifecycleUser<Parameters> replaceGlTextureMatrix = new SearchTerminals<Parameters>()
 				.singleTarget(new TerminalReplaceTargetImpl<>("gl_TextureMatrix", "iris_TextureMatrix"));
-		textureMatrixInjections = new RunPhase<Parameters>() {
+		final LifecycleUser<Parameters> textureMatrixInjections = new RunPhase<Parameters>() {
 			@Override
 			protected void run(TranslationUnitContext ctx) {
 				InputAvailability inputs = ((AttributeParameters) getJobParameters()).inputs;
@@ -170,15 +157,29 @@ class AttributeTransformation extends Transformation<Parameters> {
 								");\n");
 			}
 		};
-	}
 
-	static final LifecycleUser<Parameters> replaceEntityColorDeclaration;
-	static final LifecycleUser<Parameters> wrapOverlay;
-	static final LifecycleUser<Parameters> renameEntityColorFragment;
+		{
+			addEndDependent(replaceGlTextureMatrix);
+			addEndDependent(textureMatrixInjections);
+		}
+	};
 
-	static {
+	static final LifecycleUser<Parameters> patchOverlayColor = new Transformation<Parameters>() {
+		@Override
+		protected void setupGraph() {
+			ShaderType type = getJobParameters().type;
+
+			addEndDependent(replaceEntityColorDeclaration);
+
+			if (type == ShaderType.VERTEX || type == ShaderType.GEOMETRY) {
+				addEndDependent(wrapOverlayMain);
+			} else if (type == ShaderType.FRAGMENT) {
+				chainDependent(renameEntityColorFragment);
+			}
+		}
+
 		// does some of patchOverlayColor
-		replaceEntityColorDeclaration = new Transformation<Parameters>() {
+		final LifecycleUser<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
 				addEndDependent(new WalkPhase<Parameters>() {
@@ -228,21 +229,33 @@ class AttributeTransformation extends Transformation<Parameters> {
 			}
 		};
 
-		wrapOverlay = new MainWrapper<Parameters>() {
+		final MainWrapper<Parameters> wrapOverlayMain = new MainWrapper<Parameters>() {
 			@Override
 			protected String getMainContent() {
 				return getJobParameters().type == ShaderType.VERTEX
-						? "vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[2] * gl_MultiTexCoord2).xy);\n" +
-								"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\nirisMain();"
+						? "vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);\n" +
+								"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\nirisMain_overlayColor();"
 						: "entityColorGS = entityColor[0];\nirisMain();";
+			}
+
+			@Override
+			protected Collection<String> getDetectionResults() {
+				return ImmutableList.of(
+						getJobParameters().type == ShaderType.VERTEX
+								? "irisMain_overlayColor"
+								: "irisMain");
+			}
+
+			{
+				detectionResults(CachingSupplier.of(CachePolicy.ON_FIXED_PARAMETER_CHANGE, this::getDetectionResults));
 			}
 		};
 
-		renameEntityColorFragment = new SearchTerminals<Parameters>() {
+		final LifecycleUser<Parameters> renameEntityColorFragment = new SearchTerminals<Parameters>() {
 			@Override
 			public boolean isActive() {
 				return ((AttributeParameters) getJobParameters()).hasGeometry;
 			}
 		}.singleTarget(new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS"));
-	}
+	};
 }
