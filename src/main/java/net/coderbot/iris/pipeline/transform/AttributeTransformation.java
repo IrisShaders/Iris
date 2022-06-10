@@ -36,7 +36,9 @@ class AttributeTransformation extends Transformation<Parameters> {
 			addEndDependent(replaceMultiTexCoord3);
 		}
 
-		// TODO: patchTextureMatrices
+		// patchTextureMatrices
+		addEndDependent(replaceGlTextureMatrix);
+		addEndDependent(textureMatrixInjections);
 
 		// TODO: patchOverlayColor
 
@@ -52,10 +54,6 @@ class AttributeTransformation extends Transformation<Parameters> {
 	static final LifecycleUser<Parameters> replaceMultiTexCoord12;
 	static final LifecycleUser<Parameters> replaceMultiTexCoord0;
 	static final LifecycleUser<Parameters> replaceMultiTexCoord3;
-
-	static final LifecycleUser<Parameters> replaceEntityColorDeclaration;
-	static final LifecycleUser<Parameters> wrapOverlay;
-	static final LifecycleUser<Parameters> renameEntityColorFragment;
 
 	static {
 		String multiTexCoordReplacement = "vec4(240.0, 240.0, 0.0, 1.0)";
@@ -138,7 +136,47 @@ class AttributeTransformation extends Transformation<Parameters> {
 				return foundMixTexCoord3 && !foundMCMidTexCoord;
 			}
 		};
+	}
 
+	static final LifecycleUser<Parameters> replaceGlTextureMatrix;
+	static final LifecycleUser<Parameters> textureMatrixInjections;
+
+	static {
+		replaceGlTextureMatrix = new SearchTerminals<Parameters>()
+				.singleTarget(new TerminalReplaceTargetImpl<>("gl_TextureMatrix", "iris_TextureMatrix"));
+		textureMatrixInjections = new RunPhase<Parameters>() {
+			@Override
+			protected void run(TranslationUnitContext ctx) {
+				InputAvailability inputs = ((AttributeParameters) getJobParameters()).inputs;
+				injectExternalDeclarations(InjectionPoint.BEFORE_FUNCTIONS,
+						"const float iris_ONE_OVER_256 = 0.00390625;\n",
+						"const float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;\n",
+						inputs.lightmap
+								? "mat4 iris_LightmapTextureMatrix = gl_TextureMatrix[2];\n"
+								: "mat4 iris_LightmapTextureMatrix =" +
+										"mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
+										"     0.0, iris_ONE_OVER_256, 0.0, 0.0," +
+										"     0.0, 0.0, iris_ONE_OVER_256, 0.0," +
+										"     iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_256);",
+						"mat4 iris_TextureMatrix[8] = mat4[8](" +
+								"gl_TextureMatrix[0]," +
+								"iris_LightmapTextureMatrix," +
+								"mat4(1.0)," +
+								"mat4(1.0)," +
+								"mat4(1.0)," +
+								"mat4(1.0)," +
+								"mat4(1.0)," +
+								"mat4(1.0)" +
+								");\n");
+			}
+		};
+	}
+
+	static final LifecycleUser<Parameters> replaceEntityColorDeclaration;
+	static final LifecycleUser<Parameters> wrapOverlay;
+	static final LifecycleUser<Parameters> renameEntityColorFragment;
+
+	static {
 		// does some of patchOverlayColor
 		replaceEntityColorDeclaration = new Transformation<Parameters>() {
 			@Override
