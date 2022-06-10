@@ -51,13 +51,13 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 	}
 
 	// see SodiumTerrainPipeline for the original patcher
-	static LifecycleUser<Parameters> wrapFTransform = new WrapIdentifier<Parameters>()
+	static final LifecycleUser<Parameters> wrapFTransform = new WrapIdentifier<Parameters>()
 			.wrapTarget("ftransform")
 			.detectionResult("iris_ftransform")
 			.injectionLocation(InjectionPoint.BEFORE_FUNCTIONS)
 			.injectionExternalDeclaration("vec4 iris_ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 
-	static LifecycleUser<Parameters> wrapVertex = new WrapIdentifier<Parameters>() {
+	static final LifecycleUser<Parameters> wrapVertex = new WrapIdentifier<Parameters>() {
 		@Override
 		protected ActivatableLifecycleUser<Parameters> getWrapResultDetector() {
 			return new SearchTerminals<Parameters>()
@@ -79,7 +79,7 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 			.parsedReplacement("vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)")
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
 
-	static LifecycleUser<Parameters> wrapMultiTexCoord = new WrapIdentifier<Parameters>() {
+	static final LifecycleUser<Parameters> wrapMultiTexCoord = new WrapIdentifier<Parameters>() {
 		@Override
 		protected ActivatableLifecycleUser<Parameters> getWrapResultDetector() {
 			return new SearchTerminals<Parameters>()
@@ -100,38 +100,38 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 			.parsedReplacement("vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)")
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
 
-	static LifecycleUser<Parameters> wrapColor = new WrapIdentifier<Parameters>()
+	static final LifecycleUser<Parameters> wrapColor = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_Color")
 			.detectionResult("a_Color")
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("attribute vec4 a_Color;");
 
-	static LifecycleUser<Parameters> wrapNormal = new WrapIdentifier<Parameters>()
+	static final LifecycleUser<Parameters> wrapNormal = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_Normal")
 			.detectionResult("a_Normal")
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("attribute vec3 a_Normal;");
 
-	static LifecycleUser<Parameters> wrapModelViewMatrix = new WrapIdentifier<Parameters>()
+	static final LifecycleUser<Parameters> wrapModelViewMatrix = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_ModelViewMatrix")
 			.detectionResult("u_ModelViewMatrix")
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("uniform mat4 u_ModelViewMatrix;");
 
-	static LifecycleUser<Parameters> wrapModelViewProjectionMatrix = new WrapIdentifier<Parameters>()
+	static final LifecycleUser<Parameters> wrapModelViewProjectionMatrix = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_ModelViewProjectionMatrix")
 			.detectionResult("u_ModelViewProjectionMatrix")
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("uniform mat4 u_ModelViewProjectionMatrix;");
 
-	static LifecycleUser<Parameters> wrapNormalMatrix = new WrapIdentifier<Parameters>()
+	static final LifecycleUser<Parameters> wrapNormalMatrix = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_NormalMatrix")
 			.detectionResult("u_NormalMatrix")
 			.parsedReplacement("mat3(u_NormalMatrix)")
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("uniform mat4 u_NormalMatrix;");
 
-	static LifecycleUser<Parameters> replaceTextureMatrix0 = new Transformation<Parameters>() {
+	static final LifecycleUser<Parameters> replaceTextureMatrix0 = new Transformation<Parameters>() {
 		{
 			addEndDependent(new WalkPhase<Parameters>() {
 				ParseTreePattern textureMatrixPattern;
