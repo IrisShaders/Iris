@@ -33,7 +33,10 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * BUG: Breaks shadows on Complementary
  * -> Test by doing passthrough and seeing if that works
  * 
- * BUG: (using only this patcher) entities are fully white, seems like a iris_TextureMatrix issue
+ * BUG: (using only this patcher) entities are fully white, seems like a
+ * iris_TextureMatrix issue
+ * 
+ * BUG: ERROR: 0:1801: Use of undeclared identifier 'entityColor'
  */
 class AttributeTransformation extends Transformation<Parameters> {
 	{
@@ -191,13 +194,40 @@ class AttributeTransformation extends Transformation<Parameters> {
 			} else if (type == ShaderType.FRAGMENT) {
 				chainDependent(renameEntityColorFragment);
 			}
+
+			appendDependent(checkHasOverlay);
 		}
+
+		private boolean hasOverlay;
+
+		@Override
+		public void resetState() {
+			hasOverlay = false;
+		}
+
+		final LifecycleUser<Parameters> checkHasOverlay = new RunPhase<Parameters>() {
+			@Override
+			protected void run(TranslationUnitContext ctx) {
+				hasOverlay = ((AttributeParameters) getJobParameters()).inputs.overlay;
+			}
+		};
 
 		// PREV TODO:
 		// TODO: We're exposing entityColor to this stage even if it isn't declared in
 		// this stage. But this is needed for the pass-through behavior.
 
 		final LifecycleUser<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
+			@Override
+			protected void setupGraph() {
+				chainDependent(removeEntityColorUniform);
+
+				if (getJobParameters().type == ShaderType.GEOMETRY) {
+					chainDependent(replaceEntityColorAccess);
+				}
+
+				chainDependent(insertEntityColorInouts);
+			}
+
 			private boolean foundEntityColor;
 
 			@Override
@@ -205,63 +235,63 @@ class AttributeTransformation extends Transformation<Parameters> {
 				foundEntityColor = false;
 			}
 
-			@Override
-			protected void setupGraph() {
-				addEndDependent(new WalkPhase<Parameters>() {
-					ParseTreePattern entityColorPattern;
+			final LifecycleUser<Parameters> removeEntityColorUniform = new WalkPhase<Parameters>() {
+				ParseTreePattern entityColorPattern;
 
-					@Override
-					public void init() {
-						entityColorPattern = compilePattern(
-								"uniform vec4 entityColor;",
-								GLSLParser.RULE_externalDeclaration);
-					}
-
-					@Override
-					public void enterExternalDeclaration(ExternalDeclarationContext ctx) {
-						ParseTreeMatch match = entityColorPattern.match(ctx);
-						if (match.succeeded()) {
-							removeNode(ctx);
-							foundEntityColor = true;
-						}
-					}
-				});
-
-				// replace read references to grab the color from the first vertex.
-				if (getJobParameters().type == ShaderType.GEOMETRY) {
-					chainDependent(new SearchTerminals<Parameters>().singleTarget(
-							new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)));
+				@Override
+				public void init() {
+					entityColorPattern = compilePattern(
+							"uniform vec4 entityColor;",
+							GLSLParser.RULE_externalDeclaration);
 				}
 
-				chainDependent(new RunPhase<Parameters>() {
-					@Override
-					protected void run(TranslationUnitContext ctx) {
-						switch (getJobParameters().type) {
-							case VERTEX:
-								injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
-										"uniform sampler2D iris_overlay;",
-										"varying vec4 entityColor;");
-								break;
-							case GEOMETRY:
-								injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
-										"out vec4 entityColorGS;",
-										"in vec4 entityColor[];");
-								break;
-							case FRAGMENT:
-								// if entityColor is not declared as a uniform, we don't make it available
-								if (foundEntityColor) {
-									injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
-								}
-								break;
-						}
+				@Override
+				public void enterExternalDeclaration(ExternalDeclarationContext ctx) {
+					ParseTreeMatch match = entityColorPattern.match(ctx);
+					if (match.succeeded()) {
+						removeNode(ctx);
+						foundEntityColor = true;
 					}
-				});
-			}
+				}
+			}.activation(() -> hasOverlay);
+
+			// replace read references to grab the color from the first vertex.
+			final LifecycleUser<Parameters> replaceEntityColorAccess = new SearchTerminals<Parameters>()
+					.singleTarget(
+							new ParsedReplaceTargetImpl<>(
+									"entityColor",
+									"entityColor[0]",
+									GLSLParser::expression))
+					.activation(() -> hasOverlay);
+
+			final LifecycleUser<Parameters> insertEntityColorInouts = new RunPhase<Parameters>() {
+				@Override
+				protected void run(TranslationUnitContext ctx) {
+					switch (getJobParameters().type) {
+						case VERTEX:
+							injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+									"uniform sampler2D iris_overlay;",
+									"varying vec4 entityColor;");
+							break;
+						case GEOMETRY:
+							injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+									"out vec4 entityColorGS;",
+									"in vec4 entityColor[];");
+							break;
+						case FRAGMENT:
+							// if entityColor is not declared as a uniform, we don't make it available
+							if (foundEntityColor) {
+								injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
+							}
+							break;
+					}
+				}
+			}.activation(() -> hasOverlay);
 		};
 
 		// Create our own main function to wrap the existing main function, so that we
 		// can pass through the overlay color at the end to the fragment stage.
-		final MainWrapper<Parameters> wrapOverlayMain = new MainWrapper<Parameters>() {
+		final LifecycleUser<Parameters> wrapOverlayMain = new MainWrapper<Parameters>() {
 			@Override
 			protected String getMainContent() {
 				return getJobParameters().type == ShaderType.VERTEX
@@ -281,7 +311,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 			{
 				detectionResults(CachingSupplier.of(CachePolicy.ON_FIXED_PARAMETER_CHANGE, this::getDetectionResults));
 			}
-		};
+		}.activation(() -> hasOverlay);
 
 		// Different output name to avoid a name collision in the geometry shader.
 		final LifecycleUser<Parameters> renameEntityColorFragment = new SearchTerminals<Parameters>() {
@@ -289,6 +319,8 @@ class AttributeTransformation extends Transformation<Parameters> {
 			public boolean isActive() {
 				return ((AttributeParameters) getJobParameters()).hasGeometry;
 			}
-		}.singleTarget(new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS"));
+		}
+				.singleTarget(new TerminalReplaceTargetImpl<>("entityColor", "entityColorGS"))
+				.activation(() -> hasOverlay);
 	};
 }
