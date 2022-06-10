@@ -127,10 +127,15 @@ class AttributeTransformation extends Transformation<Parameters> {
 
 				chainDependent(new SearchTerminals<Parameters>()
 						.singleTarget(new TerminalReplaceTargetImpl<>("gl_MultiTexCoord3", "mc_midTexCoord"))
-						.activation(() -> foundMixTexCoord3 && !foundMCMidTexCoord));
+						.activation(this::doReplacement));
 
-				chainConcurrentDependent(RunPhase.withInjectExternalDeclarations(
-						InjectionPoint.BEFORE_FUNCTIONS, "attribute vec4 mc_midTexCoord;"));
+				chainConcurrentDependent(RunPhase.<Parameters>withInjectExternalDeclarations(
+						InjectionPoint.BEFORE_FUNCTIONS, "attribute vec4 mc_midTexCoord;")
+						.activation(this::doReplacement));
+			}
+
+			private boolean doReplacement() {
+				return foundMixTexCoord3 && !foundMCMidTexCoord;
 			}
 		};
 
