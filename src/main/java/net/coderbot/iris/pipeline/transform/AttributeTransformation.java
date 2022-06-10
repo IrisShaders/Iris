@@ -30,7 +30,10 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * Replaces what AttributeShaderTransformer does but using glsl-transformer to
  * do it more robustly.
  * 
- * TODO: Breaks shadows on Complementary
+ * BUG: Breaks shadows on Complementary
+ * -> Test by doing passthrough and seeing if that works
+ * 
+ * BUG: (using only this patcher) entities are fully white, seems like a iris_TextureMatrix issue
  */
 class AttributeTransformation extends Transformation<Parameters> {
 	{
@@ -146,7 +149,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 			@Override
 			protected void run(TranslationUnitContext ctx) {
 				InputAvailability inputs = ((AttributeParameters) getJobParameters()).inputs;
-				injectExternalDeclarations(InjectionPoint.BEFORE_FUNCTIONS,
+				injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
 						"const float iris_ONE_OVER_256 = 0.00390625;\n",
 						"const float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;\n",
 						inputs.lightmap
@@ -170,8 +173,8 @@ class AttributeTransformation extends Transformation<Parameters> {
 		};
 
 		{
-			addEndDependent(replaceGlTextureMatrix);
-			addEndDependent(textureMatrixInjections);
+			chainDependent(replaceGlTextureMatrix);
+			chainDependent(textureMatrixInjections);
 		}
 	};
 
