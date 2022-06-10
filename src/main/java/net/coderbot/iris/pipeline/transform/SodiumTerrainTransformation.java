@@ -7,6 +7,8 @@ import java.util.stream.Stream;
 import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
 import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
 
+import com.google.common.collect.ImmutableList;
+
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.ArrayAccessExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.MemberAccessExpressionContext;
@@ -57,47 +59,23 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 			.injectionLocation(InjectionPoint.BEFORE_FUNCTIONS)
 			.injectionExternalDeclaration("vec4 iris_ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 
-	static final LifecycleUser<Parameters> wrapVertex = new WrapIdentifier<Parameters>() {
-		@Override
-		protected ActivatableLifecycleUser<Parameters> getWrapResultDetector() {
-			return new SearchTerminals<Parameters>()
-					.targets(
-							Stream.of("a_Pos", "u_ModelScale", "d_ModelOffset")
-									.map(WrapThrowTargetImpl<Parameters>::new)
-									.collect(Collectors.toList()));
-		}
-
-		@Override
-		protected ActivatableLifecycleUser<Parameters> getInjector() {
-			return RunPhase.withInjectExternalDeclarations(injectionLocation(),
+	static final LifecycleUser<Parameters> wrapVertex = new WrapIdentifier<Parameters>()
+			.wrapTarget("gl_Vertex")
+			.detectionResults(ImmutableList.of("a_Pos", "u_ModelScale", "d_ModelOffset"))
+			.parsedReplacement("vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)")
+			.injectionExternalDeclarations(ImmutableList.of(
 					"attribute vec3 a_Pos;",
 					"uniform vec3 u_ModelScale;",
-					"attribute vec4 d_ModelOffset;");
-		}
-	}
-			.wrapTarget("gl_Vertex")
-			.parsedReplacement("vec4((a_Pos * u_ModelScale) + d_ModelOffset.xyz, 1.0)")
+					"attribute vec4 d_ModelOffset;"))
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
 
-	static final LifecycleUser<Parameters> wrapMultiTexCoord = new WrapIdentifier<Parameters>() {
-		@Override
-		protected ActivatableLifecycleUser<Parameters> getWrapResultDetector() {
-			return new SearchTerminals<Parameters>()
-					.targets(
-							Stream.of("a_TexCoord", "u_TextureScale")
-									.map((detect) -> new WrapThrowTargetImpl<Parameters>(detect))
-									.collect(Collectors.toList()));
-		}
-
-		@Override
-		protected ActivatableLifecycleUser<Parameters> getInjector() {
-			return RunPhase.withInjectExternalDeclarations(injectionLocation(),
-					"uniform vec2 u_TextureScale;",
-					"attribute vec2 a_TexCoord;");
-		}
-	}
+	static final LifecycleUser<Parameters> wrapMultiTexCoord = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_MultiTexCoord0")
+			.detectionResults(ImmutableList.of("a_TexCoord", "u_TextureScale"))
 			.parsedReplacement("vec4(a_TexCoord * u_TextureScale, 0.0, 1.0)")
+			.injectionExternalDeclarations(ImmutableList.of(
+					"uniform vec2 u_TextureScale;",
+					"attribute vec2 a_TexCoord;"))
 			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
 
 	static final LifecycleUser<Parameters> wrapColor = new WrapIdentifier<Parameters>()
