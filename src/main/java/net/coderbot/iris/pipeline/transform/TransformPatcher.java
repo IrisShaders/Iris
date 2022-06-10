@@ -18,7 +18,7 @@ import io.github.douira.glsl_transformer.transform.TransformationManager;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
+import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
@@ -85,24 +85,28 @@ public class TransformPatcher {
 		manager.setParseTokenFilter(parseTokenFilter);
 	}
 
-	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher) {
+	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher, boolean doLogging) {
 		if (source == null) {
 			return null;
 		}
 
-		if (IrisLogging.ENABLE_SPAM) {
+		if (IrisLogging.ENABLE_SPAM && doLogging) {
 			LOGGER.debug("INPUT: " + source + " END INPUT");
 		}
 
 		long time = System.currentTimeMillis();
 		String patched = patcher.get();
 
-		if (IrisLogging.ENABLE_SPAM) {
+		if (IrisLogging.ENABLE_SPAM && doLogging) {
 			LOGGER.debug("INFO: " + patchInfo);
 			LOGGER.debug("TIME: patching took " + (System.currentTimeMillis() - time) + "ms");
 			LOGGER.debug("PATCHED: " + patched + " END PATCHED");
 		}
 		return patched;
+	}
+
+	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher) {
+		return inspectPatch(source, patchInfo, patcher, true);
 	}
 
 	private static String transform(String source, Parameters parameters) {
@@ -114,17 +118,17 @@ public class TransformPatcher {
 				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
 				// routing through original patcher until changes to AttributeShaderTransformer
 				// can be caught up in TransformPatcher
-				() -> AttributeShaderTransformer.patch(source, type, hasGeometry, inputs));
-		// () -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type,
-		// hasGeometry, inputs)));
+				// () -> AttributeShaderTransformer.patch(source, type, hasGeometry, inputs));
+				() -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type,
+						hasGeometry, inputs)));
 	}
 
 	public static String patchSodiumTerrain(String source, ShaderType type) {
 		return inspectPatch(source,
 				"TYPE: " + type,
-				() -> transform(source, new Parameters(Patch.SODIUM_TERRAIN, type)));
-		// () -> type == ShaderType.VERTEX
-		// ? SodiumTerrainPipeline.transformVertexShader(source)
-		// : SodiumTerrainPipeline.transformFragmentShader(source));
+				// () -> transform(source, new Parameters(Patch.SODIUM_TERRAIN, type)));
+				() -> type == ShaderType.VERTEX
+						? SodiumTerrainPipeline.transformVertexShader(source)
+						: SodiumTerrainPipeline.transformFragmentShader(source), false);
 	}
 }
