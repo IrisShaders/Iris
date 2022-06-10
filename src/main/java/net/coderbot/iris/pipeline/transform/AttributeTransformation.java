@@ -45,6 +45,11 @@ class AttributeTransformation extends Transformation<Parameters> {
 			}
 		}
 
+		// PREV NOTE:
+		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both ways to refer to the
+		// lightmap texture coordinate.
+		// See https://github.com/IrisShaders/Iris/issues/1149
+
 		String multiTexCoordReplacement = "vec4(240.0, 240.0, 0.0, 1.0)";
 		final LifecycleUser<Parameters> replaceMultiTexCoord12 = new SearchTerminals<Parameters>() {
 			@Override
@@ -140,7 +145,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 						"const float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;\n",
 						inputs.lightmap
 								? "mat4 iris_LightmapTextureMatrix = gl_TextureMatrix[2];\n"
-								: "mat4 iris_LightmapTextureMatrix =" +
+								: "mat4 iris_LightmapTextureMatrix =" + // column major
 										"mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
 										"     0.0, iris_ONE_OVER_256, 0.0, 0.0," +
 										"     0.0, 0.0, iris_ONE_OVER_256, 0.0," +
@@ -164,6 +169,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 		}
 	};
 
+	// Add entity color -> overlay color attribute support.
 	static final LifecycleUser<Parameters> patchOverlayColor = new Transformation<Parameters>() {
 		@Override
 		protected void setupGraph() {
@@ -178,8 +184,18 @@ class AttributeTransformation extends Transformation<Parameters> {
 			}
 		}
 
-		// does some of patchOverlayColor
+		// PREV TODO:
+		// TODO: We're exposing entityColor to this stage even if it isn't declared in
+		// this stage. But this is needed for the pass-through behavior.
+
 		final LifecycleUser<Parameters> replaceEntityColorDeclaration = new Transformation<Parameters>() {
+			private boolean foundEntityColor;
+
+			@Override
+			public void resetState() {
+				foundEntityColor = false;
+			}
+
 			@Override
 			protected void setupGraph() {
 				addEndDependent(new WalkPhase<Parameters>() {
@@ -197,10 +213,12 @@ class AttributeTransformation extends Transformation<Parameters> {
 						ParseTreeMatch match = entityColorPattern.match(ctx);
 						if (match.succeeded()) {
 							removeNode(ctx);
+							foundEntityColor = true;
 						}
 					}
 				});
 
+				// replace read references to grab the color from the first vertex.
 				if (getJobParameters().type == ShaderType.GEOMETRY) {
 					chainDependent(new SearchTerminals<Parameters>().singleTarget(
 							new ParsedReplaceTargetImpl<>("entityColor", "entityColor[0]", GLSLParser::expression)));
@@ -221,7 +239,10 @@ class AttributeTransformation extends Transformation<Parameters> {
 										"in vec4 entityColor[];");
 								break;
 							case FRAGMENT:
-								injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
+								// if entityColor is not declared as a uniform, we don't make it available
+								if (foundEntityColor) {
+									injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
+								}
 								break;
 						}
 					}
@@ -229,6 +250,8 @@ class AttributeTransformation extends Transformation<Parameters> {
 			}
 		};
 
+		// Create our own main function to wrap the existing main function, so that we
+		// can pass through the overlay color at the end to the fragment stage.
 		final MainWrapper<Parameters> wrapOverlayMain = new MainWrapper<Parameters>() {
 			@Override
 			protected String getMainContent() {
@@ -251,6 +274,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 			}
 		};
 
+		// Different output name to avoid a name collision in the geometry shader.
 		final LifecycleUser<Parameters> renameEntityColorFragment = new SearchTerminals<Parameters>() {
 			@Override
 			public boolean isActive() {
