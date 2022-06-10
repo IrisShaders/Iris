@@ -69,8 +69,6 @@ public class TransformPatcher {
 			protected void setupGraph() {
 				Patch patch = getJobParameters().patch;
 
-				addEndDependent(detectReserved);
-
 				if (patch == Patch.ATTRIBUTES) {
 					addEndDependent(attributeTransformation);
 				}
@@ -78,6 +76,9 @@ public class TransformPatcher {
 				if (patch == Patch.SODIUM_TERRAIN) {
 					addEndDependent(sodiumTerrainTransformation);
 				}
+
+				// add reserved identifier detection before everything
+				appendDependent(detectReserved);
 			}
 		});
 
