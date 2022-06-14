@@ -19,7 +19,7 @@ public class PipelineManager {
 	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
 	private final Map<DimensionId, WorldRenderingPipeline> pipelinesPerDimension = new HashMap<>();
 	private WorldRenderingPipeline pipeline = new FixedFunctionWorldRenderingPipeline();
-	private boolean sodiumShaderReloadNeeded;
+	private int versionCounterForSodiumShaderReload = 0;
 
 	public PipelineManager(Function<DimensionId, WorldRenderingPipeline> pipelineFactory) {
 		this.pipelineFactory = pipelineFactory;
@@ -33,7 +33,6 @@ public class PipelineManager {
 			Iris.logger.info("Creating pipeline for dimension {}", currentDimension);
 			pipeline = pipelineFactory.apply(currentDimension);
 			pipelinesPerDimension.put(currentDimension, pipeline);
-			sodiumShaderReloadNeeded = true;
 
 			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
 				if (Minecraft.getInstance().levelRenderer != null) {
@@ -58,12 +57,8 @@ public class PipelineManager {
 		return Optional.ofNullable(pipeline);
 	}
 
-	public boolean isSodiumShaderReloadNeeded() {
-		return sodiumShaderReloadNeeded;
-	}
-
-	public void clearSodiumShaderReloadNeeded() {
-		sodiumShaderReloadNeeded = false;
+	public int getVersionCounterForSodiumShaderReload() {
+		return versionCounterForSodiumShaderReload;
 	}
 
 	public void setAsInstance() {
@@ -102,6 +97,7 @@ public class PipelineManager {
 
 		pipelinesPerDimension.clear();
 		pipeline = null;
+		versionCounterForSodiumShaderReload++;
 	}
 
 	private void resetTextureState() {
