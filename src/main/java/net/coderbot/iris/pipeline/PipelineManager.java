@@ -61,22 +61,6 @@ public class PipelineManager {
 		return versionCounterForSodiumShaderReload;
 	}
 
-	public void setAsInstance() {
-		if (instance != null) {
-			throw new IllegalStateException("Multiple pipeline managers active at one time");
-		} else {
-			instance = this;
-		}
-	}
-
-	public static void resetInstance() {
-		instance = null;
-	}
-
-	public static PipelineManager getInstance() {
-		return instance;
-	}
-
 	/**
 	 * Destroys all the current pipelines.
 	 *
