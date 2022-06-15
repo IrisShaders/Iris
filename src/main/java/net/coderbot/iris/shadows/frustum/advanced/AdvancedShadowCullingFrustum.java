@@ -4,6 +4,7 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
+import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
@@ -15,9 +16,9 @@ import net.minecraft.world.phys.AABB;
  * <p>The key idea of this algorithm is that if you are looking at the sun, something behind you cannot directly cast
  * a shadow on things visible to you. It's clear why this wouldn't work for sun-bounce GI, since with sun-bounce GI an
  * object behind you could cause light to bounce on to things visible to you.</p>
- * 
+ *
  * <p>Derived from L. Spiro's clever algorithm & helpful diagrams described in a two-part blog tutorial:</p>
- * 
+ *
  * <ul>
  * <li><a href="http://lspiroengine.com/?p=153">Tutorial: Tightly Culling Shadow Casters for Directional Lights (Part 1)</a></li>
  * <li><a href="http://lspiroengine.com/?p=187">Tutorial: Tightly Culling Shadow Casters for Directional Lights (Part 2)</a></li>
@@ -322,18 +323,23 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 			// this avoids false negative - a single point being inside causes the box to pass
 			// this plane test
 
-			if (       !(plane.dot(new Vector4f(x1, y1, z1, 1.0F)) > 0.0F)
-					&& !(plane.dot(new Vector4f(x2, y1, z1, 1.0F)) > 0.0F)
-					&& !(plane.dot(new Vector4f(x1, y2, z1, 1.0F)) > 0.0F)
-					&& !(plane.dot(new Vector4f(x2, y2, z1, 1.0F)) > 0.0F)
-					&& !(plane.dot(new Vector4f(x1, y1, z2, 1.0F)) > 0.0F)
-					&& !(plane.dot(new Vector4f(x2, y1, z2, 1.0F)) > 0.0F)
-					&& !(plane.dot(new Vector4f(x1, y2, z2, 1.0F)) > 0.0F)
-					&& !(plane.dot(new Vector4f(x2, y2, z2, 1.0F)) > 0.0F)) {
+			if (       !(dot(plane, x1, y1, z1) > 0.0F)
+					&& !(dot(plane, x2, y1, z1) > 0.0F)
+					&& !(dot(plane, x1, y2, z1) > 0.0F)
+					&& !(dot(plane, x2, y2, z1) > 0.0F)
+					&& !(dot(plane, x1, y1, z2) > 0.0F)
+					&& !(dot(plane, x2, y1, z2) > 0.0F)
+					&& !(dot(plane, x1, y2, z2) > 0.0F)
+					&& !(dot(plane, x2, y2, z2) > 0.0F)) {
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	private float dot(Vector4f input, float x, float y, float z) {
+		// This won't get intrinsics since we compile against J8, but hopefully newer Java can autovectorize this...?
+		return Math.fma(input.x(), x, Math.fma(input.y(), y, Math.fma(input.z(), z, input.w())));
 	}
 }
