@@ -18,6 +18,16 @@ import java.nio.IntBuffer;
 public class IrisRenderSystem {
 	private static Matrix4f backupProjection;
 
+	public static void getIntegerv(int pname, int[] params) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glGetIntegerv(pname, params);
+	}
+
+	public static void getFloatv(int pname, float[] params) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glGetFloatv(pname, params);
+	}
+
 	public static void generateMipmaps(int mipmapTarget) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glGenerateMipmap(mipmapTarget);
@@ -28,9 +38,14 @@ public class IrisRenderSystem {
 		GL32C.glBindAttribLocation(program, index, name);
 	}
 
-	public static void texImage2D(int i, int j, int k, int l, int m, int n, int o, int p, @Nullable ByteBuffer byteBuffer) {
+	public static void texImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GL32C.glTexImage2D(i, j, k, l, m, n, o, p, byteBuffer);
+		GL32C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+	}
+
+	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
 	}
 
 	public static void uniform1f(int location, float v0) {
@@ -66,16 +81,6 @@ public class IrisRenderSystem {
 	public static void texParameteriv(int target, int pname, int[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glTexParameteriv(target, pname, params);
-	}
-
-	public static void blitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, int mask, int filter) {
-		RenderSystem.assertOnRenderThreadOrInit();
-		GL32C.glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
-	}
-
-	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
-		RenderSystem.assertOnRenderThreadOrInit();
-		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
 	}
 
 	public static String getProgramInfoLog(int program) {
@@ -121,6 +126,11 @@ public class IrisRenderSystem {
 	public static void detachShader(int program, int shader) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glDetachShader(program, shader);
+	}
+
+	public static int getTexParameteri(int target, int pname) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		return GL32C.glGetTexParameteri(target, pname);
 	}
 
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {

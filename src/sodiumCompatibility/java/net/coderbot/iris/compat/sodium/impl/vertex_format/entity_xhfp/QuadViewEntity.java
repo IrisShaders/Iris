@@ -1,33 +1,37 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
-import net.coderbot.iris.compat.sodium.impl.vertex_format.QuadView;
-import net.coderbot.iris.vertices.NormalHelper;
+import net.coderbot.iris.vertices.QuadView;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
-public abstract class QuadViewEntity extends QuadView {
+public abstract class QuadViewEntity implements QuadView {
 	long writePointer;
-	int stride = 48;
+	int stride;
 
+	@Override
 	public float x(int index) {
-		return getFloat(writePointer - stride * (4L - index));
+		return getFloat(writePointer - stride * (3L - index));
 	}
 
+	@Override
 	public float y(int index) {
-		return getFloat(writePointer + 4 - stride * (4L - index));
+		return getFloat(writePointer + 4 - stride * (3L - index));
 	}
 
+	@Override
 	public float z(int index) {
-		return getFloat(writePointer + 8 - stride * (4L - index));
+		return getFloat(writePointer + 8 - stride * (3L - index));
 	}
 
+	@Override
 	public float u(int index) {
-		return getFloat(writePointer + 16 - stride * (4L - index));
+		return getFloat(writePointer + 16 - stride * (3L - index));
 	}
 
+	@Override
 	public float v(int index) {
-		return getFloat(writePointer + 20 - stride * (4L - index));
+		return getFloat(writePointer + 20 - stride * (3L - index));
 	}
 
 	abstract float getFloat(long writePointer);
@@ -45,11 +49,11 @@ public abstract class QuadViewEntity extends QuadView {
 	}
 
 	public static class QuadViewEntityNio extends QuadViewEntity {
-		ByteBuffer buffer;
+		private ByteBuffer buffer;
 
-		public void setup(ByteBuffer buffer, int writeOffset, int stride) {
+		public void setup(ByteBuffer buffer, int writePointer, int stride) {
 			this.buffer = buffer;
-			this.writePointer = writeOffset;
+			this.writePointer = writePointer;
 			this.stride = stride;
 		}
 

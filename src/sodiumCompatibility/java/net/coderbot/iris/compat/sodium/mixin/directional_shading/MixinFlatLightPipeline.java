@@ -10,13 +10,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(FlatLightPipeline.class)
 public class MixinFlatLightPipeline {
-    @Redirect(method = "calculate", at = @At(value = "INVOKE",
-            target = "net/minecraft/world/level/BlockAndTintGetter.getShade (Lnet/minecraft/core/Direction;Z)F"))
-    private float iris$getBrightness(BlockAndTintGetter level, Direction direction, boolean shaded) {
-        if (BlockRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
-            return 1.0F;
-        } else {
-            return level.getShade(direction, shaded);
-        }
-    }
+	@Redirect(method = "calculate", at = @At(value = "INVOKE",
+			target = "net/minecraft/world/level/BlockAndTintGetter.getShade (Lnet/minecraft/core/Direction;Z)F"))
+	private float iris$getBrightness(BlockAndTintGetter level, Direction direction, boolean shaded) {
+		if (BlockRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
+			return 1.0F;
+		} else {
+			return level.getShade(direction, shaded);
+		}
+	}
 }

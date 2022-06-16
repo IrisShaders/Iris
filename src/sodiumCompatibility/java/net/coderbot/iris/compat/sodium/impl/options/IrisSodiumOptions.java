@@ -11,16 +11,16 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+
+
 
 import java.io.IOException;
 
 public class IrisSodiumOptions {
     public static OptionImpl<Options, Integer> createMaxShadowDistanceSlider(MinecraftOptionsStorage vanillaOpts) {
         OptionImpl<Options, Integer> maxShadowDistanceSlider = OptionImpl.createBuilder(int.class, vanillaOpts)
-                .setName(new TranslatableComponent("options.iris.shadowDistance"))
-                .setTooltip(new TranslatableComponent("options.iris.shadowDistance.sodium_tooltip"))
+                .setName(Component.translatable("options.iris.shadowDistance"))
+                .setTooltip(Component.translatable("options.iris.shadowDistance.sodium_tooltip"))
                 .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantityOrDisabled("Chunks", "Disabled")))
 				.setBinding((options, value) -> {
 						IrisVideoSettings.shadowDistance = value;
@@ -42,14 +42,14 @@ public class IrisSodiumOptions {
 
     public static OptionImpl<Options, SupportedGraphicsMode> createLimitedVideoSettingsButton(MinecraftOptionsStorage vanillaOpts) {
         return OptionImpl.createBuilder(SupportedGraphicsMode.class, vanillaOpts)
-                .setName(new TranslatableComponent("options.graphics"))
+                .setName(Component.translatable("options.graphics"))
 				// TODO: State that Fabulous Graphics is incompatible with Shader Packs in the tooltip
-                .setTooltip(new TranslatableComponent("sodium.options.graphics_quality.tooltip"))
+                .setTooltip(Component.translatable("sodium.options.graphics_quality.tooltip"))
                 .setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class,
-						new Component[] { new TextComponent("Fast"), new TextComponent("Fancy") }))
+						new Component[] { Component.literal("Fast"), Component.literal("Fancy") }))
                 .setBinding(
-                        (opts, value) -> opts.graphicsMode = value.toVanilla(),
-                        opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode))
+                        (opts, value) -> opts.graphicsMode().set(value.toVanilla()),
+                        opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode().get()))
                 .setImpact(OptionImpact.HIGH)
                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 .build();

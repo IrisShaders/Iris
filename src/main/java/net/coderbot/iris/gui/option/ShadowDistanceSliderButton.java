@@ -1,13 +1,11 @@
 package net.coderbot.iris.gui.option;
 
 import java.util.List;
-import net.minecraft.client.Options;
-import net.minecraft.client.ProgressOption;
-import net.minecraft.client.gui.components.SliderButton;
 import net.minecraft.util.FormattedCharSequence;
 
-public class ShadowDistanceSliderButton extends SliderButton {
-	public ShadowDistanceSliderButton(Options gameOptions, int x, int y, int width, int height, ProgressOption option, List<FormattedCharSequence> orderedTooltip) {
+public class ShadowDistanceSliderButton { //extends AbstractWidget {
+	/*
+	public ShadowDistanceSliderButton(Options gameOptions, int x, int y, int width, int height, ProgressOption option, Option.TooltipSupplier<Double> orderedTooltip) {
 		super(gameOptions, x, y, width, height, option, orderedTooltip);
 	}
 
@@ -21,5 +19,5 @@ public class ShadowDistanceSliderButton extends SliderButton {
 
 		this.active = actuallyActive;
 		return mouseOver;
-	}
+	}*/
 }

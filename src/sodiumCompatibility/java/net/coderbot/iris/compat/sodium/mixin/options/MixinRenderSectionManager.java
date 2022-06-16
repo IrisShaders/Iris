@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  */
 @Mixin(RenderSectionManager.class)
 public class MixinRenderSectionManager {
-    @Redirect(method = "setup", remap = false,
+    /*@Redirect(method = "setup", remap = false,
             at = @At(value = "FIELD",
                     target = "net/caffeinemc/sodium/config/user/UserConfig$PerformanceSettings.useFogOcclusion : Z",
                     remap = false))
@@ -22,5 +22,5 @@ public class MixinRenderSectionManager {
         } else {
             return settings.useFogOcclusion;
         }
-    }
+    }*/
 }

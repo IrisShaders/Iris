@@ -13,8 +13,6 @@ See https://github.com/VazkiiMods/Botania/issues/3912
 
 Similarly to Botania, ComputerCraft uses custom shader programs for high-performance monitor rendering. Unfortunately, this doesn't work with Iris shader programs.
 
-This will need to be fixed on the side of ComputerCraft once Iris has requisite code to accommodate the fix, which will be available once Iris has fixed this issue: [Screens/monitors from Lifts mod turn black with shaders enabled](https://github.com/IrisShaders/Iris/issues/686). Once this issue is closed, CC:R will be able to render using its shaders to a custom framebuffer, then that framebuffer can be rendered to the scene with Iris's shaders.
-
 The ComputerCraft: Restitched developers have implemented specific workarounds when using shader packs with OptiFine, but have not done so for Iris.
 
 See: https://github.com/cc-tweaked/cc-restitched/issues/1
@@ -43,3 +41,10 @@ See https://github.com/Earthcomputer/multiconnect/issues/205
 This is a fundamental limitation of how portals are rendered when shaders are enabled. They are composited on to the scene after rendering has completed, meaning that they cannot be rendered behind translucent surfaces like water.
 
 This cannot be fixed by either Immersive Portals or Iris without completely reworking how portal rendering works with shaders.
+
+
+# Tweakeroo: Freecam
+
+Tweakeroo's freecam has various issues with Iris. We recommend not using Tweakeroo's freecam feature, and using https://github.com/hashalite/Freecam for freecam instead.
+
+See: https://github.com/maruohon/tweakeroo/issues/301

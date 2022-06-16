@@ -3,17 +3,19 @@ package net.coderbot.iris.gui.option;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.ProgressOption;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+
+import net.minecraft.util.FormattedCharSequence;
+
 import java.io.IOException;
+import java.util.List;
 
 public class IrisVideoSettings {
 	public static int shadowDistance = 32;
 
 	// TODO: Tell the user to check in the shader options once that's supported.
-	private static final Component DISABLED_TOOLTIP = new TranslatableComponent("options.iris.shadowDistance.disabled");
-	private static final Component ENABLED_TOOLTIP = new TranslatableComponent("options.iris.shadowDistance.enabled");
+	private static final Component DISABLED_TOOLTIP = Component.translatable("options.iris.shadowDistance.disabled");
+	private static final Component ENABLED_TOOLTIP = Component.translatable("options.iris.shadowDistance.enabled");
 
 	public static int getOverriddenShadowDistance(int base) {
 		return Iris.getPipelineManager().getPipeline()
@@ -26,7 +28,8 @@ public class IrisVideoSettings {
 				.map(pipeline -> !pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent())
 				.orElse(true);
 	}
-
+	// TODO 22w12a fix this
+/*
 	public static final ProgressOption RENDER_DISTANCE = new ShadowDistanceOption("options.iris.shadowDistance", 0.0D, 32.0D, 1.0F, (gameOptions) -> {
 		return (double) getOverriddenShadowDistance(shadowDistance);
 	}, (gameOptions, viewDistance) -> {
@@ -47,11 +50,11 @@ public class IrisVideoSettings {
 		}
 
 		if (d <= 0.0) {
-			return new TranslatableComponent("options.generic_value", new TranslatableComponent("options.iris.shadowDistance"), "0 (disabled)");
+			return Component.translatable("options.generic_value", Component.translatable("options.iris.shadowDistance"), "0 (disabled)");
 		} else {
-			return new TranslatableComponent("options.generic_value",
-					new TranslatableComponent("options.iris.shadowDistance"),
-					new TranslatableComponent("options.chunks", d));
+			return Component.translatable("options.generic_value",
+					Component.translatable("options.iris.shadowDistance"),
+					Component.translatable("options.chunks", d));
 		}
 	}, client -> {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
@@ -68,6 +71,6 @@ public class IrisVideoSettings {
 			tooltip = ENABLED_TOOLTIP;
 		}
 
-		return Minecraft.getInstance().font.split(tooltip, 200);
-	});
+		return (Option.TooltipSupplier<Double>) aDouble -> Minecraft.getInstance().font.split(tooltip, 200);
+	});*/
 }

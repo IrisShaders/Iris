@@ -3,8 +3,9 @@ package net.coderbot.iris.pipeline.newshader;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.AttributeShaderTransformer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
+import net.coderbot.iris.pipeline.patcher.CompositeDepthTransformer;
 import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
@@ -70,7 +71,7 @@ public class TriforcePatcher {
 			}
 
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_FragData iris_FragData");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 iris_FragData[8];");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "layout (location = 0) out vec4 iris_FragData[8];");
 		}
 
 		if (type == ShaderType.VERTEX) {
@@ -113,8 +114,7 @@ public class TriforcePatcher {
 		patchCommon(transformations, type, false);
 
 		if (inputs.hasOverlay()) {
-			// TODO: Change this once we implement 1.17 geometry shader support!
-			AttributeShaderTransformer.patch(transformations, type, hasGeometry);
+			AttributeShaderTransformer.patchOverlayColor(transformations, type, hasGeometry);
 		}
 
 		addAlphaTest(transformations, type, alpha);
@@ -137,8 +137,23 @@ public class TriforcePatcher {
 				transformations.define("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
-			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other texture coordinates are not valid inputs.
-			for (int i = 2; i < 8; i++) {
+			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
+			// See https://github.com/IrisShaders/Iris/issues/1149
+			transformations.define("gl_MultiTexCoord2", "gl_MultiTexCoord1");
+
+			if (transformations.contains("gl_MultiTexCoord3") && !transformations.contains("mc_midTexCoord")) {
+				// gl_MultiTexCoord3 is a super legacy alias of mc_midTexCoord. We don't do this replacement if
+				// we think mc_midTexCoord could be defined just we can't handle an existing declaration robustly.
+				//
+				// But basically the proper way to do this is to define mc_midTexCoord only if it's not defined, and if
+				// it is defined, figure out its type, then replace all occurrences of gl_MultiTexCoord3 with the correct
+				// conversion from mc_midTexCoord's declared type to vec4.
+				transformations.replaceExact("gl_MultiTexCoord3", "mc_midTexCoord");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "attribute vec4 mc_midTexCoord;");
+			}
+
+			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture coordinates are not valid inputs.
+			for (int i = 4; i < 8; i++) {
 				transformations.define("gl_MultiTexCoord" + i, " vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 		}
@@ -147,12 +162,18 @@ public class TriforcePatcher {
 
 		if (inputs.hasColor()) {
 			// TODO: Handle the fragment / geometry shader here
-			transformations.define("gl_Color", "(iris_Color * iris_ColorModulator)");
+			if (alpha == AlphaTests.VERTEX_ALPHA) {
+				// iris_ColorModulator.a should be applied regardless of the alpha test state.
+				transformations.define("gl_Color", "vec4((iris_Color * iris_ColorModulator).rgb, iris_ColorModulator.a)");
+			} else {
+				transformations.define("gl_Color", "(iris_Color * iris_ColorModulator)");
+			}
 
 			if (type == ShaderType.VERTEX) {
 				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 iris_Color;");
 			}
 		} else {
+			// iris_ColorModulator should be applied regardless of the alpha test state.
 			transformations.define("gl_Color", "iris_ColorModulator");
 		}
 
@@ -266,6 +287,7 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
+		applyIntelHd4000Workaround(transformations);
 
 		return transformations.toString();
 	}
@@ -363,13 +385,12 @@ public class TriforcePatcher {
 				}""");
 
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
-				
+
 				""");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return mat_modelviewproj * gl_Vertex; }");
 		}
 
-		// Just being careful
-		transformations.define("ftransform", "iris_ftransform");
+		applyIntelHd4000Workaround(transformations);
 
 		return transformations.toString();
 	}
@@ -377,6 +398,8 @@ public class TriforcePatcher {
 	public static String patchComposite(String source, ShaderType type) {
 		StringTransformations transformations = new StringTransformations(source);
 		patchCommon(transformations, type, false);
+
+		transformations = CompositeDepthTransformer.patch(transformations);
 
 		// TODO: More solid way to handle texture matrices
 		// TODO: Provide these values with uniforms
@@ -423,7 +446,28 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		}
 
+		applyIntelHd4000Workaround(transformations);
+
 		return transformations.toString();
+	}
+
+	private static void applyIntelHd4000Workaround(StringTransformations transformations) {
+		// This is a driver bug workaround that seems to be needed on HD 4000 and HD 2500 drivers.
+		//
+		// Without this, they will see the call to ftransform() without taking into account the fact that we've defined
+		// the function ourselves, and thus will allocate attribute location 0 to gl_Vertex since the driver thinks that
+		// we are referencing gl_Vertex by calling the compatibility-profile ftransform() function - despite using a
+		// core profile shader version where that function does not exist.
+		//
+		// Then, when we try to bind the attribute locations for our vertex format, the shader will fail to link.
+		// By renaming the function, we avoid the driver bug here, since it no longer thinks that we're trying
+		// to call the compatibility profile fransform() function.
+		//
+		// See: https://github.com/IrisShaders/Iris/issues/441
+		//
+		// Note that this happens after we've added our ftransform function - so that both all the calls and our
+		// function are renamed in one go.
+		transformations.define("ftransform", "iris_ftransform");
 	}
 
 	private static void addAlphaTest(StringTransformations transformations, ShaderType type, AlphaTest alpha) {
@@ -431,6 +475,8 @@ public class TriforcePatcher {
 			if (transformations.contains("irisMain")) {
 				throw new IllegalStateException("Shader already contains \"irisMain\"???");
 			}
+
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform float iris_currentAlphaTest;");
 
 			// Create our own main function to wrap the existing main function, so that we can run the alpha test at the
 			// end.

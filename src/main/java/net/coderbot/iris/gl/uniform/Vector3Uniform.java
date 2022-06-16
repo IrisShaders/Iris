@@ -1,11 +1,11 @@
 package net.coderbot.iris.gl.uniform;
 
-import java.util.function.Supplier;
-
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
+
+import java.util.function.Supplier;
 
 public class Vector3Uniform extends Uniform {
 	private final Vector3f cachedValue;

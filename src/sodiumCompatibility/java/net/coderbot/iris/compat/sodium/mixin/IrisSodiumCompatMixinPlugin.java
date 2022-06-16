@@ -24,7 +24,6 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 
 			return SodiumVersionCheck.isAllowedVersion(version);
 		}).orElse(false);
-		System.loadLibrary("renderdoc");
 
 		if (!validSodiumVersion) {
 			// We can't use Iris' logger here due to classloading issues.

@@ -4,6 +4,7 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
@@ -12,10 +13,27 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(targets = "link/infra/indium/renderer/render/BaseQuadRenderer", remap = false)
 @Pseudo
 public class MixinBaseQuadRenderer {
-	@Redirect(method = {"tesselateSmooth", "tesselateSmoothEmissive"},
-			at = @At(value = "INVOKE",
-					target = "Llink/infra/indium/renderer/helper/ColorHelper;multiplyRGB(IF)I"))
+	// One of these injections must pass, or else the game will crash.
+	@Group(name = "iris_separateIndiumAO", min = 2, max = 2)
+	@Redirect(method = {"tessellateSmooth", "tessellateSmoothEmissive"},
+		at = @At(value = "INVOKE",
+			target = "Llink/infra/indium/renderer/helper/ColorHelper;multiplyRGB(IF)I"), require = 0)
 	private int iris$separateAoColorMultiply(int color, float ao) {
+		if (BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
+			color &= 0x00FFFFFF;
+			color |= ((int) (ao * 255.0f)) << 24;
+
+			return color;
+		} else {
+			return iris$multiplyRGB(color, ao);
+		}
+	}
+
+	@Group(name = "iris_separateIndiumAO", min = 2, max = 2)
+	@Redirect(method = {"tesselateSmooth", "tesselateSmoothEmissive"},
+		at = @At(value = "INVOKE",
+			target = "Llink/infra/indium/renderer/helper/ColorHelper;multiplyRGB(IF)I"), require = 0)
+	private int iris$separateAoColorMultiplyOld(int color, float ao) {
 		if (BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			color &= 0x00FFFFFF;
 			color |= ((int) (ao * 255.0f)) << 24;

@@ -34,7 +34,7 @@ public class MixinLevelRenderer {
 	 * <a href="https://bugs.mojang.com/browse/MC-152504">MC-152504</a> since it
 	 * is also caused by being able to see the sky through invisible chunks.</p>
 	 *
-	 * <p>However, this fix comes with some caveats. When underwater, it becomes 
+	 * <p>However, this fix comes with some caveats. When underwater, it becomes
 	 * impossible to see the sun, stars, and moon since the sky is not rendered.
 	 * While this does not exactly match the vanilla game, it is consistent with
 	 * what Bedrock Edition does, so it can be considered vanilla-style. This is
@@ -45,9 +45,8 @@ public class MixinLevelRenderer {
 	 * ways the fog can be reduced in {@link FogRenderer#setupFog}.</p>
 	 */
 	@Inject(method = "renderSky", at = @At("HEAD"), cancellable = true)
-	private void preRenderSky(PoseStack $$0, Matrix4f $$1, float $$2, Runnable $$3, CallbackInfo ci) {
+	private void preRenderSky(PoseStack arg, Matrix4f arg2, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		if (!Iris.getCurrentPack().isPresent()) {
-			Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
 			Vec3 cameraPosition = camera.getPosition();
 			Entity cameraEntity = camera.getEntity();
 

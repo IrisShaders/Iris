@@ -1,7 +1,6 @@
 package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-
 import com.mojang.math.Matrix4f;
 import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.coderbot.iris.mixin.GameRendererAccessor;
@@ -9,7 +8,9 @@ import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -23,7 +24,7 @@ public class HandRenderer {
 
 	private boolean ACTIVE;
 	private boolean renderingSolid;
-	private FullyBufferedMultiBufferSource bufferSource = new FullyBufferedMultiBufferSource();
+	private final FullyBufferedMultiBufferSource bufferSource = new FullyBufferedMultiBufferSource();
 
 	public static final float DEPTH = 0.125F;
 
@@ -40,7 +41,7 @@ public class HandRenderer {
 
 		((GameRendererAccessor) gameRenderer).invokeBobHurt(poseStack, tickDelta);
 
-		if (Minecraft.getInstance().options.bobView) {
+		if (Minecraft.getInstance().options.bobView().get()) {
 			((GameRendererAccessor) gameRenderer).invokeBobView(poseStack, tickDelta);
 		}
 	}
@@ -86,7 +87,7 @@ public class HandRenderer {
 
 		renderingSolid = true;
 
-		Minecraft.getInstance().getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
+		gameRenderer.itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
 		Minecraft.getInstance().getProfiler().pop();
 
@@ -118,7 +119,7 @@ public class HandRenderer {
 
 		setupGlState(gameRenderer, camera, poseStack, tickDelta);
 
-		Minecraft.getInstance().getItemInHandRenderer().renderHandsWithItems(tickDelta, poseStack, bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
+		gameRenderer.itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
 		poseStack.popPose();
 

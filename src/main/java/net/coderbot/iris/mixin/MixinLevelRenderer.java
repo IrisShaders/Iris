@@ -4,11 +4,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import net.coderbot.iris.HorizonRenderer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.gl.program.Program;
-import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.layer.IsOutlineRenderStateShard;
+import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -22,6 +22,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Final;
@@ -33,6 +35,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -41,7 +44,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLevelRenderer {
 	private static final String RENDER = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V";
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
-	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FLjava/lang/Runnable;)V";
+	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V";
 	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/math/Matrix4f;FDDD)V";
 	private static final String RENDER_WEATHER = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V";
 
@@ -50,13 +53,10 @@ public class MixinLevelRenderer {
 	private Minecraft minecraft;
 
 	@Unique
-	private HorizonRenderer horizonRenderer = new HorizonRenderer();
-
-	@Unique
-	private int previousViewDistance;
-
-	@Unique
 	private WorldRenderingPipeline pipeline;
+
+	@Shadow
+	private RenderBuffers renderBuffers;
 
 	// Begin shader rendering after buffers have been cleared.
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
@@ -68,7 +68,7 @@ public class MixinLevelRenderer {
 									   Matrix4f projection, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid()) {
 			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
-					" didn't work. This is a bug! Please report it to the Iris developers.");
+				" didn't work. This is a bug! Please report it to the Iris developers.");
 		}
 
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
@@ -76,12 +76,6 @@ public class MixinLevelRenderer {
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
-
-		if (previousViewDistance != minecraft.options.getEffectiveRenderDistance()) {
-			horizonRenderer.close();
-			horizonRenderer = new HorizonRenderer();
-			previousViewDistance = minecraft.options.getEffectiveRenderDistance();
-		}
 
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 		pipeline.beginLevelRendering();
@@ -98,59 +92,65 @@ public class MixinLevelRenderer {
 		pipeline = null;
 	}
 
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;setupRender(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZZ)V", shift = At.Shift.AFTER))
+	// Setup shadow terrain & render shadows before the main terrain setup. We need to do things in this order to
+	// avoid breaking other mods such as Light Overlay: https://github.com/IrisShaders/Iris/issues/1356
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;setupRender(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZZ)V"))
 	private void iris$renderTerrainShadows(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo callback) {
 		pipeline.renderShadows((LevelRendererAccessor) this, camera);
 	}
 
+	@ModifyVariable(method = "renderSky", at = @At(value = "HEAD"), index = 5, argsOnly = true)
+	private boolean iris$alwaysRenderSky(boolean value) {
+		return false;
+	}
+
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_SKY))
 	private void iris$beginSky(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projection, CallbackInfo callback) {
-		pipeline.setPhase(WorldRenderingPhase.SKY);
+		// Use CUSTOM_SKY until levelFogColor is called as a heuristic to catch FabricSkyboxes.
+		pipeline.setPhase(WorldRenderingPhase.CUSTOM_SKY);
+
+		// We've changed the phase, but vanilla doesn't update the shader program at this point before rendering stuff,
+		// so we need to manually refresh the shader program so that the correct shader override gets applied.
 		// TODO: Move the injection instead
 		RenderSystem.setShader(GameRenderer::getPositionShader);
 	}
 
 	@Inject(method = RENDER_SKY,
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
-	private void iris$renderSky$drawHorizon(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo callback) {
-		RenderSystem.depthMask(false);
-
-		Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
-		RenderSystem.setShaderColor((float) fogColor.x, (float) fogColor.y, (float) fogColor.z, 1.0F);
-
-		horizonRenderer.renderHorizon(poseStack.last().pose().copy(), projectionMatrix.copy(), GameRenderer.getPositionShader());
-
-		RenderSystem.depthMask(true);
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;levelFogColor()V"))
+	private void iris$renderSky$beginNormalSky(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
+		// None of the vanilla sky is rendered until after this call, so if anything is rendered before, it's
+		// CUSTOM_SKY.
+		pipeline.setPhase(WorldRenderingPhase.SKY);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;SUN_LOCATION:Lnet/minecraft/resources/ResourceLocation;"))
-	private void iris$setSunRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setSunRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.SUN);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/DimensionSpecialEffects;getSunriseColor(FF)[F"))
-	private void iris$setSunsetRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setSunsetRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.SUNSET);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;MOON_LOCATION:Lnet/minecraft/resources/ResourceLocation;"))
-	private void iris$setMoonRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setMoonRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.MOON);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getStarBrightness(F)F"))
-	private void iris$setStarRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setStarRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.STARS);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"))
-	private void iris$setVoidRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$setVoidRenderStage(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.VOID);
 	}
 
 	@Inject(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getTimeOfDay(F)F"),
 			slice = @Slice(from = @At(value = "FIELD", target = "com/mojang/math/Vector3f.YP : Lcom/mojang/math/Vector3f;")))
-	private void iris$renderSky$tiltSun(PoseStack poseStack, Matrix4f projectionMatrix, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$renderSky$tiltSun(PoseStack poseStack, Matrix4f projectionMatrix, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
 		poseStack.mulPose(Vector3f.ZP.rotationDegrees(pipeline.getSunPathRotation()));
 	}
 
@@ -179,7 +179,7 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderChunkLayer", at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderType renderType, PoseStack poseStack, double d, double e, double f, Matrix4f projectionMatrix, CallbackInfo ci) {
-		pipeline.setPhase(GbufferPrograms.refineTerrainPhase(renderType));
+		pipeline.setPhase(WorldRenderingPhase.fromTerrainRenderType(renderType));
 	}
 
 	@Inject(method = "renderChunkLayer", at = @At("RETURN"))
@@ -224,6 +224,34 @@ public class MixinLevelRenderer {
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/debug/DebugRenderer;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V", shift = At.Shift.AFTER))
 	private void iris$resetDebugRenderStage(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
+	}
+
+	@Inject(method = "renderLevel",
+		at = @At(value = "INVOKE", target = "net/minecraft/client/renderer/MultiBufferSource$BufferSource.getBuffer (Lnet/minecraft/client/renderer/RenderType;)Lcom/mojang/blaze3d/vertex/VertexConsumer;"),
+		slice = @Slice(
+			from = @At(value = "CONSTANT", args = "stringValue=outline"),
+			to = @At(value = "INVOKE", target = "net/minecraft/client/renderer/LevelRenderer.renderHitOutline (Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V")
+		))
+	private void iris$beginBlockOutline(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
+
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
+			return;
+		}
+
+		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->
+			new OuterWrappedRenderType("iris:is_outline", type, IsOutlineRenderStateShard.INSTANCE));
+	}
+
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "net/minecraft/client/renderer/LevelRenderer.renderHitOutline (Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"))
+	private void iris$endBlockOutline(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
+
+		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
+			return;
+		}
+
+		((WrappingMultiBufferSource) bufferSource).popWrappingFunction();
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))

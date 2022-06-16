@@ -15,18 +15,18 @@ import java.util.function.BooleanSupplier;
  */
 @Mixin(OptionImpl.class)
 public class MixinOptionImpl implements OptionImplExtended  {
-    @Unique
-    private BooleanSupplier iris$dynamicallyEnabled;
+	@Unique
+	private BooleanSupplier iris$dynamicallyEnabled;
 
-    @Override
-    public void iris$dynamicallyEnable(BooleanSupplier enabled) {
-        this.iris$dynamicallyEnabled = enabled;
-    }
+	@Override
+	public void iris$dynamicallyEnable(BooleanSupplier enabled) {
+		this.iris$dynamicallyEnabled = enabled;
+	}
 
-    @Inject(method = "isAvailable()Z", at = @At("HEAD"), cancellable = true, remap = false)
-    private void iris$dynamicallyEnable(CallbackInfoReturnable<Boolean> cir) {
-        if (iris$dynamicallyEnabled != null) {
-            cir.setReturnValue(iris$dynamicallyEnabled.getAsBoolean());
-        }
-    }
+	@Inject(method = "isAvailable()Z", at = @At("HEAD"), cancellable = true, remap = false)
+	private void iris$dynamicallyEnable(CallbackInfoReturnable<Boolean> cir) {
+		if (iris$dynamicallyEnabled != null) {
+			cir.setReturnValue(iris$dynamicallyEnabled.getAsBoolean());
+		}
+	}
 }

@@ -15,17 +15,17 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttribute
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements TerrainVertexType {
-	static final int STRIDE = 36;
+	static final int STRIDE = 40;
 
 	public static final VertexFormat<TerrainMeshAttribute> VERTEX_FORMAT = VertexFormat.builder(TerrainMeshAttribute.class, STRIDE)
 		.addElement(TerrainMeshAttribute.POSITION, 0, VertexAttributeFormat.SHORT, 3, true, false)
 		.addElement(TerrainMeshAttribute.COLOR, 8, VertexAttributeFormat.UNSIGNED_BYTE, 4, true, false)
 		.addElement(TerrainMeshAttribute.BLOCK_TEXTURE, 12, VertexAttributeFormat.UNSIGNED_SHORT, 2, true, false)
 		.addElement(TerrainMeshAttribute.LIGHT_TEXTURE, 16, VertexAttributeFormat.UNSIGNED_SHORT, 2, true, false)
-		.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 20, VertexAttributeFormat.UNSIGNED_SHORT, 2, true, false)
-		.addElement(IrisChunkMeshAttributes.TANGENT, 24, VertexAttributeFormat.BYTE, 4, true, false)
-		.addElement(IrisChunkMeshAttributes.NORMAL, 28, VertexAttributeFormat.BYTE, 3, true, false)
-		.addElement(IrisChunkMeshAttributes.BLOCK_ID, 32, VertexAttributeFormat.UNSIGNED_SHORT, 2, false, false)
+		.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 20, VertexAttributeFormat.FLOAT, 2, true, false)
+		.addElement(IrisChunkMeshAttributes.TANGENT, 28, VertexAttributeFormat.BYTE, 4, true, false)
+		.addElement(IrisChunkMeshAttributes.NORMAL, 32, VertexAttributeFormat.BYTE, 3, true, false)
+		.addElement(IrisChunkMeshAttributes.BLOCK_ID, 36, VertexAttributeFormat.UNSIGNED_SHORT, 2, false, false)
 		.build();
 
 	private static final int POSITION_MAX_VALUE = 32768;

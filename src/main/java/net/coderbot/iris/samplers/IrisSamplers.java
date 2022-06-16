@@ -2,29 +2,27 @@ package net.coderbot.iris.samplers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.coderbot.iris.shadows.ShadowMapRenderer;
-import net.coderbot.iris.texunits.TextureUnit;
+import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class IrisSamplers {
-	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
-		TextureUnit.TERRAIN.getSamplerId(),
-		TextureUnit.LIGHTMAP.getSamplerId(),
-		TextureUnit.OVERLAY.getSamplerId()
-	);
+	public static final int ALBEDO_TEXTURE_UNIT = 0;
+	public static final int OVERLAY_TEXTURE_UNIT = 1;
+	public static final int LIGHTMAP_TEXTURE_UNIT = 2;
+
+	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(0, 1, 2);
 
 	// TODO: In composite programs, there shouldn't be any reserved textures.
 	// We need a way to restore these texture bindings.
-	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(
-		TextureUnit.LIGHTMAP.getSamplerId(),
-		TextureUnit.OVERLAY.getSamplerId()
-	);
+	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(1, 2);
 
 	private IrisSamplers() {
 		// no construction allowed
@@ -89,7 +87,7 @@ public class IrisSamplers {
 		return false;
 	}
 
-	public static boolean addShadowSamplers(SamplerHolder samplers, ShadowMapRenderer shadowMapRenderer) {
+	public static boolean addShadowSamplers(SamplerHolder samplers, ShadowRenderTargets shadowRenderTargets) {
 		boolean usesShadows;
 
 		// TODO: figure this out from parsing the shader source code to be 100% compatible with the legacy
@@ -98,36 +96,54 @@ public class IrisSamplers {
 
 		if (waterShadowEnabled) {
 			usesShadows = true;
-			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "watershadow");
-			samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId,
+			samplers.addDynamicSampler(shadowRenderTargets.getDepthTexture()::getTextureId, "shadowtex0", "watershadow");
+			samplers.addDynamicSampler(shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId,
 					"shadowtex1", "shadow");
 		} else {
-			usesShadows = samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureId, "shadowtex0", "shadow");
-			usesShadows |= samplers.addDynamicSampler(shadowMapRenderer::getDepthTextureNoTranslucentsId, "shadowtex1");
+			usesShadows = samplers.addDynamicSampler(shadowRenderTargets.getDepthTexture()::getTextureId, "shadowtex0", "shadow");
+			usesShadows |= samplers.addDynamicSampler(shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, "shadowtex1");
 		}
 
-		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture0Id, "shadowcolor", "shadowcolor0");
-		samplers.addDynamicSampler(shadowMapRenderer::getColorTexture1Id, "shadowcolor1");
+		samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(0), "shadowcolor", "shadowcolor0");
+		samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(1), "shadowcolor1");
 
 		return usesShadows;
 	}
 
-	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular) {
-		samplers.addExternalSampler(TextureUnit.TERRAIN.getSamplerId(), "tex", "texture", "gtexture");
-		samplers.addExternalSampler(TextureUnit.LIGHTMAP.getSamplerId(), "lightmap");
-		samplers.addExternalSampler(TextureUnit.OVERLAY.getSamplerId(), "iris_overlay");
+	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular,
+										AbstractTexture whitePixel, InputAvailability availability) {
+		if (availability.texture) {
+			samplers.addExternalSampler(ALBEDO_TEXTURE_UNIT, "tex", "texture", "gtexture");
+		} else {
+			// TODO: Rebind unbound sampler IDs instead of hardcoding a list...
+			samplers.addDynamicSampler(whitePixel::getId, "tex", "texture", "gtexture",
+					"gcolor", "colortex0");
+		}
+
+		if (availability.lightmap) {
+			samplers.addExternalSampler(LIGHTMAP_TEXTURE_UNIT, "lightmap");
+		} else {
+			samplers.addDynamicSampler(whitePixel::getId, "lightmap");
+		}
+
+		if (availability.overlay) {
+			samplers.addExternalSampler(OVERLAY_TEXTURE_UNIT, "iris_overlay");
+		} else {
+			samplers.addDynamicSampler(whitePixel::getId, "iris_overlay");
+		}
+
 		samplers.addDynamicSampler(normals::getId, "normals");
 		samplers.addDynamicSampler(specular::getId, "specular");
 	}
 
 	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
-		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId, "depthtex0");
+		samplers.addDynamicSampler(renderTargets::getDepthTexture, "depthtex0");
 		// TODO: Should depthtex2 be made available to gbuffer / shadow programs?
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId, "depthtex1");
 	}
 
 	public static void addCompositeSamplers(SamplerHolder samplers, RenderTargets renderTargets) {
-		samplers.addDynamicSampler(renderTargets.getDepthTexture()::getTextureId,
+		samplers.addDynamicSampler(renderTargets::getDepthTexture,
 				"gdepthtex", "depthtex0");
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoTranslucents()::getTextureId,
 				"depthtex1");

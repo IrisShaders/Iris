@@ -5,6 +5,8 @@ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.texture.DepthBufferFormat;
+import net.coderbot.iris.texture.TextureInfoCache;
 import org.lwjgl.opengl.GL30C;
 
 public class GlFramebuffer extends GlResource {
@@ -23,8 +25,16 @@ public class GlFramebuffer extends GlResource {
 	}
 
 	public void addDepthAttachment(int texture) {
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(texture).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
+
 		bind();
-		GlStateManager._glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
+
+		if (depthBufferFormat.isCombinedStencil()) {
+			GlStateManager._glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_STENCIL_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
+		} else {
+			GlStateManager._glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
+		}
 	}
 
 	public void addColorAttachment(int index, int texture) {

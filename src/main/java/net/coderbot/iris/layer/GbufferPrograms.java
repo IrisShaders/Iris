@@ -1,68 +1,28 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
-import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.minecraft.client.renderer.RenderType;
 
 public class GbufferPrograms {
 	private static boolean entities;
 	private static boolean blockEntities;
+	private static boolean outline;
 	private static Runnable phaseChangeListener;
 
-	/**
-	 * Uses additional information to choose a more specific (and appropriate) GbufferProgram.
-	 */
-	private static GbufferProgram refine(GbufferProgram program, boolean push) {
-		if (program == GbufferProgram.ENTITIES || program == GbufferProgram.TERRAIN || program == GbufferProgram.TRANSLUCENT_TERRAIN) {
-			if (HandRenderer.INSTANCE.isActive()) {
-				return HandRenderer.INSTANCE.isRenderingSolid() ? GbufferProgram.HAND : GbufferProgram.HAND_TRANSLUCENT;
-			} else if (entities) {
-				return GbufferProgram.ENTITIES;
-			} else if (blockEntities) {
-				return GbufferProgram.BLOCK_ENTITIES;
-			}
-		}
-
-		if (program == GbufferProgram.DAMAGED_BLOCKS) {
-			setPhase(push ? WorldRenderingPhase.DESTROY : WorldRenderingPhase.NONE);
-		} else if (program == GbufferProgram.LINES) {
-			setPhase(push ? WorldRenderingPhase.OUTLINE : WorldRenderingPhase.NONE);
-		}
-
-		return program;
-	}
-
-	public static WorldRenderingPhase refineTerrainPhase(RenderType renderType) {
-		if (renderType == RenderType.solid()) {
-			return WorldRenderingPhase.TERRAIN_SOLID;
-		} else if (renderType == RenderType.cutout()) {
-			return WorldRenderingPhase.TERRAIN_CUTOUT;
-		} else if (renderType == RenderType.cutoutMipped()) {
-			return WorldRenderingPhase.TERRAIN_CUTOUT_MIPPED;
-		} else if (renderType == RenderType.translucent()) {
-			return WorldRenderingPhase.TERRAIN_TRANSLUCENT;
-		} else if (renderType == RenderType.tripwire()) {
-			return WorldRenderingPhase.TRIPWIRE;
-		} else {
-			throw new IllegalStateException("Illegal render type!");
+	private static void checkReentrancy() {
+		if (entities || blockEntities || outline) {
+			throw new IllegalStateException("GbufferPrograms in weird state, tried to call begin function when entities = "
+				+ entities + ", blockEntities = " + blockEntities + ", outline = " + outline);
 		}
 	}
 
 	public static void beginEntities() {
-		if (entities || blockEntities) {
-			throw new IllegalStateException("GbufferPrograms in weird state, tried to call beginEntities when entities = "
-					+ entities + ", blockEntities = " + blockEntities);
-		}
-
+		checkReentrancy();
 		setPhase(WorldRenderingPhase.ENTITIES);
 		entities = true;
-	}
-
-	public static boolean isRenderingEntities() {
-		return entities;
 	}
 
 	public static void endEntities() {
@@ -74,19 +34,25 @@ public class GbufferPrograms {
 		entities = false;
 	}
 
-	public static void beginBlockEntities() {
-
-		if (entities || blockEntities) {
-			throw new IllegalStateException("GbufferPrograms in weird state, tried to call beginBlockEntities when entities = "
-					+ entities + ", blockEntities = " + blockEntities);
-		}
-
-		setPhase(WorldRenderingPhase.BLOCK_ENTITIES);
-		blockEntities = true;
+	public static void beginOutline() {
+		checkReentrancy();
+		setPhase(WorldRenderingPhase.OUTLINE);
+		outline = true;
 	}
 
-	public static boolean isRenderingBlockEntities() {
-		return blockEntities;
+	public static void endOutline() {
+		if (!outline) {
+			throw new IllegalStateException("GbufferPrograms in weird state, tried to call endOutline when outline = false");
+		}
+
+		setPhase(WorldRenderingPhase.NONE);
+		outline = false;
+	}
+
+	public static void beginBlockEntities() {
+		checkReentrancy();
+		setPhase(WorldRenderingPhase.BLOCK_ENTITIES);
+		blockEntities = true;
 	}
 
 	public static void endBlockEntities() {
@@ -96,26 +62,6 @@ public class GbufferPrograms {
 
 		setPhase(WorldRenderingPhase.NONE);
 		blockEntities = false;
-	}
-
-	public static void push(GbufferProgram program) {
-		program = refine(program, true);
-
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-
-		if (pipeline != null) {
-			pipeline.pushProgram(program);
-		}
-	}
-
-	public static void pop(GbufferProgram program) {
-		program = refine(program, false);
-
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-
-		if (pipeline != null) {
-			pipeline.popProgram(program);
-		}
 	}
 
 	public static WorldRenderingPhase getCurrentPhase() {
@@ -128,7 +74,7 @@ public class GbufferPrograms {
 		}
 	}
 
-	public static void setPhase(WorldRenderingPhase phase) {
+	private static void setPhase(WorldRenderingPhase phase) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null) {
@@ -136,10 +82,26 @@ public class GbufferPrograms {
 		}
 	}
 
+	public static void setOverridePhase(WorldRenderingPhase phase) {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline != null) {
+			pipeline.setOverridePhase(phase);
+		}
+	}
+
 	public static void runPhaseChangeNotifier() {
 		if (phaseChangeListener != null) {
 			phaseChangeListener.run();
 		}
+	}
+
+	public static void setupSpecialRenderCondition(SpecialCondition override) {
+		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setSpecialCondition(override));
+	}
+
+	public static void teardownSpecialRenderCondition(SpecialCondition override) {
+		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setSpecialCondition(null));
 	}
 
 	static {

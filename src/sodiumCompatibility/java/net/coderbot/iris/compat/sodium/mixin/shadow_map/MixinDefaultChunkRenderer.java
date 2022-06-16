@@ -1,7 +1,5 @@
 package net.coderbot.iris.compat.sodium.mixin.shadow_map;
 
-import net.caffeinemc.gfx.api.buffer.BufferMapFlags;
-import net.caffeinemc.gfx.api.buffer.BufferStorageFlags;
 import net.caffeinemc.gfx.api.buffer.MappedBuffer;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.sodium.render.chunk.draw.DefaultChunkRenderer;

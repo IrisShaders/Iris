@@ -12,9 +12,9 @@ public abstract class MixinAdvancedShadowCullingFrustum implements Frustum, Frus
 	public abstract boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
 
 	@Override
-	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// TODO: Visibility.INSIDE
-		return fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ) ? Visibility.INTERSECT : Visibility.OUTSIDE;
+	public int testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		// TODO: Visibility.INSIDE (-2)
+		return fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ) ? -1 : -3;
 	}
 
 	@Override

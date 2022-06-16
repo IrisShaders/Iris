@@ -16,9 +16,9 @@ public class MixinBoxCullingFrustum implements Frustum, FrustumAdapter {
 
 	// TODO: Better way to do this... Maybe we shouldn't be using a frustum for the box culling in the first place!
 	@Override
-	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	public int testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		// TODO: Frustum.INSIDE
-		return this.boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ) ? Visibility.OUTSIDE : Visibility.INTERSECT;
+		return this.boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ) ? -3 : -1;
 	}
 
 	@Override

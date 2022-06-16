@@ -6,6 +6,7 @@ import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageHolder;
@@ -14,6 +15,7 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
@@ -36,11 +38,17 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	GlFramebuffer baseline;
 	BlendModeOverride blendModeOverride;
 	HashMap<String, IntSupplier> dynamicSamplers;
+	float alphaTest;
 	private ProgramImages currentImages;
 	private Program geometry;
 	private boolean isFullbright;
+	private final ShaderAttributeInputs inputs;
 
-	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, BlendModeOverride blendModeOverride, Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright, NewWorldRenderingPipeline parent) throws IOException {
+	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
+						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
+						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
+						  Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright,
+						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
@@ -54,10 +62,12 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.baseline = baseline;
 		this.blendModeOverride = blendModeOverride;
 		this.dynamicSamplers = new HashMap<>();
+		this.alphaTest = alphaTest.getReference();
 		this.parent = parent;
 		this.imageBuilder = ProgramImages.builder(programId);
 		this.currentImages = null;
 		this.isFullbright = isFullbright;
+		this.inputs = inputs;
 
 		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
 		this.intensitySwizzle = getName().contains("intensity");
@@ -82,6 +92,16 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	@Override
 	public void apply() {
 		dynamicSamplers.forEach((name, supplier) -> this.addIrisSampler(name, supplier.getAsInt()));
+
+		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest);
+
+		if (!inputs.hasTex()) {
+			setSampler("Sampler0", parent.getWhitePixel().getId());
+		}
+
+		if (!inputs.hasLight()) {
+			setSampler("Sampler2", parent.getWhitePixel().getId());
+		}
 
 		super.apply();
 		uniforms.update();
@@ -123,8 +143,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 			super.setSampler("tex", sampler);
 		} else if (name.equals("Sampler1")) {
 			name = "iris_overlay";
-		} else if (name.equals("Sampler2") && !isFullbright) {
-			// TODO: Should we be providing the lightmap texture even if it's fullbright? Doing this before broke beacon beams on many packs.
+		} else if (name.equals("Sampler2")) {
 			name = "lightmap";
 		} else if (name.startsWith("Sampler")) {
 			// We only care about the texture, lightmap, and overlay for now from vanilla.
@@ -199,16 +218,19 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 	@Override
 	public void iris$createGeometryShader(ResourceProvider factory, String name) throws IOException {
-		Resource geometry = factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh"));
-		if (geometry != null) {
-			this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.getInputStream(), geometry.getSourceName(), new GlslPreprocessor() {
-				@Nullable
-				@Override
-				public String applyImport(boolean bl, String string) {
-					return null;
-				}
-			});
-		}
+		 factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh")).ifPresent(geometry -> {
+			 try {
+				 this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.open(), geometry.sourcePackId(), new GlslPreprocessor() {
+					 @Nullable
+					 @Override
+					 public String applyImport(boolean bl, String string) {
+						 return null;
+					 }
+				 });
+			 } catch (IOException e) {
+				 e.printStackTrace();
+			 }
+		 });
 	}
 
 	public Program getGeometry() {

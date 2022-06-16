@@ -5,9 +5,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.caffeinemc.gfx.api.array.VertexArrayDescription;
 import net.caffeinemc.gfx.api.array.VertexArrayResourceBinding;
 import net.caffeinemc.gfx.api.array.attribute.VertexAttributeBinding;
-import net.caffeinemc.gfx.api.buffer.BufferMapFlags;
-import net.caffeinemc.gfx.api.buffer.BufferStorageFlags;
+
 import net.caffeinemc.gfx.api.buffer.MappedBuffer;
+import net.caffeinemc.gfx.api.buffer.MappedBufferFlags;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.pipeline.PipelineState;
@@ -19,9 +19,9 @@ import net.caffeinemc.gfx.api.types.PrimitiveType;
 import net.caffeinemc.sodium.SodiumClientMod;
 import net.caffeinemc.sodium.render.buffer.StreamingBuffer;
 import net.caffeinemc.sodium.render.chunk.draw.AbstractChunkRenderer;
-import net.caffeinemc.sodium.render.chunk.draw.ChunkPrep;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderMatrices;
 import net.caffeinemc.sodium.render.chunk.draw.DefaultChunkRenderer;
+import net.caffeinemc.sodium.render.chunk.draw.RenderListBuilder;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
@@ -47,10 +47,15 @@ import java.util.List;
 import java.util.Map;
 
 public class IrisChunkRenderer extends AbstractChunkRenderer {
+	// TODO: should these be moved?
+	public static final int CAMERA_MATRICES_SIZE = 192;
+	public static final int FOG_PARAMETERS_SIZE = 32;
 	private final StreamingBuffer bufferCameraMatrices;
+	private final StreamingBuffer bufferInstanceData;
 	private final StreamingBuffer bufferFogParameters;
 
 	private Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline;
+	private final StreamingBuffer commandBuffer;
 
 	private final SequenceIndexBuffer indexBuffer;
 
@@ -58,17 +63,30 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 	private final ChunkRenderPass pass;
 	private final VertexArrayDescription<BufferTarget> vertexArray;
 
-	public IrisChunkRenderer(IrisChunkProgramOverrides overrides, boolean isShadowPass, RenderDevice device, SequenceIndexBuffer indexBuffer, TerrainVertexType vertexType, ChunkRenderPass pass) {
+	public IrisChunkRenderer(IrisChunkProgramOverrides overrides, boolean isShadowPass, RenderDevice device, StreamingBuffer instanceBuffer, StreamingBuffer commandBuffer, SequenceIndexBuffer indexBuffer, TerrainVertexType vertexType, ChunkRenderPass pass) {
 		super(device, vertexType);
-
-		var storageFlags = EnumSet.of(BufferStorageFlags.WRITABLE, BufferStorageFlags.PERSISTENT);
-		var mapFlags = EnumSet.of(BufferMapFlags.WRITE, BufferMapFlags.EXPLICIT_FLUSH, BufferMapFlags.PERSISTENT, BufferMapFlags.UNSYNCHRONIZED);
 
 		var maxInFlightFrames = SodiumClientMod.options().advanced.cpuRenderAheadLimit + 1;
 
-		this.bufferCameraMatrices = new StreamingBuffer(device, storageFlags, mapFlags, 192, maxInFlightFrames);
-		this.bufferFogParameters = new StreamingBuffer(device, storageFlags, mapFlags, 24, maxInFlightFrames);
+		final int alignment = device.properties().uniformBufferOffsetAlignment;
+		this.bufferCameraMatrices = new StreamingBuffer(
+			device,
+			alignment,
+			CAMERA_MATRICES_SIZE,
+			maxInFlightFrames,
+			MappedBufferFlags.EXPLICIT_FLUSH
+		);
+		this.bufferFogParameters = new StreamingBuffer(
+			device,
+			alignment,
+			FOG_PARAMETERS_SIZE,
+			maxInFlightFrames,
+			MappedBufferFlags.EXPLICIT_FLUSH
+		);
 
+		this.bufferInstanceData = instanceBuffer;
+
+		this.commandBuffer = commandBuffer;
 		this.indexBuffer = indexBuffer;
 
 		this.pass = pass;
@@ -100,29 +118,42 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 	}
 
 	@Override
-	public void render(ChunkPrep.PreparedRenderList lists, ChunkRenderPass renderPass, ChunkRenderMatrices matrices, int frameIndex) {
-		this.indexBuffer.ensureCapacity(lists.largestVertexIndex());
-
-		if (this.pipeline.getProgram() == null) return;
+	public void render(RenderListBuilder.RenderList lists, ChunkRenderPass renderPass, ChunkRenderMatrices matrices, int frameIndex) {
+		this.indexBuffer.ensureCapacity(lists.getLargestVertexIndex());
+		this.pipeline.getProgram().getInterface().setup();
 
 		this.device.usePipeline(this.pipeline, (cmd, programInterface, pipelineState) -> {
-			programInterface.setup();
 			this.setupTextures(renderPass, pipelineState);
 			this.setupUniforms(matrices, programInterface, pipelineState, frameIndex);
 
-			for (var batch : lists.batches()) {
-				pipelineState.bindUniformBlock(programInterface.uniformInstanceData, lists.instanceBuffer(),
-					batch.instanceData().offset(), batch.instanceData().length());
+			cmd.bindCommandBuffer(this.commandBuffer.getBuffer());
+			cmd.bindElementBuffer(this.indexBuffer.getBuffer());
 
-				cmd.bindVertexBuffer(BufferTarget.VERTICES, batch.vertexBuffer(), 0, batch.vertexStride());
-				cmd.bindElementBuffer(this.indexBuffer.getBuffer());
+			for (var batch : lists.getBatches()) {
+				pipelineState.bindBufferBlock(
+					programInterface.storageInstanceData,
+					this.bufferInstanceData.getBuffer(),
+					batch.getInstanceBufferOffset(),
+					batch.getInstanceBufferLength()
+				);
 
-				cmd.multiDrawElementsIndirect(lists.commandBuffer(), batch.commandData().offset(), batch.commandCount(),
-					ElementFormat.UNSIGNED_INT, PrimitiveType.TRIANGLES);
+				cmd.bindVertexBuffer(
+					BufferTarget.VERTICES,
+					batch.getVertexBuffer(),
+					0,
+					batch.getVertexStride()
+				);
+
+				cmd.multiDrawElementsIndirect(
+					PrimitiveType.TRIANGLES,
+					ElementFormat.UNSIGNED_INT,
+					batch.getCommandBufferOffset(),
+					batch.getCommandCount()
+				);
 			}
-
-			programInterface.restore();
 		});
+
+		this.pipeline.getProgram().getInterface().restore();
 	}
 
 	private void setupTextures(ChunkRenderPass pass, PipelineState pipelineState) {
@@ -131,8 +162,8 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 	}
 
 	private void setupUniforms(ChunkRenderMatrices renderMatrices, ChunkShaderInterface programInterface, PipelineState state, int frameIndex) {
-		var matrices = this.bufferCameraMatrices.slice(frameIndex);
-		var matricesBuf = matrices.view();
+		var matricesSection = this.bufferCameraMatrices.getSection(frameIndex);
+		var matricesBuf = matricesSection.getView();
 
 		renderMatrices.projection()
 			.get(0, matricesBuf);
@@ -145,12 +176,12 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 		mvpMatrix
 			.get(128, matricesBuf);
 
-		bufferCameraMatrices.flush(matrices);
+		matricesSection.flushFull();
 
-		state.bindUniformBlock(programInterface.uniformCameraMatrices, matrices.buffer(), matrices.offset(), matrices.length());
+		state.bindBufferBlock(programInterface.uniformCameraMatrices, matricesSection.getBuffer(), matricesSection.getOffset(), matricesSection.getView().capacity());
 
-		var fogParams = this.bufferFogParameters.slice(frameIndex);
-		var fogParamsBuf = fogParams.view();
+		var fogParamsSection = this.bufferFogParameters.getSection(frameIndex);
+		var fogParamsBuf = fogParamsSection.getView();
 
 		var paramFogColor = RenderSystem.getShaderFogColor();
 		fogParamsBuf.putFloat(0, paramFogColor[0]);
@@ -159,10 +190,11 @@ public class IrisChunkRenderer extends AbstractChunkRenderer {
 		fogParamsBuf.putFloat(12, paramFogColor[3]);
 		fogParamsBuf.putFloat(16, RenderSystem.getShaderFogStart());
 		fogParamsBuf.putFloat(20, RenderSystem.getShaderFogEnd());
+		fogParamsBuf.putInt(24, RenderSystem.getShaderFogShape().getIndex());
 
-		this.bufferFogParameters.flush(fogParams);
+		fogParamsSection.flushFull();
 
-		state.bindUniformBlock(programInterface.uniformFogParameters, fogParams.buffer(), fogParams.offset(), fogParams.length());
+		state.bindBufferBlock(programInterface.uniformFogParameters, fogParamsSection.getBuffer(), fogParamsSection.getOffset(), fogParamsSection.getView().capacity());
 	}
 
 	private static ShaderConstants getShaderConstants(ChunkRenderPass pass, TerrainVertexType vertexType) {

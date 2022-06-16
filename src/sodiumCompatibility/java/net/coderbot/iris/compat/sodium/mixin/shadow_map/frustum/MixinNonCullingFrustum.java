@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(NonCullingFrustum.class)
 public class MixinNonCullingFrustum implements Frustum, FrustumAdapter {
 	@Override
-	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return Visibility.INSIDE;
+	public int testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		return -2;
 	}
 
 	@Override

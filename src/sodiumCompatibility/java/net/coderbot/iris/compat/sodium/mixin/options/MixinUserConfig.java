@@ -21,8 +21,8 @@ public class MixinUserConfig {
         	if (Iris.getIrisConfig() != null) {
 				Iris.getIrisConfig().save();
 			}
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

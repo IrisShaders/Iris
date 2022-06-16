@@ -14,10 +14,11 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
-import net.coderbot.iris.texunits.TextureUnit;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL32C;
 
 public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	private BlendModeOverride blendModeOverride;
@@ -26,15 +27,17 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	private ProgramImages irisProgramImages;
 	private IrisTerrainPass pass;
 	private int handle;
+	private float alpha;
 
 	public IrisChunkShaderInterface(ShaderBindingContext context) {
 		super(context);
 	}
 
-	public void setInfo(boolean isShadowPass, SodiumTerrainPipeline pipeline, int handle, IrisTerrainPass pass, BlendModeOverride blendModeOverride) {
+	public void setInfo(boolean isShadowPass, SodiumTerrainPipeline pipeline, int handle, IrisTerrainPass pass, BlendModeOverride blendModeOverride, float alpha) {
 		this.blendModeOverride = blendModeOverride;
 		this.pass = pass;
 		this.handle = handle;
+		this.alpha = alpha;
 		this.irisProgramUniforms = pipeline.initUniforms(handle);
 		this.irisProgramSamplers
 			= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
@@ -52,6 +55,8 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 			if (blendModeOverride != null) {
 				blendModeOverride.apply();
 			}
+
+			CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alpha);
 
 			irisProgramUniforms.update();
 			irisProgramSamplers.update();

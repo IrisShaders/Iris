@@ -1,10 +1,5 @@
 package net.coderbot.iris.mixin;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.LanguageMap;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -18,6 +13,11 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Allows shader packs to provide extra usable language entries outside of resource packs.

@@ -115,8 +115,10 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			renderTypes += 1;
 
 			for (BufferSegment segment : typeToSegment.getOrDefault(type, Collections.emptyList())) {
-				segmentRenderer.drawInner(segment);
-				drawCalls += 1;
+				if (segment.getRenderedBuffer() != null) {
+					segmentRenderer.drawInner(segment);
+					drawCalls += 1;
+				}
 			}
 
 			type.clearRenderState();
