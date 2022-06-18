@@ -31,14 +31,16 @@ public abstract class MixinMultidrawChunkRenderBackend extends ChunkRenderShader
 					ordinal = 0))
 	private GlVertexAttributeBinding[] iris$addAdditionalBindings(GlVertexAttributeBinding[] base) {
 		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? ArrayUtils.addAll(base,
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL)),
 				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
 						vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_BLOCK,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_BLOCK))
 		) : base;
 	}
 }

@@ -9,6 +9,7 @@ public class IrisVertexFormats {
 	public static final VertexFormatElement ENTITY_ELEMENT;
 	public static final VertexFormatElement MID_TEXTURE_ELEMENT;
 	public static final VertexFormatElement TANGENT_ELEMENT;
+	public static final VertexFormatElement MID_BLOCK_ELEMENT;
 
 	public static final VertexFormat TERRAIN;
 	public static final VertexFormat ENTITY;
@@ -17,6 +18,7 @@ public class IrisVertexFormats {
 		ENTITY_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
 		MID_TEXTURE_ELEMENT = new VertexFormatElement(12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
 		TANGENT_ELEMENT = new VertexFormatElement(13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
+		MID_BLOCK_ELEMENT = new VertexFormatElement(14, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
 
 		ImmutableList.Builder<VertexFormatElement> terrainElements = ImmutableList.builder();
 		ImmutableList.Builder<VertexFormatElement> entityElements = ImmutableList.builder();
@@ -30,6 +32,8 @@ public class IrisVertexFormats {
 		terrainElements.add(ENTITY_ELEMENT);
 		terrainElements.add(MID_TEXTURE_ELEMENT);
 		terrainElements.add(TANGENT_ELEMENT);
+		terrainElements.add(MID_BLOCK_ELEMENT);
+		terrainElements.add(DefaultVertexFormat.ELEMENT_PADDING);
 
 		entityElements.add(DefaultVertexFormat.ELEMENT_POSITION);
 		entityElements.add(DefaultVertexFormat.ELEMENT_COLOR);
@@ -38,7 +42,6 @@ public class IrisVertexFormats {
 		entityElements.add(DefaultVertexFormat.ELEMENT_UV2);
 		entityElements.add(DefaultVertexFormat.ELEMENT_NORMAL);
 		entityElements.add(DefaultVertexFormat.ELEMENT_PADDING);
-		entityElements.add(ENTITY_ELEMENT);
 		entityElements.add(MID_TEXTURE_ELEMENT);
 		entityElements.add(TANGENT_ELEMENT);
 
