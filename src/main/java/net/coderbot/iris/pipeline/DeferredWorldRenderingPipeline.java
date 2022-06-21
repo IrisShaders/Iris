@@ -80,7 +80,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	@Nullable
 	private ShadowRenderTargets shadowRenderTargets;
-	private final PackShadowDirectives shadowDirectives;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
 
 	private final ProgramTable<Pass> table;
@@ -153,7 +152,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
-		this.shadowDirectives = programs.getPackDirectives().getShadowDirectives();
+		PackShadowDirectives shadowDirectives = programs.getPackDirectives().getShadowDirectives();
 
 		if (shadowDirectives.isDistanceRenderMulExplicit()) {
 			if (shadowDirectives.getDistanceRenderMul() >= 0.0) {
