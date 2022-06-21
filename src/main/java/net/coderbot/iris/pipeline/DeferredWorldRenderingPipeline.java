@@ -80,6 +80,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	@Nullable
 	private ShadowRenderTargets shadowRenderTargets;
+	private final PackShadowDirectives shadowDirectives;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
 
 	private final ProgramTable<Pass> table;
@@ -151,7 +152,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
-		PackShadowDirectives shadowDirectives = programs.getPackDirectives().getShadowDirectives();
+		this.shadowDirectives = programs.getPackDirectives().getShadowDirectives();
 
 		if (shadowDirectives.isDistanceRenderMulExplicit()) {
 			if (shadowDirectives.getDistanceRenderMul() >= 0.0) {
@@ -195,11 +196,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.shadowTargetsSupplier = () -> {
 			if (shadowRenderTargets == null) {
 				// TODO: Support more than two shadowcolor render targets
-				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, new InternalTextureFormat[]{
-					// TODO: Custom shadowcolor format support
-					InternalTextureFormat.RGBA,
-					InternalTextureFormat.RGBA
-				});
+				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, shadowDirectives);
 			}
 
 			return shadowRenderTargets;
@@ -790,9 +787,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			// TODO: Support shadow clear color directives & disable buffer clearing
 			// Ensure that the color and depth values are cleared appropriately
-			RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-			RenderSystem.clearDepth(1.0f);
-			RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
+			if (shadowDirectives.getColorSamplingSettings().get(0).getClear()) {
+				Vector4f clearColor = shadowDirectives.getColorSamplingSettings().get(0).getClearColor();
+				RenderSystem.clearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+				RenderSystem.clearDepth(1.0f);
+				RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
+			}
 		}
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();

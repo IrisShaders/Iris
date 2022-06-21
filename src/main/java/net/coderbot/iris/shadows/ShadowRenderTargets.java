@@ -10,6 +10,7 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.rendertarget.DepthTexture;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
@@ -36,13 +37,13 @@ public class ShadowRenderTargets {
 	private boolean firstTranslucentCopy;
 	private static final boolean supportsFramebufferBlitting = GL.getCapabilities().OpenGL30 || GL.getCapabilities().GL_EXT_framebuffer_blit;
 
-	public ShadowRenderTargets(int resolution, InternalTextureFormat[] formats) {
-		if (formats.length > MAX_SHADOW_RENDER_TARGETS) {
-			throw new IllegalStateException("Too many shadow render targets, requested " + formats.length +
-					" but only " + MAX_SHADOW_RENDER_TARGETS + " are allowed.");
+	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
+		this.formats = new InternalTextureFormat[2];
+
+		for (int i = 0; i < formats.length; i++) {
+			this.formats[i] = shadowDirectives.getColorSamplingSettings().get(i).getFormat();
 		}
 
-		this.formats = Arrays.copyOf(formats, formats.length);
 		this.resolution = resolution;
 
 		int[] drawBuffers = new int[formats.length];
@@ -65,7 +66,7 @@ public class ShadowRenderTargets {
 			RenderSystem.bindTexture(targets[i]);
 
 			GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, format.getGlFormat(), resolution, resolution, 0,
-				PixelFormat.RGBA.getGlFormat(), PixelType.UNSIGNED_BYTE.getGlFormat(), NULL_BUFFER);
+				format.getPixelFormat().getGlFormat(), PixelType.UNSIGNED_BYTE.getGlFormat(), NULL_BUFFER);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
