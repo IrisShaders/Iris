@@ -38,10 +38,14 @@ public class ShadowRenderTargets {
 	private static final boolean supportsFramebufferBlitting = GL.getCapabilities().OpenGL30 || GL.getCapabilities().GL_EXT_framebuffer_blit;
 
 	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
-		this.formats = new InternalTextureFormat[2];
+		this.formats = new InternalTextureFormat[MAX_SHADOW_RENDER_TARGETS];
 
 		for (int i = 0; i < formats.length; i++) {
-			this.formats[i] = shadowDirectives.getColorSamplingSettings().get(i).getFormat();
+			if (i < shadowDirectives.getColorSamplingSettings().size()) {
+				this.formats[i] = shadowDirectives.getColorSamplingSettings().get(i).getFormat();
+			} else {
+				this.formats[i] = InternalTextureFormat.RGBA;
+			}
 		}
 
 		this.resolution = resolution;
@@ -109,6 +113,11 @@ public class ShadowRenderTargets {
 		return framebuffer;
 	}
 
+	public GlFramebuffer getFramebufferForColorTexture(int buffer) {
+		// TODO: Don't hardcode this!
+		return buffer == 1 ? noTranslucentFB : framebuffer;
+	}
+
 	public DepthTexture getDepthTexture() {
 		return depthTexture;
 	}
@@ -127,6 +136,10 @@ public class ShadowRenderTargets {
 
 	public InternalTextureFormat getColorTextureFormat(int index) {
 		return formats[index];
+	}
+
+	public int getResolution() {
+		return resolution;
 	}
 
 	public void destroy() {

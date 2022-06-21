@@ -359,7 +359,7 @@ public class PackShadowDirectives {
 			mipmap = false;
 			nearest = false;
 			clear = true;
-			clearColor = new Vector4f(1);
+			clearColor = new Vector4f(1.0F);
 			format = InternalTextureFormat.RGBA;
 		}
 

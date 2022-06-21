@@ -87,6 +87,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
+	private final ImmutableList<ClearPass> shadowClearPasses;
 
 	private final GlFramebuffer baseline;
 
@@ -304,10 +305,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		if (shadowRenderTargets != null) {
 			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
 			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
+			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, shadowDirectives);
 
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
 				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
 		} else {
+			this.shadowClearPasses = ImmutableList.of();
 			this.shadowRenderer = null;
 		}
 
@@ -782,16 +785,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		if (shadowRenderTargets != null) {
-			// NB: This will be re-bound to the correct framebuffer in beginLevelRendering when matchPass is called.
-			shadowRenderTargets.getFramebuffer().bind();
-
-			// TODO: Support shadow clear color directives & disable buffer clearing
-			// Ensure that the color and depth values are cleared appropriately
-			if (shadowDirectives.getColorSamplingSettings().get(0).getClear()) {
-				Vector4f clearColor = shadowDirectives.getColorSamplingSettings().get(0).getClearColor();
-				RenderSystem.clearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
-				RenderSystem.clearDepth(1.0f);
-				RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
+			Vector4f emptyClearColor = new Vector4f(1.0F);
+			for (ClearPass clearPass : shadowClearPasses) {
+				clearPass.execute(emptyClearColor);
 			}
 		}
 
@@ -823,6 +819,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		for (ClearPass clearPass : passes) {
 			clearPass.execute(fogColor);
 		}
+
+		// Reset framebuffer and viewport
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 	}
 
 	@Override
