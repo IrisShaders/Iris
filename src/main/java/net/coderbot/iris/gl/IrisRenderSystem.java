@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
@@ -18,6 +19,16 @@ import java.nio.IntBuffer;
  * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
 public class IrisRenderSystem {
+	public static void getIntegerv(int pname, int[] params) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glGetIntegerv(pname, params);
+	}
+
+	public static void getFloatv(int pname, float[] params) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glGetFloatv(pname, params);
+	}
+
 	public static void generateMipmaps(int mipmapTarget) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glGenerateMipmap(mipmapTarget);
@@ -28,14 +39,19 @@ public class IrisRenderSystem {
 		GL30C.glBindAttribLocation(program, index, name);
 	}
 
-	public static void texImage2D(int i, int j, int k, int l, int m, int n, int o, int p, @Nullable ByteBuffer byteBuffer) {
+	public static void texImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glTexImage2D(i, j, k, l, m, n, o, p, byteBuffer);
+		GL30C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 	}
 
 	public static void uniformMatrix4fv(int location, boolean transpose, FloatBuffer matrix) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glUniformMatrix4fv(location, transpose, matrix);
+	}
+
+	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
 	}
 
 	public static void uniform1f(int location, float v0) {
@@ -83,9 +99,9 @@ public class IrisRenderSystem {
 		return GL30C.glGetUniformLocation(programId, name);
 	}
 
-	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
+	public static void texParameteriv(int target, int pname, int[] params) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
+		GL11C.glTexParameteriv(target, pname, params);
 	}
 
 	public static String getProgramInfoLog(int program) {
@@ -133,15 +149,20 @@ public class IrisRenderSystem {
 		GL30C.glDetachShader(program, shader);
 	}
 
+	public static int getTexParameteri(int target, int pname) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		return GL30C.glGetTexParameteri(target, pname);
+	}
+
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-			if (GL.getCapabilities().OpenGL42) {
-				GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
-			} else {
-				EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
-			}
+		if (GL.getCapabilities().OpenGL42) {
+			GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
+		} else {
+			EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
+		}
 	}
-	
+
 	public static int getMaxImageUnits() {
 		if (GL.getCapabilities().OpenGL42) {
 			return GlStateManager._getInteger(GL42C.GL_MAX_IMAGE_UNITS);

@@ -7,34 +7,13 @@ import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
-import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.pipeline.HandRenderer;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL20C;
 
 import java.util.function.IntSupplier;
 
 public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder, ImageHolder {
-	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
-
-	public static final ShaderConstants MACRO_CONSTANTS = ShaderConstants.builder()
-		.define(StandardMacros.getOsString())
-		.define("MC_VERSION", StandardMacros.getMcVersion())
-		.define("MC_GL_VERSION", StandardMacros.getGlVersion(GL20C.GL_VERSION))
-		.define("MC_GLSL_VERSION", StandardMacros.getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION))
-		.define(StandardMacros.getRenderer())
-		.define(StandardMacros.getVendor())
-		.define("MC_RENDER_QUALITY", "1.0")
-		.define("MC_SHADOW_QUALITY", "1.0")
-		.define("MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH))
-		.defineAll(StandardMacros.getIrisDefines())
-		.defineAll(StandardMacros.getGlExtensions())
-		.defineAll(StandardMacros.getRenderStages())
-		.build();
-
 	private final int program;
 	private final ProgramSamplers.Builder samplers;
 	private final ProgramImages.Builder images;
@@ -94,7 +73,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 
 	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {
 		try {
-			return new GlShader(shaderType, name, source, EMPTY_CONSTANTS);
+			return new GlShader(shaderType, name, source);
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile " + shaderType + " shader for program " + name, e);
 		}

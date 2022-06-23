@@ -29,7 +29,7 @@
     "shadow_map.MixinChunkRenderManager",
     "shadow_map.MixinGameRendererContext",
     "shadow_map.MixinSodiumWorldRenderer",
-    "vertex_format.entity.MixinQuadVertexType",
+    "vertex_format.entity.MixinBufferBuilder_ExtendedVertexFormatCompat",
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",

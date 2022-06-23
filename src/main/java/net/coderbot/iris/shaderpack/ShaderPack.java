@@ -8,9 +8,6 @@ import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.shader.GlShader;
-import net.coderbot.iris.gl.shader.ShaderConstants;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
@@ -38,6 +35,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +54,7 @@ public class ShaderPack {
 
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
-	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
+	private final EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new EnumMap<>(TextureStage.class);
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
 	private final OptionMenuContainer menuContainer;
@@ -64,8 +62,8 @@ public class ShaderPack {
 	private final ProfileSet.ProfileResult profile;
 	private final String profileInfo;
 
-	public ShaderPack(Path root) throws IOException {
-		this(root, Collections.emptyMap());
+	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException {
+		this(root, Collections.emptyMap(), environmentDefines);
 	}
 
 	public final CustomUniforms.Builder customUniforms;
@@ -78,7 +76,7 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs) throws IOException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, Iterable<StringPair> environmentDefines) throws IOException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
@@ -116,7 +114,7 @@ public class ShaderPack {
 		graph = this.shaderPackOptions.getIncludes();
 
 		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
-				.map(source -> new ShaderProperties(source, shaderPackOptions))
+				.map(source -> new ShaderProperties(source, shaderPackOptions, environmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
@@ -171,13 +169,14 @@ public class ShaderPack {
 				builder.append('\n');
 			}
 
-			// Apply shader environment defines / constants
-			// TODO: Write our own code pathways for this
-			ShaderConstants constants = ProgramBuilder.MACRO_CONSTANTS;
-			String source = GlShader.processShader(builder.toString(), constants);
-
-			// Apply GLSL preprocessor to source
-			source = JcppProcessor.glslPreprocessSource(source);
+			// Apply GLSL preprocessor to source, while making environment defines available.
+			//
+			// This uses similar techniques to the *.properties preprocessor to avoid actually putting
+			// #define statements in the actual source - instead, we tell the preprocessor about them
+			// directly. This removes one obstacle to accurate reporting of line numbers for errors,
+			// though there exist many more (such as relocating all #extension directives and similar things)
+			String source = builder.toString();
+			source = JcppProcessor.glslPreprocessSource(source, environmentDefines);
 
 			return source;
 		};
@@ -191,7 +190,7 @@ public class ShaderPack {
 		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
 				shaderProperties, this);
 
-		this.idMap = new IdMap(root, shaderPackOptions);
+		this.idMap = new IdMap(root, shaderPackOptions, environmentDefines);
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
@@ -257,7 +256,11 @@ public class ShaderPack {
 				Iris.logger.warn("Resource location " + path + " contained more than two parts?");
 			}
 
-			customTextureData = new CustomTextureData.ResourceData(parts[0], parts[1]);
+			if (parts[0].equals("minecraft") && (parts[1].equals("dynamic/lightmap_1") || parts[1].equals("dynamic/light_map_1"))) {
+				customTextureData = new CustomTextureData.LightmapMarker();
+			} else {
+				customTextureData = new CustomTextureData.ResourceData(parts[0], parts[1]);
+			}
 		} else {
 			// TODO: Make sure the resulting path is within the shaderpack?
 			if (path.startsWith("/")) {
@@ -349,7 +352,7 @@ public class ShaderPack {
 		return idMap;
 	}
 
-	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> getCustomTextureDataMap() {
+	public EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> getCustomTextureDataMap() {
 		return customTextureDataMap;
 	}
 

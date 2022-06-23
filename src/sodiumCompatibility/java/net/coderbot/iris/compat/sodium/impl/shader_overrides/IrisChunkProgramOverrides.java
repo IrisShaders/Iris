@@ -24,202 +24,198 @@ import java.util.Locale;
 import java.util.Optional;
 
 public class IrisChunkProgramOverrides {
-    private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
+	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
 
-    private final EnumMap<IrisTerrainPass, ChunkProgram> programs = new EnumMap<>(IrisTerrainPass.class);
+	private final EnumMap<IrisTerrainPass, ChunkProgram> programs = new EnumMap<>(IrisTerrainPass.class);
 
-    private GlShader createVertexShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
-        Optional<String> irisVertexShader;
+	private GlShader createVertexShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+		Optional<String> irisVertexShader;
 
-        if (pass == IrisTerrainPass.SHADOW) {
-            irisVertexShader = pipeline.getShadowVertexShaderSource();
-        } else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
-            irisVertexShader = pipeline.getTerrainVertexShaderSource();
-        } else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
-            irisVertexShader = pipeline.getTranslucentVertexShaderSource();
-        } else {
-            throw new IllegalArgumentException("Unknown pass type " + pass);
-        }
+		if (pass == IrisTerrainPass.SHADOW) {
+			irisVertexShader = pipeline.getShadowVertexShaderSource();
+		} else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
+			irisVertexShader = pipeline.getTerrainVertexShaderSource();
+		} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+			irisVertexShader = pipeline.getTranslucentVertexShaderSource();
+		} else {
+			throw new IllegalArgumentException("Unknown pass type " + pass);
+		}
 
-        String source = irisVertexShader.orElse(null);
+		String source = irisVertexShader.orElse(null);
 
-        if (source == null) {
-            return null;
-        }
+		if (source == null) {
+			return null;
+		}
 
-        return new GlShader(device, ShaderType.VERTEX, new ResourceLocation("iris",
+		return new GlShader(device, ShaderType.VERTEX, new ResourceLocation("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".vsh"), source, EMPTY_CONSTANTS);
-    }
+	}
 
-    private GlShader createGeometryShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
-        Optional<String> irisGeometryShader;
+	private GlShader createGeometryShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+		Optional<String> irisGeometryShader;
 
-        if (pass == IrisTerrainPass.SHADOW) {
-            irisGeometryShader = pipeline.getShadowGeometryShaderSource();
-        } else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
-            irisGeometryShader = pipeline.getTerrainGeometryShaderSource();
-        } else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
-            irisGeometryShader = pipeline.getTranslucentGeometryShaderSource();
-        } else {
-            throw new IllegalArgumentException("Unknown pass type " + pass);
-        }
+		if (pass == IrisTerrainPass.SHADOW) {
+			irisGeometryShader = pipeline.getShadowGeometryShaderSource();
+		} else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
+			irisGeometryShader = pipeline.getTerrainGeometryShaderSource();
+		} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+			irisGeometryShader = pipeline.getTranslucentGeometryShaderSource();
+		} else {
+			throw new IllegalArgumentException("Unknown pass type " + pass);
+		}
 
-        String source = irisGeometryShader.orElse(null);
+		String source = irisGeometryShader.orElse(null);
 
-        if (source == null) {
-            return null;
-        }
+		if (source == null) {
+			return null;
+		}
 
-        return new GlShader(device, IrisShaderTypes.GEOMETRY, new ResourceLocation("iris",
+		return new GlShader(device, IrisShaderTypes.GEOMETRY, new ResourceLocation("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".gsh"), source, EMPTY_CONSTANTS);
-    }
+	}
 
-    private GlShader createFragmentShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
-        Optional<String> irisFragmentShader;
+	private GlShader createFragmentShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+		Optional<String> irisFragmentShader;
 
-        if (pass == IrisTerrainPass.SHADOW) {
-            irisFragmentShader = pipeline.getShadowFragmentShaderSource();
-        } else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
-            irisFragmentShader = pipeline.getTerrainFragmentShaderSource();
-        } else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
-            irisFragmentShader = pipeline.getTranslucentFragmentShaderSource();
-        } else {
-            throw new IllegalArgumentException("Unknown pass type " + pass);
-        }
+		if (pass == IrisTerrainPass.SHADOW) {
+			irisFragmentShader = pipeline.getShadowFragmentShaderSource();
+		} else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
+			irisFragmentShader = pipeline.getTerrainFragmentShaderSource();
+		} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+			irisFragmentShader = pipeline.getTranslucentFragmentShaderSource();
+		} else {
+			throw new IllegalArgumentException("Unknown pass type " + pass);
+		}
 
-        String source = irisFragmentShader.orElse(null);
+		String source = irisFragmentShader.orElse(null);
 
-        if (source == null) {
-            return null;
-        }
+		if (source == null) {
+			return null;
+		}
 
-        return new GlShader(device, ShaderType.FRAGMENT, new ResourceLocation("iris",
+		return new GlShader(device, ShaderType.FRAGMENT, new ResourceLocation("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".fsh"), source, EMPTY_CONSTANTS);
-    }
+	}
 
-    @Nullable
-    private ChunkProgram createShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
-        GlShader vertShader = createVertexShader(device, pass, pipeline);
-        GlShader geomShader = createGeometryShader(device, pass, pipeline);
-        GlShader fragShader = createFragmentShader(device, pass, pipeline);
+	@Nullable
+	private ChunkProgram createShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+		GlShader vertShader = createVertexShader(device, pass, pipeline);
+		GlShader geomShader = createGeometryShader(device, pass, pipeline);
+		GlShader fragShader = createFragmentShader(device, pass, pipeline);
 
-        if (vertShader == null || fragShader == null) {
-            if (vertShader != null) {
-                vertShader.delete();
-            }
+		if (vertShader == null || fragShader == null) {
+			if (vertShader != null) {
+				vertShader.delete();
+			}
 
-            if (geomShader != null) {
-                geomShader.delete();
-            }
+			if (geomShader != null) {
+				geomShader.delete();
+			}
 
-            if (fragShader != null) {
-                fragShader.delete();
-            }
+			if (fragShader != null) {
+				fragShader.delete();
+			}
 
-            // TODO: Partial shader programs?
-            return null;
-        }
+			// TODO: Partial shader programs?
+			return null;
+		}
 
-        try {
-            GlProgram.Builder builder = GlProgram.builder(new ResourceLocation("sodium", "chunk_shader_for_"
-                    + pass.getName()));
+		try {
+			GlProgram.Builder builder = GlProgram.builder(new ResourceLocation("sodium", "chunk_shader_for_"
+					+ pass.getName()));
 
-            if (geomShader != null) {
-                builder.attachShader(geomShader);
-            }
+			if (geomShader != null) {
+				builder.attachShader(geomShader);
+			}
 
-            return builder.attachShader(vertShader)
-                    .attachShader(fragShader)
-                    .bindAttribute("a_Pos", ChunkShaderBindingPoints.POSITION)
-                    .bindAttribute("a_Color", ChunkShaderBindingPoints.COLOR)
-                    .bindAttribute("a_TexCoord", ChunkShaderBindingPoints.TEX_COORD)
-                    .bindAttribute("a_LightCoord", ChunkShaderBindingPoints.LIGHT_COORD)
-                    .bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
-                    .bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
-                    .bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
-                    .bindAttribute("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
-                    .bindAttribute("d_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
-                    .build((program, name) -> {
-                        ProgramUniforms.Builder uniforms = pipeline.initUniforms(name);
-                        ProgramSamplers samplers;
+			return builder.attachShader(vertShader)
+					.attachShader(fragShader)
+					.bindAttribute("a_Pos", ChunkShaderBindingPoints.POSITION)
+					.bindAttribute("a_Color", ChunkShaderBindingPoints.COLOR)
+					.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.TEX_COORD)
+					.bindAttribute("a_LightCoord", ChunkShaderBindingPoints.LIGHT_COORD)
+					.bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
+					.bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
+					.bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
+					.bindAttribute("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
+					.bindAttribute("d_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
+					.build((program, name) -> {
+						ProgramUniforms.Builder uniforms = pipeline.initUniforms(name);
+						ProgramSamplers samplers;
 						ProgramImages images;
 
-                        if (pass == IrisTerrainPass.SHADOW) {
-                            samplers = pipeline.initShadowSamplers(name);
+						if (pass == IrisTerrainPass.SHADOW) {
+							samplers = pipeline.initShadowSamplers(name);
 							images = pipeline.initShadowImages(name);
-                        } else {
-                            samplers = pipeline.initTerrainSamplers(name);
+						} else {
+							samplers = pipeline.initTerrainSamplers(name);
 							images = pipeline.initTerrainImages(name);
-                        }
+						}
 
-                        IrisChunkProgram chunkProgram =
-								new IrisChunkProgram(device, program, name, uniforms.buildUniforms(), samplers, images,
-										pipeline.getCustomUniforms());
+						IrisChunkProgram chunkProgram = new IrisChunkProgram(device, program, name, uniforms, samplers, images);
 
 						pipeline.getCustomUniforms().mapholderToPass(uniforms, chunkProgram);
 
 						return chunkProgram;
-                    });
-        } finally {
-            vertShader.delete();
-            if (geomShader != null) {
-                geomShader.delete();
-            }
-            fragShader.delete();
-        }
-    }
+					});
+		} finally {
+			vertShader.delete();
+			if (geomShader != null) {
+				geomShader.delete();
+			}
+			fragShader.delete();
+		}
+	}
 
-    public void createShaders(RenderDevice device) {
-        WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
-        SodiumTerrainPipeline sodiumTerrainPipeline = null;
+	public void createShaders(SodiumTerrainPipeline sodiumTerrainPipeline, RenderDevice device) {
+		Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
 
-        if (worldRenderingPipeline != null) {
-            sodiumTerrainPipeline = worldRenderingPipeline.getSodiumTerrainPipeline();
-        }
-
-        Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
-
-        if (sodiumTerrainPipeline != null) {
-            for (IrisTerrainPass pass : IrisTerrainPass.values()) {
+		if (sodiumTerrainPipeline != null) {
+			for (IrisTerrainPass pass : IrisTerrainPass.values()) {
 				if (pass == IrisTerrainPass.SHADOW && !sodiumTerrainPipeline.hasShadowPass()) {
 					this.programs.put(pass, null);
 					continue;
 				}
 
-                this.programs.put(pass, createShader(device, pass, sodiumTerrainPipeline));
-            }
-        } else {
-            this.programs.clear();
-        }
-    }
+				this.programs.put(pass, createShader(device, pass, sodiumTerrainPipeline));
+			}
+		} else {
+			this.programs.clear();
+		}
+	}
 
-    @Nullable
-    public ChunkProgram getProgramOverride(RenderDevice device, BlockRenderPass pass) {
-        if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
-            deleteShaders();
-            createShaders(device);
-        }
+	@Nullable
+	public ChunkProgram getProgramOverride(RenderDevice device, BlockRenderPass pass) {
+		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
+		SodiumTerrainPipeline sodiumTerrainPipeline = null;
 
-        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			ChunkProgram shadowProgram = this.programs.get(IrisTerrainPass.SHADOW);
+		if (worldRenderingPipeline != null) {
+			sodiumTerrainPipeline = worldRenderingPipeline.getSodiumTerrainPipeline();
+		}
 
-			if (shadowProgram == null) {
+		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
+			deleteShaders();
+			createShaders(sodiumTerrainPipeline, device);
+		}
+
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			if (sodiumTerrainPipeline != null && !sodiumTerrainPipeline.hasShadowPass()) {
 				throw new IllegalStateException("Shadow program requested, but the pack does not have a shadow pass?");
 			}
 
-			return shadowProgram;
-        } else {
-            return this.programs.get(pass.isTranslucent() ? IrisTerrainPass.GBUFFER_TRANSLUCENT : IrisTerrainPass.GBUFFER_SOLID);
-        }
-    }
+			return this.programs.get(IrisTerrainPass.SHADOW);
+		} else {
+			return this.programs.get(pass.isTranslucent() ? IrisTerrainPass.GBUFFER_TRANSLUCENT : IrisTerrainPass.GBUFFER_SOLID);
+		}
+	}
 
-    public void deleteShaders() {
-        for (ChunkProgram program : this.programs.values()) {
-            if (program != null) {
-                program.delete();
-            }
-        }
+	public void deleteShaders() {
+		for (ChunkProgram program : this.programs.values()) {
+			if (program != null) {
+				program.delete();
+			}
+		}
 
-        this.programs.clear();
-    }
+		this.programs.clear();
+	}
 }

@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +20,7 @@ public class ProgramSet {
 	private final ProgramSource[] prepare;
 
 	private final ProgramSource gbuffersBasic;
+	private final ProgramSource gbuffersLine;
 	private final ProgramSource gbuffersBeaconBeam;
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTexturedLit;
@@ -67,6 +69,7 @@ public class ProgramSet {
 		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
 
 		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, shaderProperties);
+		this.gbuffersLine = readProgramSource(directory, sourceProvider, "gbuffers_line", this, shaderProperties);
 		this.gbuffersBeaconBeam = readProgramSource(directory, sourceProvider, "gbuffers_beaconbeam", this, shaderProperties);
 		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, shaderProperties);
 		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, shaderProperties);
@@ -165,9 +168,8 @@ public class ProgramSet {
 			});
 		}
 
-		packDirectives.getRenderTargetDirectives().getRenderTargetSettings().forEach((index, settings) -> {
-			Iris.logger.debug("Render target settings for colortex" + index + ": " + settings);
-		});
+		packDirectives.getRenderTargetDirectives().getRenderTargetSettings().forEach((index, settings) ->
+			Iris.logger.debug("Render target settings for colortex" + index + ": " + settings));
 	}
 
 	public Optional<ProgramSource> getShadow() {
@@ -244,6 +246,33 @@ public class ProgramSet {
 
 	public Optional<ProgramSource> getGbuffersHand() {
 		return gbuffersHand.requireValid();
+	}
+
+	public Optional<ProgramSource> get(ProgramId programId) {
+		switch (programId) {
+			case Shadow: return getShadow();
+			case Basic: return getGbuffersBasic();
+			case Line: return gbuffersLine.requireValid();
+			case Textured: return getGbuffersTextured();
+			case TexturedLit: return getGbuffersTexturedLit();
+			case SkyBasic: return getGbuffersSkyBasic();
+			case SkyTextured: return getGbuffersSkyTextured();
+			case Clouds: return getGbuffersClouds();
+			case Terrain: return getGbuffersTerrain();
+			case DamagedBlock: return getGbuffersDamagedBlock();
+			case Block: return getGbuffersBlock();
+			case BeaconBeam: return getGbuffersBeaconBeam();
+			case Entities: return getGbuffersEntities();
+			case EntitiesGlowing: return getGbuffersEntitiesGlowing();
+			case ArmorGlint: return getGbuffersGlint();
+			case SpiderEyes: return getGbuffersEntityEyes();
+			case Hand: return getGbuffersHand();
+			case Weather: return getGbuffersWeather();
+			case Water: return getGbuffersWater();
+			case HandWater: return getGbuffersHandWater();
+			case Final: return getCompositeFinal();
+			default: return Optional.empty();
+		}
 	}
 
 	public ProgramSource[] getDeferred() {

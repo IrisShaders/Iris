@@ -3,8 +3,8 @@ package net.coderbot.iris.uniforms;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
-import net.coderbot.iris.mixin.statelisteners.GlStateManagerAccessor;
 
 public class FogUniforms {
 	private FogUniforms() {
@@ -25,41 +25,17 @@ public class FogUniforms {
 			StateUpdateNotifiers.fogModeNotifier.setListener(listener);
 		});
 
-		uniforms.uniform1f("fogDensity", () -> {
-			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
-
-			if (!((BooleanStateAccessor) fog.enable).isEnabled()) {
-				return 0.0f;
-			}
-
-			return GlStateManagerAccessor.getFOG().density;
-		}, listener -> {
+		uniforms.uniform1f("fogDensity", () -> GlStateManagerAccessor.getFOG().density, listener -> {
 			StateUpdateNotifiers.fogToggleNotifier.setListener(listener);
 			StateUpdateNotifiers.fogDensityNotifier.setListener(listener);
 		});
 
-		uniforms.uniform1f("fogStart", () -> {
-			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
-
-			if (!((BooleanStateAccessor) fog.enable).isEnabled()) {
-				return 0.0f;
-			}
-
-			return GlStateManagerAccessor.getFOG().start;
-		}, listener -> {
+		uniforms.uniform1f("fogStart", () -> GlStateManagerAccessor.getFOG().start, listener -> {
 			StateUpdateNotifiers.fogToggleNotifier.setListener(listener);
 			StateUpdateNotifiers.fogStartNotifier.setListener(listener);
 		});
 
-		uniforms.uniform1f("fogEnd", () -> {
-			GlStateManager.FogState fog = GlStateManagerAccessor.getFOG();
-
-			if (!((BooleanStateAccessor) fog.enable).isEnabled()) {
-				return 0.0f;
-			}
-
-			return GlStateManagerAccessor.getFOG().end;
-		}, listener -> {
+		uniforms.uniform1f("fogEnd", () -> GlStateManagerAccessor.getFOG().end, listener -> {
 			StateUpdateNotifiers.fogToggleNotifier.setListener(listener);
 			StateUpdateNotifiers.fogEndNotifier.setListener(listener);
 		});

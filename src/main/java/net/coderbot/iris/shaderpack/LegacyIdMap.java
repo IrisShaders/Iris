@@ -72,6 +72,8 @@ public class LegacyIdMap {
 
 		// Lily pad
 		add(blockIdMap, 111, block("lily_pad"));
+
+		// TODO: 76 -> redstone_torch (on)
 	}
 
 	private static BlockEntry block(String name) {

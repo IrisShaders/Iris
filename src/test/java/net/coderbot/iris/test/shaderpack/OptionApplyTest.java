@@ -16,14 +16,13 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 public class OptionApplyTest {
-	//@Test
-	// TODO: Re-enable this once we can load shader packs in tests without referencing OpenGL / LWJGL / Minecraft.
+	@Test
 	void testOptions() {
 		ShaderPack shaderPack;
 
 		// ensure that we can actually load the shader pack
 		try {
-			shaderPack = new ShaderPack(IrisTests.getTestShaderPackPath("options"));
+			shaderPack = new ShaderPack(IrisTests.getTestShaderPackPath("options"), IrisTests.TEST_ENVIRONMENT_DEFINES);
 		} catch (Exception e) {
 			Assertions.fail("Couldn't load test shader pack options", e);
 			return;

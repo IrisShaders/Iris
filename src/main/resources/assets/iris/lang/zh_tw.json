@@ -1,6 +1,11 @@
 {
   "iris.shaders.reloaded": "已重新載入光影！",
+  "iris.shaders.disabled": "已停用光影！",
   "iris.shaders.toggled": "使用光影：%s！",
+  "iris.shaders.debug.enabled": "已啟用偵錯，將進行詳細記錄！",
+  "iris.shaders.debug.disabled": "已停用偵錯。",
+  "iris.shaders.debug.failure": "無法啟用偵錯，您的電腦不支援偵錯功能。",
+  "iris.shaders.debug.restart": "您沒有偵錯內容，請重新啟動後啟用偵錯。",
   "iris.keybind.reload": "重新載入光影",
   "iris.keybind.shaderPackSelection": "光影包選擇畫面",
   "iris.keybind.toggleShaders": "光影開關",
@@ -44,8 +49,7 @@
   "options.iris.shadowDistance": "最大陰影距離",
   "options.iris.shadowDistance.enabled": "能讓您變更陰影的最大距離。超出此距離的地形和實體將不會有陰影。調低陰影距離能顯著提升效能。",
   "options.iris.shadowDistance.disabled": "您無法變更目前光影包所設定的陰影顯示距離。",
-  "options.iris.shadowDistance.sodium_tooltip": "「陰影顯示距離」選項能控制在陰影傳遞（ shadow pass）時，可能呈現的地形有多遠。 較近的距離將呈現較少的地形，但畫面播放速率（frame rates）也得以增加。 此選項在套用「有特定陰影顯示距離的光影包」時無法變更。 實際的陰影顯示距離會受「顯示距離」選項限 制。",
-
+  
   "pack.iris.select.title": "選擇",
   "pack.iris.configure.title": "設定",
   "pack.iris.list.label": "+ 將欲新增的光影包拖曳至此",

@@ -1,7 +1,11 @@
 accessWidener v1 named
+
 accessible class com/mojang/blaze3d/platform/GlStateManager$AlphaState
 accessible class com/mojang/blaze3d/platform/GlStateManager$BlendState
+accessible class com/mojang/blaze3d/platform/GlStateManager$ColorMask
+accessible class com/mojang/blaze3d/platform/GlStateManager$DepthState
 accessible class com/mojang/blaze3d/platform/GlStateManager$FogState
 accessible class com/mojang/blaze3d/platform/GlStateManager$TextureState
+accessible class net/minecraft/client/renderer/texture/Stitcher$Holder
 accessible class net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;

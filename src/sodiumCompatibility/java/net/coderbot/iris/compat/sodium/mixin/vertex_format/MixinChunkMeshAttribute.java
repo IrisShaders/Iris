@@ -17,27 +17,27 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(ChunkMeshAttribute.class)
 public class MixinChunkMeshAttribute {
 	@SuppressWarnings("target")
-    @Shadow(remap = false)
-    @Final
-    @Mutable
-    private static ChunkMeshAttribute[] $VALUES;
+	@Shadow(remap = false)
+	@Final
+	@Mutable
+	private static ChunkMeshAttribute[] $VALUES;
 
-    static {
-        int baseOrdinal = $VALUES.length;
+	static {
+		int baseOrdinal = $VALUES.length;
 
-        IrisChunkMeshAttributes.NORMAL
-                = ChunkMeshAttributeAccessor.createChunkMeshAttribute("NORMAL", baseOrdinal);
-        IrisChunkMeshAttributes.TANGENT
-                = ChunkMeshAttributeAccessor.createChunkMeshAttribute("TANGENT", baseOrdinal + 1);
-        IrisChunkMeshAttributes.MID_TEX_COORD
-                = ChunkMeshAttributeAccessor.createChunkMeshAttribute("MID_TEX_COORD", baseOrdinal + 2);
-        IrisChunkMeshAttributes.BLOCK_ID
-                = ChunkMeshAttributeAccessor.createChunkMeshAttribute("BLOCK_ID", baseOrdinal + 3);
+		IrisChunkMeshAttributes.NORMAL
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("NORMAL", baseOrdinal);
+		IrisChunkMeshAttributes.TANGENT
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("TANGENT", baseOrdinal + 1);
+		IrisChunkMeshAttributes.MID_TEX_COORD
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("MID_TEX_COORD", baseOrdinal + 2);
+		IrisChunkMeshAttributes.BLOCK_ID
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("BLOCK_ID", baseOrdinal + 3);
 
-        $VALUES = ArrayUtils.addAll($VALUES,
-                IrisChunkMeshAttributes.NORMAL,
-                IrisChunkMeshAttributes.TANGENT,
-                IrisChunkMeshAttributes.MID_TEX_COORD,
-                IrisChunkMeshAttributes.BLOCK_ID);
-    }
+		$VALUES = ArrayUtils.addAll($VALUES,
+				IrisChunkMeshAttributes.NORMAL,
+				IrisChunkMeshAttributes.TANGENT,
+				IrisChunkMeshAttributes.MID_TEX_COORD,
+				IrisChunkMeshAttributes.BLOCK_ID);
+	}
 }

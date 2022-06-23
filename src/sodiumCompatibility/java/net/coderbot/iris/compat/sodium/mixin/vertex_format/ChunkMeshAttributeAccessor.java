@@ -6,8 +6,8 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ChunkMeshAttribute.class)
 public interface ChunkMeshAttributeAccessor {
-    @Invoker(value = "<init>")
-    static ChunkMeshAttribute createChunkMeshAttribute(String name, int ordinal) {
-        throw new AssertionError();
-    }
+	@Invoker(value = "<init>")
+	static ChunkMeshAttribute createChunkMeshAttribute(String name, int ordinal) {
+		throw new AssertionError();
+	}
 }

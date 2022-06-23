@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -45,6 +46,7 @@ public class ShaderProperties {
 	private OptionalBoolean shadowTerrain = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowTranslucent = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowEntities = OptionalBoolean.DEFAULT;
+	private OptionalBoolean shadowPlayer = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowBlockEntities = OptionalBoolean.DEFAULT;
 	private OptionalBoolean underwaterOverlay = OptionalBoolean.DEFAULT;
 	private OptionalBoolean sun = OptionalBoolean.DEFAULT;
@@ -71,7 +73,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
-	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new Object2ObjectOpenHashMap<>();
+	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
@@ -81,8 +83,8 @@ public class ShaderProperties {
 	}
 
 	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
-	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions) {
-		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions);
+	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
+		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions, environmentDefines);
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
@@ -113,6 +115,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "shadowTerrain", bool -> shadowTerrain = bool);
 			handleBooleanDirective(key, value, "shadowTranslucent", bool -> shadowTranslucent = bool);
 			handleBooleanDirective(key, value, "shadowEntities", bool -> shadowEntities = bool);
+			handleBooleanDirective(key, value, "shadowPlayer", bool -> shadowPlayer = bool);
 			handleBooleanDirective(key, value, "shadowBlockEntities", bool -> shadowBlockEntities = bool);
 			handleBooleanDirective(key, value, "underwaterOverlay", bool -> underwaterOverlay = bool);
 			handleBooleanDirective(key, value, "sun", bool -> sun = bool);
@@ -221,10 +224,8 @@ public class ShaderProperties {
 
 				TextureStage stage = optionalTextureStage.get();
 
-				Object2ObjectMap<String, String> customTexturePropertyMap = customTextures.getOrDefault(stage, new Object2ObjectOpenHashMap<>());
-				customTexturePropertyMap.put(samplerName, value);
-
-				customTextures.put(stage, customTexturePropertyMap);
+				customTextures.computeIfAbsent(stage, _stage -> new Object2ObjectOpenHashMap<>())
+						.put(samplerName, value);
 			});
 
 			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
@@ -415,6 +416,10 @@ public class ShaderProperties {
 		return shadowEntities;
 	}
 
+	public OptionalBoolean getShadowPlayer() {
+		return shadowPlayer;
+	}
+
 	public OptionalBoolean getShadowBlockEntities() {
 		return shadowBlockEntities;
 	}
@@ -487,7 +492,7 @@ public class ShaderProperties {
 		return blendModeOverrides;
 	}
 
-	public Object2ObjectMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
+	public EnumMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
 		return customTextures;
 	}
 

@@ -3,6 +3,7 @@ package net.coderbot.iris.mixin;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -13,20 +14,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(RenderTarget.class)
 public class MixinRenderTarget implements Blaze3dRenderTargetExt {
-	private boolean iris$dirty = false;
+	@Shadow
+	private int depthBufferId;
+
+	private int iris$depthBufferVersion;
+	private int iris$colorBufferVersion;
 
 	@Inject(method = "destroyBuffers()V", at = @At("HEAD"))
 	private void iris$onDestroyBuffers(CallbackInfo ci) {
-		iris$dirty = true;
+		iris$depthBufferVersion++;
+		iris$colorBufferVersion++;
 	}
 
 	@Override
-	public boolean iris$isDepthBufferDirty() {
-		return iris$dirty;
+	public int iris$getDepthBufferVersion() {
+		return iris$depthBufferVersion;
 	}
 
 	@Override
-	public void iris$clearDepthBufferDirtyFlag() {
-		iris$dirty = false;
+	public int iris$getColorBufferVersion() {
+		return iris$colorBufferVersion;
 	}
 }

@@ -24,43 +24,43 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(ChunkBuildBuffers.class)
 public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
-    @Unique
-    private MaterialIdHolder idHolder;
+	@Unique
+	private MaterialIdHolder idHolder;
 
-    @Inject(method = "<init>", at = @At("RETURN"), remap = false)
-    private void iris$onConstruct(ChunkVertexType vertexType, BlockRenderPassManager renderPassManager, CallbackInfo ci) {
-        Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
+	@Inject(method = "<init>", at = @At("RETURN"), remap = false)
+	private void iris$onConstruct(ChunkVertexType vertexType, BlockRenderPassManager renderPassManager, CallbackInfo ci) {
+		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
 
-        if (blockStateIds != null) {
-            this.idHolder = new MaterialIdHolder(blockStateIds);
-        } else {
-            this.idHolder = new MaterialIdHolder();
-        }
-    }
+		if (blockStateIds != null) {
+			this.idHolder = new MaterialIdHolder(blockStateIds);
+		} else {
+			this.idHolder = new MaterialIdHolder();
+		}
+	}
 
-    @Redirect(method = "init", remap = false, at = @At(value = "INVOKE",
-            target = "me/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType.createBufferWriter (" +
-                        "Lme/jellysquid/mods/sodium/client/model/vertex/buffer/VertexBufferView;" +
-                        "Z" +
-                    ")Lme/jellysquid/mods/sodium/client/model/vertex/VertexSink;", remap = false))
-    private VertexSink iris$redirectWriterCreation(ChunkVertexType vertexType,
-                                                   VertexBufferView buffer, boolean direct) {
-        VertexSink sink = vertexType.createBufferWriter(buffer, direct);
+	@Redirect(method = "init", remap = false, at = @At(value = "INVOKE",
+			target = "me/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType.createBufferWriter (" +
+						"Lme/jellysquid/mods/sodium/client/model/vertex/buffer/VertexBufferView;" +
+						"Z" +
+					")Lme/jellysquid/mods/sodium/client/model/vertex/VertexSink;", remap = false))
+	private VertexSink iris$redirectWriterCreation(ChunkVertexType vertexType,
+												   VertexBufferView buffer, boolean direct) {
+		VertexSink sink = vertexType.createBufferWriter(buffer, direct);
 
-        if (sink instanceof MaterialIdAwareVertexWriter) {
-            ((MaterialIdAwareVertexWriter) sink).iris$setIdHolder(idHolder);
-        }
+		if (sink instanceof MaterialIdAwareVertexWriter) {
+			((MaterialIdAwareVertexWriter) sink).iris$setIdHolder(idHolder);
+		}
 
-        return sink;
-    }
+		return sink;
+	}
 
-    @Override
-    public void iris$setMaterialId(BlockState state, short renderType) {
-        this.idHolder.set(state, renderType);
-    }
+	@Override
+	public void iris$setMaterialId(BlockState state, short renderType) {
+		this.idHolder.set(state, renderType);
+	}
 
-    @Override
-    public void iris$resetMaterialId() {
-        this.idHolder.reset();
-    }
+	@Override
+	public void iris$resetMaterialId() {
+		this.idHolder.reset();
+	}
 }

@@ -1,7 +1,9 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
+import net.coderbot.iris.shaderpack.DimensionId;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 
@@ -25,8 +27,14 @@ public final class WorldTimeUniforms {
 			.uniform1i(PER_TICK, "moonPhase", () -> getWorld().getMoonPhase());
 	}
 
-	private static int getWorldDayTime() {
+	static int getWorldDayTime() {
 		long timeOfDay = getWorld().getDayTime();
+
+		if (Iris.getCurrentDimension() == DimensionId.END || Iris.getCurrentDimension() == DimensionId.NETHER) {
+			// If the dimension is the nether or the end, don't override the fixed time.
+			// This was an oversight in versions before and including 1.2.5 causing inconsistencies, such as Complementary's ender beams not moving.
+			return (int) (timeOfDay % 24000L);
+		}
 
 		long dayTime = ((DimensionTypeAccessor) getWorld().dimensionType()).getFixedTime()
 																		  .orElse(timeOfDay % 24000L);
