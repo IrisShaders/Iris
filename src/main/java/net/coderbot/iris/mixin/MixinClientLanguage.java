@@ -26,6 +26,7 @@ import java.util.Map;
  * resource manager on shader pack changes, since reloading the resource manager is very slow.</p>
  *
  * Uses a lower priority to inject before Incubus-Core to prevent translations from breaking
+ * @see <a href="https://github.com/devs-immortal/Incubus-Core/blob/4edfff0f088bc1b7ea77a1d475f76801a03179a4/src/main/java/net/id/incubus_core/mixin/devel/client/TranslationStorageMixin.java">Incubus-Core translation mixin</a>
  */
 @Mixin(value = ClientLanguage.class, priority = 990)
 public class MixinClientLanguage {
