@@ -1,8 +1,11 @@
 package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
+import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
@@ -19,7 +22,7 @@ public class PipelineManager {
 	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
 	private final Map<DimensionId, WorldRenderingPipeline> pipelinesPerDimension = new HashMap<>();
 	private WorldRenderingPipeline pipeline = new FixedFunctionWorldRenderingPipeline();
-	private boolean sodiumShaderReloadNeeded;
+	private int versionCounterForSodiumShaderReload = 0;
 
 	public PipelineManager(Function<DimensionId, WorldRenderingPipeline> pipelineFactory) {
 		this.pipelineFactory = pipelineFactory;
@@ -33,7 +36,6 @@ public class PipelineManager {
 			Iris.logger.info("Creating pipeline for dimension {}", currentDimension);
 			pipeline = pipelineFactory.apply(currentDimension);
 			pipelinesPerDimension.put(currentDimension, pipeline);
-			sodiumShaderReloadNeeded = true;
 
 			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
 				if (Minecraft.getInstance().levelRenderer != null) {
@@ -58,28 +60,17 @@ public class PipelineManager {
 		return Optional.ofNullable(pipeline);
 	}
 
-	public boolean isSodiumShaderReloadNeeded() {
-		return sodiumShaderReloadNeeded;
-	}
-
-	public void clearSodiumShaderReloadNeeded() {
-		sodiumShaderReloadNeeded = false;
-	}
-
-	public void setAsInstance() {
-		if (instance != null) {
-			throw new IllegalStateException("Multiple pipeline managers active at one time");
-		} else {
-			instance = this;
-		}
-	}
-
-	public static void resetInstance() {
-		instance = null;
-	}
-
-	public static PipelineManager getInstance() {
-		return instance;
+	/**
+	 * In {@link IrisChunkProgramOverrides#getProgramOverride(RenderDevice, BlockRenderPass)},
+	 * it uses version counter to check whether to reload sodium shaders.
+	 * This fixes a compat issue with Immersive Portals(#1188).
+	 * Immersive Portals may load multiple client dimensions at the same time,
+	 * and every dimension corresponds to a {@link IrisChunkProgramOverrides} object.
+	 * Multiple dimensions (mod dimensions that fallback to overworld shaders) may use the same pipeline.
+	 * This ensures that the sodium shader for each dimension will get properly reloaded.
+	 */
+	public int getVersionCounterForSodiumShaderReload() {
+		return versionCounterForSodiumShaderReload;
 	}
 
 	/**
@@ -102,6 +93,7 @@ public class PipelineManager {
 
 		pipelinesPerDimension.clear();
 		pipeline = null;
+		versionCounterForSodiumShaderReload++;
 	}
 
 	private void resetTextureState() {
