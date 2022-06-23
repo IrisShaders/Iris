@@ -322,7 +322,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
 
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
+				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages, customUniforms);
 		} else {
 			this.shadowRenderer = null;
 		}
@@ -393,7 +393,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
 			shadowRenderer == null ? null : createShadowTerrainSamplers, createTerrainImages,
-			shadowRenderer == null ? null : createShadowTerrainImages);
+			shadowRenderer == null ? null : createShadowTerrainImages, customUniforms);
 
 		// first optimization pass
 		this.customUniforms.optimise();
@@ -706,7 +706,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				RenderSystem.viewport(0, 0, main.width, main.height);
 			}
 
-			if (program != null && !sodiumTerrainRendering) {
+			if (program != null) {
 				program.use();
 			}
 

@@ -152,7 +152,7 @@ public class IrisChunkProgramOverrides {
 							images = pipeline.initTerrainImages(name);
 						}
 
-						IrisChunkProgram chunkProgram = new IrisChunkProgram(device, program, name, uniforms, samplers, images);
+						IrisChunkProgram chunkProgram = new IrisChunkProgram(device, program, name, uniforms.buildUniforms(), samplers, images, pipeline.getCustomUniforms());
 
 						pipeline.getCustomUniforms().mapholderToPass(uniforms, chunkProgram);
 
