@@ -1,7 +1,13 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
+import java.nio.FloatBuffer;
+
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryStack;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
+
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderFogComponent;
@@ -10,10 +16,6 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.MemoryStack;
-
-import java.nio.FloatBuffer;
 
 public class IrisChunkProgram extends ChunkProgram {
 	// Uniform variable binding indexes
@@ -66,7 +68,7 @@ public class IrisChunkProgram extends ChunkProgram {
 
 	@Override
 	public int getUniformLocation(String name) {
-		// NB: We pass through calls involving iris_ModelViewProjectionMatrix, iris_ModelScale, and iris_TextureScale, since
+		// NB: We pass through calls involving u_ModelViewProjectionMatrix, u_ModelScale, and u_TextureScale, since
 		//     currently patched Iris shader programs use those.
 
 		if ("iris_BlockTex".equals(name) || "iris_LightTex".equals(name)) {

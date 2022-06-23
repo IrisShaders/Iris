@@ -1,5 +1,9 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.IntFunction;
+
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
@@ -11,10 +15,6 @@ import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.IntFunction;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -107,10 +107,10 @@ public class SodiumTerrainPipeline {
 			"attribute vec2 iris_LightCoord; // The light map texture coordinate of the vertex\n" +
 			"attribute vec3 iris_Normal; // The vertex normal\n" +
 			"uniform mat4 iris_ModelViewMatrix;\n" +
-			"uniform mat4 iris_ModelViewProjectionMatrix;\n" +
+			"uniform mat4 u_ModelViewProjectionMatrix;\n" +
 			"uniform mat4 iris_NormalMatrix;\n" +
-			"uniform vec3 iris_ModelScale;\n" +
-			"uniform vec2 iris_TextureScale;\n" +
+			"uniform vec3 u_ModelScale;\n" +
+			"uniform vec2 u_TextureScale;\n" +
 			"\n" +
 			"// The model translation for this draw call.\n" +
 			"attribute vec4 iris_ModelOffset;\n" +
@@ -119,13 +119,13 @@ public class SodiumTerrainPipeline {
 
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
 
-		transformations.define("gl_Vertex", "vec4((iris_Pos * iris_ModelScale) + iris_ModelOffset.xyz, 1.0)");
+		transformations.define("gl_Vertex", "vec4((iris_Pos * u_ModelScale) + iris_ModelOffset.xyz, 1.0)");
 		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "iris_LightCoord");
-		transformations.define("gl_MultiTexCoord0", "vec4(iris_TexCoord * iris_TextureScale, 0.0, 1.0)");
+		transformations.define("gl_MultiTexCoord0", "vec4(iris_TexCoord * u_TextureScale, 0.0, 1.0)");
 		//transformations.replaceExact("gl_MultiTexCoord1", "vec4(iris_LightCoord * 255.0, 0.0, 1.0)");
 		transformations.define("gl_Color", "iris_Color");
 		transformations.define("gl_ModelViewMatrix", "iris_ModelViewMatrix");
-		transformations.define("gl_ModelViewProjectionMatrix", "iris_ModelViewProjectionMatrix");
+		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
 		transformations.define("gl_NormalMatrix", "mat3(iris_NormalMatrix)");
@@ -148,11 +148,11 @@ public class SodiumTerrainPipeline {
 
 		String injections =
 				"uniform mat4 iris_ModelViewMatrix;\n" +
-				"uniform mat4 iris_ModelViewProjectionMatrix;\n" +
+				"uniform mat4 u_ModelViewProjectionMatrix;\n" +
 				"uniform mat4 iris_NormalMatrix;\n";
 
 		transformations.define("gl_ModelViewMatrix", "iris_ModelViewMatrix");
-		transformations.define("gl_ModelViewProjectionMatrix", "iris_ModelViewProjectionMatrix");
+		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 		transformations.define("gl_NormalMatrix", "mat3(iris_NormalMatrix)");
 
