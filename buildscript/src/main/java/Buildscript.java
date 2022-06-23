@@ -44,7 +44,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
     static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = false;
-	static final String MC_VERSION = "22w24a";
+	static final String MC_VERSION = "1.19.1-rc1";
 	static final String customSodiumName = "";
 
 	private static final String[] SOURCE_SETS = new String[] {
