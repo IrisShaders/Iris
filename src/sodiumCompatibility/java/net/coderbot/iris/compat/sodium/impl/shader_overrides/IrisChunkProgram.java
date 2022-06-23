@@ -33,8 +33,8 @@ public class IrisChunkProgram extends ChunkProgram {
 							@Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers,
 							@Nullable ProgramImages irisProgramImages) {
 		super(owner, name, handle, ChunkShaderFogComponent.None::new);
-		this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
-		this.uNormalMatrix = this.getUniformLocation("u_NormalMatrix");
+		this.uModelViewMatrix = this.getUniformLocation("iris_ModelViewMatrix");
+		this.uNormalMatrix = this.getUniformLocation("iris_NormalMatrix");
 		this.irisProgramUniforms = irisProgramUniforms;
 		this.irisProgramSamplers = irisProgramSamplers;
 		this.irisProgramImages = irisProgramImages;
@@ -66,10 +66,10 @@ public class IrisChunkProgram extends ChunkProgram {
 
 	@Override
 	public int getUniformLocation(String name) {
-		// NB: We pass through calls involving u_ModelViewProjectionMatrix, u_ModelScale, and u_TextureScale, since
+		// NB: We pass through calls involving iris_ModelViewProjectionMatrix, iris_ModelScale, and iris_TextureScale, since
 		//     currently patched Iris shader programs use those.
 
-		if ("u_BlockTex".equals(name) || "u_LightTex".equals(name)) {
+		if ("iris_BlockTex".equals(name) || "iris_LightTex".equals(name)) {
 			// Not relevant for Iris shader programs
 			return -1;
 		}

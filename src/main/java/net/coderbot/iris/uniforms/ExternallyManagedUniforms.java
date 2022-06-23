@@ -9,30 +9,30 @@ public class ExternallyManagedUniforms {
 	}
 
 	public static void addExternallyManagedUniforms(UniformHolder uniformHolder) {
-		addMat4(uniformHolder, "u_ModelViewMatrix");
-		addMat4(uniformHolder, "u_ModelViewProjectionMatrix");
-		addMat4(uniformHolder, "u_NormalMatrix");
+		addMat4(uniformHolder, "iris_ModelViewMatrix");
+		addMat4(uniformHolder, "iris_ModelViewProjectionMatrix");
+		addMat4(uniformHolder, "iris_NormalMatrix");
 	}
 
 	public static void addExternallyManagedUniforms116(UniformHolder uniformHolder) {
 		addExternallyManagedUniforms(uniformHolder);
 
-		uniformHolder.externallyManagedUniform("u_ModelScale", UniformType.VEC3);
-		uniformHolder.externallyManagedUniform("u_TextureScale", UniformType.VEC2);
+		uniformHolder.externallyManagedUniform("iris_ModelScale", UniformType.VEC3);
+		uniformHolder.externallyManagedUniform("iris_TextureScale", UniformType.VEC2);
 	}
 
 	public static void addExternallyManagedUniforms117(UniformHolder uniformHolder) {
 		addExternallyManagedUniforms(uniformHolder);
 
 		// Sodium
-		addFloat(uniformHolder, "u_FogStart");
-		addFloat(uniformHolder, "u_FogEnd");
-		addVec4(uniformHolder, "u_FogColor");
-		addMat4(uniformHolder, "u_ProjectionMatrix");
-		addFloat(uniformHolder, "u_TextureScale");
-		addFloat(uniformHolder, "u_ModelScale");
-		addFloat(uniformHolder, "u_ModelOffset");
-		uniformHolder.externallyManagedUniform("u_CameraTranslation", UniformType.VEC3);
+		addFloat(uniformHolder, "iris_FogStart");
+		addFloat(uniformHolder, "iris_FogEnd");
+		addVec4(uniformHolder, "iris_FogColor");
+		addMat4(uniformHolder, "iris_ProjectionMatrix");
+		addFloat(uniformHolder, "iris_TextureScale");
+		addFloat(uniformHolder, "iris_ModelScale");
+		addFloat(uniformHolder, "iris_ModelOffset");
+		uniformHolder.externallyManagedUniform("iris_CameraTranslation", UniformType.VEC3);
 
 		// Vanilla
 		uniformHolder.externallyManagedUniform("iris_TextureMat", UniformType.MAT4);
