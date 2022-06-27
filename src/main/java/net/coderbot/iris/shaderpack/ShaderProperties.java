@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -72,6 +73,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
+	private final Int2IntArrayMap bufferObjects = new Int2IntArrayMap();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
@@ -202,6 +204,20 @@ public class ShaderProperties {
 				}
 
 				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+			});
+
+			handlePassDirective("bufferObject.", key, value, index -> {
+				int trueIndex;
+				int trueSize;
+				try {
+					trueIndex = Integer.parseInt(index);
+					trueSize = Integer.parseInt(value);
+				} catch (NumberFormatException e) {
+					Iris.logger.warn("Number format exception parsing SSBO index/size!", e);
+					return;
+				}
+
+				bufferObjects.put(trueIndex, trueSize);
 			});
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
@@ -468,6 +484,10 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, BlendModeOverride> getBlendModeOverrides() {
 		return blendModeOverrides;
+	}
+
+	public Int2IntArrayMap getBufferObjects() {
+		return bufferObjects;
 	}
 
 	public EnumMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {

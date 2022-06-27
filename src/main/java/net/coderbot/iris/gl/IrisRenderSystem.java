@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
+import org.lwjgl.opengl.GL43C;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -190,4 +191,12 @@ public class IrisRenderSystem {
 		RenderSystem.popMatrix();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 	}
+
+    public static void memoryBarrier(int barriers) {
+		GL43C.glMemoryBarrier(barriers);
+    }
+
+    public static void genBuffers(int[] buffers) {
+		GL43C.glGenBuffers(buffers);
+    }
 }

@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -25,6 +26,7 @@ public class PackDirectives {
 	private boolean oldLighting;
 	private boolean particlesBeforeDeferred;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
+	private Int2IntArrayMap bufferObjects;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
@@ -37,6 +39,7 @@ public class PackDirectives {
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
+		bufferObjects = new Int2IntArrayMap();
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -50,6 +53,7 @@ public class PackDirectives {
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
+		bufferObjects = properties.getBufferObjects();
 		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
 	}
 
@@ -59,6 +63,7 @@ public class PackDirectives {
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
 		explicitFlips = directives.explicitFlips;
+		bufferObjects = directives.bufferObjects;
 		particlesBeforeDeferred = directives.particlesBeforeDeferred;
 	}
 
@@ -124,6 +129,10 @@ public class PackDirectives {
 
 	public PackShadowDirectives getShadowDirectives() {
 		return shadowDirectives;
+	}
+
+	public Int2IntArrayMap getBufferObjects() {
+		return bufferObjects;
 	}
 
 	private static float clamp(float val, float lo, float hi) {

@@ -16,6 +16,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -61,6 +62,7 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -127,6 +129,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private boolean isBeforeTranslucent;
 	private InputAvailability inputs = new InputAvailability(false, false, false);
 	private SpecialCondition special = null;
+	private ShaderStorageBufferHolder shaderStorageBufferHolder;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -138,6 +141,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.shouldRenderParticlesBeforeDeferred = programs.getPackDirectives().areParticlesBeforeDeferred();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
+
+		if (!programs.getPackDirectives().getBufferObjects().isEmpty()) {
+			this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programs.getPackDirectives().getBufferObjects());
+
+			this.shaderStorageBufferHolder.setupBuffers();
+		} else {
+			for (int i = 0; i < 16; i++) {
+				GL43C.glBindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
+			}
+		}
 
 		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
