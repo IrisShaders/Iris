@@ -19,8 +19,13 @@ import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntFunction;
@@ -124,6 +129,7 @@ public class SodiumTerrainPipeline {
 			shadowAlpha = sources.getDirectives().getAlphaTestOverride().orElse(AlphaTests.NON_ZERO_ALPHA);
 		});
 
+
 		if (terrainVertex != null) {
 			terrainVertex = TriforcePatcher.patchSodium(terrainVertex, ShaderType.VERTEX, null, inputs, vertexRange);
 		}
@@ -164,6 +170,34 @@ public class SodiumTerrainPipeline {
 
 			shadowFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexRange);
 			shadowCutoutFragment = TriforcePatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTests.ONE_TENTH_ALPHA, inputs, vertexRange);
+		}
+
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+			try {
+				Files.write(debugOutDir.resolve("sodium_shadow.vsh"), shadowVertex.getBytes(StandardCharsets.UTF_8));
+				Files.write(debugOutDir.resolve("sodium_shadowCutout.fsh"), shadowCutoutFragment.getBytes(StandardCharsets.UTF_8));
+				Files.write(debugOutDir.resolve("sodium_shadow.fsh"), shadowFragment.getBytes(StandardCharsets.UTF_8));
+				Files.write(debugOutDir.resolve("sodium_terrain.vsh"), terrainVertex.getBytes(StandardCharsets.UTF_8));
+				Files.write(debugOutDir.resolve("sodium_terrainCutout.fsh"), terrainCutoutFragment.getBytes(StandardCharsets.UTF_8));
+				Files.write(debugOutDir.resolve("sodium_terrain.fsh"), terrainFragment.getBytes(StandardCharsets.UTF_8));
+				Files.write(debugOutDir.resolve("sodium_translucent.vsh"), translucentVertex.getBytes(StandardCharsets.UTF_8));
+				Files.write(debugOutDir.resolve("sodium_translucent.fsh"), translucentFragment.getBytes(StandardCharsets.UTF_8));
+
+				if (shadowGeometry != null) {
+					Files.write(debugOutDir.resolve("sodium_shadow.gsh"), shadowGeometry.getBytes(StandardCharsets.UTF_8));
+				}
+
+				if (terrainGeometry != null) {
+					Files.write(debugOutDir.resolve("sodium_terrain.gsh"), terrainGeometry.getBytes(StandardCharsets.UTF_8));
+				}
+
+				if (translucentGeometry != null) {
+					Files.write(debugOutDir.resolve("sodium_translucent.gsh"), translucentGeometry.getBytes(StandardCharsets.UTF_8));
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 

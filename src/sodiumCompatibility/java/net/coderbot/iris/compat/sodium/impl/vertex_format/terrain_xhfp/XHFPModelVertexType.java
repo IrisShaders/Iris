@@ -62,14 +62,15 @@ public class XHFPModelVertexType implements TerrainVertexType {
 
 	static short encodePosition(float v) {
 		return (short) ((v - POSITION_ORIGIN) * POSITION_SCALE);
+		// (v - 8) * 2048
 	}
 
 	public static float decodeBlockTexture(short raw) {
-		return (raw & 0xFFFF) * TEXTURE_MAX_VALUE_INV;
+		return raw / 65536F;
 	}
 
 	public static float decodePosition(short v) {
-		return (v + POSITION_ORIGIN) / POSITION_SCALE;
+		return (v + 16384f) / 2048f;
 	}
 
 	static int encodeLightMapTexCoord(int light) {

@@ -339,12 +339,12 @@ public class TriforcePatcher {
 				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
 		}
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_view.vert>"));
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define VERT_SCALE " + vertexRange);
 
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_format.vert>"));
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_view.vert>"));
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
 			const uint MAX_BATCH_SIZE = 8 * 4 * 8;
 
@@ -514,15 +514,7 @@ public class TriforcePatcher {
 			throw new IllegalStateException("Transforming a shader that is already built against the core profile???");
 		}
 
-		if (!actualVersion.startsWith("1")) {
-			if (actualVersion.endsWith("compatibility")) {
-				actualVersion = actualVersion.substring(0, actualVersion.length() - "compatibility".length()).trim() + " core";
-			} else {
-				throw new IllegalStateException("Expected \"compatibility\" after the GLSL version: #version " + actualVersion);
-			}
-		} else {
-			actualVersion = (sodium ? 460 : 330) + " core";
-		}
+		actualVersion = (sodium ? 460 : 330) + " core";
 
 		beforeVersion = beforeVersion.trim();
 

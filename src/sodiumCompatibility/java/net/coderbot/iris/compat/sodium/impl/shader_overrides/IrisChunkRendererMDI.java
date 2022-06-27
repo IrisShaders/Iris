@@ -12,6 +12,7 @@ import net.caffeinemc.gfx.api.buffer.MappedBufferFlags;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.pipeline.PipelineState;
+import net.caffeinemc.gfx.api.shader.Program;
 import net.caffeinemc.gfx.api.types.ElementFormat;
 import net.caffeinemc.gfx.api.types.PrimitiveType;
 import net.caffeinemc.gfx.util.buffer.DualStreamingBuffer;
@@ -126,9 +127,13 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 
 
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
+			Program<IrisChunkShaderInterface> program = overrides.getProgramOverride(isShadowPass, device, pass, vertexType);
+			if (program == null) {
+				throw new RuntimeException("failure");
+			}
 			Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createPipeline(
 				pass.pipelineDescription(),
-				overrides.getProgramOverride(isShadowPass, device, pass, vertexType),
+				program,
 				vertexArray
 			);
 

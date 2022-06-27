@@ -124,10 +124,18 @@ public class MixinRenderSectionManager {
 
 	private ChunkRenderer irisChunkRendererCreation(boolean isShadowPass, RenderDevice device, TerrainVertexType vertexType, ChunkRenderPassManager renderPassManager) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
-			if (device.properties().driverWorkarounds.forceIndirectCount) {
-				return new IrisChunkRendererMDIC(irisChunkProgramOverrides, isShadowPass, device, renderPassManager, vertexType);
-			} else {
-				return new IrisChunkRendererMDI(irisChunkProgramOverrides, isShadowPass, device, renderPassManager, vertexType);
+			try {
+				if (device.properties().driverWorkarounds.forceIndirectCount) {
+					return new IrisChunkRendererMDIC(irisChunkProgramOverrides, isShadowPass, device, renderPassManager, vertexType);
+				} else {
+					return new IrisChunkRendererMDI(irisChunkProgramOverrides, isShadowPass, device, renderPassManager, vertexType);
+				}
+			} catch (RuntimeException e) {
+				if (device.properties().driverWorkarounds.forceIndirectCount) {
+					return new MdiCountChunkRenderer(device, renderPassManager, vertexType);
+				} else {
+					return new MdiChunkRenderer(device, renderPassManager, vertexType);
+				}
 			}
 		} else {
 			if (device.properties().driverWorkarounds.forceIndirectCount) {

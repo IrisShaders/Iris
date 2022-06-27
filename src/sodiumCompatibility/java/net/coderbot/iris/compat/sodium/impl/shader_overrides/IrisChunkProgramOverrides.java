@@ -25,6 +25,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Optional;
 
@@ -128,8 +129,19 @@ public class IrisChunkProgramOverrides {
 		}
 
 		ShaderDescription desc = builder.addShaderSource(ShaderType.FRAGMENT, fragShader).build();
+		Program<IrisChunkShaderInterface> interfaces;
 
-		Program<IrisChunkShaderInterface> interfaces = device.createProgram(desc, IrisChunkShaderInterface::new);
+		try {
+			interfaces = device.createProgram(desc, IrisChunkShaderInterface::new);
+		} catch (RuntimeException e) {
+			Iris.logger.error("Shader " + pass.getName() + " failed to compile!", e);
+			try {
+				Iris.toggleShaders(Minecraft.getInstance(), false);
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
+			return null;
+		}
 
 		int handle = GlProgram.getHandle(interfaces);
 
