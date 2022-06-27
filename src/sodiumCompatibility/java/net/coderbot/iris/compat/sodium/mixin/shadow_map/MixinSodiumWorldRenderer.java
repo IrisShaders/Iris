@@ -3,7 +3,7 @@ package net.coderbot.iris.compat.sodium.mixin.shadow_map;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.caffeinemc.sodium.interop.vanilla.math.frustum.Frustum;
 import net.caffeinemc.sodium.render.SodiumWorldRenderer;
-import net.caffeinemc.sodium.render.chunk.RenderSectionManager;
+import net.caffeinemc.sodium.render.chunk.TerrainRenderManager;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
 import net.minecraft.client.Camera;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer {
     @Shadow(remap = false)
-    private RenderSectionManager renderSectionManager;
+	private TerrainRenderManager terrainRenderManager;
 
     @Unique
     private boolean wasRenderingShadows = false;
@@ -66,15 +66,15 @@ public class MixinSodiumWorldRenderer {
     @Unique
     private void iris$ensureStateSwapped() {
         if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
-				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
+			if (this.terrainRenderManager instanceof SwappableRenderSectionManager) {
+				((SwappableRenderSectionManager) this.terrainRenderManager).iris$swapVisibilityState();
 				swapCachedCameraPositions();
 			}
 
             wasRenderingShadows = true;
         } else if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
-				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
+			if (this.terrainRenderManager instanceof SwappableRenderSectionManager) {
+				((SwappableRenderSectionManager) this.terrainRenderManager).iris$swapVisibilityState();
 				swapCachedCameraPositions();
 			}
 
@@ -84,7 +84,7 @@ public class MixinSodiumWorldRenderer {
 
     @Inject(method = "scheduleTerrainUpdate()V", remap = false,
             at = @At(value = "INVOKE",
-                    target = "net/caffeinemc/sodium/render/chunk/RenderSectionManager.markGraphDirty ()V",
+                    target = "Lnet/caffeinemc/sodium/render/chunk/TerrainRenderManager;markGraphDirty()V",
                     remap = false))
     private void iris$ensureStateSwappedBeforeMarkDirty(CallbackInfo ci) {
         iris$ensureStateSwapped();

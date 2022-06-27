@@ -7,7 +7,7 @@ import net.caffeinemc.gfx.api.shader.ShaderDescription;
 import net.caffeinemc.gfx.api.shader.ShaderType;
 import net.caffeinemc.gfx.opengl.shader.GlProgram;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
-import net.caffeinemc.sodium.render.chunk.passes.DefaultRenderPasses;
+import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPassManager;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
@@ -190,15 +190,15 @@ public class IrisChunkProgramOverrides {
 				throw new IllegalStateException("Shadow program requested, but the pack does not have a shadow pass?");
 			}
 
-			if (pass == DefaultRenderPasses.CUTOUT || pass == DefaultRenderPasses.CUTOUT_MIPPED) {
+			if (pass.isCutout()) {
 				return this.programs.get(IrisTerrainPass.SHADOW_CUTOUT);
 			} else {
 				return this.programs.get(IrisTerrainPass.SHADOW);
 			}
         } else {
-			if (pass == DefaultRenderPasses.CUTOUT || pass == DefaultRenderPasses.CUTOUT_MIPPED) {
+			if (pass.isCutout()) {
 				return this.programs.get(IrisTerrainPass.GBUFFER_CUTOUT);
-			} else if (pass == DefaultRenderPasses.TRANSLUCENT || pass == DefaultRenderPasses.TRIPWIRE) {
+			} else if (pass.usesReverseOrder()) {
 				return this.programs.get(IrisTerrainPass.GBUFFER_TRANSLUCENT);
 			} else {
 				return this.programs.get(IrisTerrainPass.GBUFFER_SOLID);

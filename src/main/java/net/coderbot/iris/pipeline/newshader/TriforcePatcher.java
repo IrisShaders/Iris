@@ -345,8 +345,23 @@ public class TriforcePatcher {
 
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_format.vert>"));
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_view.vert>"));
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_draw.vert>"));
-	} else if (type == ShaderType.FRAGMENT) {
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
+			const uint MAX_BATCH_SIZE = 8 * 4 * 8;
+
+			struct ModelTransform {
+			    // Translation of the model in world-space
+			    vec3 translation;
+			};
+
+			layout(std140, binding = 1) uniform ModelTransforms {
+			    ModelTransform transforms[MAX_BATCH_SIZE];
+			};
+
+			vec3 _apply_view_transform(vec3 position) {
+			    ModelTransform transform = transforms[gl_BaseInstance];
+			    return transform.translation + position;
+			}""");
+		} else if (type == ShaderType.FRAGMENT) {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
 					        layout(std140, binding = 2) uniform ubo_FogParameters {
 						             vec4 u_FogColor; // The color of the shader fog
