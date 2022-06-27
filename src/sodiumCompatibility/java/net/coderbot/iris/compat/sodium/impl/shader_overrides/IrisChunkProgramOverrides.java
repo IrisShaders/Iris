@@ -198,7 +198,7 @@ public class IrisChunkProgramOverrides {
         } else {
 			if (pass.isCutout()) {
 				return this.programs.get(IrisTerrainPass.GBUFFER_CUTOUT);
-			} else if (pass.usesReverseOrder()) {
+			} else if (pass.isTranslucent()) {
 				return this.programs.get(IrisTerrainPass.GBUFFER_TRANSLUCENT);
 			} else {
 				return this.programs.get(IrisTerrainPass.GBUFFER_SOLID);
