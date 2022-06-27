@@ -49,12 +49,16 @@ public class MixinRenderSectionManager {
 	@Unique
 	private IrisChunkProgramOverrides irisChunkProgramOverrides;
 
+	@Unique
+	private ChunkRenderPassManager manager;
+
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void createShadow(RenderDevice device, SodiumWorldRenderer worldRenderer, ChunkRenderPassManager renderPassManager, ClientLevel world, int renderDistance, CallbackInfo ci) {
 		this.irisChunkProgramOverrides = new IrisChunkProgramOverrides();
 
 		this.chunkRenderer = irisChunkRendererCreation(false, device, createVertexType(), renderPassManager);
 
+		this.manager = renderPassManager;
 
 		if (Iris.getPipelineManager().getPipeline().isPresent() && Iris.getPipelineManager().getPipelineNullable().getSodiumTerrainPipeline() != null && Iris.getPipelineManager().getPipelineNullable().getSodiumTerrainPipeline().hasShadowPass()) {
 			this.chunkRendererShadow = irisChunkRendererCreation(true, device, createVertexType(), renderPassManager);
@@ -63,29 +67,46 @@ public class MixinRenderSectionManager {
 		}
 	}
 
-	@Redirect(method = "renderLayer", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/TerrainRenderManager;chunkRenderer:Lnet/caffeinemc/sodium/render/chunk/draw/ChunkRenderer;"))
+	@Redirect(method = "renderLayer", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/TerrainRenderManager;chunkRenderer:Lnet/caffeinemc/sodium/render/chunk/draw/ChunkRenderer;"), remap = false)
 	private ChunkRenderer redirectShadowRenderers(TerrainRenderManager instance) {
-		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? chunkRendererShadow : chunkRenderer;
+		return isShadowPassUsable() ? chunkRendererShadow : chunkRenderer;
 	}
 
-	@Redirect(method = "update", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/TerrainRenderManager;chunkRenderer:Lnet/caffeinemc/sodium/render/chunk/draw/ChunkRenderer;"))
+	@Redirect(method = "update", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/TerrainRenderManager;chunkRenderer:Lnet/caffeinemc/sodium/render/chunk/draw/ChunkRenderer;"), remap = false)
 	private ChunkRenderer redirectShadowRenderers2(TerrainRenderManager instance) {
-		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? chunkRendererShadow : chunkRenderer;
+		return isShadowPassUsable() ? chunkRendererShadow : chunkRenderer;
 	}
 
-	@Inject(method = "renderLayer", at = @At("HEAD"))
+	private boolean isShadowPassUsable() {
+		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() && this.chunkRendererShadow != null;
+	}
+
+	@Inject(method = "renderLayer", at = @At("HEAD"), remap = false)
 	private void renderLayerHead(ChunkRenderMatrices matrices, ChunkRenderPass renderPass, CallbackInfo ci) {
 		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
+			irisChunkProgramOverrides.deleteShaders(device);
+
 			if (chunkRenderer instanceof IrisChunkRenderer irisChunkRenderer) {
-				irisChunkRenderer.deletePipeline(irisChunkProgramOverrides);
+				irisChunkRenderer.deletePipeline();
+				irisChunkRenderer.createPipelines(irisChunkProgramOverrides);
 			}
-			if (chunkRendererShadow instanceof IrisChunkRenderer irisChunkRenderer) {
-				irisChunkRenderer.deletePipeline(irisChunkProgramOverrides);
+
+			if (irisChunkProgramOverrides.getSodiumTerrainPipeline() != null && irisChunkProgramOverrides.getSodiumTerrainPipeline().hasShadowPass()) {
+				if (chunkRendererShadow == null) {
+					chunkRendererShadow = irisChunkRendererCreation(true, device, createVertexType(), manager);
+				}
+				((IrisChunkRenderer) chunkRendererShadow).deletePipeline();
+				((IrisChunkRenderer) chunkRendererShadow).createPipelines(irisChunkProgramOverrides);
+			} else if (chunkRendererShadow != null) {
+				chunkRendererShadow.delete();
+				chunkRendererShadow = null;
 			}
+
 			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
 		}
 	}
-	@Inject(method = "destroy", at = @At("TAIL"))
+
+	@Inject(method = "destroy", at = @At("TAIL"), remap = false)
 	private void destroyShadow(CallbackInfo ci) {
 		if (chunkRendererShadow != null) {
 			chunkRendererShadow.delete();

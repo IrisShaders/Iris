@@ -405,6 +405,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	@Override
 	public void delete() {
 		super.delete();
+		this.pipelines.clear();
 		MemoryUtil.memFree(this.stackBuffer);
 		this.uniformBufferCameraMatrices.delete();
 		this.uniformBufferInstanceData.delete();
@@ -575,15 +576,17 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 						// the spec requires that the entire part of the UBO is filled completely, so lets just make the range the right size
 					);
 
-					cmd.bindVertexBuffer(BufferTarget.VERTICES, batch.getVertexBuffer(), 0, batch.getVertexStride());
+					if (((GlObjectExt) batch.getVertexBuffer()).isHandleValid()) {
+						cmd.bindVertexBuffer(BufferTarget.VERTICES, batch.getVertexBuffer(), 0, batch.getVertexStride());
 
-					cmd.multiDrawElementsIndirect(
-						PrimitiveType.TRIANGLES,
-						ElementFormat.UNSIGNED_INT,
-						batch.getCommandBufferOffset(),
-						batch.getCommandCount(),
-						0
-					);
+						cmd.multiDrawElementsIndirect(
+							PrimitiveType.TRIANGLES,
+							ElementFormat.UNSIGNED_INT,
+							batch.getCommandBufferOffset(),
+							batch.getCommandCount(),
+							0
+						);
+					}
 				}
 			});
 
@@ -679,9 +682,12 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		return constants.build();
 	}
 
-	public void deletePipeline(IrisChunkProgramOverrides overrides) {
+	public void deletePipeline() {
+		this.pipelines.clear();
+	}
+
+	public void createPipelines(IrisChunkProgramOverrides overrides) {
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
-			this.pipelines.clear();
 			Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createPipeline(
 				pass.pipelineDescription(),
 				overrides.getProgramOverride(isShadowPass, device, pass, vertexType),

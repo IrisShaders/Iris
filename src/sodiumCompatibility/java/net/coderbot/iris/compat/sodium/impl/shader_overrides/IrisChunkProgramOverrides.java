@@ -150,7 +150,7 @@ public class IrisChunkProgramOverrides {
 		}
 	}
 
-	private SodiumTerrainPipeline getSodiumTerrainPipeline() {
+	public SodiumTerrainPipeline getSodiumTerrainPipeline() {
 		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (worldRenderingPipeline != null) {

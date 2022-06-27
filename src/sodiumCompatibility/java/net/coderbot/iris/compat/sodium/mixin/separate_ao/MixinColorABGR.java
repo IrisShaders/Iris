@@ -15,7 +15,7 @@ public abstract class MixinColorABGR {
 		throw new AssertionError();
 	}
 
-	@Inject(method = "repack", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "repack", at = @At("HEAD"), cancellable = true, remap = false)
 	private static void iris$separateAo(int rgb, float alpha, CallbackInfoReturnable<Integer> cir) {
 		if (!BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			cir.setReturnValue(mul(rgb, alpha));

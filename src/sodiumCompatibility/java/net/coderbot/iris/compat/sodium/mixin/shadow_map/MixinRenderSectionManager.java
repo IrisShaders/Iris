@@ -23,6 +23,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -130,7 +131,7 @@ public abstract class MixinRenderSectionManager implements SwappableRenderSectio
         needsUpdateSwap = needsUpdateTmp;
     }
 
-    @Inject(method = "update", at = @At("RETURN"))
+    @Inject(method = "update", at = @At("RETURN"), remap = false)
 	private void iris$captureVisibleBlockEntities(ChunkCameraContext camera, Frustum frustum, boolean spectator, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ShadowRenderer.visibleBlockEntities = StreamSupport
@@ -144,6 +145,15 @@ public abstract class MixinRenderSectionManager implements SwappableRenderSectio
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ci.cancel();
 		}
+	}
+
+	/**
+	 * @author
+	 * @reason
+	 */
+	@Overwrite(remap = false)
+	public boolean isGraphDirty() {
+		return true;
 	}
 
 //	@Redirect(method = "resetLists", remap = false,
