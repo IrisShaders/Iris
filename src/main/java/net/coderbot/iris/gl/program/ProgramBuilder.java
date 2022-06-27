@@ -67,8 +67,24 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		return new ProgramBuilder(name, programId, reservedTextureUnits);
 	}
 
+	public static ProgramBuilder beginCompute(String name, @Nullable String source, ImmutableSet<Integer> reservedTextureUnits) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+
+		GlShader compute = buildShader(ShaderType.COMPUTE, name + ".csh", source);
+
+		int programId = ProgramCreator.create(name, compute);
+
+		compute.destroy();
+
+		return new ProgramBuilder(name, programId, reservedTextureUnits);
+	}
+
 	public Program build() {
 		return new Program(program, super.buildUniforms(), this.samplers.build(), this.images.build());
+	}
+
+	public ComputeProgram buildCompute() {
+		return new ComputeProgram(program, super.buildUniforms(), this.samplers.build(), this.images.build());
 	}
 
 	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {

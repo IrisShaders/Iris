@@ -205,21 +205,21 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			return shadowRenderTargets;
 		};
 
-		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
+		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), programs.getPrepareCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.PREPARE),
 				programs.getPackDirectives().getExplicitFlips("prepare_pre"));
 
 		flippedAfterPrepare = flipper.snapshot();
 
-		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), renderTargets,
+		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), programs.getDeferredCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.DEFERRED),
 				programs.getPackDirectives().getExplicitFlips("deferred_pre"));
 
 		flippedAfterTranslucent = flipper.snapshot();
 
-		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), renderTargets,
+		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), programs.getCompositeCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.COMPOSITE_AND_FINAL),
 				programs.getPackDirectives().getExplicitFlips("composite_pre"));
@@ -308,7 +308,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
 			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
 
-			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
+			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null), programs.getShadowCompute(),
 				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
 		} else {
 			this.shadowRenderer = null;

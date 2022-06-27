@@ -13,6 +13,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -86,7 +87,7 @@ public class ShadowRenderer {
 	private int renderedShadowBlockEntities = 0;
 	private ProfilerFiller profiler;
 
-	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
+	public ShadowRenderer(ProgramSource shadow, ComputeSource[] compute, PackDirectives directives,
 						  ShadowRenderTargets shadowRenderTargets, boolean shadowUsesImages) {
 
 		this.profiler = Minecraft.getInstance().getProfiler();
