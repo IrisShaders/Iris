@@ -5,6 +5,7 @@ import com.mojang.blaze3d.shaders.ProgramManager;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector3i;
+import org.lwjgl.opengl.GL43C;
 
 public final class ComputeProgram extends GlResource {
 	private final ProgramUniforms uniforms;
@@ -12,10 +13,13 @@ public final class ComputeProgram extends GlResource {
 	private final ProgramImages images;
 	private Vector3i absoluteWorkGroups;
 	private Vector2f relativeWorkGroups;
+	private int[] localSize;
 
 	ComputeProgram(int program, ProgramUniforms uniforms, ProgramSamplers samplers, ProgramImages images) {
 		super(program);
 
+		localSize = new int[3];
+		GL43C.glGetProgramiv(program, GL43C.GL_COMPUTE_WORK_GROUP_SIZE, localSize);
 		this.uniforms = uniforms;
 		this.samplers = samplers;
 		this.images = images;
@@ -30,7 +34,7 @@ public final class ComputeProgram extends GlResource {
 		if (this.absoluteWorkGroups != null) {
 			return this.absoluteWorkGroups;
 		} else if (relativeWorkGroups != null) {
-			return new Vector3i((int) (width * relativeWorkGroups.x), (int) (height * relativeWorkGroups.y), 1);
+			return new Vector3i((int) (width * relativeWorkGroups.x) / localSize[0], (int) (height * relativeWorkGroups.y) / localSize[1], 1);
 		} else {
 			return new Vector3i((int) width, (int) height, 1);
 		}
