@@ -774,6 +774,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		// Destroy custom textures and the static samplers (normals, specular, and noise)
 		customTextureManager.destroy();
 		whitePixel.releaseId();
+
+		if (shaderStorageBufferHolder != null) {
+			// Destroy shader storage buffer objects
+			shaderStorageBufferHolder.destroyBuffers();
+		}
 	}
 
 	private static void destroyPasses(ProgramTable<Pass> table) {

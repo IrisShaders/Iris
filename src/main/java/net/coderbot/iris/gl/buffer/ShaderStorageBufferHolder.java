@@ -8,22 +8,37 @@ import org.lwjgl.opengl.GL43C;
 import java.util.Collections;
 
 public class ShaderStorageBufferHolder {
-	private int[] buffers;
+	private ShaderStorageBuffer[] buffers;
+	private boolean destroyed;
 
 	public ShaderStorageBufferHolder(Int2IntArrayMap overrides) {
-		buffers = new int[Collections.max(overrides.keySet()) + 1];
-		IrisRenderSystem.genBuffers(buffers);
+		destroyed = false;
+		buffers = new ShaderStorageBuffer[Collections.max(overrides.keySet()) + 1];
 		overrides.forEach((index, size) -> {
-			GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, buffers[index]);
-			GL43C.glBufferData(GL43C.GL_SHADER_STORAGE_BUFFER, size, GL43C.GL_DYNAMIC_DRAW);
-			GL43C.glBindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, buffers[index]);
+			int buffer = GlStateManager._glGenBuffers();
+			GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, buffer);
+			IrisRenderSystem.bufferData(GL43C.GL_SHADER_STORAGE_BUFFER, size, GL43C.GL_DYNAMIC_DRAW);
+			IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, buffer);
+			buffers[index] = new ShaderStorageBuffer(buffer, index, size);
 		});
 		GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
 	public void setupBuffers() {
-		for (int i = 0; i < buffers.length; i++) {
-			GL43C.glBindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, buffers[i]);
+		if (destroyed) {
+			throw new IllegalStateException("Tried to use destroyed buffer objects");
 		}
+
+		for (ShaderStorageBuffer buffer : buffers) {
+			buffer.bind();
+		}
+	}
+
+	public void destroyBuffers() {
+		for (ShaderStorageBuffer buffer : buffers) {
+			buffer.destroy();
+		}
+		buffers = null;
+		destroyed = true;
 	}
 }

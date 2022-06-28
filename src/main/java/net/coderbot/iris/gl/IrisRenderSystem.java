@@ -140,6 +140,15 @@ public class IrisRenderSystem {
 		GL30C.glBufferData(target, data, usage);
 	}
 
+	public static void bufferData(int target, long size, int usage) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glBufferData(target, size, usage);
+	}
+
+	public static void bindBufferBase(int target, Integer index, int buffer) {
+		GL43C.glBindBufferBase(target, index, buffer);
+	}
+
 	public static void vertexAttrib4f(int index, float v0, float v1, float v2, float v3) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glVertexAttrib4f(index, v0, v1, v2, v3);
