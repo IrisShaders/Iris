@@ -180,8 +180,8 @@ public class FinalPassRenderer {
 				if (computeProgram != null) {
 					Vector3i workGroups = computeProgram.getWorkGroups(baseWidth, baseHeight);
 					computeProgram.use();
-					GL43C.glDispatchCompute(workGroups.x, workGroups.y, workGroups.z);
-					GL43C.glMemoryBarrier(40);
+					IrisRenderSystem.dispatchCompute(workGroups.x, workGroups.y, workGroups.z);
+					IrisRenderSystem.memoryBarrier(40);
 				}
 			}
 

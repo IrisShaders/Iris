@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
+import org.lwjgl.opengl.GL43C;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -171,6 +172,18 @@ public class IrisRenderSystem {
 		} else {
 			return 0;
 		}
+	}
+
+	public static void getProgramiv(int program, int value, int[] storage) {
+		GL30C.glGetProgramiv(program, value, storage);
+	}
+
+	public static void dispatchCompute(int workX, int workY, int workZ) {
+		GL43C.glDispatchCompute(workX, workY, workZ);
+	}
+
+	public static void memoryBarrier(int barriers) {
+		GL43C.glMemoryBarrier(barriers);
 	}
 
 	// These functions are deprecated and unavailable in the core profile.

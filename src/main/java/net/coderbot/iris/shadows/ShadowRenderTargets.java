@@ -65,7 +65,7 @@ public class ShadowRenderTargets {
 			RenderSystem.bindTexture(targets[i]);
 
 			GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, format.getGlFormat(), resolution, resolution, 0,
-				PixelFormat.RGBA.getGlFormat(), PixelType.UNSIGNED_BYTE.getGlFormat(), NULL_BUFFER);
+				format.getPixelFormat().getGlFormat(), PixelType.UNSIGNED_BYTE.getGlFormat(), NULL_BUFFER);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);

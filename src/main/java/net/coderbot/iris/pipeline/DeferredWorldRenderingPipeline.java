@@ -14,9 +14,11 @@ import net.coderbot.iris.gbuffer_overrides.matching.ProgramTable;
 import net.coderbot.iris.gbuffer_overrides.matching.RenderCondition;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
@@ -36,6 +38,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -51,6 +54,7 @@ import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -61,6 +65,7 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,6 +85,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	@Nullable
 	private ShadowRenderTargets shadowRenderTargets;
+	@Nullable
+	private ComputeProgram[] shadowComputes;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
 
 	private final ProgramTable<Pass> table;
@@ -197,8 +204,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				// TODO: Support more than two shadowcolor render targets
 				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, new InternalTextureFormat[]{
 					// TODO: Custom shadowcolor format support
-					InternalTextureFormat.RGBA,
-					InternalTextureFormat.RGBA
+					InternalTextureFormat.R32UI,
+					InternalTextureFormat.R32UI
 				});
 			}
 
@@ -304,11 +311,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.baseline = renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[] {0});
 
+		this.shadowComputes = createShadowComputes(programs.getShadowCompute(), programs);
+
 		if (shadowRenderTargets != null) {
 			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
 			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
 
-			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null), programs.getShadowCompute(),
+			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null), this.shadowComputes,
 				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
 		} else {
 			this.shadowRenderer = null;
@@ -790,6 +799,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			// TODO: Support shadow clear color directives & disable buffer clearing
 			// Ensure that the color and depth values are cleared appropriately
+
+			for (ComputeProgram computeProgram : shadowComputes) {
+				if (computeProgram != null) {
+					Iris.logger.warn("aaa");
+					Vector3i workGroups = computeProgram.getWorkGroups(shadowMapResolution, shadowMapResolution);
+					computeProgram.use();
+					IrisRenderSystem.dispatchCompute(workGroups.x, workGroups.y, workGroups.z);
+					IrisRenderSystem.memoryBarrier(40);
+				}
+			}
+
 			RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
 			RenderSystem.clearDepth(1.0f);
 			RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
@@ -823,6 +843,59 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		for (ClearPass clearPass : passes) {
 			clearPass.execute(fogColor);
 		}
+	}
+
+	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
+		ComputeProgram[] programs = new ComputeProgram[compute.length];
+		for (int i = 0; i < programs.length; i++) {
+			ComputeSource source = compute[i];
+			if (source == null || !source.getSource().isPresent()) {
+				continue;
+			} else {
+				ProgramBuilder builder;
+
+				try {
+					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+				} catch (RuntimeException e) {
+					// TODO: Better error handling
+					throw new RuntimeException("Shader compilation failed!", e);
+				}
+
+				CommonUniforms.addCommonUniforms(builder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier);
+
+				Supplier<ImmutableSet<Integer>> flipped;
+
+				flipped = () -> flippedBeforeShadow;
+
+				TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+
+				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
+					ProgramSamplers.customTextureSamplerInterceptor(builder,
+						customTextureManager.getCustomTextureIdMap(textureStage));
+
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
+				IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(),
+					customTextureManager.getSpecular(), whitePixel, new InputAvailability(true, true, false));
+
+				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
+
+				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
+					if (shadowRenderTargets != null) {
+						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets);
+						IrisImages.addShadowColorImages(builder, shadowRenderTargets);
+					}
+				}
+
+				programs[i] = builder.buildCompute();
+
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+			}
+		}
+
+
+		return programs;
 	}
 
 	@Override
