@@ -11,9 +11,11 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
-import net.coderbot.iris.texunits.TextureUnit;
+import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL32C;
 
 public class IrisChunkShaderInterface {
 	@Nullable
@@ -29,17 +31,20 @@ public class IrisChunkShaderInterface {
 
 	private final BlendModeOverride blendModeOverride;
 	private final IrisShaderFogComponent fogShaderComponent;
+	private final float alpha;
 	private final ProgramUniforms irisProgramUniforms;
 	private final ProgramSamplers irisProgramSamplers;
 	private final ProgramImages irisProgramImages;
 
 	public IrisChunkShaderInterface(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
-									boolean isShadowPass, BlendModeOverride blendModeOverride) {
+									boolean isShadowPass, BlendModeOverride blendModeOverride, float alpha) {
 		this.uniformModelViewMatrix = contextExt.bindUniformIfPresent("u_ModelViewMatrix", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("u_ProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformModelViewProjectionMatrix = contextExt.bindUniformIfPresent("u_ModelViewProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("u_NormalMatrix", GlUniformMatrix4f::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
+
+		this.alpha = alpha;
 
 		this.blendModeOverride = blendModeOverride;
 		this.fogShaderComponent = new IrisShaderFogComponent(contextExt);
@@ -52,14 +57,16 @@ public class IrisChunkShaderInterface {
 
 	public void setup() {
 		// See IrisSamplers#addLevelSamplers
-		RenderSystem.activeTexture(TextureUnit.TERRAIN.getUnitId());
+		RenderSystem.activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.ALBEDO_TEXTURE_UNIT);
 		RenderSystem.bindTexture(RenderSystem.getShaderTexture(0));
-		RenderSystem.activeTexture(TextureUnit.LIGHTMAP.getUnitId());
+		RenderSystem.activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
 		RenderSystem.bindTexture(RenderSystem.getShaderTexture(2));
 
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();
 		}
+
+		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alpha);
 
 		fogShaderComponent.setup();
 		irisProgramUniforms.update();

@@ -1,6 +1,7 @@
 package net.coderbot.iris.uniforms;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.newshader.FogMode;
@@ -18,12 +19,7 @@ public class FogUniforms {
 		if (fogMode == FogMode.OFF) {
 			uniforms.uniform1f(UniformUpdateFrequency.ONCE, "fogDensity", () -> 0.0F);
 			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> 0);
-		} else if (fogMode == FogMode.ENABLED) {
-			uniforms.uniform1f("fogDensity", () -> {
-				// ensure that the minimum value is 0.0
-				return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
-			}, notifier -> {});
-
+		} else if (fogMode == FogMode.PER_VERTEX || fogMode == FogMode.PER_FRAGMENT) {
 			uniforms.uniform1i("fogMode", () -> {
 				float fogDensity = CapturedRenderingState.INSTANCE.getFogDensity();
 
@@ -32,14 +28,29 @@ public class FogUniforms {
 				} else {
 					return GL11.GL_EXP2;
 				}
-			}, notifier -> {});
+			}, listener -> {
+			});
 		}
 
+		uniforms.uniform1f("fogDensity", () -> {
+			// ensure that the minimum value is 0.0
+			return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
+		}, notifier -> {
+		});
+
+		uniforms.uniform1f("fogStart", RenderSystem::getShaderFogStart, listener -> {
+			StateUpdateNotifiers.fogStartNotifier.setListener(listener);
+		});
+
+		uniforms.uniform1f("fogEnd", RenderSystem::getShaderFogEnd, listener -> {
+			StateUpdateNotifiers.fogEndNotifier.setListener(listener);
+		});
+
 		uniforms
-				// TODO: Update frequency of continuous?
-				.uniform3f(PER_FRAME, "fogColor", () -> {
-					float[] fogColor = RenderSystem.getShaderFogColor();
-					return new Vector3f(fogColor[0], fogColor[1], fogColor[2]);
-				});
+			// TODO: Update frequency of continuous?
+			.uniform3f(PER_FRAME, "fogColor", () -> {
+				float[] fogColor = RenderSystem.getShaderFogColor();
+				return new Vector3f(fogColor[0], fogColor[1], fogColor[2]);
+			});
 	}
 }

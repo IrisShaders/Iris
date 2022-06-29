@@ -32,7 +32,7 @@ public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isBeacon, boolean isSwizzle,
+										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isSwizzle,
 										boolean isFullbright) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
@@ -129,23 +129,23 @@ public class NewShaderTests {
 			Files.writeString(debugOutDir.resolve(name + ".json"), shaderJsonString);
 		}
 
-		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, uniforms -> {
+		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, alpha, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, fogMode);
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-		}, isBeacon, isSwizzle, isFullbright, parent);
+		}, isSwizzle, isFullbright, parent, inputs);
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
 										VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 										NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
-										boolean intensityTex, boolean isBeacon, boolean isFullbright) throws IOException {
+										boolean intensityTex, boolean isFullbright) throws IOException {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting, isBeacon);
-		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isBeacon);
+		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting);
+		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex);
 
 		String shaderJsonString = "{\n" +
 				"    \"blend\": {\n" +
@@ -180,6 +180,7 @@ public class NewShaderTests {
 				"        { \"name\": \"FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"FogDensity\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"FogIsExp2\", \"type\": \"int\", \"count\": 1, \"values\": [ 0 ] },\n" +
+				"        { \"name\": \"AlphaTestValue\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
 				"        { \"name\": \"LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
 				"        { \"name\": \"FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
@@ -197,7 +198,7 @@ public class NewShaderTests {
 		}
 
 		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
-				writingToAfterTranslucent, blendModeOverride, parent);
+				writingToAfterTranslucent, blendModeOverride, alpha.getReference(), parent);
 	}
 
 	private static class IrisProgramResourceFactory implements ResourceProvider {

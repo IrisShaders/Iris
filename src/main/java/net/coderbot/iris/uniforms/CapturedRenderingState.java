@@ -2,12 +2,13 @@ package net.coderbot.iris.uniforms;
 
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.uniform.ValueUpdateNotifier;
-
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Minecraft;
 
 public class CapturedRenderingState {
 	public static final CapturedRenderingState INSTANCE = new CapturedRenderingState();
+
+	private static final Vector3d ZERO_VECTOR_3d = new Vector3d();
 
 	private Matrix4f gbufferModelView;
 	private Matrix4f gbufferProjection;
@@ -19,6 +20,8 @@ public class CapturedRenderingState {
 
 	private int currentRenderedEntity = -1;
 	private Runnable entityIdListener = null;
+
+	private float currentAlphaTest;
 
 	private CapturedRenderingState() {
 	}
@@ -41,7 +44,7 @@ public class CapturedRenderingState {
 
 	public Vector3d getFogColor() {
 		if (Minecraft.getInstance().level == null || fogColor == null) {
-			return new Vector3d();
+			return ZERO_VECTOR_3d;
 		}
 
 		return fogColor;
@@ -97,5 +100,13 @@ public class CapturedRenderingState {
 
 	public int getCurrentRenderedEntity() {
 		return currentRenderedEntity;
+	}
+
+    public float getCurrentAlphaTest() {
+		return currentAlphaTest;
+    }
+
+	public void setCurrentAlphaTest(float alphaTest) {
+		this.currentAlphaTest = alphaTest;
 	}
 }

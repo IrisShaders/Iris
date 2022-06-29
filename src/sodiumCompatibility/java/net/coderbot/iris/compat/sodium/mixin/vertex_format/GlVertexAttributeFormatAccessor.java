@@ -6,8 +6,8 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(GlVertexAttributeFormat.class)
 public interface GlVertexAttributeFormatAccessor {
-    @Invoker(value = "<init>")
-    static GlVertexAttributeFormat createGlVertexAttributeFormat(int glId, int size) {
-        throw new AssertionError("accessor failure");
-    }
+	@Invoker(value = "<init>")
+	static GlVertexAttributeFormat createGlVertexAttributeFormat(int glId, int size) {
+		throw new AssertionError("accessor failure");
+	}
 }

@@ -11,7 +11,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-@Mixin(DebugScreenOverlay.class)
+/**
+ * Adds entity batching debug information to the debug screen. Uses a priority of 1010
+ * so that we apply after other mixins to the debug screen (such as the one that adds Iris
+ * shader pack information), so that the entity batching debug logic appears at the bottom.
+ */
+@Mixin(value = DebugScreenOverlay.class, priority = 1010)
 public abstract class MixinDebugScreenOverlay {
     @Inject(method = "getGameInformation", at = @At("RETURN"))
     private void batchedentityrendering$appendStats(CallbackInfoReturnable<List<String>> cir) {

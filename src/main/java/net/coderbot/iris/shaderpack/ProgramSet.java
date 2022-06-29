@@ -20,11 +20,12 @@ public class ProgramSet {
 	private final ProgramSource[] prepare;
 
 	private final ProgramSource gbuffersBasic;
+	private final ProgramSource gbuffersLine;
 	private final ProgramSource gbuffersBeaconBeam;
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTexturedLit;
 	private final ProgramSource gbuffersTerrain;
-	private final ProgramSource gbuffersDamagedBlock;
+	private ProgramSource gbuffersDamagedBlock;
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
 	private final ProgramSource gbuffersClouds;
@@ -68,6 +69,7 @@ public class ProgramSet {
 		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
 
 		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, shaderProperties);
+		this.gbuffersLine = readProgramSource(directory, sourceProvider, "gbuffers_line", this, shaderProperties);
 		this.gbuffersBeaconBeam = readProgramSource(directory, sourceProvider, "gbuffers_beaconbeam", this, shaderProperties);
 		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, shaderProperties);
 		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, shaderProperties);
@@ -93,6 +95,27 @@ public class ProgramSet {
 		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, shaderProperties);
 
 		locateDirectives();
+
+		if (!gbuffersDamagedBlock.isValid()) {
+			// Special behavior inherited by OptiFine & Iris from old ShadersMod
+			// Presumably this was added before DRAWBUFFERS was a thing? Or just a hardcoded hacky fix for some
+			// shader packs - in any case, Sildurs Vibrant Shaders and other packs rely on it.
+			first(getGbuffersTerrain(), getGbuffersTexturedLit(), getGbuffersTextured(), getGbuffersBasic()).ifPresent(src -> {
+				ProgramDirectives overrideDirectives = src.getDirectives().withOverriddenDrawBuffers(new int[] { 0 });
+				this.gbuffersDamagedBlock = src.withDirectiveOverride(overrideDirectives);
+			});
+		}
+	}
+
+	@SafeVarargs
+	private static <T> Optional<T> first(Optional<T>... candidates) {
+		for (Optional<T> candidate : candidates) {
+			if (candidate.isPresent()) {
+				return candidate;
+			}
+		}
+
+		return Optional.empty();
 	}
 
 	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
@@ -145,9 +168,8 @@ public class ProgramSet {
 			});
 		}
 
-		packDirectives.getRenderTargetDirectives().getRenderTargetSettings().forEach((index, settings) -> {
-			Iris.logger.debug("Render target settings for colortex" + index + ": " + settings);
-		});
+		packDirectives.getRenderTargetDirectives().getRenderTargetSettings().forEach((index, settings) ->
+			Iris.logger.debug("Render target settings for colortex" + index + ": " + settings));
 	}
 
 	public Optional<ProgramSource> getShadow() {
@@ -230,7 +252,7 @@ public class ProgramSet {
 		switch (programId) {
 			case Shadow: return getShadow();
 			case Basic: return getGbuffersBasic();
-			//case Line: return Optional.empty();
+			case Line: return gbuffersLine.requireValid();
 			case Textured: return getGbuffersTextured();
 			case TexturedLit: return getGbuffersTexturedLit();
 			case SkyBasic: return getGbuffersSkyBasic();

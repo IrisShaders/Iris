@@ -1,13 +1,13 @@
 package net.coderbot.iris.config;
 
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.gui.option.IrisVideoSettings;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Properties;
-
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.gui.option.IrisVideoSettings;
 
 /**
  * A class dedicated to storing the config values of shaderpacks. Right now it only stores the path to the current shaderpack
@@ -26,11 +26,23 @@ public class IrisConfig {
 	 */
 	private boolean enableShaders;
 
+	/**
+	 * If debug features should be enabled. Gives much more detailed OpenGL error outputs at the cost of performance.
+	 */
+	private boolean enableDebugOptions;
+
+	/**
+	 * If the update notification should be disabled or not.
+	 */
+	private boolean disableUpdateMessage;
+
 	private final Path propertiesPath;
 
 	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;
 		enableShaders = true;
+		enableDebugOptions = false;
+		disableUpdateMessage = false;
 		this.propertiesPath = propertiesPath;
 	}
 
@@ -84,6 +96,18 @@ public class IrisConfig {
 		return enableShaders;
 	}
 
+	public boolean areDebugOptionsEnabled() {
+		return enableDebugOptions;
+	}
+
+	public boolean shouldDisableUpdateMessage() {
+		return disableUpdateMessage;
+	}
+
+	public void setDebugEnabled(boolean enabled) {
+		enableDebugOptions = enabled;
+	}
+
 	/**
 	 * Sets whether shaders should be used for rendering.
 	 */
@@ -107,6 +131,8 @@ public class IrisConfig {
 		properties.load(Files.newInputStream(propertiesPath));
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
+		enableDebugOptions = "true".equals(properties.getProperty("enableDebugOptions"));
+		disableUpdateMessage = "true".equals(properties.getProperty("disableUpdateMessage"));
 		try {
 			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("maxShadowRenderDistance", "32"));
 		} catch (NumberFormatException e) {
@@ -131,6 +157,8 @@ public class IrisConfig {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName().orElse(""));
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
+		properties.setProperty("enableDebugOptions", enableDebugOptions ? "true" : "false");
+		properties.setProperty("disableUpdateMessage", disableUpdateMessage ? "true" : "false");
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		properties.store(Files.newOutputStream(propertiesPath), COMMENT);

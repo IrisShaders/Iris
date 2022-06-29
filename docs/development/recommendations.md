@@ -15,3 +15,4 @@ Here are a few recommendations to help you get started.
         - Creating a new mod with a template
         - Mixin error-checking
         - Workspace highlighting
+- If you are facing an issue that can only be easily reproduced on servers, use the [AuthMe](https://www.curseforge.com/minecraft/mc-mods/auth-me) mod to log in while using the development environment. This is often way easier than using print statement debugging & constantly recompiling the mod.

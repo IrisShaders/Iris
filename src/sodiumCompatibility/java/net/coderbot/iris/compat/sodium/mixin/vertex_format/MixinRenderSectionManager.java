@@ -3,6 +3,7 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,7 +18,7 @@ public class MixinRenderSectionManager {
 								"Lme/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType;" +
 							")V"))
 	private ChunkVertexType iris$useExtendedVertexFormat$1(ChunkVertexType vertexType) {
-		return Iris.isPackActive() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
+		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
 	}
 
 	@ModifyArg(method = "<init>", remap = false,
@@ -26,6 +27,6 @@ public class MixinRenderSectionManager {
 								"Lme/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType;" +
 							")V"))
 	private ChunkVertexType iris$useExtendedVertexFormat$2(ChunkVertexType vertexType) {
-		return Iris.isPackActive() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
+		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
 	}
 }

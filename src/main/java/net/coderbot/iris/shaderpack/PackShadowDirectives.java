@@ -17,11 +17,12 @@ public class PackShadowDirectives {
 	private boolean explicitRenderDistance;
 	private float intervalSize;
 
-	private boolean shouldRenderTerrain;
-	private boolean shouldRenderTranslucent;
-	private boolean shouldRenderEntities;
-	private boolean shouldRenderBlockEntities;
-	private OptionalBoolean cullingState;
+	private final boolean shouldRenderTerrain;
+	private final boolean shouldRenderTranslucent;
+	private final boolean shouldRenderEntities;
+	private final boolean shouldRenderPlayer;
+	private final boolean shouldRenderBlockEntities;
+	private final OptionalBoolean cullingState;
 
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
 	private final ImmutableList<SamplingSettings> colorSamplingSettings;
@@ -68,6 +69,7 @@ public class PackShadowDirectives {
 		this.shouldRenderTerrain = properties.getShadowTerrain().orElse(true);
 		this.shouldRenderTranslucent = properties.getShadowTranslucent().orElse(true);
 		this.shouldRenderEntities = properties.getShadowEntities().orElse(true);
+		this.shouldRenderPlayer = properties.getShadowPlayer().orElse(false);
 		this.shouldRenderBlockEntities = properties.getShadowBlockEntities().orElse(true);
 		this.cullingState = properties.getShadowCulling();
 
@@ -93,6 +95,7 @@ public class PackShadowDirectives {
 		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain;
 		this.shouldRenderTranslucent = shadowDirectives.shouldRenderTranslucent;
 		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities;
+		this.shouldRenderPlayer = shadowDirectives.shouldRenderPlayer;
 		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities;
 		this.cullingState = shadowDirectives.cullingState;
 		this.depthSamplingSettings = shadowDirectives.depthSamplingSettings;
@@ -137,6 +140,10 @@ public class PackShadowDirectives {
 
 	public boolean shouldRenderEntities() {
 		return shouldRenderEntities;
+	}
+
+	public boolean shouldRenderPlayer() {
+		return shouldRenderPlayer;
 	}
 
 	public boolean shouldRenderBlockEntities() {

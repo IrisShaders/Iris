@@ -3,25 +3,33 @@ package net.coderbot.iris.block_rendering;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Map;
 
 public class BlockRenderingSettings {
 	public static final BlockRenderingSettings INSTANCE = new BlockRenderingSettings();
 
 	private boolean reloadRequired;
 	private Object2IntMap<BlockState> blockStateIds;
+	private Map<Block, RenderType> blockTypeIds;
 	private Object2IntFunction<NamespacedId> entityIds;
 	private float ambientOcclusionLevel;
 	private boolean disableDirectionalShading;
 	private boolean useSeparateAo;
+	private boolean useExtendedVertexFormat;
 
 	public BlockRenderingSettings() {
 		reloadRequired = false;
 		blockStateIds = null;
+		blockTypeIds = null;
 		ambientOcclusionLevel = 1.0F;
 		disableDirectionalShading = false;
 		useSeparateAo = false;
+		useExtendedVertexFormat = false;
 	}
 
 	public boolean isReloadRequired() {
@@ -37,6 +45,11 @@ public class BlockRenderingSettings {
 		return blockStateIds;
 	}
 
+	@Nullable
+	public Map<Block, RenderType> getBlockTypeIds() {
+		return blockTypeIds;
+	}
+
 	// TODO (coderbot): This doesn't belong here. But I couldn't think of a nicer place to put it.
 	@Nullable
 	public Object2IntFunction<NamespacedId> getEntityIds() {
@@ -50,6 +63,15 @@ public class BlockRenderingSettings {
 
 		this.reloadRequired = true;
 		this.blockStateIds = blockStateIds;
+	}
+
+	public void setBlockTypeIds(Map<Block, RenderType> blockTypeIds) {
+		if (this.blockTypeIds != null && this.blockTypeIds.equals(blockTypeIds)) {
+			return;
+		}
+
+		this.reloadRequired = true;
+		this.blockTypeIds = blockTypeIds;
 	}
 
 	public void setEntityIds(Object2IntFunction<NamespacedId> entityIds) {
@@ -94,5 +116,18 @@ public class BlockRenderingSettings {
 
 		this.reloadRequired = true;
 		this.useSeparateAo = useSeparateAo;
+	}
+
+	public boolean shouldUseExtendedVertexFormat() {
+		return useExtendedVertexFormat;
+	}
+
+	public void setUseExtendedVertexFormat(boolean useExtendedVertexFormat) {
+		if (useExtendedVertexFormat == this.useExtendedVertexFormat) {
+			return;
+		}
+
+		this.reloadRequired = true;
+		this.useExtendedVertexFormat = useExtendedVertexFormat;
 	}
 }

@@ -5,13 +5,15 @@ import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleEngine;
-import net.coderbot.iris.layer.GbufferProgram;
-import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleEngine;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderBuffers;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -48,15 +50,14 @@ public class MixinLevelRenderer {
 
 		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
 
-		GbufferPrograms.push(GbufferProgram.TEXTURED_LIT);
 		minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
 
 		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
+
 		if (Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldRenderParticlesBeforeDeferred).orElse(false)) {
 			// Render translucent particles here as well if the pack requests so
 			minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
 		}
-		GbufferPrograms.pop(GbufferProgram.TEXTURED_LIT);
 	}
 
 	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V"))

@@ -1,5 +1,19 @@
 package net.coderbot.iris.shaderpack;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMaps;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.materialmap.BlockEntry;
+import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
+import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -14,20 +28,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2IntFunction;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMaps;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.shaderpack.materialmap.BlockEntry;
-import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
-import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
-import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
-import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -53,14 +53,14 @@ public class IdMap {
 	 */
 	private Map<NamespacedId, BlockRenderType> blockRenderTypeMap;
 
-	IdMap(Path shaderPath, ShaderPackOptions shaderPackOptions) {
-		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions)
+	IdMap(Path shaderPath, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
+		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions, environmentDefines)
 			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
 
-		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions)
+		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions, environmentDefines)
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
-		loadProperties(shaderPath, "block.properties", shaderPackOptions).ifPresent(blockProperties -> {
+		loadProperties(shaderPath, "block.properties", shaderPackOptions, environmentDefines).ifPresent(blockProperties -> {
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});
@@ -81,16 +81,21 @@ public class IdMap {
 	/**
 	 * Loads properties from a properties file in a shaderpack path
 	 */
-	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions) {
+	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions,
+													   Iterable<StringPair> environmentDefines) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions);
+		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines);
 
 		StringReader propertiesReader = new StringReader(processed);
-		Properties properties = new Properties();
+
+		// Note: ordering of properties is significant
+		// See https://github.com/IrisShaders/Iris/issues/1327 and the relevant putIfAbsent calls in
+		// BlockMaterialMapping
+		Properties properties = new OrderBackedProperties();
 		try {
 			properties.load(propertiesReader);
 		} catch (IOException e) {

@@ -15,14 +15,14 @@ import java.io.IOException;
  */
 @Mixin(SodiumGameOptions.class)
 public class MixinSodiumGameOptions {
-    @Inject(method = "writeChanges()V", at = @At("RETURN"), remap = false)
-    public void iris$writeIrisConfig(CallbackInfo ci) {
-        try {
-        	if (Iris.getIrisConfig() != null) {
+	@Inject(method = "writeChanges()V", at = @At("RETURN"), remap = false)
+	public void iris$writeIrisConfig(CallbackInfo ci) {
+		try {
+			if (Iris.getIrisConfig() != null) {
 				Iris.getIrisConfig().save();
 			}
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

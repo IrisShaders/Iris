@@ -1,11 +1,11 @@
 package net.coderbot.iris.gl.texture;
 
-import java.util.Optional;
-
 import net.coderbot.iris.gl.GlVersion;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL12C;
 import org.lwjgl.opengl.GL30C;
+
+import java.util.Optional;
 
 public enum PixelType {
 	BYTE(GL11C.GL_BYTE, GlVersion.GL_11),

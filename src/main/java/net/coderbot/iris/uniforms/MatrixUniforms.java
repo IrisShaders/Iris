@@ -1,16 +1,15 @@
 package net.coderbot.iris.uniforms;
 
-import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
-
 import com.mojang.math.Matrix4f;
-import java.nio.FloatBuffer;
-import java.util.function.Supplier;
-
 import net.coderbot.iris.gl.uniform.UniformHolder;
-
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shadow.ShadowMatrices;
+
+import java.nio.FloatBuffer;
+import java.util.function.Supplier;
+
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 public final class MatrixUniforms {
 	private MatrixUniforms() {

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "iris",
-  "version": "1.2.3-pre-development-environment",
+  "version": "1.2.6-pre-development-environment",
 
   "name": "Iris",
   "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
@@ -22,9 +22,6 @@
 
   "environment": "client",
   "entrypoints": {
-    "client": [
-      "net.coderbot.iris.Iris"
-    ],
     "modmenu": [
       "net.coderbot.iris.compat.modmenu.ModMenuIntegration"
     ]
@@ -36,9 +33,11 @@
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",
     "mixins.iris.bettermipmaps.json",
+    "mixins.iris.optimized-stitching.json",
     "mixins.iris.compat.indigo.json",
     "mixins.iris.compat.sodium.json",
-    "mixins.iris.compat.indium.json"
+    "mixins.iris.compat.indium.json",
+    "mixins.iris.fixes.maxfpscrash.json"
   ],
 
   "accessWidener" : "iris.accesswidener",
@@ -47,7 +46,8 @@
     "fabricloader": ">=0.12.3",
     "minecraft": "1.17.x",
     "fabric-resource-loader-v0": ">=0.3.2",
-    "fabric-key-binding-api-v1": ">=1.0.1"
+    "fabric-key-binding-api-v1": ">=1.0.1",
+    "fabric-api-base": ">=0.4.0"
   },
 
   "breaks": {
@@ -56,7 +56,8 @@
     "batchedentityrendering": "*",
     "canvas": "*",
     "optifabric": "*",
-    "worldeditcui": "*"
+    "worldeditcui": "*",
+    "immersive_portals": "<=1.4.2"
   },
 
   "custom": {

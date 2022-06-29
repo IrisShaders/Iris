@@ -2,6 +2,7 @@ package net.coderbot.iris.shadow;
 
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
+
 import java.nio.FloatBuffer;
 
 public class ShadowMatrices {
@@ -55,6 +56,12 @@ public class ShadowMatrices {
 	}
 
 	public static void snapModelViewToGrid(Matrix4f target, float shadowIntervalSize, double cameraX, double cameraY, double cameraZ) {
+		if (Math.abs(shadowIntervalSize) == 0.0F) {
+			// Avoid a division by zero - semantically, this just means that the snapping does not take place,
+			// if the shadow interval (size of each grid "cell") is zero.
+			return;
+		}
+
 		// Calculate where we are within each grid "cell"
 		// These values will be in the range of (-shadowIntervalSize, shadowIntervalSize)
 		//
