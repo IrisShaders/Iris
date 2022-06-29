@@ -29,7 +29,6 @@ import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
 public class ExtendedShader extends ShaderInstance implements SamplerHolder, ImageHolder, ShaderInstanceInterface {
-	private final boolean isFullbright;
 	private final boolean intensitySwizzle;
 	private final ProgramImages.Builder imageBuilder;
 	NewWorldRenderingPipeline parent;
@@ -42,13 +41,12 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	float alphaTest;
 	private ProgramImages currentImages;
 	private Program geometry;
-	private boolean isFullbright;
 	private final ShaderAttributeInputs inputs;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
-						  Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright, boolean isSwizzle,
+						  Consumer<DynamicUniformHolder> uniformCreator, boolean isIntensity,
 						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
@@ -67,10 +65,9 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.parent = parent;
 		this.imageBuilder = ProgramImages.builder(programId);
 		this.currentImages = null;
-		this.isFullbright = isFullbright;
 		this.inputs = inputs;
 
-		this.intensitySwizzle = isSwizzle;
+		this.intensitySwizzle = isIntensity;
 	}
 
 	public boolean isIntensitySwizzle() {

@@ -380,17 +380,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return createShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
-				key.isSwizzle(), key.shouldIgnoreLightmap());
+				key.isIntensity(), key.shouldIgnoreLightmap());
 	}
 
 	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FogMode fogMode,
-										boolean isSwizzle, boolean isFullbright) throws IOException {
+										boolean isIntensity, boolean isFullbright) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent,
-				baseline, fallbackAlpha, vertexFormat, updateNotifier, this, fogMode, isSwizzle, isFullbright);
+				baseline, fallbackAlpha, vertexFormat, updateNotifier, this, fogMode, isIntensity, isFullbright);
 
 		loadedShaders.add(extendedShader);
 
