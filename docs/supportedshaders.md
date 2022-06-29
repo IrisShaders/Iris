@@ -5,10 +5,12 @@
 ### BSL and derivatives
 
 * [BSL Shaders](https://bitslablab.com/bslshaders/)
-* [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
 * [Prismarine Shaders](https://www.curseforge.com/minecraft/customization/prismarine-shader)
 * [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
 
+### Complementary Shaders
+* [Complementary Reimagined](https://www.complementary.dev/reimagined/)
+* [Complementary Shaders](https://www.complementary.dev/shaders-v4/) (BSL derivative)
 
 ### SEUS and derivatives
 
