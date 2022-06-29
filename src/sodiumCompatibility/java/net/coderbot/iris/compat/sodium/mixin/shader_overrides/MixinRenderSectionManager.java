@@ -43,8 +43,6 @@ public class MixinRenderSectionManager {
 	@Shadow
 	@Final
 	private ChunkRenderer chunkRenderer;
-	@Unique
-	private ChunkRenderer chunkRendererShadow;
 
 	@Unique
 	private IrisChunkProgramOverrides irisChunkProgramOverrides;
@@ -56,29 +54,9 @@ public class MixinRenderSectionManager {
 	private void createShadow(RenderDevice device, SodiumWorldRenderer worldRenderer, ChunkRenderPassManager renderPassManager, ClientLevel world, int renderDistance, CallbackInfo ci) {
 		this.irisChunkProgramOverrides = new IrisChunkProgramOverrides();
 
-		this.chunkRenderer = irisChunkRendererCreation(false, device, createVertexType(), renderPassManager);
+		this.chunkRenderer = irisChunkRendererCreation(device, createVertexType(), renderPassManager);
 
 		this.manager = renderPassManager;
-
-		if (Iris.getPipelineManager().getPipeline().isPresent() && Iris.getPipelineManager().getPipelineNullable().getSodiumTerrainPipeline() != null && Iris.getPipelineManager().getPipelineNullable().getSodiumTerrainPipeline().hasShadowPass()) {
-			this.chunkRendererShadow = irisChunkRendererCreation(true, device, createVertexType(), renderPassManager);
-		} else {
-			this.chunkRendererShadow = null;
-		}
-	}
-
-	@Redirect(method = "renderLayer", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/TerrainRenderManager;chunkRenderer:Lnet/caffeinemc/sodium/render/chunk/draw/ChunkRenderer;"), remap = false)
-	private ChunkRenderer redirectShadowRenderers(TerrainRenderManager instance) {
-		return isShadowPassUsable() ? chunkRendererShadow : chunkRenderer;
-	}
-
-	@Redirect(method = "update", at = @At(value = "FIELD", target = "Lnet/caffeinemc/sodium/render/chunk/TerrainRenderManager;chunkRenderer:Lnet/caffeinemc/sodium/render/chunk/draw/ChunkRenderer;"), remap = false)
-	private ChunkRenderer redirectShadowRenderers2(TerrainRenderManager instance) {
-		return isShadowPassUsable() ? chunkRendererShadow : chunkRenderer;
-	}
-
-	private boolean isShadowPassUsable() {
-		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() && this.chunkRendererShadow != null;
 	}
 
 	@Inject(method = "renderLayer", at = @At("HEAD"), remap = false)
@@ -91,26 +69,12 @@ public class MixinRenderSectionManager {
 				irisChunkRenderer.createPipelines(irisChunkProgramOverrides);
 			}
 
-			if (irisChunkProgramOverrides.getSodiumTerrainPipeline() != null && irisChunkProgramOverrides.getSodiumTerrainPipeline().hasShadowPass()) {
-				if (chunkRendererShadow == null) {
-					chunkRendererShadow = irisChunkRendererCreation(true, device, createVertexType(), manager);
-				}
-				((IrisChunkRenderer) chunkRendererShadow).deletePipeline();
-				((IrisChunkRenderer) chunkRendererShadow).createPipelines(irisChunkProgramOverrides);
-			} else if (chunkRendererShadow != null) {
-				chunkRendererShadow.delete();
-				chunkRendererShadow = null;
-			}
-
 			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
 		}
 	}
 
 	@Inject(method = "destroy", at = @At("TAIL"), remap = false)
 	private void destroyShadow(CallbackInfo ci) {
-		if (chunkRendererShadow != null) {
-			chunkRendererShadow.delete();
-		}
 		irisChunkProgramOverrides.deleteShaders(device);
 	}
 
@@ -122,13 +86,13 @@ public class MixinRenderSectionManager {
 		return null;
 	}
 
-	private ChunkRenderer irisChunkRendererCreation(boolean isShadowPass, RenderDevice device, TerrainVertexType vertexType, ChunkRenderPassManager renderPassManager) {
+	private ChunkRenderer irisChunkRendererCreation(RenderDevice device, TerrainVertexType vertexType, ChunkRenderPassManager renderPassManager) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			try {
 				if (device.properties().driverWorkarounds.forceIndirectCount) {
-					return new IrisChunkRendererMDIC(irisChunkProgramOverrides, isShadowPass, device, renderPassManager, vertexType);
+					return new IrisChunkRendererMDIC(irisChunkProgramOverrides, device, renderPassManager, vertexType);
 				} else {
-					return new IrisChunkRendererMDI(irisChunkProgramOverrides, isShadowPass, device, renderPassManager, vertexType);
+					return new IrisChunkRendererMDI(irisChunkProgramOverrides, device, renderPassManager, vertexType);
 				}
 			} catch (RuntimeException e) {
 				if (device.properties().driverWorkarounds.forceIndirectCount) {

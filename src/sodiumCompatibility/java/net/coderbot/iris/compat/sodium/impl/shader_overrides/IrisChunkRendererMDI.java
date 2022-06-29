@@ -43,6 +43,7 @@ import net.caffeinemc.sodium.util.TextureUtil;
 import net.caffeinemc.sodium.util.UnsafeUtil;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
@@ -70,12 +71,12 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	protected final ChunkRenderPassManager renderPassManager;
 
 	protected final Map<ChunkRenderPass, Pipeline<IrisChunkShaderInterface, BufferTarget>> pipelines;
+	protected final Map<ChunkRenderPass, Pipeline<IrisChunkShaderInterface, BufferTarget>> shadowPipelines;
 
 	protected final StreamingBuffer uniformBufferCameraMatrices;
 	protected final StreamingBuffer uniformBufferInstanceData;
 	protected final StreamingBuffer uniformBufferFogParameters;
 	protected final StreamingBuffer commandBuffer;
-	protected final boolean isShadowPass;
 	protected final SequenceIndexBuffer indexBuffer;
 	private final TerrainVertexType vertexType;
 
@@ -85,7 +86,6 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 
 	public IrisChunkRendererMDI(
 		IrisChunkProgramOverrides overrides,
-		boolean isShadowPass,
 		RenderDevice device,
 		ChunkRenderPassManager renderPassManager,
 		TerrainVertexType vertexType
@@ -95,13 +95,8 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		this.vertexType = vertexType;
 
 		this.renderPassManager = renderPassManager;
-
-		int maxInFlightFrames = SodiumClientMod.options().advanced.cpuRenderAheadLimit + 1;
-		int uboAlignment = device.properties().values.uniformBufferOffsetAlignment;
-
 		this.pipelines = new Object2ObjectOpenHashMap<>();
-
-		this.isShadowPass = isShadowPass;
+		this.shadowPipelines = new Object2ObjectOpenHashMap<>();
 
 		var vertexFormat = vertexType.getCustomVertexFormat();
 		this.vertexArray = new VertexArrayDescription<>(BufferTarget.values(), List.of(
@@ -125,9 +120,10 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 			})
 		));
 
+		boolean hasShadowPass = overrides.getSodiumTerrainPipeline() != null && overrides.getSodiumTerrainPipeline().hasShadowPass();
 
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
-			Program<IrisChunkShaderInterface> program = overrides.getProgramOverride(isShadowPass, device, pass, vertexType);
+			Program<IrisChunkShaderInterface> program = overrides.getProgramOverride(false, device, pass, vertexType);
 			if (program == null) {
 				throw new RuntimeException("failure");
 			}
@@ -138,13 +134,31 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 			);
 
 			this.pipelines.put(pass, pipeline);
+
+			if (hasShadowPass) {
+				Program<IrisChunkShaderInterface> shadowProgram = overrides.getProgramOverride(true, device, pass, vertexType);
+				if (shadowProgram == null) {
+					throw new RuntimeException("failure");
+				}
+				Pipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createPipeline(
+					pass.pipelineDescription(),
+					shadowProgram,
+					vertexArray
+				);
+
+				this.shadowPipelines.put(pass, shadowPipeline);
+			}
 		}
+
+		int maxInFlightFrames = SodiumClientMod.options().advanced.cpuRenderAheadLimit + 1;
+		int uboAlignment = device.properties().values.uniformBufferOffsetAlignment;
+		int totalPasses = renderPassManager.getRenderPassCount();
 
 
 		this.uniformBufferCameraMatrices = new DualStreamingBuffer(
 			device,
 			uboAlignment,
-			CAMERA_MATRICES_SIZE,
+			MathUtil.align(CAMERA_MATRICES_SIZE, uboAlignment) * totalPasses * 2,
 			maxInFlightFrames,
 			EnumSet.of(MappedBufferFlags.EXPLICIT_FLUSH)
 		);
@@ -158,7 +172,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		this.uniformBufferFogParameters = new DualStreamingBuffer(
 			device,
 			uboAlignment,
-			FOG_PARAMETERS_SIZE,
+			MathUtil.align(FOG_PARAMETERS_SIZE, uboAlignment) * totalPasses * 2,
 			maxInFlightFrames,
 			EnumSet.of(MappedBufferFlags.EXPLICIT_FLUSH)
 		);
@@ -260,7 +274,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 					UploadedChunkGeometry geometry = section.getGeometry();
 					int baseVertex = geometry.segment.getOffset();
 
-					int visibility = isShadowPass ? ChunkMeshFace.ALL_BITS : calculateVisibilityFlags(section.getBounds(), camera);
+					int visibility = ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ChunkMeshFace.ALL_BITS : calculateVisibilityFlags(section.getBounds(), camera);
 
 					for (UploadedChunkGeometry.PackedModel model : geometry.models) {
 						if ((model.visibilityBits & visibility) == 0) {
@@ -411,6 +425,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	public void delete() {
 		super.delete();
 		this.pipelines.clear();
+		this.shadowPipelines.clear();
 		MemoryUtil.memFree(this.stackBuffer);
 		this.uniformBufferCameraMatrices.delete();
 		this.uniformBufferInstanceData.delete();
@@ -562,7 +577,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		var renderList = this.renderLists.get(renderPass);
 		this.indexBuffer.ensureCapacity(renderList.getLargestVertexIndex());
 
-		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.pipelines.get(renderPass);
+		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? this.shadowPipelines.get(renderPass) : this.pipelines.get(renderPass);
 		if (pipeline != null) {
 			pipeline.getProgram().getInterface().setup();
 			this.device.usePipeline(pipeline, (cmd, programInterface, pipelineState) -> {
@@ -614,28 +629,21 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		PipelineState state,
 		int frameIndex
 	) {
-		StreamingBuffer.WritableSection matricesSection = this.uniformBufferCameraMatrices.getSection(frameIndex);
-		long matricesPtr = MemoryUtil.memAddress(matricesSection.getView());
 
-		// We write everything into a temporary buffer and check equality with the existing buffer to avoid unnecessary
-		// flushes, which require api calls.
-		try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-			long tempPtr = memoryStack.nmalloc(128);
-			renderMatrices.projection().getToAddress(tempPtr);
-			renderMatrices.modelView().getToAddress(tempPtr + 64);
-			boolean equalContents = UnsafeUtil.nmemEquals(tempPtr, matricesPtr, 128);
+		StreamingBuffer.WritableSection matricesSection = this.uniformBufferCameraMatrices.getSection(frameIndex, CAMERA_MATRICES_SIZE, true);
+		ByteBuffer matricesView = matricesSection.getView();
+		long matricesPtr = MemoryUtil.memAddress(matricesView);
 
-			if (!equalContents) {
-				MemoryUtil.memCopy(tempPtr, matricesPtr, 128);
+		renderMatrices.projection().getToAddress(matricesPtr);
+		renderMatrices.modelView().getToAddress(matricesPtr + 64);
 
-				Matrix4f mvpMatrix = new Matrix4f();
-				mvpMatrix.set(renderMatrices.projection());
-				mvpMatrix.mul(renderMatrices.modelView());
-				mvpMatrix.getToAddress(matricesPtr + 128);
+		Matrix4f mvpMatrix = new Matrix4f();
+		mvpMatrix.set(renderMatrices.projection());
+		mvpMatrix.mul(renderMatrices.modelView());
+		mvpMatrix.getToAddress(matricesPtr + 128);
+		matricesView.position(matricesView.position() + CAMERA_MATRICES_SIZE);
 
-				matricesSection.flushFull();
-			}
-		}
+		matricesSection.flushPartial();
 
 		state.bindBufferBlock(
 			programInterface.uniformCameraMatrices,
@@ -644,26 +652,21 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 			matricesSection.getView().capacity()
 		);
 
-		StreamingBuffer.WritableSection fogParamsSection = this.uniformBufferFogParameters.getSection(frameIndex);
-		long fogParamsPtr = MemoryUtil.memAddress(fogParamsSection.getView());
+		StreamingBuffer.WritableSection fogParamsSection = this.uniformBufferFogParameters.getSection(frameIndex, FOG_PARAMETERS_SIZE, true);
+		ByteBuffer fogParamsView = fogParamsSection.getView();
+		long fogParamsPtr = MemoryUtil.memAddress(fogParamsView);
 
-		try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-			long tempPtr = memoryStack.nmalloc(28);
-			float[] paramFogColor = RenderSystem.getShaderFogColor();
-			MemoryUtil.memPutFloat(tempPtr + 0, paramFogColor[0]);
-			MemoryUtil.memPutFloat(tempPtr + 4, paramFogColor[1]);
-			MemoryUtil.memPutFloat(tempPtr + 8, paramFogColor[2]);
-			MemoryUtil.memPutFloat(tempPtr + 12, paramFogColor[3]);
-			MemoryUtil.memPutFloat(tempPtr + 16, RenderSystem.getShaderFogStart());
-			MemoryUtil.memPutFloat(tempPtr + 20, RenderSystem.getShaderFogEnd());
-			MemoryUtil.memPutInt(tempPtr + 24, RenderSystem.getShaderFogShape().getIndex());
-			boolean equalContents = UnsafeUtil.nmemEquals(tempPtr, fogParamsPtr, 28);
+		float[] paramFogColor = RenderSystem.getShaderFogColor();
+		MemoryUtil.memPutFloat(fogParamsPtr + 0, paramFogColor[0]);
+		MemoryUtil.memPutFloat(fogParamsPtr + 4, paramFogColor[1]);
+		MemoryUtil.memPutFloat(fogParamsPtr + 8, paramFogColor[2]);
+		MemoryUtil.memPutFloat(fogParamsPtr + 12, paramFogColor[3]);
+		MemoryUtil.memPutFloat(fogParamsPtr + 16, RenderSystem.getShaderFogStart());
+		MemoryUtil.memPutFloat(fogParamsPtr + 20, RenderSystem.getShaderFogEnd());
+		MemoryUtil.memPutInt(  fogParamsPtr + 24, RenderSystem.getShaderFogShape().getIndex());
+		fogParamsView.position(fogParamsView.position() + FOG_PARAMETERS_SIZE);
 
-			if (!equalContents) {
-				MemoryUtil.memCopy(tempPtr, fogParamsPtr, 28);
-				fogParamsSection.flushFull();
-			}
-		}
+		fogParamsSection.flushPartial();
 
 		state.bindBufferBlock(
 			programInterface.uniformFogParameters,
@@ -689,17 +692,29 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 
 	public void deletePipeline() {
 		this.pipelines.clear();
+		this.shadowPipelines.clear();
 	}
 
 	public void createPipelines(IrisChunkProgramOverrides overrides) {
+		boolean hasShadowPass = overrides.getSodiumTerrainPipeline() != null && overrides.getSodiumTerrainPipeline().hasShadowPass();
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
 			Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createPipeline(
 				pass.pipelineDescription(),
-				overrides.getProgramOverride(isShadowPass, device, pass, vertexType),
+				overrides.getProgramOverride(false, device, pass, vertexType),
 				vertexArray
 			);
 
 			this.pipelines.put(pass, pipeline);
+
+			if (hasShadowPass) {
+				Pipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createPipeline(
+					pass.pipelineDescription(),
+					overrides.getProgramOverride(true, device, pass, vertexType),
+					vertexArray
+				);
+
+				this.shadowPipelines.put(pass, shadowPipeline);
+			}
 		}
 	}
 

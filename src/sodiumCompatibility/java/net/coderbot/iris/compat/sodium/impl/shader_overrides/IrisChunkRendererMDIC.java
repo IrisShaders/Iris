@@ -26,6 +26,7 @@ import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.chunk.state.UploadedChunkGeometry;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.caffeinemc.sodium.util.MathUtil;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.core.SectionPos;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -39,12 +40,11 @@ public class IrisChunkRendererMDIC extends IrisChunkRendererMDI {
 
 	public IrisChunkRendererMDIC(
 		IrisChunkProgramOverrides overrides,
-		boolean isShadowPass,
 		RenderDevice device,
 		ChunkRenderPassManager renderPassManager,
 		TerrainVertexType vertexType
 	) {
-		super(overrides, isShadowPass, device, renderPassManager, vertexType);
+		super(overrides, device, renderPassManager, vertexType);
 
 		int maxInFlightFrames = SodiumClientMod.options().advanced.cpuRenderAheadLimit + 1;
 
@@ -341,7 +341,7 @@ public class IrisChunkRendererMDIC extends IrisChunkRendererMDI {
 		var renderList = this.renderLists.get(renderPass);
 		this.indexBuffer.ensureCapacity(renderList.getLargestVertexIndex());
 
-		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.pipelines.get(renderPass);
+		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? this.shadowPipelines.get(renderPass) : this.pipelines.get(renderPass);
 		pipeline.getProgram().getInterface().setup();
 		this.device.usePipeline(pipeline, (cmd, programInterface, pipelineState) -> {
 			this.setupTextures(renderPass, pipelineState);
