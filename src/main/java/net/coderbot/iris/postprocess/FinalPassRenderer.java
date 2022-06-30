@@ -182,6 +182,8 @@ public class FinalPassRenderer {
 				}
 			}
 
+			IrisRenderSystem.memoryBarrier(40);
+
 			if (!finalPass.mipmappedBuffers.isEmpty()) {
 				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
