@@ -178,10 +178,7 @@ public class FinalPassRenderer {
 
 			for (ComputeProgram computeProgram : finalPass.computes) {
 				if (computeProgram != null) {
-					Vector3i workGroups = computeProgram.getWorkGroups(baseWidth, baseHeight);
-					computeProgram.use();
-					IrisRenderSystem.dispatchCompute(workGroups.x, workGroups.y, workGroups.z);
-					IrisRenderSystem.memoryBarrier(40);
+					computeProgram.dispatch(baseWidth, baseHeight);
 				}
 			}
 

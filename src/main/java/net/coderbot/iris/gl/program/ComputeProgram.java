@@ -41,12 +41,15 @@ public final class ComputeProgram extends GlResource {
 		}
 	}
 
-	public void use() {
+	public void dispatch(float width, float height) {
 		ProgramManager.glUseProgram(getGlId());
-
 		uniforms.update();
 		samplers.update();
 		images.update();
+
+		IrisRenderSystem.memoryBarrier(40);
+		IrisRenderSystem.dispatchCompute(getWorkGroups(width, height));
+		IrisRenderSystem.memoryBarrier(40);
 	}
 
 	public static void unbind() {

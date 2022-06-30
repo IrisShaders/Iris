@@ -802,11 +802,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			for (ComputeProgram computeProgram : shadowComputes) {
 				if (computeProgram != null) {
-					Iris.logger.warn("aaa");
-					Vector3i workGroups = computeProgram.getWorkGroups(shadowMapResolution, shadowMapResolution);
-					computeProgram.use();
-					IrisRenderSystem.dispatchCompute(workGroups.x, workGroups.y, workGroups.z);
-					IrisRenderSystem.memoryBarrier(40);
+					computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
 				}
 			}
 

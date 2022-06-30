@@ -76,15 +76,21 @@ public class CompositeRenderer {
 
 		for (int i = 0; i < sources.length; i++) {
 			ProgramSource source = sources[i];
+
+			ImmutableSet<Integer> flipped = bufferFlipper.snapshot();
+			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
+
 			if (source == null || !source.isValid()) {
+				if (computes[i] != null) {
+					ComputeOnlyPass pass = new ComputeOnlyPass();
+					pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
+					passes.add(pass);
+				}
 				continue;
 			}
 
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
-
-			ImmutableSet<Integer> flipped = bufferFlipper.snapshot();
-			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
@@ -131,7 +137,7 @@ public class CompositeRenderer {
 		return this.flippedAtLeastOnceFinal;
 	}
 
-	private static final class Pass {
+	private class Pass {
 		Program program;
 		ComputeProgram[] computes;
 		GlFramebuffer framebuffer;
@@ -140,8 +146,24 @@ public class CompositeRenderer {
 		ImmutableSet<Integer> mipmappedBuffers;
 		float viewportScale;
 
-		private void destroy() {
+		protected void destroy() {
 			this.program.destroy();
+			for (ComputeProgram compute : this.computes) {
+				if (compute != null) {
+					compute.destroy();
+				}
+			}
+		}
+	}
+
+	private class ComputeOnlyPass extends Pass {
+		@Override
+		protected void destroy() {
+			for (ComputeProgram compute : this.computes) {
+				if (compute != null) {
+					compute.destroy();
+				}
+			}
 		}
 	}
 
@@ -158,20 +180,21 @@ public class CompositeRenderer {
 		for (Pass renderPass : passes) {
 			for (ComputeProgram computeProgram : renderPass.computes) {
 				if (computeProgram != null) {
-					Vector3i workGroups = computeProgram.getWorkGroups(baseWidth, baseHeight);
-					computeProgram.use();
-					IrisRenderSystem.dispatchCompute(workGroups.x, workGroups.y, workGroups.z);
-					IrisRenderSystem.memoryBarrier(40);
+					computeProgram.dispatch(baseWidth, baseHeight);
 				}
 			}
 
 			Program.unbind();
 
+			if (renderPass instanceof ComputeOnlyPass) {
+				continue;
+			}
+
 			if (!renderPass.mipmappedBuffers.isEmpty()) {
 				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 				for (int index : renderPass.mipmappedBuffers) {
-					setupMipmapping(renderTargets.get(index), renderPass.stageReadsFromAlt.contains(index));
+					setupMipmapping(CompositeRenderer.this.renderTargets.get(index), renderPass.stageReadsFromAlt.contains(index));
 				}
 			}
 
