@@ -218,9 +218,9 @@ public class ProgramSet {
 			if (source != null) {
 				source.getSource().map(ConstDirectiveParser::findDirectives).ifPresent(constDirectives -> {
 					for (ConstDirectiveParser.ConstDirective directive : constDirectives) {
-						if (directive.getType() == ConstDirectiveParser.Type.IVEC3) {
+						if (directive.getType() == ConstDirectiveParser.Type.IVEC3 && directive.getKey().equals("workGroups")) {
 							ComputeDirectiveParser.setComputeWorkGroups(source, directive);
-						} else if (directive.getType() == ConstDirectiveParser.Type.VEC2) {
+						} else if (directive.getType() == ConstDirectiveParser.Type.VEC2 && directive.getKey().equals("workGroupsRender")) {
 							ComputeDirectiveParser.setComputeWorkGroupsRelative(source, directive);
 						}
 					}
