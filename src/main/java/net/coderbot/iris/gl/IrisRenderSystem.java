@@ -2,6 +2,7 @@ package net.coderbot.iris.gl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
@@ -180,6 +181,10 @@ public class IrisRenderSystem {
 
 	public static void dispatchCompute(int workX, int workY, int workZ) {
 		GL43C.glDispatchCompute(workX, workY, workZ);
+	}
+
+	public static void dispatchCompute(Vector3i workGroups) {
+		GL43C.glDispatchCompute(workGroups.x, workGroups.y, workGroups.z);
 	}
 
 	public static void memoryBarrier(int barriers) {
