@@ -36,7 +36,7 @@ public class MixinTextureAtlasSprite {
 	// can remain minimal. Being less dependent on specific details of Fabric is good, since it means we can be more
 	// cross-platform.
 	@ModifyVariable(method = "<init>", at = @At(value = "INVOKE",
-		target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;generateMipLevels(Lcom/mojang/blaze3d/platform/NativeImage;I)[Lcom/mojang/blaze3d/platform/NativeImage;"))
+		target = "Lnet/minecraft/client/renderer/texture/MipmapGenerator;generateMipLevels(Lcom/mojang/blaze3d/platform/NativeImage;I)[Lcom/mojang/blaze3d/platform/NativeImage;"), argsOnly = true)
 	private NativeImage iris$beforeGenerateMipLevels(NativeImage nativeImage) {
 		// We're injecting after the "info" field has been set, so this is safe even though we're in a constructor.
 		ResourceLocation name = Objects.requireNonNull(info).name();
