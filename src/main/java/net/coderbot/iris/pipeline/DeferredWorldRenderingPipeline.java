@@ -125,6 +125,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean shouldRenderParticlesBeforeDeferred;
 	private final boolean oldLighting;
+	private final boolean allowConcurrentCompute;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
 	private Pass current = null;
@@ -143,6 +144,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.shouldRenderVignette = programs.getPackDirectives().vignette();
 		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
 		this.shouldRenderParticlesBeforeDeferred = programs.getPackDirectives().areParticlesBeforeDeferred();
+		this.allowConcurrentCompute = programs.getPackDirectives().getConcurrentCompute();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -434,6 +436,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	@Override
 	public boolean shouldRenderParticlesBeforeDeferred() {
 		return shouldRenderParticlesBeforeDeferred;
+	}
+
+	@Override
+	public boolean allowConcurrentCompute() {
+		return allowConcurrentCompute;
 	}
 
 	@Override

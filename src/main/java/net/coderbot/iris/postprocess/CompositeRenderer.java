@@ -184,6 +184,8 @@ public class CompositeRenderer {
 				}
 			}
 
+			IrisRenderSystem.memoryBarrier(40);
+
 			Program.unbind();
 
 			if (renderPass instanceof ComputeOnlyPass) {

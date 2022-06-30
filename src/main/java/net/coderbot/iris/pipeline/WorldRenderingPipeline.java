@@ -43,6 +43,8 @@ public interface WorldRenderingPipeline {
 	boolean shouldRenderVignette();
 	boolean shouldWriteRainAndSnowToDepthBuffer();
 	boolean shouldRenderParticlesBeforeDeferred();
+	boolean allowConcurrentCompute();
 
 	float getSunPathRotation();
+
 }

@@ -23,6 +23,7 @@ public class PackDirectives {
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean oldLighting;
+	private boolean concurrentCompute;
 	private boolean particlesBeforeDeferred;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 
@@ -49,6 +50,7 @@ public class PackDirectives {
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
+		concurrentCompute = properties.getConcurrentCompute().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
 		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
 	}
@@ -58,6 +60,7 @@ public class PackDirectives {
 		areCloudsEnabled = directives.areCloudsEnabled();
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
+		concurrentCompute = directives.concurrentCompute;
 		explicitFlips = directives.explicitFlips;
 		particlesBeforeDeferred = directives.particlesBeforeDeferred;
 	}
@@ -116,6 +119,10 @@ public class PackDirectives {
 
 	public boolean areParticlesBeforeDeferred() {
 		return particlesBeforeDeferred;
+	}
+
+	public boolean getConcurrentCompute() {
+		return concurrentCompute;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {

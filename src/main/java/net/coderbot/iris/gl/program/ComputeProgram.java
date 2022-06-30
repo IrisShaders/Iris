@@ -2,8 +2,10 @@ package net.coderbot.iris.gl.program;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.ProgramManager;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector3i;
 import org.lwjgl.opengl.GL43C;
@@ -15,6 +17,9 @@ public final class ComputeProgram extends GlResource {
 	private Vector3i absoluteWorkGroups;
 	private Vector2f relativeWorkGroups;
 	private int[] localSize;
+	private float cachedWidth;
+	private float cachedHeight;
+	private Vector3i cachedWorkGroups;
 
 	ComputeProgram(int program, ProgramUniforms uniforms, ProgramSamplers samplers, ProgramImages images) {
 		super(program);
@@ -32,13 +37,19 @@ public final class ComputeProgram extends GlResource {
 	}
 
 	public Vector3i getWorkGroups(float width, float height) {
-		if (this.absoluteWorkGroups != null) {
-			return this.absoluteWorkGroups;
-		} else if (relativeWorkGroups != null) {
-			return new Vector3i((int) (width * relativeWorkGroups.x) / localSize[0], (int) (height * relativeWorkGroups.y) / localSize[1], localSize[2]);
-		} else {
-			return new Vector3i((int) width / localSize[0], (int) height / localSize[1], localSize[2]);
+		if (cachedWidth != width || cachedHeight != height || cachedWorkGroups == null) {
+			this.cachedWidth = width;
+			this.cachedHeight = height;
+			if (this.absoluteWorkGroups != null) {
+				this.cachedWorkGroups = this.absoluteWorkGroups;
+			} else if (relativeWorkGroups != null) {
+				this.cachedWorkGroups = new Vector3i((int) (width * relativeWorkGroups.x) / localSize[0], (int) (height * relativeWorkGroups.y) / localSize[1], localSize[2]);
+			} else {
+				this.cachedWorkGroups = new Vector3i((int) width / localSize[0], (int) height / localSize[1], localSize[2]);
+			}
 		}
+
+		return cachedWorkGroups;
 	}
 
 	public void dispatch(float width, float height) {
@@ -47,9 +58,11 @@ public final class ComputeProgram extends GlResource {
 		samplers.update();
 		images.update();
 
-		IrisRenderSystem.memoryBarrier(40);
+		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::allowConcurrentCompute).orElse(false)) {
+			IrisRenderSystem.memoryBarrier(40);
+		}
+
 		IrisRenderSystem.dispatchCompute(getWorkGroups(width, height));
-		IrisRenderSystem.memoryBarrier(40);
 	}
 
 	public static void unbind() {
