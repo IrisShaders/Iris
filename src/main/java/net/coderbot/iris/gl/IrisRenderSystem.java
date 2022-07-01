@@ -183,6 +183,18 @@ public class IrisRenderSystem {
 		}
 	}
 
+	public static void memoryBarrier(int barriers) {
+		GL43C.glMemoryBarrier(barriers);
+	}
+
+	public static void genBuffers(int[] buffers) {
+		GL43C.glGenBuffers(buffers);
+	}
+
+	public static void clearBufferData(int glShaderStorageBuffer, int glR8, int glRed, int glByte, int[] ints) {
+		GL43C.glClearBufferData(glShaderStorageBuffer, glR8, glRed, glByte, ints);
+	}
+
 	// These functions are deprecated and unavailable in the core profile.
 
 	@Deprecated
@@ -200,12 +212,4 @@ public class IrisRenderSystem {
 		RenderSystem.popMatrix();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 	}
-
-    public static void memoryBarrier(int barriers) {
-		GL43C.glMemoryBarrier(barriers);
-    }
-
-    public static void genBuffers(int[] buffers) {
-		GL43C.glGenBuffers(buffers);
-    }
 }

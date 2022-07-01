@@ -14,6 +14,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.ProgramTable;
 import net.coderbot.iris.gbuffer_overrides.matching.RenderCondition;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
@@ -148,7 +149,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			this.shaderStorageBufferHolder.setupBuffers();
 		} else {
 			for (int i = 0; i < 16; i++) {
-				GL43C.glBindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
+				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
 			}
 		}
 
