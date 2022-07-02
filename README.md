@@ -40,14 +40,14 @@ These are the goals of Iris. Since Iris isn't yet complete, it hasn't fully achi
 
 ## What's the current state of development?
 
-Iris has public releases for 1.16.5, 1.17.1, and 1.18 that work with the official releases of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
+Iris has public releases for 1.16.5, 1.17.1, 1.18.2, and 1.19 that work with the official releases of Sodium. Iris has made a lot of progress, but it is still not complete software. Though it is already usable for many people, and generally provides a big performance boost over alternatives, there is still much to be done before Iris can be a complete replacement for OptiFine's shaders features. As Iris continues its development, it will only become more and more complete with time.
 
 Compatibility with Sodium is an ongoing project. I've been chatting with JellySquid over the course of many months regarding compatibility, and many refactors and improvements have been implemented into Sodium in order to better accommodate Iris.
 
 
 ## How can I help?
 
-* The Iris Discord server is looking for people willing to provide support and moderate the server! Send @IMS#7902 a message if you'd like to apply.
+* The Iris Discord server is looking for people willing to provide support and moderate the server! Go to #applications on our server if you'd like to apply.
 * Code review on open PRs is appreciated! This helps get important issues with PRs resolved before I give them a look.
 * Code contributions through PRs are also welcome! If you're working on a large / significant feature it's usually a good idea to talk about your plans beforehand, to make sure that work isn't wasted.
 
