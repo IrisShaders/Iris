@@ -206,8 +206,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				// TODO: Support more than two shadowcolor render targets
 				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, new InternalTextureFormat[]{
 					// TODO: Custom shadowcolor format support
-					InternalTextureFormat.R32UI,
-					InternalTextureFormat.R32UI
+					InternalTextureFormat.RGBA,
+					InternalTextureFormat.RGBA
 				});
 			}
 
