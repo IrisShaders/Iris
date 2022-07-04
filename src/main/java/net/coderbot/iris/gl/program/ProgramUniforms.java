@@ -356,6 +356,10 @@ public class ProgramUniforms {
 			return UniformType.INT;
 		} else if (type == GL20C.GL_SAMPLER_2D) {
 			return UniformType.INT;
+		} else if (type == GL30C.GL_UNSIGNED_INT_SAMPLER_2D) {
+			return UniformType.INT;
+		} else if (type == GL30C.GL_UNSIGNED_INT_SAMPLER_3D) {
+			return UniformType.INT;
 		} else if (type == GL20C.GL_SAMPLER_1D) {
 			return UniformType.INT;
 		} else if (type == GL20C.GL_SAMPLER_2D_SHADOW) {
