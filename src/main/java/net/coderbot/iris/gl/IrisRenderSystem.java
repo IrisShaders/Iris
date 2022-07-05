@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
 
@@ -19,6 +20,9 @@ import java.nio.IntBuffer;
  * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
 public class IrisRenderSystem {
+	private static boolean faceCullingEnabled = true;
+	private static int faceCullingState = GL20C.GL_BACK;
+
 	public static void getIntegerv(int pname, int[] params) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glGetIntegerv(pname, params);
@@ -171,6 +175,30 @@ public class IrisRenderSystem {
 		} else {
 			return 0;
 		}
+	}
+
+	public static void setFaceCullState(boolean enabled, int state) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		if (enabled && !faceCullingEnabled) {
+			faceCullingEnabled = true;
+			GL20C.glEnable(GL20C.GL_CULL_FACE);
+		} else if (!enabled && faceCullingEnabled) {
+			faceCullingEnabled = false;
+			GL11C.glDisable(GL20C.GL_CULL_FACE);
+		}
+
+		if (state != faceCullingState && state != -1) {
+			faceCullingState = state;
+			GL20C.glCullFace(state);
+		}
+	}
+
+	/**
+	 * For internal use, do not touch. Please use {@link #setFaceCullState(boolean, int)} instead.
+	 * @param enabled Whether face culling is enabled.
+	 */
+	public static void overrideFaceCullingEnabled(boolean enabled) {
+		faceCullingEnabled = enabled;
 	}
 
 	// These functions are deprecated and unavailable in the core profile.

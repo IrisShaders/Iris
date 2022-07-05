@@ -55,6 +55,9 @@ public class ShaderProperties {
 	private OptionalBoolean backFaceCutout = OptionalBoolean.DEFAULT;
 	private OptionalBoolean backFaceCutoutMipped = OptionalBoolean.DEFAULT;
 	private OptionalBoolean backFaceTranslucent = OptionalBoolean.DEFAULT;
+	private OptionalBoolean cullSolidFrontFaces = OptionalBoolean.DEFAULT;
+	private OptionalBoolean cullCutoutFrontFaces = OptionalBoolean.DEFAULT;
+	private OptionalBoolean cullTranslucentFrontFaces = OptionalBoolean.DEFAULT;
 	private OptionalBoolean rainDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
@@ -124,6 +127,9 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "backFace.cutout", bool -> backFaceCutout = bool);
 			handleBooleanDirective(key, value, "backFace.cutoutMipped", bool -> backFaceCutoutMipped = bool);
 			handleBooleanDirective(key, value, "backFace.translucent", bool -> backFaceTranslucent = bool);
+			handleBooleanDirective(key, value, "shadow.cullSolidFrontFaces", bool -> cullSolidFrontFaces = bool);
+			handleBooleanDirective(key, value, "shadow.cullCutoutFrontFaces", bool -> cullCutoutFrontFaces = bool);
+			handleBooleanDirective(key, value, "shadow.cullTranslucentFrontFaces", bool -> cullTranslucentFrontFaces = bool);
 			handleBooleanDirective(key, value, "rain.depth", bool -> rainDepth = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
@@ -454,6 +460,18 @@ public class ShaderProperties {
 
 	public OptionalBoolean getShadowCulling() {
 		return shadowCulling;
+	}
+
+	public OptionalBoolean getCullSolidFrontFaces() {
+		return cullSolidFrontFaces;
+	}
+
+	public OptionalBoolean getCullCutoutFrontFaces() {
+		return cullCutoutFrontFaces;
+	}
+
+	public OptionalBoolean getCullTranslucentFrontFaces() {
+		return cullTranslucentFrontFaces;
 	}
 
 	public OptionalBoolean getParticlesBeforeDeferred() {

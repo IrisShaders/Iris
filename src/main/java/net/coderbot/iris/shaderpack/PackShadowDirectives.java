@@ -22,6 +22,9 @@ public class PackShadowDirectives {
 	private final boolean shouldRenderEntities;
 	private final boolean shouldRenderPlayer;
 	private final boolean shouldRenderBlockEntities;
+	private final boolean shouldCullSolidFrontFaces;
+	private final boolean shouldCullCutoutFrontFaces;
+	private final boolean shouldCullTranslucentFrontFaces;
 	private final OptionalBoolean cullingState;
 
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
@@ -71,6 +74,9 @@ public class PackShadowDirectives {
 		this.shouldRenderEntities = properties.getShadowEntities().orElse(true);
 		this.shouldRenderPlayer = properties.getShadowPlayer().orElse(false);
 		this.shouldRenderBlockEntities = properties.getShadowBlockEntities().orElse(true);
+		this.shouldCullSolidFrontFaces = properties.getCullSolidFrontFaces().orElse(false);
+		this.shouldCullCutoutFrontFaces = properties.getCullCutoutFrontFaces().orElse(false);
+		this.shouldCullTranslucentFrontFaces = properties.getCullTranslucentFrontFaces().orElse(false);
 		this.cullingState = properties.getShadowCulling();
 
 		this.depthSamplingSettings = ImmutableList.of(new DepthSamplingSettings(), new DepthSamplingSettings());
@@ -97,6 +103,9 @@ public class PackShadowDirectives {
 		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities;
 		this.shouldRenderPlayer = shadowDirectives.shouldRenderPlayer;
 		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities;
+		this.shouldCullSolidFrontFaces = shadowDirectives.shouldCullSolidFrontFaces;
+		this.shouldCullCutoutFrontFaces = shadowDirectives.shouldCullCutoutFrontFaces;
+		this.shouldCullTranslucentFrontFaces = shadowDirectives.shouldCullTranslucentFrontFaces;
 		this.cullingState = shadowDirectives.cullingState;
 		this.depthSamplingSettings = shadowDirectives.depthSamplingSettings;
 		this.colorSamplingSettings = shadowDirectives.colorSamplingSettings;
@@ -148,6 +157,18 @@ public class PackShadowDirectives {
 
 	public boolean shouldRenderBlockEntities() {
 		return shouldRenderBlockEntities;
+	}
+
+	public boolean shouldCullSolidFrontFaces() {
+		return shouldCullSolidFrontFaces;
+	}
+
+	public boolean shouldCullCutoutFrontFaces() {
+		return shouldCullCutoutFrontFaces;
+	}
+
+	public boolean shouldCullTranslucentFrontFaces() {
+		return shouldCullTranslucentFrontFaces;
 	}
 
 	public OptionalBoolean getCullingState() {

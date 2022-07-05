@@ -47,6 +47,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.lwjgl.opengl.ARBTextureSwizzle;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
@@ -79,6 +80,9 @@ public class ShadowRenderer {
 	private final RenderBuffersExt renderBuffersExt;
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
 	private final String debugStringOverall;
+	private final boolean cullSolidFrontFaces;
+	private final boolean cullCutoutFrontFaces;
+	private final boolean cullTranslucentFrontFaces;
 	private FrustumHolder terrainFrustumHolder;
 	private FrustumHolder entityFrustumHolder;
 	private String debugStringTerrain = "(unavailable)";
@@ -102,6 +106,9 @@ public class ShadowRenderer {
 		this.shouldRenderTranslucent = shadowDirectives.shouldRenderTranslucent();
 		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities();
 		this.shouldRenderPlayer = shadowDirectives.shouldRenderPlayer();
+		this.cullSolidFrontFaces = shadowDirectives.shouldCullSolidFrontFaces();
+		this.cullCutoutFrontFaces = shadowDirectives.shouldCullCutoutFrontFaces();
+		this.cullTranslucentFrontFaces = shadowDirectives.shouldCullTranslucentFrontFaces();
 		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities();
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
@@ -324,20 +331,11 @@ public class ShadowRenderer {
 	private void setupGlState(float[] projMatrix) {
 		// Set up our projection matrix and load it into the legacy matrix stack
 		IrisRenderSystem.setupProjectionMatrix(projMatrix);
-
-		// Disable backface culling
-		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
-		// shadow.
-		//
-		// However, it only partially resolves issues of light leaking into caves.
-		//
-		// TODO: Better way of preventing light from leaking into places where it shouldn't
-		RenderSystem.disableCull();
 	}
 
 	private void restoreGlState() {
 		// Restore backface culling
-		RenderSystem.enableCull();
+		IrisRenderSystem.setFaceCullState(true, GL11C.GL_BACK);
 
 		// Make sure to unload the projection matrix
 		IrisRenderSystem.restoreProjectionMatrix();
@@ -533,7 +531,17 @@ public class ShadowRenderer {
 
 		// Render all opaque terrain unless pack requests not to
 		if (shouldRenderTerrain) {
+			if (cullSolidFrontFaces) {
+				IrisRenderSystem.setFaceCullState(true, GL11C.GL_FRONT);
+			} else {
+				IrisRenderSystem.setFaceCullState(false, GL11C.GL_BACK);
+			}
 			levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ);
+			if (cullCutoutFrontFaces) {
+				IrisRenderSystem.setFaceCullState(true, GL11C.GL_FRONT);
+			} else {
+				IrisRenderSystem.setFaceCullState(false, GL11C.GL_BACK);
+			}
 			levelRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ);
 			levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ);
 		}
@@ -597,6 +605,11 @@ public class ShadowRenderer {
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
 		if (shouldRenderTranslucent) {
+			if (cullTranslucentFrontFaces) {
+				IrisRenderSystem.setFaceCullState(true, GL11C.GL_FRONT);
+			} else {
+				IrisRenderSystem.setFaceCullState(false, GL11C.GL_BACK);
+			}
 			levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ);
 		}
 
