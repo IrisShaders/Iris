@@ -33,6 +33,8 @@ public class IrisChunkProgramOverrides {
 	private boolean shadersCreated = false;
     private final EnumMap<IrisTerrainPass, Program<IrisChunkShaderInterface>> programs = new EnumMap<>(IrisTerrainPass.class);
 
+	private int versionCounterForSodiumShaderReload = -1;
+
 	private String createVertexShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
 		Optional<String> irisVertexShader;
 

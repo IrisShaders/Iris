@@ -24,8 +24,11 @@ import java.util.Map;
  *
  * <p>We "sideload" the language entries with an override system to avoid having to reload the
  * resource manager on shader pack changes, since reloading the resource manager is very slow.</p>
+ *
+ * Uses a lower priority to inject before Incubus-Core to prevent translations from breaking
+ * @see <a href="https://github.com/devs-immortal/Incubus-Core/blob/4edfff0f088bc1b7ea77a1d475f76801a03179a4/src/main/java/net/id/incubus_core/mixin/devel/client/TranslationStorageMixin.java">Incubus-Core translation mixin</a>
  */
-@Mixin(ClientLanguage.class)
+@Mixin(value = ClientLanguage.class, priority = 990)
 public class MixinClientLanguage {
 	private static final String LOAD = "Lnet/minecraft/client/resources/language/ClientLanguage;loadFrom(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/List;)Lnet/minecraft/client/resources/language/ClientLanguage;";
 
