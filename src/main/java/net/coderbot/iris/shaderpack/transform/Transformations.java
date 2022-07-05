@@ -10,6 +10,7 @@ public interface Transformations {
 	void define(String key, String value);
 
 	enum InjectionPoint {
+		EXTENSIONS,
 		DEFINES,
 		BEFORE_CODE,
 		END

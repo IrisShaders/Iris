@@ -50,6 +50,9 @@ public class MixinRenderSectionManager {
 	@Unique
 	private ChunkRenderPassManager manager;
 
+	@Unique
+	private int versionCounterForSodiumShaderReload = -1;
+
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void createShadow(RenderDevice device, SodiumWorldRenderer worldRenderer, ChunkRenderPassManager renderPassManager, ClientLevel world, int renderDistance, CallbackInfo ci) {
 		this.irisChunkProgramOverrides = new IrisChunkProgramOverrides();
@@ -61,15 +64,14 @@ public class MixinRenderSectionManager {
 
 	@Inject(method = "renderLayer", at = @At("HEAD"), remap = false)
 	private void renderLayerHead(ChunkRenderMatrices matrices, ChunkRenderPass renderPass, CallbackInfo ci) {
-		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
+		if (versionCounterForSodiumShaderReload != Iris.getPipelineManager().getVersionCounterForSodiumShaderReload()) {
+			versionCounterForSodiumShaderReload = Iris.getPipelineManager().getVersionCounterForSodiumShaderReload();
 			irisChunkProgramOverrides.deleteShaders(device);
 
 			if (chunkRenderer instanceof IrisChunkRenderer irisChunkRenderer) {
 				irisChunkRenderer.deletePipeline();
 				irisChunkRenderer.createPipelines(irisChunkProgramOverrides);
 			}
-
-			Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
 		}
 	}
 

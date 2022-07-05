@@ -1,8 +1,6 @@
 package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
-import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
@@ -61,7 +59,7 @@ public class PipelineManager {
 	}
 
 	/**
-	 * In {@link IrisChunkProgramOverrides#getProgramOverride(RenderDevice, BlockRenderPass)},
+	 * In {@link IrisChunkProgramOverrides#getProgramOverride(net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass, net.caffeinemc.sodium.render.terrain.format.TerrainVertexType)},
 	 * it uses version counter to check whether to reload sodium shaders.
 	 * This fixes a compat issue with Immersive Portals(#1188).
 	 * Immersive Portals may load multiple client dimensions at the same time,

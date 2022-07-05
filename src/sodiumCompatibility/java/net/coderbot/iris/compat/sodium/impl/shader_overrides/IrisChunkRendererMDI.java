@@ -213,6 +213,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	@Override
 	public void createRenderLists(SortedChunkLists chunks, ChunkCameraContext camera, int frameIndex) {
 		if (chunks.isEmpty()) {
+			this.renderLists = null;
 			return;
 		}
 

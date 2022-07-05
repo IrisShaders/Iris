@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack.transform;
 public class StringTransformations implements Transformations {
 	private String prefix;
 	private String extensions;
+	private String defines;
 	private StringBuilder injections;
 	private String body;
 	private StringBuilder suffix;
@@ -21,6 +22,7 @@ public class StringTransformations implements Transformations {
 
 		this.prefix = prefix + base.substring(0, splitPoint);
 		this.extensions = "";
+		this.defines = "";
 		this.injections = new StringBuilder();
 		this.body = base.substring(splitPoint);
 		this.suffix = new StringBuilder("\n");
@@ -78,7 +80,7 @@ public class StringTransformations implements Transformations {
 	@Override
 	public void define(String key, String value) {
 		// TODO: This isn't super efficient, but oh well.
-		extensions = extensions + "#define " + key + " " + value + "\n";
+		defines = defines + "#define " + key + " " + value + "\n";
 	}
 
 	@Override
@@ -86,9 +88,12 @@ public class StringTransformations implements Transformations {
 		if (at == InjectionPoint.BEFORE_CODE) {
 			injections.append(line);
 			injections.append('\n');
-		} else if (at == InjectionPoint.DEFINES) {
+		} else if (at == InjectionPoint.EXTENSIONS) {
 			// TODO: This isn't super efficient, but oh well.
 			extensions = extensions + line + "\n";
+		} else if (at == InjectionPoint.DEFINES) {
+			// TODO: This isn't super efficient, but oh well.
+			defines = defines + line + "\n";
 		} else if (at == InjectionPoint.END) {
 			suffix.append(line);
 			suffix.append('\n');
@@ -107,6 +112,7 @@ public class StringTransformations implements Transformations {
 
 		prefix = prefix.replace(from, to);
 		extensions = extensions.replace(from, to);
+		defines = defines.replace(from, to);
 		injections = new StringBuilder(injections.toString().replace(from, to));
 		body = body.replace(from, to);
 		suffix = new StringBuilder(suffix.toString().replace(from, to));
@@ -116,6 +122,7 @@ public class StringTransformations implements Transformations {
 	public void replaceRegex(String regex, String to) {
 		prefix = prefix.replaceAll(regex, to);
 		extensions = extensions.replaceAll(regex, to);
+		defines = defines.replaceAll(regex, to);
 		injections = new StringBuilder(injections.toString().replaceAll(regex, to));
 		body = body.replaceAll(regex, to);
 		suffix = new StringBuilder(suffix.toString().replaceAll(regex, to));
@@ -123,6 +130,6 @@ public class StringTransformations implements Transformations {
 
 	@Override
 	public String toString() {
-		return prefix + extensions + injections + body + suffix;
+		return prefix + extensions + defines + injections + body + suffix;
 	}
 }
