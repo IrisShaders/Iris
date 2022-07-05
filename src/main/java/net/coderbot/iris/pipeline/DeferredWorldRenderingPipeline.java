@@ -117,6 +117,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final boolean shouldRenderVignette;
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean shouldRenderParticlesBeforeDeferred;
+	private final boolean shouldRenderPrepareBeforeShadow;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
@@ -136,6 +137,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.shouldRenderVignette = programs.getPackDirectives().vignette();
 		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
 		this.shouldRenderParticlesBeforeDeferred = programs.getPackDirectives().areParticlesBeforeDeferred();
+		this.shouldRenderPrepareBeforeShadow = programs.getPackDirectives().isPrepareBeforeShadow();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -561,7 +563,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		Supplier<ImmutableSet<Integer>> flipped;
 
 		if (shadow) {
-			flipped = () -> flippedBeforeShadow;
+			flipped = () -> (shouldRenderPrepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 		} else {
 			flipped = () -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 		}
@@ -865,6 +867,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		if (shouldRenderPrepareBeforeShadow) {
+			isRenderingFullScreenPass = true;
+
+			prepareRenderer.renderAll();
+
+			isRenderingFullScreenPass = false;
+		}
+
 		if (shadowRenderer != null) {
 			isRenderingShadow = true;
 
@@ -875,11 +885,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			isRenderingShadow = false;
 		}
 
-		isRenderingFullScreenPass = true;
+		if (!shouldRenderPrepareBeforeShadow) {
+			isRenderingFullScreenPass = true;
 
-		prepareRenderer.renderAll();
+			prepareRenderer.renderAll();
 
-		isRenderingFullScreenPass = false;
+			isRenderingFullScreenPass = false;
+		}
 	}
 
 	@Override

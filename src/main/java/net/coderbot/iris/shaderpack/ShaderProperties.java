@@ -61,6 +61,7 @@ public class ShaderProperties {
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean particlesBeforeDeferred = OptionalBoolean.DEFAULT;
+	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
 	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
 	private List<String> mainScreenOptions = new ArrayList<>();
@@ -129,6 +130,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> particlesBeforeDeferred = bool);
+			handleBooleanDirective(key, value, "prepareBeforeShadow", bool -> prepareBeforeShadow = bool);
 
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
 			// TODO: Custom uniforms
@@ -456,6 +458,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getParticlesBeforeDeferred() {
 		return particlesBeforeDeferred;
+	}
+
+	public OptionalBoolean getPrepareBeforeShadow() {
+		return prepareBeforeShadow;
 	}
 
 	public Object2ObjectMap<String, AlphaTestOverride> getAlphaTestOverrides() {
