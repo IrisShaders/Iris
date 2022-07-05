@@ -58,7 +58,9 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -131,6 +133,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private InputAvailability inputs = new InputAvailability(false, false, false);
 	private SpecialCondition special = null;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
+	private boolean showSSBOError = false;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -144,9 +147,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.updateNotifier = new FrameUpdateNotifier();
 
 		if (!programs.getPackDirectives().getBufferObjects().isEmpty()) {
-			this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programs.getPackDirectives().getBufferObjects());
+			if (IrisRenderSystem.supportsSSBO()) {
+				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programs.getPackDirectives().getBufferObjects());
 
-			this.shaderStorageBufferHolder.setupBuffers();
+				this.shaderStorageBufferHolder.setupBuffers();
+			} else {
+				Iris.logger.fatal("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? Let's hope it's not a problem.");
+				showSSBOError = true;
+				for (int i = 0; i < 16; i++) {
+					IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
+				}
+			}
 		} else {
 			for (int i = 0; i < 16; i++) {
 				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
@@ -941,6 +952,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		if (current != null) {
 			throw new IllegalStateException("Called beginLevelRendering but level rendering appears to still be in progress?");
+		}
+
+		if (showSSBOError) {
+			showSSBOError = false;
+			if (Minecraft.getInstance().player != null) {
+				Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent("iris.shaders.ssbofailure"), false);
+			}
 		}
 
 		updateNotifier.onNewFrame();

@@ -6,6 +6,7 @@
   "iris.shaders.debug.disabled": "Debugging has been disabled.",
   "iris.shaders.debug.failure": "Cannot enable debugging, your computer does not support debug features.",
   "iris.shaders.debug.restart": "You do not have a debug context, please restart to enable debugging.",
+  "iris.shaders.ssbofailure": "The shader requested a specific feature (SSBO) that is not supported by your GPU, it may not work correctly.",
   "iris.keybind.reload": "Reload Shaders",
   "iris.keybind.shaderPackSelection": "Shaderpack Selection Screen",
   "iris.keybind.toggleShaders": "Toggle Shaders",

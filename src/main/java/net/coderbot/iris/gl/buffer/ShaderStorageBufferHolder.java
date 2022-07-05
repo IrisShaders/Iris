@@ -17,8 +17,8 @@ public class ShaderStorageBufferHolder {
 		overrides.forEach((index, size) -> {
 			int buffer = GlStateManager._glGenBuffers();
 			GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, buffer);
-			IrisRenderSystem.bufferData(GL43C.GL_SHADER_STORAGE_BUFFER, size, GL43C.GL_DYNAMIC_DRAW);
-			IrisRenderSystem.clearBufferData(GL43C.GL_SHADER_STORAGE_BUFFER, GL43C.GL_R8, GL43C.GL_RED, GL43C.GL_BYTE, new int[] {0});
+			IrisRenderSystem.bufferStorage(GL43C.GL_SHADER_STORAGE_BUFFER, size, 0);
+			IrisRenderSystem.clearBufferSubData(GL43C.GL_SHADER_STORAGE_BUFFER, GL43C.GL_R8, 0, size, GL43C.GL_RED, GL43C.GL_BYTE, new int[] {0});
 			IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, buffer);
 			buffers[index] = new ShaderStorageBuffer(buffer, index, size);
 		});

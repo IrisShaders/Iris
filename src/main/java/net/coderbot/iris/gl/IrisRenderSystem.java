@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL45C;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -140,9 +141,10 @@ public class IrisRenderSystem {
 		GL30C.glBufferData(target, data, usage);
 	}
 
-	public static void bufferData(int target, long size, int usage) {
+	public static void bufferStorage(int target, long size, int flags) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glBufferData(target, size, usage);
+		// The ARB version is identical to GL44 and redirects, so this should work on ARB as well.
+		GL45C.glBufferStorage(target, size, flags);
 	}
 
 	public static void bindBufferBase(int target, Integer index, int buffer) {
@@ -183,6 +185,10 @@ public class IrisRenderSystem {
 		}
 	}
 
+	public static boolean supportsSSBO() {
+		return GL.getCapabilities().OpenGL44 || (GL.getCapabilities().GL_ARB_shader_storage_buffer_object && GL.getCapabilities().GL_ARB_buffer_storage);
+	}
+
 	public static void memoryBarrier(int barriers) {
 		GL43C.glMemoryBarrier(barriers);
 	}
@@ -191,8 +197,8 @@ public class IrisRenderSystem {
 		GL43C.glGenBuffers(buffers);
 	}
 
-	public static void clearBufferData(int glShaderStorageBuffer, int glR8, int glRed, int glByte, int[] ints) {
-		GL43C.glClearBufferData(glShaderStorageBuffer, glR8, glRed, glByte, ints);
+	public static void clearBufferSubData(int glShaderStorageBuffer, int glR8, long offset, long size, int glRed, int glByte, int[] ints) {
+		GL43C.glClearBufferSubData(glShaderStorageBuffer, glR8, offset, size, glRed, glByte, ints);
 	}
 
 	// These functions are deprecated and unavailable in the core profile.
