@@ -20,6 +20,7 @@ import net.caffeinemc.gfx.util.buffer.SequenceBuilder;
 import net.caffeinemc.gfx.util.buffer.SequenceIndexBuffer;
 import net.caffeinemc.gfx.util.buffer.StreamingBuffer;
 import net.caffeinemc.sodium.SodiumClientMod;
+import net.caffeinemc.sodium.render.buffer.VertexRange;
 import net.caffeinemc.sodium.render.chunk.RenderSection;
 import net.caffeinemc.sodium.render.chunk.TerrainRenderManager;
 import net.caffeinemc.sodium.render.chunk.draw.AbstractChunkRenderer;
@@ -32,6 +33,7 @@ import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPassManager;
 import net.caffeinemc.sodium.render.chunk.region.RenderRegion;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
+import net.caffeinemc.sodium.render.chunk.state.ChunkPassModel;
 import net.caffeinemc.sodium.render.chunk.state.ChunkRenderBounds;
 import net.caffeinemc.sodium.render.chunk.state.UploadedChunkGeometry;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
@@ -70,8 +72,8 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 
 	protected final ChunkRenderPassManager renderPassManager;
 
-	protected final Map<ChunkRenderPass, Pipeline<IrisChunkShaderInterface, BufferTarget>> pipelines;
-	protected final Map<ChunkRenderPass, Pipeline<IrisChunkShaderInterface, BufferTarget>> shadowPipelines;
+	protected final Pipeline<IrisChunkShaderInterface, BufferTarget>[] pipelines;
+	protected final Pipeline<IrisChunkShaderInterface, BufferTarget>[] shadowPipelines;
 
 	protected final StreamingBuffer uniformBufferCameraMatrices;
 	protected final StreamingBuffer uniformBufferInstanceData;
@@ -80,9 +82,8 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	protected final SequenceIndexBuffer indexBuffer;
 	private final TerrainVertexType vertexType;
 
-	protected ByteBuffer stackBuffer;
+	private Collection<MdiChunkRenderBatch>[] renderLists;
 
-	private Map<ChunkRenderPass, RenderList<MdiChunkRenderBatch>> renderLists;
 
 	public IrisChunkRendererMDI(
 		IrisChunkProgramOverrides overrides,
@@ -95,9 +96,11 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		this.vertexType = vertexType;
 
 		this.renderPassManager = renderPassManager;
-		this.pipelines = new Object2ObjectOpenHashMap<>();
-		this.shadowPipelines = new Object2ObjectOpenHashMap<>();
+		//noinspection unchecked
+		this.pipelines = new Pipeline[renderPassManager.getRenderPassCount()];
+		this.shadowPipelines = new Pipeline[renderPassManager.getRenderPassCount()];
 
+		// construct all pipelines for current render passes now
 		var vertexFormat = vertexType.getCustomVertexFormat();
 		this.vertexArray = new VertexArrayDescription<>(BufferTarget.values(), List.of(
 			new VertexArrayResourceBinding<>(BufferTarget.VERTICES, new VertexAttributeBinding[] {
@@ -128,12 +131,12 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 				throw new RuntimeException("failure");
 			}
 			Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createPipeline(
-				pass.pipelineDescription(),
+				pass.getPipelineDescription(),
 				program,
 				vertexArray
 			);
 
-			this.pipelines.put(pass, pipeline);
+			this.pipelines[pass.getId()] = pipeline;
 
 			if (hasShadowPass) {
 				Program<IrisChunkShaderInterface> shadowProgram = overrides.getProgramOverride(true, device, pass, vertexType);
@@ -141,12 +144,12 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 					throw new RuntimeException("failure");
 				}
 				Pipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createPipeline(
-					pass.pipelineDescription(),
+					pass.getPipelineDescription(),
 					shadowProgram,
 					vertexArray
 				);
 
-				this.shadowPipelines.put(pass, shadowPipeline);
+				this.shadowPipelines[pass.getId()] = shadowPipeline;
 			}
 		}
 
@@ -217,8 +220,9 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 			return;
 		}
 
-		Collection<ChunkRenderPass> chunkRenderPasses = this.renderPassManager.getAllRenderPasses();
-		int totalPasses = chunkRenderPasses.size();
+		ChunkRenderPass[] chunkRenderPasses = this.renderPassManager.getAllRenderPasses();
+		int totalPasses = chunkRenderPasses.length;
+
 
 		// setup buffers, resizing as needed
 		int commandBufferPassSize = commandBufferPassSize(this.commandBuffer.getAlignment(), chunks);
@@ -241,183 +245,138 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		ByteBuffer instanceBufferSectionView = instanceBufferSection.getView();
 		long instanceBufferSectionAddress = MemoryUtil.memAddress0(instanceBufferSectionView);
 
-		Map<ChunkRenderPass, RenderList<MdiChunkRenderBatch>> renderLists = new Reference2ReferenceArrayMap<>();
+		int largestVertexIndex = 0;
+		int commandBufferPosition = commandBufferSectionView.position();
+		int instanceBufferPosition = instanceBufferSectionView.position();
 
-		// setup memory stack, which will be used to temporarily store buffer subsections to be copied to the main
-		// buffer at the end in the correct order.
-		int stackSize = (instanceBufferPassSize + commandBufferPassSize) * totalPasses;
-		if (this.stackBuffer == null || this.stackBuffer.capacity() < stackSize) {
-			MemoryUtil.memFree(this.stackBuffer); // this does nothing if the buffer is null
-			this.stackBuffer = MemoryUtil.memAlloc(stackSize);
-		}
+		@SuppressWarnings("unchecked")
+		Collection<MdiChunkRenderBatch>[] renderLists = new Collection[totalPasses];
 
-		try (MemoryStack stack = MemoryStack.create(this.stackBuffer).push()) {
-			for (ChunkRenderPass renderPass : chunkRenderPasses) {
-				renderLists.put(
-					renderPass,
-					new RenderList<>(
-						stack.nmalloc(1, commandBufferPassSize),
-						stack.nmalloc(1, instanceBufferPassSize)
-					)
-				);
-			}
+		for (int passId = 0; passId < chunkRenderPasses.length; passId++) {
+			ChunkRenderPass renderPass = chunkRenderPasses[passId];
+			Deque<MdiChunkRenderBatch> renderList = new ArrayDeque<>(16); // just an estimate
 
-			boolean reverseOrder = false; // TODO: fix me
+			boolean reverseOrder = renderPass.isTranslucent();
 
-			for (Iterator<SortedChunkLists.Bucket> bucketIterator = chunks.sorted(reverseOrder); bucketIterator.hasNext(); )
-			{
-				SortedChunkLists.Bucket bucket = bucketIterator.next();
+			for (Iterator<SortedChunkLists.RegionBucket> regionIterator = chunks.sortedRegionBuckets(reverseOrder); regionIterator.hasNext(); ) {
+				SortedChunkLists.RegionBucket regionBucket = regionIterator.next();
 
-				for (Iterator<RenderSection> sectionIterator = bucket.sorted(reverseOrder); sectionIterator.hasNext(); )
-				{
+				int batchInstanceCount = 0;
+				int batchCommandCount = 0;
+
+				for (Iterator<RenderSection> sectionIterator = regionBucket.sortedSections(reverseOrder); sectionIterator.hasNext(); ) {
 					RenderSection section = sectionIterator.next();
 
 					UploadedChunkGeometry geometry = section.getGeometry();
-					int baseVertex = geometry.segment.getOffset();
-
-					int visibility = ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ChunkMeshFace.ALL_BITS : calculateVisibilityFlags(section.getBounds(), camera);
-
-					for (UploadedChunkGeometry.PackedModel model : geometry.models) {
-						if ((model.visibilityBits & visibility) == 0) {
-							continue;
-						}
-
-						RenderList<MdiChunkRenderBatch> renderList = renderLists.get(model.pass);
-
-						if (renderList == null) { // very bad
-							continue;
-						}
-
-						for (long range : model.ranges) {
-							if ((visibility & range) == 0) {
-								continue;
-							}
-
-							int vertexCount = UploadedChunkGeometry.ModelPart.unpackVertexCount(range);
-							int firstVertex = baseVertex + UploadedChunkGeometry.ModelPart.unpackFirstVertex(range);
-
-							long ptr = renderList.tempCommandBufferAddress + renderList.tempCommandBufferPosition;
-							MemoryUtil.memPutInt(ptr + 0, vertexCount);
-							MemoryUtil.memPutInt(ptr + 4, 1);
-							MemoryUtil.memPutInt(ptr + 8, 0);
-							MemoryUtil.memPutInt(ptr + 12, firstVertex); // baseVertex
-							MemoryUtil.memPutInt(ptr + 16, renderList.currentInstanceCount); // baseInstance
-							renderList.tempCommandBufferPosition += COMMAND_STRUCT_STRIDE;
-							renderList.currentCommandCount++;
-						}
-
-						float x = getCameraTranslation(
-							SectionPos.sectionToBlockCoord(section.getChunkX()),
-							camera.blockX,
-							camera.deltaX
-						);
-						float y = getCameraTranslation(
-							SectionPos.sectionToBlockCoord(section.getChunkY()),
-							camera.blockY,
-							camera.deltaY
-						);
-						float z = getCameraTranslation(
-							SectionPos.sectionToBlockCoord(section.getChunkZ()),
-							camera.blockZ,
-							camera.deltaZ
-						);
-
-						long ptr = renderList.tempInstanceBufferAddress + renderList.tempInstanceBufferPosition;
-						MemoryUtil.memPutFloat(ptr + 0, x);
-						MemoryUtil.memPutFloat(ptr + 4, y);
-						MemoryUtil.memPutFloat(ptr + 8, z);
-						renderList.tempInstanceBufferPosition += INSTANCE_STRUCT_STRIDE;
-						renderList.currentInstanceCount++;
-
-						renderList.largestVertexIndex = Math.max(
-							renderList.largestVertexIndex,
-							geometry.segment.getLength()
-						);
-					}
-				}
-
-				for (RenderList<MdiChunkRenderBatch> renderList : renderLists.values()) {
-					int instanceCount = renderList.currentInstanceCount;
-					int commandCount = renderList.currentCommandCount;
-					renderList.currentCommandCount = 0;
-					renderList.currentInstanceCount = 0;
-
-					if (commandCount <= 0) {
+					if (geometry.models == null) {
 						continue;
 					}
 
-					long commandCurrentPosition = renderList.tempCommandBufferPosition;
-					int commandSubsectionLength = commandCount * COMMAND_STRUCT_STRIDE;
-					long commandSubsectionStart = commandCurrentPosition - commandSubsectionLength;
-					renderList.tempCommandBufferPosition = MathUtil.align(
-						commandCurrentPosition,
-						this.commandBuffer.getAlignment()
+					int baseVertex = geometry.segment.getOffset();
+
+					int visibility = calculateVisibilityFlags(section.getBounds(), camera);
+
+					ChunkPassModel model = geometry.models[passId];
+
+					if (model == null || (model.getVisibilityBits() & visibility) == 0) {
+						continue;
+					}
+
+					VertexRange[] modelParts = model.getModelParts();
+					for (int dir = 0; dir < modelParts.length; dir++) {
+						if ((visibility & (1 << dir)) == 0) {
+							continue;
+						}
+
+						VertexRange modelPart = modelParts[dir];
+
+						if (modelPart == null) {
+							continue;
+						}
+
+						long ptr = commandBufferSectionAddress + commandBufferPosition;
+						MemoryUtil.memPutInt(ptr + 0, modelPart.indexCount());
+						MemoryUtil.memPutInt(ptr + 4, 1);
+						MemoryUtil.memPutInt(ptr + 8, 0);
+						MemoryUtil.memPutInt(ptr + 12, baseVertex + modelPart.firstVertex()); // baseVertex
+						MemoryUtil.memPutInt(ptr + 16, batchInstanceCount); // baseInstance
+						commandBufferPosition += COMMAND_STRUCT_STRIDE;
+						batchCommandCount++;
+					}
+
+					// TODO: should only need instance buffer data written once or twice, not for every render pass
+
+					float x = getCameraTranslation(
+						SectionPos.sectionToBlockCoord(section.getChunkX()),
+						camera.blockX,
+						camera.deltaX
+					);
+					float y = getCameraTranslation(
+						SectionPos.sectionToBlockCoord(section.getChunkY()),
+						camera.blockY,
+						camera.deltaY
+					);
+					float z = getCameraTranslation(
+						SectionPos.sectionToBlockCoord(section.getChunkZ()),
+						camera.blockZ,
+						camera.deltaZ
 					);
 
-					long instanceCurrentPosition = renderList.tempInstanceBufferPosition;
-					int instanceSubsectionLength = instanceCount * INSTANCE_STRUCT_STRIDE;
-					long instanceSubsectionStart = instanceCurrentPosition - instanceSubsectionLength;
-					renderList.tempInstanceBufferPosition = MathUtil.align(
-						instanceCurrentPosition,
-						this.uniformBufferInstanceData.getAlignment()
-					);
+					long ptr = instanceBufferSectionAddress + instanceBufferPosition;
+					MemoryUtil.memPutFloat(ptr + 0, x);
+					MemoryUtil.memPutFloat(ptr + 4, y);
+					MemoryUtil.memPutFloat(ptr + 8, z);
+					instanceBufferPosition += INSTANCE_STRUCT_STRIDE;
+					batchInstanceCount++;
 
-					RenderRegion region = bucket.region();
-
-					renderList.batches.add(new MdiChunkRenderBatch(
-						region.vertexBuffers.getBufferObject(),
-						region.vertexBuffers.getStride(),
-						instanceCount,
-						commandCount,
-						instanceSubsectionStart,
-						commandSubsectionStart
-					));
+					largestVertexIndex = Math.max(largestVertexIndex, geometry.segment.getLength());
 				}
-			}
 
-			// copy all temporary instance and command subsections to their corresponding streaming buffer sections
-			int commandBufferCurrentPos = commandBufferSectionView.position();
-			int instanceBufferCurrentPos = instanceBufferSectionView.position();
-			for (Iterator<RenderList<MdiChunkRenderBatch>> renderListIterator = renderLists.values()
-				.iterator(); renderListIterator.hasNext(); )
-			{
-				RenderList<MdiChunkRenderBatch> renderList = renderListIterator.next();
-
-				if (renderList.batches.size() <= 0) {
-					renderListIterator.remove();
+				if (batchCommandCount == 0) {
 					continue;
 				}
 
-				long mainCommandBufferOffset = commandBufferSection.getDeviceOffset() + commandBufferCurrentPos;
-				long mainInstanceBufferOffset = instanceBufferSection.getDeviceOffset() + instanceBufferCurrentPos;
-				for (MdiChunkRenderBatch batch : renderList.batches) {
-					batch.commandBufferOffset += mainCommandBufferOffset;
-					batch.instanceBufferOffset += mainInstanceBufferOffset;
-				}
-
-				long tempCommandBufferLength = renderList.tempCommandBufferPosition;
-				MemoryUtil.memCopy(
-					renderList.tempCommandBufferAddress,
-					commandBufferSectionAddress + commandBufferCurrentPos,
-					tempCommandBufferLength
+				int commandSubsectionLength = batchCommandCount * COMMAND_STRUCT_STRIDE;
+				long commandSubsectionStart = commandBufferSection.getDeviceOffset()
+					+ commandBufferPosition - commandSubsectionLength;
+				commandBufferPosition = MathUtil.align(
+					commandBufferPosition,
+					this.commandBuffer.getAlignment()
 				);
-				commandBufferCurrentPos += tempCommandBufferLength;
 
-				long tempInstanceBufferLength = renderList.tempInstanceBufferPosition;
-				MemoryUtil.memCopy(
-					renderList.tempInstanceBufferAddress,
-					instanceBufferSectionAddress + instanceBufferCurrentPos,
-					tempInstanceBufferLength
+				int instanceSubsectionLength = batchInstanceCount * INSTANCE_STRUCT_STRIDE;
+				long instanceSubsectionStart = instanceBufferSection.getDeviceOffset()
+					+ instanceBufferPosition - instanceSubsectionLength;
+				instanceBufferPosition = MathUtil.align(
+					instanceBufferPosition,
+					this.uniformBufferInstanceData.getAlignment()
 				);
-				instanceBufferCurrentPos += tempInstanceBufferLength;
+
+				RenderRegion region = regionBucket.getRegion();
+
+				renderList.add(new MdiChunkRenderBatch(
+					region.vertexBuffers.getBufferObject(),
+					region.vertexBuffers.getStride(),
+					batchInstanceCount,
+					batchCommandCount,
+					instanceSubsectionStart,
+					commandSubsectionStart
+				));
 
 			}
-			commandBufferSectionView.position(commandBufferCurrentPos);
-			instanceBufferSectionView.position(instanceBufferCurrentPos);
+
+			if (!renderList.isEmpty()) {
+				renderLists[passId] = renderList;
+			}
 		}
+
+		commandBufferSectionView.position(commandBufferPosition);
+		instanceBufferSectionView.position(instanceBufferPosition);
 
 		commandBufferSection.flushPartial();
 		instanceBufferSection.flushPartial();
+
+		this.indexBuffer.ensureCapacity(largestVertexIndex);
 
 		this.renderLists = renderLists;
 	}
@@ -425,44 +384,11 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	@Override
 	public void delete() {
 		super.delete();
-		this.pipelines.clear();
-		this.shadowPipelines.clear();
-		MemoryUtil.memFree(this.stackBuffer);
 		this.uniformBufferCameraMatrices.delete();
 		this.uniformBufferInstanceData.delete();
 		this.uniformBufferFogParameters.delete();
 		this.commandBuffer.delete();
 		this.indexBuffer.delete();
-	}
-
-	protected static class RenderList<T extends MdiChunkRenderBatch> {
-		private final Deque<T> batches;
-		protected int largestVertexIndex;
-
-		// TEMP VARS
-		// these will be deallocated by the time construction is done
-		protected final long tempCommandBufferAddress;
-		protected long tempCommandBufferPosition;
-		protected final long tempInstanceBufferAddress;
-		protected long tempInstanceBufferPosition;
-
-		protected int currentInstanceCount;
-		protected int currentCommandCount;
-
-		public RenderList(long tempCommandBufferAddress, long tempInstanceBufferAddress) {
-			this.tempCommandBufferAddress = tempCommandBufferAddress;
-			this.tempInstanceBufferAddress = tempInstanceBufferAddress;
-			this.batches = new ArrayDeque<>();
-		}
-
-		public Collection<T> getBatches() {
-			return this.batches;
-		}
-
-		public int getLargestVertexIndex() {
-			return this.largestVertexIndex;
-		}
-
 	}
 
 	protected static class MdiChunkRenderBatch {
@@ -517,8 +443,8 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	protected static int commandBufferPassSize(int alignment, SortedChunkLists list) {
 		int size = 0;
 
-		for (SortedChunkLists.Bucket bucket : list.unsorted()) {
-			size += MathUtil.align((bucket.size() * ChunkMeshFace.COUNT) * COMMAND_STRUCT_STRIDE, alignment);
+		for (SortedChunkLists.RegionBucket regionBucket : list.unsortedRegionBuckets()) {
+			size += MathUtil.align((regionBucket.sectionCount() * ChunkMeshFace.COUNT) * COMMAND_STRUCT_STRIDE, alignment);
 		}
 
 		return size;
@@ -527,8 +453,8 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	protected static int instanceBufferPassSize(int alignment, SortedChunkLists list) {
 		int size = 0;
 
-		for (SortedChunkLists.Bucket bucket : list.unsorted()) {
-			size += MathUtil.align(bucket.size() * INSTANCE_STRUCT_STRIDE, alignment);
+		for (SortedChunkLists.RegionBucket regionBucket : list.unsortedRegionBuckets()) {
+			size += MathUtil.align(regionBucket.sectionCount() * INSTANCE_STRUCT_STRIDE, alignment);
 		}
 
 		return size;
@@ -540,6 +466,10 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 
 	protected static int calculateVisibilityFlags(ChunkRenderBounds bounds, ChunkCameraContext camera) {
 		int flags = ChunkMeshFace.UNASSIGNED_BITS;
+
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			return ChunkMeshFace.ALL_BITS;
+		}
 
 		if (camera.posY > bounds.y1) {
 			flags |= ChunkMeshFace.UP_BITS;
@@ -571,14 +501,23 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 
 	@Override
 	public void render(ChunkRenderPass renderPass, ChunkRenderMatrices matrices, int frameIndex) {
-		if (this.renderLists == null || !this.renderLists.containsKey(renderPass)) {
+		// make sure a render list was created for this pass, if any
+		if (this.renderLists == null) {
 			return;
 		}
 
-		var renderList = this.renderLists.get(renderPass);
-		this.indexBuffer.ensureCapacity(renderList.getLargestVertexIndex());
+		int passId = renderPass.getId();
+		if (passId < 0 || this.renderLists.length < passId) {
+			return;
+		}
 
-		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? this.shadowPipelines.get(renderPass) : this.pipelines.get(renderPass);
+		var renderList = this.renderLists[passId];
+		if (renderList == null) {
+			return;
+		}
+
+		// if the render list exists, the pipeline probably exists (unless a new render pass was added without a reload)
+		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? this.shadowPipelines[passId] : this.pipelines[passId];
 		if (pipeline != null) {
 			pipeline.getProgram().getInterface().setup();
 			this.device.usePipeline(pipeline, (cmd, programInterface, pipelineState) -> {
@@ -588,7 +527,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 				cmd.bindCommandBuffer(this.commandBuffer.getBufferObject());
 				cmd.bindElementBuffer(this.indexBuffer.getBuffer());
 
-				for (var batch : renderList.getBatches()) {
+				for (var batch : renderList) {
 					pipelineState.bindBufferBlock(
 						programInterface.uniformInstanceData,
 						this.uniformBufferInstanceData.getBufferObject(),
@@ -619,7 +558,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		pipelineState.bindTexture(
 			0,
 			TextureUtil.getBlockAtlasTexture(),
-			pass.mipped() ? this.blockTextureMippedSampler : this.blockTextureSampler
+			pass.isMipped() ? this.blockTextureMippedSampler : this.blockTextureSampler
 		);
 		pipelineState.bindTexture(1, TextureUtil.getLightTexture(), this.lightTextureSampler);
 	}
@@ -681,7 +620,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		var constants = ShaderConstants.builder();
 
 		if (pass.isCutout()) {
-			constants.add("ALPHA_CUTOFF", String.valueOf(pass.alphaCutoff()));
+			constants.add("ALPHA_CUTOFF", String.valueOf(pass.getAlphaCutoff()));
 		}
 
 		if (!Mth.equal(vertexType.getVertexRange(), 1.0f)) {
@@ -692,29 +631,27 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 	}
 
 	public void deletePipeline() {
-		this.pipelines.clear();
-		this.shadowPipelines.clear();
 	}
 
 	public void createPipelines(IrisChunkProgramOverrides overrides) {
 		boolean hasShadowPass = overrides.getSodiumTerrainPipeline() != null && overrides.getSodiumTerrainPipeline().hasShadowPass();
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
 			Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createPipeline(
-				pass.pipelineDescription(),
+				pass.getPipelineDescription(),
 				overrides.getProgramOverride(false, device, pass, vertexType),
 				vertexArray
 			);
 
-			this.pipelines.put(pass, pipeline);
+			this.pipelines[pass.getId()] = pipeline;
 
 			if (hasShadowPass) {
 				Pipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createPipeline(
-					pass.pipelineDescription(),
+					pass.getPipelineDescription(),
 					overrides.getProgramOverride(true, device, pass, vertexType),
 					vertexArray
 				);
 
-				this.shadowPipelines.put(pass, shadowPipeline);
+				this.shadowPipelines[pass.getId()] = shadowPipeline;
 			}
 		}
 	}

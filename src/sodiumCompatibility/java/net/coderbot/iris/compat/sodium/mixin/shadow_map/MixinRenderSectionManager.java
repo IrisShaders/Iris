@@ -71,7 +71,7 @@ public abstract class MixinRenderSectionManager implements SwappableRenderSectio
 	@Mutable
 	@Shadow
 	@Final
-	private RenderRegionManager regions;
+	private RenderRegionManager regionManager;
 
 	@Shadow(remap = false)
 	protected static TerrainVertexType createVertexType() {
@@ -165,13 +165,6 @@ public abstract class MixinRenderSectionManager implements SwappableRenderSectio
 			return collection.iterator();
 		}
 	}
-
-//	@Redirect(method = "calculateVisibilityFlags",
-//			at = @At(value = "FIELD",
-//					target = "net/caffeinemc/sodium/render/chunk/RenderSectionManager.isBlockFaceCullingEnabled : Z"))
-//	private boolean iris$disableBlockFaceCullingInShadowPass(RenderSectionManager manager) {
-//		return isBlockFaceCullingEnabled && !ShadowRenderingState.areShadowsCurrentlyBeingRendered();
-//	}
 
 	// TODO: check needsUpdate and needsUpdateSwap patches?
 }

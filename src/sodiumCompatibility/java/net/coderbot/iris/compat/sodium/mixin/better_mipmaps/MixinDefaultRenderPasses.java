@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 public class MixinDefaultRenderPasses {
 	@ModifyArg(method = "<clinit>",
 			at = @At(value = "INVOKE",
-					target = "Lnet/caffeinemc/sodium/render/chunk/passes/ChunkRenderPass;<init>(Lnet/caffeinemc/gfx/api/pipeline/PipelineDescription;ZFLnet/minecraft/resources/ResourceLocation;)V"))
+					target = "Lnet/caffeinemc/sodium/render/chunk/passes/ChunkRenderPass;<init>(Lnet/caffeinemc/gfx/api/pipeline/PipelineDescription;ZF)V"))
 	private static float iris$tweakCutoutMippedAlphaThreshold(float threshold) {
 		if (threshold == 0.5f) {
 			return 0.1f;
