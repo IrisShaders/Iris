@@ -537,20 +537,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow) {
 		// TODO: Properly handle empty shaders
-		String geometry = source.getGeometrySource().orElse(null);
+		String geometry = null;
+		if (source.getGeometrySource().isPresent()) {
+			geometry = AttributeShaderTransformer.patch(source.getGeometrySource().orElse(null),
+				ShaderType.GEOMETRY, true, availability);
+		}
 		String vertex = AttributeShaderTransformer.patch(source.getVertexSource().orElseThrow(NullPointerException::new),
 				ShaderType.VERTEX, geometry != null, availability);
 		String fragment = AttributeShaderTransformer.patch(source.getFragmentSource().orElseThrow(NullPointerException::new),
 				ShaderType.FRAGMENT, geometry != null, availability);
 
-		ProgramBuilder builder;
-		try {
-			builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
-					fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-		} catch (RuntimeException e) {
-			// TODO: Better error handling
-			throw new RuntimeException("Shader compilation failed!", e);
-		}
+		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
+				fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives(), availability, shadow);
 	}
