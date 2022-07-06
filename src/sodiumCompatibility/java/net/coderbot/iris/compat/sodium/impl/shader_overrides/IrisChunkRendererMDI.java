@@ -501,6 +501,7 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 
 	@Override
 	public void render(ChunkRenderPass renderPass, ChunkRenderMatrices matrices, int frameIndex) {
+
 		// make sure a render list was created for this pass, if any
 		if (this.renderLists == null) {
 			return;
@@ -517,7 +518,14 @@ public class IrisChunkRendererMDI extends AbstractChunkRenderer implements IrisC
 		}
 
 		// if the render list exists, the pipeline probably exists (unless a new render pass was added without a reload)
-		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? this.shadowPipelines[passId] : this.pipelines[passId];
+		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline;
+		if(ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			RenderSystem.disableCull();
+			pipeline = this.shadowPipelines[passId];
+		} else {
+			pipeline = this.pipelines[passId];
+		}
+
 		if (pipeline != null) {
 			pipeline.getProgram().getInterface().setup();
 			this.device.usePipeline(pipeline, (cmd, programInterface, pipelineState) -> {
