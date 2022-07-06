@@ -10,6 +10,10 @@ public enum TextureStage {
 	 */
 	SHADOWCOMP,
 	/**
+	 * The begin passes.
+	 */
+	BEGIN,
+	/**
 	 * The prepare passes.
 	 *
 	 * While this is not documented in shaders.txt, it is a valid stage for defining custom textures.
@@ -32,6 +36,8 @@ public enum TextureStage {
 		switch (name) {
 			case "shadowcomp":
 				return Optional.of(SHADOWCOMP);
+			case "begin":
+				return Optional.of(BEGIN);
 			case "prepare":
 				return Optional.of(PREPARE);
 			case "gbuffers":

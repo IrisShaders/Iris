@@ -88,7 +88,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final ImmutableList<ClearPass> clearPasses;
 
 	private final GlFramebuffer baseline;
-
+	private final CompositeRenderer beginPassRenderer;
 	private final CompositeRenderer prepareRenderer;
 
 	@Nullable
@@ -103,7 +103,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 
-	private final ImmutableSet<Integer> flippedBeforeShadow;
+	private ImmutableSet<Integer> flippedAfterBegin;
 	private final ImmutableSet<Integer> flippedAfterPrepare;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
@@ -117,7 +117,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final boolean shouldRenderVignette;
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean shouldRenderParticlesBeforeDeferred;
-	private final boolean shouldRenderPrepareBeforeShadow;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 
@@ -137,7 +136,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.shouldRenderVignette = programs.getPackDirectives().vignette();
 		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
 		this.shouldRenderParticlesBeforeDeferred = programs.getPackDirectives().areParticlesBeforeDeferred();
-		this.shouldRenderPrepareBeforeShadow = programs.getPackDirectives().isPrepareBeforeShadow();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 
@@ -186,7 +184,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
-		this.flippedBeforeShadow = ImmutableSet.of();
+		this.flippedAfterBegin = ImmutableSet.of();
 
 		BufferFlipper flipper = new BufferFlipper();
 
@@ -206,6 +204,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			return shadowRenderTargets;
 		};
+
+		this.beginPassRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getBegin(), renderTargets,
+			customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
+			customTextureManager.getCustomTextureIdMap(TextureStage.BEGIN),
+			programs.getPackDirectives().getExplicitFlips("begin_pre"));
+
+		flippedAfterBegin = flipper.snapshot();
 
 		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
@@ -561,7 +566,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		Supplier<ImmutableSet<Integer>> flipped;
 
 		if (shadow) {
-			flipped = () -> (shouldRenderPrepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
+			flipped = () -> flippedAfterBegin;
 		} else {
 			flipped = () -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 		}
@@ -865,14 +870,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
-		if (shouldRenderPrepareBeforeShadow) {
-			isRenderingFullScreenPass = true;
-
-			prepareRenderer.renderAll();
-
-			isRenderingFullScreenPass = false;
-		}
-
 		if (shadowRenderer != null) {
 			isRenderingShadow = true;
 
@@ -883,13 +880,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			isRenderingShadow = false;
 		}
 
-		if (!shouldRenderPrepareBeforeShadow) {
-			isRenderingFullScreenPass = true;
+		isRenderingFullScreenPass = true;
 
-			prepareRenderer.renderAll();
+		prepareRenderer.renderAll();
 
-			isRenderingFullScreenPass = false;
-		}
+		isRenderingFullScreenPass = false;
 	}
 
 	@Override
@@ -938,6 +933,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		// Get ready for world rendering
 		prepareRenderTargets();
+
+		isRenderingFullScreenPass = true;
+
+		beginPassRenderer.renderAll();
+
+		isRenderingFullScreenPass = false;
 
 		setPhase(WorldRenderingPhase.SKY);
 

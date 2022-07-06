@@ -17,6 +17,7 @@ public class ProgramSet {
 	private final ProgramSource shadow;
 
 	private final ProgramSource[] shadowcomp;
+	private final ProgramSource[] begin;
 	private final ProgramSource[] prepare;
 
 	private final ProgramSource gbuffersBasic;
@@ -66,6 +67,7 @@ public class ProgramSet {
 				BlendModeOverride.OFF);
 
 		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties);
+		this.begin = readProgramArray(directory, sourceProvider, "begin", shaderProperties);
 		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
 
 		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, shaderProperties);
@@ -137,6 +139,7 @@ public class ProgramSet {
 
 		programs.add(shadow);
 		programs.addAll(Arrays.asList(shadowcomp));
+		programs.addAll(Arrays.asList(begin));
 		programs.addAll(Arrays.asList(prepare));
 
 		programs.addAll (Arrays.asList(
@@ -178,6 +181,10 @@ public class ProgramSet {
 
 	public ProgramSource[] getShadowComposite() {
 		return shadowcomp;
+	}
+
+	public ProgramSource[] getBegin() {
+		return begin;
 	}
 
 	public ProgramSource[] getPrepare() {
