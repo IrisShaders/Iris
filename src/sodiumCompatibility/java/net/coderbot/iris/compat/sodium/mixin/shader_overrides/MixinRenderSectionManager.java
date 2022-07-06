@@ -97,6 +97,7 @@ public class MixinRenderSectionManager {
 					return new IrisChunkRendererMDI(irisChunkProgramOverrides, device, renderPassManager, vertexType);
 				}
 			} catch (RuntimeException e) {
+				Iris.logger.fatal("Failed to load Sodium shader, falling back to vanilla rendering. See log for more details!");
 				if (device.properties().driverWorkarounds.forceIndirectCount) {
 					return new MdiCountChunkRenderer(device, renderPassManager, vertexType);
 				} else {

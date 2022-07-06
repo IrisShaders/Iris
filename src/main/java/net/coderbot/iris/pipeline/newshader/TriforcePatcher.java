@@ -340,6 +340,8 @@ public class TriforcePatcher {
 			}
 		}
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_view.vert>"));
+		// Packs such as SEUS have outputs on one stage with no input on the other, causing a link error on 450. We need to use 330 with extensions.
+		transformations.injectLine(Transformations.InjectionPoint.EXTENSIONS, "#extension GL_ARB_shading_language_420pack : enable");
 
 		if (type == ShaderType.VERTEX) {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define VERT_SCALE " + vertexRange);
@@ -348,7 +350,7 @@ public class TriforcePatcher {
 
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_format.vert>"));
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
-			const uint MAX_BATCH_SIZE = 8 * 4 * 8;
+			const int MAX_BATCH_SIZE = 8 * 4 * 8;
 
 			struct ModelTransform {
 			    // Translation of the model in world-space
@@ -516,7 +518,7 @@ public class TriforcePatcher {
 			throw new IllegalStateException("Transforming a shader that is already built against the core profile???");
 		}
 
-		actualVersion = (sodium ? 450 : 330) + " core";
+		actualVersion = (sodium ? 330 : 330) + " core";
 
 		beforeVersion = beforeVersion.trim();
 
