@@ -7,6 +7,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -40,6 +41,7 @@ import java.util.function.Supplier;
 
 public class FinalPassRenderer {
 	private final RenderTargets renderTargets;
+	private final ShaderStorageBufferHolder shaderStorageBufferHolder;
 
 	@Nullable
 	private final Pass finalPass;
@@ -54,7 +56,7 @@ public class FinalPassRenderer {
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 
 	// TODO: The length of this argument list is getting a bit ridiculous
-	public FinalPassRenderer(ProgramSet pack, RenderTargets renderTargets, IntSupplier noiseTexture,
+	public FinalPassRenderer(ProgramSet pack, RenderTargets renderTargets, ShaderStorageBufferHolder shaderStorageBufferHolder, IntSupplier noiseTexture,
 							 FrameUpdateNotifier updateNotifier, ImmutableSet<Integer> flippedBuffers,
 							 CenterDepthSampler centerDepthSampler,
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
@@ -70,6 +72,7 @@ public class FinalPassRenderer {
 
 		this.noiseTexture = noiseTexture;
 		this.renderTargets = renderTargets;
+		this.shaderStorageBufferHolder = shaderStorageBufferHolder;
 		this.finalPass = pack.getCompositeFinal().map(source -> {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
@@ -278,7 +281,7 @@ public class FinalPassRenderer {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), CompositeDepthTransformer.patch(source.getVertexSource().orElse(null)), CompositeDepthTransformer.patch(source.getGeometrySource().orElse(null)),
-				CompositeDepthTransformer.patch(source.getFragmentSource().orElse(null)), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+				CompositeDepthTransformer.patch(source.getFragmentSource().orElse(null)), shaderStorageBufferHolder, source.getDirectives().getBufferMappings(), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);

@@ -2,6 +2,8 @@ package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -15,6 +17,8 @@ import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.buffer.BufferMapping;
+import net.coderbot.iris.gl.buffer.BufferType;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -25,11 +29,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -73,7 +79,8 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
-	private final Int2IntArrayMap bufferObjects = new Int2IntArrayMap();
+	private final Object2ObjectMap<String, Set<BufferMapping>> bufferMappings = new Object2ObjectOpenHashMap<>();
+	private final Int2LongArrayMap bufferObjects = new Int2LongArrayMap();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
@@ -206,12 +213,19 @@ public class ShaderProperties {
 				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(modes[0], modes[1], modes[2], modes[3])));
 			});
 
+			handleTwoArgDirective("mapping.", key, value, (pass, index) -> {
+				String[] modeArray = value.split(" ");
+
+				bufferMappings.computeIfAbsent(pass, empty -> new HashSet<>()).add(new BufferMapping(Integer.parseInt(index), Integer.parseInt(modeArray[0]), BufferType.parse(modeArray[1])));
+				Iris.logger.warn("mapped! " + new BufferMapping(Integer.parseInt(index), Integer.parseInt(modeArray[0]), BufferType.parse(modeArray[1])) );
+			});
+
 			handlePassDirective("bufferObject.", key, value, index -> {
 				int trueIndex;
-				int trueSize;
+				long trueSize;
 				try {
 					trueIndex = Integer.parseInt(index);
-					trueSize = Integer.parseInt(value);
+					trueSize = Long.parseLong(value);
 				} catch (NumberFormatException e) {
 					Iris.logger.warn("Number format exception parsing SSBO index/size!", e);
 					return;
@@ -486,7 +500,11 @@ public class ShaderProperties {
 		return blendModeOverrides;
 	}
 
-	public Int2IntArrayMap getBufferObjects() {
+	public Object2ObjectMap<String, Set<BufferMapping>> getBufferMappings() {
+		return bufferMappings;
+	}
+
+	public Int2LongArrayMap getBufferObjects() {
 		return bufferObjects;
 	}
 

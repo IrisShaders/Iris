@@ -10,6 +10,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
+import net.coderbot.iris.gl.buffer.BufferMapping;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
@@ -22,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 public class IrisChunkProgramOverrides {
 	private static final ShaderConstants EMPTY_CONSTANTS = ShaderConstants.builder().build();
@@ -99,11 +101,24 @@ public class IrisChunkProgramOverrides {
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".fsh"), source, EMPTY_CONSTANTS);
 	}
 
+	private Set<BufferMapping> getBufferMappings(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+		if (pass == IrisTerrainPass.SHADOW) {
+			return pipeline.getShadowBufferMappings();
+		} else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
+			return pipeline.getTerrainBufferMappings();
+		} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+			return pipeline.getTranslucentBufferMappings();
+		} else {
+			throw new IllegalArgumentException("Unknown pass type " + pass);
+		}
+	}
+
 	@Nullable
 	private ChunkProgram createShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
 		GlShader vertShader = createVertexShader(device, pass, pipeline);
 		GlShader geomShader = createGeometryShader(device, pass, pipeline);
 		GlShader fragShader = createFragmentShader(device, pass, pipeline);
+		Set<BufferMapping> bufferMappings = getBufferMappings(pass, pipeline);
 
 		if (vertShader == null || fragShader == null) {
 			if (vertShader != null) {
@@ -142,7 +157,7 @@ public class IrisChunkProgramOverrides {
 					.bindAttribute("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
 					.bindAttribute("d_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
 					.build((program, name) -> {
-						ProgramUniforms uniforms = pipeline.initUniforms(name);
+						ProgramUniforms uniforms = pipeline.initUniforms(name, bufferMappings);
 						ProgramSamplers samplers;
 						ProgramImages images;
 

@@ -1,9 +1,12 @@
 package net.coderbot.iris.gl.program;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.buffer.BufferMapping;
+import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.Uniform;
 import net.coderbot.iris.gl.uniform.UniformHolder;
@@ -23,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.Set;
 
 public class ProgramUniforms {
 	private static ProgramUniforms active;
@@ -30,23 +34,33 @@ public class ProgramUniforms {
 	private final ImmutableList<Uniform> perFrame;
 	private final ImmutableList<Uniform> dynamic;
 	private final ImmutableList<ValueUpdateNotifier> notifiersToReset;
+	private final ShaderStorageBufferHolder bufferHolder;
+	private final Set<BufferMapping> bufferMappings;
 
 	private ImmutableList<Uniform> once;
 	long lastTick = -1;
 	int lastFrame = -1;
 
 	public ProgramUniforms(ImmutableList<Uniform> once, ImmutableList<Uniform> perTick, ImmutableList<Uniform> perFrame,
-						   ImmutableList<Uniform> dynamic, ImmutableList<ValueUpdateNotifier> notifiersToReset) {
+						   ImmutableList<Uniform> dynamic, ImmutableList<ValueUpdateNotifier> notifiersToReset, ShaderStorageBufferHolder bufferHolder, Set<BufferMapping> bufferMappings) {
 		this.once = once;
 		this.perTick = perTick;
 		this.perFrame = perFrame;
 		this.dynamic = dynamic;
 		this.notifiersToReset = notifiersToReset;
+		this.bufferHolder = bufferHolder;
+		this.bufferMappings = bufferMappings;
 	}
 
 	private void updateStage(ImmutableList<Uniform> uniforms) {
 		for (Uniform uniform : uniforms) {
 			uniform.update();
+		}
+	}
+
+	private void updateStage(Set<BufferMapping> bufferMappings) {
+		for (BufferMapping mapping : bufferMappings) {
+			IrisRenderSystem.bindBufferBase(mapping.getType().id, mapping.getIndex(), bufferHolder.getBuffer(mapping.getLocation()));
 		}
 	}
 
@@ -62,6 +76,7 @@ public class ProgramUniforms {
 		active = this;
 
 		updateStage(dynamic);
+		updateStage(bufferMappings);
 
 		if (once != null) {
 			updateStage(once);
@@ -97,6 +112,10 @@ public class ProgramUniforms {
 		for (ValueUpdateNotifier notifier : notifiersToReset) {
 			notifier.setListener(null);
 		}
+
+		for (BufferMapping mapping : bufferMappings) {
+			IrisRenderSystem.bindBufferBase(mapping.getType().id, mapping.getIndex(), 0);
+		}
 	}
 
 	public static void clearActiveUniforms() {
@@ -105,8 +124,8 @@ public class ProgramUniforms {
 		}
 	}
 
-	public static Builder builder(String name, int program) {
-		return new Builder(name, program);
+	public static Builder builder(String name, int program, ShaderStorageBufferHolder bufferHolder, Set<BufferMapping> bufferMappings) {
+		return new Builder(name, program, bufferHolder, bufferMappings);
 	}
 
 	public static class Builder implements DynamicLocationalUniformHolder {
@@ -120,11 +139,15 @@ public class ProgramUniforms {
 		private final Map<String, Uniform> dynamic;
 		private final Map<String, UniformType> uniformNames;
 		private final Map<String, UniformType> externalUniformNames;
+		private final ShaderStorageBufferHolder bufferHolder;
+		private final Set<BufferMapping> bufferMappings;
 		private final List<ValueUpdateNotifier> notifiersToReset;
 
-		protected Builder(String name, int program) {
+		protected Builder(String name, int program, ShaderStorageBufferHolder bufferHolder, Set<BufferMapping> bufferMappings) {
 			this.name = name;
 			this.program = program;
+			this.bufferHolder = bufferHolder;
+			this.bufferMappings = bufferMappings;
 
 			locations = new HashMap<>();
 			once = new HashMap<>();
@@ -258,7 +281,7 @@ public class ProgramUniforms {
 			}
 
 			return new ProgramUniforms(ImmutableList.copyOf(once.values()), ImmutableList.copyOf(perTick.values()), ImmutableList.copyOf(perFrame.values()),
-					ImmutableList.copyOf(dynamic.values()), ImmutableList.copyOf(notifiersToReset));
+					ImmutableList.copyOf(dynamic.values()), ImmutableList.copyOf(notifiersToReset), bufferHolder, bufferMappings);
 		}
 
 		@Override

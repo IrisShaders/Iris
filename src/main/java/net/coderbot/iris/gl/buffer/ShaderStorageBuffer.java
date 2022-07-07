@@ -23,13 +23,18 @@ public class ShaderStorageBuffer extends GlResource {
 		return size;
 	}
 
+	public int getBuffer() {
+		return getGlId();
+	}
+
 	@Override
 	protected void destroyInternal() {
 		IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, 0);
+		IrisRenderSystem.bindBufferBase(GL43C.GL_UNIFORM_BUFFER, index, 0);
 		GlStateManager._glDeleteBuffers(getGlId());
 	}
 
-	public void bind() {
-		IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, getGlId());
+	public void bind(int target) {
+		IrisRenderSystem.bindBufferBase(target, index, getGlId());
 	}
 }

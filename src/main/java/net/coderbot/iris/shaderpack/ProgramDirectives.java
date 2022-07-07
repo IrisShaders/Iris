@@ -4,11 +4,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.buffer.BufferMapping;
+import net.coderbot.iris.gl.buffer.BufferType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -24,16 +29,18 @@ public class ProgramDirectives {
 	private final BlendModeOverride blendModeOverride;
 	private final ImmutableSet<Integer> mipmappedBuffers;
 	private final ImmutableMap<Integer, Boolean> explicitFlips;
+	private final Set<BufferMapping> bufferMappings;
 
 	private ProgramDirectives(int[] drawBuffers, float viewportScale, @Nullable AlphaTestOverride alphaTestOverride,
 							 @Nullable BlendModeOverride blendModeOverride, ImmutableSet<Integer> mipmappedBuffers,
-							 ImmutableMap<Integer, Boolean> explicitFlips) {
+							 ImmutableMap<Integer, Boolean> explicitFlips, Set<BufferMapping> bufferMappings) {
 		this.drawBuffers = drawBuffers;
 		this.viewportScale = viewportScale;
 		this.alphaTestOverride = alphaTestOverride;
 		this.blendModeOverride = blendModeOverride;
 		this.mipmappedBuffers = mipmappedBuffers;
 		this.explicitFlips = explicitFlips;
+		this.bufferMappings = bufferMappings;
 	}
 
 	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets,
@@ -67,11 +74,13 @@ public class ProgramDirectives {
 			this.blendModeOverride = blendModeOverride != null ? blendModeOverride : defaultBlendOverride;
 
 			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(source.getName());
+			bufferMappings = source.getParent().getPackDirectives().getBufferMappings(source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
 			blendModeOverride = defaultBlendOverride;
 			explicitFlips = ImmutableMap.of();
+			bufferMappings = new HashSet<>();
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -104,7 +113,7 @@ public class ProgramDirectives {
 
 	public ProgramDirectives withOverriddenDrawBuffers(int[] drawBuffersOverride) {
 		return new ProgramDirectives(drawBuffersOverride, viewportScale, alphaTestOverride, blendModeOverride,
-			mipmappedBuffers, explicitFlips);
+			mipmappedBuffers, explicitFlips, bufferMappings);
 	}
 
 	private static Optional<CommentDirective> findDrawbuffersDirective(Optional<String> stageSource) {
@@ -171,5 +180,9 @@ public class ProgramDirectives {
 
 	public ImmutableMap<Integer, Boolean> getExplicitFlips() {
 		return explicitFlips;
+	}
+
+	public Set<BufferMapping> getBufferMappings() {
+		return bufferMappings == null ? Collections.emptySet() : bufferMappings;
 	}
 }

@@ -1,6 +1,8 @@
 package net.coderbot.iris.pipeline;
 
 import net.coderbot.iris.IrisLogging;
+import net.coderbot.iris.gl.buffer.BufferMapping;
+import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
@@ -14,19 +16,24 @@ import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.IntFunction;
 
 public class SodiumTerrainPipeline {
+	private final ShaderStorageBufferHolder shaderStorageBufferHolder;
 	String terrainVertex;
 	String terrainGeometry;
 	String terrainFragment;
+	Set<BufferMapping> terrainBufferMappings;
 	String translucentVertex;
 	String translucentGeometry;
 	String translucentFragment;
+	Set<BufferMapping> translucentBufferMappings;
 	String shadowVertex;
 	String shadowGeometry;
 	String shadowFragment;
 	//GlFramebuffer framebuffer;
+	Set<BufferMapping> shadowBufferMappings;
 	ProgramSet programSet;
 
 	private final WorldRenderingPipeline parent;
@@ -41,8 +48,9 @@ public class SodiumTerrainPipeline {
 								 ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
 								 IntFunction<ProgramSamplers> createShadowSamplers,
 								 IntFunction<ProgramImages> createTerrainImages,
-								 IntFunction<ProgramImages> createShadowImages) {
+								 IntFunction<ProgramImages> createShadowImages, ShaderStorageBufferHolder shaderStorageBufferHolder) {
 		this.parent = Objects.requireNonNull(parent);
+		this.shaderStorageBufferHolder = shaderStorageBufferHolder;
 
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
@@ -54,18 +62,21 @@ public class SodiumTerrainPipeline {
 			terrainVertex = sources.getVertexSource().orElse(null);
 			terrainGeometry = sources.getGeometrySource().orElse(null);
 			terrainFragment = sources.getFragmentSource().orElse(null);
+			terrainBufferMappings = sources.getDirectives().getBufferMappings();
 		});
 
 		translucentSource.ifPresent(sources -> {
 			translucentVertex = sources.getVertexSource().orElse(null);
 			translucentGeometry = sources.getGeometrySource().orElse(null);
 			translucentFragment = sources.getFragmentSource().orElse(null);
+			translucentBufferMappings = sources.getDirectives().getBufferMappings();
 		});
 
 		shadowSource.ifPresent(sources -> {
 			shadowVertex = sources.getVertexSource().orElse(null);
 			shadowGeometry = sources.getGeometrySource().orElse(null);
 			shadowFragment = sources.getFragmentSource().orElse(null);
+			shadowBufferMappings = sources.getDirectives().getBufferMappings();
 		});
 
 		if (terrainVertex != null) {
@@ -178,6 +189,10 @@ public class SodiumTerrainPipeline {
 		return Optional.ofNullable(terrainFragment);
 	}
 
+	public Set<BufferMapping> getTerrainBufferMappings() {
+		return terrainBufferMappings;
+	}
+
 	public Optional<String> getTranslucentVertexShaderSource() {
 		return Optional.ofNullable(translucentVertex);
 	}
@@ -188,6 +203,10 @@ public class SodiumTerrainPipeline {
 
 	public Optional<String> getTranslucentFragmentShaderSource() {
 		return Optional.ofNullable(translucentFragment);
+	}
+
+	public Set<BufferMapping> getTranslucentBufferMappings() {
+		return translucentBufferMappings;
 	}
 
 	public Optional<String> getShadowVertexShaderSource() {
@@ -202,8 +221,12 @@ public class SodiumTerrainPipeline {
 		return Optional.ofNullable(shadowFragment);
 	}
 
-	public ProgramUniforms initUniforms(int programId) {
-		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId);
+	public Set<BufferMapping> getShadowBufferMappings() {
+		return shadowBufferMappings;
+	}
+
+	public ProgramUniforms initUniforms(int programId, Set<BufferMapping> bufferMappings) {
+		ProgramUniforms.Builder uniforms = ProgramUniforms.builder("<sodium shaders>", programId, shaderStorageBufferHolder, bufferMappings);
 
 		CommonUniforms.addCommonUniforms(uniforms, programSet.getPack().getIdMap(), programSet.getPackDirectives(), parent.getFrameUpdateNotifier());
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);

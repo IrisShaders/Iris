@@ -147,7 +147,7 @@ public class IrisRenderSystem {
 		GL45C.glBufferStorage(target, size, flags);
 	}
 
-	public static void bindBufferBase(int target, Integer index, int buffer) {
+	public static void bindBufferBase(int target, int index, int buffer) {
 		GL43C.glBindBufferBase(target, index, buffer);
 	}
 

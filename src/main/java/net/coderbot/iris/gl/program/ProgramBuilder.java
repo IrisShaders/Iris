@@ -3,6 +3,8 @@ package net.coderbot.iris.gl.program;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.buffer.BufferMapping;
+import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.shader.GlShader;
@@ -11,6 +13,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Set;
 import java.util.function.IntSupplier;
 
 public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHolder, ImageHolder {
@@ -18,8 +21,8 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	private final ProgramSamplers.Builder samplers;
 	private final ProgramImages.Builder images;
 
-	private ProgramBuilder(String name, int program, ImmutableSet<Integer> reservedTextureUnits) {
-		super(name, program);
+	private ProgramBuilder(String name, int program, ShaderStorageBufferHolder shaderStorageBufferHolder, Set<BufferMapping> bufferMappings, ImmutableSet<Integer> reservedTextureUnits) {
+		super(name, program, shaderStorageBufferHolder, bufferMappings);
 
 		this.program = program;
 		this.samplers = ProgramSamplers.builder(program, reservedTextureUnits);
@@ -31,7 +34,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	}
 
 	public static ProgramBuilder begin(String name, @Nullable String vertexSource, @Nullable String geometrySource,
-									   @Nullable String fragmentSource, ImmutableSet<Integer> reservedTextureUnits) {
+									   @Nullable String fragmentSource, ShaderStorageBufferHolder shaderStorageBufferHolder, Set<BufferMapping> bufferMappings, ImmutableSet<Integer> reservedTextureUnits) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 
 		GlShader vertex;
@@ -64,7 +67,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 
 		fragment.destroy();
 
-		return new ProgramBuilder(name, programId, reservedTextureUnits);
+		return new ProgramBuilder(name, programId, shaderStorageBufferHolder, bufferMappings, reservedTextureUnits);
 	}
 
 	public Program build() {
