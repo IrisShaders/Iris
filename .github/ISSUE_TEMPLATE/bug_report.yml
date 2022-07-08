@@ -66,6 +66,6 @@ body:
     id: additional-context
     attributes:
       label: Additional context
-      description: 'Add any other context about the problem here. If you are proficient at reading log files and think there is an especially relevant section, feel free to paste it in a code block here - that's not required, though.'
+      description: 'Add any other context about the problem here. If you are proficient at reading log files and think there is an especially relevant section, feel free to paste it in a code block here - that is not required, though.'
     validations:
       required: false
