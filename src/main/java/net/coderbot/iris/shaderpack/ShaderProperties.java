@@ -14,6 +14,7 @@ import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.texture.TextureScaleOverride;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -72,6 +73,7 @@ public class ShaderProperties {
 	// TODO: Parse custom uniforms / variables
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
+	private final Object2ObjectMap<String, TextureScaleOverride> textureScaleOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
@@ -146,6 +148,17 @@ public class ShaderProperties {
 				}
 
 				viewportScaleOverrides.put(pass, scale);
+			});
+
+			handlePassDirective("size.buffer.", key, value, pass -> {
+				String[] parts = value.split(" ");
+
+				if (parts.length != 2) {
+					Iris.logger.error("Unable to parse size.buffer directive for " + pass + ": " + value);
+					return;
+				}
+
+				textureScaleOverrides.put(pass, new TextureScaleOverride(parts[0], parts[1]));
 			});
 
 			handlePassDirective("alphaTest.", key, value, pass -> {
@@ -470,6 +483,10 @@ public class ShaderProperties {
 
 	public Object2FloatMap<String> getViewportScaleOverrides() {
 		return viewportScaleOverrides;
+	}
+
+	public Object2ObjectMap<String, TextureScaleOverride> getTextureScaleOverrides() {
+		return textureScaleOverrides;
 	}
 
 	public Object2ObjectMap<String, BlendModeOverride> getBlendModeOverrides() {

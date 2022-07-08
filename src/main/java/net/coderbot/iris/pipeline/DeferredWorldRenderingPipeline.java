@@ -149,7 +149,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.renderTargets = new RenderTargets(mainTarget.width, mainTarget.height, depthTextureId,
 			((Blaze3dRenderTargetExt) mainTarget).iris$getDepthBufferVersion(),
-			depthBufferFormat, programs.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
+			depthBufferFormat, programs.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings(), programs.getPackDirectives());
 
 		this.sunPathRotation = programs.getPackDirectives().getSunPathRotation();
 
