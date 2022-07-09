@@ -15,6 +15,7 @@ import net.caffeinemc.gfx.api.device.commands.RenderCommandList;
 import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.pipeline.PipelineState;
 import net.caffeinemc.gfx.api.shader.Program;
+import net.caffeinemc.gfx.opengl.texture.GlTexture;
 import net.caffeinemc.gfx.util.buffer.DualStreamingBuffer;
 import net.caffeinemc.gfx.util.buffer.SequenceBuilder;
 import net.caffeinemc.gfx.util.buffer.SequenceIndexBuffer;
@@ -237,6 +238,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 			pipeline = this.pipelines[passId];
 		}
 
+		RenderSystem.setShaderTexture(0, GlTexture.getHandle(TextureUtil.getBlockAtlasTexture()));
 		pipeline.getProgram().getInterface().setup();
         this.device.usePipeline(pipeline, (commandList, programInterface, pipelineState) -> {
             this.setupPerRenderList(renderPass, matrices, frameIndex, pipeline, commandList, programInterface, pipelineState);
