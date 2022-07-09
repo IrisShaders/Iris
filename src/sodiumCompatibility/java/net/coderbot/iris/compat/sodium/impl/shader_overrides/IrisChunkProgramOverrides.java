@@ -167,11 +167,11 @@ public class IrisChunkProgramOverrides {
 		}
 	}
 
-	private void createShaders(SodiumTerrainPipeline pipeline, RenderDevice device, TerrainVertexType vertexType) {
+	private void createShaders(int maxDrawCount, SodiumTerrainPipeline pipeline, RenderDevice device, TerrainVertexType vertexType, boolean baseInstanced) {
 		this.programs.clear();
 
 		if (pipeline != null) {
-			pipeline.patchShaders(vertexType.getVertexRange());
+			pipeline.patchShaders(maxDrawCount, vertexType.getVertexRange(), baseInstanced);
 			for (IrisTerrainPass pass : IrisTerrainPass.values()) {
 				if (!pipeline.hasShadowPass() && pass.isShadow()) {
 					continue;
@@ -184,11 +184,11 @@ public class IrisChunkProgramOverrides {
 	}
 
 	@Nullable
-	public Program<IrisChunkShaderInterface> getProgramOverride(boolean isShadowPass, RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
+	public Program<IrisChunkShaderInterface> getProgramOverride(boolean baseInstanced, int maxDrawCount, boolean isShadowPass, RenderDevice device, ChunkRenderPass pass, TerrainVertexType vertexType) {
 		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
 
 		if (!shadersCreated) {
-			createShaders(pipeline, device, vertexType);
+			createShaders(maxDrawCount, pipeline, device, vertexType, baseInstanced);
 		}
 
 		if (isShadowPass) {

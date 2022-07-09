@@ -292,7 +292,7 @@ public class TriforcePatcher {
 		return transformations.toString();
 	}
 
-	public static String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float vertexRange) {
+	public static String patchSodium(String source, ShaderType type, AlphaTest alpha, ShaderAttributeInputs inputs, float vertexRange, int maxBatchSize, boolean baseInstanced) {
 		StringTransformations transformations = new StringTransformations(source);
 
 		patchCommon(transformations, type, true);
@@ -350,7 +350,7 @@ public class TriforcePatcher {
 
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/terrain_format.vert>"));
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, """
-			const int MAX_BATCH_SIZE = 8 * 4 * 8;
+			const int MAX_BATCH_SIZE = """ + maxBatchSize + ";" + """
 
 			struct ModelTransform {
 			    // Translation of the model in world-space
@@ -362,7 +362,7 @@ public class TriforcePatcher {
 			};
 
 			vec3 _apply_view_transform(vec3 position) {
-			    ModelTransform transform = transforms[gl_BaseInstanceARB];
+			    ModelTransform transform = transforms[""" + (baseInstanced ? "gl_BaseInstanceARB" : "gl_DrawIDARB") + "];" + """
 			    return transform.translation + position;
 			}""");
 		} else if (type == ShaderType.FRAGMENT) {
