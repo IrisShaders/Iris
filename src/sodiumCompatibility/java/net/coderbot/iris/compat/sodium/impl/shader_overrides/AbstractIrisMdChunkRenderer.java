@@ -374,7 +374,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 
         for (SortedChunkLists.RegionBucket regionBucket : list.unsortedRegionBuckets()) {
             for (RenderSection section : regionBucket.unsortedSections()) {
-                for (ChunkPassModel model : section.getGeometry().models) {
+                for (ChunkPassModel model : section.getData().models) {
                     // each bit set represents a model, so we can just count the set bits
                     faces += Integer.bitCount(model.getVisibilityBits());
                 }

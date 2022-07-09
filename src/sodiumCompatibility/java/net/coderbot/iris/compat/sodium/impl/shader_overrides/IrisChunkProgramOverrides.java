@@ -216,7 +216,7 @@ public class IrisChunkProgramOverrides {
 
 	public void deleteShaders(RenderDevice device) {
 		for (Program<?> program : this.programs.values()) {
-			if (program != null && ((GlObjectExt) program).isHandleValid()) {
+			if (program != null) {
 				device.deleteProgram(program);
 			}
 		}

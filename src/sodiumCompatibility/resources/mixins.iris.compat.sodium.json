@@ -10,22 +10,20 @@
     "conformVisibility": true
   },
   "client": [
-    "better_mipmaps.MixinDefaultRenderPasses",
+    "better_mipmaps.MixinChunkRenderPassManager",
     "block_id.MixinTerrainBuildBuffers",
     "block_id.MixinTerrainBuildTask",
     "directional_shading.MixinFlatLightPipeline",
     "directional_shading.MixinSmoothLightPipeline",
     "options.MixinOptionImpl",
-    "options.MixinRenderSectionManager",
+    "options.MixinTerrainRenderManager",
     "options.MixinUserConfig",
     "options.MixinUserConfigCategories",
     "options.MixinUserConfigScreen",
     "separate_ao.MixinColorABGR",
-    "shader_overrides.MixinGlObject",
     "shader_overrides.MixinGlProgram",
     "shader_overrides.MixinRenderSectionManager",
-    "shadow_map.MixinDefaultChunkRenderer",
-    "shadow_map.MixinRenderSectionManager",
+    "shadow_map.MixinTerrainRenderManager",
     "shadow_map.MixinSodiumWorldRenderer",
     "shadow_map.frustum.MixinAdvancedShadowCullingFrustum",
     "shadow_map.frustum.MixinBoxCullingFrustum",
@@ -34,10 +32,8 @@
     "sky.MixinLevelRenderer",
     "vertex_format.entity.MixinBufferBuilder_ExtendedVertexFormatCompat",
     "vertex_format.ChunkMeshAttributeAccessor",
-    "vertex_format.MixinFluidRenderer",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
     "vertex_format.MixinRenderRegionArenas",
-    "vertex_format.MixinRenderSectionManager"
   ]
 }
