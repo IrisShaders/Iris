@@ -13,7 +13,10 @@ import net.caffeinemc.gfx.api.buffer.MappedBufferFlags;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.device.commands.RenderCommandList;
 import net.caffeinemc.gfx.api.pipeline.Pipeline;
+import net.caffeinemc.gfx.api.pipeline.PipelineDescription;
 import net.caffeinemc.gfx.api.pipeline.PipelineState;
+import net.caffeinemc.gfx.api.pipeline.state.BlendFunc;
+import net.caffeinemc.gfx.api.pipeline.state.CullMode;
 import net.caffeinemc.gfx.api.shader.Program;
 import net.caffeinemc.gfx.opengl.texture.GlTexture;
 import net.caffeinemc.gfx.util.buffer.DualStreamingBuffer;
@@ -106,6 +109,9 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 
 		boolean hasShadowPass = overrides.getSodiumTerrainPipeline() != null && overrides.getSodiumTerrainPipeline().hasShadowPass();
 
+		PipelineDescription terrainDescription = PipelineDescription.builder().setCullingMode(CullMode.DISABLE).build();
+		PipelineDescription translucentDescription = PipelineDescription.builder().setCullingMode(CullMode.DISABLE).setBlendFunction(BlendFunc.separate(BlendFunc.SrcFactor.SRC_ALPHA, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA, BlendFunc.SrcFactor.ONE, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA)).build();
+
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
 			Program<IrisChunkShaderInterface> program = overrides.getProgramOverride(this instanceof MdiChunkRendererIris, getMaxBatchSize(), false, device, pass, vertexType);
 			if (program == null) {
@@ -125,7 +131,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 					throw new RuntimeException("failure");
 				}
 				Pipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createPipeline(
-					pass.getPipelineDescription(),
+					pass.isTranslucent() ? translucentDescription : terrainDescription,
 					shadowProgram,
 					vertexArray
 				);
@@ -189,6 +195,9 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 	@Override
 	public void createPipelines(IrisChunkProgramOverrides overrides) {
 		boolean hasShadowPass = overrides.getSodiumTerrainPipeline() != null && overrides.getSodiumTerrainPipeline().hasShadowPass();
+		PipelineDescription terrainDescription = PipelineDescription.builder().setCullingMode(CullMode.DISABLE).build();
+		PipelineDescription translucentDescription = PipelineDescription.builder().setCullingMode(CullMode.DISABLE).setBlendFunction(BlendFunc.separate(BlendFunc.SrcFactor.SRC_ALPHA, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA, BlendFunc.SrcFactor.ONE, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA)).build();
+
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
 			Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createPipeline(
 				pass.getPipelineDescription(),
@@ -200,7 +209,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 
 			if (hasShadowPass) {
 				Pipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createPipeline(
-					pass.getPipelineDescription(),
+					pass.isTranslucent() ? translucentDescription : terrainDescription,
 					overrides.getProgramOverride(this instanceof MdiChunkRendererIris, getMaxBatchSize(), true, device, pass, vertexType),
 					vertexArray
 				);
@@ -232,7 +241,6 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
         // if the render list exists, the pipeline probably exists (unless a new render pass was added without a reload)
 		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline;
 		if(ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			RenderSystem.disableCull();
 			pipeline = this.shadowPipelines[passId];
 		} else {
 			pipeline = this.pipelines[passId];
