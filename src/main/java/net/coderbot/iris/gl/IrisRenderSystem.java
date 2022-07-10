@@ -141,6 +141,15 @@ public class IrisRenderSystem {
 		GL30C.glBufferData(target, data, usage);
 	}
 
+	public static void bufferData(int target, long size, int usage) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glBufferData(target, size, usage);
+	}
+
+	public static void clearBufferData(int glShaderStorageBuffer, int internalFormat, int format, int type, int[] data) {
+		GL45C.glClearBufferData(glShaderStorageBuffer, internalFormat, format, type, data);
+	}
+
 	public static void bufferStorage(int target, long size, int flags) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		// The ARB version is identical to GL44 and redirects, so this should work on ARB as well.

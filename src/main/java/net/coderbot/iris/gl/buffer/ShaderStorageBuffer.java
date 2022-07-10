@@ -8,11 +8,13 @@ import org.lwjgl.opengl.GL43C;
 public class ShaderStorageBuffer extends GlResource {
 	protected final int index;
 	protected final long size;
+	protected final boolean clear;
 
-	public ShaderStorageBuffer(int buffer, int index, long size) {
+	public ShaderStorageBuffer(int buffer, BufferObjectInformation information) {
 		super(buffer);
-		this.index = index;
-		this.size = size;
+		this.index = information.getIndex();
+		this.size = information.getSize();
+		this.clear = information.shouldClear();
 	}
 
 	public final int getIndex() {
@@ -36,5 +38,13 @@ public class ShaderStorageBuffer extends GlResource {
 
 	public void bind(int target) {
 		IrisRenderSystem.bindBufferBase(target, index, getGlId());
+	}
+
+	public void onNewFrame() {
+		if (clear) {
+			GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, getGlId());
+			IrisRenderSystem.clearBufferData(GL43C.GL_SHADER_STORAGE_BUFFER, GL43C.GL_R8UI, GL43C.GL_RED_INTEGER, GL43C.GL_UNSIGNED_BYTE, null);
+			GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, 0);
+		}
 	}
 }

@@ -9,4 +9,9 @@ public class EmptyBufferHolder implements ShaderStorageBufferHolder {
 	@Override
 	public void destroyBuffers() {
 	}
+
+	@Override
+	public void onNewFrame() {
+
+	}
 }

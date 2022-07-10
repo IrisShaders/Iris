@@ -1,14 +1,16 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.buffer.BufferMapping;
+import net.coderbot.iris.gl.buffer.BufferObjectInformation;
 
+import java.util.List;
 import java.util.Set;
 
 public class PackDirectives {
@@ -28,7 +30,7 @@ public class PackDirectives {
 	private boolean particlesBeforeDeferred;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, Set<BufferMapping>> bufferMappings = new Object2ObjectOpenHashMap<>();
-	private Int2LongArrayMap bufferObjects;
+	private List<BufferObjectInformation> bufferObjects;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
@@ -42,7 +44,7 @@ public class PackDirectives {
 		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
 		bufferMappings = new Object2ObjectOpenHashMap<>();
-		bufferObjects = new Int2LongArrayMap();
+		bufferObjects = new ReferenceArrayList<>();
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -136,7 +138,7 @@ public class PackDirectives {
 		return shadowDirectives;
 	}
 
-	public Int2LongArrayMap getBufferObjects() {
+	public List<BufferObjectInformation> getBufferObjects() {
 		return bufferObjects;
 	}
 

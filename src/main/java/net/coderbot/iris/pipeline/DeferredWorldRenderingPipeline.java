@@ -18,6 +18,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.buffer.ActiveBufferHolder;
+import net.coderbot.iris.gl.buffer.BufferMapping;
 import net.coderbot.iris.gl.buffer.EmptyBufferHolder;
 import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -958,6 +959,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		}
 
 		updateNotifier.onNewFrame();
+
+		shaderStorageBufferHolder.onNewFrame();
 
 		// Get ready for world rendering
 		prepareRenderTargets();

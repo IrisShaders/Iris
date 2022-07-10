@@ -1,15 +1,13 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
@@ -18,6 +16,7 @@ import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.buffer.BufferMapping;
+import net.coderbot.iris.gl.buffer.BufferObjectInformation;
 import net.coderbot.iris.gl.buffer.BufferType;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
@@ -80,7 +79,7 @@ public class ShaderProperties {
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, Set<BufferMapping>> bufferMappings = new Object2ObjectOpenHashMap<>();
-	private final Int2LongArrayMap bufferObjects = new Int2LongArrayMap();
+	private final List<BufferObjectInformation> bufferObjects = new ReferenceArrayList<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
@@ -217,21 +216,25 @@ public class ShaderProperties {
 				String[] modeArray = value.split(" ");
 
 				bufferMappings.computeIfAbsent(pass, empty -> new HashSet<>()).add(new BufferMapping(Integer.parseInt(index), Integer.parseInt(modeArray[0]), BufferType.parse(modeArray[1])));
-				Iris.logger.warn("mapped! " + new BufferMapping(Integer.parseInt(index), Integer.parseInt(modeArray[0]), BufferType.parse(modeArray[1])) );
+				Iris.logger.warn("mapped! " + new BufferMapping(Integer.parseInt(index), Integer.parseInt(modeArray[0]), BufferType.parse(modeArray[1])));
 			});
 
 			handlePassDirective("bufferObject.", key, value, index -> {
+				String[] array = value.split(" ");
+
 				int trueIndex;
 				long trueSize;
+				boolean clear;
 				try {
 					trueIndex = Integer.parseInt(index);
-					trueSize = Long.parseLong(value);
+					trueSize = Long.parseLong(array[0]);
+					clear = Boolean.parseBoolean(array[1]);
 				} catch (NumberFormatException e) {
 					Iris.logger.warn("Number format exception parsing SSBO index/size!", e);
 					return;
 				}
 
-				bufferObjects.put(trueIndex, trueSize);
+				bufferObjects.add(new BufferObjectInformation(trueIndex, trueSize, clear));
 			});
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
@@ -504,7 +507,7 @@ public class ShaderProperties {
 		return bufferMappings;
 	}
 
-	public Int2LongArrayMap getBufferObjects() {
+	public List<BufferObjectInformation> getBufferObjects() {
 		return bufferObjects;
 	}
 

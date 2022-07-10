@@ -12,4 +12,5 @@ import java.util.Collections;
 public interface ShaderStorageBufferHolder {
 	int getBuffer(int location);
 	void destroyBuffers();
+    void onNewFrame();
 }

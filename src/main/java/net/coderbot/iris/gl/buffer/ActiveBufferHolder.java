@@ -1,28 +1,27 @@
 package net.coderbot.iris.gl.buffer;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL43C;
 
 import java.util.Collections;
+import java.util.List;
 
 public class ActiveBufferHolder implements ShaderStorageBufferHolder {
 	private ShaderStorageBuffer[] buffers;
 	private boolean destroyed;
 
-	public ActiveBufferHolder(Int2LongArrayMap overrides) {
+	public ActiveBufferHolder(List<BufferObjectInformation> overrides) {
 		destroyed = false;
-		buffers = new ShaderStorageBuffer[Collections.max(overrides.keySet()) + 1];
-		overrides.forEach((index, size) -> {
+		buffers = new ShaderStorageBuffer[Collections.max(overrides).getIndex() + 1];
+		overrides.forEach((mapping) -> {
 			int buffer = GlStateManager._glGenBuffers();
 			GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, buffer);
-			IrisRenderSystem.bufferStorage(GL43C.GL_SHADER_STORAGE_BUFFER, size, 0);
-			IrisRenderSystem.clearBufferSubData(GL43C.GL_SHADER_STORAGE_BUFFER, GL43C.GL_R8, 0, size, GL43C.GL_RED, GL43C.GL_BYTE, new int[] {0});
-			Iris.logger.warn("Creating SSBO " + index + " with size " + size + " at buffer location " + buffer);
-			buffers[index] = new ShaderStorageBuffer(buffer, index, size);
+			IrisRenderSystem.bufferData(GL43C.GL_SHADER_STORAGE_BUFFER, mapping.getSize(), GL43C.GL_DYNAMIC_DRAW);
+			IrisRenderSystem.clearBufferData(GL43C.GL_SHADER_STORAGE_BUFFER, GL43C.GL_R8UI, GL43C.GL_RED_INTEGER, GL43C.GL_UNSIGNED_BYTE, null);
+			Iris.logger.warn("Creating SSBO " + mapping.getIndex() + " with size " + mapping + " at buffer location " + buffer);
+			buffers[mapping.getIndex()] = new ShaderStorageBuffer(buffer, mapping);
 		});
 		GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, 0);
 	}
@@ -34,6 +33,12 @@ public class ActiveBufferHolder implements ShaderStorageBufferHolder {
 		}
 
 		return buffers[location].getBuffer();
+	}
+
+	public void onNewFrame() {
+		for (ShaderStorageBuffer buffer : buffers) {
+			buffer.onNewFrame();
+		}
 	}
 
 	@Override
