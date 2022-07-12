@@ -42,6 +42,8 @@ public interface WorldRenderingPipeline {
 	CloudSetting getCloudSetting();
 	boolean shouldRenderUnderwaterOverlay();
 	boolean shouldRenderVignette();
+	boolean shouldRenderSun();
+	boolean shouldRenderMoon();
 	boolean shouldWriteRainAndSnowToDepthBuffer();
 	boolean shouldRenderParticlesBeforeDeferred();
 

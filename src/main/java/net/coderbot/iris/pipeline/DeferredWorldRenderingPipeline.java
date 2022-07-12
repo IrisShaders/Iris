@@ -118,6 +118,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final CloudSetting cloudSetting;
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
+	private final boolean shouldRenderSun;
+	private final boolean shouldRenderMoon;
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
 	private final boolean shouldRenderParticlesBeforeDeferred;
 	private final boolean shouldRenderPrepareBeforeShadow;
@@ -138,6 +140,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.cloudSetting = programs.getPackDirectives().getCloudSetting();
 		this.shouldRenderUnderwaterOverlay = programs.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programs.getPackDirectives().vignette();
+		this.shouldRenderSun = programs.getPackDirectives().shouldRenderSun();
+		this.shouldRenderMoon = programs.getPackDirectives().shouldRenderMoon();
 		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
 		this.shouldRenderParticlesBeforeDeferred = programs.getPackDirectives().areParticlesBeforeDeferred();
 		this.shouldRenderPrepareBeforeShadow = programs.getPackDirectives().isPrepareBeforeShadow();
@@ -419,6 +423,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	@Override
 	public boolean shouldRenderVignette() {
 		return shouldRenderVignette;
+	}
+
+	@Override
+	public boolean shouldRenderSun() {
+		return shouldRenderSun;
+	}
+
+	@Override
+	public boolean shouldRenderMoon() {
+		return shouldRenderMoon;
 	}
 
 	@Override

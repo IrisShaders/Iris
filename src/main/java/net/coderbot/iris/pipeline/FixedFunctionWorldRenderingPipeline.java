@@ -148,6 +148,16 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public boolean shouldRenderSun() {
+		return true;
+	}
+
+	@Override
+	public boolean shouldRenderMoon() {
+		return true;
+	}
+
+	@Override
 	public boolean shouldWriteRainAndSnowToDepthBuffer() {
 		return false;
 	}

@@ -20,6 +20,8 @@ public class PackDirectives {
 	private CloudSetting cloudSetting;
 	private boolean underwaterOverlay;
 	private boolean vignette;
+	private boolean sun;
+	private boolean moon;
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean oldLighting;
@@ -38,7 +40,6 @@ public class PackDirectives {
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
-		cloudSetting = CloudSetting.DEFAULT;
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -48,6 +49,8 @@ public class PackDirectives {
 		cloudSetting = properties.getCloudSetting();
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
+		sun = properties.getSun().orElse(true);
+		moon = properties.getMoon().orElse(true);
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
@@ -104,6 +107,14 @@ public class PackDirectives {
 
 	public boolean vignette() {
 		return vignette;
+	}
+
+	public boolean shouldRenderSun() {
+		return sun;
+	}
+
+	public boolean shouldRenderMoon() {
+		return moon;
 	}
 
 	public boolean rainDepth() {
