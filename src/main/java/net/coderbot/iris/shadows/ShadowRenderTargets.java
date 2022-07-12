@@ -26,6 +26,7 @@ public class ShadowRenderTargets {
 
 	private final int[] targets;
 	private final InternalTextureFormat[] formats;
+	private final boolean[] isHardwareFiltered;
 
 	private final DepthTexture depthTexture;
 	private final DepthTexture noTranslucents;
@@ -40,12 +41,19 @@ public class ShadowRenderTargets {
 
 	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
 		this.formats = new InternalTextureFormat[MAX_SHADOW_RENDER_TARGETS];
+		this.isHardwareFiltered = new boolean[MAX_SHADOW_RENDER_TARGETS];
 
 		for (int i = 0; i < formats.length; i++) {
 			if (i < shadowDirectives.getColorSamplingSettings().size()) {
 				this.formats[i] = shadowDirectives.getColorSamplingSettings().get(i).getFormat();
 			} else {
 				this.formats[i] = InternalTextureFormat.RGBA;
+			}
+
+			if (i < shadowDirectives.getDepthSamplingSettings().size()) {
+				this.isHardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
+			} else {
+				this.isHardwareFiltered[i] = false;
 			}
 		}
 
@@ -119,6 +127,10 @@ public class ShadowRenderTargets {
 	public GlFramebuffer getFramebufferForColorTexture(int buffer) {
 		// TODO: Don't hardcode this!
 		return buffer == 1 ? noTranslucentFB : framebuffer;
+	}
+
+	public boolean isHardwareFiltered(int index) {
+		return isHardwareFiltered[index];
 	}
 
 	public DepthTexture getDepthTexture() {
