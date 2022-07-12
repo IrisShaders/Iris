@@ -148,6 +148,7 @@ public class IrisChunkProgramOverrides {
 
             return builder.attachShader(vertShader)
                     .attachShader(fragShader)
+				// The following 4 attributes are part of Sodium
 					.bindAttribute("a_PosId", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID)
 					.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
 					.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE)
@@ -155,7 +156,7 @@ public class IrisChunkProgramOverrides {
                     .bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
                     .bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
                     .bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
-                    .bindAttribute("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
+                    .bindAttribute("iris_Normal", IrisChunkShaderBindingPoints.NORMAL)
 					.bindAttribute("at_midBlock", IrisChunkShaderBindingPoints.MID_BLOCK)
 					.link((shader) -> {
 						// TODO: Better way for this? It's a bit too much casting for me.

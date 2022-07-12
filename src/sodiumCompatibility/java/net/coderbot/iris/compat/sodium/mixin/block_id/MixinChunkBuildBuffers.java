@@ -1,6 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.block_id;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.model.vertex.VertexSink;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
@@ -39,13 +40,9 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 	}
 
 	@Redirect(method = "init", remap = false, at = @At(value = "INVOKE",
-			target = "me/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType.createBufferWriter(" +
-						"Lme/jellysquid/mods/sodium/client/model/vertex/buffer/VertexBufferView;" +
-						"Z" +
-					")Lme/jellysquid/mods/sodium/client/model/vertex/VertexSink;", remap = false))
-	private VertexSink iris$redirectWriterCreation(ChunkVertexType vertexType,
-												   VertexBufferView buffer, boolean direct) {
-		VertexSink sink = vertexType.createBufferWriter(buffer, direct);
+			target = "Lme/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType;createBufferWriter(Lme/jellysquid/mods/sodium/client/model/vertex/buffer/VertexBufferView;)Lme/jellysquid/mods/sodium/client/model/vertex/VertexSink;", remap = false))
+	private VertexSink iris$redirectWriterCreation(ChunkVertexType instance, VertexBufferView vertexBufferView) {
+		VertexSink sink = instance.createBufferWriter(vertexBufferView, SodiumClientMod.isDirectMemoryAccessEnabled());
 
 		if (sink instanceof ContextAwareVertexWriter) {
 			((ContextAwareVertexWriter) sink).iris$setContextHolder(contextHolder);

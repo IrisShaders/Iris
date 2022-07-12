@@ -10,9 +10,9 @@ public class IrisShaderFogComponent {
 	private final GlUniformFloat uFogEnd;
 
 	public IrisShaderFogComponent(ShaderBindingContextExt context) {
-		this.uFogColor = context.bindUniformIfPresent("u_FogColor", GlUniformFloat4v::new);
-		this.uFogStart = context.bindUniformIfPresent("u_FogStart", GlUniformFloat::new);
-		this.uFogEnd = context.bindUniformIfPresent("u_FogEnd", GlUniformFloat::new);
+		this.uFogColor = context.bindUniformIfPresent("iris_FogColor", GlUniformFloat4v::new);
+		this.uFogStart = context.bindUniformIfPresent("iris_FogStart", GlUniformFloat::new);
+		this.uFogEnd = context.bindUniformIfPresent("iris_FogEnd", GlUniformFloat::new);
 	}
 
 	public void setup() {

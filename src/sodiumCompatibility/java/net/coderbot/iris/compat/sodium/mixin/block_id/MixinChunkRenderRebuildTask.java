@@ -1,5 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.block_id;
 
+import me.jellysquid.mods.sodium.client.gl.compile.ChunkBuildContext;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderBounds;
@@ -32,14 +33,15 @@ public class MixinChunkRenderRebuildTask {
 			target = "net/minecraft/world/level/block/state/BlockState.getRenderShape()" +
 					"Lnet/minecraft/world/level/block/RenderShape;"),
 			locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$setLocalPos(ChunkRenderCacheLocal cache, ChunkBuildBuffers buffers,
-								  CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult<?>> cir,
-								  ChunkRenderData.Builder renderData, VisGraph occluder, ChunkRenderBounds.Builder bounds,
-								  WorldSlice slice, int baseX, int baseY, int baseZ,
-								  BlockPos.MutableBlockPos pos, BlockPos renderOffset,
+	private void iris$setLocalPos(ChunkBuildContext context,
+								  CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult> cir,
+								  ChunkRenderData.Builder renderData, VisGraph occluder, ChunkRenderBounds.Builder bounds, ChunkBuildBuffers buffers,
+								  ChunkRenderCacheLocal cacheLocal,
+								  WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
+								  BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset,
 								  int relY, int relZ, int relX) {
-		if (buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) buffers).iris$setLocalPos(relX, relY, relZ);
+		if (context.buffers instanceof ChunkBuildBuffersExt) {
+			((ChunkBuildBuffersExt) context.buffers).iris$setLocalPos(relX, relY, relZ);
 		}
 	}
 
@@ -47,10 +49,9 @@ public class MixinChunkRenderRebuildTask {
 			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getChunkRenderType(" +
 						"Lnet/minecraft/world/level/block/state/BlockState;" +
 					")Lnet/minecraft/client/renderer/RenderType;"))
-	private RenderType iris$wrapGetBlockLayer(BlockState blockState, ChunkRenderCacheLocal cache,
-											  ChunkBuildBuffers buffers, CancellationSource cancellationSource) {
-		if (buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE);
+	private RenderType iris$wrapGetBlockLayer(BlockState blockState, ChunkBuildContext context) {
+		if (context.buffers instanceof ChunkBuildBuffersExt) {
+			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE);
 		}
 
 		return ItemBlockRenderTypes.getChunkRenderType(blockState);
@@ -60,21 +61,19 @@ public class MixinChunkRenderRebuildTask {
 			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getRenderLayer(" +
 						"Lnet/minecraft/world/level/material/FluidState;" +
 					")Lnet/minecraft/client/renderer/RenderType;"))
-	private RenderType iris$wrapGetFluidLayer(FluidState fluidState, ChunkRenderCacheLocal cache,
-											  ChunkBuildBuffers buffers, CancellationSource cancellationSource) {
-		if (buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE);
+	private RenderType iris$wrapGetFluidLayer(FluidState fluidState, ChunkBuildContext context) {
+		if (context.buffers instanceof ChunkBuildBuffersExt) {
+			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE);
 		}
 
 		return ItemBlockRenderTypes.getRenderLayer(fluidState);
 	}
 
 	@Inject(method = "performBuild",
-			at = @At(value = "INVOKE", target = "net/minecraft/world/level/block/Block.isEntityBlock()Z"))
-	private void iris$resetContext(ChunkRenderCacheLocal cache, ChunkBuildBuffers buffers,
-							  CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult<?>> cir) {
-		if (buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) buffers).iris$resetBlockContext();
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;hasBlockEntity()Z"))
+	private void iris$resetContext(ChunkBuildContext buildContext, CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult> cir) {
+		if (buildContext.buffers instanceof ChunkBuildBuffersExt) {
+			((ChunkBuildBuffersExt) buildContext.buffers).iris$resetBlockContext();
 		}
 	}
 }

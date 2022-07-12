@@ -63,7 +63,7 @@ public class MixinChunkRebuildTask {
 			lastBufferBuilder = ((BlockSensitiveBufferBuilder) bufferBuilder2);
 			// All fluids have a ShadersMod render type of 1, to match behavior of Minecraft 1.7 and earlier.
 			// TODO: We're using createLegacyBlock? That seems like something that Mojang wants to deprecate.
-			lastBufferBuilder.beginBlock(resolveBlockId(fluidState.createLegacyBlock()), ExtendedDataHelper.FLUID_RENDER_TYPE, pos.getX() & 0xF, pos.getY() & 0xF, pos.getZ() & 0xF);
+			lastBufferBuilder.beginBlock(resolveBlockId(fluidState.createLegacyBlock()), ExtendedDataHelper.FLUID_RENDER_TYPE, blockPos3.getX() & 0xF, blockPos3.getY() & 0xF, blockPos3.getZ() & 0xF);
 		}
 	}
 
@@ -80,7 +80,7 @@ public class MixinChunkRebuildTask {
 		if (bufferBuilder2 instanceof BlockSensitiveBufferBuilder) {
 			lastBufferBuilder = ((BlockSensitiveBufferBuilder) bufferBuilder2);
 			// TODO: Resolve render types for normal blocks?
-			lastBufferBuilder.beginBlock(resolveBlockId(blockState), ExtendedDataHelper.BLOCK_RENDER_TYPE, pos.getX() & 0xF, pos.getY() & 0xF, pos.getZ() & 0xF);
+			lastBufferBuilder.beginBlock(resolveBlockId(blockState), ExtendedDataHelper.BLOCK_RENDER_TYPE, blockPos3.getX() & 0xF, blockPos3.getY() & 0xF, blockPos3.getZ() & 0xF);
 		}
 	}
 

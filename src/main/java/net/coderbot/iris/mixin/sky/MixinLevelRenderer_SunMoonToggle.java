@@ -4,6 +4,8 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -30,7 +32,7 @@ public class MixinLevelRenderer_SunMoonToggle {
 		BufferBuilder builder = Tesselator.getInstance().getBuilder();
 
 		builder.discard();
-		builder.begin(GL11C.GL_QUADS, DefaultVertexFormat.POSITION);
+		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 		builder.end();
 	}
 
@@ -40,7 +42,7 @@ public class MixinLevelRenderer_SunMoonToggle {
 			from = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.SUN_LOCATION : Lnet/minecraft/resources/ResourceLocation;"),
 			to = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.MOON_LOCATION : Lnet/minecraft/resources/ResourceLocation;")),
 		allow = 1)
-	private void iris$beforeDrawSun(PoseStack arg, float partialTicks, CallbackInfo ci) {
+	private void iris$beforeDrawSun(PoseStack arg, Matrix4f arg2, float f, Runnable runnable, CallbackInfo ci) {
 		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldRenderSun).orElse(true)) {
 			iris$emptyBuilder();
 		}
@@ -52,7 +54,7 @@ public class MixinLevelRenderer_SunMoonToggle {
 			from = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.MOON_LOCATION : Lnet/minecraft/resources/ResourceLocation;"),
 			to = @At(value = "INVOKE", target = "net/minecraft/client/multiplayer/ClientLevel.getStarBrightness (F)F")),
 		allow = 1)
-	private void iris$beforeDrawMoon(PoseStack arg, float partialTicks, CallbackInfo ci) {
+	private void iris$beforeDrawMoon(PoseStack arg, Matrix4f arg2, float f, Runnable runnable, CallbackInfo ci) {
 		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldRenderMoon).orElse(true)) {
 			iris$emptyBuilder();
 		}
