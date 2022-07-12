@@ -86,6 +86,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
+	private final ImmutableList<ClearPass> shadowClearPasses;
+	private final ImmutableList<ClearPass> shadowClearPassesFull;
 
 	private final GlFramebuffer baseline;
 
@@ -196,12 +198,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.shadowTargetsSupplier = () -> {
 			if (shadowRenderTargets == null) {
-				// TODO: Support more than two shadowcolor render targets
-				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, new InternalTextureFormat[]{
-					// TODO: Custom shadowcolor format support
-					InternalTextureFormat.RGBA,
-					InternalTextureFormat.RGBA
-				});
+				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, shadowDirectives);
 			}
 
 			return shadowRenderTargets;
@@ -309,10 +306,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		if (shadowRenderTargets != null) {
 			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
 			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
+			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
+			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
 				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
 		} else {
+			this.shadowClearPasses = ImmutableList.of();
+			this.shadowClearPassesFull = ImmutableList.of();
 			this.shadowRenderer = null;
 		}
 
@@ -785,14 +786,19 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		if (shadowRenderTargets != null) {
-			// NB: This will be re-bound to the correct framebuffer in beginLevelRendering when matchPass is called.
-			shadowRenderTargets.getFramebuffer().bind();
+			Vector4f emptyClearColor = new Vector4f(1.0F);
+			ImmutableList<ClearPass> passes;
 
-			// TODO: Support shadow clear color directives & disable buffer clearing
-			// Ensure that the color and depth values are cleared appropriately
-			RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-			RenderSystem.clearDepth(1.0f);
-			RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
+			if (shadowRenderTargets.needsFullClear()) {
+				passes = shadowClearPassesFull;
+				shadowRenderTargets.resetClearStatus();
+			} else {
+				passes = shadowClearPasses;
+			}
+
+			for (ClearPass clearPass : passes) {
+				clearPass.execute(emptyClearColor);
+			}
 		}
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
@@ -823,6 +829,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		for (ClearPass clearPass : passes) {
 			clearPass.execute(fogColor);
 		}
+
+		// Reset framebuffer and viewport
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 	}
 
 	@Override
