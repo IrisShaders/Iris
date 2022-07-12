@@ -4,9 +4,14 @@ import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
+import net.coderbot.iris.vertices.IrisTextVertexSinkImpl;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.api.v0.IrisApiConfig;
+import net.irisshaders.iris.api.v0.IrisTextVertexSink;
 import net.minecraft.client.gui.screens.Screen;
+
+import java.nio.ByteBuffer;
+import java.util.function.IntFunction;
 
 public class IrisApiV0Impl implements IrisApi {
 	public static final IrisApiV0Impl INSTANCE = new IrisApiV0Impl();
@@ -14,7 +19,7 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public int getMinorApiRevision() {
-		return 0;
+		return 1;
 	}
 
 	@Override
@@ -46,5 +51,10 @@ public class IrisApiV0Impl implements IrisApi {
 	@Override
 	public IrisApiConfig getConfig() {
 		return CONFIG;
+	}
+
+	@Override
+	public IrisTextVertexSink createTextVertexSink(int maxQuadCount, IntFunction<ByteBuffer> bufferProvider) {
+		return new IrisTextVertexSinkImpl(maxQuadCount, bufferProvider);
 	}
 }

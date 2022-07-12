@@ -26,7 +26,7 @@ jobs:
           restore-keys: ${{ runner.os }}-brachyura
 
       - name: Build with Brachyura
-        run: java -jar brachyura-bootstrap-0.jar build
+        run: java -Diris.release=true -jar brachyura-bootstrap-0.jar build
 
       - name: Upload artifacts to Modrinth, Curseforge and GitHub
         uses: Kir-Antipov/mc-publish@v2.0

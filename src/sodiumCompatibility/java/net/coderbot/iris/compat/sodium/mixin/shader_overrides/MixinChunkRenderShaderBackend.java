@@ -36,10 +36,10 @@ public class MixinChunkRenderShaderBackend implements ChunkRenderBackendExt {
 	private ChunkProgram override;
 
 	@Shadow(remap = false)
-	private ChunkProgram activeProgram;
+	protected ChunkProgram activeProgram;
 
 	@Shadow
-	private void begin(PoseStack poseStack) {
+	public void begin(PoseStack poseStack) {
 		throw new AssertionError();
 	}
 

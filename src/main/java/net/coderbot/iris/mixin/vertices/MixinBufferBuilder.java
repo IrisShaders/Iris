@@ -9,6 +9,7 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.BufferBuilderPolygonView;
+import net.coderbot.iris.vertices.ExtendedDataHelper;
 import net.coderbot.iris.vertices.ExtendingBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
@@ -32,6 +33,12 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	private boolean extending;
 
 	@Unique
+	private boolean iris$shouldNotExtend = false;
+
+	@Unique
+	private boolean iris$isTerrain = false;
+
+	@Unique
 	private int vertexCount;
 
 	@Unique
@@ -48,6 +55,15 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 	@Unique
 	private short currentRenderType;
+
+	@Unique
+	private int currentLocalPosX;
+
+	@Unique
+	private int currentLocalPosY;
+
+	@Unique
+	private int currentLocalPosZ;
 
 	@Shadow
 	private boolean fastFormat;
@@ -76,9 +92,6 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Shadow
 	public abstract void putShort(int i, short s);
 
-	@Unique
-	private boolean iris$shouldNotExtend = false;
-
 	@Override
 	public void iris$beginWithoutExtending(int drawMode, VertexFormat vertexFormat) {
 		iris$shouldNotExtend = true;
@@ -101,9 +114,13 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 	@Inject(method = "begin", at = @At("RETURN"))
 	private void iris$afterBegin(int drawMode, VertexFormat format, CallbackInfo ci) {
 		if (extending) {
-			this.format = (format == DefaultVertexFormat.NEW_ENTITY)
-				? IrisVertexFormats.ENTITY
-				: IrisVertexFormats.TERRAIN;
+			if (format == DefaultVertexFormat.NEW_ENTITY) {
+				this.format = IrisVertexFormats.ENTITY;
+				this.iris$isTerrain = false;
+			} else {
+				this.format = IrisVertexFormats.TERRAIN;
+				this.iris$isTerrain = true;
+			}
 			this.currentElement = this.format.getElements().get(0);
 		}
 	}
@@ -135,14 +152,28 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			this.nextElement();
 		}
 
-		this.putShort(0, currentBlock);
-		this.putShort(2, currentRenderType);
-		this.nextElement();
+		if (iris$isTerrain) {
+			// ENTITY_ELEMENT
+			this.putShort(0, currentBlock);
+			this.putShort(2, currentRenderType);
+			this.nextElement();
+		}
+		// MID_TEXTURE_ELEMENT
 		this.putFloat(0, 0);
 		this.putFloat(4, 0);
 		this.nextElement();
+		// TANGENT_ELEMENT
 		this.putInt(0, 0);
 		this.nextElement();
+		if (iris$isTerrain) {
+			// MID_BLOCK_ELEMENT
+			int posIndex = this.nextElementByte - 48;
+			float x = buffer.getFloat(posIndex);
+			float y = buffer.getFloat(posIndex + 4);
+			float z = buffer.getFloat(posIndex + 8);
+			this.putInt(0, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
+			this.nextElement();
+		}
 
 		vertexCount++;
 
@@ -151,28 +182,13 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		}
 	}
 
-	@Override
-	public void beginBlock(short block, short renderType) {
-		this.currentBlock = block;
-		this.currentRenderType = renderType;
-	}
-
-	@Override
-	public void endBlock() {
-		this.currentBlock = -1;
-		this.currentRenderType = -1;
-	}
-
 	@Unique
 	private void fillExtendedData(int vertexAmount) {
 		vertexCount = 0;
 
-		// TODO: Keep this in sync with the extensions
-		int extendedDataLength = (2 * 2) + (2 * 4) + (1 * 4);
+		int stride = format.getVertexSize();
 
-		int stride = this.format.getVertexSize();
-
-		polygon.setup(buffer, this.nextElementByte, stride, vertexAmount);
+		polygon.setup(buffer, nextElementByte, stride, vertexAmount);
 
 		float midU = 0;
 		float midV = 0;
@@ -194,12 +210,46 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 
 		int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
-		for (int vertex = 0; vertex < vertexAmount; vertex++) {
-			buffer.putFloat(nextElementByte - 12 - stride * vertex, midU);
-			buffer.putFloat(nextElementByte - 8 - stride * vertex, midV);
-			buffer.putInt(nextElementByte - 4 - extendedDataLength - stride * vertex, packedNormal);
-			buffer.putInt(nextElementByte - 4 - stride * vertex, tangent);
+		int midUOffset;
+		int midVOffset;
+		int normalOffset;
+		int tangentOffset;
+		if (iris$isTerrain) {
+			midUOffset = 16;
+			midVOffset = 12;
+			normalOffset = 24;
+			tangentOffset = 8;
+		} else {
+			midUOffset = 12;
+			midVOffset = 8;
+			normalOffset = 16;
+			tangentOffset = 4;
 		}
+
+		for (int vertex = 0; vertex < vertexAmount; vertex++) {
+			buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
+			buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+			buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
+			buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+		}
+	}
+
+	@Override
+	public void beginBlock(short block, short renderType, int localPosX, int localPosY, int localPosZ) {
+		this.currentBlock = block;
+		this.currentRenderType = renderType;
+		this.currentLocalPosX = localPosX;
+		this.currentLocalPosY = localPosY;
+		this.currentLocalPosZ = localPosZ;
+	}
+
+	@Override
+	public void endBlock() {
+		this.currentBlock = -1;
+		this.currentRenderType = -1;
+		this.currentLocalPosX = 0;
+		this.currentLocalPosY = 0;
+		this.currentLocalPosZ = 0;
 	}
 
 	@Unique
