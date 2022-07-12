@@ -19,6 +19,7 @@ public class ProgramCreator {
 		GlStateManager._glBindAttribLocation(program, 11, "mc_Entity");
 		GlStateManager._glBindAttribLocation(program, 12, "mc_midTexCoord");
 		GlStateManager._glBindAttribLocation(program, 13, "at_tangent");
+		GlStateManager._glBindAttribLocation(program, 14, "at_midBlock");
 
 		// TODO: more hardcoding for 1.17
 		GlStateManager._glBindAttribLocation(program, 0, "Position");

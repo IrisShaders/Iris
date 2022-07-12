@@ -22,6 +22,7 @@ public class MixinBufferBuilder_ExtendedVertexFormatCompat {
 	@Shadow
 	private VertexFormat format;
 
+	@SuppressWarnings("target")
 	@ModifyVariable(method = "createSink(Lme/jellysquid/mods/sodium/client/model/vertex/type/VertexType;)Lme/jellysquid/mods/sodium/client/model/vertex/VertexSink;",
 		at = @At("HEAD"), remap = false)
 	private VertexType<?> iris$createSink(VertexType<?> type) {

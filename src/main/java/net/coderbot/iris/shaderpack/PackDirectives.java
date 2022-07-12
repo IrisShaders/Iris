@@ -17,13 +17,16 @@ public class PackDirectives {
 	private float drynessHalfLife;
 	private float eyeBrightnessHalfLife;
 	private float centerDepthHalfLife;
-	private boolean areCloudsEnabled;
+	private CloudSetting cloudSetting;
 	private boolean underwaterOverlay;
 	private boolean vignette;
+	private boolean sun;
+	private boolean moon;
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean oldLighting;
 	private boolean particlesBeforeDeferred;
+	private boolean prepareBeforeShadow;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
@@ -43,23 +46,27 @@ public class PackDirectives {
 
 	PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
 		this(supportedRenderTargets, new PackShadowDirectives(properties));
-		areCloudsEnabled = properties.areCloudsEnabled();
+		cloudSetting = properties.getCloudSetting();
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
+		sun = properties.getSun().orElse(true);
+		moon = properties.getMoon().orElse(true);
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
 		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
+		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
 		this(supportedRenderTargets, new PackShadowDirectives(directives.getShadowDirectives()));
-		areCloudsEnabled = directives.areCloudsEnabled();
+		cloudSetting = directives.cloudSetting;
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
 		explicitFlips = directives.explicitFlips;
 		particlesBeforeDeferred = directives.particlesBeforeDeferred;
+		prepareBeforeShadow = directives.prepareBeforeShadow;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -90,8 +97,8 @@ public class PackDirectives {
 		return centerDepthHalfLife;
 	}
 
-	public boolean areCloudsEnabled() {
-		return areCloudsEnabled;
+	public CloudSetting getCloudSetting() {
+		return cloudSetting;
 	}
 
 	public boolean underwaterOverlay() {
@@ -100,6 +107,14 @@ public class PackDirectives {
 
 	public boolean vignette() {
 		return vignette;
+	}
+
+	public boolean shouldRenderSun() {
+		return sun;
+	}
+
+	public boolean shouldRenderMoon() {
+		return moon;
 	}
 
 	public boolean rainDepth() {
@@ -116,6 +131,10 @@ public class PackDirectives {
 
 	public boolean areParticlesBeforeDeferred() {
 		return particlesBeforeDeferred;
+	}
+
+	public boolean isPrepareBeforeShadow() {
+		return prepareBeforeShadow;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {

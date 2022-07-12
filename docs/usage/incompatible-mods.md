@@ -25,17 +25,6 @@ Beyond potential issues with shader packs, [Colored Lights isn't compatible with
 See https://github.com/Gegy/colored-lights/issues/11
 
 
-## Issues when connecting to 1.8-1.12 servers using the Multiconnect mod
-
-Multiconnect completely replaces the content of Minecraft's registries with pre-flattening block IDs when connecting to pre-1.13 servers. Since Iris shader packs use block IDs to determine block effects, and do not expect pre-1.13 block IDs when running on a post-1.13 Minecraft version, this breaks shader packs.
-
-This notably results in solid grass blocks waving like grass plants, since in 1.12 `minecraft:grass` refers to solid grass blocks and in 1.13 `minecraft:grass` refers to the non-solid plant.
-
-We can't fix this on our side, Multiconnect will ideally need to be changed to not disrupt registry content to such an extent.
-
-See https://github.com/Earthcomputer/multiconnect/issues/205
-
-
 ## Immersive Portals: Underwater mirrors are not visible from above water
 
 This is a fundamental limitation of how portals are rendered when shaders are enabled. They are composited on to the scene after rendering has completed, meaning that they cannot be rendered behind translucent surfaces like water.
