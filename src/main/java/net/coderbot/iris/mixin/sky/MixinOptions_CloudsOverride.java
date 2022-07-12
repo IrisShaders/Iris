@@ -21,7 +21,7 @@ public class MixinOptions_CloudsOverride {
 	@Shadow
 	private int renderDistance;
 
-	@Inject(method = "getCloudsType", at = @At("HEAD"))
+	@Inject(method = "getCloudsType", at = @At("HEAD"), cancellable = true)
 	private void iris$overrideCloudsType(CallbackInfoReturnable<CloudStatus> cir) {
 		// Vanilla does not render clouds on low render distances, we have to mirror that check
 		// when injecting at the head.
@@ -35,8 +35,10 @@ public class MixinOptions_CloudsOverride {
 			switch (setting) {
 				case OFF:
 					cir.setReturnValue(CloudStatus.OFF);
+					return;
 				case FAST:
 					cir.setReturnValue(CloudStatus.FAST);
+					return;
 				case FANCY:
 					cir.setReturnValue(CloudStatus.FANCY);
 			}
