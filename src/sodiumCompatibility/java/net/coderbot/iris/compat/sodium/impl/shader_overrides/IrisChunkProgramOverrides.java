@@ -136,10 +136,11 @@ public class IrisChunkProgramOverrides {
 					.bindAttribute("iris_Color", ChunkShaderBindingPoints.COLOR)
 					.bindAttribute("iris_TexCoord", ChunkShaderBindingPoints.TEX_COORD)
 					.bindAttribute("iris_LightCoord", ChunkShaderBindingPoints.LIGHT_COORD)
-					.bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
-					.bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
-					.bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
 					.bindAttribute("iris_Normal", IrisChunkShaderBindingPoints.NORMAL)
+					.bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
+					.bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
+					.bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
+					.bindAttribute("at_midBlock", IrisChunkShaderBindingPoints.MID_BLOCK)
 					.bindAttribute("iris_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
 					.build((program, name) -> {
 						ProgramUniforms uniforms = pipeline.initUniforms(name);

@@ -19,6 +19,7 @@ public class ProgramCreator {
 		IrisRenderSystem.bindAttributeLocation(program, 11, "mc_Entity");
 		IrisRenderSystem.bindAttributeLocation(program, 12, "mc_midTexCoord");
 		IrisRenderSystem.bindAttributeLocation(program, 13, "at_tangent");
+		IrisRenderSystem.bindAttributeLocation(program, 14, "at_midBlock");
 
 		for (GlShader shader : shaders) {
 			GlStateManager.glAttachShader(program, shader.getHandle());
