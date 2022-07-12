@@ -33,7 +33,7 @@ public class ExternallyManagedUniforms {
 		addFloat(uniformHolder, "iris_ModelScale");
 		addFloat(uniformHolder, "iris_ModelOffset");
 		addVec3(uniformHolder, "iris_CameraTranslation");
-		addVec3(uniformHolder, "iris_RegionOffset");
+		addVec3(uniformHolder, "u_RegionOffset");
 
 		// Vanilla
 		uniformHolder.externallyManagedUniform("iris_TextureMat", UniformType.MAT4);

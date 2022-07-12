@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.LevelRenderer;
 import org.lwjgl.opengl.GL11C;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,7 +43,7 @@ public class MixinLevelRenderer_SunMoonToggle {
 			from = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.SUN_LOCATION : Lnet/minecraft/resources/ResourceLocation;"),
 			to = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.MOON_LOCATION : Lnet/minecraft/resources/ResourceLocation;")),
 		allow = 1)
-	private void iris$beforeDrawSun(PoseStack arg, Matrix4f arg2, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$beforeDrawSun(PoseStack arg, Matrix4f arg2, float f, Camera arg3, boolean bl, Runnable runnable, CallbackInfo ci) {
 		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldRenderSun).orElse(true)) {
 			iris$emptyBuilder();
 		}
@@ -54,7 +55,7 @@ public class MixinLevelRenderer_SunMoonToggle {
 			from = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.MOON_LOCATION : Lnet/minecraft/resources/ResourceLocation;"),
 			to = @At(value = "INVOKE", target = "net/minecraft/client/multiplayer/ClientLevel.getStarBrightness (F)F")),
 		allow = 1)
-	private void iris$beforeDrawMoon(PoseStack arg, Matrix4f arg2, float f, Runnable runnable, CallbackInfo ci) {
+	private void iris$beforeDrawMoon(PoseStack arg, Matrix4f arg2, float f, Camera arg3, boolean bl, Runnable runnable, CallbackInfo ci) {
 		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldRenderMoon).orElse(true)) {
 			iris$emptyBuilder();
 		}
