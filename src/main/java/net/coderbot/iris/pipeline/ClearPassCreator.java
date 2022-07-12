@@ -80,18 +80,12 @@ public class ClearPassCreator {
 		List<ClearPass> clearPasses = new ArrayList<>();
 
 		for (int i = 0; i < renderTargets.getNumColorTextures(); i++) {
-			// TODO: Refractor this to not depend on different numbers and color buffer numbers.
 			if (i < renderTargetDirectives.getColorSamplingSettings().size()) {
-				if (renderTargetDirectives.getColorSamplingSettings().get(i).getClear()) {
+				if (fullClear || renderTargetDirectives.getColorSamplingSettings().get(i).getClear()) {
 					PackShadowDirectives.SamplingSettings samplingSettings = renderTargetDirectives.getColorSamplingSettings().get(i);
 					clearPasses.add(new ClearPass(samplingSettings.getClearColor(), renderTargets::getResolution, renderTargets::getResolution, renderTargets.getFramebufferForColorTexture(i), GL21C.GL_COLOR_BUFFER_BIT | GL21C.GL_DEPTH_BUFFER_BIT));
 				} else {
-					if (fullClear) {
-						PackShadowDirectives.SamplingSettings samplingSettings = renderTargetDirectives.getColorSamplingSettings().get(i);
-						clearPasses.add(new ClearPass(samplingSettings.getClearColor(), renderTargets::getResolution, renderTargets::getResolution, renderTargets.getFramebufferForColorTexture(i), GL21C.GL_COLOR_BUFFER_BIT | GL21C.GL_DEPTH_BUFFER_BIT));
-					} else {
-						clearPasses.add(new ClearPass(new Vector4f(1.0F), renderTargets::getResolution, renderTargets::getResolution, renderTargets.getFramebufferForColorTexture(i), GL21C.GL_DEPTH_BUFFER_BIT));
-					}
+					clearPasses.add(new ClearPass(new Vector4f(1.0F), renderTargets::getResolution, renderTargets::getResolution, renderTargets.getFramebufferForColorTexture(i), GL21C.GL_DEPTH_BUFFER_BIT));
 				}
 			}
 		}
