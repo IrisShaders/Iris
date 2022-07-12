@@ -32,7 +32,7 @@ public class MixinBannerRenderer {
     private static Groupable groupableToEnd;
     private static int index;
 
-    @ModifyVariable(method = RENDER_PATTERNS, at = @At("HEAD"))
+    @ModifyVariable(method = RENDER_PATTERNS, at = @At("HEAD"), argsOnly = true)
     private static MultiBufferSource iris$wrapBufferSource(MultiBufferSource multiBufferSource) {
         if (multiBufferSource instanceof Groupable) {
             Groupable groupable = (Groupable) multiBufferSource;

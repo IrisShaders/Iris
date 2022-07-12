@@ -12,6 +12,11 @@
 * [Complementary Reimagined](https://www.complementary.dev/reimagined/)
 * [Complementary Shaders](https://www.complementary.dev/shaders-v4/) (BSL derivative)
 
+### MakeUp - Ultra Fast
+
+Only 8.5 and above works on Iris.
+* [MakeUp - Ultra Fast](https://www.curseforge.com/minecraft/customization/makeup-ultra-fast-shader)
+
 ### SEUS and derivatives
 
 NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drivers.
@@ -51,7 +56,7 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 
 The paid versions are not supported, but Continuum 2.0.4 works decently.
 
-* [Continuum 2.0.4](https://continuum.graphics/downloads)
+* [Continuum 2.0.5](https://continuum.graphics/downloads)
 
 
 ### Other
@@ -84,7 +89,6 @@ This is not a complete list, but is just for people trying to control-F their fa
   - SoftVoxels
   - UShader
   - VanillaPlus
-- MakeUp - Ultra Fast
 - Voyager Shaders
 - All shaders made by DrDesten
   - DrDestens MinecraftShaders

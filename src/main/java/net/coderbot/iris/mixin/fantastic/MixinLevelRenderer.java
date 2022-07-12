@@ -34,7 +34,6 @@ public class MixinLevelRenderer {
 	private Minecraft minecraft;
 
 	@Shadow
-	@Final
 	private RenderBuffers renderBuffers;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))

@@ -40,6 +40,7 @@ public class MixinEntityRenderDispatcher {
 	// First Person Model by tr7zw compatibility, this is a method added by First Person Model:
 	// https://github.com/tr7zw/FirstPersonModel/blob/172ab05368832df82e34ca9f9b06814672f69f59/FPShared/src/main/java/dev/tr7zw/firstperson/mixins/RenderDispatcherMixin.java#L68
 	// The renderBlockShadow injection will handle this, but it's easier to suppress it before all of the other calculations.
+	@SuppressWarnings("target")
 	@Inject(method = "renderOffsetShadow", at = @At("HEAD"), cancellable = true, require = 0, remap=false)
 	private static void iris$maybeSuppressEntityShadow(PoseStack poseStack, MultiBufferSource bufferSource,
 													   Entity entity, float opacity, float tickDelta, LevelReader level,

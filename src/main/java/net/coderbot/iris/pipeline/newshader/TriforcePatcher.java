@@ -98,6 +98,9 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
 
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "ivec4 texture2D(isampler2D sampler, ivec2 coord) { return texture(sampler, coord); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uvec4 texture2D(usampler2D sampler, uvec2 coord) { return texture(sampler, coord); }");
+
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");
@@ -300,7 +303,7 @@ public class TriforcePatcher {
 
 		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 
-		transformations.define("gl_ProjectionMatrix", "u_ProjectionMatrix");
+		transformations.define("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasTex()) {
@@ -333,8 +336,8 @@ public class TriforcePatcher {
 
 		if (type == ShaderType.VERTEX) {
 			if (inputs.hasNormal()) {
-				transformations.define("gl_Normal", "a_Normal");
-				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 a_Normal;");
+				transformations.define("gl_Normal", "iris_Normal");
+				transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec3 iris_Normal;");
 			} else {
 				transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
@@ -342,13 +345,13 @@ public class TriforcePatcher {
 
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's computed on the CPU-side of things
-		transformations.define("gl_NormalMatrix", "mat3(u_NormalMatrix)");
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_NormalMatrix;");
+		transformations.define("gl_NormalMatrix", "mat3(iris_NormalMatrix)");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_NormalMatrix;");
 
 
 		// TODO: All of the transformed variants of the input matrices, preferably computed on the CPU side...
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix u_ModelViewMatrix");
-		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (u_ProjectionMatrix * u_ModelViewMatrix)");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewMatrix iris_ModelViewMatrix");
+		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (iris_ProjectionMatrix * iris_ModelViewMatrix)");
 
 		if (type == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to chunks.
@@ -361,8 +364,16 @@ public class TriforcePatcher {
 
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"));
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_matrices.glsl>"));
 
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, """
+				// The projection matrix
+				uniform mat4 iris_ProjectionMatrix;
+
+				// The model-view matrix
+				uniform mat4 iris_ModelViewMatrix;
+
+				// The model-view-projection matrix
+				#define iris_ModelViewProjectionMatrix iris_ProjectionMatrix * iris_ModelViewMatrix""");
 			transformations.define("gl_Vertex", "getVertexPosition()");
 
 			if (transformations.contains("irisMain")) {
@@ -381,8 +392,8 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(u_RegionOffset + _draw_translation + _vert_position, 1.0); }");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		} else {
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_ModelViewMatrix;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 iris_ProjectionMatrix;");
 		}
 
 		applyIntelHd4000Workaround(transformations);
