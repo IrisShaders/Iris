@@ -5,19 +5,30 @@ import net.coderbot.iris.shaderpack.CloudSetting;
 import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Options;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Allows the current pipeline to override the cloud video mode setting.
+ *
+ * Uses a priority of 1010 to apply after Sodium's MixinGameOptions, which overwrites getCloudsType, so that we can
+ * override its behavior.
  */
-@Mixin(Options.class)
+@Mixin(value = Options.class, priority = 1010)
 public class MixinOptions_CloudsOverride {
-	@Inject(method = "getCloudsType",
-		at = @At(value = "FIELD",
-			target = "net/minecraft/client/Options.renderClouds : Lnet/minecraft/client/CloudStatus;"))
+	@Shadow
+	private int renderDistance;
+
+	@Inject(method = "getCloudsType", at = @At("HEAD"))
 	private void iris$overrideCloudsType(CallbackInfoReturnable<CloudStatus> cir) {
+		// Vanilla does not render clouds on low render distances, we have to mirror that check
+		// when injecting at the head.
+		if (renderDistance < 4) {
+			return;
+		}
+
 		Iris.getPipelineManager().getPipeline().ifPresent(p -> {
 			CloudSetting setting = p.getCloudSetting();
 
