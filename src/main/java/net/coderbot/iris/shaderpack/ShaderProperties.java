@@ -38,7 +38,7 @@ import java.util.function.Consumer;
  * values in here & the values parsed from shader source code.
  */
 public class ShaderProperties {
-	private boolean enableClouds = true;
+	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean oldLighting = OptionalBoolean.DEFAULT;
@@ -103,9 +103,16 @@ public class ShaderProperties {
 				return;
 			}
 
-			if ("clouds".equals(key) && value.equals("off")) {
-				// TODO: Force clouds to fast / fancy as well if the shaderpack wants it
-				enableClouds = false;
+			if ("clouds".equals(key)) {
+				if ("off".equals(value)) {
+					cloudSetting = CloudSetting.OFF;
+				} else if ("fast".equals(value)) {
+					cloudSetting = CloudSetting.FAST;
+				} else if ("fancy".equals(value)) {
+					cloudSetting = CloudSetting.FANCY;
+				} else {
+					Iris.logger.error("Unrecognized clouds setting: " + value);
+				}
 			}
 
 			handleBooleanDirective(key, value, "oldHandLight", bool -> oldHandLight = bool);
@@ -368,8 +375,8 @@ public class ShaderProperties {
 		return new ShaderProperties();
 	}
 
-	public boolean areCloudsEnabled() {
-		return enableClouds;
+	public CloudSetting getCloudSetting() {
+		return cloudSetting;
 	}
 
 	public OptionalBoolean getOldHandLight() {

@@ -36,6 +36,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -114,7 +115,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	private final float sunPathRotation;
-	private final boolean shouldRenderClouds;
+	private final CloudSetting cloudSetting;
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
@@ -134,7 +135,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
-		this.shouldRenderClouds = programs.getPackDirectives().areCloudsEnabled();
+		this.cloudSetting = programs.getPackDirectives().getCloudSetting();
 		this.shouldRenderUnderwaterOverlay = programs.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programs.getPackDirectives().vignette();
 		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
@@ -406,8 +407,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	@Override
-	public boolean shouldRenderClouds() {
-		return shouldRenderClouds;
+	public CloudSetting getCloudSetting() {
+		return cloudSetting;
 	}
 
 	@Override

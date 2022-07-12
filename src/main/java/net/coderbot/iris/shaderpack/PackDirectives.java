@@ -17,7 +17,7 @@ public class PackDirectives {
 	private float drynessHalfLife;
 	private float eyeBrightnessHalfLife;
 	private float centerDepthHalfLife;
-	private boolean areCloudsEnabled;
+	private CloudSetting cloudSetting;
 	private boolean underwaterOverlay;
 	private boolean vignette;
 	private boolean rainDepth;
@@ -38,13 +38,14 @@ public class PackDirectives {
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
+		cloudSetting = CloudSetting.DEFAULT;
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
 		this(supportedRenderTargets, new PackShadowDirectives(properties));
-		areCloudsEnabled = properties.areCloudsEnabled();
+		cloudSetting = properties.getCloudSetting();
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
 		rainDepth = properties.getRainDepth().orElse(false);
@@ -57,7 +58,7 @@ public class PackDirectives {
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
 		this(supportedRenderTargets, new PackShadowDirectives(directives.getShadowDirectives()));
-		areCloudsEnabled = directives.areCloudsEnabled();
+		cloudSetting = directives.cloudSetting;
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
 		explicitFlips = directives.explicitFlips;
@@ -93,8 +94,8 @@ public class PackDirectives {
 		return centerDepthHalfLife;
 	}
 
-	public boolean areCloudsEnabled() {
-		return areCloudsEnabled;
+	public CloudSetting getCloudSetting() {
+		return cloudSetting;
 	}
 
 	public boolean underwaterOverlay() {

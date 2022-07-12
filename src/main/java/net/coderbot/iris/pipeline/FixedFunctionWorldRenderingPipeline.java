@@ -6,6 +6,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -132,9 +133,8 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public boolean shouldRenderClouds() {
-		// Keep clouds enabled
-		return true;
+	public CloudSetting getCloudSetting() {
+		return CloudSetting.DEFAULT;
 	}
 
 	@Override
