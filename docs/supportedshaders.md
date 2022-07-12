@@ -56,7 +56,7 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 
 The paid versions are not supported, but Continuum 2.0.4 works decently.
 
-* [Continuum 2.0.4](https://continuum.graphics/downloads)
+* [Continuum 2.0.5](https://continuum.graphics/downloads)
 
 
 ### Other

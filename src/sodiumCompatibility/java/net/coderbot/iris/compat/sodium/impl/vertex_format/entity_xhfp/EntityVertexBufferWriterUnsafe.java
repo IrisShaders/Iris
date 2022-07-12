@@ -41,8 +41,6 @@ public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe imp
 		MemoryUtil.memPutFloat(i + 20, v);
 		MemoryUtil.memPutInt(i + 24, overlay);
 		MemoryUtil.memPutInt(i + 28, light);
-		MemoryUtil.memPutShort(i + 36, (short) -1);
-		MemoryUtil.memPutShort(i + 38, (short) -1);
 
 		if (vertexCount == 4) {
 			this.endQuad(normal);
@@ -83,10 +81,10 @@ public class EntityVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe imp
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			MemoryUtil.memPutFloat(i + 40 - STRIDE * vertex, uSum);
-			MemoryUtil.memPutFloat(i + 44 - STRIDE * vertex, vSum);
+			MemoryUtil.memPutFloat(i + 36 - STRIDE * vertex, uSum);
+			MemoryUtil.memPutFloat(i + 40 - STRIDE * vertex, vSum);
 			MemoryUtil.memPutInt(i + 32 - STRIDE * vertex, normal);
-			MemoryUtil.memPutInt(i + 48 - STRIDE * vertex, tangent);
+			MemoryUtil.memPutInt(i + 44 - STRIDE * vertex, tangent);
 		}
 
 		uSum = 0;

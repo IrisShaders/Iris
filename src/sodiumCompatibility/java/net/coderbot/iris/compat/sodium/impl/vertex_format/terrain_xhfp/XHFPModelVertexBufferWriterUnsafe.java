@@ -3,20 +3,22 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
-import net.coderbot.iris.block_rendering.MaterialIdHolder;
-import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
+import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexUtil;
+import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
+import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vertices.ExtendedDataHelper;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.lwjgl.system.MemoryUtil;
 
 import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
-public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, MaterialIdAwareVertexWriter {
+public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, ContextAwareVertexWriter {
 	private final QuadViewTerrain.QuadViewTerrainUnsafe quad = new QuadViewTerrain.QuadViewTerrainUnsafe();
 	private final Vector3f normal = new Vector3f();
 
-	private MaterialIdHolder idHolder;
+	private BlockContextHolder contextHolder;
 
 	private int vertexCount;
 	private float uSum;
@@ -55,14 +57,11 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		uSum += u;
 		vSum += v;
 
-		short materialId = idHolder.id;
-		short renderType = idHolder.renderType;
-
-		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType, chunkId);
+		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType, chunkId, ExtendedDataHelper.computeMidBlock(x, y, z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 	}
 
 	private void writeQuadInternal(float posX, float posY, float posZ, int color,
-								   float u, float v, int light, short materialId, short renderType, int chunkId) {
+								   float u, float v, int light, short materialId, short renderType, int chunkId, int packedMidBlock) {
 		long i = this.writePointer;
 
 		vertexCount++;
@@ -86,6 +85,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		// TODO: can we pack this into one short?
 		MemoryUtil.memPutShort(i + 36, materialId);
 		MemoryUtil.memPutShort(i + 38, renderType);
+		MemoryUtil.memPutInt(i + 40, packedMidBlock);
 
 		if (vertexCount == 4) {
 			vertexCount = 0;
@@ -158,7 +158,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 	}
 
 	@Override
-	public void iris$setIdHolder(MaterialIdHolder holder) {
-		this.idHolder = holder;
+	public void iris$setContextHolder(BlockContextHolder holder) {
+		this.contextHolder = holder;
 	}
 }
