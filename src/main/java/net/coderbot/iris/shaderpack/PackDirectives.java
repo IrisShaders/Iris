@@ -24,6 +24,7 @@ public class PackDirectives {
 	private boolean separateAo;
 	private boolean oldLighting;
 	private boolean particlesBeforeDeferred;
+	private boolean prepareBeforeShadow;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
@@ -51,6 +52,7 @@ public class PackDirectives {
 		oldLighting = properties.getOldLighting().orElse(false);
 		explicitFlips = properties.getExplicitFlips();
 		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
+		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -60,6 +62,7 @@ public class PackDirectives {
 		oldLighting = directives.oldLighting;
 		explicitFlips = directives.explicitFlips;
 		particlesBeforeDeferred = directives.particlesBeforeDeferred;
+		prepareBeforeShadow = directives.prepareBeforeShadow;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -116,6 +119,10 @@ public class PackDirectives {
 
 	public boolean areParticlesBeforeDeferred() {
 		return particlesBeforeDeferred;
+	}
+
+	public boolean isPrepareBeforeShadow() {
+		return prepareBeforeShadow;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {

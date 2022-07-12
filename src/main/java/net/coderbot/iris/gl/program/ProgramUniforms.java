@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBShaderImageLoadStore;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -307,6 +308,10 @@ public class ProgramUniforms {
 			typeName = "sampler3D";
 		} else if (type == GL20C.GL_SAMPLER_2D) {
 			typeName = "sampler2D";
+		} else if (type == GL30C.GL_UNSIGNED_INT_SAMPLER_2D) {
+			typeName = "usampler2D";
+		} else if (type == GL30C.GL_UNSIGNED_INT_SAMPLER_3D) {
+			typeName = "usampler3D";
 		} else if (type == GL20C.GL_SAMPLER_1D) {
 			typeName = "sampler1D";
 		} else if (type == GL20C.GL_SAMPLER_2D_SHADOW) {
@@ -351,6 +356,10 @@ public class ProgramUniforms {
 			return UniformType.INT;
 		} else if (type == GL20C.GL_SAMPLER_2D) {
 			return UniformType.INT;
+		} else if (type == GL30C.GL_UNSIGNED_INT_SAMPLER_2D) {
+			return UniformType.INT;
+		} else if (type == GL30C.GL_UNSIGNED_INT_SAMPLER_3D) {
+			return UniformType.INT;
 		} else if (type == GL20C.GL_SAMPLER_1D) {
 			return UniformType.INT;
 		} else if (type == GL20C.GL_SAMPLER_2D_SHADOW) {
@@ -365,6 +374,8 @@ public class ProgramUniforms {
 	private static boolean isSampler(int type) {
 		return type == GL20C.GL_SAMPLER_1D
 				|| type == GL20C.GL_SAMPLER_2D
+				|| type == GL30C.GL_UNSIGNED_INT_SAMPLER_2D
+				|| type == GL30C.GL_UNSIGNED_INT_SAMPLER_3D
 				|| type == GL20C.GL_SAMPLER_3D
 				|| type == GL20C.GL_SAMPLER_1D_SHADOW
 				|| type == GL20C.GL_SAMPLER_2D_SHADOW;
@@ -373,6 +384,7 @@ public class ProgramUniforms {
 	private static boolean isImage(int type) {
 		return type == ARBShaderImageLoadStore.GL_IMAGE_1D
 			|| type == ARBShaderImageLoadStore.GL_IMAGE_2D
+			|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_2D
 			|| type == ARBShaderImageLoadStore.GL_IMAGE_3D
 			|| type == ARBShaderImageLoadStore.GL_IMAGE_1D_ARRAY
 			|| type == ARBShaderImageLoadStore.GL_IMAGE_2D_ARRAY;
