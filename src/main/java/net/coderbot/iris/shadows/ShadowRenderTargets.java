@@ -36,6 +36,7 @@ public class ShadowRenderTargets {
 	private static final IntBuffer NULL_BUFFER = null;
 	private boolean firstTranslucentCopy;
 	private static final boolean supportsFramebufferBlitting = GL.getCapabilities().OpenGL30 || GL.getCapabilities().GL_EXT_framebuffer_blit;
+	private boolean needsFullClear;
 
 	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
 		this.formats = new InternalTextureFormat[MAX_SHADOW_RENDER_TARGETS];
@@ -85,6 +86,8 @@ public class ShadowRenderTargets {
 		noTranslucentFB.drawBuffers(drawBuffers);
 
 		this.firstTranslucentCopy = true;
+
+		this.needsFullClear = true;
 
 		RenderSystem.bindTexture(0);
 	}
@@ -140,6 +143,14 @@ public class ShadowRenderTargets {
 
 	public int getResolution() {
 		return resolution;
+	}
+
+	public boolean needsFullClear() {
+		return needsFullClear;
+	}
+
+	public void resetClearStatus() {
+		needsFullClear = false;
 	}
 
 	public void destroy() {

@@ -87,6 +87,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
 	private final ImmutableList<ClearPass> shadowClearPasses;
+	private final ImmutableList<ClearPass> shadowClearPassesFull;
 
 	private final GlFramebuffer baseline;
 
@@ -195,7 +196,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.shadowTargetsSupplier = () -> {
 			if (shadowRenderTargets == null) {
-				// TODO: Support more than two shadowcolor render targets
 				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, shadowDirectives);
 			}
 
@@ -304,12 +304,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		if (shadowRenderTargets != null) {
 			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
 			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
-			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, shadowDirectives);
+			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
+			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
 				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
 		} else {
 			this.shadowClearPasses = ImmutableList.of();
+			this.shadowClearPassesFull = ImmutableList.of();
 			this.shadowRenderer = null;
 		}
 
@@ -785,7 +787,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		if (shadowRenderTargets != null) {
 			Vector4f emptyClearColor = new Vector4f(1.0F);
-			for (ClearPass clearPass : shadowClearPasses) {
+			ImmutableList<ClearPass> passes;
+
+			if (shadowRenderTargets.needsFullClear()) {
+				passes = shadowClearPassesFull;
+				shadowRenderTargets.resetClearStatus();
+			} else {
+				passes = shadowClearPasses;
+			}
+
+			for (ClearPass clearPass : passes) {
 				clearPass.execute(emptyClearColor);
 			}
 		}
