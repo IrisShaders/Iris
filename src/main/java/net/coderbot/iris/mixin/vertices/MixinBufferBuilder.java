@@ -167,7 +167,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		this.nextElement();
 		if (iris$isTerrain) {
 			// MID_BLOCK_ELEMENT
-			int posIndex = this.nextElementByte - format.getVertexSize() + 4;
+			int posIndex = this.nextElementByte - 48;
 			float x = buffer.getFloat(posIndex);
 			float y = buffer.getFloat(posIndex + 4);
 			float z = buffer.getFloat(posIndex + 8);

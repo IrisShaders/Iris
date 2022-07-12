@@ -23,27 +23,27 @@ public class IrisVertexFormats {
 		ImmutableList.Builder<VertexFormatElement> terrainElements = ImmutableList.builder();
 		ImmutableList.Builder<VertexFormatElement> entityElements = ImmutableList.builder();
 
-		terrainElements.add(DefaultVertexFormat.ELEMENT_POSITION);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_COLOR);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_UV0);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_UV2);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_NORMAL);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_PADDING);
-		terrainElements.add(ENTITY_ELEMENT);
-		terrainElements.add(MID_TEXTURE_ELEMENT);
-		terrainElements.add(TANGENT_ELEMENT);
-		terrainElements.add(MID_BLOCK_ELEMENT);
-		terrainElements.add(DefaultVertexFormat.ELEMENT_PADDING);
+		terrainElements.add(DefaultVertexFormat.ELEMENT_POSITION); // 12
+		terrainElements.add(DefaultVertexFormat.ELEMENT_COLOR); // 16
+		terrainElements.add(DefaultVertexFormat.ELEMENT_UV0); // 24
+		terrainElements.add(DefaultVertexFormat.ELEMENT_UV2); // 28
+		terrainElements.add(DefaultVertexFormat.ELEMENT_NORMAL); // 31
+		terrainElements.add(DefaultVertexFormat.ELEMENT_PADDING); // 32
+		terrainElements.add(ENTITY_ELEMENT); // 36
+		terrainElements.add(MID_TEXTURE_ELEMENT); // 44
+		terrainElements.add(TANGENT_ELEMENT); // 48
+		terrainElements.add(MID_BLOCK_ELEMENT); // 51
+		terrainElements.add(DefaultVertexFormat.ELEMENT_PADDING); // 52
 
-		entityElements.add(DefaultVertexFormat.ELEMENT_POSITION);
-		entityElements.add(DefaultVertexFormat.ELEMENT_COLOR);
-		entityElements.add(DefaultVertexFormat.ELEMENT_UV0);
-		entityElements.add(DefaultVertexFormat.ELEMENT_UV1);
-		entityElements.add(DefaultVertexFormat.ELEMENT_UV2);
-		entityElements.add(DefaultVertexFormat.ELEMENT_NORMAL);
-		entityElements.add(DefaultVertexFormat.ELEMENT_PADDING);
-		entityElements.add(MID_TEXTURE_ELEMENT);
-		entityElements.add(TANGENT_ELEMENT);
+		entityElements.add(DefaultVertexFormat.ELEMENT_POSITION); // 12
+		entityElements.add(DefaultVertexFormat.ELEMENT_COLOR); // 16
+		entityElements.add(DefaultVertexFormat.ELEMENT_UV0); // 24
+		entityElements.add(DefaultVertexFormat.ELEMENT_UV1); // 28
+		entityElements.add(DefaultVertexFormat.ELEMENT_UV2); // 32
+		entityElements.add(DefaultVertexFormat.ELEMENT_NORMAL); // 35
+		entityElements.add(DefaultVertexFormat.ELEMENT_PADDING); // 36
+		entityElements.add(MID_TEXTURE_ELEMENT); // 44
+		entityElements.add(TANGENT_ELEMENT); // 48
 
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());
