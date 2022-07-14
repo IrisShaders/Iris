@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 
 public class ShaderPack {
 	private static final Gson GSON = new Gson();
@@ -114,6 +115,18 @@ public class ShaderPack {
 				.map(source -> new ShaderProperties(source, shaderPackOptions, environmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
+		ArrayList<StringPair> irisDefines = new ArrayList<>();
+
+		shaderProperties.getRequiredFeatures().forEach(feature -> {
+			irisDefines.add(new StringPair("IRIS_FEATURE_" + feature.name(), ""));
+		});
+
+		shaderProperties.getRequiredFixedIssues().forEach((IntConsumer) feature -> {
+			irisDefines.add(new StringPair("IRIS_ISSUES_FIXED_" + feature, ""));
+		});
+
+		environmentDefines.forEach(irisDefines::add);
+
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
@@ -181,7 +194,7 @@ public class ShaderPack {
 			// directly. This removes one obstacle to accurate reporting of line numbers for errors,
 			// though there exist many more (such as relocating all #extension directives and similar things)
 			String source = builder.toString();
-			source = JcppProcessor.glslPreprocessSource(source, environmentDefines);
+			source = JcppProcessor.glslPreprocessSource(source, irisDefines);
 
 			return source;
 		};
@@ -195,7 +208,7 @@ public class ShaderPack {
 		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
 				shaderProperties, this);
 
-		this.idMap = new IdMap(root, shaderPackOptions, environmentDefines);
+		this.idMap = new IdMap(root, shaderPackOptions, irisDefines);
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {

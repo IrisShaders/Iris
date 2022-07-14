@@ -1,13 +1,17 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.IrisFeatures;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
@@ -17,6 +21,7 @@ import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -26,6 +31,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -77,6 +83,8 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	private Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
+	private IntList requiredFixedIssues = new IntArrayList();
+	private List<IrisFeatures> requiredFeatures = new ReferenceArrayList<>();
 
 	private ShaderProperties() {
 		// empty
@@ -246,6 +254,29 @@ public class ShaderProperties {
 							.put(buffer, shouldFlip);
 				});
 			});
+
+			if (key.equalsIgnoreCase("iris.issues.fixed")) {
+				String[] issues = value.split(" ");
+
+				try {
+					for (String issue : issues) {
+						int issueInt = Integer.parseInt(issue);
+						if (ArrayUtils.contains(IrisFeatures.FIXED_ISSUES, issueInt)) {
+							requiredFixedIssues.add(issueInt);
+						}
+					}
+				} catch (NumberFormatException e) {
+					Iris.logger.error("Unable to parse iris.issues.fixed directive: " + value, e);
+				}
+			}
+
+			if (key.equalsIgnoreCase("iris.features")) {
+				String[] features = value.split(" ");
+
+				for (String feature : features) {
+					requiredFeatures.add(IrisFeatures.valueOf(feature.toUpperCase(Locale.US)));
+				}
+			}
 
 			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
@@ -534,5 +565,13 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, Object2BooleanMap<String>> getExplicitFlips() {
 		return explicitFlips;
+	}
+
+	public IntList getRequiredFixedIssues() {
+		return requiredFixedIssues;
+	}
+
+	public List<IrisFeatures> getRequiredFeatures() {
+		return requiredFeatures;
 	}
 }

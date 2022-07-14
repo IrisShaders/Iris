@@ -10,11 +10,23 @@ public interface OptionValues {
 	Optional<String> getStringValue(String name);
 
 	default boolean getBooleanValueOrDefault(String name) {
-		return getBooleanValue(name).orElseGet(() -> getOptionSet().getBooleanOptions().get(name).getOption().getDefaultValue());
+		return getBooleanValue(name).orElseGet(() -> {
+			if (getOptionSet().getBooleanOptions().containsKey(name)) {
+				return getOptionSet().getBooleanOptions().get(name).getOption().getDefaultValue();
+			} else {
+				return false;
+			}
+		});
 	}
 
 	default String getStringValueOrDefault(String name) {
-		return getStringValue(name).orElseGet(() -> getOptionSet().getStringOptions().get(name).getOption().getDefaultValue());
+		return getStringValue(name).orElseGet(() -> {
+			if (getOptionSet().getStringOptions().containsKey(name)) {
+				return getOptionSet().getStringOptions().get(name).getOption().getDefaultValue();
+			} else {
+				return "";
+			}
+		});
 	}
 
 	int getOptionsChanged();
