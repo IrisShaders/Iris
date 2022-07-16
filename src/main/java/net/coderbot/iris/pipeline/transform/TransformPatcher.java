@@ -1,20 +1,21 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import io.github.douira.glsl_transformer.cst.core.SearchTerminals;
+import io.github.douira.glsl_transformer.ast.node.Identifier;
+import io.github.douira.glsl_transformer.ast.print.PrintType;
+import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import io.github.douira.glsl_transformer.cst.core.SemanticException;
-import io.github.douira.glsl_transformer.cst.core.target.ThrowTargetImpl;
 import io.github.douira.glsl_transformer.cst.token_filter.ChannelFilter;
 import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
 import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
-import io.github.douira.glsl_transformer.cst.transform.CSTTransformer;
-import io.github.douira.glsl_transformer.cst.transform.Transformation;
-import io.github.douira.glsl_transformer.cst.transform.lifecycle.LifecycleUser;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
@@ -34,7 +35,7 @@ import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
  */
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
-	private static CSTTransformer<Parameters> transformer;
+	private static ASTTransformer<Parameters> transformer;
 
 	/**
 	 * PREV TODO: Only do the NewLines patches if the source code isn't from
@@ -52,38 +53,27 @@ public class TransformPatcher {
 		}
 	};
 
-	// setup the transformations and even loose phases if necessary
-	static LifecycleUser<Parameters> detectReserved = new SearchTerminals<Parameters>()
-			.singleTarget(
-					new ThrowTargetImpl<Parameters>(
-							"iris_",
-							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported."))
-			.requireFullMatch(false);
-
 	static {
+		transformer = new ASTTransformer<>(translationUnit -> {
+			Root root = translationUnit.getRoot();
+			Parameters parameters = transformer.getJobParameters();
 
-		LifecycleUser<Parameters> sodiumTerrainTransformation = new SodiumTerrainTransformation();
-		LifecycleUser<Parameters> attributeTransformation = new AttributeTransformation();
+			// check for illegal references to internal Iris shader interfaces
+			Map<String, Set<Identifier>> detectionResult = root.identifierIndex.prefixMap("iris_");
+			if (!detectionResult.isEmpty()) {
+				throw new SemanticException(
+						"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported. Violation: "
+								+ detectionResult.keySet().iterator().next());
+			}
 
-		transformer = new CSTTransformer<Parameters>(new Transformation<Parameters>() {
-			@Override
-			protected void setupGraph() {
-				Patch patch = getJobParameters().patch;
-
-				if (patch == Patch.ATTRIBUTES) {
-					addEndDependent(attributeTransformation);
-				}
-
-				if (patch == Patch.SODIUM_TERRAIN) {
-					addEndDependent(sodiumTerrainTransformation);
-				}
-
-				// add reserved identifier detection before everything
-				appendDependent(detectReserved);
+			if (parameters.patch == Patch.ATTRIBUTES) {
+				AttributeTransformer.accept(translationUnit, root, (AttributeParameters) parameters);
+			}
+			if (parameters.patch == Patch.SODIUM_TERRAIN) {
+				SodiumTerrainTransformer.accept(translationUnit, root, parameters);
 			}
 		});
-
-		transformer.setParseTokenFilter(parseTokenFilter);
+		transformer.getInternalParser().setParseTokenFilter(parseTokenFilter);
 	}
 
 	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher, boolean doLogging) {
@@ -111,25 +101,29 @@ public class TransformPatcher {
 	}
 
 	private static String transform(String source, Parameters parameters) {
-		return transformer.transform(source, parameters);
+		return transformer.transform(PrintType.COMPACT, source, parameters);
 	}
 
 	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
 		return inspectPatch(source,
 				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
-				// routing through original patcher until changes to AttributeShaderTransformer
-				// can be caught up in TransformPatcher
-				() -> AttributeShaderTransformer.patch(source, type, hasGeometry, inputs));
-				// () -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type,
-				// 		hasGeometry, inputs)));
+				() -> {
+					// TODO: temporary
+					String patched = transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry, inputs));
+					return AttributeShaderTransformer.patch(patched, type, hasGeometry, inputs);
+				});
 	}
 
 	public static String patchSodiumTerrain(String source, ShaderType type) {
 		return inspectPatch(source,
 				"TYPE: " + type,
-				// () -> transform(source, new Parameters(Patch.SODIUM_TERRAIN, type)));
-				() -> type == ShaderType.VERTEX
-						? SodiumTerrainPipeline.transformVertexShader(source)
-						: SodiumTerrainPipeline.transformFragmentShader(source), false);
+				() -> {
+					// TODO: temporary
+					String patched = transform(source, new Parameters(Patch.SODIUM_TERRAIN, type));
+					return type == ShaderType.VERTEX
+							? SodiumTerrainPipeline.transformVertexShader(patched)
+							: SodiumTerrainPipeline.transformFragmentShader(patched);
+				},
+				false);
 	}
 }
