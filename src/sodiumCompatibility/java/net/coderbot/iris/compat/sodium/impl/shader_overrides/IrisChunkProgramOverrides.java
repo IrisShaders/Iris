@@ -28,6 +28,8 @@ public class IrisChunkProgramOverrides {
 
 	private final EnumMap<IrisTerrainPass, ChunkProgram> programs = new EnumMap<>(IrisTerrainPass.class);
 
+	private int versionCounterForSodiumShaderReload = -1;
+
 	private GlShader createVertexShader(RenderDevice device, IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
 		Optional<String> irisVertexShader;
 
@@ -130,15 +132,16 @@ public class IrisChunkProgramOverrides {
 
 			return builder.attachShader(vertShader)
 					.attachShader(fragShader)
-					.bindAttribute("a_Pos", ChunkShaderBindingPoints.POSITION)
-					.bindAttribute("a_Color", ChunkShaderBindingPoints.COLOR)
-					.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.TEX_COORD)
-					.bindAttribute("a_LightCoord", ChunkShaderBindingPoints.LIGHT_COORD)
-					.bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
-					.bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
+					.bindAttribute("iris_Pos", ChunkShaderBindingPoints.POSITION)
+					.bindAttribute("iris_Color", ChunkShaderBindingPoints.COLOR)
+					.bindAttribute("iris_TexCoord", ChunkShaderBindingPoints.TEX_COORD)
+					.bindAttribute("iris_LightCoord", ChunkShaderBindingPoints.LIGHT_COORD)
+					.bindAttribute("iris_Normal", IrisChunkShaderBindingPoints.NORMAL)
 					.bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
-					.bindAttribute("a_Normal", IrisChunkShaderBindingPoints.NORMAL)
-					.bindAttribute("d_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
+					.bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
+					.bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
+					.bindAttribute("at_midBlock", IrisChunkShaderBindingPoints.MID_BLOCK)
+					.bindAttribute("iris_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
 					.build((program, name) -> {
 						ProgramUniforms uniforms = pipeline.initUniforms(name);
 						ProgramSamplers samplers;
@@ -164,8 +167,6 @@ public class IrisChunkProgramOverrides {
 	}
 
 	public void createShaders(SodiumTerrainPipeline sodiumTerrainPipeline, RenderDevice device) {
-		Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
-
 		if (sodiumTerrainPipeline != null) {
 			for (IrisTerrainPass pass : IrisTerrainPass.values()) {
 				if (pass == IrisTerrainPass.SHADOW && !sodiumTerrainPipeline.hasShadowPass()) {
@@ -189,7 +190,8 @@ public class IrisChunkProgramOverrides {
 			sodiumTerrainPipeline = worldRenderingPipeline.getSodiumTerrainPipeline();
 		}
 
-		if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
+		if (versionCounterForSodiumShaderReload != Iris.getPipelineManager().getVersionCounterForSodiumShaderReload()) {
+			versionCounterForSodiumShaderReload = Iris.getPipelineManager().getVersionCounterForSodiumShaderReload();
 			deleteShaders();
 			createShaders(sodiumTerrainPipeline, device);
 		}

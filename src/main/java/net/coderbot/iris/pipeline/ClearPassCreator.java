@@ -6,6 +6,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import org.lwjgl.opengl.GL21C;
 
@@ -62,13 +64,31 @@ public class ClearPassCreator {
 				}
 
 				// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
-				clearPasses.add(new ClearPass(clearColor,
-						renderTargets.createFramebufferWritingToAlt(clearBuffers)));
+				clearPasses.add(new ClearPass(clearColor, renderTargets::getCurrentWidth, renderTargets::getCurrentHeight,
+						renderTargets.createFramebufferWritingToAlt(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
 
-				clearPasses.add(new ClearPass(clearColor,
-						renderTargets.createFramebufferWritingToMain(clearBuffers)));
+				clearPasses.add(new ClearPass(clearColor, renderTargets::getCurrentWidth, renderTargets::getCurrentHeight,
+						renderTargets.createFramebufferWritingToMain(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
 			}
 		});
+
+		return ImmutableList.copyOf(clearPasses);
+	}
+
+	public static ImmutableList<ClearPass> createShadowClearPasses(ShadowRenderTargets renderTargets, boolean fullClear,
+																   PackShadowDirectives renderTargetDirectives) {
+		List<ClearPass> clearPasses = new ArrayList<>();
+
+		for (int i = 0; i < renderTargets.getNumColorTextures(); i++) {
+			if (i < renderTargetDirectives.getColorSamplingSettings().size()) {
+				if (fullClear || renderTargetDirectives.getColorSamplingSettings().get(i).getClear()) {
+					PackShadowDirectives.SamplingSettings samplingSettings = renderTargetDirectives.getColorSamplingSettings().get(i);
+					clearPasses.add(new ClearPass(samplingSettings.getClearColor(), renderTargets::getResolution, renderTargets::getResolution, renderTargets.getFramebufferForColorTexture(i), GL21C.GL_COLOR_BUFFER_BIT | GL21C.GL_DEPTH_BUFFER_BIT));
+				} else {
+					clearPasses.add(new ClearPass(new Vector4f(1.0F), renderTargets::getResolution, renderTargets::getResolution, renderTargets.getFramebufferForColorTexture(i), GL21C.GL_DEPTH_BUFFER_BIT));
+				}
+			}
+		}
 
 		return ImmutableList.copyOf(clearPasses);
 	}

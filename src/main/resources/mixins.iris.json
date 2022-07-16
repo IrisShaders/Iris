@@ -57,6 +57,8 @@
     "shadows.MixinPreventRebuildNearInShadowPass",
     "sky.MixinClientLevelData_DisableVoidPlane",
     "sky.MixinDimensionSpecialEffects",
+    "sky.MixinLevelRenderer_SunMoonToggle",
+    "sky.MixinOptions_CloudsOverride",
     "statelisteners.BooleanStateAccessor",
     "statelisteners.MixinGlStateManager",
     "texture.MixinAbstractTexture",

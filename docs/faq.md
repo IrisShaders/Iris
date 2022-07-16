@@ -21,7 +21,7 @@ Go to Options>Video Settings>Shader Packs>Shader Pack Settings.
 
 ## Is my system supported?
 
-See the [Driver Support](usage/drivers.md) document for more information. 
+See the [Driver Support](usage/drivers.md) document for more information.
 
 ## Why is (insert shader) not working?
 
@@ -53,7 +53,6 @@ The following is a short list, more alternatives can be found through further re
 Better Grass/Snow - [LambdaBetterGrass](https://www.curseforge.com/minecraft/mc-mods/lambdabettergrass)
 
 Chunk Caching - [Bobby](https://www.curseforge.com/minecraft/mc-mods/bobby) -
-Bobby is incompatible with Starlight.
 
 Connected Textures - [Continuity](https://modrinth.com/mod/continuity)
 
