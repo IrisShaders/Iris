@@ -4,9 +4,9 @@ import java.util.Collection;
 
 import com.google.common.collect.ImmutableList;
 
-import io.github.douira.glsl_transformer.core.CachePolicy;
-import io.github.douira.glsl_transformer.core.WrapIdentifier;
-import io.github.douira.glsl_transformer.transform.InjectionPoint;
+import io.github.douira.glsl_transformer.cst.core.CachePolicy;
+import io.github.douira.glsl_transformer.cst.core.WrapIdentifier;
+import io.github.douira.glsl_transformer.cst.transform.CSTInjectionPoint;
 
 /**
  * Users of this transformation have to insert irisMain(); themselves because it
@@ -18,7 +18,7 @@ abstract class MainWrapper<R extends Parameters> extends WrapIdentifier<R> {
 	{
 		detectionResult("irisMain");
 		wrapTarget("main");
-		injectionLocation(InjectionPoint.BEFORE_EOF);
+		injectionLocation(CSTInjectionPoint.END);
 		injectionExternalDeclarations(CachePolicy.ON_JOB);
 	}
 

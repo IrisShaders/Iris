@@ -6,15 +6,15 @@ import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import io.github.douira.glsl_transformer.core.SearchTerminals;
-import io.github.douira.glsl_transformer.core.SemanticException;
-import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
-import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
-import io.github.douira.glsl_transformer.print.filter.TokenChannel;
-import io.github.douira.glsl_transformer.print.filter.TokenFilter;
-import io.github.douira.glsl_transformer.transform.LifecycleUser;
-import io.github.douira.glsl_transformer.transform.Transformation;
-import io.github.douira.glsl_transformer.transform.TransformationManager;
+import io.github.douira.glsl_transformer.cst.core.SearchTerminals;
+import io.github.douira.glsl_transformer.cst.core.SemanticException;
+import io.github.douira.glsl_transformer.cst.core.target.ThrowTargetImpl;
+import io.github.douira.glsl_transformer.cst.token_filter.ChannelFilter;
+import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
+import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
+import io.github.douira.glsl_transformer.cst.transform.CSTTransformer;
+import io.github.douira.glsl_transformer.cst.transform.Transformation;
+import io.github.douira.glsl_transformer.cst.transform.lifecycle.LifecycleUser;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
@@ -23,17 +23,17 @@ import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
  * transformation.
- * 
+ *
  * NOTE: This patcher expects (and ensures) that the string doesn't contain any
  * (!) preprocessor directives. The only allowed ones are #extension and #pragma
  * as they are considered "parsed" directives. If any other directive appears in
  * the string, it will throw.
- * 
+ *
  * TODO: JCPP has to be configured to remove preprocessor directives entirely
  */
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
-	private static TransformationManager<Parameters> manager;
+	private static CSTTransformer<Parameters> manager;
 
 	/**
 	 * PREV TODO: Only do the NewLines patches if the source code isn't from
@@ -64,7 +64,7 @@ public class TransformPatcher {
 		LifecycleUser<Parameters> sodiumTerrainTransformation = new SodiumTerrainTransformation();
 		LifecycleUser<Parameters> attributeTransformation = new AttributeTransformation();
 
-		manager = new TransformationManager<Parameters>(new Transformation<Parameters>() {
+		manager = new CSTTransformer<Parameters>(new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
 				Patch patch = getJobParameters().patch;

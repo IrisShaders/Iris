@@ -10,18 +10,18 @@ import com.google.common.collect.ImmutableList;
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.GLSLParser.ExternalDeclarationContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
-import io.github.douira.glsl_transformer.core.CachePolicy;
-import io.github.douira.glsl_transformer.core.CachingSupplier;
-import io.github.douira.glsl_transformer.core.SearchTerminals;
-import io.github.douira.glsl_transformer.core.target.HandlerTarget;
-import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
-import io.github.douira.glsl_transformer.core.target.ParsedReplaceTargetImpl;
-import io.github.douira.glsl_transformer.core.target.TerminalReplaceTargetImpl;
-import io.github.douira.glsl_transformer.transform.InjectionPoint;
-import io.github.douira.glsl_transformer.transform.LifecycleUser;
-import io.github.douira.glsl_transformer.transform.RunPhase;
-import io.github.douira.glsl_transformer.transform.Transformation;
-import io.github.douira.glsl_transformer.transform.WalkPhase;
+import io.github.douira.glsl_transformer.cst.core.CachePolicy;
+import io.github.douira.glsl_transformer.cst.core.CachingSupplier;
+import io.github.douira.glsl_transformer.cst.core.SearchTerminals;
+import io.github.douira.glsl_transformer.cst.core.target.HandlerTarget;
+import io.github.douira.glsl_transformer.cst.core.target.HandlerTargetImpl;
+import io.github.douira.glsl_transformer.cst.core.target.ParsedReplaceTargetImpl;
+import io.github.douira.glsl_transformer.cst.core.target.TerminalReplaceTargetImpl;
+import io.github.douira.glsl_transformer.cst.transform.CSTInjectionPoint;
+import io.github.douira.glsl_transformer.cst.transform.RunPhase;
+import io.github.douira.glsl_transformer.cst.transform.Transformation;
+import io.github.douira.glsl_transformer.cst.transform.WalkPhase;
+import io.github.douira.glsl_transformer.cst.transform.lifecycle.LifecycleUser;
 import io.github.douira.glsl_transformer.tree.TreeMember;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
@@ -29,13 +29,13 @@ import net.coderbot.iris.gl.shader.ShaderType;
 /**
  * Replaces what AttributeShaderTransformer does but using glsl-transformer to
  * do it more robustly.
- * 
+ *
  * BUG: Breaks shadows on Complementary
  * -> Test by doing passthrough and seeing if that works
- * 
+ *
  * BUG: (using only this patcher) entities are fully white, seems like a
  * iris_TextureMatrix issue
- * 
+ *
  * BUG: ERROR: 0:1801: Use of undeclared identifier 'entityColor'
  */
 class AttributeTransformation extends Transformation<Parameters> {
@@ -134,7 +134,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 						.activation(this::doReplacement));
 
 				chainConcurrentDependent(RunPhase.<Parameters>withInjectExternalDeclarations(
-						InjectionPoint.BEFORE_FUNCTIONS, "attribute vec4 mc_midTexCoord;")
+						CSTInjectionPoint.BEFORE_FUNCTIONS, "attribute vec4 mc_midTexCoord;")
 						.activation(this::doReplacement));
 			}
 
@@ -152,7 +152,7 @@ class AttributeTransformation extends Transformation<Parameters> {
 			@Override
 			protected void run(TranslationUnitContext ctx) {
 				InputAvailability inputs = ((AttributeParameters) getJobParameters()).inputs;
-				injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+				injectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 						"const float iris_ONE_OVER_256 = 0.00390625;\n",
 						"const float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;\n",
 						inputs.lightmap
@@ -269,19 +269,19 @@ class AttributeTransformation extends Transformation<Parameters> {
 				protected void run(TranslationUnitContext ctx) {
 					switch (getJobParameters().type) {
 						case VERTEX:
-							injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+							injectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 									"uniform sampler2D iris_overlay;",
 									"varying vec4 entityColor;");
 							break;
 						case GEOMETRY:
-							injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+							injectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 									"out vec4 entityColorGS;",
 									"in vec4 entityColor[];");
 							break;
 						case FRAGMENT:
 							// if entityColor is not declared as a uniform, we don't make it available
 							if (foundEntityColor) {
-								injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
+								injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
 							}
 							break;
 					}

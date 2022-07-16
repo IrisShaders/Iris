@@ -1,8 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.tree.pattern.ParseTreeMatch;
 import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
@@ -14,17 +12,16 @@ import io.github.douira.glsl_transformer.GLSLParser.ArrayAccessExpressionContext
 import io.github.douira.glsl_transformer.GLSLParser.MemberAccessExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.MultiplicativeExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
-import io.github.douira.glsl_transformer.ast.StringNode;
-import io.github.douira.glsl_transformer.core.SearchTerminals;
-import io.github.douira.glsl_transformer.core.WrapIdentifier;
-import io.github.douira.glsl_transformer.core.target.ParsedReplaceTargetImpl;
-import io.github.douira.glsl_transformer.core.target.WrapThrowTargetImpl;
-import io.github.douira.glsl_transformer.transform.ActivatableLifecycleUser;
-import io.github.douira.glsl_transformer.transform.InjectionPoint;
-import io.github.douira.glsl_transformer.transform.LifecycleUser;
-import io.github.douira.glsl_transformer.transform.RunPhase;
-import io.github.douira.glsl_transformer.transform.Transformation;
-import io.github.douira.glsl_transformer.transform.WalkPhase;
+import io.github.douira.glsl_transformer.cst.core.SearchTerminals;
+import io.github.douira.glsl_transformer.cst.core.WrapIdentifier;
+import io.github.douira.glsl_transformer.cst.core.target.ParsedReplaceTargetImpl;
+import io.github.douira.glsl_transformer.cst.core.target.WrapThrowTargetImpl;
+import io.github.douira.glsl_transformer.cst.node.StringNode;
+import io.github.douira.glsl_transformer.cst.transform.CSTInjectionPoint;
+import io.github.douira.glsl_transformer.cst.transform.RunPhase;
+import io.github.douira.glsl_transformer.cst.transform.Transformation;
+import io.github.douira.glsl_transformer.cst.transform.WalkPhase;
+import io.github.douira.glsl_transformer.cst.transform.lifecycle.LifecycleUser;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
 import net.coderbot.iris.gl.shader.ShaderType;
 
@@ -56,7 +53,7 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 	static final LifecycleUser<Parameters> wrapFTransform = new WrapIdentifier<Parameters>()
 			.wrapTarget("ftransform")
 			.detectionResult("iris_ftransform")
-			.injectionLocation(InjectionPoint.BEFORE_FUNCTIONS)
+			.injectionLocation(CSTInjectionPoint.BEFORE_FUNCTIONS)
 			.injectionExternalDeclaration("vec4 iris_ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 
 	static final LifecycleUser<Parameters> wrapVertex = new WrapIdentifier<Parameters>()
@@ -67,7 +64,7 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 					"attribute vec3 a_Pos;",
 					"uniform vec3 u_ModelScale;",
 					"attribute vec4 d_ModelOffset;"))
-			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
+			.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS);
 
 	static final LifecycleUser<Parameters> wrapMultiTexCoord = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_MultiTexCoord0")
@@ -76,37 +73,37 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 			.injectionExternalDeclarations(ImmutableList.of(
 					"uniform vec2 u_TextureScale;",
 					"attribute vec2 a_TexCoord;"))
-			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS);
+			.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS);
 
 	static final LifecycleUser<Parameters> wrapColor = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_Color")
 			.detectionResult("a_Color")
-			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+			.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("attribute vec4 a_Color;");
 
 	static final LifecycleUser<Parameters> wrapNormal = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_Normal")
 			.detectionResult("a_Normal")
-			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+			.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("attribute vec3 a_Normal;");
 
 	static final LifecycleUser<Parameters> wrapModelViewMatrix = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_ModelViewMatrix")
 			.detectionResult("u_ModelViewMatrix")
-			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+			.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("uniform mat4 u_ModelViewMatrix;");
 
 	static final LifecycleUser<Parameters> wrapModelViewProjectionMatrix = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_ModelViewProjectionMatrix")
 			.detectionResult("u_ModelViewProjectionMatrix")
-			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+			.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("uniform mat4 u_ModelViewProjectionMatrix;");
 
 	static final LifecycleUser<Parameters> wrapNormalMatrix = new WrapIdentifier<Parameters>()
 			.wrapTarget("gl_NormalMatrix")
 			.detectionResult("u_NormalMatrix")
 			.parsedReplacement("mat3(u_NormalMatrix)")
-			.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+			.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 			.injectionExternalDeclaration("uniform mat4 u_NormalMatrix;");
 
 	static final LifecycleUser<Parameters> replaceTextureMatrix0 = new Transformation<Parameters>() {
@@ -240,7 +237,7 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 				chainDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclaration(InjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
 					}
 
 					@Override
@@ -250,7 +247,7 @@ public class SodiumTerrainTransformation extends Transformation<Parameters> {
 				});
 
 				chainConcurrentDependent(
-						RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_FUNCTIONS, "attribute vec2 a_LightCoord;"));
+						RunPhase.withInjectExternalDeclarations(CSTInjectionPoint.BEFORE_FUNCTIONS, "attribute vec2 a_LightCoord;"));
 
 				chainConcurrentDependent(new SearchTerminals<Parameters>()
 						.addTarget(new ParsedReplaceTargetImpl<>("gl_MultiTexCoord1",

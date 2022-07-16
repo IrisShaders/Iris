@@ -1,6 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
-import io.github.douira.glsl_transformer.transform.JobParameters;
+import io.github.douira.glsl_transformer.job_parameter.JobParameters;
 import net.coderbot.iris.gl.shader.ShaderType;
 
  class Parameters extends JobParameters {
