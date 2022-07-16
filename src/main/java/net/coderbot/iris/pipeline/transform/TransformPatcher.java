@@ -19,6 +19,7 @@ import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
@@ -33,7 +34,7 @@ import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
  */
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
-	private static CSTTransformer<Parameters> manager;
+	private static CSTTransformer<Parameters> transformer;
 
 	/**
 	 * PREV TODO: Only do the NewLines patches if the source code isn't from
@@ -64,7 +65,7 @@ public class TransformPatcher {
 		LifecycleUser<Parameters> sodiumTerrainTransformation = new SodiumTerrainTransformation();
 		LifecycleUser<Parameters> attributeTransformation = new AttributeTransformation();
 
-		manager = new CSTTransformer<Parameters>(new Transformation<Parameters>() {
+		transformer = new CSTTransformer<Parameters>(new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
 				Patch patch = getJobParameters().patch;
@@ -82,7 +83,7 @@ public class TransformPatcher {
 			}
 		});
 
-		manager.setParseTokenFilter(parseTokenFilter);
+		transformer.setParseTokenFilter(parseTokenFilter);
 	}
 
 	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher, boolean doLogging) {
@@ -110,7 +111,7 @@ public class TransformPatcher {
 	}
 
 	private static String transform(String source, Parameters parameters) {
-		return manager.transform(source, parameters);
+		return transformer.transform(source, parameters);
 	}
 
 	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
@@ -118,9 +119,9 @@ public class TransformPatcher {
 				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
 				// routing through original patcher until changes to AttributeShaderTransformer
 				// can be caught up in TransformPatcher
-				// () -> AttributeShaderTransformer.patch(source, type, hasGeometry, inputs));
-				() -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type,
-						hasGeometry, inputs)));
+				() -> AttributeShaderTransformer.patch(source, type, hasGeometry, inputs));
+				// () -> transform(source, new AttributeParameters(Patch.ATTRIBUTES, type,
+				// 		hasGeometry, inputs)));
 	}
 
 	public static String patchSodiumTerrain(String source, ShaderType type) {
