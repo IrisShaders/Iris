@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL40C;
 import org.lwjgl.opengl.GL42C;
 
 import java.nio.ByteBuffer;
@@ -171,6 +172,25 @@ public class IrisRenderSystem {
 		} else {
 			return 0;
 		}
+	}
+
+	public static boolean supportsBufferBlending() {
+		return GL.getCapabilities().GL_ARB_draw_buffers_blend || GL.getCapabilities().OpenGL40;
+	}
+
+	public static void disableBufferBlend(int buffer) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glDisablei(GL30C.GL_BLEND, buffer);
+	}
+
+	public static void enableBufferBlend(int buffer) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL30C.glEnablei(GL30C.GL_BLEND, buffer);
+	}
+
+	public static void blendFuncSeparatei(int buffer, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GL40C.glBlendFuncSeparatei(buffer, srcRGB, dstRGB, srcAlpha, dstAlpha);
 	}
 
 	// These functions are deprecated and unavailable in the core profile.

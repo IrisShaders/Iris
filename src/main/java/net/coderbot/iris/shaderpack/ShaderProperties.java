@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -8,12 +9,14 @@ import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -24,11 +27,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -73,6 +78,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, ArrayList<BufferBlendOverride>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
@@ -192,8 +198,44 @@ public class ShaderProperties {
 
 			handlePassDirective("blend.", key, value, pass -> {
 				if (pass.contains(".")) {
-					// TODO: Support per-buffer blending directives (glBlendFuncSeparateI)
-					Iris.logger.warn("Per-buffer pass blending directives are not supported, ignoring blend directive for " + key);
+
+					if (IrisRenderSystem.supportsBufferBlending()) {
+						throw new RuntimeException("Buffer blending is not supported on this platform, however it was attempted to be used!");
+					}
+
+					String[] parts = pass.split("\\.");
+					int index = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.indexOf(parts[1]);
+
+					if (index == -1 && parts[1].startsWith("colortex")) {
+						String id = parts[1].substring("colortex".length());
+
+						try {
+							index = Integer.parseInt(id);
+						} catch (NumberFormatException e) {
+							throw new RuntimeException("Failed to parse buffer blend!", e);
+						}
+					}
+
+					if (index == -1) {
+						throw new RuntimeException("Failed to parse buffer blend! index = " + index);
+					}
+
+					if ("off".equals(value)) {
+						bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendOverride(index, null));
+						return;
+					}
+
+					String[] modeArray = value.split(" ");
+					int[] modes = new int[4];
+
+					int i = 0;
+					for (String modeName : modeArray) {
+						modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
+						i++;
+					}
+
+					bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendOverride(index, new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+
 					return;
 				}
 
@@ -494,6 +536,10 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, BlendModeOverride> getBlendModeOverrides() {
 		return blendModeOverrides;
+	}
+
+	public Object2ObjectMap<String, ArrayList<BufferBlendOverride>> getBufferBlendOverrides() {
+		return bufferBlendOverrides;
 	}
 
 	public EnumMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
