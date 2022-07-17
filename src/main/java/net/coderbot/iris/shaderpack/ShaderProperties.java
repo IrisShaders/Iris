@@ -199,7 +199,7 @@ public class ShaderProperties {
 			handlePassDirective("blend.", key, value, pass -> {
 				if (pass.contains(".")) {
 
-					if (IrisRenderSystem.supportsBufferBlending()) {
+					if (!IrisRenderSystem.supportsBufferBlending()) {
 						throw new RuntimeException("Buffer blending is not supported on this platform, however it was attempted to be used!");
 					}
 
