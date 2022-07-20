@@ -1,8 +1,8 @@
 package net.coderbot.iris.pipeline.transform;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -57,11 +57,13 @@ public class TransformPatcher {
 		transformer = new ASTTransformer<>();
 		transformer.setTransformation((tree, root, parameters) -> {
 			// check for illegal references to internal Iris shader interfaces
-			Map<String, Set<Identifier>> detectionResult = root.identifierIndex.prefixMap("iris_");
-			if (!detectionResult.isEmpty()) {
+			Optional<Identifier> violation = Stream.concat(
+					root.identifierIndex.prefixQueryFlat("iris_"),
+					root.identifierIndex.prefixQueryFlat("irisMain")).findAny();
+			if (violation.isPresent()) {
 				throw new SemanticException(
-						"Detected a potential reference to unstable and internal Iris shader interfaces (iris_). This isn't currently supported. Violation: "
-								+ detectionResult.keySet().iterator().next());
+						"Detected a potential reference to unstable and internal Iris shader interfaces (iris_ and irisMain). This isn't currently supported. Violation: "
+								+ violation.get().getName());
 			}
 
 			Root.indexBuildSession(tree, () -> {
