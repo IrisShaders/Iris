@@ -82,7 +82,7 @@ public final class CommonUniforms {
 			return ZERO_VECTOR_2i;
 		}, StateUpdateNotifiers.bindTextureNotifier);
 
-		uniforms.uniform2i("mainUnitSize", () -> {
+		uniforms.uniform2i("gtextureSize", () -> {
 			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
 
 			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
