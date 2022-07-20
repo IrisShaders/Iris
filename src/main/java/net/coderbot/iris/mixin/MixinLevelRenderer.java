@@ -208,32 +208,14 @@ public class MixinLevelRenderer {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
-	@Inject(method = "renderLevel",
+	@ModifyArg(method = "renderLevel",
 		at = @At(value = "INVOKE", target = "net/minecraft/client/renderer/MultiBufferSource$BufferSource.getBuffer (Lnet/minecraft/client/renderer/RenderType;)Lcom/mojang/blaze3d/vertex/VertexConsumer;"),
 		slice = @Slice(
 			from = @At(value = "CONSTANT", args = "stringValue=outline"),
 			to = @At(value = "INVOKE", target = "net/minecraft/client/renderer/LevelRenderer.renderHitOutline (Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V")
 		))
-	private void iris$beginBlockOutline(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
-		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
-
-		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
-			return;
-		}
-
-		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->
-			new OuterWrappedRenderType("iris:is_outline", type, IsOutlineRenderStateShard.INSTANCE));
-	}
-
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "net/minecraft/client/renderer/LevelRenderer.renderHitOutline (Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"))
-	private void iris$endBlockOutline(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
-		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
-
-		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
-			return;
-		}
-
-		((WrappingMultiBufferSource) bufferSource).popWrappingFunction();
+	private RenderType iris$beginBlockOutline(RenderType type) {
+		return new OuterWrappedRenderType("iris:is_outline", type, IsOutlineRenderStateShard.INSTANCE);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
