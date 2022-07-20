@@ -82,6 +82,18 @@ public final class CommonUniforms {
 			return ZERO_VECTOR_2i;
 		}, StateUpdateNotifiers.bindTextureNotifier);
 
+		uniforms.uniform2i("mainUnitSize", () -> {
+			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
+
+			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
+			if (!(texture instanceof TextureAtlas)) {
+				TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
+				return new Vector2i(info.getWidth(), info.getHeight());
+			}
+
+			return ZERO_VECTOR_2i;
+		}, StateUpdateNotifiers.bindTextureNotifier);
+
 		uniforms.uniform4i("blendFunc", () -> {
 			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND();
 
