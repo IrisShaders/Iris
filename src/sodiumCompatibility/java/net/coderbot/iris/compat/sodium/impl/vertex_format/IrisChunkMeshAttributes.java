@@ -10,4 +10,5 @@ public class IrisChunkMeshAttributes {
     public static TerrainMeshAttribute TANGENT;
     public static TerrainMeshAttribute MID_TEX_COORD;
     public static TerrainMeshAttribute BLOCK_ID;
+	public static TerrainMeshAttribute MID_BLOCK;
 }

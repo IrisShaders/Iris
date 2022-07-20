@@ -75,7 +75,9 @@ public class NewShaderTests {
 				"        { \"name\": \"shadow\" },\n" +
 				"        { \"name\": \"watershadow\" },\n" +
 				"        { \"name\": \"shadowtex0\" },\n" +
+				"        { \"name\": \"shadowtex0HW\" },\n" +
 				"        { \"name\": \"shadowtex1\" },\n" +
+				"        { \"name\": \"shadowtex1HW\" },\n" +
 				"        { \"name\": \"depthtex0\" },\n" +
 				"        { \"name\": \"depthtex1\" },\n" +
 				"        { \"name\": \"noisetex\" },\n");

@@ -7,17 +7,18 @@ import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter
 import net.coderbot.iris.block_rendering.MaterialIdHolder;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vertices.ExtendedDataHelper;
 import net.coderbot.iris.vertices.NormalHelper;
 
 import java.nio.ByteBuffer;
 
 import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
-public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implements TerrainVertexSink, MaterialIdAwareVertexWriter {
+public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implements TerrainVertexSink, ContextAwareVertexWriter {
 	private final QuadViewTerrain.QuadViewTerrainNio quad = new QuadViewTerrain.QuadViewTerrainNio();
 	private final Vector3f normal = new Vector3f();
 
-	private MaterialIdHolder idHolder;
+	private BlockContextHolder contextHolder;
 
 	private int vertexCount;
 	private float uSum;
@@ -32,13 +33,14 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		uSum += u;
 		vSum += v;
 
-		short materialId = idHolder.id;
-		short renderType = idHolder.renderType;
+		short materialId = contextHolder.blockId;
+		short renderType = contextHolder.renderType;
 
-		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType);
+		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType, ExtendedDataHelper.computeMidBlock(posX, posY, posZ, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 	}
 
-	private void writeQuadInternal(float posX, float posY, float posZ, int color, float u, float v, int light, short materialId, short renderType) {
+	private void writeQuadInternal(float posX, float posY, float posZ, int color,
+								   float u, float v, int light, short materialId, short renderType, int packedMidBlock) {
 		int i = this.writeOffset;
 
 		vertexCount++;
@@ -63,6 +65,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		// TODO: can we pack this into one short?
 		buffer.putShort(i + 36, materialId);
 		buffer.putShort(i + 38, renderType);
+		buffer.putInt(i + 40, packedMidBlock);
 
 		if (vertexCount == 4) {
 			vertexCount = 0;
@@ -135,7 +138,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 	}
 
 	@Override
-	public void iris$setIdHolder(MaterialIdHolder holder) {
-		this.idHolder = holder;
+	public void iris$setContextHolder(BlockContextHolder holder) {
+		this.contextHolder = holder;
 	}
 }

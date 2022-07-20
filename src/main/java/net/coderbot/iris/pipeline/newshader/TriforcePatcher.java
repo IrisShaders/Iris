@@ -98,6 +98,9 @@ public class TriforcePatcher {
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }");
 
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "ivec4 texture2D(isampler2D sampler, ivec2 coord) { return texture(sampler, coord); }");
+		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uvec4 texture2D(usampler2D sampler, uvec2 coord) { return texture(sampler, coord); }");
+
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");
 		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }");

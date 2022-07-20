@@ -15,7 +15,7 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttribute
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements TerrainVertexType {
-	static final int STRIDE = 40;
+	static final int STRIDE = 44;
 
 	public static final VertexFormat<TerrainMeshAttribute> VERTEX_FORMAT = VertexFormat.builder(TerrainMeshAttribute.class, STRIDE)
 		.addElement(TerrainMeshAttribute.POSITION, 0, VertexAttributeFormat.SHORT, 3, true, false)
@@ -26,6 +26,7 @@ public class XHFPModelVertexType implements TerrainVertexType {
 		.addElement(IrisChunkMeshAttributes.TANGENT, 28, VertexAttributeFormat.BYTE, 4, true, false)
 		.addElement(IrisChunkMeshAttributes.NORMAL, 32, VertexAttributeFormat.BYTE, 3, true, false)
 		.addElement(IrisChunkMeshAttributes.BLOCK_ID, 36, VertexAttributeFormat.UNSIGNED_SHORT, 2, false, false)
+		.addElement(IrisChunkMeshAttributes.MID_BLOCK, 40, IrisGlVertexAttributeFormat.BYTE, 3, false)
 		.build();
 
 	private static final int POSITION_MAX_VALUE = 32768;

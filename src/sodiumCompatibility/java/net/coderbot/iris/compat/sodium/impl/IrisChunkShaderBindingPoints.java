@@ -10,4 +10,5 @@ public class IrisChunkShaderBindingPoints {
     public static final int MID_TEX_COORD = 5;
     public static final int TANGENT = 6;
     public static final int NORMAL = 7;
+	public static final int MID_BLOCK = 8;
 }

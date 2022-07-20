@@ -22,6 +22,7 @@ public class MixinBufferBuilder_ExtendedVertexFormatCompat {
 	@Shadow
 	private VertexFormat format;
 
+	@SuppressWarnings("target")
 	@ModifyVariable(method = "createSink(Lnet/caffeinemc/sodium/render/vertex/type/VertexType;)Lnet/caffeinemc/sodium/render/vertex/VertexSink;",
 		at = @At("HEAD"), remap = false)
 	private VertexType<?> iris$createSink(VertexType<?> type) {
