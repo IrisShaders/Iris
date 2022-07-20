@@ -3,8 +3,8 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexSink;
 import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferView;
 import net.caffeinemc.sodium.render.vertex.buffer.VertexBufferWriterUnsafe;
-import net.coderbot.iris.block_rendering.MaterialIdHolder;
-import net.coderbot.iris.compat.sodium.impl.block_id.MaterialIdAwareVertexWriter;
+import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
+import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
@@ -13,7 +13,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
-public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements TerrainVertexSink, MaterialIdAwareVertexWriter {
+public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements TerrainVertexSink, ContextAwareVertexWriter {
 	private final QuadViewTerrain.QuadViewTerrainUnsafe quad = new QuadViewTerrain.QuadViewTerrainUnsafe();
 	private final Vector3f normal = new Vector3f();
 
@@ -32,8 +32,8 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		uSum += u;
 		vSum += v;
 
-		short materialId = idHolder.id;
-		short renderType = idHolder.renderType;
+		short materialId = contextHolder.blockId;
+		short renderType = contextHolder.renderType;
 
 		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, materialId, renderType, ExtendedDataHelper.computeMidBlock(posX, posY, posZ, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 	}

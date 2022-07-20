@@ -104,6 +104,8 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 					vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
 				new VertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
 					vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL)),
+				new VertexAttributeBinding(IrisChunkShaderBindingPoints.MID_BLOCK,
+					vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_BLOCK)),
 			})
 		));
 

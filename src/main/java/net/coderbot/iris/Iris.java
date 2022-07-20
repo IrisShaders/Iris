@@ -216,7 +216,7 @@ public class Iris {
 		lastDimension = DimensionId.OVERWORLD;
 		Iris.getPipelineManager().preparePipeline(DimensionId.OVERWORLD);
 	}
-
+	
 	public static void handleKeybinds(Minecraft minecraft) {
 		if (reloadKeybind.consumeClick()) {
 			try {

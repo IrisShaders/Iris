@@ -19,6 +19,7 @@ public class MixinGlProgram {
 		GlStateManager._glBindAttribLocation(handle, 4, "mc_Entity");
 		GlStateManager._glBindAttribLocation(handle, 5, "mc_midTexCoord");
 		GlStateManager._glBindAttribLocation(handle, 6, "at_tangent");
+		GlStateManager._glBindAttribLocation(handle, 8, "at_midBlock");
 
 		GL20C.glLinkProgram(handle);
 	}

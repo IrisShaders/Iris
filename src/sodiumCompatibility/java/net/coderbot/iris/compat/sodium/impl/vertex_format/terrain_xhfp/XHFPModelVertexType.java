@@ -26,7 +26,7 @@ public class XHFPModelVertexType implements TerrainVertexType {
 		.addElement(IrisChunkMeshAttributes.TANGENT, 28, VertexAttributeFormat.BYTE, 4, true, false)
 		.addElement(IrisChunkMeshAttributes.NORMAL, 32, VertexAttributeFormat.BYTE, 3, true, false)
 		.addElement(IrisChunkMeshAttributes.BLOCK_ID, 36, VertexAttributeFormat.UNSIGNED_SHORT, 2, false, false)
-		.addElement(IrisChunkMeshAttributes.MID_BLOCK, 40, IrisGlVertexAttributeFormat.BYTE, 3, false)
+		.addElement(IrisChunkMeshAttributes.MID_BLOCK, 40, VertexAttributeFormat.BYTE, 3, false, false)
 		.build();
 
 	private static final int POSITION_MAX_VALUE = 32768;
