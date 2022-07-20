@@ -12,9 +12,9 @@ import net.caffeinemc.gfx.api.buffer.Buffer;
 import net.caffeinemc.gfx.api.buffer.MappedBufferFlags;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.device.commands.RenderCommandList;
-import net.caffeinemc.gfx.api.pipeline.Pipeline;
-import net.caffeinemc.gfx.api.pipeline.PipelineDescription;
 import net.caffeinemc.gfx.api.pipeline.PipelineState;
+import net.caffeinemc.gfx.api.pipeline.RenderPipeline;
+import net.caffeinemc.gfx.api.pipeline.RenderPipelineDescription;
 import net.caffeinemc.gfx.api.pipeline.state.BlendFunc;
 import net.caffeinemc.gfx.api.pipeline.state.CullMode;
 import net.caffeinemc.gfx.api.shader.Program;
@@ -55,8 +55,8 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
     public static final int FOG_PARAMETERS_SIZE = 32;
 
     protected final ChunkRenderPassManager renderPassManager;
-    protected final Pipeline<IrisChunkShaderInterface, BufferTarget>[] pipelines;
-    protected final Pipeline<IrisChunkShaderInterface, BufferTarget>[] shadowPipelines;
+    protected final RenderPipeline<IrisChunkShaderInterface, BufferTarget>[] pipelines;
+    protected final RenderPipeline<IrisChunkShaderInterface, BufferTarget>[] shadowPipelines;
 
     protected final StreamingBuffer uniformBufferCameraMatrices;
     protected final StreamingBuffer uniformBufferChunkTransforms;
@@ -81,8 +81,8 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 
 		this.vertexType = vertexType;
         //noinspection unchecked
-		this.pipelines = new Pipeline[renderPassManager.getRenderPassCount()];
-		this.shadowPipelines = new Pipeline[renderPassManager.getRenderPassCount()];
+		this.pipelines = new RenderPipeline[renderPassManager.getRenderPassCount()];
+		this.shadowPipelines = new RenderPipeline[renderPassManager.getRenderPassCount()];
 
 		// construct all pipelines for current render passes now
 		var vertexFormat = vertexType.getCustomVertexFormat();
@@ -109,15 +109,15 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 
 		boolean hasShadowPass = overrides.getSodiumTerrainPipeline() != null && overrides.getSodiumTerrainPipeline().hasShadowPass();
 
-		PipelineDescription terrainDescription = PipelineDescription.builder().setCullingMode(CullMode.DISABLE).build();
-		PipelineDescription translucentDescription = PipelineDescription.builder().setCullingMode(CullMode.DISABLE).setBlendFunction(BlendFunc.separate(BlendFunc.SrcFactor.SRC_ALPHA, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA, BlendFunc.SrcFactor.ONE, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA)).build();
+		RenderPipelineDescription terrainDescription = RenderPipelineDescription.builder().setCullingMode(CullMode.DISABLE).build();
+		RenderPipelineDescription translucentDescription = RenderPipelineDescription.builder().setCullingMode(CullMode.DISABLE).setBlendFunction(BlendFunc.separate(BlendFunc.SrcFactor.SRC_ALPHA, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA, BlendFunc.SrcFactor.ONE, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA)).build();
 
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
 			Program<IrisChunkShaderInterface> program = overrides.getProgramOverride(this instanceof MdiChunkRendererIris, getMaxBatchSize(), false, device, pass, vertexType);
 			if (program == null) {
 				throw new RuntimeException("failure");
 			}
-			Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createPipeline(
+			RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createRenderPipeline(
 				pass.getPipelineDescription(),
 				program,
 				vertexArray
@@ -130,7 +130,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 				if (shadowProgram == null) {
 					throw new RuntimeException("failure");
 				}
-				Pipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createPipeline(
+				RenderPipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createRenderPipeline(
 					pass.isTranslucent() ? translucentDescription : terrainDescription,
 					shadowProgram,
 					vertexArray
@@ -195,11 +195,11 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 	@Override
 	public void createPipelines(IrisChunkProgramOverrides overrides) {
 		boolean hasShadowPass = overrides.getSodiumTerrainPipeline() != null && overrides.getSodiumTerrainPipeline().hasShadowPass();
-		PipelineDescription terrainDescription = PipelineDescription.builder().setCullingMode(CullMode.DISABLE).build();
-		PipelineDescription translucentDescription = PipelineDescription.builder().setCullingMode(CullMode.DISABLE).setBlendFunction(BlendFunc.separate(BlendFunc.SrcFactor.SRC_ALPHA, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA, BlendFunc.SrcFactor.ONE, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA)).build();
+		RenderPipelineDescription terrainDescription = RenderPipelineDescription.builder().setCullingMode(CullMode.DISABLE).build();
+		RenderPipelineDescription translucentDescription = RenderPipelineDescription.builder().setCullingMode(CullMode.DISABLE).setBlendFunction(BlendFunc.separate(BlendFunc.SrcFactor.SRC_ALPHA, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA, BlendFunc.SrcFactor.ONE, BlendFunc.DstFactor.ONE_MINUS_SRC_ALPHA)).build();
 
 		for (ChunkRenderPass pass : renderPassManager.getAllRenderPasses()) {
-			Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createPipeline(
+			RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline = this.device.createRenderPipeline(
 				pass.getPipelineDescription(),
 				overrides.getProgramOverride(this instanceof MdiChunkRendererIris, getMaxBatchSize(), false, device, pass, vertexType),
 				vertexArray
@@ -208,7 +208,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 			this.pipelines[pass.getId()] = pipeline;
 
 			if (hasShadowPass) {
-				Pipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createPipeline(
+				RenderPipeline<IrisChunkShaderInterface, BufferTarget> shadowPipeline = this.device.createRenderPipeline(
 					pass.isTranslucent() ? translucentDescription : terrainDescription,
 					overrides.getProgramOverride(this instanceof MdiChunkRendererIris, getMaxBatchSize(), true, device, pass, vertexType),
 					vertexArray
@@ -239,7 +239,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
         }
 
         // if the render list exists, the pipeline probably exists (unless a new render pass was added without a reload)
-		Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline;
+		RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline;
 		if(ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			pipeline = this.shadowPipelines[passId];
 		} else {
@@ -248,7 +248,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 
 		RenderSystem.setShaderTexture(0, GlTexture.getHandle(TextureUtil.getBlockAtlasTexture()));
 		pipeline.getProgram().getInterface().setup();
-        this.device.usePipeline(pipeline, (commandList, programInterface, pipelineState) -> {
+        this.device.useRenderPipeline(pipeline, (commandList, programInterface, pipelineState) -> {
             this.setupPerRenderList(renderPass, matrices, frameIndex, pipeline, commandList, programInterface, pipelineState);
 
             for (B batch : renderList) {
@@ -266,7 +266,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
             ChunkRenderPass renderPass,
             ChunkRenderMatrices matrices,
             int frameIndex,
-            Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
+            RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
             ChunkShaderInterface programInterface,
             PipelineState pipelineState
@@ -281,7 +281,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
             ChunkRenderPass renderPass,
             ChunkRenderMatrices matrices,
             int frameIndex,
-            Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
+			RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
             ChunkShaderInterface programInterface,
             PipelineState pipelineState,
@@ -299,7 +299,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
             ChunkRenderPass renderPass,
             ChunkRenderMatrices matrices,
             int frameIndex,
-            Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
+			RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
             ChunkShaderInterface programInterface,
             PipelineState pipelineState,
@@ -375,6 +375,9 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
         for (SortedChunkLists.RegionBucket regionBucket : list.unsortedRegionBuckets()) {
             for (RenderSection section : regionBucket.unsortedSections()) {
                 for (ChunkPassModel model : section.getData().models) {
+					if (model == null) {
+						continue;
+					}
                     // each bit set represents a model, so we can just count the set bits
                     faces += Integer.bitCount(model.getVisibilityBits());
                 }

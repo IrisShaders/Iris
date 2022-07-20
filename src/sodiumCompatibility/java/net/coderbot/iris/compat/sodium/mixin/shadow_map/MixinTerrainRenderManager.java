@@ -31,6 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -48,16 +49,16 @@ public abstract class MixinTerrainRenderManager implements SwappableRenderSectio
 	@Shadow
 	@Final
 	@Mutable
-	private ReferenceArrayList<RenderSection> visibleMeshedSections;
+	private List<RenderSection> visibleMeshedSections;
 	@Shadow
 	@Final
 	@Mutable
 
-	private ReferenceArrayList<RenderSection> visibleTickingSections;
+	private List<RenderSection> visibleTickingSections;
 	@Mutable
 	@Shadow
 	@Final
-	private ReferenceArrayList<RenderSection> visibleBlockEntitySections;
+	private List<RenderSection> visibleBlockEntitySections;
 
 	@Shadow
 	public abstract Iterable<BlockEntity> getVisibleBlockEntities();
@@ -82,13 +83,13 @@ public abstract class MixinTerrainRenderManager implements SwappableRenderSectio
 	@Shadow
 	private int frameIndex;
 	@Unique
-    private ReferenceArrayList<RenderSection> visibleSectionsSwap;
+    private List<RenderSection> visibleSectionsSwap;
 
     @Unique
-    private ReferenceArrayList<RenderSection> tickableChunksSwap;
+    private List<RenderSection> tickableChunksSwap;
 
     @Unique
-    private ReferenceArrayList<RenderSection> visibleBlockEntitiesSwap;
+    private List<RenderSection> visibleBlockEntitiesSwap;
 
 
     @Unique
@@ -108,15 +109,15 @@ public abstract class MixinTerrainRenderManager implements SwappableRenderSectio
 
     @Override
     public void iris$swapVisibilityState() {
-        ReferenceArrayList<RenderSection> visibleSectionsTmp = visibleMeshedSections;
+		List<RenderSection> visibleSectionsTmp = visibleMeshedSections;
 		visibleMeshedSections = visibleSectionsSwap;
         visibleSectionsSwap = visibleSectionsTmp;
 
-        ReferenceArrayList<RenderSection> tickableChunksTmp = visibleTickingSections;
+        List<RenderSection> tickableChunksTmp = visibleTickingSections;
         visibleTickingSections = tickableChunksSwap;
         tickableChunksSwap = tickableChunksTmp;
 
-        ReferenceArrayList<RenderSection> visibleBlockEntitiesTmp = visibleBlockEntitySections;
+		List<RenderSection> visibleBlockEntitiesTmp = visibleBlockEntitySections;
         visibleBlockEntitySections = visibleBlockEntitiesSwap;
         visibleBlockEntitiesSwap = visibleBlockEntitiesTmp;
 

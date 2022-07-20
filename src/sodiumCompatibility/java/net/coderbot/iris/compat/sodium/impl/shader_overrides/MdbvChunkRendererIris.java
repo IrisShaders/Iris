@@ -8,8 +8,8 @@ import java.util.Iterator;
 import net.caffeinemc.gfx.api.buffer.Buffer;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.device.commands.RenderCommandList;
-import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.pipeline.PipelineState;
+import net.caffeinemc.gfx.api.pipeline.RenderPipeline;
 import net.caffeinemc.gfx.api.types.ElementFormat;
 import net.caffeinemc.gfx.api.types.PrimitiveType;
 import net.caffeinemc.gfx.util.buffer.StreamingBuffer;
@@ -128,15 +128,15 @@ public class MdbvChunkRendererIris extends AbstractIrisMdChunkRenderer<MdbvChunk
                 for (Iterator<RenderSection> sectionIterator = regionBucket.sortedSections(reverseOrder); sectionIterator.hasNext(); ) {
                     RenderSection section = sectionIterator.next();
 
-					BufferSegment uploadedSegment = section.getUploadedGeometrySegment();
+					long uploadedSegment = section.getUploadedGeometrySegment();
 
-					if (uploadedSegment == null) {
+					if (uploadedSegment == BufferSegment.INVALID) {
                         continue;
                     }
 
 					ChunkPassModel[] models = section.getData().models;
 
-					int baseVertex = uploadedSegment.getOffset();
+					int baseVertex = BufferSegment.getOffset(uploadedSegment);
 
                     int visibility = calculateVisibilityFlags(section.getData().bounds, camera);
 
@@ -188,7 +188,7 @@ public class MdbvChunkRendererIris extends AbstractIrisMdChunkRenderer<MdbvChunk
                         batchCommandCount++;
                     }
 
-                    largestVertexIndex = Math.max(largestVertexIndex, uploadedSegment.getLength());
+                    largestVertexIndex = Math.max(largestVertexIndex, BufferSegment.getLength(uploadedSegment));
                 }
 
                 if (batchCommandCount == 0) {
@@ -283,6 +283,9 @@ public class MdbvChunkRendererIris extends AbstractIrisMdChunkRenderer<MdbvChunk
         for (SortedChunkLists.RegionBucket regionBucket : list.unsortedRegionBuckets()) {
             for (RenderSection section : regionBucket.unsortedSections()) {
                 for (ChunkPassModel model : section.getData().models) {
+					if (model == null) {
+						continue;
+					}
                     // each bit set represents a model, so we can just count the set bits
                     size += Integer.bitCount(model.getVisibilityBits()) * TRANSFORM_STRUCT_STRIDE;
                 }
@@ -298,7 +301,7 @@ public class MdbvChunkRendererIris extends AbstractIrisMdChunkRenderer<MdbvChunk
             ChunkRenderPass renderPass,
             ChunkRenderMatrices matrices,
             int frameIndex,
-            Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
+            RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
             ChunkShaderInterface programInterface,
             PipelineState pipelineState,
@@ -328,7 +331,7 @@ public class MdbvChunkRendererIris extends AbstractIrisMdChunkRenderer<MdbvChunk
             ChunkRenderPass renderPass,
             ChunkRenderMatrices matrices,
             int frameIndex,
-            Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
+            RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
             ChunkShaderInterface programInterface,
             PipelineState pipelineState,

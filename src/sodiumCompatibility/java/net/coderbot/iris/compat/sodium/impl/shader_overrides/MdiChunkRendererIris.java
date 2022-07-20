@@ -10,8 +10,8 @@ import net.caffeinemc.gfx.api.buffer.Buffer;
 import net.caffeinemc.gfx.api.buffer.MappedBufferFlags;
 import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.gfx.api.device.commands.RenderCommandList;
-import net.caffeinemc.gfx.api.pipeline.Pipeline;
 import net.caffeinemc.gfx.api.pipeline.PipelineState;
+import net.caffeinemc.gfx.api.pipeline.RenderPipeline;
 import net.caffeinemc.gfx.api.types.ElementFormat;
 import net.caffeinemc.gfx.api.types.PrimitiveType;
 import net.caffeinemc.gfx.util.buffer.DualStreamingBuffer;
@@ -136,15 +136,15 @@ public class MdiChunkRendererIris<B extends MdiChunkRendererIris.MdiChunkRenderB
                 for (Iterator<RenderSection> sectionIterator = regionBucket.sortedSections(reverseOrder); sectionIterator.hasNext(); ) {
                     RenderSection section = sectionIterator.next();
 
-					BufferSegment uploadedSegment = section.getUploadedGeometrySegment();
+					long uploadedSegment = section.getUploadedGeometrySegment();
 
-					if (uploadedSegment == null) {
+					if (uploadedSegment == BufferSegment.INVALID) {
                         continue;
                     }
 
 					ChunkPassModel[] models = section.getData().models;
 
-					int baseVertex = uploadedSegment.getOffset();
+					int baseVertex = BufferSegment.getOffset(uploadedSegment);
 
 					int visibility = calculateVisibilityFlags(section.getData().bounds, camera);
 
@@ -201,7 +201,7 @@ public class MdiChunkRendererIris<B extends MdiChunkRendererIris.MdiChunkRenderB
                     transformBufferPosition += TRANSFORM_STRUCT_STRIDE;
                     batchTransformCount++;
 
-                    largestVertexIndex = Math.max(largestVertexIndex, uploadedSegment.getLength());
+                    largestVertexIndex = Math.max(largestVertexIndex, BufferSegment.getLength(uploadedSegment));
                 }
 
                 if (batchCommandCount == 0) {
@@ -309,7 +309,7 @@ public class MdiChunkRendererIris<B extends MdiChunkRendererIris.MdiChunkRenderB
             ChunkRenderPass renderPass,
             ChunkRenderMatrices matrices,
             int frameIndex,
-            Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
+            RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
             ChunkShaderInterface programInterface,
             PipelineState pipelineState
@@ -332,7 +332,7 @@ public class MdiChunkRendererIris<B extends MdiChunkRendererIris.MdiChunkRenderB
             ChunkRenderPass renderPass,
             ChunkRenderMatrices matrices,
             int frameIndex,
-            Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
+            RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
             ChunkShaderInterface programInterface,
             PipelineState pipelineState,
@@ -362,7 +362,7 @@ public class MdiChunkRendererIris<B extends MdiChunkRendererIris.MdiChunkRenderB
             ChunkRenderPass renderPass,
             ChunkRenderMatrices matrices,
             int frameIndex,
-            Pipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
+            RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
             ChunkShaderInterface programInterface,
             PipelineState pipelineState,
