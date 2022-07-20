@@ -25,9 +25,7 @@ public class AttributeTransformer {
 		if (parameters.inputs.lightmap) {
 			// original: transformations.replaceExact("gl_MultiTexCoord1",
 			// "gl_MultiTexCoord2");
-			root.identifierIndex.get("gl_MultiTexCoord1").forEach(identifier -> {
-				identifier.name = "gl_MultiTexCoord2";
-			});
+			root.identifierIndex.renameAll("gl_MultiTexCoord1", "gl_MultiTexCoord2");
 		}
 
 		Stream<Identifier> stream = Stream.empty();
@@ -53,11 +51,8 @@ public class AttributeTransformer {
 		stream.forEach(identifier -> {
 			ReferenceExpression reference = (ReferenceExpression) identifier.getParent();
 			reference.replaceByAndDelete(
-					transformer.parseNode(
-							"vec4(240.0, 240.0, 0.0, 1.0)",
-							reference.getParent(),
-							GLSLParser::expression,
-							ASTBuilder::visitExpression));
+					transformer.parseExpression(reference.getParent(),
+							"vec4(240.0, 240.0, 0.0, 1.0)"));
 		});
 
 		// TODO: patchTextureMatrices(transformations, inputs.lightmap);
@@ -72,20 +67,13 @@ public class AttributeTransformer {
 			// TODO: proper type conversion, see original code
 			// original: transformations.replaceExact("gl_MultiTexCoord3",
 			// "mc_midTexCoord");
-			root.identifierIndex.get("gl_MultiTexCoord3").forEach(identifier -> {
-				identifier.name = "mc_midTexCoord";
-			});
+			root.identifierIndex.renameAll("gl_MultiTexCoord3", "mc_midTexCoord");
 
 			// original:
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 			// "attribute vec4 mc_midTexCoord;");
-			 //TODO: use new compact parse method for this
-			tree.injectNode(ASTInjectionPoint.BEFORE_FUNCTIONS,
-					transformer.parseNode(
-							"attribute vec4 mc_midTexCoord;",
-							tree,
-							GLSLParser::externalDeclaration,
-							ASTBuilder::visitExternalDeclaration));
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
+					"attribute vec4 mc_midTexCoord;");
 		}
 	}
 }
