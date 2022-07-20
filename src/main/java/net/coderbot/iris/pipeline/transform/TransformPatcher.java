@@ -54,10 +54,8 @@ public class TransformPatcher {
 	};
 
 	static {
-		transformer = new ASTTransformer<>(translationUnit -> {
-			Root root = translationUnit.getRoot();
-			Parameters parameters = transformer.getJobParameters();
-
+		transformer = new ASTTransformer<>();
+		transformer.setTransformation((tree, root, parameters) -> {
 			// check for illegal references to internal Iris shader interfaces
 			Map<String, Set<Identifier>> detectionResult = root.identifierIndex.prefixMap("iris_");
 			if (!detectionResult.isEmpty()) {
@@ -66,12 +64,14 @@ public class TransformPatcher {
 								+ detectionResult.keySet().iterator().next());
 			}
 
-			if (parameters.patch == Patch.ATTRIBUTES) {
-				AttributeTransformer.accept(translationUnit, root, (AttributeParameters) parameters);
-			}
-			if (parameters.patch == Patch.SODIUM_TERRAIN) {
-				SodiumTerrainTransformer.accept(translationUnit, root, parameters);
-			}
+			Root.indexBuildSession(tree, () -> {
+				if (parameters.patch == Patch.ATTRIBUTES) {
+					AttributeTransformer.accept(transformer, tree, root, (AttributeParameters) parameters);
+				}
+				if (parameters.patch == Patch.SODIUM_TERRAIN) {
+					SodiumTerrainTransformer.accept(transformer, tree, root, parameters);
+				}
+			});
 		});
 		transformer.getInternalParser().setParseTokenFilter(parseTokenFilter);
 	}
