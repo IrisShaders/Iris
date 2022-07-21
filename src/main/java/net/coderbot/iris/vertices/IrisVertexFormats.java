@@ -25,7 +25,7 @@ public class IrisVertexFormats {
 
 		terrainElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION); // 12
 		terrainElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR); // 16
-		terrainElements.put("UVO", DefaultVertexFormat.ELEMENT_UV0); // 24
+		terrainElements.put("UV0", DefaultVertexFormat.ELEMENT_UV0); // 24
 		terrainElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2); // 28
 		terrainElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL); // 31
 		terrainElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING); // 32
