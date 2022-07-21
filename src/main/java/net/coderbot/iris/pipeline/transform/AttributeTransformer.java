@@ -42,16 +42,16 @@ public class AttributeTransformer {
 		// 240.0, 0.0, 1.0)");
 		if (!parameters.inputs.lightmap) {
 			stream = Stream.concat(stream,
-					root.identifierIndex.get("gl_MultiTexCoord1").stream());
+					root.identifierIndex.getStream("gl_MultiTexCoord1"));
 			stream = Stream.concat(stream,
-					root.identifierIndex.get("gl_MultiTexCoord2").stream());
+					root.identifierIndex.getStream("gl_MultiTexCoord2"));
 		}
 
 		// original: transformations.define("gl_MultiTexCoord0", "vec4(240.0, 240.0,
 		// 0.0, 1.0)");
-		if (parameters.inputs.overlay) {
+		if (!parameters.inputs.texture) {
 			stream = Stream.concat(stream,
-					root.identifierIndex.get("gl_MultiTexCoord0").stream());
+					root.identifierIndex.getStream("gl_MultiTexCoord0"));
 		}
 
 		nodeList.clear();
