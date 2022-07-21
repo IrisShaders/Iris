@@ -29,17 +29,16 @@ public class AttributeTransformer {
 			AttributeParameters parameters) {
 
 		if (parameters.inputs.lightmap) {
-			// original: transformations.replaceExact("gl_MultiTexCoord1",
-			// "gl_MultiTexCoord2");
+			// transformations.replaceExact("gl_MultiTexCoord1", "gl_MultiTexCoord2");
 			root.identifierIndex.renameAll("gl_MultiTexCoord1", "gl_MultiTexCoord2");
 		}
 
 		Stream<Identifier> stream = Stream.empty();
 
-		// original: transformations.replaceExact("gl_MultiTexCoord1", "vec4(240.0,
-		// 240.0, 0.0, 1.0)");
-		// original: transformations.replaceExact("gl_MultiTexCoord2", "vec4(240.0,
-		// 240.0, 0.0, 1.0)");
+		// transformations.replaceExact("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0,
+		// 1.0)");
+		// transformations.replaceExact("gl_MultiTexCoord2", "vec4(240.0, 240.0, 0.0,
+		// 1.0)");
 		if (!parameters.inputs.lightmap) {
 			stream = Stream.concat(stream,
 					root.identifierIndex.getStream("gl_MultiTexCoord1"));
@@ -47,7 +46,7 @@ public class AttributeTransformer {
 					root.identifierIndex.getStream("gl_MultiTexCoord2"));
 		}
 
-		// original: transformations.define("gl_MultiTexCoord0", "vec4(240.0, 240.0,
+		// transformations.define("gl_MultiTexCoord0", "vec4(240.0, 240.0,
 		// 0.0, 1.0)");
 		if (!parameters.inputs.texture) {
 			stream = Stream.concat(stream,
@@ -61,7 +60,7 @@ public class AttributeTransformer {
 					transformer.parseExpression(identifier, "vec4(240.0, 240.0, 0.0, 1.0)"));
 		}
 
-		// original: patchTextureMatrices(transformations, inputs.lightmap);
+		// patchTextureMatrices(transformations, inputs.lightmap);
 		patchTextureMatrices(transformer, tree, root, parameters.inputs.lightmap);
 
 		if (parameters.inputs.overlay) {
@@ -72,11 +71,9 @@ public class AttributeTransformer {
 				&& root.identifierIndex.has("gl_MultiTexCoord3")
 				&& !root.identifierIndex.has("mc_midTexCoord")) {
 			// TODO: proper type conversion, see original code
-			// original: transformations.replaceExact("gl_MultiTexCoord3",
-			// "mc_midTexCoord");
+			// transformations.replaceExact("gl_MultiTexCoord3", "mc_midTexCoord");
 			root.identifierIndex.renameAll("gl_MultiTexCoord3", "mc_midTexCoord");
 
-			// original:
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 			// "attribute vec4 mc_midTexCoord;");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
@@ -89,28 +86,22 @@ public class AttributeTransformer {
 			TranslationUnit tree,
 			Root root,
 			boolean hasLightmap) {
-		// original: transformations.replaceExact("gl_TextureMatrix",
-		// "iris_TextureMatrix");
+		// transformations.replaceExact("gl_TextureMatrix", "iris_TextureMatrix");
 		root.identifierIndex.renameAll("gl_TextureMatrix", "iris_TextureMatrix");
 
-		// original:
 		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const
 		// float iris_ONE_OVER_256 = 0.00390625;\n");
-		// original:
 		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const
 		// float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;\n");
-		tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
-				"const float iris_ONE_OVER_256 = 0.00390625;");
-		tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
+		tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				"const float iris_ONE_OVER_256 = 0.00390625;",
 				"const float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;");
 		if (hasLightmap) {
-			// original:
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4
 			// iris_LightmapTextureMatrix = gl_TextureMatrix[2];\n");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"mat4 iris_LightmapTextureMatrix = gl_TextureMatrix[2];");
 		} else {
-			// original:
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4
 			// iris_LightmapTextureMatrix =" +
 			// "mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
@@ -126,7 +117,6 @@ public class AttributeTransformer {
 							"     iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_256);");
 		}
 
-		// original:
 		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4
 		// iris_TextureMatrix[8] = mat4[8](" +
 		// "gl_TextureMatrix[0]," +
@@ -159,8 +149,7 @@ public class AttributeTransformer {
 			TranslationUnit tree,
 			Root root,
 			AttributeParameters parameters) {
-		// original: transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;",
-		// "");
+		// transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
 		nodeList.clear();
 		root.identifierIndex.getStream("entityColor")
 				.map(identifier -> identifier.getAncestor(DeclarationExternalDeclaration.class))
@@ -177,11 +166,10 @@ public class AttributeTransformer {
 		if (parameters.type == ShaderType.VERTEX) {
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 			// "uniform sampler2D iris_overlay;");
-			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"uniform sampler2D iris_overlay;");
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 			// "varying vec4 entityColor;");
-			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+			tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"uniform sampler2D iris_overlay;",
 					"varying vec4 entityColor;");
 
 			// transformations.replaceExact("main", "irisMain_overlayColor");
