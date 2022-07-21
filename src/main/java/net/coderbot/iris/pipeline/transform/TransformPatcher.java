@@ -2,7 +2,6 @@ package net.coderbot.iris.pipeline.transform;
 
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +19,6 @@ import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
-import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
@@ -70,10 +68,10 @@ public class TransformPatcher {
 			Root.indexBuildSession(tree, () -> {
 				switch (parameters.patch) {
 					case ATTRIBUTES:
-						AttributeTransformer.accept(transformer, tree, root, (AttributeParameters) parameters);
+						AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
 						break;
 					case SODIUM_TERRAIN:
-						SodiumTerrainTransformer.accept(transformer, tree, root, parameters);
+						SodiumTerrainTransformer.transform(transformer, tree, root, parameters);
 						break;
 				}
 			});
