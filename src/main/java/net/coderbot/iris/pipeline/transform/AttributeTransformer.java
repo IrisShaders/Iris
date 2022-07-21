@@ -1,7 +1,5 @@
 package net.coderbot.iris.pipeline.transform;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.GLSLParser;
@@ -20,8 +18,6 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * transformation methods.
  */
 public class AttributeTransformer {
-	private static List<ASTNode> nodeList = new ArrayList<>();
-
 	public static void transform(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
@@ -53,12 +49,8 @@ public class AttributeTransformer {
 					root.identifierIndex.getStream("gl_MultiTexCoord0"));
 		}
 
-		nodeList.clear();
-		stream.forEach(nodeList::add);
-		for (ASTNode identifier : nodeList) {
-			identifier.getParent().replaceByAndDelete(
-					transformer.parseExpression(identifier, "vec4(240.0, 240.0, 0.0, 1.0)"));
-		}
+		root.replaceAll(stream, identifier -> identifier.getParent().replaceByAndDelete(
+				transformer.parseExpression(identifier, "vec4(240.0, 240.0, 0.0, 1.0)")));
 
 		// patchTextureMatrices(transformations, inputs.lightmap);
 		patchTextureMatrices(transformer, tree, root, parameters.inputs.lightmap);
@@ -109,12 +101,11 @@ public class AttributeTransformer {
 			// " 0.0, 0.0, iris_ONE_OVER_256, 0.0," +
 			// " iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_32,
 			// iris_ONE_OVER_256);");
-			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
-					"mat4 iris_LightmapTextureMatrix =" +
-							"mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
-							"     0.0, iris_ONE_OVER_256, 0.0, 0.0," +
-							"     0.0, 0.0, iris_ONE_OVER_256, 0.0," +
-							"     iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_256);");
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS, "mat4 iris_LightmapTextureMatrix =" +
+					"mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
+					"     0.0, iris_ONE_OVER_256, 0.0, 0.0," +
+					"     0.0, 0.0, iris_ONE_OVER_256, 0.0," +
+					"     iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_256);");
 		}
 
 		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4
@@ -128,17 +119,16 @@ public class AttributeTransformer {
 		// "mat4(1.0)," +
 		// "mat4(1.0)" +
 		// ");");
-		tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
-				"mat4 iris_TextureMatrix[8] = mat4[8](" +
-						"gl_TextureMatrix[0]," +
-						"iris_LightmapTextureMatrix," +
-						"mat4(1.0)," +
-						"mat4(1.0)," +
-						"mat4(1.0)," +
-						"mat4(1.0)," +
-						"mat4(1.0)," +
-						"mat4(1.0)" +
-						");");
+		tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS, "mat4 iris_TextureMatrix[8] = mat4[8](" +
+				"gl_TextureMatrix[0]," +
+				"iris_LightmapTextureMatrix," +
+				"mat4(1.0)," +
+				"mat4(1.0)," +
+				"mat4(1.0)," +
+				"mat4(1.0)," +
+				"mat4(1.0)," +
+				"mat4(1.0)" +
+				");");
 	}
 
 	private static final Matcher uniformVec4EntityColor = new Matcher(
@@ -150,18 +140,12 @@ public class AttributeTransformer {
 			Root root,
 			AttributeParameters parameters) {
 		// transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
-		nodeList.clear();
-		root.identifierIndex.getStream("entityColor")
-				.map(identifier -> identifier.getAncestor(DeclarationExternalDeclaration.class))
-				.distinct()
-				.forEach(externalDeclaration -> {
-					if (uniformVec4EntityColor.matches(externalDeclaration)) {
-						nodeList.add(externalDeclaration);
-					}
-				});
-		for (ASTNode node : nodeList) {
-			node.detachAndDelete();
-		}
+		root.replaceAll(
+				root.identifierIndex.getStream("entityColor")
+						.map(identifier -> identifier.getAncestor(DeclarationExternalDeclaration.class))
+						.distinct()
+						.filter(uniformVec4EntityColor::matches),
+				ASTNode::detachAndDelete);
 
 		if (parameters.type == ShaderType.VERTEX) {
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
@@ -183,20 +167,15 @@ public class AttributeTransformer {
 			// "\n" +
 			// " irisMain_overlayColor();\n" +
 			// "}");
-			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END,
-					"void main() {" +
-							"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);" +
-							"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
-							"irisMain_overlayColor(); }");
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END, "void main() {" +
+					"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);" +
+					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
+					"irisMain_overlayColor(); }");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
 			// transformations.replaceExact("entityColor", "entityColor[0]");
-			nodeList.clear();
-			nodeList.addAll(root.identifierIndex.get("entityColor"));
-			for (ASTNode identifier : nodeList) {
-				identifier.getParent().replaceByAndDelete(
-						transformer.parseExpression(identifier,
-								"entityColor[0]"));
-			}
+			root.replaceAll("entityColor", identifier -> identifier.getParent().replaceByAndDelete(
+					transformer.parseExpression(identifier,
+							"entityColor[0]")));
 
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out
 			// vec4 entityColorGS;");
