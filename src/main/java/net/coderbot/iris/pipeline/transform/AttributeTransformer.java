@@ -22,7 +22,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
 public class AttributeTransformer {
 	private static List<ASTNode> nodeList = new ArrayList<>();
 
-	public static void accept(
+	public static void transform(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
 			Root root,
@@ -30,7 +30,7 @@ public class AttributeTransformer {
 
 		if (parameters.inputs.lightmap) {
 			// transformations.replaceExact("gl_MultiTexCoord1", "gl_MultiTexCoord2");
-			root.identifierIndex.renameAll("gl_MultiTexCoord1", "gl_MultiTexCoord2");
+			root.renameAll("gl_MultiTexCoord1", "gl_MultiTexCoord2");
 		}
 
 		Stream<Identifier> stream = Stream.empty();
@@ -72,7 +72,7 @@ public class AttributeTransformer {
 				&& !root.identifierIndex.has("mc_midTexCoord")) {
 			// TODO: proper type conversion, see original code
 			// transformations.replaceExact("gl_MultiTexCoord3", "mc_midTexCoord");
-			root.identifierIndex.renameAll("gl_MultiTexCoord3", "mc_midTexCoord");
+			root.renameAll("gl_MultiTexCoord3", "mc_midTexCoord");
 
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 			// "attribute vec4 mc_midTexCoord;");
@@ -87,7 +87,7 @@ public class AttributeTransformer {
 			Root root,
 			boolean hasLightmap) {
 		// transformations.replaceExact("gl_TextureMatrix", "iris_TextureMatrix");
-		root.identifierIndex.renameAll("gl_TextureMatrix", "iris_TextureMatrix");
+		root.renameAll("gl_TextureMatrix", "iris_TextureMatrix");
 
 		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const
 		// float iris_ONE_OVER_256 = 0.00390625;\n");
@@ -173,7 +173,7 @@ public class AttributeTransformer {
 					"varying vec4 entityColor;");
 
 			// transformations.replaceExact("main", "irisMain_overlayColor");
-			root.identifierIndex.renameAll("main", "irisMain_overlayColor");
+			root.renameAll("main", "irisMain_overlayColor");
 
 			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
 			// {\n" +
@@ -209,7 +209,7 @@ public class AttributeTransformer {
 					"in vec4 entityColor[];");
 
 			// transformations.replaceExact("main", "irisMain");
-			root.identifierIndex.renameAll("main", "irisMain");
+			root.renameAll("main", "irisMain");
 
 			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
 			// {\n" +
@@ -226,7 +226,7 @@ public class AttributeTransformer {
 
 			if (parameters.hasGeometry) {
 				// transformations.replaceExact("entityColor", "entityColorGS");
-				root.identifierIndex.renameAll("entityColor", "entityColorGS");
+				root.renameAll("entityColor", "entityColorGS");
 			}
 		}
 	}
