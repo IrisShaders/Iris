@@ -120,6 +120,14 @@ public class ShaderPack {
 		// Get programs that should be disabled from the detected profile
 		List<String> disabledPrograms = new ArrayList<>();
 		this.profile.current.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
+		// Add programs that are disabled by shader options
+		shaderProperties.getConditionallyEnabledPrograms().forEach((program, shaderOption) -> {
+			if ("true".equals(shaderOption)) return;
+
+			if ("false".equals(shaderOption) || !this.shaderPackOptions.getOptionValues().getBooleanValueOrDefault(shaderOption)) {
+				disabledPrograms.add(program);
+			}
+		});
 
 		this.menuContainer = new OptionMenuContainer(shaderProperties, this.shaderPackOptions, profiles);
 
