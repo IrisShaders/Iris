@@ -18,7 +18,6 @@ import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader
@@ -125,9 +124,9 @@ public class TransformPatcher {
 				() -> {
 					String str = source;
 					str = transform(str, new Parameters(Patch.SODIUM_TERRAIN, type));
-					str = type == ShaderType.VERTEX
-							? SodiumTerrainPipeline.transformVertexShader(str)
-							: SodiumTerrainPipeline.transformFragmentShader(str);
+					// str = type == ShaderType.VERTEX
+					// 		? SodiumTerrainPipeline.transformVertexShader(str)
+					// 		: SodiumTerrainPipeline.transformFragmentShader(str);
 					return str;
 				},
 				false);
