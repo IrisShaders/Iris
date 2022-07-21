@@ -20,6 +20,7 @@ import net.coderbot.iris.compat.sodium.impl.shader_overrides.MdbvChunkRendererIr
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.MdiChunkRendererIris;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.MdiCountChunkRendererIris;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.spongepowered.asm.mixin.Final;
@@ -30,6 +31,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TerrainRenderManager.class)
@@ -84,6 +86,15 @@ public class MixinRenderSectionManager {
 	@Overwrite(remap = false)
 	private static ChunkRenderer createChunkRenderer(RenderDevice device, ChunkRenderPassManager renderPassManager, TerrainVertexType vertexType) {
 		return null;
+	}
+
+	@ModifyArg(method = "update", at = @At(value = "INVOKE",target = "Lnet/caffeinemc/sodium/render/chunk/occlusion/ChunkOcclusion;calculateVisibleSections(Lnet/caffeinemc/sodium/render/chunk/occlusion/ChunkTree;Lnet/caffeinemc/sodium/interop/vanilla/math/frustum/Frustum;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;IZ)Lit/unimi/dsi/fastutil/ints/IntArrayList;"))
+	private boolean iris$blockChunkTreeCulling(boolean useOcclusionCulling) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			return false;
+		} else {
+			return useOcclusionCulling;
+		}
 	}
 
 	private ChunkRenderer irisChunkRendererCreation(RenderDevice device, TerrainVertexType vertexType, ChunkRenderPassManager renderPassManager) {
