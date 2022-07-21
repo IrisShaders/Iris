@@ -49,8 +49,7 @@ public class AttributeTransformer {
 					root.identifierIndex.getStream("gl_MultiTexCoord0"));
 		}
 
-		root.replaceAll(stream, identifier -> identifier.getParent().replaceByAndDelete(
-				transformer.parseExpression(identifier, "vec4(240.0, 240.0, 0.0, 1.0)")));
+		root.replaceAllReferenceExpressions(transformer, stream, "vec4(240.0, 240.0, 0.0, 1.0)");
 
 		// patchTextureMatrices(transformations, inputs.lightmap);
 		patchTextureMatrices(transformer, tree, root, parameters.inputs.lightmap);
@@ -140,7 +139,7 @@ public class AttributeTransformer {
 			Root root,
 			AttributeParameters parameters) {
 		// transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
-		root.replaceAll(
+		root.processAll(
 				root.identifierIndex.getStream("entityColor")
 						.map(identifier -> identifier.getAncestor(DeclarationExternalDeclaration.class))
 						.distinct()
@@ -173,9 +172,7 @@ public class AttributeTransformer {
 					"irisMain_overlayColor(); }");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
 			// transformations.replaceExact("entityColor", "entityColor[0]");
-			root.replaceAll("entityColor", identifier -> identifier.getParent().replaceByAndDelete(
-					transformer.parseExpression(identifier,
-							"entityColor[0]")));
+			root.replaceAllReferenceExpressions(transformer, "entityColor", "entityColor[0]");
 
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out
 			// vec4 entityColorGS;");
