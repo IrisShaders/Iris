@@ -1,11 +1,13 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
+import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
@@ -18,12 +20,14 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * transformation methods.
  */
 public class AttributeTransformer {
+	private static List<ASTNode> nodeList = new ArrayList<>();
 
 	public static void accept(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
 			Root root,
 			AttributeParameters parameters) {
+
 		if (parameters.inputs.lightmap) {
 			// original: transformations.replaceExact("gl_MultiTexCoord1",
 			// "gl_MultiTexCoord2");
@@ -50,12 +54,12 @@ public class AttributeTransformer {
 					root.identifierIndex.get("gl_MultiTexCoord0").stream());
 		}
 
-		stream.forEach(identifier -> {
-			ReferenceExpression reference = (ReferenceExpression) identifier.getParent();
-			reference.replaceByAndDelete(
-					transformer.parseExpression(reference.getParent(),
-							"vec4(240.0, 240.0, 0.0, 1.0)"));
-		});
+		nodeList.clear();
+		stream.forEach(nodeList::add);
+		for (ASTNode identifier : nodeList) {
+			identifier.getParent().replaceByAndDelete(
+					transformer.parseExpression(identifier, "vec4(240.0, 240.0, 0.0, 1.0)"));
+		}
 
 		// original: patchTextureMatrices(transformations, inputs.lightmap);
 		patchTextureMatrices(transformer, tree, root, parameters.inputs.lightmap);
@@ -157,27 +161,32 @@ public class AttributeTransformer {
 			AttributeParameters parameters) {
 		// original: transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;",
 		// "");
+		nodeList.clear();
 		root.identifierIndex.getStream("entityColor")
 				.map(identifier -> identifier.getAncestor(DeclarationExternalDeclaration.class))
 				.distinct()
 				.forEach(externalDeclaration -> {
-					if (externalDeclaration != null && uniformVec4EntityColor.matches(externalDeclaration)) {
-						externalDeclaration.detachAndDelete();
+					if (uniformVec4EntityColor.matches(externalDeclaration)) {
+						nodeList.add(externalDeclaration);
 					}
 				});
+		for (ASTNode node : nodeList) {
+			node.detachAndDelete();
+		}
 
 		if (parameters.type == ShaderType.VERTEX) {
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 			// "uniform sampler2D iris_overlay;");
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"uniform sampler2D iris_overlay;");
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 			// "varying vec4 entityColor;");
-
-			// if (transformations.contains("irisMain_overlayColor")) {
-			// throw new IllegalStateException("Shader already contains
-			// \"irisMain_overlayColor\"???");
-			// }
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"varying vec4 entityColor;");
 
 			// transformations.replaceExact("main", "irisMain_overlayColor");
+			root.identifierIndex.renameAll("main", "irisMain_overlayColor");
+
 			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
 			// {\n" +
 			// " vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] *
@@ -186,30 +195,51 @@ public class AttributeTransformer {
 			// "\n" +
 			// " irisMain_overlayColor();\n" +
 			// "}");
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END,
+					"void main() {" +
+							"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);" +
+							"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
+							"irisMain_overlayColor(); }");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
 			// transformations.replaceExact("entityColor", "entityColor[0]");
+			nodeList.clear();
+			nodeList.addAll(root.identifierIndex.get("entityColor"));
+			for (ASTNode identifier : nodeList) {
+				identifier.getParent().replaceByAndDelete(
+						transformer.parseExpression(identifier,
+								"entityColor[0]"));
+			}
+
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out
 			// vec4 entityColorGS;");
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"out vec4 entityColorGS;");
+
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
 			// vec4 entityColor[];");
-
-			// if (transformations.contains("irisMain")) {
-			// throw new IllegalStateException("Shader already contains \"irisMain\"???");
-			// }
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"in vec4 entityColor[];");
 
 			// transformations.replaceExact("main", "irisMain");
+			root.identifierIndex.renameAll("main", "irisMain");
+
 			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
 			// {\n" +
 			// " entityColorGS = entityColor[0];\n" +
 			// " irisMain();\n" +
 			// "}");
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END,
+					"void main() { entityColorGS = entityColor[0]; irisMain(); }");
 		} else if (parameters.type == ShaderType.FRAGMENT) {
 			// transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "varying vec4
 			// entityColor;");
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"varying vec4 entityColor;");
 
-			// if (parameters.hasGeometry) {
-			// transformations.replaceExact("entityColor", "entityColorGS");
-			// }
+			if (parameters.hasGeometry) {
+				// transformations.replaceExact("entityColor", "entityColorGS");
+				root.identifierIndex.renameAll("entityColor", "entityColorGS");
+			}
 		}
 	}
 }

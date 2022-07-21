@@ -57,21 +57,24 @@ public class TransformPatcher {
 		transformer = new ASTTransformer<>();
 		transformer.setTransformation((tree, root, parameters) -> {
 			// check for illegal references to internal Iris shader interfaces
-			Optional<Identifier> violation = Stream.concat(
-					root.identifierIndex.prefixQueryFlat("iris_"),
-					root.identifierIndex.prefixQueryFlat("irisMain")).findAny();
-			if (violation.isPresent()) {
+			Optional<Identifier> violation = root.identifierIndex.prefixQueryFlat("iris_").findAny();
+			if (!violation.isPresent()) {
+				violation = root.identifierIndex.prefixQueryFlat("irisMain").findAny();
+			}
+			violation.ifPresent(id -> {
 				throw new SemanticException(
 						"Detected a potential reference to unstable and internal Iris shader interfaces (iris_ and irisMain). This isn't currently supported. Violation: "
-								+ violation.get().getName());
-			}
+								+ id.getName());
+			});
 
 			Root.indexBuildSession(tree, () -> {
-				if (parameters.patch == Patch.ATTRIBUTES) {
-					AttributeTransformer.accept(transformer, tree, root, (AttributeParameters) parameters);
-				}
-				if (parameters.patch == Patch.SODIUM_TERRAIN) {
-					SodiumTerrainTransformer.accept(transformer, tree, root, parameters);
+				switch (parameters.patch) {
+					case ATTRIBUTES:
+						AttributeTransformer.accept(transformer, tree, root, (AttributeParameters) parameters);
+						break;
+					case SODIUM_TERRAIN:
+						SodiumTerrainTransformer.accept(transformer, tree, root, parameters);
+						break;
 				}
 			});
 		});
@@ -110,9 +113,11 @@ public class TransformPatcher {
 		return inspectPatch(source,
 				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
 				() -> {
-					// TODO: temporary
-					String patched = transform(source, new AttributeParameters(Patch.ATTRIBUTES, type, hasGeometry, inputs));
-					return AttributeShaderTransformer.patch(patched, type, hasGeometry, inputs);
+					String str = source;
+					str = transform(str, new AttributeParameters(Patch.ATTRIBUTES, type,
+							hasGeometry, inputs));
+					// str = AttributeShaderTransformer.patch(str, type, hasGeometry, inputs);
+					return str;
 				});
 	}
 
@@ -120,11 +125,12 @@ public class TransformPatcher {
 		return inspectPatch(source,
 				"TYPE: " + type,
 				() -> {
-					// TODO: temporary
-					String patched = transform(source, new Parameters(Patch.SODIUM_TERRAIN, type));
-					return type == ShaderType.VERTEX
-							? SodiumTerrainPipeline.transformVertexShader(patched)
-							: SodiumTerrainPipeline.transformFragmentShader(patched);
+					String str = source;
+					str = transform(str, new Parameters(Patch.SODIUM_TERRAIN, type));
+					str = type == ShaderType.VERTEX
+							? SodiumTerrainPipeline.transformVertexShader(str)
+							: SodiumTerrainPipeline.transformFragmentShader(str);
+					return str;
 				},
 				false);
 	}
