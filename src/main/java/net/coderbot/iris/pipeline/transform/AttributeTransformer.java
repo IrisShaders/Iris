@@ -2,32 +2,23 @@ package net.coderbot.iris.pipeline.transform;
 
 import java.util.stream.Stream;
 
+import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.declaration.Declaration;
-import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
-import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.type.FullySpecifiedType;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
-import io.github.douira.glsl_transformer.util.Type;
+import io.github.douira.glsl_transformer.ast.transform.Matcher;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.shaderpack.transform.Transformations;
 
 /**
  * Implements AttributeShaderTransformer using glsl-transformer AST
  * transformation methods.
  */
 public class AttributeTransformer {
+
 	public static void accept(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
@@ -156,6 +147,9 @@ public class AttributeTransformer {
 						");");
 	}
 
+	private static final Matcher uniformVec4EntityColor = new Matcher(
+			"uniform vec4 entityColor;", GLSLParser::externalDeclaration);
+
 	private static void patchOverlayColor(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
@@ -167,77 +161,54 @@ public class AttributeTransformer {
 				.map(identifier -> identifier.getAncestor(DeclarationExternalDeclaration.class))
 				.distinct()
 				.forEach(externalDeclaration -> {
-					if (externalDeclaration == null) {
-						return;
-					}
-
-					// check that it is a "uniform vec4" declaration
-					Declaration declaration = externalDeclaration.getDeclaration();
-					if (!(declaration instanceof TypeAndInitDeclaration)) {
-						return;
-					}
-					TypeAndInitDeclaration typeAndInitDeclaration = (TypeAndInitDeclaration) declaration;
-					if (typeAndInitDeclaration.members.size() != 1) {
-						return;
-					}
-					DeclarationMember member = typeAndInitDeclaration.members.get(0);
-					if (member.getArraySpecifier() != null || member.getInitializer() != null) {
-						return;
-					}
-					FullySpecifiedType type = typeAndInitDeclaration.getType();
-					TypeSpecifier specifier = type.getTypeSpecifier();
-					TypeQualifier qualifier = type.getTypeQualifier(); // is never null
-					if (qualifier == null
-							|| specifier.getArraySpecifier() != null
-							|| !(specifier instanceof BuiltinNumericTypeSpecifier)
-							|| qualifier.children.size() != 1) {
-						return;
-					}
-					BuiltinNumericTypeSpecifier builtinNumericTypeSpecifier = (BuiltinNumericTypeSpecifier) specifier;
-					TypeQualifierPart typeQualifierPart = qualifier.children.get(0);
-					if (!(typeQualifierPart instanceof StorageQualifier) || builtinNumericTypeSpecifier.type != Type.F32VEC4) {
-						return;
-					}
-					StorageQualifier storageQualifier = (StorageQualifier) typeQualifierPart;
-					if (storageQualifier.storageType != StorageType.UNIFORM) {
-						return;
+					if (externalDeclaration != null && uniformVec4EntityColor.matches(externalDeclaration)) {
+						externalDeclaration.detachAndDelete();
 					}
 				});
 
 		if (parameters.type == ShaderType.VERTEX) {
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D iris_overlay;");
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "varying vec4 entityColor;");
+			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
+			// "uniform sampler2D iris_overlay;");
+			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
+			// "varying vec4 entityColor;");
 
 			// if (transformations.contains("irisMain_overlayColor")) {
-			// 	throw new IllegalStateException("Shader already contains \"irisMain_overlayColor\"???");
+			// throw new IllegalStateException("Shader already contains
+			// \"irisMain_overlayColor\"???");
 			// }
 
 			// transformations.replaceExact("main", "irisMain_overlayColor");
-			// transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
-			// 		"	vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);\n" +
-			// 		"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
-			// 		"\n" +
-			// 		"    irisMain_overlayColor();\n" +
-			// 		"}");
+			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
+			// {\n" +
+			// " vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] *
+			// gl_MultiTexCoord1).xy);\n" +
+			// " entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
+			// "\n" +
+			// " irisMain_overlayColor();\n" +
+			// "}");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
 			// transformations.replaceExact("entityColor", "entityColor[0]");
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 entityColorGS;");
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 entityColor[];");
+			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out
+			// vec4 entityColorGS;");
+			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
+			// vec4 entityColor[];");
 
 			// if (transformations.contains("irisMain")) {
-			// 	throw new IllegalStateException("Shader already contains \"irisMain\"???");
+			// throw new IllegalStateException("Shader already contains \"irisMain\"???");
 			// }
 
 			// transformations.replaceExact("main", "irisMain");
-			// transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
-			// 		"	 entityColorGS = entityColor[0];\n" +
-			// 		"    irisMain();\n" +
-			// 		"}");
+			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
+			// {\n" +
+			// " entityColorGS = entityColor[0];\n" +
+			// " irisMain();\n" +
+			// "}");
 		} else if (parameters.type == ShaderType.FRAGMENT) {
-			// transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "varying vec4 entityColor;");
+			// transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "varying vec4
+			// entityColor;");
 
 			// if (parameters.hasGeometry) {
-			// 	transformations.replaceExact("entityColor", "entityColorGS");
+			// transformations.replaceExact("entityColor", "entityColorGS");
 			// }
 		}
 	}
