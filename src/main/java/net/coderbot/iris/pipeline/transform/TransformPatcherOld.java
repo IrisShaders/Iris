@@ -21,28 +21,28 @@ import io.github.douira.glsl_transformer.GLSLParser.MemberAccessExpressionContex
 import io.github.douira.glsl_transformer.GLSLParser.MultiplicativeExpressionContext;
 import io.github.douira.glsl_transformer.GLSLParser.TranslationUnitContext;
 import io.github.douira.glsl_transformer.GLSLParser.VersionStatementContext;
-import io.github.douira.glsl_transformer.ast.StringNode;
-import io.github.douira.glsl_transformer.core.CachePolicy;
-import io.github.douira.glsl_transformer.core.SearchTerminals;
-import io.github.douira.glsl_transformer.core.SemanticException;
-import io.github.douira.glsl_transformer.core.WrapIdentifier;
-import io.github.douira.glsl_transformer.core.target.HandlerTarget;
-import io.github.douira.glsl_transformer.core.target.HandlerTargetImpl;
-import io.github.douira.glsl_transformer.core.target.ParsedReplaceTarget;
-import io.github.douira.glsl_transformer.core.target.ParsedReplaceTargetImpl;
-import io.github.douira.glsl_transformer.core.target.TerminalReplaceTargetImpl;
-import io.github.douira.glsl_transformer.core.target.ThrowTargetImpl;
-import io.github.douira.glsl_transformer.core.target.WrapThrowTargetImpl;
-import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
-import io.github.douira.glsl_transformer.print.filter.TokenChannel;
-import io.github.douira.glsl_transformer.print.filter.TokenFilter;
-import io.github.douira.glsl_transformer.transform.InjectionPoint;
-import io.github.douira.glsl_transformer.transform.JobParameters;
-import io.github.douira.glsl_transformer.transform.LifecycleUser;
-import io.github.douira.glsl_transformer.transform.RunPhase;
-import io.github.douira.glsl_transformer.transform.Transformation;
-import io.github.douira.glsl_transformer.transform.TransformationManager;
-import io.github.douira.glsl_transformer.transform.WalkPhase;
+import io.github.douira.glsl_transformer.cst.core.CachePolicy;
+import io.github.douira.glsl_transformer.cst.core.SearchTerminals;
+import io.github.douira.glsl_transformer.cst.core.SemanticException;
+import io.github.douira.glsl_transformer.cst.core.WrapIdentifier;
+import io.github.douira.glsl_transformer.cst.core.target.HandlerTarget;
+import io.github.douira.glsl_transformer.cst.core.target.HandlerTargetImpl;
+import io.github.douira.glsl_transformer.cst.core.target.ParsedReplaceTarget;
+import io.github.douira.glsl_transformer.cst.core.target.ParsedReplaceTargetImpl;
+import io.github.douira.glsl_transformer.cst.core.target.TerminalReplaceTargetImpl;
+import io.github.douira.glsl_transformer.cst.core.target.ThrowTargetImpl;
+import io.github.douira.glsl_transformer.cst.core.target.WrapThrowTargetImpl;
+import io.github.douira.glsl_transformer.cst.node.StringNode;
+import io.github.douira.glsl_transformer.cst.token_filter.ChannelFilter;
+import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
+import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
+import io.github.douira.glsl_transformer.cst.transform.CSTInjectionPoint;
+import io.github.douira.glsl_transformer.cst.transform.CSTTransformer;
+import io.github.douira.glsl_transformer.cst.transform.RunPhase;
+import io.github.douira.glsl_transformer.cst.transform.Transformation;
+import io.github.douira.glsl_transformer.cst.transform.WalkPhase;
+import io.github.douira.glsl_transformer.cst.transform.lifecycle.LifecycleUser;
+import io.github.douira.glsl_transformer.job_parameter.JobParameters;
 import io.github.douira.glsl_transformer.tree.ExtendedContext;
 import io.github.douira.glsl_transformer.tree.TreeMember;
 import io.github.douira.glsl_transformer.util.CompatUtil;
@@ -67,7 +67,7 @@ import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 
 public class TransformPatcherOld {
 	private static Logger LOGGER = LogManager.getLogger(TransformPatcherOld.class);
-	private static TransformationManager<Parameters> manager;
+	private static CSTTransformer<Parameters> transformer;
 
 	private static enum Patch {
 		ATTRIBUTES, VANILLA_REGULAR, VANILLA_WITH_ATTRIBUTE_TRANSFORM, SODIUM, COMPOSITE
@@ -184,7 +184,7 @@ public class TransformPatcherOld {
 		{
 			detectionResult("irisMain");
 			wrapTarget("main");
-			injectionLocation(InjectionPoint.BEFORE_EOF);
+			injectionLocation(CSTInjectionPoint.END);
 			injectionExternalDeclarations(CachePolicy.ON_JOB);
 		}
 
@@ -229,7 +229,7 @@ public class TransformPatcherOld {
 					throw new IllegalStateException("Missing the version statement!");
 				}
 
-				String profile = Optional.ofNullable(versionStatement.NR_IDENTIFIER())
+				String profile = Optional.ofNullable(versionStatement.profile)
 						.map(terminal -> terminal.getText())
 						.orElse("");
 				int version = Integer.parseInt(versionStatement.NR_INTCONSTANT().getText());
@@ -289,17 +289,17 @@ public class TransformPatcherOld {
 					protected void run(TranslationUnitContext ctx) {
 						switch (getJobParameters().type) {
 							case VERTEX:
-								injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+								injectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 										"uniform sampler2D iris_overlay;",
 										"varying vec4 entityColor;");
 								break;
 							case GEOMETRY:
-								injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+								injectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 										"out vec4 entityColorGS;",
 										"in vec4 entityColor[];");
 								break;
 							case FRAGMENT:
-								injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
+								injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS, "varying vec4 entityColor;");
 								break;
 						}
 					}
@@ -336,7 +336,7 @@ public class TransformPatcherOld {
 		LifecycleUser<Parameters> wrapFogSetup = new WrapIdentifier<Parameters>()
 				.wrapTarget("gl_Fog")
 				.detectionResult("iris_Fog")
-				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 				.injectionExternalDeclarations(CompatUtil.listOf(
 						"uniform float iris_FogDensity;",
 						"uniform float iris_FogStart;",
@@ -361,7 +361,7 @@ public class TransformPatcherOld {
 		}
 				.wrapTarget("gl_FogFragCoord")
 				.detectionResult("iris_FogFragCoord")
-				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 				.injectionExternalDeclarations(CachePolicy.ON_FIXED_PARAMETER_CHANGE);
 
 		/**
@@ -372,7 +372,7 @@ public class TransformPatcherOld {
 		LifecycleUser<Parameters> wrapFrontColor = new WrapIdentifier<Parameters>()
 				.wrapTarget("gl_FrontColor")
 				.detectionResult("iris_FrontColor")
-				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 				.injectionExternalDeclaration("vec4 iris_FrontColor;");
 
 		// TODO: the following procedure is not implemented yet for now as it's quite
@@ -399,7 +399,7 @@ public class TransformPatcherOld {
 
 		// PREV TODO: Add similar functions for all legacy texture sampling functions
 		LifecycleUser<Parameters> injectTextureFunctions = RunPhase.withInjectExternalDeclarations(
-				InjectionPoint.BEFORE_DECLARATIONS,
+				CSTInjectionPoint.BEFORE_DECLARATIONS,
 				"vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
 				"vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
 				"vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }",
@@ -421,7 +421,7 @@ public class TransformPatcherOld {
 		 * The bias parameter is not accepted in a vertex or geometry shader.
 		 */
 		LifecycleUser<Parameters> injectTextureFunctionsFragment = RunPhase.withInjectExternalDeclarations(
-				InjectionPoint.BEFORE_DECLARATIONS,
+				CSTInjectionPoint.BEFORE_DECLARATIONS,
 				"vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
 				"vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
 
@@ -653,7 +653,7 @@ public class TransformPatcherOld {
 		LifecycleUser<Parameters> wrapProjMatrixVanilla = new WrapIdentifier<Parameters>()
 				.wrapTarget("gl_ProjectionMatrix")
 				.detectionResult("iris_ProjMat")
-				.injectionLocation(InjectionPoint.BEFORE_DECLARATIONS)
+				.injectionLocation(CSTInjectionPoint.BEFORE_DECLARATIONS)
 				.injectionExternalDeclaration("uniform mat4 iris_ProjMat;");
 
 		LifecycleUser<Parameters> replaceExcessMultiTexCoord = new SearchTerminals<Parameters>()
@@ -724,19 +724,19 @@ public class TransformPatcherOld {
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec2 iris_UV0;");
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS, "in vec2 iris_UV0;");
 					}
 				}.activation(() -> hasTex));
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in ivec2 iris_UV2;");
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS, "in ivec2 iris_UV2;");
 					}
 				}.activation(() -> hasLight));
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
 					}
 				}.activation(() -> hasNormalAndIsNotNewLines));
 
@@ -781,7 +781,7 @@ public class TransformPatcherOld {
 									}
 								}));
 
-						addEndDependent(RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+						addEndDependent(RunPhase.withInjectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 								"uniform vec4 iris_ColorModulator;"));
 					}
 				});
@@ -834,7 +834,7 @@ public class TransformPatcherOld {
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+						injectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 								"uniform mat4 iris_TextureMat;",
 								"uniform mat4 iris_LightmapTextureMatrix;");
 					}
@@ -934,11 +934,11 @@ public class TransformPatcherOld {
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS,
 								"uniform mat4 iris_ModelViewMat;");
 
 						if (type == ModelViewMatrixType.CHUNK_OFFSET) {
-							injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+							injectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 									"uniform vec3 iris_ChunkOffset;",
 									"mat4 _iris_internal_translate(vec3 offset) {\n" +
 											"    // NB: Column-major order\n" +
@@ -948,7 +948,7 @@ public class TransformPatcherOld {
 											"                offset.x, offset.y, offset.z, 1.0);\n" +
 											"}");
 						} else if (type == ModelViewMatrixType.NEW_LINES) {
-							injectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+							injectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 									"const float iris_VIEW_SHRINK = 1.0 - (1.0 / 256.0);",
 									"const mat4 iris_VIEW_SCALE = mat4(\n" +
 											"    iris_VIEW_SHRINK, 0.0, 0.0, 0.0,\n" +
@@ -987,7 +987,7 @@ public class TransformPatcherOld {
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS,
 								"vec3 iris_vertex_offset = vec3(0.0);");
 					}
 
@@ -999,7 +999,7 @@ public class TransformPatcherOld {
 
 				chainConcurrentDependent(new MainWrapper<Parameters>() {
 					{
-						chainDependency(RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_DECLARATIONS,
+						chainDependency(RunPhase.withInjectExternalDeclarations(CSTInjectionPoint.BEFORE_DECLARATIONS,
 								"uniform vec2 iris_ScreenSize;",
 								"uniform float iris_LineWidth;",
 								"// Widen the line into a rectangle of appropriate width\n" +
@@ -1050,8 +1050,8 @@ public class TransformPatcherOld {
 				chainConcurrentDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Position;");
-						injectExternalDeclaration(InjectionPoint.BEFORE_DECLARATIONS,
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Position;");
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_DECLARATIONS,
 								"vec4 ftransform() { return gl_ModelViewProjectionMatrix * " + glVertexResult + "; }");
 					}
 				});
@@ -1165,7 +1165,7 @@ public class TransformPatcherOld {
 				chainDependent(new RunPhase<Parameters>() {
 					@Override
 					protected void run(TranslationUnitContext ctx) {
-						injectExternalDeclaration(InjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
+						injectExternalDeclaration(CSTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
 					}
 
 					@Override
@@ -1175,7 +1175,7 @@ public class TransformPatcherOld {
 				});
 
 				chainConcurrentDependent(
-						RunPhase.withInjectExternalDeclarations(InjectionPoint.BEFORE_FUNCTIONS, "attribute vec2 a_LightCoord;"));
+						RunPhase.withInjectExternalDeclarations(CSTInjectionPoint.BEFORE_FUNCTIONS, "attribute vec2 a_LightCoord;"));
 
 				chainConcurrentDependent(new SearchTerminals<Parameters>()
 						.addTarget(new ParsedReplaceTargetImpl<>("gl_MultiTexCoord1",
@@ -1186,7 +1186,7 @@ public class TransformPatcherOld {
 		};
 		// #endregion patchSodiumTerrain
 
-		manager = new TransformationManager<Parameters>(new Transformation<Parameters>() {
+		transformer = new CSTTransformer<Parameters>(new Transformation<Parameters>() {
 			@Override
 			protected void setupGraph() {
 				Patch patch = getJobParameters().patch;
@@ -1251,7 +1251,7 @@ public class TransformPatcherOld {
 			}
 		});
 
-		manager.setParseTokenFilter(parseTokenFilter);
+		transformer.setParseTokenFilter(parseTokenFilter);
 	}
 
 	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher) {
@@ -1275,7 +1275,7 @@ public class TransformPatcherOld {
 	}
 
 	private static String transform(String source, Parameters parameters) {
-		return manager.transform(source, parameters);
+		return transformer.transform(source, parameters);
 	}
 
 	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {

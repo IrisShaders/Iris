@@ -7,13 +7,14 @@ import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
-import io.github.douira.glsl_transformer.core.SemanticException;
-import io.github.douira.glsl_transformer.print.filter.ChannelFilter;
-import io.github.douira.glsl_transformer.print.filter.TokenChannel;
-import io.github.douira.glsl_transformer.print.filter.TokenFilter;
+import io.github.douira.glsl_transformer.cst.core.SemanticException;
+import io.github.douira.glsl_transformer.cst.token_filter.ChannelFilter;
+import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
+import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
