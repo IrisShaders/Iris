@@ -27,8 +27,6 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * (!) preprocessor directives. The only allowed ones are #extension and #pragma
  * as they are considered "parsed" directives. If any other directive appears in
  * the string, it will throw.
- *
- * TODO: JCPP has to be configured to remove preprocessor directives entirely
  */
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
