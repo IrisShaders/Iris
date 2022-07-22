@@ -168,18 +168,13 @@ public final class CommonUniforms {
 	}
 
 	private static Vector2i getEyeBrightness() {
-		if (client.cameraEntity == null || client.level == null) {
+		if (client.cameraEntity == null) {
 			return ZERO_VECTOR_2i;
 		}
 
-		Vec3 feet = client.cameraEntity.position();
-		Vec3 eyes = new Vec3(feet.x, client.cameraEntity.getEyeY(), feet.z);
-		BlockPos eyeBlockPos = new BlockPos(eyes);
+		int light = client.getEntityRenderDispatcher().getPackedLightCoords(client.cameraEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 
-		int blockLight = client.level.getBrightness(LightLayer.BLOCK, eyeBlockPos);
-		int skyLight = client.level.getBrightness(LightLayer.SKY, eyeBlockPos);
-
-		return new Vector2i(blockLight * 16, skyLight * 16);
+		return new Vector2i(light & 65535, light >> 16);
 	}
 
 	private static float getNightVision() {
