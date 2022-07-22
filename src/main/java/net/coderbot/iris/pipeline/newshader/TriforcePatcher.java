@@ -364,15 +364,14 @@ public class TriforcePatcher {
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"));
 
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, """
-				// The projection matrix
-				uniform mat4 iris_ProjectionMatrix;
-
-				// The model-view matrix
-				uniform mat4 iris_ModelViewMatrix;
-
-				// The model-view-projection matrix
-				#define iris_ModelViewProjectionMatrix iris_ProjectionMatrix * iris_ModelViewMatrix""");
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, 
+				"// The projection matrix\n" +
+				"uniform mat4 iris_ProjectionMatrix;\n" +
+				"// The model-view matrix\n" +
+				"uniform mat4 iris_ModelViewMatrix;\n" +
+				"// The model-view-projection matrix\n" +
+				"#define iris_ModelViewProjectionMatrix iris_ProjectionMatrix * iris_ModelViewMatrix\n"
+			);
 			transformations.define("gl_Vertex", "getVertexPosition()");
 
 			if (transformations.contains("irisMain")) {
