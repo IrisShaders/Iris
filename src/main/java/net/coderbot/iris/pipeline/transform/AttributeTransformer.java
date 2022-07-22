@@ -7,7 +7,9 @@ import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import io.github.douira.glsl_transformer.ast.transform.Matcher;
@@ -130,8 +132,8 @@ public class AttributeTransformer {
 				");");
 	}
 
-	private static final Matcher uniformVec4EntityColor = new Matcher(
-			"uniform vec4 entityColor;", GLSLParser::externalDeclaration);
+	private static final Matcher<ExternalDeclaration> uniformVec4EntityColor = new Matcher<>(
+			"uniform vec4 entityColor;", GLSLParser::externalDeclaration, ASTBuilder::visitExternalDeclaration);
 
 	private static void patchOverlayColor(
 			ASTTransformer<?> transformer,

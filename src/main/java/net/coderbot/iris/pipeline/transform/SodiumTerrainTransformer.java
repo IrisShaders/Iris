@@ -1,24 +1,21 @@
 package net.coderbot.iris.pipeline.transform;
 
-import java.util.Objects;
+import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
-import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.binary.DivisionExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.binary.MultiplicationExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import io.github.douira.glsl_transformer.ast.transform.Matcher;
 
 public class SodiumTerrainTransformer {
-	private static final Matcher glTextureMatrix0 = new Matcher(
-			"gl_TextureMatrix[0]", GLSLParser::expression);
-	private static final Matcher glTextureMatrix1 = new Matcher(
-			"gl_TextureMatrix[1]", GLSLParser::expression);
-	private static final String lightmapCoordsExpression = "iris_LightCoord";
-
 	public static void transform(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
@@ -35,6 +32,9 @@ public class SodiumTerrainTransformer {
 				throw new IllegalStateException("Unexpected Sodium terrain patching shader type: " + parameters.type);
 		}
 	}
+
+	private static final Matcher<Expression> glTextureMatrix0 = new Matcher<>(
+			"gl_TextureMatrix[0]", GLSLParser::expression, ASTBuilder::visitExpression);
 
 	public static void transformVertex(
 			ASTTransformer<?> transformer,
@@ -136,6 +136,12 @@ public class SodiumTerrainTransformer {
 				"mat4(1.0)");
 	}
 
+	private static final Matcher<Expression> glTextureMatrix1 = new Matcher<>(
+			"gl_TextureMatrix[1]", GLSLParser::expression, ASTBuilder::visitExpression);
+	private static final String lightmapCoordsExpression = "iris_LightCoord";
+	private static final String lightmapCoordsExpressionS = lightmapCoordsExpression + ".s";
+	private static final String lightmapCoordsExpressionWrapped = "vec4(" + lightmapCoordsExpression + ", 0.0, 1.0)";
+
 	// replaces BuiltinUniformReplacementTransformer
 	private static void replaceLightmapForSodium(
 			ASTTransformer<?> transformer,
@@ -179,14 +185,58 @@ public class SodiumTerrainTransformer {
 		}
 	}
 
+	private static final Matcher<Expression> glTextureMatrixMultMember = new Matcher<>(
+			"(gl_TextureMatrix[1] * ___coord).___suffix",
+			GLSLParser::expression, ASTBuilder::visitExpression, "___");
+	private static final Matcher<Expression> glTextureMatrixMultS = new Matcher<>(
+			"(gl_TextureMatrix[1] * ___coord).s",
+			GLSLParser::expression, ASTBuilder::visitExpression, "___");
+	private static final Matcher<Expression> glTextureMatrixMult = new Matcher<>(
+			"gl_TextureMatrix[1] * ___coord",
+			GLSLParser::expression, ASTBuilder::visitExpression, "___");
+	private static final Matcher<Expression> xyDivision = new Matcher<>(
+			"___coord.xy / 255.0",
+			GLSLParser::expression, ASTBuilder::visitExpression, "___");
+
 	private static void replaceMultiTexCoord(
 			ASTTransformer<?> transformer,
 			Root root,
 			String coordName) {
-		// root.replaceAllExpressions(transformer,
-		// 		root.identifierIndex.getStream(coordName).map(identifier -> {
-		// 			return null;
-		// 		}).filter(Objects::nonNull),
-		// 		lightmapCoordsExpression);
+		// replacement with basic lightmap coords
+		root.replaceAllExpressions(transformer, Stream.concat(
+				root.identifierIndex.getStream(coordName)
+						.map(identifier -> identifier.getAncestor(MemberAccessExpression.class))
+						.filter(expression -> {
+							if (expression == null || !glTextureMatrixMultMember.matchesExtract(expression)) {
+								return false;
+							}
+							String suffix = glTextureMatrixMultMember.getStringDataMatch("suffix");
+							return glTextureMatrixMultMember.getStringDataMatch("coord") == coordName
+									&& suffix != null && ("st".equals(suffix) || "xy".equals(suffix));
+						}),
+				root.identifierIndex.getStream(coordName)
+						.map(identifier -> identifier.getAncestor(DivisionExpression.class))
+						.filter(expression -> expression != null
+								&& xyDivision.matchesExtract(expression)
+								&& xyDivision.getStringDataMatch("coord") == coordName)),
+				lightmapCoordsExpression);
+
+		// replacement with lightmap coord .s
+		root.replaceAllExpressions(transformer,
+				root.identifierIndex.getStream(coordName)
+						.map(identifier -> identifier.getAncestor(MemberAccessExpression.class))
+						.filter(expression -> expression != null
+								&& glTextureMatrixMultS.matchesExtract(expression)
+								&& glTextureMatrixMultS.getStringDataMatch("coord") == coordName),
+				lightmapCoordsExpressionS);
+
+		// replacement with wrapped lightmap coord
+		root.replaceAllExpressions(transformer,
+				root.identifierIndex.getStream(coordName)
+						.map(identifier -> identifier.getAncestor(MultiplicationExpression.class))
+						.filter(expression -> expression != null
+								&& glTextureMatrixMult.matchesExtract(expression)
+								&& glTextureMatrixMult.getStringDataMatch("coord") == coordName),
+				lightmapCoordsExpressionWrapped);
 	}
 }
