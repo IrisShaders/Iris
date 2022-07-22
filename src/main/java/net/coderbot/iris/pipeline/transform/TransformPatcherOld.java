@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline;
+package net.coderbot.iris.pipeline.transform;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -65,8 +65,8 @@ import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
  * TODO: JCPP has to be configured to remove preprocessor directives entirely
  */
 
-public class TransformPatcher {
-	private static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
+public class TransformPatcherOld {
+	private static Logger LOGGER = LogManager.getLogger(TransformPatcherOld.class);
 	private static TransformationManager<Parameters> manager;
 
 	private static enum Patch {

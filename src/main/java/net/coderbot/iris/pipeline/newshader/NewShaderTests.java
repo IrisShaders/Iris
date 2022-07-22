@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import net.coderbot.iris.gl.blending.*;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.TransformPatcher;
+import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.pipeline.newshader.fallback.*;
 import net.coderbot.iris.shaderpack.*;
 import net.coderbot.iris.uniforms.*;
