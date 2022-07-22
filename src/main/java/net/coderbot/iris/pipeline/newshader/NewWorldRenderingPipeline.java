@@ -39,6 +39,7 @@ import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramFallbackResolver;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -88,6 +89,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Set<ShaderInstance> loadedShaders;
 	private final ImmutableList<ClearPass> clearPassesFull;
 	private final ImmutableList<ClearPass> clearPasses;
+	private final ImmutableList<ClearPass> shadowClearPasses;
+	private final ImmutableList<ClearPass> shadowClearPassesFull;
 	private final GlFramebuffer baseline;
 
 	private final CompositeRenderer prepareRenderer;
@@ -110,7 +113,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
 
 	private final float sunPathRotation;
-	private final boolean shouldRenderClouds;
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
@@ -120,6 +122,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private boolean destroyed = false;
 	private boolean isRenderingWorld;
 	private boolean isMainBound;
+	private CloudSetting cloudSetting;
+	private boolean shouldRenderSun;
+	private boolean shouldRenderMoon;
+	private boolean prepareBeforeShadow;
 
 	@Nullable
 	private final ShadowRenderer shadowRenderer;
@@ -142,13 +148,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			Files.createDirectories(debugOutDir);
 		}
 
-		this.shouldRenderClouds = programSet.getPackDirectives().areCloudsEnabled();
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
 		this.shouldWriteRainAndSnowToDepthBuffer = programSet.getPackDirectives().rainDepth();
 		this.shouldRenderParticlesBeforeDeferred = programSet.getPackDirectives().areParticlesBeforeDeferred();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
+
+		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
+		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
+		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
+		this.prepareBeforeShadow = programSet.getPackDirectives().isPrepareBeforeShadow();
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		int depthTextureId = main.getDepthTextureId();
@@ -191,11 +201,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shadowTargetsSupplier = () -> {
 			if (shadowRenderTargets == null) {
 				// TODO: Support more than two shadowcolor render targets
-				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, new InternalTextureFormat[]{
-					// TODO: Custom shadowcolor format support
-					InternalTextureFormat.RGBA,
-					InternalTextureFormat.RGBA
-				});
+				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, shadowDirectives);
 			}
 
 			return shadowRenderTargets;
@@ -266,7 +272,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeShadow, renderTargets, false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow, renderTargets, false);
 			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(), customTextureManager.getSpecular(),
 				whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
@@ -286,7 +292,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
 			ProgramImages.Builder builder = ProgramImages.builder(programId);
 
-			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeShadow, renderTargets);
+			IrisImages.addRenderTargetImages(builder, () -> prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow, renderTargets);
 
 			if (IrisImages.hasShadowImages(builder)) {
 				// We don't compile Sodium shadow programs unless there's a shadow pass... And a shadow pass
@@ -350,9 +356,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 					|| IrisImages.hasRenderTargetImages(holder, renderTargets);
 			}
 
+			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
+			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
+
 			this.shadowRenderer = new ShadowRenderer(programSet.getShadow().orElse(null),
 				programSet.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
 		} else {
+			this.shadowClearPasses = ImmutableList.of();
+			this.shadowClearPassesFull = ImmutableList.of();
 			this.shadowRenderer = null;
 		}
 
@@ -380,17 +391,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return createShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
-				key.shouldIgnoreLightmap());
+				key.isIntensity(), key.shouldIgnoreLightmap());
 	}
 
 	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FogMode fogMode,
-										boolean isFullbright) throws IOException {
+										boolean isIntensity, boolean isFullbright) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent,
-				baseline, fallbackAlpha, vertexFormat, updateNotifier, this, fogMode, isFullbright);
+				baseline, fallbackAlpha, vertexFormat, updateNotifier, this, fogMode, isIntensity, isFullbright);
 
 		loadedShaders.add(extendedShader);
 
@@ -421,7 +432,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return createShadowShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(),
-				key.shouldIgnoreLightmap());
+				key.isIntensity(), key.shouldIgnoreLightmap());
 	}
 
 	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
@@ -437,15 +448,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
-											  VertexFormat vertexFormat, boolean isFullbright) throws IOException {
+											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright) throws IOException {
 		GlFramebuffer framebuffer = this.shadowRenderTargets.getFramebuffer();
 
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
-				fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.PER_VERTEX, isFullbright);
+				fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.PER_VERTEX, isIntensity, isFullbright);
 
 		loadedShaders.add(extendedShader);
 
-		Supplier<ImmutableSet<Integer>> flipped = () -> flippedBeforeShadow;
+		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 
 		addGbufferOrShadowSamplers(extendedShader, flipped, true);
 
@@ -532,14 +543,19 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		if (shadowRenderTargets != null) {
-			// NB: This will be re-bound to the correct framebuffer in beginLevelRendering when matchPass is called.
-			shadowRenderTargets.getFramebuffer().bind();
+			Vector4f emptyClearColor = new Vector4f(1.0F);
+			ImmutableList<ClearPass> passes;
 
-			// TODO: Support shadow clear color directives & disable buffer clearing
-			// Ensure that the color and depth values are cleared appropriately
-			RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-			RenderSystem.clearDepth(1.0f);
-			RenderSystem.clear(GL11C.GL_DEPTH_BUFFER_BIT | GL11C.GL_COLOR_BUFFER_BIT, false);
+			if (shadowRenderTargets.needsFullClear()) {
+				passes = shadowClearPassesFull;
+				shadowRenderTargets.resetClearStatus();
+			} else {
+				passes = shadowClearPasses;
+			}
+
+			for (ClearPass clearPass : passes) {
+				clearPass.execute(emptyClearColor);
+			}
 		}
 
 		// NB: execute this before resizing / clearing so that the center depth sample is retrieved properly.
@@ -605,11 +621,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
+		if (prepareBeforeShadow) {
+			prepareRenderer.renderAll();
+		}
+
 		if (shadowRenderer != null) {
 			this.shadowRenderer.renderShadows(worldRenderer, playerCamera);
 		}
 
-		prepareRenderer.renderAll();
+		if (!prepareBeforeShadow) {
+			prepareRenderer.renderAll();
+		}
 	}
 
 	@Override
@@ -679,11 +701,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public boolean shouldRenderClouds() {
-		return shouldRenderClouds;
-	}
-
-	@Override
 	public boolean shouldRenderUnderwaterOverlay() {
 		return shouldRenderUnderwaterOverlay;
 	}
@@ -691,6 +708,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldRenderVignette() {
 		return shouldRenderVignette;
+	}
+
+	@Override
+	public boolean shouldRenderSun() {
+		return shouldRenderSun;
+	}
+
+	@Override
+	public boolean shouldRenderMoon() {
+		return shouldRenderMoon;
 	}
 
 	@Override
@@ -706,6 +733,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldDisableDirectionalShading() {
 		return !oldLighting;
+	}
+
+	@Override
+	public CloudSetting getCloudSetting() {
+		return cloudSetting;
 	}
 
 	@Override

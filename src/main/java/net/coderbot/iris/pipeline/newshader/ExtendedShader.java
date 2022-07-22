@@ -41,13 +41,12 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	float alphaTest;
 	private ProgramImages currentImages;
 	private Program geometry;
-	private boolean isFullbright;
 	private final ShaderAttributeInputs inputs;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
-						  Consumer<DynamicUniformHolder> uniformCreator, boolean isFullbright,
+						  Consumer<DynamicUniformHolder> uniformCreator, boolean isIntensity,
 						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
@@ -66,11 +65,9 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.parent = parent;
 		this.imageBuilder = ProgramImages.builder(programId);
 		this.currentImages = null;
-		this.isFullbright = isFullbright;
 		this.inputs = inputs;
 
-		// TODO(coderbot): consider a way of doing this that doesn't rely on checking the shader name.
-		this.intensitySwizzle = getName().contains("intensity");
+		this.intensitySwizzle = isIntensity;
 	}
 
 	public boolean isIntensitySwizzle() {

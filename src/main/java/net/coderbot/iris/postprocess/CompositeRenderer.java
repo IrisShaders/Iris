@@ -2,33 +2,46 @@ package net.coderbot.iris.postprocess;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
-import java.util.function.*;
+import java.util.function.Supplier;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-
-import org.lwjgl.opengl.*;
-
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.program.*;
+import net.coderbot.iris.gl.program.Program;
+import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.TransformPatcher;
-import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.samplers.*;
-import net.coderbot.iris.shaderpack.*;
+import net.coderbot.iris.pipeline.newshader.FogMode;
+import net.coderbot.iris.samplers.IrisImages;
+import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.PackDirectives;
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
+import net.coderbot.iris.shaderpack.ProgramDirectives;
+import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
-import net.coderbot.iris.uniforms.*;
+import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import org.lwjgl.opengl.GL15C;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
+
+import java.util.function.IntSupplier;
 
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
@@ -168,6 +181,7 @@ public class CompositeRenderer {
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
 		main.bindWrite(true);
+		ProgramUniforms.clearActiveUniforms();
 		GlStateManager._glUseProgram(0);
 
 		// NB: Unbinding all of these textures is necessary for proper shaderpack reloading.

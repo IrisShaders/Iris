@@ -608,7 +608,7 @@ public class TransformPatcher {
 					@Override
 					protected String getMainContent() {
 						return getJobParameters().getAlphaTest().toExpression(
-								type == FragColorOutput.COLOR ? "gl_FragColor.a" : "gl_FragData[0].a", "");
+								type == FragColorOutput.COLOR ? "gl_FragColor.a" : "gl_FragData[0].a", "", "");
 					}
 
 					@Override

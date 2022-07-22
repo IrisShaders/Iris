@@ -35,6 +35,8 @@ public class MixinRegionChunkRenderer {
 		GlVertexFormat<ChunkMeshAttribute> vertexFormat = vertexType.getCustomVertexFormat();
 
 		vertexAttributeBindings = ArrayUtils.addAll(vertexAttributeBindings,
+				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_BLOCK,
+						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_BLOCK)),
 				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
 						vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
 				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,

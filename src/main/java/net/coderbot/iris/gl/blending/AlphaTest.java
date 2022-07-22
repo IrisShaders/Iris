@@ -14,10 +14,10 @@ public class AlphaTest {
 	}
 
 	public String toExpression(String indentation) {
-		return toExpression("gl_FragData[0].a", indentation);
+		return toExpression("gl_FragData[0].a", "iris_currentAlphaTest", indentation);
 	}
 
-	public String toExpression(String alphaAccessor, String indentation) {
+	public String toExpression(String alphaAccessor, String alphaThreshold, String indentation) {
 		String expr = function.getExpression();
 
 		if (function == AlphaTestFunction.ALWAYS) {
@@ -30,7 +30,7 @@ public class AlphaTest {
 			return "discard;\n";
 		}
 
-		return indentation + "if (!(" + alphaAccessor + " " + expr + " iris_currentAlphaTest)) {\n" +
+		return indentation + "if (!(" + alphaAccessor + " " + expr + " " + alphaThreshold + ")) {\n" +
 				indentation + "    discard;\n" +
 				indentation + "}\n";
 	}

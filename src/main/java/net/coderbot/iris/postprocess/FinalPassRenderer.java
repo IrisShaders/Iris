@@ -1,35 +1,53 @@
 package net.coderbot.iris.postprocess;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.util.*;
-import java.util.function.*;
-
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.*;
-
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.program.*;
-import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.gl.program.Program;
+import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.TransformPatcher;
 import net.coderbot.iris.pipeline.newshader.FogMode;
-import net.coderbot.iris.rendertarget.*;
-import net.coderbot.iris.samplers.*;
-import net.coderbot.iris.shaderpack.*;
+import net.coderbot.iris.pipeline.newshader.TriforcePatcher;
+import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
+import net.coderbot.iris.rendertarget.RenderTarget;
+import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.samplers.IrisImages;
+import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
+import net.coderbot.iris.shaderpack.ProgramDirectives;
+import net.coderbot.iris.shaderpack.ProgramSet;
+import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
-import net.coderbot.iris.uniforms.*;
+import net.coderbot.iris.uniforms.CommonUniforms;
+import net.coderbot.iris.uniforms.IrisInternalUniforms;
+import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL15C;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class FinalPassRenderer {
 	private final RenderTargets renderTargets;
@@ -218,6 +236,7 @@ public class FinalPassRenderer {
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
 		main.bindWrite(true);
+		ProgramUniforms.clearActiveUniforms();
 		GlStateManager._glUseProgram(0);
 
 		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {

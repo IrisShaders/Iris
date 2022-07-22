@@ -1,23 +1,32 @@
 package net.coderbot.iris.pipeline;
 
-import java.util.*;
-import java.util.function.IntFunction;
-import java.util.regex.*;
-
 import com.google.common.collect.ImmutableSet;
-
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
-import net.coderbot.iris.gl.blending.*;
+import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.blending.AlphaTestFunction;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.program.*;
+import net.coderbot.iris.gl.program.ProgramImages;
+import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.newshader.*;
+import net.coderbot.iris.pipeline.newshader.AlphaTests;
+import net.coderbot.iris.pipeline.newshader.FogMode;
+import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.newshader.TriforcePatcher;
 import net.coderbot.iris.rendertarget.RenderTargets;
-import net.coderbot.iris.shaderpack.*;
+import net.coderbot.iris.shaderpack.ProgramSet;
+import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.minecraft.resources.ResourceLocation;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.IntFunction;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SodiumTerrainPipeline {
 	String terrainVertex;
@@ -26,12 +35,14 @@ public class SodiumTerrainPipeline {
 	String terrainCutoutFragment;
 	GlFramebuffer terrainFramebuffer;
 	BlendModeOverride terrainBlendOverride;
+	AlphaTest terrainCutoutAlpha;
 
 	String translucentVertex;
 	String translucentGeometry;
 	String translucentFragment;
 	GlFramebuffer translucentFramebuffer;
 	BlendModeOverride translucentBlendOverride;
+	AlphaTest translucentAlpha;
 
 	String shadowVertex;
 	String shadowGeometry;
@@ -39,6 +50,7 @@ public class SodiumTerrainPipeline {
 	String shadowCutoutFragment;
 	GlFramebuffer shadowFramebuffer;
 	BlendModeOverride shadowBlendOverride = BlendModeOverride.OFF;
+	AlphaTest shadowAlpha;
 
 	ProgramSet programSet;
 
@@ -86,8 +98,6 @@ public class SodiumTerrainPipeline {
 	public void patchShaders(ChunkVertexType vertexType) {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(true, true, false, true, true);
 
-		AlphaTest cutoutAlpha = new AlphaTest(AlphaTestFunction.GREATER, 0.1F);
-
 		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
 		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
 
@@ -96,6 +106,7 @@ public class SodiumTerrainPipeline {
 			terrainGeometry = sources.getGeometrySource().orElse(null);
 			terrainFragment = sources.getFragmentSource().orElse(null);
 			terrainBlendOverride = sources.getDirectives().getBlendModeOverride();
+			terrainCutoutAlpha = sources.getDirectives().getAlphaTestOverride().orElse(AlphaTests.ONE_TENTH_ALPHA);
 		});
 
 		translucentSource.ifPresent(sources -> {
@@ -103,6 +114,7 @@ public class SodiumTerrainPipeline {
 			translucentGeometry = sources.getGeometrySource().orElse(null);
 			translucentFragment = sources.getFragmentSource().orElse(null);
 			translucentBlendOverride = sources.getDirectives().getBlendModeOverride();
+			translucentAlpha = sources.getDirectives().getAlphaTestOverride().orElse(AlphaTest.ALWAYS);
 		});
 
 		programSet.getShadow().ifPresent(sources -> {
@@ -110,6 +122,7 @@ public class SodiumTerrainPipeline {
 			shadowGeometry = sources.getGeometrySource().orElse(null);
 			shadowFragment = sources.getFragmentSource().orElse(null);
 			shadowBlendOverride = sources.getDirectives().getBlendModeOverride();
+			shadowAlpha = sources.getDirectives().getAlphaTestOverride().orElse(AlphaTests.NON_ZERO_ALPHA);
 		});
 
 		if (terrainVertex != null) {
@@ -140,18 +153,18 @@ public class SodiumTerrainPipeline {
 			String fragment = terrainFragment;
 
 			terrainFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
-			terrainCutoutFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainCutoutFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, terrainCutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (translucentFragment != null) {
-			translucentFragment = TransformPatcher.patchSodium(translucentFragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			translucentFragment = TransformPatcher.patchSodium(translucentFragment, ShaderType.FRAGMENT, translucentAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 
 		if (shadowFragment != null) {
 			String fragment = shadowFragment;
 
 			shadowFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
-			shadowCutoutFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, cutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowCutoutFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, shadowAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
 		}
 	}
 
@@ -179,6 +192,10 @@ public class SodiumTerrainPipeline {
 		return terrainBlendOverride;
 	}
 
+	public Optional<AlphaTest> getTerrainCutoutAlpha() {
+		return Optional.ofNullable(terrainCutoutAlpha);
+	}
+
 	public Optional<String> getTranslucentVertexShaderSource() {
 		return Optional.ofNullable(translucentVertex);
 	}
@@ -197,6 +214,10 @@ public class SodiumTerrainPipeline {
 
 	public BlendModeOverride getTranslucentBlendOverride() {
 		return translucentBlendOverride;
+	}
+
+	public Optional<AlphaTest> getTranslucentAlpha() {
+		return Optional.ofNullable(translucentAlpha);
 	}
 
 	public Optional<String> getShadowVertexShaderSource() {
@@ -221,6 +242,10 @@ public class SodiumTerrainPipeline {
 
 	public BlendModeOverride getShadowBlendOverride() {
 		return shadowBlendOverride;
+	}
+
+	public Optional<AlphaTest> getShadowAlpha() {
+		return Optional.ofNullable(shadowAlpha);
 	}
 
 	public ProgramUniforms initUniforms(int programId) {

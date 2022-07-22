@@ -28,3 +28,9 @@ jobs:
 
     - name: Build with Brachyura
       run: java -jar brachyura-bootstrap-0.jar build
+
+    - name: Upload built JAR
+      uses: actions/upload-artifact@v3
+      with:
+        name: iris-artifacts
+        path: build/libs

@@ -25,7 +25,7 @@ public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode,
+										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isIntensity,
 										boolean isFullbright) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
@@ -69,7 +69,9 @@ public class NewShaderTests {
 				"        { \"name\": \"shadow\" },\n" +
 				"        { \"name\": \"watershadow\" },\n" +
 				"        { \"name\": \"shadowtex0\" },\n" +
+				"        { \"name\": \"shadowtex0HW\" },\n" +
 				"        { \"name\": \"shadowtex1\" },\n" +
+				"        { \"name\": \"shadowtex1HW\" },\n" +
 				"        { \"name\": \"depthtex0\" },\n" +
 				"        { \"name\": \"depthtex1\" },\n" +
 				"        { \"name\": \"noisetex\" },\n");
@@ -113,12 +115,12 @@ public class NewShaderTests {
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 
-			Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
-			Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+			Files.writeString(debugOutDir.resolve(name + ".vsh"), vertex);
+			Files.writeString(debugOutDir.resolve(name + ".fsh"), fragment);
 			if (geometry != null) {
-				Files.write(debugOutDir.resolve(name + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
+				Files.writeString(debugOutDir.resolve(name + ".gsh"), geometry);
 			}
-			Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
+			Files.writeString(debugOutDir.resolve(name + ".json"), shaderJsonString);
 		}
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, alpha, uniforms -> {
@@ -126,7 +128,7 @@ public class NewShaderTests {
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-		}, isFullbright, parent, inputs);
+		}, isIntensity, parent, inputs);
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
@@ -172,6 +174,7 @@ public class NewShaderTests {
 				"        { \"name\": \"FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"FogDensity\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"FogIsExp2\", \"type\": \"int\", \"count\": 1, \"values\": [ 0 ] },\n" +
+				"        { \"name\": \"AlphaTestValue\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
 				"        { \"name\": \"LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 				"        { \"name\": \"ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
 				"        { \"name\": \"FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
@@ -189,7 +192,7 @@ public class NewShaderTests {
 		}
 
 		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
-				writingToAfterTranslucent, blendModeOverride, parent);
+				writingToAfterTranslucent, blendModeOverride, alpha.getReference(), parent);
 	}
 
 	private static class IrisProgramResourceFactory implements ResourceProvider {
