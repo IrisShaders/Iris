@@ -30,11 +30,11 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * 
  * Change notes compared to existing 1.16 patches:
  * - Builtinuniformtransformer: nothing
- * - CompositeDepth: texture2D -> texture
+ * - CompositeDepth: texture2D -> texture (done)
  * - Attribute: out vec4 entityColor instead of varying, iris_UV1 and related,
  * iris_vertexColorGS and following, iris_vertexColorGS in new main, in vec4
  * entityColor instead of varying, iris_vertexColor replacement added and in
- * vec4 iris_vertexColor added
+ * vec4 iris_vertexColor added (done)
  */
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);

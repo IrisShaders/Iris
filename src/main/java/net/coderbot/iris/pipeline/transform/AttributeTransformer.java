@@ -131,35 +131,42 @@ class AttributeTransformer {
 			// this stage. But this is needed for the pass-through behavior.
 			tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform sampler2D iris_overlay;",
-					"varying vec4 entityColor;");
+					"out vec4 entityColor;",
+					"out vec4 iris_vertexColor;",
+					"in ivec2 iris_UV1;");
 
 			// Create our own main function to wrap the existing main function, so that we
 			// can pass through the overlay color at the end to the geometry or fragment
 			// stage.
 			root.renameAll("main", "irisMain_overlayColor");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END, "void main() {" +
-					"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);" +
+					"vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);" +
 					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
-					"irisMain_overlayColor(); }");
+					"iris_vertexColor = iris_Color;" +
+					"irisMain_overlayColor();}");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
 			// replace read references to grab the color from the first vertex.
 			root.replaceAllReferenceExpressions(transformer, "entityColor", "entityColor[0]");
 
 			// TODO: this is passthrough behavior
-			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"out vec4 entityColorGS;");
-			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"in vec4 entityColor[];");
+			tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"out vec4 entityColorGS;",
+					"in vec4 entityColor[];",
+					"out vec4 iris_vertexColorGS;",
+					"in vec4 iris_vertexColor[];");
 			root.renameAll("main", "irisMain");
-			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END,
-					"void main() { entityColorGS = entityColor[0]; irisMain(); }");
+			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END, "void main() {" +
+					"entityColorGS = entityColor[0];" +
+					"iris_vertexColorGS = iris_vertexColor[0];" +
+					"irisMain();}");
 		} else if (parameters.type == ShaderType.FRAGMENT) {
-			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"varying vec4 entityColor;");
+			tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"in vec4 entityColor;", "in vec4 iris_vertexColor;");
 
 			// Different output name to avoid a name collision in the geometry shader.
 			if (parameters.hasGeometry) {
 				root.renameAll("entityColor", "entityColorGS");
+				root.renameAll("iris_vertexColor", "iris_vertexColorGS");
 			}
 		}
 	}
