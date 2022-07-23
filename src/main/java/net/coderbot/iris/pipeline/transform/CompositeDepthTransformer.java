@@ -39,7 +39,7 @@ class CompositeDepthTransformer {
 
 			// if centerDepthSmooth is not declared as a uniform, we don't make it available
 			root.replaceAllReferenceExpressions(transformer, "centerDepthSmooth",
-					"texture2D(iris_centerDepthSmooth, vec2(0.5)).r");
+					"texture(iris_centerDepthSmooth, vec2(0.5)).r");
 		}
 	}
 }
