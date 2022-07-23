@@ -49,19 +49,6 @@ public class SodiumTerrainTransformer {
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
-		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-		// "attribute vec3 iris_Pos; // The position of the vertex\n" +
-		// "attribute vec4 iris_Color; // The color of the vertex\n" +
-		// "attribute vec2 iris_TexCoord; // The block texture coordinate of the
-		// vertex\n" +
-		// "attribute vec2 iris_LightCoord; // The light map texture coordinate of the
-		// vertex\n" +
-		// "attribute vec3 iris_Normal; // The vertex normal\n" + (some removed since
-		// shared)
-		// "uniform vec3 u_ModelScale;\n" +
-		// "uniform vec2 u_TextureScale;\n" +
-		// "attribute vec4 iris_ModelOffset;\n" +
-		// "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"attribute vec3 iris_Pos;",
 				"attribute vec4 iris_Color;",
@@ -75,27 +62,14 @@ public class SodiumTerrainTransformer {
 
 		transformShared(transformer, tree, root, parameters);
 
-		// transformations.define("gl_Vertex", "vec4((iris_Pos * u_ModelScale) +
-		// iris_ModelOffset.xyz, 1.0)");
 		root.replaceAllReferenceExpressions(transformer, "gl_Vertex",
 				"vec4((iris_Pos * u_ModelScale) + iris_ModelOffset.xyz, 1.0)");
-
-		// transformations.define("gl_MultiTexCoord0", "vec4(iris_TexCoord *
-		// u_TextureScale, 0.0, 1.0)");
 		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord0",
 				"vec4(iris_TexCoord * u_TextureScale, 0.0, 1.0)");
-
-		// transformations.define("gl_Color", "iris_Color");
 		root.renameAll("gl_Color", "iris_Color");
-
-		// transformations.define("gl_Normal", "iris_Normal");
 		root.renameAll("gl_Normal", "iris_Normal");
-
-		// transformations.define("ftransform", "iris_ftransform");
 		root.renameAll("ftransform", "iris_ftransform");
 
-		// new
-		// BuiltinUniformReplacementTransformer("iris_LightCoord").apply(transformations);
 		replaceLightmapForSodium(transformer, tree, root, parameters);
 	}
 
@@ -120,27 +94,15 @@ public class SodiumTerrainTransformer {
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
-		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-		// "uniform mat4 iris_ModelViewMatrix;\n" +
-		// "uniform mat4 u_ModelViewProjectionMatrix;\n" +
-		// "uniform mat4 iris_NormalMatrix;\n");
 		tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_ModelViewMatrix;",
 				"uniform mat4 u_ModelViewProjectionMatrix;",
 				"uniform mat4 iris_NormalMatrix;");
-
-		// transformations.define("gl_ModelViewMatrix", "iris_ModelViewMatrix");
 		root.renameAll("gl_ModelViewMatrix", "iris_ModelViewMatrix");
-
-		// transformations.define("gl_ModelViewProjectionMatrix",
-		// "u_ModelViewProjectionMatrix");
 		root.renameAll("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
-
-		// transformations.define("gl_NormalMatrix", "mat3(iris_NormalMatrix)");
 		root.replaceAllReferenceExpressions(transformer,
 				"gl_NormalMatrix", "mat3(iris_NormalMatrix)");
 
-		// transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
 		root.replaceAllExpressions(
 				transformer,
 				root.identifierIndex.getStream("gl_TextureMatrix")
@@ -189,7 +151,11 @@ public class SodiumTerrainTransformer {
 				replaceSExpressions.add(memberAccess);
 				return;
 			}
-
+			// NB: Technically this isn't a correct transformation (it changes the values
+			// slightly), however the shader code being replaced isn't correct to begin with
+			// since it doesn't properly apply the centering / scaling transformation like
+			// gl_TextureMatrix[1] would. Therefore, I think this is acceptable. This code
+			// shows up in Sildur's shaderpacks.
 			DivisionExpression division = identifier.getAncestor(DivisionExpression.class);
 			if (division != null
 					&& xyDivision.matchesExtract(division)
@@ -208,28 +174,6 @@ public class SodiumTerrainTransformer {
 		}
 	}
 
-	/**
-	 * Does the generic texture matrix replacement.
-	 */
-	private static void replaceMultiTexCoord(
-			ASTTransformer<?> transformer,
-			Root root) {
-		replaceExpressions.clear();
-		replaceSExpressions.clear();
-		replaceWrapExpressions.clear();
-
-		processCoord(transformer, root, "gl_MultiTexCoord1");
-		processCoord(transformer, root, "gl_MultiTexCoord2");
-
-		Root.replaceAllExpressionsConcurrent(transformer, replaceExpressions, lightmapCoordsExpression);
-		Root.replaceAllExpressionsConcurrent(transformer, replaceSExpressions, lightmapCoordsExpressionS);
-		Root.replaceAllExpressionsConcurrent(transformer, replaceWrapExpressions, lightmapCoordsExpressionWrapped);
-
-		replaceExpressions.clear();
-		replaceSExpressions.clear();
-		replaceWrapExpressions.clear();
-	}
-
 	private static final Matcher<Expression> glTextureMatrix1 = new Matcher<>(
 			"gl_TextureMatrix[1]", GLSLParser::expression, ASTBuilder::visitExpression);
 
@@ -242,10 +186,23 @@ public class SodiumTerrainTransformer {
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
-		replaceMultiTexCoord(transformer, root);
+		replaceExpressions.clear();
+		replaceSExpressions.clear();
+		replaceWrapExpressions.clear();
 
-		// transformations.replaceExact("gl_TextureMatrix[1]",
-		// "iris_LightmapTextureMatrix");
+		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both aliases of the lightmap
+		// coords
+		processCoord(transformer, root, "gl_MultiTexCoord1");
+		processCoord(transformer, root, "gl_MultiTexCoord2");
+
+		Root.replaceAllExpressionsConcurrent(transformer, replaceExpressions, lightmapCoordsExpression);
+		Root.replaceAllExpressionsConcurrent(transformer, replaceSExpressions, lightmapCoordsExpressionS);
+		Root.replaceAllExpressionsConcurrent(transformer, replaceWrapExpressions, lightmapCoordsExpressionWrapped);
+
+		replaceExpressions.clear();
+		replaceSExpressions.clear();
+		replaceWrapExpressions.clear();
+
 		root.replaceAllExpressions(
 				transformer,
 				root.identifierIndex.getStream("gl_TextureMatrix")
@@ -253,26 +210,14 @@ public class SodiumTerrainTransformer {
 						.distinct()
 						.filter(glTextureMatrix1::matches),
 				"iris_LightmapTextureMatrix");
-
-		// transformations.replaceExact(
-		// "gl_MultiTexCoord1",
-		// "vec4(" + NORMALIZED_PLACEHOLDER + " * 255.0, 0.0, 1.0)"
-		// );
 		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord1", "vec4("
 				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
-
-		// transformations.replaceExact(
-		// "gl_MultiTexCoord2",
-		// "vec4(" + NORMALIZED_PLACEHOLDER + " * 255.0, 0.0, 1.0)"
-		// );
 		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord2", "vec4("
 				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
 
+		// If there are references to the fallback lightmap texture matrix, then make it
+		// available to the shader program.
 		if (root.identifierIndex.has("iris_LightmapTextureMatrix")) {
-			// transformations.injectLine(
-			// Transformations.InjectionPoint.BEFORE_CODE,
-			// "uniform mat4 iris_LightmapTextureMatrix;"
-			// );
 			tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform mat4 iris_LightmapTextureMatrix;");
 		}
