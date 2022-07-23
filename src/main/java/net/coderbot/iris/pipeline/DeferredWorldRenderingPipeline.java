@@ -90,8 +90,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final ImmutableList<ClearPass> shadowClearPasses;
 	private final ImmutableList<ClearPass> shadowClearPassesFull;
 
-	private final GlFramebuffer baseline;
-
 	private final CompositeRenderer prepareRenderer;
 
 	@Nullable
@@ -305,8 +303,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				programs.getPackDirectives().getRenderTargetDirectives());
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 				programs.getPackDirectives().getRenderTargetDirectives());
-
-		this.baseline = renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[] {0});
 
 		if (shadowRenderTargets != null) {
 			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
