@@ -2,6 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.Minecraft;
 
 public class IrisExclusiveUniforms {
@@ -13,7 +14,9 @@ public class IrisExclusiveUniforms {
 
 
 	private static float getThunderStrength() {
-		return Minecraft.getInstance().level.getThunderLevel(CapturedRenderingState.INSTANCE.getTickDelta());
+		// Note: Ensure this is in the range of 0 to 1 - some custom servers send out of range values.
+		return Math.clamp(0.0F, 1.0F,
+			Minecraft.getInstance().level.getThunderLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
 	}
 
 	private static boolean isFirstPersonCamera() {
