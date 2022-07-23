@@ -43,6 +43,7 @@
   "options.iris.reset.tooltip.holdShift": "Hold SHIFT and click to reset",
   "options.iris.importSettings.tooltip": "Import settings from file",
   "options.iris.exportSettings.tooltip": "Export applied settings to file",
+  "options.iris.mustDisableFullscreen": "Please disable fullscreen first!",
   "options.iris.setToDefault": "Set option to default value?",
   "options.iris.profile": "Profile",
   "options.iris.profile.custom": "Custom",

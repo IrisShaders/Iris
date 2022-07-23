@@ -382,6 +382,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.notificationDialogTimer = 100;
 	}
 
+	public void displayNotification(Component component) {
+		this.notificationDialog = component;
+		this.notificationDialogTimer = 100;
+	}
+
 	public void onOptionMenuFilesDrop(List<Path> paths) {
 		// If more than one option file has been dragged, display an error
 		// as only one option file should be imported at a time
