@@ -20,8 +20,8 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**
- * The transform patcher (triforce 2) uses glsl-transformer to do shader
- * transformation.
+ * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
+ * do shader transformation.
  *
  * NOTE: This patcher expects (and ensures) that the string doesn't contain any
  * (!) preprocessor directives. The only allowed ones are #extension and #pragma
@@ -32,10 +32,8 @@ public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	private static ASTTransformer<Parameters> transformer;
 
-	/**
-	 * PREV TODO: Only do the NewLines patches if the source code isn't from
-	 * gbuffers_lines
-	 */
+	// TODO: Only do the NewLines patches if the source code isn't from
+	// gbuffers_lines (what does this mean?)
 
 	static TokenFilter<Parameters> parseTokenFilter = new ChannelFilter<Parameters>(TokenChannel.PREPROCESSOR) {
 		@Override

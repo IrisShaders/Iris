@@ -19,7 +19,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
  * Implements AttributeShaderTransformer using glsl-transformer AST
  * transformation methods.
  */
-public class AttributeTransformer {
+class AttributeTransformer {
 	public static void transform(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,

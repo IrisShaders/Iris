@@ -20,7 +20,7 @@ import io.github.douira.glsl_transformer.ast.transform.Matcher;
 /**
  * Does the sodium terrain transformations using glsl-transformer AST.
  */
-public class SodiumTerrainTransformer {
+class SodiumTerrainTransformer {
 	public static void transform(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
