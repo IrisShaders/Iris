@@ -10,8 +10,7 @@ This release was developed by coderbot, IMS, and Pepper.
 
 Here's what's changed since 1.2.5:
 
-- 🚧 Added support for the at_midBlock shader attribute
-- 📄 Added many Optifine shader properties
+- 📄 Added many Optifine parity improvements
 - 🗣️ Fix issues with translations combined with Spectrum 1.4.0
 - 📈 Slightly improved performance of shadow rendering
 - 🛸 Fixed ender beam effect in the End not animating with Complementary
