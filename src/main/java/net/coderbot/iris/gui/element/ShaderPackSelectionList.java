@@ -20,11 +20,14 @@ import java.util.function.Function;
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
 	private static final Component PACK_LIST_LABEL = new TranslatableComponent("pack.iris.list.label").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
 
+	private final ShaderPackScreen screen;
 	private final TopButtonRowEntry topButtonRow;
 	private ShaderPackEntry applied = null;
 
-	public ShaderPackSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right) {
+	public ShaderPackSelectionList(ShaderPackScreen screen, Minecraft client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
+
+		this.screen = screen;
 		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
 
 		refresh();
@@ -268,6 +271,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		public void setShadersEnabled(boolean shadersEnabled) {
 			this.shadersEnabled = shadersEnabled;
 			this.enableDisableButton.text = getEnableDisableLabel();
+			this.list.screen.refreshScreenSwitchButton();
 		}
 
 		@Override

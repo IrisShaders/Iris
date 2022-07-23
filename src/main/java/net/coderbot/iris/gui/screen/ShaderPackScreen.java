@@ -180,7 +180,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.children.remove(this.shaderPackList);
 		this.children.remove(this.shaderOptionList);
 
-		this.shaderPackList = new ShaderPackSelectionList(this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
+		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
 
 		if (Iris.getCurrentPack().isPresent() && this.navigation != null) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
@@ -263,7 +263,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 							new TranslatableComponent("options.iris.shaderPackList")
 							: new TranslatableComponent("options.iris.shaderPackSettings")
 			);
-			this.screenSwitchButton.active = optionMenuOpen || Iris.getCurrentPack().isPresent();
+			this.screenSwitchButton.active = optionMenuOpen || shaderPackList.getTopButtonRow().shadersEnabled;
 		}
 	}
 
