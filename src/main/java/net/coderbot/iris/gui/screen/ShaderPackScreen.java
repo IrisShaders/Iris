@@ -224,6 +224,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.screenSwitchButton = this.addButton(new Button(topCenter + 78, this.height - 51, 152, 20,
 			new TranslatableComponent("options.iris.shaderPackList"), button -> {
 				this.optionMenuOpen = !this.optionMenuOpen;
+
+				// UX: Apply changes before switching screens to avoid unintuitive behavior
+				//
+				// Not doing this leads to unintuitive behavior, since selecting a pack in the
+				// list (but not applying) would open the settings for the previous pack, rather
+				// than opening the settings for the selected (but not applied) pack.
+				this.applyChanges();
+
 				this.init();
 			}
 		));
