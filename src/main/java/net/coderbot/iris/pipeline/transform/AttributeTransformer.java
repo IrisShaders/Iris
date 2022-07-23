@@ -33,17 +33,22 @@ class AttributeTransformer {
 		}
 
 		Stream<Identifier> stream = Stream.empty();
+		boolean hasItems = false;
 		if (!parameters.inputs.lightmap) {
 			stream = Stream.concat(stream,
 					root.identifierIndex.getStream("gl_MultiTexCoord1"));
 			stream = Stream.concat(stream,
 					root.identifierIndex.getStream("gl_MultiTexCoord2"));
+			hasItems = true;
 		}
 		if (!parameters.inputs.texture) {
 			stream = Stream.concat(stream,
 					root.identifierIndex.getStream("gl_MultiTexCoord0"));
+			hasItems = true;
 		}
-		root.replaceAllReferenceExpressions(transformer, stream, "vec4(240.0, 240.0, 0.0, 1.0)");
+		if (hasItems) {
+			root.replaceAllReferenceExpressions(transformer, stream, "vec4(240.0, 240.0, 0.0, 1.0)");
+		}
 
 		patchTextureMatrices(transformer, tree, root, parameters.inputs.lightmap);
 
