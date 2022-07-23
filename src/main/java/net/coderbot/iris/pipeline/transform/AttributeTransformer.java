@@ -25,35 +25,26 @@ public class AttributeTransformer {
 			TranslationUnit tree,
 			Root root,
 			AttributeParameters parameters) {
-
+		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both ways to refer to the
+		// lightmap texture coordinate.
+		// See https://github.com/IrisShaders/Iris/issues/1149
 		if (parameters.inputs.lightmap) {
-			// transformations.replaceExact("gl_MultiTexCoord1", "gl_MultiTexCoord2");
 			root.renameAll("gl_MultiTexCoord1", "gl_MultiTexCoord2");
 		}
 
 		Stream<Identifier> stream = Stream.empty();
-
-		// transformations.replaceExact("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0,
-		// 1.0)");
-		// transformations.replaceExact("gl_MultiTexCoord2", "vec4(240.0, 240.0, 0.0,
-		// 1.0)");
 		if (!parameters.inputs.lightmap) {
 			stream = Stream.concat(stream,
 					root.identifierIndex.getStream("gl_MultiTexCoord1"));
 			stream = Stream.concat(stream,
 					root.identifierIndex.getStream("gl_MultiTexCoord2"));
 		}
-
-		// transformations.define("gl_MultiTexCoord0", "vec4(240.0, 240.0,
-		// 0.0, 1.0)");
 		if (!parameters.inputs.texture) {
 			stream = Stream.concat(stream,
 					root.identifierIndex.getStream("gl_MultiTexCoord0"));
 		}
-
 		root.replaceAllReferenceExpressions(transformer, stream, "vec4(240.0, 240.0, 0.0, 1.0)");
 
-		// patchTextureMatrices(transformations, inputs.lightmap);
 		patchTextureMatrices(transformer, tree, root, parameters.inputs.lightmap);
 
 		if (parameters.inputs.overlay) {
@@ -63,12 +54,14 @@ public class AttributeTransformer {
 		if (parameters.type == ShaderType.VERTEX
 				&& root.identifierIndex.has("gl_MultiTexCoord3")
 				&& !root.identifierIndex.has("mc_midTexCoord")) {
-			// TODO: proper type conversion, see original code
-			// transformations.replaceExact("gl_MultiTexCoord3", "mc_midTexCoord");
+			// TODO: proper type conversion
+			// gl_MultiTexCoord3 is a super legacy alias of mc_midTexCoord. We don't do this
+			// replacement if we think mc_midTexCoord could be defined just we can't handle
+			// an existing declaration robustly. But basically the proper way to do this is
+			// to define mc_midTexCoord only if it's not defined, and if it is defined,
+			// figure out its type, then replace all occurrences of gl_MultiTexCoord3 with
+			// the correct conversion from mc_midTexCoord's declared type to vec4.
 			root.renameAll("gl_MultiTexCoord3", "mc_midTexCoord");
-
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-			// "attribute vec4 mc_midTexCoord;");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"attribute vec4 mc_midTexCoord;");
 		}
@@ -79,29 +72,15 @@ public class AttributeTransformer {
 			TranslationUnit tree,
 			Root root,
 			boolean hasLightmap) {
-		// transformations.replaceExact("gl_TextureMatrix", "iris_TextureMatrix");
 		root.renameAll("gl_TextureMatrix", "iris_TextureMatrix");
 
-		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const
-		// float iris_ONE_OVER_256 = 0.00390625;\n");
-		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "const
-		// float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;\n");
 		tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
 				"const float iris_ONE_OVER_256 = 0.00390625;",
 				"const float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;");
 		if (hasLightmap) {
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4
-			// iris_LightmapTextureMatrix = gl_TextureMatrix[2];\n");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"mat4 iris_LightmapTextureMatrix = gl_TextureMatrix[2];");
 		} else {
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4
-			// iris_LightmapTextureMatrix =" +
-			// "mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
-			// " 0.0, iris_ONE_OVER_256, 0.0, 0.0," +
-			// " 0.0, 0.0, iris_ONE_OVER_256, 0.0," +
-			// " iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_32,
-			// iris_ONE_OVER_256);");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS, "mat4 iris_LightmapTextureMatrix =" +
 					"mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
 					"     0.0, iris_ONE_OVER_256, 0.0, 0.0," +
@@ -109,17 +88,7 @@ public class AttributeTransformer {
 					"     iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_32, iris_ONE_OVER_256);");
 		}
 
-		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4
-		// iris_TextureMatrix[8] = mat4[8](" +
-		// "gl_TextureMatrix[0]," +
-		// "iris_LightmapTextureMatrix," +
-		// "mat4(1.0)," +
-		// "mat4(1.0)," +
-		// "mat4(1.0)," +
-		// "mat4(1.0)," +
-		// "mat4(1.0)," +
-		// "mat4(1.0)" +
-		// ");");
+		// column major
 		tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS, "mat4 iris_TextureMatrix[8] = mat4[8](" +
 				"gl_TextureMatrix[0]," +
 				"iris_LightmapTextureMatrix," +
@@ -135,12 +104,13 @@ public class AttributeTransformer {
 	private static final Matcher<ExternalDeclaration> uniformVec4EntityColor = new Matcher<>(
 			"uniform vec4 entityColor;", GLSLParser::externalDeclaration, ASTBuilder::visitExternalDeclaration);
 
+	// Add entity color -> overlay color attribute support.
 	private static void patchOverlayColor(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
 			Root root,
 			AttributeParameters parameters) {
-		// transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
+		// delete original declaration
 		root.processAll(
 				root.identifierIndex.getStream("entityColor")
 						.map(identifier -> identifier.getAncestor(DeclarationExternalDeclaration.class))
@@ -149,61 +119,39 @@ public class AttributeTransformer {
 				ASTNode::detachAndDelete);
 
 		if (parameters.type == ShaderType.VERTEX) {
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-			// "uniform sampler2D iris_overlay;");
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-			// "varying vec4 entityColor;");
+			// add our own declarations
+			// TODO: We're exposing entityColor to this stage even if it isn't declared in
+			// this stage. But this is needed for the pass-through behavior.
 			tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform sampler2D iris_overlay;",
 					"varying vec4 entityColor;");
 
-			// transformations.replaceExact("main", "irisMain_overlayColor");
+			// Create our own main function to wrap the existing main function, so that we
+			// can pass through the overlay color at the end to the geometry or fragment
+			// stage.
 			root.renameAll("main", "irisMain_overlayColor");
-
-			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
-			// {\n" +
-			// " vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] *
-			// gl_MultiTexCoord1).xy);\n" +
-			// " entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
-			// "\n" +
-			// " irisMain_overlayColor();\n" +
-			// "}");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END, "void main() {" +
 					"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);" +
 					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
 					"irisMain_overlayColor(); }");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
-			// transformations.replaceExact("entityColor", "entityColor[0]");
+			// replace read references to grab the color from the first vertex.
 			root.replaceAllReferenceExpressions(transformer, "entityColor", "entityColor[0]");
 
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out
-			// vec4 entityColorGS;");
+			// TODO: this is passthrough behavior
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"out vec4 entityColorGS;");
-
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
-			// vec4 entityColor[];");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in vec4 entityColor[];");
-
-			// transformations.replaceExact("main", "irisMain");
 			root.renameAll("main", "irisMain");
-
-			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
-			// {\n" +
-			// " entityColorGS = entityColor[0];\n" +
-			// " irisMain();\n" +
-			// "}");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END,
 					"void main() { entityColorGS = entityColor[0]; irisMain(); }");
 		} else if (parameters.type == ShaderType.FRAGMENT) {
-			// transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "varying vec4
-			// entityColor;");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"varying vec4 entityColor;");
 
+			// Different output name to avoid a name collision in the geometry shader.
 			if (parameters.hasGeometry) {
-				// transformations.replaceExact("entityColor", "entityColorGS");
 				root.renameAll("entityColor", "entityColorGS");
 			}
 		}
