@@ -1,7 +1,7 @@
 package net.coderbot.iris.pipeline.transform;
 
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -70,34 +70,36 @@ public class TransformPatcher {
 					case SODIUM_TERRAIN:
 						SodiumTerrainTransformer.transform(transformer, tree, root, parameters);
 						break;
+					case COMPOSITE_DEPTH:
+						CompositeDepthTransformer.transform(transformer, tree, root);
+						break;
 				}
 			});
 		});
 		transformer.getInternalParser().setParseTokenFilter(parseTokenFilter);
 	}
 
-	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher, boolean doLogging) {
+	private static String inspectPatch(
+			String source,
+			String patchInfo,
+			Function<String, String> patcher) {
 		if (source == null) {
 			return null;
 		}
 
-		if (IrisLogging.ENABLE_SPAM && doLogging) {
+		if (IrisLogging.ENABLE_TRANSFORM_SPAM) {
 			LOGGER.debug("INPUT: " + source + " END INPUT");
 		}
 
 		long time = System.currentTimeMillis();
-		String patched = patcher.get();
+		String patched = patcher.apply(source);
 
-		if (IrisLogging.ENABLE_SPAM && doLogging) {
+		if (IrisLogging.ENABLE_TRANSFORM_SPAM) {
 			LOGGER.debug("INFO: " + patchInfo);
 			LOGGER.debug("TIME: patching took " + (System.currentTimeMillis() - time) + "ms");
 			LOGGER.debug("PATCHED: " + patched + " END PATCHED");
 		}
 		return patched;
-	}
-
-	private static String inspectPatch(String source, String patchInfo, Supplier<String> patcher) {
-		return inspectPatch(source, patchInfo, patcher, true);
 	}
 
 	private static String transform(String source, Parameters parameters) {
@@ -107,26 +109,19 @@ public class TransformPatcher {
 	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
 		return inspectPatch(source,
 				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
-				() -> {
-					String str = source;
-					str = transform(str, new AttributeParameters(Patch.ATTRIBUTES, type,
-							hasGeometry, inputs));
-					// str = AttributeShaderTransformer.patch(str, type, hasGeometry, inputs);
-					return str;
-				});
+				str -> transform(str, new AttributeParameters(Patch.ATTRIBUTES, type,
+						hasGeometry, inputs)));
 	}
 
 	public static String patchSodiumTerrain(String source, ShaderType type) {
 		return inspectPatch(source,
 				"TYPE: " + type,
-				() -> {
-					String str = source;
-					str = transform(str, new Parameters(Patch.SODIUM_TERRAIN, type));
-					// str = type == ShaderType.VERTEX
-					// 		? SodiumTerrainPipeline.transformVertexShader(str)
-					// 		: SodiumTerrainPipeline.transformFragmentShader(str);
-					return str;
-				},
-				false);
+				str -> transform(str, new Parameters(Patch.SODIUM_TERRAIN, type)));
+	}
+
+	public static String patchCompositeDepth(String source) {
+		return inspectPatch(source,
+				"(no type)",
+				str -> transform(str, new Parameters(Patch.COMPOSITE_DEPTH, null)));
 	}
 }

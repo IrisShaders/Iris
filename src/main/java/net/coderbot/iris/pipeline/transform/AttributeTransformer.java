@@ -102,7 +102,9 @@ public class AttributeTransformer {
 	}
 
 	private static final Matcher<ExternalDeclaration> uniformVec4EntityColor = new Matcher<>(
-			"uniform vec4 entityColor;", GLSLParser::externalDeclaration, ASTBuilder::visitExternalDeclaration);
+			"uniform vec4 entityColor;",
+			GLSLParser::externalDeclaration,
+			ASTBuilder::visitExternalDeclaration);
 
 	// Add entity color -> overlay color attribute support.
 	private static void patchOverlayColor(
