@@ -37,7 +37,7 @@ class SodiumTerrainTransformer {
 	private static final List<Expression> replaceSExpressions = new ArrayList<>();
 	private static final List<Expression> replaceWrapExpressions = new ArrayList<>();
 
-	private static void processCoord(ASTTransformer<?> transformer, Root root, String coord) {
+	private static void processCoord(Root root, String coord) {
 		for (Identifier identifier : root.identifierIndex.get(coord)) {
 			MemberAccessExpression memberAccess = identifier.getAncestor(MemberAccessExpression.class);
 			if (memberAccess != null && glTextureMatrixMultMember.matchesExtract(memberAccess)) {
@@ -84,7 +84,7 @@ class SodiumTerrainTransformer {
 	 */
 	public static void replaceLightmapForSodium(
 			final String lightmapCoordsExpression,
-			ASTTransformer<?> transformer,
+			ASTTransformer<?> t,
 			TranslationUnit tree,
 			Root root) {
 		final String lightmapCoordsExpressionS = lightmapCoordsExpression + ".s";
@@ -96,28 +96,28 @@ class SodiumTerrainTransformer {
 
 		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both aliases of the lightmap
 		// coords
-		processCoord(transformer, root, "gl_MultiTexCoord1");
-		processCoord(transformer, root, "gl_MultiTexCoord2");
+		processCoord(root, "gl_MultiTexCoord1");
+		processCoord(root, "gl_MultiTexCoord2");
 
-		Root.replaceAllExpressionsConcurrent(transformer, replaceExpressions, lightmapCoordsExpression);
-		Root.replaceAllExpressionsConcurrent(transformer, replaceSExpressions, lightmapCoordsExpressionS);
-		Root.replaceAllExpressionsConcurrent(transformer, replaceWrapExpressions, lightmapCoordsExpressionWrapped);
+		Root.replaceExpressionsConcurrent(t, replaceExpressions, lightmapCoordsExpression);
+		Root.replaceExpressionsConcurrent(t, replaceSExpressions, lightmapCoordsExpressionS);
+		Root.replaceExpressionsConcurrent(t, replaceWrapExpressions, lightmapCoordsExpressionWrapped);
 
 		replaceExpressions.clear();
 		replaceSExpressions.clear();
 		replaceWrapExpressions.clear();
 
-		root.replaceAllExpressionMatches(transformer, "gl_TextureMatrix",
+		root.replaceExpressionMatches(t, "gl_TextureMatrix",
 				CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
-		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord1", "vec4("
+		root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4("
 				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
-		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord2", "vec4("
+		root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4("
 				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
 
 		// If there are references to the fallback lightmap texture matrix, then make it
 		// available to the shader program.
 		if (root.identifierIndex.has("iris_LightmapTextureMatrix")) {
-			tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform mat4 iris_LightmapTextureMatrix;");
 		}
 	}
