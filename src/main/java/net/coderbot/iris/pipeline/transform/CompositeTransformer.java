@@ -12,7 +12,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CompositeTransformer {
-	private static final AutoHintedMatcher<Expression> glTextureMatrix1To8 = new AutoHintedMatcher<Expression>(
+	private static final AutoHintedMatcher<Expression> glTextureMatrix0To8 = new AutoHintedMatcher<Expression>(
 			"gl_TextureMatrix[index]", Matcher.expressionPattern) {
 		{
 			markClassedPredicateWildcard("index",
@@ -43,7 +43,7 @@ public class CompositeTransformer {
 		// transformations.replaceExact("gl_TextureMatrix[" + i + "]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix [" + i + "]", "mat4(1.0)");
 		// }
-		root.replaceExpressionMatches(t, glTextureMatrix1To8, "mat4(1.0)");
+		root.replaceExpressionMatches(t, glTextureMatrix0To8, "mat4(1.0)");
 
 		// TODO: Other fog things
 
