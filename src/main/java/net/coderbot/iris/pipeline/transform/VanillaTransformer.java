@@ -7,11 +7,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.AlphaTests;
 
-/**
- * TODO TRANSFORM: the attribute -> in etc. replacements done in common have to
- * be applied after all the other things have happened since they might
- * introduce new attribute usages. (or replace them manually)
- */
+// Order fixed
 public class VanillaTransformer {
 	public static void transform(
 			ASTTransformer<?> t,
@@ -325,6 +321,5 @@ public class VanillaTransformer {
 		// "uniform mat4 iris_ProjMat;");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 				"uniform mat4 iris_ProjMat;");
-
 	}
 }

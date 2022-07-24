@@ -14,6 +14,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
 
+// Order fixed
 public class CommonTransformer {
 	public static final AutoHintedMatcher<Expression> glTextureMatrix0 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[0]", Matcher.expressionPattern);
