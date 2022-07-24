@@ -31,7 +31,7 @@ public class AlphaTestTransformer {
 			// " irisMain();\n" +
 			// alpha.toExpression(" ") +
 			// "}");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.END, "void irisMain() {" +
+			tree.parseAndInjectNode(t, ASTInjectionPoint.END, "void main() {" +
 					" irisMain();" + alpha.toExpression(" ") + "}");
 		}
 	}

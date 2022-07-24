@@ -96,11 +96,6 @@ public class SodiumTransformer {
 		// transformations.injectLine(Transformations.InjectionPoint.DEFINES,
 		// "#define gl_ModelViewMatrix iris_ModelViewMatrix");
 		root.rename("gl_ModelViewMatrix", "iris_ModelViewMatrix");
-		// transformations.injectLine(Transformations.InjectionPoint.DEFINES,
-		// "#define gl_ModelViewProjectionMatrix (iris_ProjectionMatrix *
-		// iris_ModelViewMatrix)");
-		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
-				"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
 
 		if (parameters.type == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to
@@ -186,6 +181,12 @@ public class SodiumTransformer {
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform mat4 iris_ProjectionMatrix;");
 		}
+
+		// transformations.injectLine(Transformations.InjectionPoint.DEFINES,
+		// "#define gl_ModelViewProjectionMatrix (iris_ProjectionMatrix *
+		// iris_ModelViewMatrix)");
+		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
+				"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
 
 		CommonTransformer.applyIntelHd4000Workaround(root);
 	}

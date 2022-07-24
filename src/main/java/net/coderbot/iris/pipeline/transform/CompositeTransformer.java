@@ -47,13 +47,6 @@ public class CompositeTransformer {
 
 		// TODO: Other fog things
 
-		// This is used to scale the quad projection matrix from (0, 1) to (-1, 1).
-		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-		// gl_ProjectionMatrix mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0),
-		// vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
-		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix",
-				"mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
-
 		if (parameters.type == ShaderType.VERTEX) {
 			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 			// gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
@@ -92,9 +85,18 @@ public class CompositeTransformer {
 		// gl_NormalMatrix mat3(1.0)");
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix", "mat3(1.0)");
 
-		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-		// gl_ModelViewMatrix mat4(1.0)");
-		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", "mat4(1.0)");
+		if (parameters.type == ShaderType.VERTEX) {
+			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
+			// vec3 Position;");
+			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4
+			// ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec3 Position;",
+					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+
+			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
+			// gl_Vertex vec4(Position, 1.0)");
+			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(Position, 1.0)");
+		}
 
 		// TODO: All of the transformed variants of the input matrices, preferably
 		// computed on the CPU side...
@@ -103,18 +105,16 @@ public class CompositeTransformer {
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
 				"(gl_ProjectionMatrix * gl_ModelViewMatrix)");
 
-		if (parameters.type == ShaderType.VERTEX) {
-			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-			// gl_Vertex vec4(Position, 1.0)");
-			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(Position, 1.0)");
+		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
+		// gl_ModelViewMatrix mat4(1.0)");
+		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", "mat4(1.0)");
 
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
-			// vec3 Position;");
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4
-			// ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec3 Position;",
-					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
-		}
+		// This is used to scale the quad projection matrix from (0, 1) to (-1, 1).
+		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
+		// gl_ProjectionMatrix mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0),
+		// vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
+		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix",
+				"mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
 
 		CommonTransformer.applyIntelHd4000Workaround(root);
 	}

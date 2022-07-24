@@ -172,6 +172,8 @@ public class VanillaTransformer {
 
 				// Create our own main function to wrap the existing main function, so that we
 				// can do our line shenanigans.
+				// TRANSFORM: this is fine since the AttributeTransformer has a different name
+				// in the vertex shader
 				// transformations.replaceExact("main", "irisMain");
 				root.rename("main", "irisMain");
 
