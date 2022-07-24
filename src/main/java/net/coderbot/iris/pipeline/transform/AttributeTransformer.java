@@ -6,9 +6,8 @@ import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.query.Matcher;
+import io.github.douira.glsl_transformer.ast.query.HintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
@@ -29,7 +28,7 @@ class AttributeTransformer {
 		// lightmap texture coordinate.
 		// See https://github.com/IrisShaders/Iris/issues/1149
 		if (parameters.inputs.lightmap) {
-			root.renameAll("gl_MultiTexCoord1", "gl_MultiTexCoord2");
+			root.rename("gl_MultiTexCoord1", "gl_MultiTexCoord2");
 		}
 
 		Stream<Identifier> stream = Stream.empty();
@@ -47,7 +46,7 @@ class AttributeTransformer {
 			hasItems = true;
 		}
 		if (hasItems) {
-			root.replaceAllReferenceExpressions(transformer, stream, "vec4(240.0, 240.0, 0.0, 1.0)");
+			root.replaceReferenceExpressions(transformer, stream, "vec4(240.0, 240.0, 0.0, 1.0)");
 		}
 
 		patchTextureMatrices(transformer, tree, root, parameters.inputs.lightmap);
@@ -66,7 +65,7 @@ class AttributeTransformer {
 			// to define mc_midTexCoord only if it's not defined, and if it is defined,
 			// figure out its type, then replace all occurrences of gl_MultiTexCoord3 with
 			// the correct conversion from mc_midTexCoord's declared type to vec4.
-			root.renameAll("gl_MultiTexCoord3", "mc_midTexCoord");
+			root.rename("gl_MultiTexCoord3", "mc_midTexCoord");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"attribute vec4 mc_midTexCoord;");
 		}
@@ -77,7 +76,7 @@ class AttributeTransformer {
 			TranslationUnit tree,
 			Root root,
 			boolean hasLightmap) {
-		root.renameAll("gl_TextureMatrix", "iris_TextureMatrix");
+		root.rename("gl_TextureMatrix", "iris_TextureMatrix");
 
 		tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_FUNCTIONS,
 				"const float iris_ONE_OVER_256 = 0.00390625;",
@@ -106,10 +105,11 @@ class AttributeTransformer {
 				");");
 	}
 
-	private static final Matcher<ExternalDeclaration> uniformVec4EntityColor = new Matcher<>(
+	private static final HintedMatcher<ExternalDeclaration> uniformVec4EntityColor = new HintedMatcher<>(
 			"uniform vec4 entityColor;",
 			GLSLParser::externalDeclaration,
-			ASTBuilder::visitExternalDeclaration);
+			ASTBuilder::visitExternalDeclaration,
+			"entityColor");
 
 	// Add entity color -> overlay color attribute support.
 	private static void patchOverlayColor(
@@ -118,12 +118,7 @@ class AttributeTransformer {
 			Root root,
 			AttributeParameters parameters) {
 		// delete original declaration
-		root.processAll(
-				root.identifierIndex.getStream("entityColor")
-						.map(identifier -> identifier.getAncestor(DeclarationExternalDeclaration.class))
-						.distinct()
-						.filter(uniformVec4EntityColor::matches),
-				ASTNode::detachAndDelete);
+		root.processMatches(transformer, uniformVec4EntityColor, ASTNode::detachAndDelete);
 
 		if (parameters.type == ShaderType.VERTEX) {
 			// add our own declarations
@@ -136,21 +131,21 @@ class AttributeTransformer {
 			// Create our own main function to wrap the existing main function, so that we
 			// can pass through the overlay color at the end to the geometry or fragment
 			// stage.
-			root.renameAll("main", "irisMain_overlayColor");
+			root.rename("main", "irisMain_overlayColor");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END, "void main() {" +
 					"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);" +
 					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
 					"irisMain_overlayColor(); }");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
 			// replace read references to grab the color from the first vertex.
-			root.replaceAllReferenceExpressions(transformer, "entityColor", "entityColor[0]");
+			root.replaceReferenceExpressions(transformer, "entityColor", "entityColor[0]");
 
 			// TODO: this is passthrough behavior
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"out vec4 entityColorGS;");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in vec4 entityColor[];");
-			root.renameAll("main", "irisMain");
+			root.rename("main", "irisMain");
 			tree.parseAndInjectNode(transformer, ASTInjectionPoint.END,
 					"void main() { entityColorGS = entityColor[0]; irisMain(); }");
 		} else if (parameters.type == ShaderType.FRAGMENT) {
@@ -159,7 +154,7 @@ class AttributeTransformer {
 
 			// Different output name to avoid a name collision in the geometry shader.
 			if (parameters.hasGeometry) {
-				root.renameAll("entityColor", "entityColorGS");
+				root.rename("entityColor", "entityColorGS");
 			}
 		}
 	}

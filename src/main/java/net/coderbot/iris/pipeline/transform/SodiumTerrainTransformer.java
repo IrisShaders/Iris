@@ -11,6 +11,7 @@ import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessE
 import io.github.douira.glsl_transformer.ast.node.expression.binary.DivisionExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.MultiplicationExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
+import io.github.douira.glsl_transformer.ast.query.HintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.Matcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
@@ -38,8 +39,8 @@ class SodiumTerrainTransformer {
 		}
 	}
 
-	private static final Matcher<Expression> glTextureMatrix0 = new Matcher<>(
-			"gl_TextureMatrix[0]", GLSLParser::expression, ASTBuilder::visitExpression);
+	private static final HintedMatcher<Expression> glTextureMatrix0 = new HintedMatcher<>(
+			"gl_TextureMatrix[0]", GLSLParser::expression, ASTBuilder::visitExpression, "gl_TextureMatrix");
 
 	/**
 	 * Transforms vertex shaders.
@@ -62,13 +63,13 @@ class SodiumTerrainTransformer {
 
 		transformShared(transformer, tree, root, parameters);
 
-		root.replaceAllReferenceExpressions(transformer, "gl_Vertex",
+		root.replaceReferenceExpressions(transformer, "gl_Vertex",
 				"vec4((iris_Pos * u_ModelScale) + iris_ModelOffset.xyz, 1.0)");
-		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord0",
+		root.replaceReferenceExpressions(transformer, "gl_MultiTexCoord0",
 				"vec4(iris_TexCoord * u_TextureScale, 0.0, 1.0)");
-		root.renameAll("gl_Color", "iris_Color");
-		root.renameAll("gl_Normal", "iris_Normal");
-		root.renameAll("ftransform", "iris_ftransform");
+		root.rename("gl_Color", "iris_Color");
+		root.rename("gl_Normal", "iris_Normal");
+		root.rename("ftransform", "iris_ftransform");
 
 		replaceLightmapForSodium(transformer, tree, root, parameters);
 	}
@@ -98,17 +99,14 @@ class SodiumTerrainTransformer {
 				"uniform mat4 iris_ModelViewMatrix;",
 				"uniform mat4 u_ModelViewProjectionMatrix;",
 				"uniform mat4 iris_NormalMatrix;");
-		root.renameAll("gl_ModelViewMatrix", "iris_ModelViewMatrix");
-		root.renameAll("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
-		root.replaceAllReferenceExpressions(transformer,
+		root.rename("gl_ModelViewMatrix", "iris_ModelViewMatrix");
+		root.rename("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
+		root.replaceReferenceExpressions(transformer,
 				"gl_NormalMatrix", "mat3(iris_NormalMatrix)");
 
-		root.replaceAllExpressions(
+		root.replaceExpressionMatches(
 				transformer,
-				root.identifierIndex.getStream("gl_TextureMatrix")
-						.map(identifier -> identifier.getAncestor(ArrayAccessExpression.class))
-						.distinct()
-						.filter(glTextureMatrix0::matches),
+				glTextureMatrix0,
 				"mat4(1.0)");
 	}
 
@@ -174,8 +172,8 @@ class SodiumTerrainTransformer {
 		}
 	}
 
-	private static final Matcher<Expression> glTextureMatrix1 = new Matcher<>(
-			"gl_TextureMatrix[1]", GLSLParser::expression, ASTBuilder::visitExpression);
+	private static final HintedMatcher<Expression> glTextureMatrix1 = new HintedMatcher<>(
+			"gl_TextureMatrix[1]", GLSLParser::expression, ASTBuilder::visitExpression, "gl_TextureMatrix");
 
 	/**
 	 * Replaces BuiltinUniformReplacementTransformer and does what it does but a
@@ -195,24 +193,18 @@ class SodiumTerrainTransformer {
 		processCoord(transformer, root, "gl_MultiTexCoord1");
 		processCoord(transformer, root, "gl_MultiTexCoord2");
 
-		Root.replaceAllExpressionsConcurrent(transformer, replaceExpressions, lightmapCoordsExpression);
-		Root.replaceAllExpressionsConcurrent(transformer, replaceSExpressions, lightmapCoordsExpressionS);
-		Root.replaceAllExpressionsConcurrent(transformer, replaceWrapExpressions, lightmapCoordsExpressionWrapped);
+		Root.replaceExpressionsConcurrent(transformer, replaceExpressions, lightmapCoordsExpression);
+		Root.replaceExpressionsConcurrent(transformer, replaceSExpressions, lightmapCoordsExpressionS);
+		Root.replaceExpressionsConcurrent(transformer, replaceWrapExpressions, lightmapCoordsExpressionWrapped);
 
 		replaceExpressions.clear();
 		replaceSExpressions.clear();
 		replaceWrapExpressions.clear();
 
-		root.replaceAllExpressions(
-				transformer,
-				root.identifierIndex.getStream("gl_TextureMatrix")
-						.map(identifier -> identifier.getAncestor(ArrayAccessExpression.class))
-						.distinct()
-						.filter(glTextureMatrix1::matches),
-				"iris_LightmapTextureMatrix");
-		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord1", "vec4("
+		root.replaceExpressionMatches(transformer, glTextureMatrix1, "iris_LightmapTextureMatrix");
+		root.replaceReferenceExpressions(transformer, "gl_MultiTexCoord1", "vec4("
 				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
-		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord2", "vec4("
+		root.replaceReferenceExpressions(transformer, "gl_MultiTexCoord2", "vec4("
 				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
 
 		// If there are references to the fallback lightmap texture matrix, then make it
