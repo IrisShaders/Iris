@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.transform;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.AlphaTests;
@@ -24,42 +25,67 @@ public class VanillaTransformer {
 		}
 
 		// transformations.define("gl_ProjectionMatrix", "iris_ProjMat");
+		root.renameAll("gl_ProjectionMatrix", "iris_ProjMat");
 		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 		// "uniform mat4 iris_ProjMat;");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				"uniform mat4 iris_ProjMat;");
 
 		if (parameters.type == ShaderType.VERTEX) {
 			if (parameters.inputs.hasTex()) {
 				// transformations.define("gl_MultiTexCoord0", "vec4(iris_UV0, 0.0, 1.0)");
+				root.replaceAllReferenceExpressions(t, "gl_MultiTexCoord0",
+						"vec4(iris_UV0, 0.0, 1.0)");
 				// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
 				// vec2 iris_UV0;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"in vec2 iris_UV0;");
 			} else {
 				// transformations.define("gl_MultiTexCoord0", "vec4(0.5, 0.5, 0.0, 1.0)");
+				root.replaceAllReferenceExpressions(t, "gl_MultiTexCoord0",
+						"vec4(0.5, 0.5, 0.0, 1.0)");
 			}
 
 			if (parameters.inputs.hasLight()) {
 				// transformations.define("gl_MultiTexCoord1", "vec4(iris_UV2, 0.0, 1.0)");
+				root.replaceAllReferenceExpressions(t, "gl_MultiTexCoord1",
+						"vec4(iris_UV2, 0.0, 1.0)");
 				// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
 				// ivec2 iris_UV2;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"in ivec2 iris_UV2;");
 			} else {
 				// transformations.define("gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
+				root.replaceAllReferenceExpressions(t, "gl_MultiTexCoord1",
+						"vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
 			// See https://github.com/IrisShaders/Iris/issues/1149
 			// transformations.define("gl_MultiTexCoord2", "gl_MultiTexCoord1");
+			root.renameAll("gl_MultiTexCoord2", "gl_MultiTexCoord1");
 
 			AttributeTransformer.patchMultiTexCoord3(t, tree, root, parameters);
 
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with
 			// gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture
 			// coordinates are not valid inputs.
-			for (int i = 4; i < 8; i++) {
-				// transformations.define("gl_MultiTexCoord" + i, " vec4(0.0, 0.0, 0.0, 1.0)");
-			}
+			// for (int i = 4; i < 8; i++) {
+			// transformations.define("gl_MultiTexCoord" + i, " vec4(0.0, 0.0, 0.0, 1.0)");
+			// }
+			root.replaceAllReferenceExpressions(t,
+					root.identifierIndex.prefixQueryFlat("gl_MultiTexCoord")
+							.filter(id -> {
+								int index = Integer.parseInt(id.getName().substring("gl_MultiTexCoord".length()));
+								return index >= 4 && index < 8;
+							}),
+					"vec4(0.0, 0.0, 0.0, 1.0)");
 		}
 
 		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 		// "uniform vec4 iris_ColorModulator;");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				"uniform vec4 iris_ColorModulator;");
 
 		if (parameters.inputs.hasColor()) {
 			// TODO: Handle the fragment / geometry shader here
@@ -67,31 +93,45 @@ public class VanillaTransformer {
 				// iris_ColorModulator.a should be applied regardless of the alpha test state.
 				// transformations.define("gl_Color", "vec4((iris_Color *
 				// iris_ColorModulator).rgb, iris_ColorModulator.a)");
+				root.replaceAllReferenceExpressions(t, "gl_Color",
+						"vec4((iris_Color * iris_ColorModulator).rgb, iris_ColorModulator.a)");
 			} else {
 				// transformations.define("gl_Color", "(iris_Color * iris_ColorModulator)");
+				root.replaceAllReferenceExpressions(t, "gl_Color",
+						"(iris_Color * iris_ColorModulator)");
 			}
 
 			if (parameters.type == ShaderType.VERTEX) {
 				// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
 				// vec4 iris_Color;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"in vec4 iris_Color;");
 			}
 		} else {
 			// iris_ColorModulator should be applied regardless of the alpha test state.
 			// transformations.define("gl_Color", "iris_ColorModulator");
+			root.renameAll("gl_Color", "iris_ColorModulator");
 		}
 
 		if (parameters.type == ShaderType.VERTEX) {
 			if (parameters.inputs.hasNormal()) {
 				if (!parameters.inputs.isNewLines()) {
 					// transformations.define("gl_Normal", "iris_Normal");
+					root.renameAll("gl_Normal", "iris_Normal");
 				} else {
 					// transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
+					root.replaceAllReferenceExpressions(t, "gl_Normal",
+							"vec3(0.0, 0.0, 1.0)");
 				}
 
 				// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
 				// vec3 iris_Normal;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"in vec3 iris_Normal;");
 			} else {
 				// transformations.define("gl_Normal", "vec3(0.0, 0.0, 1.0)");
+				root.replaceAllReferenceExpressions(t, "gl_Normal",
+						"vec3(0.0, 0.0, 1.0)");
 			}
 		}
 
@@ -99,6 +139,12 @@ public class VanillaTransformer {
 		// "uniform mat4 iris_LightmapTextureMatrix;");
 		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 		// "uniform mat4 iris_TextureMat;");
+		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
+		// "uniform mat4 iris_ModelViewMat;");
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				"uniform mat4 iris_LightmapTextureMatrix;",
+				"uniform mat4 iris_TextureMat;",
+				"uniform mat4 iris_ModelViewMat;");
 
 		// TODO: More solid way to handle texture matrices
 		// transformations.replaceExact("gl_TextureMatrix[0]", "iris_TextureMat");
@@ -109,9 +155,6 @@ public class VanillaTransformer {
 		// computed on the CPU-side of things
 		// transformations.define("gl_NormalMatrix",
 		// "mat3(transpose(inverse(gl_ModelViewMatrix)))");
-
-		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-		// "uniform mat4 iris_ModelViewMat;");
 
 		if (parameters.hasChunkOffset) {
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
