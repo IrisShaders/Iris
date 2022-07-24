@@ -2,14 +2,13 @@ package net.coderbot.iris.pipeline.transform;
 
 import java.util.stream.Stream;
 
-import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.query.HintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
+import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
+import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.gl.shader.ShaderType;
@@ -113,11 +112,8 @@ class AttributeTransformer {
 				");");
 	}
 
-	private static final HintedMatcher<ExternalDeclaration> uniformVec4EntityColor = new HintedMatcher<>(
-			"uniform vec4 entityColor;",
-			GLSLParser::externalDeclaration,
-			ASTBuilder::visitExternalDeclaration,
-			"entityColor");
+	private static final AutoHintedMatcher<ExternalDeclaration> uniformVec4EntityColor = new AutoHintedMatcher<>(
+			"uniform vec4 entityColor;", Matcher.externalDeclarationPattern);
 
 	// Add entity color -> overlay color attribute support.
 	public static void patchOverlayColor(
