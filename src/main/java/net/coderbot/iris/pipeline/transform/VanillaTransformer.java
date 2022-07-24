@@ -14,12 +14,12 @@ public class VanillaTransformer {
 			TranslationUnit tree,
 			Root root,
 			VanillaParameters parameters) {
-		// this happens first to make sure the renaming of attributes is done on
+		// this happens before common to make sure the renaming of attributes is done on
 		// attribute inserted by this
 		if (parameters.inputs.hasOverlay()) {
 			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
 		}
-
+		// this happens before common for patching gl_FragData
 		if (parameters.type == ShaderType.FRAGMENT) {
 			AlphaTestTransformer.transform(t, tree, root, parameters, parameters.alpha);
 		}
