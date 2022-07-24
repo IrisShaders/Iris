@@ -50,6 +50,8 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 * [Chocapic v4 - v6](https://www.mediafire.com/folder/qs3lb60h0zw6t/Older_versions)
 * [Triliton's Shaders](https://www.curseforge.com/minecraft/customization/trilitons-shaders)
 * [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
+* [Edi's Shaders](https://download2038.mediafire.com/z9lt7h9j6axg/142fc1vtr1cqcuf/Edi%C2%B4s+Shader+OFFICIAL+V3+ULTRA.zip)
+* [TME Shaders](https://github.com/CrankerMan/TME-Shaders)
 
 
 ### Continuum
