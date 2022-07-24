@@ -17,8 +17,7 @@ public class SodiumTransformer {
 		AlphaTestTransformer.transform(t, tree, root, parameters, parameters.alpha);
 
 		// transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
-		root.replaceExpressionMatches(t, "gl_TextureMatrix",
-				CommonTransformer.glTextureMatrix1, "mat4(1.0)");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 
 		// transformations.define("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");

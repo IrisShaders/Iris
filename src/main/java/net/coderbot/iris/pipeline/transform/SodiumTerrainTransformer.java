@@ -10,7 +10,6 @@ import io.github.douira.glsl_transformer.ast.node.expression.binary.DivisionExpr
 import io.github.douira.glsl_transformer.ast.node.expression.binary.MultiplicationExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
@@ -102,8 +101,7 @@ class SodiumTerrainTransformer {
 		replaceSExpressions.clear();
 		replaceWrapExpressions.clear();
 
-		root.replaceExpressionMatches(t, "gl_TextureMatrix",
-				CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
 		root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4("
 				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
 		root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4("

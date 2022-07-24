@@ -1,21 +1,19 @@
 package net.coderbot.iris.pipeline.transform;
 
-import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
-import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
-import io.github.douira.glsl_transformer.ast.query.Matcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
+import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
+import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CompositeTransformer {
-	private static final Matcher<Expression> glTextureMatrix1To8 = new Matcher<Expression>(
-			"gl_TextureMatrix[index]", GLSLParser::expression, ASTBuilder::visitExpression) {
+	private static final AutoHintedMatcher<Expression> glTextureMatrix1To8 = new AutoHintedMatcher<Expression>(
+			"gl_TextureMatrix[index]", Matcher.expressionPattern) {
 		{
 			markClassedPredicateWildcard("index",
 					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
@@ -45,12 +43,7 @@ public class CompositeTransformer {
 		// transformations.replaceExact("gl_TextureMatrix[" + i + "]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix [" + i + "]", "mat4(1.0)");
 		// }
-		root.replaceExpressions(t,
-				root.identifierIndex.getStream("gl_TextureMatrix")
-						.map(identifier -> identifier.getAncestor(ArrayAccessExpression.class))
-						.distinct()
-						.filter(glTextureMatrix1To8::matches),
-				"mat4(1.0)");
+		root.replaceExpressionMatches(t, glTextureMatrix1To8, "mat4(1.0)");
 
 		// TODO: Other fog things
 

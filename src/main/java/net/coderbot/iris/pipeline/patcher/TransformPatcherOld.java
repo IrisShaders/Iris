@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.patcher;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,7 +51,6 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
-import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer to do shader

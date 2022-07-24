@@ -1,25 +1,24 @@
 package net.coderbot.iris.pipeline.transform;
 
-import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement.Profile;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
-import io.github.douira.glsl_transformer.ast.query.Matcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
+import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
+import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CommonTransformer {
-	public static final Matcher<Expression> glTextureMatrix0 = new Matcher<>(
-			"gl_TextureMatrix[0]", GLSLParser::expression, ASTBuilder::visitExpression);
-	public static final Matcher<Expression> glTextureMatrix1 = new Matcher<>(
-			"gl_TextureMatrix[1]", GLSLParser::expression, ASTBuilder::visitExpression);
+	public static final AutoHintedMatcher<Expression> glTextureMatrix0 = new AutoHintedMatcher<>(
+			"gl_TextureMatrix[0]", Matcher.expressionPattern);
+	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
+			"gl_TextureMatrix[1]", Matcher.expressionPattern);
 
 	public static void transform(
 			ASTTransformer<?> t,
