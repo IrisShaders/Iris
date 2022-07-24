@@ -8,11 +8,11 @@ import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.query.Matcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
-import io.github.douira.glsl_transformer.ast.transform.Matcher;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**

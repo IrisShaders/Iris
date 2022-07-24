@@ -11,11 +11,11 @@ import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessE
 import io.github.douira.glsl_transformer.ast.node.expression.binary.DivisionExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.MultiplicationExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
+import io.github.douira.glsl_transformer.ast.query.Matcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
-import io.github.douira.glsl_transformer.ast.transform.Matcher;
 
 /**
  * Does the sodium terrain transformations using glsl-transformer AST.
