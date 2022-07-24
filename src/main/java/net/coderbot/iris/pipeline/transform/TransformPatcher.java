@@ -29,14 +29,6 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
  * (!) preprocessor directives. The only allowed ones are #extension and #pragma
  * as they are considered "parsed" directives. If any other directive appears in
  * the string, it will throw.
- * 
- * Change notes compared to existing 1.16 patches:
- * - Builtinuniformtransformer: nothing
- * - CompositeDepth: texture2D -> texture (done)
- * - Attribute: out vec4 entityColor instead of varying, iris_UV1 and related,
- * iris_vertexColorGS and following, iris_vertexColorGS in new main, in vec4
- * entityColor instead of varying, iris_vertexColor replacement added and in
- * vec4 iris_vertexColor added (done)
  */
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);

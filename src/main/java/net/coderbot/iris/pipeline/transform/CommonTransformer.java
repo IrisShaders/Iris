@@ -4,6 +4,7 @@ import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement.Profile;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
+import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.query.Root;
@@ -99,6 +100,12 @@ public class CommonTransformer {
 				}
 			}
 		}
+
+		// addition: patch texture uniform to be gtexture but without touching it's use
+		// as a function
+		root.process(root.identifierIndex.getStream("texture")
+				.filter(id -> !(id.getParent() instanceof FunctionCallExpression)),
+				id -> id.setName("gtexture"));
 
 		// TODO: Add similar functions for all legacy texture sampling functions
 		if (parameters.type == ShaderType.FRAGMENT) {
