@@ -24,7 +24,7 @@ public class AlphaTestTransformer {
 			// can run the alpha test at the
 			// end.
 			// transformations.replaceExact("main", "irisMain");
-			root.renameAll("main", "irisMain");
+			root.rename("main", "irisMain");
 
 			// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
 			// {\n" +

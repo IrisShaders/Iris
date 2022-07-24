@@ -32,7 +32,7 @@ public class CommonTransformer {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
 		// transformations.define("gl_FogFragCoord", "iris_FogFragCoord");
-		root.renameAll("gl_FogFragCoord", "iris_FogFragCoord");
+		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
 
 		// TODO: This doesn't handle geometry shaders... How do we do that?
 		if (parameters.type == ShaderType.VERTEX) {
@@ -58,7 +58,7 @@ public class CommonTransformer {
 					"vec4 iris_FrontColor;");
 
 			// transformations.define("gl_FrontColor", "iris_FrontColor");
-			root.renameAll("gl_FrontColor", "iris_FrontColor");
+			root.rename("gl_FrontColor", "iris_FrontColor");
 		}
 
 		if (parameters.type == ShaderType.FRAGMENT) {
@@ -69,12 +69,12 @@ public class CommonTransformer {
 						"[Triforce Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
 				// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 				// gl_FragColor iris_FragData[0]");
-				root.replaceAllReferenceExpressions(t, "gl_FragColor", "iris_FragData[0]");
+				root.replaceReferenceExpressions(t, "gl_FragColor", "iris_FragData[0]");
 			}
 
 			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 			// gl_FragData iris_FragData");
-			root.renameAll("gl_FragData", "iris_FragData");
+			root.rename("gl_FragData", "iris_FragData");
 
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
 			// "layout (location = 0) out vec4 iris_FragData[8];");
@@ -140,7 +140,7 @@ public class CommonTransformer {
 		// iris_FogStart));\n" +
 		// "\n" +
 		// "#define gl_Fog iris_Fog");
-		root.renameAll("gl_Fog", "iris_Fog");
+		root.rename("gl_Fog", "iris_Fog");
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 				"uniform float iris_FogDensity;",
 				"uniform float iris_FogStart;",
@@ -213,6 +213,6 @@ public class CommonTransformer {
 		// Note that this happens after we've added our ftransform function - so that
 		// both all the calls and our function are renamed in one go.
 		// transformations.define("ftransform", "iris_ftransform");
-		root.renameAll("ftransform", "iris_ftransform");
+		root.rename("ftransform", "iris_ftransform");
 	}
 }

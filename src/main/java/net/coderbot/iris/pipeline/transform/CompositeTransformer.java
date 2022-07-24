@@ -45,7 +45,7 @@ public class CompositeTransformer {
 		// transformations.replaceExact("gl_TextureMatrix[" + i + "]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix [" + i + "]", "mat4(1.0)");
 		// }
-		root.replaceAllExpressions(t,
+		root.replaceExpressions(t,
 				root.identifierIndex.getStream("gl_TextureMatrix")
 						.map(identifier -> identifier.getAncestor(ArrayAccessExpression.class))
 						.distinct()
@@ -58,13 +58,13 @@ public class CompositeTransformer {
 		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 		// gl_ProjectionMatrix mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0),
 		// vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
-		root.replaceAllReferenceExpressions(t, "gl_ProjectionMatrix",
+		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix",
 				"mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
 
 		if (parameters.type == ShaderType.VERTEX) {
 			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 			// gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
-			root.replaceAllReferenceExpressions(t, "gl_MultiTexCoord0",
+			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 					"vec4(UV0, 0.0, 1.0)");
 
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
@@ -76,7 +76,7 @@ public class CompositeTransformer {
 			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 			// gl_MultiTexCoord" + i + " vec4(0.0, 0.0, 0.0, 1.0)");
 			// }
-			root.replaceAllReferenceExpressions(t,
+			root.replaceReferenceExpressions(t,
 					root.identifierIndex.prefixQueryFlat("gl_MultiTexCoord")
 							.filter(identifier -> !identifier.getName().equals("gl_MultiTexCoord0")),
 					"vec4(0.0, 0.0, 0.0, 1.0)");
@@ -85,35 +85,35 @@ public class CompositeTransformer {
 		// No color attributes, the color is always solid white.
 		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 		// gl_Color vec4(1.0, 1.0, 1.0, 1.0)");
-		root.replaceAllReferenceExpressions(t, "gl_Color", "vec4(1.0, 1.0, 1.0, 1.0)");
+		root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0, 1.0, 1.0, 1.0)");
 
 		if (parameters.type == ShaderType.VERTEX) {
 			// https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glNormal.xml
 			// The initial value of the current normal is the unit vector, (0, 0, 1).
 			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 			// gl_Normal vec3(0.0, 0.0, 1.0)");
-			root.replaceAllReferenceExpressions(t, "gl_Normal", "vec3(0.0, 0.0, 1.0)");
+			root.replaceReferenceExpressions(t, "gl_Normal", "vec3(0.0, 0.0, 1.0)");
 		}
 
 		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 		// gl_NormalMatrix mat3(1.0)");
-		root.replaceAllReferenceExpressions(t, "gl_NormalMatrix", "mat3(1.0)");
+		root.replaceReferenceExpressions(t, "gl_NormalMatrix", "mat3(1.0)");
 
 		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 		// gl_ModelViewMatrix mat4(1.0)");
-		root.replaceAllReferenceExpressions(t, "gl_ModelViewMatrix", "mat4(1.0)");
+		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", "mat4(1.0)");
 
 		// TODO: All of the transformed variants of the input matrices, preferably
 		// computed on the CPU side...
 		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 		// gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
-		root.replaceAllReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
+		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
 				"(gl_ProjectionMatrix * gl_ModelViewMatrix)");
 
 		if (parameters.type == ShaderType.VERTEX) {
 			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 			// gl_Vertex vec4(Position, 1.0)");
-			root.replaceAllReferenceExpressions(t, "gl_Vertex", "vec4(Position, 1.0)");
+			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(Position, 1.0)");
 
 			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
 			// vec3 Position;");
