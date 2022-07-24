@@ -8,11 +8,11 @@ import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.query.Matcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
-import io.github.douira.glsl_transformer.ast.transform.Matcher;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**
@@ -56,6 +56,14 @@ class AttributeTransformer {
 			patchOverlayColor(transformer, tree, root, parameters);
 		}
 
+		patchMultiTexCoord3(transformer, tree, root, parameters);
+	}
+
+	public static void patchMultiTexCoord3(
+			ASTTransformer<?> transformer,
+			TranslationUnit tree,
+			Root root,
+			Parameters parameters) {
 		if (parameters.type == ShaderType.VERTEX
 				&& root.identifierIndex.has("gl_MultiTexCoord3")
 				&& !root.identifierIndex.has("mc_midTexCoord")) {
@@ -112,11 +120,11 @@ class AttributeTransformer {
 			ASTBuilder::visitExternalDeclaration);
 
 	// Add entity color -> overlay color attribute support.
-	private static void patchOverlayColor(
+	public static void patchOverlayColor(
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
 			Root root,
-			AttributeParameters parameters) {
+			OverlayParameters parameters) {
 		// delete original declaration
 		root.processAll(
 				root.identifierIndex.getStream("entityColor")

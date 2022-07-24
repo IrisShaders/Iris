@@ -17,7 +17,9 @@ import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
 import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
@@ -62,9 +64,12 @@ public class TransformPatcher {
 			if (!violation.isPresent()) {
 				violation = root.identifierIndex.prefixQueryFlat("irisMain").findAny();
 			}
+			if (!violation.isPresent()) {
+				violation = root.identifierIndex.prefixQueryFlat("moj_import").findAny();
+			}
 			violation.ifPresent(id -> {
 				throw new SemanticException(
-						"Detected a potential reference to unstable and internal Iris shader interfaces (iris_ and irisMain). This isn't currently supported. Violation: "
+						"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
 								+ id.getName());
 			});
 
@@ -73,11 +78,14 @@ public class TransformPatcher {
 					case ATTRIBUTES:
 						AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
 						break;
-					case SODIUM_TERRAIN:
-						SodiumTerrainTransformer.transform(transformer, tree, root, parameters);
+					case COMPOSITE:
+						CompositeTransformer.transform(transformer, tree, root, parameters);
 						break;
-					case COMPOSITE_DEPTH:
-						CompositeDepthTransformer.transform(transformer, tree, root);
+					case SODIUM:
+						SodiumTransformer.transform(transformer, tree, root, (SodiumParameters) parameters);
+						break;
+					case VANILLA:
+						VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
 						break;
 				}
 			});
@@ -113,21 +121,30 @@ public class TransformPatcher {
 	}
 
 	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
-		return inspectPatch(source,
-				"TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
+		return inspectPatch(source, "TYPE: " + type + " HAS_GEOMETRY: " + hasGeometry,
 				str -> transform(str, new AttributeParameters(Patch.ATTRIBUTES, type,
 						hasGeometry, inputs)));
 	}
 
-	public static String patchSodiumTerrain(String source, ShaderType type) {
-		return inspectPatch(source,
-				"TYPE: " + type,
-				str -> transform(str, new Parameters(Patch.SODIUM_TERRAIN, type)));
+	public static String patchVanilla(
+			String source, ShaderType type, AlphaTest alpha,
+			boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean hasGeometry) {
+		return inspectPatch(source, " TYPE: " + type + "HAS_GEOMETRY: " + hasGeometry,
+				str -> transform(str, new VanillaParameters(Patch.VANILLA,
+						type, alpha, hasChunkOffset, inputs, hasGeometry)));
 	}
 
-	public static String patchCompositeDepth(String source) {
+	public static String patchSodium(
+			String source, ShaderType type, AlphaTest alpha,
+			ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
+		return inspectPatch(source, " TYPE: " + type,
+				str -> transform(str, new SodiumParameters(Patch.SODIUM,
+						type, alpha, inputs, positionScale, positionOffset, textureScale)));
+	}
+
+	public static String patchComposite(String source, ShaderType type) {
 		return inspectPatch(source,
-				"(no type)",
-				str -> transform(str, new Parameters(Patch.COMPOSITE_DEPTH, null)));
+				" TYPE: " + type,
+				str -> transform(str, new Parameters(Patch.COMPOSITE, type)));
 	}
 }

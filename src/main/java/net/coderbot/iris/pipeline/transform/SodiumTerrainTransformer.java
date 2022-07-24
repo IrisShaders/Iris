@@ -11,11 +11,11 @@ import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessE
 import io.github.douira.glsl_transformer.ast.node.expression.binary.DivisionExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.MultiplicationExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
+import io.github.douira.glsl_transformer.ast.query.Matcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
-import io.github.douira.glsl_transformer.ast.transform.Matcher;
 
 /**
  * Does the sodium terrain transformations using glsl-transformer AST.
@@ -37,9 +37,6 @@ class SodiumTerrainTransformer {
 				throw new IllegalStateException("Unexpected Sodium terrain patching shader type: " + parameters.type);
 		}
 	}
-
-	private static final Matcher<Expression> glTextureMatrix0 = new Matcher<>(
-			"gl_TextureMatrix[0]", GLSLParser::expression, ASTBuilder::visitExpression);
 
 	/**
 	 * Transforms vertex shaders.
@@ -108,7 +105,7 @@ class SodiumTerrainTransformer {
 				root.identifierIndex.getStream("gl_TextureMatrix")
 						.map(identifier -> identifier.getAncestor(ArrayAccessExpression.class))
 						.distinct()
-						.filter(glTextureMatrix0::matches),
+						.filter(CommonTransformer.glTextureMatrix0::matches),
 				"mat4(1.0)");
 	}
 
@@ -174,9 +171,6 @@ class SodiumTerrainTransformer {
 		}
 	}
 
-	private static final Matcher<Expression> glTextureMatrix1 = new Matcher<>(
-			"gl_TextureMatrix[1]", GLSLParser::expression, ASTBuilder::visitExpression);
-
 	/**
 	 * Replaces BuiltinUniformReplacementTransformer and does what it does but a
 	 * little more general.
@@ -203,13 +197,8 @@ class SodiumTerrainTransformer {
 		replaceSExpressions.clear();
 		replaceWrapExpressions.clear();
 
-		root.replaceAllExpressions(
-				transformer,
-				root.identifierIndex.getStream("gl_TextureMatrix")
-						.map(identifier -> identifier.getAncestor(ArrayAccessExpression.class))
-						.distinct()
-						.filter(glTextureMatrix1::matches),
-				"iris_LightmapTextureMatrix");
+		root.replaceAllExpressionMatches(transformer, "gl_TextureMatrix",
+				CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
 		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord1", "vec4("
 				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
 		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord2", "vec4("
