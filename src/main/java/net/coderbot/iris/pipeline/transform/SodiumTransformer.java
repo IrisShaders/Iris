@@ -106,20 +106,6 @@ public class SodiumTransformer {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to
 			// chunks.
 
-			// TODO TRANSFORM: Doing these define replacements is questionable
-			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-			// USE_VERTEX_COMPRESSION");
-			root.replaceReferenceExpressions(t, "USE_VERTEX_COMPRESSION", "1");
-			// transformations.define("VERT_POS_SCALE", String.valueOf(positionScale));
-			root.replaceReferenceExpressions(t, "VERT_POS_SCALE",
-					String.valueOf(parameters.positionScale));
-			// transformations.define("VERT_POS_OFFSET", String.valueOf(positionOffset));
-			root.replaceReferenceExpressions(t, "VERT_POS_OFFSET",
-					String.valueOf(parameters.positionOffset));
-			// transformations.define("VERT_TEX_SCALE", String.valueOf(textureScale));
-			root.replaceReferenceExpressions(t, "VERT_TEX_SCALE",
-					String.valueOf(parameters.textureScale));
-
 			// Create our own main function to wrap the existing main function, so that we
 			// can run the alpha test at the end.
 			// transformations.replaceExact("main", "irisMain");
@@ -149,12 +135,39 @@ public class SodiumTransformer {
 			// " irisMain();\n" +
 			// "}");
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-					SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"),
-					SodiumTerrainPipeline.parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"),
+					// translated from sodium's chunk_vertex.glsl
+					"vec3 _vert_position;",
+					"vec2 _vert_tex_diffuse_coord;",
+					"vec2 _vert_tex_light_coord;",
+					"vec4 _vert_color;",
+					"uint _draw_id;",
+					"in vec4 a_PosId;",
+					"in vec4 a_Color;",
+					"in vec2 a_TexCoord;",
+					"in vec2 a_LightCoord;",
+					"void _vert_init() {" +
+							"_vert_position = (a_PosId.xyz * " + String.valueOf(parameters.positionScale) + " + "
+							+ String.valueOf(parameters.positionOffset) + ");" +
+							"_vert_tex_diffuse_coord = (a_TexCoord * " + String.valueOf(parameters.textureScale) + ");" +
+							"_vert_tex_light_coord = a_LightCoord;" +
+							"_vert_color = a_Color;" +
+							"_draw_id = uint(a_PosId.w); }",
+
+					// translated from sodium's chunk_parameters.glsl
+					// Comment on the struct:
+					// Older AMD drivers can't handle vec3 in std140 layouts correctly The alignment
+					// requirement is 16 bytes (4 float components) anyways, so we're not wasting
+					// extra memory with this, only fixing broken drivers.
+					"struct DrawParameters { vec4 offset; };",
+					"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };",
+
 					"uniform mat4 iris_ProjectionMatrix;",
 					"uniform mat4 iris_ModelViewMatrix;",
-					"vec4 getVertexPosition() { return vec4(_draw_translation + _vert_position, 1.0); }",
-					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }",
+					// _draw_translation replaced with Chunks[_draw_id].offset.xyz
+					"vec4 getVertexPosition() { return vec4(Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }",
+					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+
+			tree.parseAndInjectNode(t, ASTInjectionPoint.END,
 					"void main() { _vert_init(); irisMain(); }");
 
 			// "#define iris_ModelViewProjectionMatrix iris_ProjectionMatrix *
