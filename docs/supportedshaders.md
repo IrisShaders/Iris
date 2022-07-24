@@ -69,7 +69,7 @@ The paid versions are not supported, but Continuum 2.0.4 works decently.
 * [Tea V1.5.3](https://www.curseforge.com/minecraft/customization/beyondbelief-vanilla-reborn)
 * [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
 * [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus)
-
+* [maple's retro extravaganza](https://github.com/Lana-chan/maples-retro-extravaganza)
 
 # Shaders that do not work on Iris
 
