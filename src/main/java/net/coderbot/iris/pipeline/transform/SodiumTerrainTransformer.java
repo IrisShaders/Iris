@@ -3,17 +3,15 @@ package net.coderbot.iris.pipeline.transform;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.DivisionExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.MultiplicationExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
-import io.github.douira.glsl_transformer.ast.query.HintedMatcher;
-import io.github.douira.glsl_transformer.ast.query.Matcher;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.ASTBuilder;
+import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
+import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 
@@ -38,8 +36,8 @@ class SodiumTerrainTransformer {
 		}
 	}
 
-	private static final HintedMatcher<Expression> glTextureMatrix0 = new HintedMatcher<>(
-			"gl_TextureMatrix[0]", GLSLParser::expression, ASTBuilder::visitExpression, "gl_TextureMatrix");
+	private static final AutoHintedMatcher<Expression> glTextureMatrix0 = new AutoHintedMatcher<>(
+			"gl_TextureMatrix[0]", Matcher.expressionPattern);
 
 	/**
 	 * Transforms vertex shaders.
@@ -110,17 +108,13 @@ class SodiumTerrainTransformer {
 	}
 
 	private static final Matcher<Expression> glTextureMatrixMultMember = new Matcher<>(
-			"(gl_TextureMatrix[1] * ___coord).___suffix",
-			GLSLParser::expression, ASTBuilder::visitExpression, "___");
+			"(gl_TextureMatrix[1] * ___coord).___suffix", Matcher.expressionPattern, "___");
 	private static final Matcher<Expression> glTextureMatrixMultS = new Matcher<>(
-			"(gl_TextureMatrix[1] * ___coord).s",
-			GLSLParser::expression, ASTBuilder::visitExpression, "___");
+			"(gl_TextureMatrix[1] * ___coord).s", Matcher.expressionPattern, "___");
 	private static final Matcher<Expression> glTextureMatrixMult = new Matcher<>(
-			"gl_TextureMatrix[1] * ___coord",
-			GLSLParser::expression, ASTBuilder::visitExpression, "___");
+			"gl_TextureMatrix[1] * ___coord", Matcher.expressionPattern, "___");
 	private static final Matcher<Expression> xyDivision = new Matcher<>(
-			"___coord.xy / 255.0",
-			GLSLParser::expression, ASTBuilder::visitExpression, "___");
+			"___coord.xy / 255.0", Matcher.expressionPattern, "___");
 
 	private static final String lightmapCoordsExpression = "iris_LightCoord";
 	private static final String lightmapCoordsExpressionS = lightmapCoordsExpression + ".s";
@@ -171,8 +165,8 @@ class SodiumTerrainTransformer {
 		}
 	}
 
-	private static final HintedMatcher<Expression> glTextureMatrix1 = new HintedMatcher<>(
-			"gl_TextureMatrix[1]", GLSLParser::expression, ASTBuilder::visitExpression, "gl_TextureMatrix");
+	private static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
+			"gl_TextureMatrix[1]", Matcher.expressionPattern);
 
 	/**
 	 * Replaces BuiltinUniformReplacementTransformer and does what it does but a
