@@ -157,6 +157,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
+		} else if (isBlockEntities() || isEntities()) {
+			override(ShaderKey.MOVING_BLOCK, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_SOLID, cir);
 		}
@@ -167,6 +169,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
+		} else if (isBlockEntities() || isEntities()) {
+			override(ShaderKey.MOVING_BLOCK, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_CUTOUT_MIPPED, cir);
 		}
@@ -176,6 +180,8 @@ public class MixinGameRenderer {
 	private static void iris$overrideCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
+		} else if (isBlockEntities() || isEntities()) {
+			override(ShaderKey.MOVING_BLOCK, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_CUTOUT, cir);
 		}
@@ -191,8 +197,8 @@ public class MixinGameRenderer {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else if (isBlockEntities()) {
-			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+		} else if (isBlockEntities() || isEntities()) {
+			override(ShaderKey.MOVING_BLOCK, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TERRAIN_TRANSLUCENT, cir);
 		}
@@ -399,6 +405,12 @@ public class MixinGameRenderer {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		return pipeline != null && pipeline.getPhase() == WorldRenderingPhase.BLOCK_ENTITIES;
+	}
+
+	private static boolean isEntities() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		return pipeline != null && pipeline.getPhase() == WorldRenderingPhase.ENTITIES;
 	}
 
 	private static boolean isSky() {
