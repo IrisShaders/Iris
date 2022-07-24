@@ -237,6 +237,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		));
 
 		refreshScreenSwitchButton();
+
+		// NB: Don't let comment remain when exiting options screen
+		// https://github.com/IrisShaders/Iris/issues/1494
+		this.hoveredElement = null;
+		this.hoveredElementCommentTimer = 0;
 	}
 
 	public void refreshForChangedPack() {
