@@ -7,9 +7,9 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.AlphaTests;
 
 /**
- * TODO: the attribute -> in etc. replacements done in common have to be applied
- * after all the other things have happened since they might introduce new
- * attribute usages. (or replace them manually)
+ * TODO TRANSFORM: the attribute -> in etc. replacements done in common have to
+ * be applied after all the other things have happened since they might
+ * introduce new attribute usages. (or replace them manually)
  */
 public class VanillaTransformer {
 	public static void transform(
