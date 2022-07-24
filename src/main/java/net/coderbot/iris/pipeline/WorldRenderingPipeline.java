@@ -4,6 +4,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.pipeline.newshader.FlwProgram;
 import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
@@ -44,6 +45,22 @@ public interface WorldRenderingPipeline {
 	boolean shouldRenderMoon();
 	boolean shouldWriteRainAndSnowToDepthBuffer();
 	boolean shouldRenderParticlesBeforeDeferred();
+
+	default FlwProgram getTerrainFlwProgram() {
+		return null;
+	}
+
+	default FlwProgram getTerrainCutoutFlwProgram() {
+		return null;
+	}
+
+	default FlwProgram getShadowFlwProgram() {
+		return null;
+	}
+
+	default FlwProgram getShadowCutoutFlwProgram() {
+		return null;
+	}
 
 	float getSunPathRotation();
 }

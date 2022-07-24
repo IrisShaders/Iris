@@ -179,7 +179,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public String getVersion() {
-		return computeVersionLazy.get();
+		return "diewheel9";
 	}
 
 	@Override

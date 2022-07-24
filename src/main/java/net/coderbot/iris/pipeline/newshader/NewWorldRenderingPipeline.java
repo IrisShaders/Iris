@@ -18,6 +18,7 @@ import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -73,6 +74,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
@@ -103,6 +105,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
+	private final FlwProgram terrainFlw;
+	private final FlwProgram terrainCutoutFlw;
+	private final FlwProgram shadowFlw;
+	private final FlwProgram shadowCutoutFlw;
 
 	private final ImmutableSet<Integer> flippedBeforeShadow;
 	private final ImmutableSet<Integer> flippedAfterPrepare;
@@ -233,9 +239,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Supplier<ImmutableSet<Integer>> flipped =
 			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
-		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
-			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-
+		Consumer<SamplerHolder> initTerrainSamplers = (builder) -> {
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
@@ -249,13 +253,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				// very odd is going on.
 				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets));
 			}
+		};
+
+		IntFunction<ProgramSamplers> createTerrainSamplers = (programId) -> {
+			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+
+			initTerrainSamplers.accept(builder);
 
 			return builder.build();
 		};
 
-		IntFunction<ProgramImages> createTerrainImages = (programId) -> {
-			ProgramImages.Builder builder = ProgramImages.builder(programId);
-
+		Consumer<ImageHolder> initTerrainImages = (builder) -> {
 			IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
 
 			if (IrisImages.hasShadowImages(builder)) {
@@ -263,13 +271,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				// very odd is going on.
 				IrisImages.addShadowColorImages(builder, Objects.requireNonNull(shadowRenderTargets));
 			}
+		};
+
+		IntFunction<ProgramImages> createTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			initTerrainImages.accept(builder);
 
 			return builder.build();
 		};
 
-		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
-			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-
+		Consumer<SamplerHolder> initShadowTerrainSamplers = (builder) -> {
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow, renderTargets, false);
@@ -285,13 +297,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				// usage in a different program. So this null-check makes sense here.
 				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets));
 			}
+		};
+
+		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
+			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+
+			initShadowTerrainSamplers.accept(builder);
 
 			return builder.build();
 		};
 
-		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
-			ProgramImages.Builder builder = ProgramImages.builder(programId);
-
+		Consumer<ImageHolder> initShadowTerrainImages = (builder) -> {
 			IrisImages.addRenderTargetImages(builder, () -> prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow, renderTargets);
 
 			if (IrisImages.hasShadowImages(builder)) {
@@ -300,6 +316,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				// usage in a different program. So this null-check makes sense here.
 				IrisImages.addShadowColorImages(builder, Objects.requireNonNull(shadowRenderTargets));
 			}
+		};
+
+		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
+			ProgramImages.Builder builder = ProgramImages.builder(programId);
+
+			initShadowTerrainImages.accept(builder);
 
 			return builder.build();
 		};
@@ -344,6 +366,20 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 				programSet.getPackDirectives().getRenderTargetDirectives());
 
+		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> shadowTerrainSource = programSet.getShadow();
+
+		// TODO: What if the terrain shader isn't present???
+		// TODO: Shadow cutout flw
+		this.terrainFlw = new FlwProgram(programSet, updateNotifier, terrainSource.get().getVertexSource().get(),
+			terrainSource.get().getFragmentSource().get(), -1F, initTerrainSamplers, initTerrainImages,
+			terrainSource.get().getDirectives().getBlendModeOverride(),
+			renderTargets.createGbufferFramebuffer(flippedAfterPrepare, terrainSource.get().getDirectives().getDrawBuffers()));
+		this.terrainCutoutFlw = new FlwProgram(programSet, updateNotifier, terrainSource.get().getVertexSource().get(),
+			terrainSource.get().getFragmentSource().get(), 0.1F, initTerrainSamplers, initTerrainImages,
+			terrainSource.get().getDirectives().getBlendModeOverride(),
+			renderTargets.createGbufferFramebuffer(flippedAfterPrepare, terrainSource.get().getDirectives().getDrawBuffers()));
+
 		if (shadowRenderTargets != null) {
 			ShaderInstance shader = shaderMap.getShader(ShaderKey.SHADOW_TERRAIN_CUTOUT);
 			boolean shadowUsesImages = false;
@@ -361,10 +397,21 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			this.shadowRenderer = new ShadowRenderer(programSet.getShadow().orElse(null),
 				programSet.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
+
+			this.shadowFlw = new FlwProgram(programSet, updateNotifier, shadowTerrainSource.get().getVertexSource().get(),
+				shadowTerrainSource.get().getFragmentSource().get(), -1F, initShadowTerrainSamplers, initShadowTerrainImages,
+				shadowTerrainSource.get().getDirectives().getBlendModeOverride(),
+				shadowRenderTargets.getFramebuffer());
+			this.shadowCutoutFlw = new FlwProgram(programSet, updateNotifier, shadowTerrainSource.get().getVertexSource().get(),
+				shadowTerrainSource.get().getFragmentSource().get(), 0.1F, initShadowTerrainSamplers, initShadowTerrainImages,
+				shadowTerrainSource.get().getDirectives().getBlendModeOverride(),
+				shadowRenderTargets.getFramebuffer());
 		} else {
 			this.shadowClearPasses = ImmutableList.of();
 			this.shadowClearPassesFull = ImmutableList.of();
 			this.shadowRenderer = null;
+			this.shadowFlw = null;
+			this.shadowCutoutFlw = null;
 		}
 
 		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
@@ -831,5 +878,25 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void setIsMainBound(boolean bound) {
 		isMainBound = bound;
+	}
+
+	@Override
+	public FlwProgram getShadowFlwProgram() {
+		return shadowFlw;
+	}
+
+	@Override
+	public FlwProgram getShadowCutoutFlwProgram() {
+		return shadowCutoutFlw;
+	}
+
+	@Override
+	public FlwProgram getTerrainFlwProgram() {
+		return terrainFlw;
+	}
+
+	@Override
+	public FlwProgram getTerrainCutoutFlwProgram() {
+		return terrainCutoutFlw;
 	}
 }
