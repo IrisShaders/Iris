@@ -7,7 +7,6 @@ import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
-import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.DivisionExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.MultiplicationExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
@@ -21,94 +20,6 @@ import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
  * Does the sodium terrain transformations using glsl-transformer AST.
  */
 class SodiumTerrainTransformer {
-	public static void transform(
-			ASTTransformer<?> transformer,
-			TranslationUnit tree,
-			Root root,
-			Parameters parameters) {
-		switch (parameters.type) {
-			case FRAGMENT:
-				transformFragment(transformer, tree, root, parameters);
-				break;
-			case VERTEX:
-				transformVertex(transformer, tree, root, parameters);
-				break;
-			default:
-				throw new IllegalStateException("Unexpected Sodium terrain patching shader type: " + parameters.type);
-		}
-	}
-
-	/**
-	 * Transforms vertex shaders.
-	 */
-	public static void transformVertex(
-			ASTTransformer<?> transformer,
-			TranslationUnit tree,
-			Root root,
-			Parameters parameters) {
-		tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"attribute vec3 iris_Pos;",
-				"attribute vec4 iris_Color;",
-				"attribute vec2 iris_TexCoord;",
-				"attribute vec2 iris_LightCoord;",
-				"attribute vec3 iris_Normal;", // some are shared
-				"uniform vec3 u_ModelScale;",
-				"uniform vec2 u_TextureScale;",
-				"attribute vec4 iris_ModelOffset;",
-				"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
-
-		transformShared(transformer, tree, root, parameters);
-
-		root.replaceAllReferenceExpressions(transformer, "gl_Vertex",
-				"vec4((iris_Pos * u_ModelScale) + iris_ModelOffset.xyz, 1.0)");
-		root.replaceAllReferenceExpressions(transformer, "gl_MultiTexCoord0",
-				"vec4(iris_TexCoord * u_TextureScale, 0.0, 1.0)");
-		root.renameAll("gl_Color", "iris_Color");
-		root.renameAll("gl_Normal", "iris_Normal");
-		root.renameAll("ftransform", "iris_ftransform");
-
-		replaceLightmapForSodium(transformer, tree, root, parameters);
-	}
-
-	/**
-	 * Transforms fragment shaders. The fragment shader does only the shared things
-	 * from the vertex shader.
-	 */
-	public static void transformFragment(
-			ASTTransformer<?> transformer,
-			TranslationUnit tree,
-			Root root,
-			Parameters parameters) {
-		// interestingly there is nothing that isn't shared
-		transformShared(transformer, tree, root, parameters);
-	}
-
-	/**
-	 * Does the things that transformVertex and transformFragment have in common.
-	 */
-	private static void transformShared(
-			ASTTransformer<?> transformer,
-			TranslationUnit tree,
-			Root root,
-			Parameters parameters) {
-		tree.parseAndInjectNodes(transformer, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform mat4 iris_ModelViewMatrix;",
-				"uniform mat4 u_ModelViewProjectionMatrix;",
-				"uniform mat4 iris_NormalMatrix;");
-		root.renameAll("gl_ModelViewMatrix", "iris_ModelViewMatrix");
-		root.renameAll("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
-		root.replaceAllReferenceExpressions(transformer,
-				"gl_NormalMatrix", "mat3(iris_NormalMatrix)");
-
-		root.replaceAllExpressions(
-				transformer,
-				root.identifierIndex.getStream("gl_TextureMatrix")
-						.map(identifier -> identifier.getAncestor(ArrayAccessExpression.class))
-						.distinct()
-						.filter(CommonTransformer.glTextureMatrix0::matches),
-				"mat4(1.0)");
-	}
-
 	private static final Matcher<Expression> glTextureMatrixMultMember = new Matcher<>(
 			"(gl_TextureMatrix[1] * ___coord).___suffix",
 			GLSLParser::expression, ASTBuilder::visitExpression, "___");
@@ -121,10 +32,6 @@ class SodiumTerrainTransformer {
 	private static final Matcher<Expression> xyDivision = new Matcher<>(
 			"___coord.xy / 255.0",
 			GLSLParser::expression, ASTBuilder::visitExpression, "___");
-
-	private static final String lightmapCoordsExpression = "iris_LightCoord";
-	private static final String lightmapCoordsExpressionS = lightmapCoordsExpression + ".s";
-	private static final String lightmapCoordsExpressionWrapped = "vec4(" + lightmapCoordsExpression + ", 0.0, 1.0)";
 
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
 	private static final List<Expression> replaceSExpressions = new ArrayList<>();
@@ -175,11 +82,14 @@ class SodiumTerrainTransformer {
 	 * Replaces BuiltinUniformReplacementTransformer and does what it does but a
 	 * little more general.
 	 */
-	private static void replaceLightmapForSodium(
+	public static void replaceLightmapForSodium(
+			final String lightmapCoordsExpression,
 			ASTTransformer<?> transformer,
 			TranslationUnit tree,
-			Root root,
-			Parameters parameters) {
+			Root root) {
+		final String lightmapCoordsExpressionS = lightmapCoordsExpression + ".s";
+		final String lightmapCoordsExpressionWrapped = "vec4(" + lightmapCoordsExpression + ", 0.0, 1.0)";
+
 		replaceExpressions.clear();
 		replaceSExpressions.clear();
 		replaceWrapExpressions.clear();

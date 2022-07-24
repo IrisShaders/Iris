@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline.transform;
 import io.github.douira.glsl_transformer.GLSLParser;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
+import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
 import io.github.douira.glsl_transformer.ast.query.Matcher;
@@ -13,11 +14,19 @@ import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CompositeTransformer {
-	private static final Matcher<Expression> glTextureMatrixAny = new Matcher<Expression>(
+	private static final Matcher<Expression> glTextureMatrix1To8 = new Matcher<Expression>(
 			"gl_TextureMatrix[index]", GLSLParser::expression, ASTBuilder::visitExpression) {
 		{
-			markAnyWildcard("index",
-					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class));
+			markClassedPredicateWildcard("index",
+					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
+					LiteralExpression.class,
+					literalExpression -> {
+						if (!literalExpression.isInteger()) {
+							return false;
+						}
+						long index = literalExpression.integerValue;
+						return index >= 0 && index < 8;
+					});
 		}
 	};
 
@@ -36,12 +45,11 @@ public class CompositeTransformer {
 		// transformations.replaceExact("gl_TextureMatrix[" + i + "]", "mat4(1.0)");
 		// transformations.replaceExact("gl_TextureMatrix [" + i + "]", "mat4(1.0)");
 		// }
-		root.replaceAllExpressions(
-				t,
+		root.replaceAllExpressions(t,
 				root.identifierIndex.getStream("gl_TextureMatrix")
 						.map(identifier -> identifier.getAncestor(ArrayAccessExpression.class))
 						.distinct()
-						.filter(glTextureMatrixAny::matches),
+						.filter(glTextureMatrix1To8::matches),
 				"mat4(1.0)");
 
 		// TODO: Other fog things
