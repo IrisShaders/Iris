@@ -293,7 +293,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 					return createDefaultPass();
 				}
 
-				return createPass(source, availability, condition == RenderCondition.SHADOW);
+				try {
+					return createPass(source, availability, condition == RenderCondition.SHADOW);
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to create pass for " + source.getName() + " for rendering condition "
+						+ condition + " specialized to input availability " + availability, e);
+				}
 			});
 		});
 
