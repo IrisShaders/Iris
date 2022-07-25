@@ -222,4 +222,18 @@ public class CommonTransformer {
 		// transformations.define("ftransform", "iris_ftransform");
 		root.rename("ftransform", "iris_ftransform");
 	}
+
+	public static void replaceGlMultiTexCoordBounded(
+			ASTTransformer<?> t,
+			Root root,
+			int minimum,
+			int maximum) {
+		root.replaceReferenceExpressions(t,
+				root.identifierIndex.prefixQueryFlat("gl_MultiTexCoord")
+						.filter(id -> {
+							int index = Integer.parseInt(id.getName().substring("gl_MultiTexCoord".length()));
+							return index >= minimum && index <= maximum;
+						}),
+				"vec4(0.0, 0.0, 0.0, 1.0)");
+	}
 }

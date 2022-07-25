@@ -62,10 +62,7 @@ public class CompositeTransformer {
 			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
 			// gl_MultiTexCoord" + i + " vec4(0.0, 0.0, 0.0, 1.0)");
 			// }
-			root.replaceReferenceExpressions(t,
-					root.identifierIndex.prefixQueryFlat("gl_MultiTexCoord")
-							.filter(identifier -> !identifier.getName().equals("gl_MultiTexCoord0")),
-					"vec4(0.0, 0.0, 0.0, 1.0)");
+			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 1, 7);
 		}
 
 		// No color attributes, the color is always solid white.

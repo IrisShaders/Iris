@@ -52,13 +52,7 @@ public class SodiumTransformer {
 			// for (int i = 2; i < 8; i++) {
 			// transformations.define("gl_MultiTexCoord" + i, " vec4(0.0, 0.0, 0.0, 1.0)");
 			// }
-			root.replaceReferenceExpressions(t,
-					root.identifierIndex.prefixQueryFlat("gl_MultiTexCoord")
-							.filter(id -> {
-								int index = Integer.parseInt(id.getName().substring("gl_MultiTexCoord".length()));
-								return index >= 2 && index < 8;
-							}),
-					"vec4(0.0, 0.0, 0.0, 1.0)");
+			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 2, 7);
 		}
 
 		if (parameters.inputs.hasColor()) {
