@@ -44,7 +44,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
     static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = false;
-	static final String MC_VERSION = "1.19.1-rc1";
+	static final String MC_VERSION = "1.19.1";
 	static final String customSodiumName = "";
 
 	private static final String[] SOURCE_SETS = new String[] {
@@ -60,7 +60,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion(MC_VERSION);
+		return Minecraft.getVersion("1.19.1-rc2");
 	}
 
 	@Override
@@ -178,7 +178,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public Path getBuildJarPath() {
-		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + createMcVersion().version + "-" + getVersion() + ".jar");
+		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + MC_VERSION + "-" + getVersion() + ".jar");
 	}
 
 	@Override
