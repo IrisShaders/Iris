@@ -5,7 +5,6 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.gl.blending.AlphaTest;
-import net.coderbot.iris.gl.shader.ShaderType;
 
 public class AlphaTestTransformer {
 	public static void transform(

@@ -5,7 +5,6 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 
 public class SodiumTransformer {
 	public static void transform(
