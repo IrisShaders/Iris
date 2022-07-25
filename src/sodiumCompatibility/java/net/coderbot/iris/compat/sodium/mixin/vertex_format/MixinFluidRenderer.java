@@ -40,8 +40,7 @@ public class MixinFluidRenderer {
 	@SuppressWarnings("mapping")
 	@Redirect(method = "render",
 			at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/model/IndexBufferBuilder.add" +
-					"(ILme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadWinding;)V",
-					ordinal = 1),
+					"(ILme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadWinding;)V"),
 			slice = @Slice(
 					from = @At(value = "FIELD",
 							target = "me/jellysquid/mods/sodium/common/util/DirectionUtil.HORIZONTAL_DIRECTIONS : [Lnet/minecraft/core/Direction;")
