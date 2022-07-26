@@ -20,6 +20,7 @@ import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.coderbot.iris.vendored.joml.Vector4i;
+import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -258,13 +259,22 @@ public final class CommonUniforms {
 
 			ItemStack stack = client.player.getItemInHand(hand);
 
-			if (stack == ItemStack.EMPTY || stack == null || !(stack.getItem() instanceof BlockItem)) {
+			if (stack == ItemStack.EMPTY || stack == null) {
 				return 0;
 			}
 
-			BlockItem item = (BlockItem) stack.getItem();
+			if (stack.getItem() instanceof BlockItem) {
+				BlockItem item = (BlockItem)stack.getItem();
 
-			return item.getBlock().defaultBlockState().getLightEmission();
+				return item.getBlock().defaultBlockState().getLightEmission();
+			}
+			else if (stack.getItem() instanceof IrisItemLightProvider) {
+				IrisItemLightProvider item = (IrisItemLightProvider)stack.getItem();
+
+				return item.getLightEmission(client.player, stack);
+			}
+
+			return 0;
 		}
 	}
 
