@@ -3,6 +3,7 @@ package net.coderbot.iris.uniforms;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.vendored.joml.Math;
+import net.coderbot.iris.vendored.joml.Vector3d;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.GameType;
 
@@ -12,6 +13,7 @@ public class IrisExclusiveUniforms {
 		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "firstPersonCamera", IrisExclusiveUniforms::isFirstPersonCamera);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isSpectator", IrisExclusiveUniforms::isSpectator);
+		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "eyePosition", IrisExclusiveUniforms::getEyePosition);
 	}
 
 	private static float getThunderStrength() {
@@ -32,5 +34,9 @@ public class IrisExclusiveUniforms {
 
 	private static boolean isSpectator() {
 		return Minecraft.getInstance().gameMode.getPlayerMode() == GameType.SPECTATOR;
+	}
+
+	private static Vector3d getEyePosition() {
+		return new Vector3d(Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getEyeY(), Minecraft.getInstance().player.getZ());
 	}
 }
