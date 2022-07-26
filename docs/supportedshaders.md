@@ -7,7 +7,7 @@
 * [BSL Shaders](https://bitslablab.com/bslshaders/)
 * [Prismarine Shaders](https://www.curseforge.com/minecraft/customization/prismarine-shader)
 * [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
-
+* [Lux Shaders](https://techdevongithub.github.io/Lux/)
 ### Complementary Shaders
 * [Complementary Reimagined](https://www.complementary.dev/reimagined/)
 * [Complementary Shaders](https://www.complementary.dev/shaders-v4/) (BSL derivative)
@@ -96,4 +96,3 @@ This is not a complete list, but is just for people trying to control-F their fa
   - DrDestens MinecraftShaders
   - Stracciatella
 - Voxlementary
-- Lux Shader
