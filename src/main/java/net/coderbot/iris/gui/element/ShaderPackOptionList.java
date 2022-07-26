@@ -236,6 +236,15 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 				return false;
 			}
 
+			// Displaying a dialog when the game is full-screened can cause severe issues
+			// https://github.com/IrisShaders/Iris/issues/1258
+			if (Minecraft.getInstance().getWindow().isFullscreen()) {
+				this.screen.displayNotification(
+					new TranslatableComponent("options.iris.mustDisableFullscreen")
+						.withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD));
+				return false;
+			}
+
 			final ShaderPackScreen originalScreen = this.screen; // Also used to prevent invalid state
 
 			FileDialogUtil.fileSelectDialog(
@@ -262,6 +271,15 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 			// Invalid state to be in
 			if (!Iris.getCurrentPack().isPresent()) {
+				return false;
+			}
+
+			// Displaying a dialog when the game is full-screened can cause severe issues
+			// https://github.com/IrisShaders/Iris/issues/1258
+			if (Minecraft.getInstance().getWindow().isFullscreen()) {
+				this.screen.displayNotification(
+					new TranslatableComponent("options.iris.mustDisableFullscreen")
+						.withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD));
 				return false;
 			}
 
