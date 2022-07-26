@@ -33,7 +33,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FluidState;
@@ -259,22 +258,12 @@ public final class CommonUniforms {
 
 			ItemStack stack = client.player.getItemInHand(hand);
 
-			if (stack == ItemStack.EMPTY || stack == null) {
+			if (stack == ItemStack.EMPTY || stack == null || !(stack.getItem() instanceof IrisItemLightProvider)) {
 				return 0;
 			}
 
-			if (stack.getItem() instanceof BlockItem) {
-				BlockItem item = (BlockItem)stack.getItem();
-
-				return item.getBlock().defaultBlockState().getLightEmission();
-			}
-			else if (stack.getItem() instanceof IrisItemLightProvider) {
-				IrisItemLightProvider item = (IrisItemLightProvider)stack.getItem();
-
-				return item.getLightEmission(client.player, stack);
-			}
-
-			return 0;
+			IrisItemLightProvider item = (IrisItemLightProvider)stack.getItem();
+			return item.getLightEmission(client.player, stack);
 		}
 	}
 
