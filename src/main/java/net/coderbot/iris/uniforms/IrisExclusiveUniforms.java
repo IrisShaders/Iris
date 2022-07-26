@@ -2,18 +2,22 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.GameType;
 
 public class IrisExclusiveUniforms {
 	public static void addIrisExclusiveUniforms(UniformHolder uniforms) {
 		//All Iris-exclusive uniforms (uniforms which do not exist in either OptiFine or ShadersMod) should be registered here.
 		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "firstPersonCamera", IrisExclusiveUniforms::isFirstPersonCamera);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isSpectator", IrisExclusiveUniforms::isSpectator);
 	}
 
-
 	private static float getThunderStrength() {
-		return Minecraft.getInstance().level.getThunderLevel(CapturedRenderingState.INSTANCE.getTickDelta());
+		// Note: Ensure this is in the range of 0 to 1 - some custom servers send out of range values.
+		return Math.clamp(0.0F, 1.0F,
+			Minecraft.getInstance().level.getThunderLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
 	}
 
 	private static boolean isFirstPersonCamera() {
@@ -24,5 +28,9 @@ public class IrisExclusiveUniforms {
 				return false;
 			default: return true;
 		}
+	}
+
+	private static boolean isSpectator() {
+		return Minecraft.getInstance().gameMode.getPlayerMode() == GameType.SPECTATOR;
 	}
 }

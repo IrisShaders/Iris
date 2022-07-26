@@ -9,17 +9,21 @@ import net.coderbot.iris.shaderpack.option.BooleanOption;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuBooleanOptionElement;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 
 public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBooleanOptionElement> {
 	private static final Component TEXT_TRUE = new TranslatableComponent("label.iris.true").withStyle(ChatFormatting.GREEN);
 	private static final Component TEXT_FALSE = new TranslatableComponent("label.iris.false").withStyle(ChatFormatting.RED);
+	private static final Component TEXT_TRUE_DEFAULT = new TranslatableComponent("label.iris.true");
+	private static final Component TEXT_FALSE_DEFAULT = new TranslatableComponent("label.iris.false");
 
 	private final BooleanOption option;
 
 	private boolean appliedValue;
 	private boolean value;
+	private boolean defaultValue;
 
 	public BooleanElementWidget(OptionMenuBooleanOptionElement element) {
 		super(element);
@@ -38,6 +42,9 @@ public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBool
 		// Might be equal to the applied value
 		this.value = this.element.getPendingOptionValues().getBooleanValueOrDefault(this.option.getName());
 
+		this.defaultValue = this.element.getAppliedOptionValues().getOptionSet().getBooleanOptions()
+			.get(this.option.getName()).getOption().getDefaultValue();
+
 		this.setLabel(GuiUtil.translateOrDefault(new TextComponent(this.option.getName()), "option." + this.option.getName()));
 	}
 
@@ -51,6 +58,20 @@ public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBool
 
 	@Override
 	protected Component createValueLabel() {
+		// UX: Do not use color if the value is set to default.
+		//
+		// This is because the red color for "Off" and green color of "On"
+		// was causing people to want to change options to On when that was
+		// unnecessary due to red having a bad association.
+		//
+		// This was changed on request of Emin, since people kept on changing
+		// Compatibility Mode to "On" when not needed. Now we use white for
+		// default to avoid giving a positive or negative connotation to a
+		// default value.
+		if (this.value == this.defaultValue) {
+			return this.value ? TEXT_TRUE_DEFAULT : TEXT_FALSE_DEFAULT;
+		}
+
 		return this.value ? TEXT_TRUE : TEXT_FALSE;
 	}
 
