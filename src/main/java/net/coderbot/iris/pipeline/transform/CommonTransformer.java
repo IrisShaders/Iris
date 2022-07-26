@@ -1,8 +1,9 @@
 package net.coderbot.iris.pipeline.transform;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
+import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
-import io.github.douira.glsl_transformer.ast.node.VersionStatement.Profile;
+import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
@@ -186,7 +187,7 @@ public class CommonTransformer {
 			throw new IllegalStateException(
 					"Transforming a shader that is already built against the core profile???");
 		}
-		if (versionStatement.version >= 200) {
+		if (versionStatement.version.number >= 200) {
 			if (profile != Profile.COMPATIBILITY) {
 				throw new IllegalStateException(
 						"Expected \"compatibility\" after the GLSL version: #version " + versionStatement.version + " "
@@ -194,7 +195,7 @@ public class CommonTransformer {
 			}
 			versionStatement.profile = Profile.CORE;
 		} else {
-			versionStatement.version = 330;
+			versionStatement.version = Version.GL33;
 			versionStatement.profile = Profile.CORE;
 		}
 	}

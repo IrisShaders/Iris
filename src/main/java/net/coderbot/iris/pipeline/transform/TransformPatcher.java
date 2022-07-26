@@ -2,12 +2,15 @@ package net.coderbot.iris.pipeline.transform;
 
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
+import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
@@ -108,7 +111,21 @@ public class TransformPatcher {
 		return patched;
 	}
 
+	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
+
 	private static String transform(String source, Parameters parameters) {
+		// parse #version directive using an efficient regex before parsing so that the
+		// parser can be set to the correct version
+		Matcher matcher = versionPattern.matcher(source);
+		if (!matcher.find()) {
+			throw new IllegalArgumentException("No #version directive found in source code!");
+		}
+		Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
+		if (version.number >= 200) {
+			version = Version.GL33;
+		}
+		transformer.getLexer().version = version;
+
 		return transformer.transform(PrintType.COMPACT, source, parameters);
 	}
 

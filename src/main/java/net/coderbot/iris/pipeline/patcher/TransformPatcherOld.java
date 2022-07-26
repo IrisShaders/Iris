@@ -231,7 +231,7 @@ public class TransformPatcherOld {
 				String profile = Optional.ofNullable(versionStatement.profile)
 						.map(terminal -> terminal.getText())
 						.orElse("");
-				int version = Integer.parseInt(versionStatement.NR_INTCONSTANT().getText());
+				int version = Integer.parseInt(versionStatement.version.getText());
 
 				if (profile.equals("core")) {
 					throw new IllegalStateException(
