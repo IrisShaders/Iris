@@ -40,6 +40,10 @@ There are a few possible reasons:
 - You're using macOS, which has limited support.
 - You may have an incompatible mod installed.
 
+## Why are entities becoming invisible randomly?
+
+You probably have GraalVM installed. Install a normal version of Java to fix the issue.
+
 ## What shaders have been tested and are working with Iris?
 
 See [this](./supportedshaders.md) document for the list

@@ -26,7 +26,6 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
-import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
@@ -65,7 +64,6 @@ import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
@@ -96,8 +94,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private final ImmutableList<ClearPass> clearPasses;
 	private final ImmutableList<ClearPass> shadowClearPasses;
 	private final ImmutableList<ClearPass> shadowClearPassesFull;
-
-	private final GlFramebuffer baseline;
 
 	private final CompositeRenderer prepareRenderer;
 
@@ -304,7 +300,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 					return createDefaultPass();
 				}
 
-				return createPass(source, availability, condition == RenderCondition.SHADOW);
+				try {
+					return createPass(source, availability, condition == RenderCondition.SHADOW);
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to create pass for " + source.getName() + " for rendering condition "
+						+ condition + " specialized to input availability " + availability, e);
+				}
 			});
 		});
 
@@ -312,8 +313,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				programs.getPackDirectives().getRenderTargetDirectives());
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 				programs.getPackDirectives().getRenderTargetDirectives());
-
-		this.baseline = renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[] {0});
 
 		if (shadowRenderTargets != null) {
 			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
