@@ -1,5 +1,7 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -34,6 +36,53 @@ import net.coderbot.iris.gl.shader.ShaderType;
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	private static ASTTransformer<Parameters> transformer;
+	private static Map<CacheKey, String> cache = new LRUCache<>(400);
+
+	private static class CacheKey {
+		final Version version;
+		final Parameters parameters;
+		final String input;
+
+		public CacheKey(Version version, Parameters parameters, String input) {
+			this.version = version;
+			this.parameters = parameters;
+			this.input = input;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((input == null) ? 0 : input.hashCode());
+			result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
+			result = prime * result + ((version == null) ? 0 : version.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			CacheKey other = (CacheKey) obj;
+			if (input == null) {
+				if (other.input != null)
+					return false;
+			} else if (!input.equals(other.input))
+				return false;
+			if (parameters == null) {
+				if (other.parameters != null)
+					return false;
+			} else if (!Objects.equals(parameters, other.parameters))
+				return false;
+			if (version != other.version)
+				return false;
+			return true;
+		}
+	}
 
 	// TODO: Only do the NewLines patches if the source code isn't from
 	// gbuffers_lines (what does this mean?)
@@ -115,7 +164,16 @@ public class TransformPatcher {
 		Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 		transformer.getLexer().version = version;
 
-		return transformer.transform(PrintType.COMPACT, source, parameters);
+		// check if this has been cached
+		CacheKey key = new CacheKey(version, parameters, source);
+		if (cache.containsKey(key)) {
+			return cache.get(key);
+		}
+
+		String result = transformer.transform(PrintType.COMPACT, source, parameters);
+
+		cache.put(key, result);
+		return result;
 	}
 
 	public static String patchAttributes(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
