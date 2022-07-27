@@ -258,12 +258,11 @@ public final class CommonUniforms {
 
 			ItemStack stack = client.player.getItemInHand(hand);
 
-			if (stack == ItemStack.EMPTY || stack == null || !(stack.getItem() instanceof IrisItemLightProvider)) {
+			if (stack == ItemStack.EMPTY || stack == null) {
 				return 0;
 			}
 
-			IrisItemLightProvider item = (IrisItemLightProvider)stack.getItem();
-			return item.getLightEmission(client.player, stack);
+			return ((IrisItemLightProvider)stack.getItem()).getLightEmission(client.player, stack);
 		}
 	}
 
