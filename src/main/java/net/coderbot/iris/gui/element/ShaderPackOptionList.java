@@ -238,7 +238,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 			// https://github.com/IrisShaders/Iris/issues/1258
 			if (Minecraft.getInstance().getWindow().isFullscreen()) {
 				this.screen.displayNotification(
-					new TranslatableComponent("options.iris.mustDisableFullscreen")
+					Component.translatable("options.iris.mustDisableFullscreen")
 						.withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD));
 				return false;
 			}
@@ -276,7 +276,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 			// https://github.com/IrisShaders/Iris/issues/1258
 			if (Minecraft.getInstance().getWindow().isFullscreen()) {
 				this.screen.displayNotification(
-					new TranslatableComponent("options.iris.mustDisableFullscreen")
+					Component.translatable("options.iris.mustDisableFullscreen")
 						.withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD));
 				return false;
 			}
