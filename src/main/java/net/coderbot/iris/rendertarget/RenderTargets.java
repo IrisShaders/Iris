@@ -215,9 +215,23 @@ public class RenderTargets {
 		return inverted.build();
 	}
 
+	private GlFramebuffer createEmptyFramebuffer() {
+		GlFramebuffer framebuffer = new GlFramebuffer();
+		ownedFramebuffers.add(framebuffer);
+
+		framebuffer.addDepthAttachment(currentDepthTexture);
+
+		// NB: Before OpenGL 3.0, all framebuffers are required to have a color
+		// attachment no matter what.
+		framebuffer.addColorAttachment(0, get(0).getMainTexture());
+		framebuffer.noDrawBuffers();
+
+		return framebuffer;
+	}
+
 	public GlFramebuffer createGbufferFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
-			throw new IllegalArgumentException("Framebuffer must have at least one color buffer");
+			return createEmptyFramebuffer();
 		}
 
 		ImmutableSet<Integer> stageWritesToMain = invert(stageWritesToAlt, drawBuffers);
@@ -231,7 +245,7 @@ public class RenderTargets {
 
 	private GlFramebuffer createFullFramebuffer(boolean clearsAlt, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
-			throw new IllegalArgumentException("Framebuffer must have at least one color buffer");
+			return createEmptyFramebuffer();
 		}
 
 		ImmutableSet<Integer> stageWritesToMain = ImmutableSet.of();
