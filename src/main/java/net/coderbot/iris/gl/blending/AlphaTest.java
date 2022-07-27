@@ -42,4 +42,29 @@ public class AlphaTest {
 	public float getReference() {
 		return reference;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((function == null) ? 0 : function.hashCode());
+		result = prime * result + Float.floatToIntBits(reference);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		AlphaTest other = (AlphaTest) obj;
+		if (function != other.function)
+			return false;
+		if (Float.floatToIntBits(reference) != Float.floatToIntBits(other.reference))
+			return false;
+		return true;
+	}
 }
