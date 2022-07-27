@@ -60,7 +60,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public VersionMeta createMcVersion() {
-		return Minecraft.getVersion("1.19.1-rc2");
+		return Minecraft.getVersion(MC_VERSION);
 	}
 
 	@Override
