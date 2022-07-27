@@ -131,6 +131,10 @@ class AttributeTransformer {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.END, "void main() {" +
 					"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);" +
 					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
+					// Workaround for a shader pack bug: https://github.com/IrisShaders/Iris/issues/1549
+					// Some shader packs incorrectly ignore the alpha value, and assume that rgb will be
+					// zero if there is no hit flash, we try to emulate that here
+					"entityColor.rgb *= float(entityColor.a != 0.0);" +
 					"irisMain_overlayColor(); }");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
 			// replace read references to grab the color from the first vertex.

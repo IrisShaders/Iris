@@ -15,6 +15,7 @@ import net.coderbot.iris.texture.TextureInfoCache.TextureInfo;
 import net.coderbot.iris.texture.TextureTracker;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
+import net.coderbot.iris.vendored.joml.Math;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
@@ -110,6 +111,8 @@ public final class CommonUniforms {
 			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(InteractionHand.MAIN_HAND))
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
+			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
+			//       that the player is trying to turn on fullbright?
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
 			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
@@ -144,7 +147,7 @@ public final class CommonUniforms {
 			if (blindness != null) {
 				// Guessing that this is what OF uses, based on how vanilla calculates the fog value in BackgroundRenderer
 				// TODO: Add this to ShaderDoc
-				return Math.min(1.0F, blindness.getDuration() / 20.0F);
+				return Math.clamp(0.0F, 1.0F, blindness.getDuration() / 20.0F);
 			}
 		}
 
@@ -156,7 +159,8 @@ public final class CommonUniforms {
 			return 0.0F;
 		}
 
-		return ((LocalPlayer) client.cameraEntity).getCurrentMood();
+		// This should always be 0 to 1 anyways but just making sure
+		return Math.clamp(0.0F, 1.0F, ((LocalPlayer) client.cameraEntity).getCurrentMood());
 	}
 
 	static float getRainStrength() {
@@ -164,7 +168,9 @@ public final class CommonUniforms {
 			return 0f;
 		}
 
-		return client.level.getRainLevel(CapturedRenderingState.INSTANCE.getTickDelta());
+		// Note: Ensure this is in the range of 0 to 1 - some custom servers send out of range values.
+		return Math.clamp(0.0F, 1.0F,
+			client.level.getRainLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
 	}
 
 	private static Vector2i getEyeBrightness() {
@@ -200,7 +206,8 @@ public final class CommonUniforms {
 						GameRenderer.getNightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 
 				if (nightVisionStrength > 0) {
-					return nightVisionStrength;
+					// Just protecting against potential weird mod behavior
+					return Math.clamp(0.0F, 1.0F, nightVisionStrength);
 				}
 			} catch (NullPointerException e) {
 				// If our injection didn't get applied, a NullPointerException will occur from calling that method if
@@ -217,7 +224,8 @@ public final class CommonUniforms {
 			float underwaterVisibility = client.player.getWaterVision();
 
 			if (underwaterVisibility > 0.0f) {
-				return underwaterVisibility;
+				// Just protecting against potential weird mod behavior
+				return Math.clamp(0.0F, 1.0F, underwaterVisibility);
 			}
 		}
 

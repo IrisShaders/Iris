@@ -41,8 +41,10 @@ public class LegacyIdMap {
 
 		addMany(blockIdMap, 35, COLORS, color -> block(color + "_wool"));
 
-		add(blockIdMap, 8, block("water"));
-		add(blockIdMap, 10, block("lava"));
+		// NB: Use the "still" IDs for water and lava, since some shader packs don't properly support the "flowing"
+		// versions: https://github.com/IrisShaders/Iris/issues/1462
+		add(blockIdMap, 9, block("water"));
+		add(blockIdMap, 11, block("lava"));
 		add(blockIdMap, 79, block("ice"));
 
 		addMany(blockIdMap, 18, WOOD_TYPES, woodType -> block(woodType + "_leaves"));
