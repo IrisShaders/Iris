@@ -33,18 +33,13 @@ public class CommonTransformer {
 
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
-		// transformations.define("gl_FogFragCoord", "iris_FogFragCoord");
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
 
 		// TODO: This doesn't handle geometry shaders... How do we do that?
 		if (parameters.type == ShaderType.VERTEX) {
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out
-			// float iris_FogFragCoord;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"out float iris_FogFragCoord;");
 		} else if (parameters.type == ShaderType.FRAGMENT) {
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
-			// float iris_FogFragCoord;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"in float iris_FogFragCoord;");
 		}
@@ -54,12 +49,8 @@ public class CommonTransformer {
 			// Renewed to compile. It works because they don't actually use gl_FrontColor
 			// even though they write to it.
 
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4
-			// iris_FrontColor;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"vec4 iris_FrontColor;");
-
-			// transformations.define("gl_FrontColor", "iris_FrontColor");
 			root.rename("gl_FrontColor", "iris_FrontColor");
 		}
 
@@ -69,34 +60,21 @@ public class CommonTransformer {
 			if (root.identifierIndex.has("gl_FragColor")) {
 				Iris.logger.warn(
 						"[Triforce Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
-				// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-				// gl_FragColor iris_FragData[0]");
 				root.replaceReferenceExpressions(t, "gl_FragColor", "iris_FragData[0]");
 			}
 
-			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-			// gl_FragData iris_FragData");
 			root.rename("gl_FragData", "iris_FragData");
-
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-			// "layout (location = 0) out vec4 iris_FragData[8];");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"layout (location = 0) out vec4 iris_FragData[8];");
 		}
 
 		if (parameters.type == ShaderType.VERTEX || parameters.type == ShaderType.FRAGMENT) {
 			for (StorageQualifier qualifier : root.nodeIndex.get(StorageQualifier.class)) {
-				// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-				// attribute in");
 				if (qualifier.storageType == StorageType.ATTRIBUTE) {
 					qualifier.storageType = StorageType.IN;
 				} else if (qualifier.storageType == StorageType.VARYING) {
 					qualifier.storageType = parameters.type == ShaderType.VERTEX
-							// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-							// varying out"); (VERTEX)
 							? StorageType.OUT
-							// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-							// varying in"); (FRAGMENT)
 							: StorageType.IN;
 				}
 			}
@@ -113,13 +91,6 @@ public class CommonTransformer {
 			// GLSL 1.50 Specification, Section 8.7:
 			// In all functions below, the bias parameter is optional for fragment shaders.
 			// The bias parameter is not accepted in a vertex or geometry shader.
-
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4
-			// texture2D(sampler2D sampler, vec2 coord, float bias) { return
-			// texture(sampler, coord, bias); }");
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4
-			// texture3D(sampler3D sampler, vec3 coord, float bias) { return
-			// texture(sampler, coord, bias); }");
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
 					"vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
@@ -128,26 +99,6 @@ public class CommonTransformer {
 		// This must be defined and valid in all shader passes, including composite
 		// passes. A shader that relies on this behavior is SEUS v11 - it reads
 		// gl_Fog.color and breaks if it is not properly defined.
-
-		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-		// "uniform float iris_FogDensity;\n" +
-		// "uniform float iris_FogStart;\n" +
-		// "uniform float iris_FogEnd;\n" +
-		// "uniform vec4 iris_FogColor;\n" +
-		// "\n" +
-		// "struct iris_FogParameters {\n" +
-		// " vec4 color;\n" +
-		// " float density;\n" +
-		// " float start;\n" +
-		// " float end;\n" +
-		// " float scale;\n" +
-		// "};\n" +
-		// "\n" +
-		// "iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor,
-		// iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd -
-		// iris_FogStart));\n" +
-		// "\n" +
-		// "#define gl_Fog iris_Fog");
 		root.rename("gl_Fog", "iris_Fog");
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 				"uniform float iris_FogDensity;",
@@ -220,7 +171,6 @@ public class CommonTransformer {
 		//
 		// Note that this happens after we've added our ftransform function - so that
 		// both all the calls and our function are renamed in one go.
-		// transformations.define("ftransform", "iris_ftransform");
 		root.rename("ftransform", "iris_ftransform");
 	}
 
