@@ -39,77 +39,41 @@ public class CompositeTransformer {
 		// TODO: More solid way to handle texture matrices
 		// TODO: Provide these values with uniforms
 
-		// for (int i = 0; i < 8; i++) {
-		// transformations.replaceExact("gl_TextureMatrix[" + i + "]", "mat4(1.0)");
-		// transformations.replaceExact("gl_TextureMatrix [" + i + "]", "mat4(1.0)");
-		// }
 		root.replaceExpressionMatches(t, glTextureMatrix0To7, "mat4(1.0)");
 
 		// TODO: Other fog things
 
 		if (parameters.type == ShaderType.VERTEX) {
-			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-			// gl_MultiTexCoord0 vec4(UV0, 0.0, 1.0)");
 			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 					"vec4(UV0, 0.0, 1.0)");
-
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
-			// vec2 UV0;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec2 UV0;");
-
-			// gl_MultiTexCoord0 is the only valid input, all other inputs
-			// for (int i = 1; i < 8; i++) {
-			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-			// gl_MultiTexCoord" + i + " vec4(0.0, 0.0, 0.0, 1.0)");
-			// }
 			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 1, 7);
 		}
 
 		// No color attributes, the color is always solid white.
-		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-		// gl_Color vec4(1.0, 1.0, 1.0, 1.0)");
 		root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0, 1.0, 1.0, 1.0)");
 
 		if (parameters.type == ShaderType.VERTEX) {
 			// https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glNormal.xml
 			// The initial value of the current normal is the unit vector, (0, 0, 1).
-			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-			// gl_Normal vec3(0.0, 0.0, 1.0)");
 			root.replaceReferenceExpressions(t, "gl_Normal", "vec3(0.0, 0.0, 1.0)");
 		}
 
-		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-		// gl_NormalMatrix mat3(1.0)");
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix", "mat3(1.0)");
 
 		if (parameters.type == ShaderType.VERTEX) {
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in
-			// vec3 Position;");
-			// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4
-			// ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec3 Position;",
 					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
-
-			// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-			// gl_Vertex vec4(Position, 1.0)");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(Position, 1.0)");
 		}
 
 		// TODO: All of the transformed variants of the input matrices, preferably
 		// computed on the CPU side...
-		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-		// gl_ModelViewProjectionMatrix (gl_ProjectionMatrix * gl_ModelViewMatrix)");
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
 				"(gl_ProjectionMatrix * gl_ModelViewMatrix)");
-
-		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-		// gl_ModelViewMatrix mat4(1.0)");
 		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", "mat4(1.0)");
 
 		// This is used to scale the quad projection matrix from (0, 1) to (-1, 1).
-		// transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define
-		// gl_ProjectionMatrix mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0),
-		// vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
 		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix",
 				"mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
 

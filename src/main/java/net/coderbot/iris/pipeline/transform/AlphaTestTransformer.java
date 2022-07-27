@@ -13,22 +13,13 @@ public class AlphaTestTransformer {
 			Root root,
 			Parameters parameters,
 			AlphaTest alpha) {
-		// transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE,
-		// "uniform float iris_currentAlphaTest;");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 				"uniform float iris_currentAlphaTest;");
 
 		// Create our own main function to wrap the existing main function, so that we
 		// can run the alpha test at the
 		// end.
-		// transformations.replaceExact("main", "irisMain");
 		root.rename("main", "irisMain");
-
-		// transformations.injectLine(Transformations.InjectionPoint.END, "void main()
-		// {\n" +
-		// " irisMain();\n" +
-		// alpha.toExpression(" ") +
-		// "}");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.END, "void main() {" +
 				" irisMain();" + alpha.toExpression(" ") + "}");
 	}
