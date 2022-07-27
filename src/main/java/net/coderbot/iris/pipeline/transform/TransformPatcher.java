@@ -39,12 +39,10 @@ public class TransformPatcher {
 	private static Map<CacheKey, String> cache = new LRUCache<>(400);
 
 	private static class CacheKey {
-		final Version version;
 		final Parameters parameters;
 		final String input;
 
-		public CacheKey(Version version, Parameters parameters, String input) {
-			this.version = version;
+		public CacheKey(Parameters parameters, String input) {
 			this.parameters = parameters;
 			this.input = input;
 		}
@@ -55,7 +53,6 @@ public class TransformPatcher {
 			int result = 1;
 			result = prime * result + ((input == null) ? 0 : input.hashCode());
 			result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
-			result = prime * result + ((version == null) ? 0 : version.hashCode());
 			return result;
 		}
 
@@ -77,8 +74,6 @@ public class TransformPatcher {
 				if (other.parameters != null)
 					return false;
 			} else if (!Objects.equals(parameters, other.parameters))
-				return false;
-			if (version != other.version)
 				return false;
 			return true;
 		}
@@ -155,6 +150,12 @@ public class TransformPatcher {
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
 
 	private static String transform(String source, Parameters parameters) {
+		// check if this has been cached
+		CacheKey key = new CacheKey(parameters, source);
+		if (cache.containsKey(key)) {
+			return cache.get(key);
+		}
+
 		// parse #version directive using an efficient regex before parsing so that the
 		// parser can be set to the correct version
 		Matcher matcher = versionPattern.matcher(source);
@@ -163,12 +164,6 @@ public class TransformPatcher {
 		}
 		Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 		transformer.getLexer().version = version;
-
-		// check if this has been cached
-		CacheKey key = new CacheKey(version, parameters, source);
-		if (cache.containsKey(key)) {
-			return cache.get(key);
-		}
 
 		String result = transformer.transform(PrintType.COMPACT, source, parameters);
 
