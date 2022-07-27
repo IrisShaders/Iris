@@ -5,7 +5,7 @@
   "package": "net.coderbot.iris.compat.indium.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinAbstractQuadRenderer"
+    "MixinBaseQuadRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

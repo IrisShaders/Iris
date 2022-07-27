@@ -43,6 +43,10 @@ public class GlFramebuffer extends GlResource {
 		attachments.put(index, texture);
 	}
 
+	public void noDrawBuffers() {
+		IrisRenderSystem.drawBuffers(new int[] { GL30C.GL_NONE });
+	}
+
 	public void drawBuffers(int[] buffers) {
 		bind();
 

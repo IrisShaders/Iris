@@ -13,8 +13,8 @@ public interface OptionValues {
 	default boolean getBooleanValueOrDefault(String name) {
 		return getBooleanValue(name).orElseGet(() -> {
 			if (!getOptionSet().getBooleanOptions().containsKey(name)) {
-				Iris.logger.warn("Tried to get boolean value for unknown option: " + name + ", defaulting to false!");
-				return false;
+				Iris.logger.warn("Tried to get boolean value for unknown option: " + name + ", defaulting to true!");
+				return true;
 			}
 			return getOptionSet().getBooleanOptions().get(name).getOption().getDefaultValue();
 		});
