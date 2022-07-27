@@ -142,6 +142,10 @@ class AttributeTransformer {
 					"vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);" +
 					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
 					"iris_vertexColor = iris_Color;" +
+					// Workaround for a shader pack bug: https://github.com/IrisShaders/Iris/issues/1549
+					// Some shader packs incorrectly ignore the alpha value, and assume that rgb will be
+					// zero if there is no hit flash, we try to emulate that here
+					"entityColor.rgb *= float(entityColor.a != 0.0);" +
 					"irisMain_overlayColor();}");
 		} else if (parameters.type == ShaderType.GEOMETRY) {
 			// replace read references to grab the color from the first vertex.

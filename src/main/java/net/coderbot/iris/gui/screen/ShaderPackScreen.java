@@ -182,7 +182,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.removeWidget(this.shaderPackList);
 		this.removeWidget(this.shaderOptionList);
 
-		this.shaderPackList = new ShaderPackSelectionList(this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
+		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
 
 		if (Iris.getCurrentPack().isPresent() && this.navigation != null) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
@@ -226,11 +226,24 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.screenSwitchButton = this.addRenderableWidget(new Button(topCenter + 78, this.height - 51, 152, 20,
 			new TranslatableComponent("options.iris.shaderPackList"), button -> {
 				this.optionMenuOpen = !this.optionMenuOpen;
+
+				// UX: Apply changes before switching screens to avoid unintuitive behavior
+				//
+				// Not doing this leads to unintuitive behavior, since selecting a pack in the
+				// list (but not applying) would open the settings for the previous pack, rather
+				// than opening the settings for the selected (but not applied) pack.
+				this.applyChanges();
+
 				this.init();
 			}
 		));
 
 		refreshScreenSwitchButton();
+
+		// NB: Don't let comment remain when exiting options screen
+		// https://github.com/IrisShaders/Iris/issues/1494
+		this.hoveredElement = null;
+		this.hoveredElementCommentTimer = 0;
 	}
 
 	public void refreshForChangedPack() {
@@ -257,7 +270,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 							new TranslatableComponent("options.iris.shaderPackList")
 							: new TranslatableComponent("options.iris.shaderPackSettings")
 			);
-			this.screenSwitchButton.active = optionMenuOpen || Iris.getCurrentPack().isPresent();
+			this.screenSwitchButton.active = optionMenuOpen || shaderPackList.getTopButtonRow().shadersEnabled;
 		}
 	}
 
@@ -381,6 +394,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}
 
 		// Show the relevant message for 5 seconds (100 ticks)
+		this.notificationDialogTimer = 100;
+	}
+
+	public void displayNotification(Component component) {
+		this.notificationDialog = component;
 		this.notificationDialogTimer = 100;
 	}
 

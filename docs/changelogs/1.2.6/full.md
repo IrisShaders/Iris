@@ -23,6 +23,7 @@ This release was developed by coderbot, IMS, and Pepper.
 - Fixed the entityColor geometry shader passthrough (IMS)
 - Modify block outline wrap function to be compatible with Create 0.5 (IMS)
 - Preserve GUI render state when vignette is off (Sorenon)
+- Fix normals on the inside of flowing water (IMS)
 
 ### Iris exclusive features
 
