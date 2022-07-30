@@ -23,6 +23,7 @@ import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
@@ -169,7 +170,9 @@ public class TransformPatcher {
 		Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 		transformer.getLexer().version = version;
 
-		String result = transformer.transform(PrintType.COMPACT, source, parameters);
+		String result = transformer.transform(
+				FabricLoader.getInstance().isDevelopmentEnvironment() ? PrintType.INDENTED : PrintType.COMPACT,
+				source, parameters);
 
 		cache.put(key, result);
 		return result;
