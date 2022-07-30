@@ -1,11 +1,31 @@
 package net.coderbot.iris.pipeline;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL15C;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Pair;
+
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
@@ -52,24 +72,11 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.texture.AbstractTexture;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.OptionalInt;
-import java.util.Set;
-import java.util.function.IntFunction;
-import java.util.function.Supplier;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -204,6 +211,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			return shadowRenderTargets;
 		};
+
+		// reset clearing state
+		outputLocationCleared = false;
 
 		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
@@ -562,6 +572,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		String fragment = TransformPatcher.patchAttributes(source.getFragmentSource().orElseThrow(NullPointerException::new),
 				ShaderType.FRAGMENT, geometry != null, availability);
 
+		debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+
 		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
 				fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
@@ -632,6 +644,49 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
 				programDirectives.getBlendModeOverride(), shadow);
+	}
+
+	private static boolean outputLocationCleared = false;
+	private static int programCounter = 0;
+
+	public static void debugPatchedShaders(String name, String vertex, String geometry, String fragment) {
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
+			if (!outputLocationCleared) {
+				try {
+					if (Files.exists(debugOutDir)) {
+						Files.list(debugOutDir).forEach(path -> {
+							try {
+								Files.delete(path);
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
+						});
+					}
+
+					Files.createDirectories(debugOutDir);
+				} catch (IOException e) {
+					Iris.logger.warn("Failed to initialize debug patched shader source location", e);
+				}
+				outputLocationCleared = true;
+			}
+
+			try {
+				programCounter++;
+				String prefix = String.format("%03d_", programCounter);
+				if (vertex != null) {
+					Files.write(debugOutDir.resolve(prefix + name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
+				}
+				if (geometry != null) {
+					Files.write(debugOutDir.resolve(prefix + name + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
+				}
+				if (fragment != null) {
+					Files.write(debugOutDir.resolve(prefix + name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
+				}
+			} catch (IOException e) {
+				Iris.logger.warn("Failed to write debug patched shader source", e);
+			}
+		}
 	}
 
 	private boolean isPostChain;

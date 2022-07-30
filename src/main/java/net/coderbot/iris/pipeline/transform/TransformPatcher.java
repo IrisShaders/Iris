@@ -150,6 +150,10 @@ public class TransformPatcher {
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
 
 	private static String transform(String source, Parameters parameters) {
+		if (source == null) {
+			return null;
+		}
+
 		// check if this has been cached
 		CacheKey key = new CacheKey(parameters, source);
 		if (cache.containsKey(key)) {
@@ -182,6 +186,14 @@ public class TransformPatcher {
 		return inspectPatch(source,
 				"TYPE: " + type,
 				str -> transform(str, new Parameters(Patch.SODIUM_TERRAIN, type)));
+	}
+
+	public static String patchSodiumTerrainVertex(String source) {
+		return patchSodiumTerrain(source, ShaderType.VERTEX);
+	}
+
+	public static String patchSodiumTerrainFragment(String source) {
+		return patchSodiumTerrain(source, ShaderType.FRAGMENT);
 	}
 
 	public static String patchCompositeDepth(String source) {

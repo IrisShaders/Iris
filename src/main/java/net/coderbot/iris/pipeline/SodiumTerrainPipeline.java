@@ -7,7 +7,6 @@ import java.util.function.IntFunction;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
-import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
@@ -15,15 +14,15 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 
 public class SodiumTerrainPipeline {
-	String terrainVertex;
-	String terrainGeometry;
-	String terrainFragment;
-	String translucentVertex;
-	String translucentGeometry;
-	String translucentFragment;
-	String shadowVertex;
-	String shadowGeometry;
-	String shadowFragment;
+	Optional<String> terrainVertex = Optional.empty();
+	Optional<String> terrainGeometry = Optional.empty();
+	Optional<String> terrainFragment = Optional.empty();
+	Optional<String> translucentVertex = Optional.empty();
+	Optional<String> translucentGeometry = Optional.empty();
+	Optional<String> translucentFragment = Optional.empty();
+	Optional<String> shadowVertex = Optional.empty();
+	Optional<String> shadowGeometry = Optional.empty();
+	Optional<String> shadowFragment = Optional.empty();
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
 
@@ -49,46 +48,37 @@ public class SodiumTerrainPipeline {
 		this.programSet = programSet;
 
 		terrainSource.ifPresent(sources -> {
-			terrainVertex = sources.getVertexSource().orElse(null);
-			terrainGeometry = sources.getGeometrySource().orElse(null);
-			terrainFragment = sources.getFragmentSource().orElse(null);
+			terrainVertex = sources.getVertexSource().map(TransformPatcher::patchSodiumTerrainVertex);
+
+			terrainGeometry = sources.getGeometrySource();
+
+			terrainFragment = sources.getFragmentSource().map(TransformPatcher::patchSodiumTerrainFragment);
+
+			DeferredWorldRenderingPipeline.debugPatchedShaders(sources.getName() + "_sodium", 
+				terrainVertex.orElse(null), terrainGeometry.orElse(null), terrainFragment.orElse(null));
 		});
 
 		translucentSource.ifPresent(sources -> {
-			translucentVertex = sources.getVertexSource().orElse(null);
-			translucentGeometry = sources.getGeometrySource().orElse(null);
-			translucentFragment = sources.getFragmentSource().orElse(null);
+			translucentVertex = sources.getVertexSource().map(TransformPatcher::patchSodiumTerrainVertex);
+
+			translucentGeometry = sources.getGeometrySource();
+
+			translucentFragment = sources.getFragmentSource().map(TransformPatcher::patchSodiumTerrainFragment);
+
+			DeferredWorldRenderingPipeline.debugPatchedShaders(sources.getName() + "_sodium",
+				translucentVertex.orElse(null), translucentGeometry.orElse(null), translucentFragment.orElse(null));
 		});
 
 		shadowSource.ifPresent(sources -> {
-			shadowVertex = sources.getVertexSource().orElse(null);
-			shadowGeometry = sources.getGeometrySource().orElse(null);
-			shadowFragment = sources.getFragmentSource().orElse(null);
+			shadowVertex = 	sources.getVertexSource().map(TransformPatcher::patchSodiumTerrainVertex);
+
+			shadowGeometry = sources.getGeometrySource();
+
+			shadowFragment = sources.getFragmentSource().map(TransformPatcher::patchSodiumTerrainFragment);
+
+			DeferredWorldRenderingPipeline.debugPatchedShaders(sources.getName() + "_sodium",
+				shadowVertex.orElse(null), shadowGeometry.orElse(null), shadowFragment.orElse(null));
 		});
-
-		if (terrainVertex != null) {
-			terrainVertex = TransformPatcher.patchSodiumTerrain(terrainVertex, ShaderType.VERTEX);
-		}
-
-		if (translucentVertex != null) {
-			translucentVertex = TransformPatcher.patchSodiumTerrain(translucentVertex, ShaderType.VERTEX);
-		}
-
-		if (shadowVertex != null) {
-			shadowVertex = TransformPatcher.patchSodiumTerrain(shadowVertex, ShaderType.VERTEX);
-		}
-
-		if (terrainFragment != null) {
-			terrainFragment = TransformPatcher.patchSodiumTerrain(terrainFragment, ShaderType.FRAGMENT);
-		}
-
-		if (translucentFragment != null) {
-			translucentFragment = TransformPatcher.patchSodiumTerrain(translucentFragment, ShaderType.FRAGMENT);
-		}
-
-		if (shadowFragment != null) {
-			shadowFragment = TransformPatcher.patchSodiumTerrain(shadowFragment, ShaderType.FRAGMENT);
-		}
 
 		this.createTerrainSamplers = createTerrainSamplers;
 		this.createShadowSamplers = createShadowSamplers;
@@ -97,39 +87,39 @@ public class SodiumTerrainPipeline {
 	}
 
 	public Optional<String> getTerrainVertexShaderSource() {
-		return Optional.ofNullable(terrainVertex);
+		return terrainVertex;
 	}
 
 	public Optional<String> getTerrainGeometryShaderSource() {
-		return Optional.ofNullable(terrainGeometry);
+		return terrainGeometry;
 	}
 
 	public Optional<String> getTerrainFragmentShaderSource() {
-		return Optional.ofNullable(terrainFragment);
+		return terrainFragment;
 	}
 
 	public Optional<String> getTranslucentVertexShaderSource() {
-		return Optional.ofNullable(translucentVertex);
+		return translucentVertex;
 	}
 
 	public Optional<String> getTranslucentGeometryShaderSource() {
-		return Optional.ofNullable(translucentGeometry);
+		return translucentGeometry;
 	}
 
 	public Optional<String> getTranslucentFragmentShaderSource() {
-		return Optional.ofNullable(translucentFragment);
+		return translucentFragment;
 	}
 
 	public Optional<String> getShadowVertexShaderSource() {
-		return Optional.ofNullable(shadowVertex);
+		return shadowVertex;
 	}
 
 	public Optional<String> getShadowGeometryShaderSource() {
-		return Optional.ofNullable(shadowGeometry);
+		return shadowGeometry;
 	}
 
 	public Optional<String> getShadowFragmentShaderSource() {
-		return Optional.ofNullable(shadowFragment);
+		return shadowFragment;
 	}
 
 	public ProgramUniforms initUniforms(int programId) {
