@@ -5,6 +5,7 @@ import me.jellysquid.mods.sodium.client.gui.SodiumGameOptionPages;
 import me.jellysquid.mods.sodium.client.gui.options.Option;
 import me.jellysquid.mods.sodium.client.gui.options.OptionGroup;
 import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
+import me.jellysquid.mods.sodium.client.gui.options.storage.SodiumOptionsStorage;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.options.IrisSodiumOptions;
 import org.spongepowered.asm.mixin.Final;
@@ -23,6 +24,10 @@ public class MixinSodiumGameOptionPages {
 	@Shadow(remap = false)
 	@Final
 	private static MinecraftOptionsStorage vanillaOpts;
+
+	@Shadow(remap = false)
+	@Final
+	private static SodiumOptionsStorage sodiumOpts;
 
 	@Redirect(method = "general", remap = false,
 			slice = @Slice(
@@ -57,6 +62,42 @@ public class MixinSodiumGameOptionPages {
 			return candidate;
 		} else {
 			return IrisSodiumOptions.createLimitedVideoSettingsButton(vanillaOpts);
+		}
+	}
+
+	@ModifyArg(method = "quality", remap = false,
+			slice = @Slice(
+					from = @At(value = "CONSTANT", args = "stringValue=Clouds Quality"),
+					to = @At(value = "CONSTANT", args = "stringValue=Weather Quality")
+			),
+			at = @At(value = "INVOKE", remap = false,
+					target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
+								"Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
+							")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
+			allow = 1)
+	private static Option<?> iris$replaceCloudQualityButton(Option<?> candidate) {
+		if (!Iris.getIrisConfig().areShadersEnabled()) {
+			return candidate;
+		} else {
+			return IrisSodiumOptions.createLimitedCloudQualityButton(sodiumOpts);
+		}
+	}
+
+	@ModifyArg(method = "general", remap = false,
+			slice = @Slice(
+					from = @At(value = "CONSTANT", args = "stringValue=Clouds"),
+					to = @At(value = "CONSTANT", args = "stringValue=GUI Scale")
+			),
+			at = @At(value = "INVOKE", remap = false,
+					target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
+								"Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
+							")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
+			allow = 1)
+	private static Option<?> iris$replaceCloudEnableButton(Option<?> candidate) {
+		if (!Iris.getIrisConfig().areShadersEnabled()) {
+			return candidate;
+		} else {
+			return IrisSodiumOptions.createLimitedCloudEnableButton(sodiumOpts);
 		}
 	}
 }

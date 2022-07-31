@@ -2,6 +2,8 @@ package net.coderbot.iris.gui.option;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shaderpack.CloudSetting;
+import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.ProgressOption;
 import net.minecraft.network.chat.Component;
@@ -20,6 +22,41 @@ public class IrisVideoSettings {
 		return Iris.getPipelineManager().getPipeline()
 				.map(pipeline -> pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(base))
 				.orElse(base);
+	}
+
+	public static CloudStatus getOverridenCloudQuality(CloudStatus status) {
+		return Iris.getPipelineManager().getPipeline()
+				.map(pipeline -> {
+					CloudSetting setting = pipeline.getCloudSetting();
+					if (setting == CloudSetting.DEFAULT) {
+						return status;
+					} else {
+						return CloudStatus.valueOf(setting.name());
+					}
+				}).orElse(status);
+	}
+
+	public static boolean isCloudSettingEnabled() {
+		return Iris.getPipelineManager().getPipeline()
+				.map(pipeline -> pipeline.getCloudSetting() == CloudSetting.DEFAULT)
+				.orElse(true);
+	}
+	public static boolean areCloudsModified() {
+		return Iris.getPipelineManager().getPipeline()
+				.map(pipeline -> pipeline.getCloudSetting() != CloudSetting.DEFAULT)
+				.orElse(false);
+	}
+
+	public static boolean areCloudsEnabled(boolean enableClouds) {
+		CloudSetting setting = Iris.getPipelineManager().getPipelineNullable().getCloudSetting();
+		if (setting == CloudSetting.OFF) {
+			return false;
+		} else if (setting == CloudSetting.FANCY || setting == CloudSetting.FAST) {
+			return true;
+		} else if (setting == CloudSetting.DEFAULT) {
+			return enableClouds;
+		}
+		return false;
 	}
 
 	public static boolean isShadowDistanceSliderEnabled() {
