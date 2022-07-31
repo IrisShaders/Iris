@@ -1,7 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -25,6 +24,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
@@ -41,12 +41,10 @@ public class TransformPatcher {
 	private static Map<CacheKey, String> cache = new LRUCache<>(400);
 
 	private static class CacheKey {
-		final Version version;
 		final Parameters parameters;
 		final String input;
 
-		public CacheKey(Version version, Parameters parameters, String input) {
-			this.version = version;
+		public CacheKey(Parameters parameters, String input) {
 			this.parameters = parameters;
 			this.input = input;
 		}
@@ -57,7 +55,6 @@ public class TransformPatcher {
 			int result = 1;
 			result = prime * result + ((input == null) ? 0 : input.hashCode());
 			result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
-			result = prime * result + ((version == null) ? 0 : version.hashCode());
 			return result;
 		}
 
@@ -78,9 +75,7 @@ public class TransformPatcher {
 			if (parameters == null) {
 				if (other.parameters != null)
 					return false;
-			} else if (!Objects.equals(parameters, other.parameters))
-				return false;
-			if (version != other.version)
+			} else if (!parameters.equals(other.parameters))
 				return false;
 			return true;
 		}
@@ -134,7 +129,7 @@ public class TransformPatcher {
 				}
 			});
 		});
-		transformer.getInternalParser().setParseTokenFilter(parseTokenFilter);
+		transformer.setParseTokenFilter(parseTokenFilter);
 	}
 
 	private static String inspectPatch(
@@ -163,6 +158,12 @@ public class TransformPatcher {
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
 
 	private static String transform(String source, Parameters parameters) {
+		// check if this has been cached
+		CacheKey key = new CacheKey(parameters, source);
+		if (cache.containsKey(key)) {
+			return cache.get(key);
+		}
+
 		// parse #version directive using an efficient regex before parsing so that the
 		// parser can be set to the correct version
 		Matcher matcher = versionPattern.matcher(source);
@@ -175,13 +176,9 @@ public class TransformPatcher {
 		}
 		transformer.getLexer().version = version;
 
-		// check if this has been cached
-		CacheKey key = new CacheKey(version, parameters, source);
-		if (cache.containsKey(key)) {
-			return cache.get(key);
-		}
-
-		String result = transformer.transform(PrintType.COMPACT, source, parameters);
+		String result = transformer.transform(
+				FabricLoader.getInstance().isDevelopmentEnvironment() ? PrintType.INDENTED : PrintType.COMPACT,
+				source, parameters);
 
 		cache.put(key, result);
 		return result;
