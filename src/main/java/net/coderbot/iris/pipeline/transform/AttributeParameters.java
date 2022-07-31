@@ -15,7 +15,6 @@ class AttributeParameters extends OverlayParameters {
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + (hasGeometry ? 1231 : 1237);
 		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
 		return result;
 	}
@@ -29,8 +28,6 @@ class AttributeParameters extends OverlayParameters {
 		if (getClass() != obj.getClass())
 			return false;
 		AttributeParameters other = (AttributeParameters) obj;
-		if (hasGeometry != other.hasGeometry)
-			return false;
 		if (inputs == null) {
 			if (other.inputs != null)
 				return false;
