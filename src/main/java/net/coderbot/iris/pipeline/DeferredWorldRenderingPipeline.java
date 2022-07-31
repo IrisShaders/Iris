@@ -210,8 +210,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			return shadowRenderTargets;
 		};
 
-		// reset clearing state
-		outputLocationCleared = false;
+		resetPrintState();
 
 		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
@@ -646,6 +645,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private static boolean outputLocationCleared = false;
 	private static int programCounter = 0;
+
+	private static void resetPrintState() {
+		outputLocationCleared = false;
+		programCounter = 0;
+	}
 
 	public static void debugPatchedShaders(String name, String vertex, String geometry, String fragment) {
 		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
