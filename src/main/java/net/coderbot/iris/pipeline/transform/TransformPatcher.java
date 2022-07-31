@@ -73,7 +73,7 @@ public class TransformPatcher {
 			if (parameters == null) {
 				if (other.parameters != null)
 					return false;
-			} else if (!Objects.equals(parameters, other.parameters))
+			} else if (!parameters.equals(other.parameters))
 				return false;
 			return true;
 		}

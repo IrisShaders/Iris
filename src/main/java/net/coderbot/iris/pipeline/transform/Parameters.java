@@ -34,9 +34,4 @@ class Parameters extends JobParameters {
 			return false;
 		return true;
 	}
-
-	@Override
-	public boolean equals(JobParameters other) {
-		throw new UnsupportedOperationException("Not using CST transformer.");
-	}
 }
