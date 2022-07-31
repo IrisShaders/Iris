@@ -22,7 +22,7 @@ public class CompositeTransformer {
 						if (!literalExpression.isInteger()) {
 							return false;
 						}
-						long index = literalExpression.integerValue;
+						long index = literalExpression.getInteger();
 						return index >= 0 && index < 8;
 					});
 		}
