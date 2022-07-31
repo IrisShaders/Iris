@@ -1,7 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
