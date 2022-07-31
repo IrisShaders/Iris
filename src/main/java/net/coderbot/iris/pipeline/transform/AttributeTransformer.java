@@ -120,7 +120,7 @@ class AttributeTransformer {
 			// add our own declarations
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in
 			// this stage. But this is needed for the pass-through behavior.
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"uniform sampler2D iris_overlay;",
 					"varying vec4 entityColor;");
 
@@ -141,9 +141,9 @@ class AttributeTransformer {
 			root.replaceReferenceExpressions(t, "entityColor", "entityColor[0]");
 
 			// TODO: this is passthrough behavior
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"out vec4 entityColorGS;");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"in vec4 entityColor[];");
 			root.rename("main", "irisMain");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.END,
