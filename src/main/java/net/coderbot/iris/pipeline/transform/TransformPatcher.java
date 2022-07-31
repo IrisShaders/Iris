@@ -122,7 +122,7 @@ public class TransformPatcher {
 				}
 			});
 		});
-		transformer.getInternalParser().setParseTokenFilter(parseTokenFilter);
+		transformer.setParseTokenFilter(parseTokenFilter);
 	}
 
 	private static String inspectPatch(
