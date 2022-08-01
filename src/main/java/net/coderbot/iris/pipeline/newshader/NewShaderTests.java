@@ -5,6 +5,7 @@ import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.pipeline.newshader.fallback.ShaderSynthesizer;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
@@ -12,7 +13,6 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.resources.Resource;
@@ -23,8 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class NewShaderTests {
@@ -38,9 +36,8 @@ public class NewShaderTests {
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 		String geometry = null;
-		boolean hasGeometry = false;
-		if (source.getGeometrySource().isPresent()) {
-			hasGeometry = true;
+		boolean hasGeometry = source.getGeometrySource().isPresent();
+		if (hasGeometry) {
 			geometry = TransformPatcher.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs, true);
 		}
 
@@ -116,18 +113,9 @@ public class NewShaderTests {
 
 		String shaderJsonString = shaderJson.toString();
 
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment, shaderJsonString);
+
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, geometry, fragment);
-
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
-
-			Files.writeString(debugOutDir.resolve(name + ".vsh"), vertex);
-			Files.writeString(debugOutDir.resolve(name + ".fsh"), fragment);
-			if (geometry != null) {
-				Files.writeString(debugOutDir.resolve(name + ".gsh"), geometry);
-			}
-			Files.writeString(debugOutDir.resolve(name + ".json"), shaderJsonString);
-		}
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, alpha, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, fogMode);
@@ -187,15 +175,9 @@ public class NewShaderTests {
 				"    ]\n" +
 				"}";
 
+		PatchedShaderPrinter.debugPatchedShaders(name, vertex, null, fragment, shaderJsonString);
+
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, fragment);
-
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
-
-			Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
-			Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
-			Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
-		}
 
 		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
 				writingToAfterTranslucent, blendModeOverride, alpha.getReference(), parent);

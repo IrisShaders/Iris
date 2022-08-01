@@ -56,6 +56,7 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
@@ -75,6 +76,10 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -209,6 +214,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			return shadowRenderTargets;
 		};
+
+		PatchedShaderPrinter.resetPrintState();
 
 		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
@@ -566,6 +573,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				ShaderType.VERTEX, geometry != null, availability);
 		String fragment = TransformPatcher.patchAttributes(source.getFragmentSource().orElseThrow(NullPointerException::new),
 				ShaderType.FRAGMENT, geometry != null, availability);
+
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
 
 		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
 				fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
