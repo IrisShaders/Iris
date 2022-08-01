@@ -54,7 +54,7 @@ public class SodiumTerrainPipeline {
 
 			terrainFragment = sources.getFragmentSource().map(TransformPatcher::patchSodiumTerrainFragment);
 
-			DeferredWorldRenderingPipeline.debugPatchedShaders(sources.getName() + "_sodium", 
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", 
 				terrainVertex.orElse(null), terrainGeometry.orElse(null), terrainFragment.orElse(null));
 		});
 
@@ -65,7 +65,7 @@ public class SodiumTerrainPipeline {
 
 			translucentFragment = sources.getFragmentSource().map(TransformPatcher::patchSodiumTerrainFragment);
 
-			DeferredWorldRenderingPipeline.debugPatchedShaders(sources.getName() + "_sodium",
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
 				translucentVertex.orElse(null), translucentGeometry.orElse(null), translucentFragment.orElse(null));
 		});
 
@@ -76,7 +76,7 @@ public class SodiumTerrainPipeline {
 
 			shadowFragment = sources.getFragmentSource().map(TransformPatcher::patchSodiumTerrainFragment);
 
-			DeferredWorldRenderingPipeline.debugPatchedShaders(sources.getName() + "_sodium",
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
 				shadowVertex.orElse(null), shadowGeometry.orElse(null), shadowFragment.orElse(null));
 		});
 

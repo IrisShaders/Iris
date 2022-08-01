@@ -24,7 +24,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
-import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.*;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
@@ -220,7 +220,7 @@ public class CompositeRenderer {
 			String vertex = TransformPatcher.patchCompositeDepth(source.getVertexSource().orElse(null));
 			String geometry = TransformPatcher.patchCompositeDepth(source.getGeometrySource().orElse(null));
 			String fragment = TransformPatcher.patchCompositeDepth(source.getFragmentSource().orElse(null));
-			DeferredWorldRenderingPipeline.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+			PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
 			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
 				IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
