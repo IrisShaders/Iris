@@ -108,7 +108,7 @@ public class CommonTransformer {
 		// passes. A shader that relies on this behavior is SEUS v11 - it reads
 		// gl_Fog.color and breaks if it is not properly defined.
 		root.rename("gl_Fog", "iris_Fog");
-		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform float iris_FogDensity;",
 				"uniform float iris_FogStart;",
 				"uniform float iris_FogEnd;",
