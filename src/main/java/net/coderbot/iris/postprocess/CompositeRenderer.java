@@ -1,9 +1,5 @@
 package net.coderbot.iris.postprocess;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -15,7 +11,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
@@ -26,6 +21,7 @@ import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
@@ -36,7 +32,6 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -225,6 +220,7 @@ public class CompositeRenderer {
 		}
 
 		String fragment = TransformPatcher.patchComposite(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
 
 		ProgramBuilder builder;
 
@@ -252,20 +248,6 @@ public class CompositeRenderer {
 
 		// TODO: Don't duplicate this with FinalPassRenderer
 		builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
-
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
-
-			try {
-				Files.write(debugOutDir.resolve(source.getName() + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
-				if (source.getGeometrySource().isPresent()) {
-					Files.write(debugOutDir.resolve(source.getName() + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
-				}
-				Files.write(debugOutDir.resolve(source.getName() + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
-			} catch (IOException e) {
-				Iris.logger.warn("Failed to write debug patched shader source", e);
-			}
-		}
 
 		return builder.build();
 	}
