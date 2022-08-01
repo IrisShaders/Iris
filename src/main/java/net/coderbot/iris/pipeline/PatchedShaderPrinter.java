@@ -20,7 +20,8 @@ public class PatchedShaderPrinter {
 	}
 
 	public static void debugPatchedShaders(String name, String vertex, String geometry, String fragment) {
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()
+				|| System.getProperty("iris.prettyPrintShaders", "false").equals("true")) {
 			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 			if (!outputLocationCleared) {
 				try {
