@@ -27,6 +27,13 @@ import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
  * do shader transformation.
+ * 
+ * The TransformPatcher does caching on the source string and associated
+ * parameters. For this to work, all objects contained in a parameter must have
+ * an equals method and they must never be changed after having been used for
+ * patching. Since the cache also contains the source string, it doesn't need to
+ * be disabled when developing shaderpacks. However, when changes are made to
+ * the patcher, the cache should be disabled with {@link #useCache}.
  *
  * NOTE: This patcher expects (and ensures) that the string doesn't contain any
  * (!) preprocessor directives. The only allowed ones are #extension and #pragma
@@ -36,7 +43,8 @@ import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	private static ASTTransformer<Parameters> transformer;
-	private static Map<CacheKey, String> cache = new LRUCache<>(400);
+	private static final boolean useCache = true;
+	private static final Map<CacheKey, String> cache = useCache ? new LRUCache<>(400) : null;
 
 	private static class CacheKey {
 		final Parameters parameters;
@@ -155,9 +163,12 @@ public class TransformPatcher {
 		}
 
 		// check if this has been cached
-		CacheKey key = new CacheKey(parameters, source);
-		if (cache.containsKey(key)) {
-			return cache.get(key);
+		CacheKey key;
+		if (useCache) {
+			key = new CacheKey(parameters, source);
+			if (cache.containsKey(key)) {
+				return cache.get(key);
+			}
 		}
 
 		// parse #version directive using an efficient regex before parsing so that the
@@ -173,7 +184,9 @@ public class TransformPatcher {
 				PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.COMPACT,
 				source, parameters);
 
-		cache.put(key, result);
+		if (useCache) {
+			cache.put(key, result);
+		}
 		return result;
 	}
 
