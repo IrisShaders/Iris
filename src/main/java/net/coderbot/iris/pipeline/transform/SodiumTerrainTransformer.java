@@ -36,7 +36,7 @@ class SodiumTerrainTransformer {
 			MemberAccessExpression memberAccess = identifier.getAncestor(MemberAccessExpression.class);
 			if (memberAccess != null && glTextureMatrixMultMember.matchesExtract(memberAccess)) {
 				String suffix = glTextureMatrixMultMember.getStringDataMatch("suffix");
-				if (glTextureMatrixMultMember.getStringDataMatch("coord") == coord
+				if (glTextureMatrixMultMember.getStringDataMatch("coord").equals(coord)
 						&& suffix != null && ("st".equals(suffix) || "xy".equals(suffix))) {
 					replaceExpressions.add(memberAccess);
 					return;
@@ -45,7 +45,7 @@ class SodiumTerrainTransformer {
 
 			if (memberAccess != null
 					&& glTextureMatrixMultS.matchesExtract(memberAccess)
-					&& glTextureMatrixMultS.getStringDataMatch("coord") == coord) {
+					&& glTextureMatrixMultS.getStringDataMatch("coord").equals(coord)) {
 				replaceSExpressions.add(memberAccess);
 				return;
 			}
@@ -57,7 +57,7 @@ class SodiumTerrainTransformer {
 			DivisionExpression division = identifier.getAncestor(DivisionExpression.class);
 			if (division != null
 					&& xyDivision.matchesExtract(division)
-					&& xyDivision.getStringDataMatch("coord") == coord) {
+					&& xyDivision.getStringDataMatch("coord").equals(coord)) {
 				replaceExpressions.add(division);
 				return;
 			}
@@ -65,7 +65,7 @@ class SodiumTerrainTransformer {
 			MultiplicationExpression mult = identifier.getAncestor(MultiplicationExpression.class);
 			if (mult != null
 					&& glTextureMatrixMult.matchesExtract(mult)
-					&& glTextureMatrixMult.getStringDataMatch("coord") == coord) {
+					&& glTextureMatrixMult.getStringDataMatch("coord").equals(coord)) {
 				replaceWrapExpressions.add(mult);
 				return;
 			}
