@@ -22,6 +22,7 @@ import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.fabricmc.loader.api.FabricLoader;
 
 /**
@@ -170,10 +171,7 @@ public class TransformPatcher {
 		transformer.getLexer().version = version;
 
 		String result = transformer.transform(
-				FabricLoader.getInstance().isDevelopmentEnvironment()
-						|| System.getProperty("iris.prettyPrintShaders", "false").equals("true")
-								? PrintType.INDENTED
-								: PrintType.COMPACT,
+				PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.COMPACT,
 				source, parameters);
 
 		cache.put(key, result);

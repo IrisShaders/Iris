@@ -2,7 +2,8 @@ package net.coderbot.iris.pipeline;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import net.coderbot.iris.Iris;
 import net.fabricmc.loader.api.FabricLoader;
@@ -13,6 +14,8 @@ import net.fabricmc.loader.api.FabricLoader;
 public class PatchedShaderPrinter {
 	private static boolean outputLocationCleared = false;
 	private static int programCounter = 0;
+	public static final boolean prettyPrintShaders = FabricLoader.getInstance().isDevelopmentEnvironment()
+			|| System.getProperty("iris.prettyPrintShaders", "false").equals("true");
 
 	public static void resetPrintState() {
 		outputLocationCleared = false;
@@ -20,8 +23,7 @@ public class PatchedShaderPrinter {
 	}
 
 	public static void debugPatchedShaders(String name, String vertex, String geometry, String fragment) {
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()
-				|| System.getProperty("iris.prettyPrintShaders", "false").equals("true")) {
+		if (prettyPrintShaders) {
 			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 			if (!outputLocationCleared) {
 				try {
