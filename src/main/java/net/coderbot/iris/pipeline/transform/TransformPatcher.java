@@ -181,7 +181,10 @@ public class TransformPatcher {
 		transformer.getLexer().version = version;
 
 		String result = transformer.transform(
-				FabricLoader.getInstance().isDevelopmentEnvironment() ? PrintType.INDENTED : PrintType.COMPACT,
+				FabricLoader.getInstance().isDevelopmentEnvironment()
+						|| System.getProperty("iris.prettyPrintShaders", "false").equals("true")
+								? PrintType.INDENTED
+								: PrintType.COMPACT,
 				source, parameters);
 
 		cache.put(key, result);
