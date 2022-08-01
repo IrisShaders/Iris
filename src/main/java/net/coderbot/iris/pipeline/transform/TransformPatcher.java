@@ -23,7 +23,6 @@ import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
-import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
