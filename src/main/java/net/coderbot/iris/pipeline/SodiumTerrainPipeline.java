@@ -29,24 +29,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SodiumTerrainPipeline {
-	String terrainVertex;
-	String terrainGeometry;
-	String terrainFragment;
+	Optional<String> terrainVertex = Optional.empty();
+	Optional<String> terrainGeometry = Optional.empty();
+	Optional<String> terrainFragment = Optional.empty();
 	String terrainCutoutFragment;
 	GlFramebuffer terrainFramebuffer;
 	BlendModeOverride terrainBlendOverride;
 	AlphaTest terrainCutoutAlpha;
 
-	String translucentVertex;
-	String translucentGeometry;
-	String translucentFragment;
+	Optional<String> translucentVertex = Optional.empty();
+	Optional<String> translucentGeometry = Optional.empty();
+	Optional<String> translucentFragment = Optional.empty();
 	GlFramebuffer translucentFramebuffer;
 	BlendModeOverride translucentBlendOverride;
 	AlphaTest translucentAlpha;
 
-	String shadowVertex;
-	String shadowGeometry;
-	String shadowFragment;
+	Optional<String> shadowVertex = Optional.empty();
+	Optional<String> shadowGeometry = Optional.empty();
+	Optional<String> shadowFragment = Optional.empty();
 	String shadowCutoutFragment;
 	GlFramebuffer shadowFramebuffer;
 	BlendModeOverride shadowBlendOverride = BlendModeOverride.OFF;
@@ -169,15 +169,15 @@ public class SodiumTerrainPipeline {
 	}
 
 	public Optional<String> getTerrainVertexShaderSource() {
-		return Optional.ofNullable(terrainVertex);
+		return terrainVertex;
 	}
 
 	public Optional<String> getTerrainGeometryShaderSource() {
-		return Optional.ofNullable(terrainGeometry);
+		return terrainGeometry;
 	}
 
 	public Optional<String> getTerrainFragmentShaderSource() {
-		return Optional.ofNullable(terrainFragment);
+		return terrainFragment;
 	}
 
 	public Optional<String> getTerrainCutoutFragmentShaderSource() {
@@ -197,11 +197,11 @@ public class SodiumTerrainPipeline {
 	}
 
 	public Optional<String> getTranslucentVertexShaderSource() {
-		return Optional.ofNullable(translucentVertex);
+		return translucentVertex;
 	}
 
 	public Optional<String> getTranslucentGeometryShaderSource() {
-		return Optional.ofNullable(translucentGeometry);
+		return translucentGeometry;
 	}
 
 	public Optional<String> getTranslucentFragmentShaderSource() {
@@ -221,11 +221,11 @@ public class SodiumTerrainPipeline {
 	}
 
 	public Optional<String> getShadowVertexShaderSource() {
-		return Optional.ofNullable(shadowVertex);
+		return shadowVertex;
 	}
 
 	public Optional<String> getShadowGeometryShaderSource() {
-		return Optional.ofNullable(shadowGeometry);
+		return shadowGeometry;
 	}
 
 	public Optional<String> getShadowFragmentShaderSource() {

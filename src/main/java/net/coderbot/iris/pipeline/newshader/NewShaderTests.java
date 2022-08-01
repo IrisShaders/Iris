@@ -37,9 +37,8 @@ public class NewShaderTests {
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 		String geometry = null;
-		boolean hasGeometry = false;
-		if (source.getGeometrySource().isPresent()) {
-			hasGeometry = true;
+		boolean hasGeometry = source.getGeometrySource().isPresent();
+		if (hasGeometry) {
 			geometry = TransformPatcher.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs, true);
 		}
 
