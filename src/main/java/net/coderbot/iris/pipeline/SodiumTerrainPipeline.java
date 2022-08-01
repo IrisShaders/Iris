@@ -110,6 +110,54 @@ public class SodiumTerrainPipeline {
 		});
 
 		translucentSource.ifPresent(sources -> {
+			translucentVertex = sources.getVertexSource().map(TransformPatcher::patchSodiumTerrainVertex);
+
+		if (terrainGeometry != null) {
+			terrainGeometry = TransformPatcher.patchSodium(terrainGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+		}
+
+		if (translucentGeometry != null) {
+			translucentGeometry = TransformPatcher.patchSodium(translucentGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+		}
+
+		if (shadowGeometry != null) {
+			shadowGeometry = TransformPatcher.patchSodium(shadowGeometry, ShaderType.GEOMETRY, null, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+		}
+
+		if (terrainFragment != null) {
+			String fragment = terrainFragment;
+
+			terrainFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			terrainCutoutFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, terrainCutoutAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+		}
+
+		if (translucentFragment != null) {
+			translucentFragment = TransformPatcher.patchSodium(translucentFragment, ShaderType.FRAGMENT, translucentAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+		}
+
+		if (shadowFragment != null) {
+			String fragment = shadowFragment;
+
+			shadowFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, AlphaTest.ALWAYS, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+			shadowCutoutFragment = TransformPatcher.patchSodium(fragment, ShaderType.FRAGMENT, shadowAlpha, inputs, vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+		}
+	}
+
+	public void patchShaders(ChunkVertexType vertexType) {
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(true, true, false, true, true);
+
+		Optional<ProgramSource> terrainSource = first(programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
+		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainSource);
+
+		terrainSource.ifPresent(sources -> {
+			terrainVertex = sources.getVertexSource().orElse(null);
+			terrainGeometry = sources.getGeometrySource().orElse(null);
+			terrainFragment = sources.getFragmentSource().orElse(null);
+			terrainBlendOverride = sources.getDirectives().getBlendModeOverride();
+			terrainCutoutAlpha = sources.getDirectives().getAlphaTestOverride().orElse(AlphaTests.ONE_TENTH_ALPHA);
+		});
+
+		translucentSource.ifPresent(sources -> {
 			translucentVertex = sources.getVertexSource().orElse(null);
 			translucentGeometry = sources.getGeometrySource().orElse(null);
 			translucentFragment = sources.getFragmentSource().orElse(null);

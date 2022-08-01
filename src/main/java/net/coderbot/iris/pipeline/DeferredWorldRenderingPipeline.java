@@ -215,7 +215,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			return shadowRenderTargets;
 		};
 
-		resetPrintState();
+		PatchedShaderPrinter.resetPrintState();
 
 		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
@@ -574,7 +574,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		String fragment = TransformPatcher.patchAttributes(source.getFragmentSource().orElseThrow(NullPointerException::new),
 				ShaderType.FRAGMENT, geometry != null, availability);
 
-		debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
 
 		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
 				fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
@@ -646,54 +646,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
 				programDirectives.getBlendModeOverride(), shadow);
-	}
-
-	private static boolean outputLocationCleared = false;
-	private static int programCounter = 0;
-
-	private static void resetPrintState() {
-		outputLocationCleared = false;
-		programCounter = 0;
-	}
-
-	public static void debugPatchedShaders(String name, String vertex, String geometry, String fragment) {
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
-			if (!outputLocationCleared) {
-				try {
-					if (Files.exists(debugOutDir)) {
-						Files.list(debugOutDir).forEach(path -> {
-							try {
-								Files.delete(path);
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
-						});
-					}
-
-					Files.createDirectories(debugOutDir);
-				} catch (IOException e) {
-					Iris.logger.warn("Failed to initialize debug patched shader source location", e);
-				}
-				outputLocationCleared = true;
-			}
-
-			try {
-				programCounter++;
-				String prefix = String.format("%03d_", programCounter);
-				if (vertex != null) {
-					Files.write(debugOutDir.resolve(prefix + name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
-				}
-				if (geometry != null) {
-					Files.write(debugOutDir.resolve(prefix + name + ".gsh"), geometry.getBytes(StandardCharsets.UTF_8));
-				}
-				if (fragment != null) {
-					Files.write(debugOutDir.resolve(prefix + name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
-				}
-			} catch (IOException e) {
-				Iris.logger.warn("Failed to write debug patched shader source", e);
-			}
-		}
 	}
 
 	private boolean isPostChain;
