@@ -1,7 +1,10 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.stream.Stream;
+
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
@@ -25,6 +28,18 @@ class CompositeTransformer {
 			// if centerDepthSmooth is not declared as a uniform, we don't make it available
 			root.replaceReferenceExpressions(t, "centerDepthSmooth",
 					"texture2D(iris_centerDepthSmooth, vec2(0.5)).r");
+		}
+
+		// if using a lod texture sampler and on version 120, patch in the extension
+		// #extension GL_ARB_shader_texture_lod : require
+		if (tree.getVersionStatement().version.number <= 120
+				&& Stream.concat(
+						root.identifierIndex.getStream("texture2DLod"),
+						root.identifierIndex.getStream("texture3DLod"))
+						.filter(id -> id.getParent() instanceof FunctionCallExpression)
+						.findAny().isPresent()) {
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"#extension GL_ARB_shader_texture_lod : require\n");
 		}
 	}
 }
