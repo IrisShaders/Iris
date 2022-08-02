@@ -123,8 +123,8 @@ public class TransformPatcher {
 					case SODIUM_TERRAIN:
 						SodiumTerrainTransformer.transform(transformer, tree, root, parameters);
 						break;
-					case COMPOSITE_DEPTH:
-						CompositeDepthTransformer.transform(transformer, tree, root);
+					case COMPOSITE:
+						CompositeTransformer.transform(transformer, tree, root);
 						break;
 				}
 			});
@@ -211,9 +211,9 @@ public class TransformPatcher {
 		return patchSodiumTerrain(source, ShaderType.FRAGMENT);
 	}
 
-	public static String patchCompositeDepth(String source) {
+	public static String patchComposite(String source) {
 		return inspectPatch(source,
 				"(no type)",
-				str -> transform(str, new Parameters(Patch.COMPOSITE_DEPTH, null)));
+				str -> transform(str, new Parameters(Patch.COMPOSITE, null)));
 	}
 }
