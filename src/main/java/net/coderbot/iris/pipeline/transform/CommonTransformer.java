@@ -23,6 +23,24 @@ public class CommonTransformer {
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", Matcher.expressionPattern);
 
+	private static void renameFunctionCall(Root root, String oldName, String newName) {
+		root.process(root.identifierIndex.getStream(oldName)
+				.filter(id -> id.getParent() instanceof FunctionCallExpression),
+				id -> id.setName(newName));
+	}
+
+	private static void renameAndWrapShadow(ASTTransformer<?> t, Root root, String oldName, String innerName) {
+    root.process(root.identifierIndex.getStream(oldName)
+        .filter(id -> id.getParent() instanceof FunctionCallExpression),
+        id -> {
+          FunctionCallExpression functionCall = (FunctionCallExpression) id.getParent();
+          functionCall.getFunctionName().setName(innerName);
+          FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(id, "vec4()");
+          functionCall.replaceBy(wrapper);
+          wrapper.getParameters().add(functionCall);
+        });
+  }
+
 	public static void transform(
 			ASTTransformer<?> t,
 			TranslationUnit tree,
@@ -80,27 +98,17 @@ public class CommonTransformer {
 			}
 		}
 
-		// addition: patch texture uniform to be gtexture but without touching it's use
-		// as a function
+		// addition: rename all uses of texture to gtexture if it's *not* used as a
+		// function call
 		root.process(root.identifierIndex.getStream("texture")
 				.filter(id -> !(id.getParent() instanceof FunctionCallExpression)),
 				id -> id.setName("gtexture"));
-
-		// TODO: Add similar functions for all legacy texture sampling functions
-		if (parameters.type == ShaderType.FRAGMENT) {
-			// GLSL 1.50 Specification, Section 8.7:
-			// In all functions below, the bias parameter is optional for fragment shaders.
-			// The bias parameter is not accepted in a vertex or geometry shader.
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-					"vec4 texture2D(sampler2D sampler, vec2 coord, float bias) { return texture(sampler, coord, bias); }",
-					"vec4 texture3D(sampler3D sampler, vec3 coord, float bias) { return texture(sampler, coord, bias); }");
-		}
 
 		// This must be defined and valid in all shader passes, including composite
 		// passes. A shader that relies on this behavior is SEUS v11 - it reads
 		// gl_Fog.color and breaks if it is not properly defined.
 		root.rename("gl_Fog", "iris_Fog");
-		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform float iris_FogDensity;",
 				"uniform float iris_FogStart;",
 				"uniform float iris_FogEnd;",
@@ -112,20 +120,21 @@ public class CommonTransformer {
 						"float end;" +
 						"float scale;" +
 						"};",
-				"iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));",
-				"vec4 texture2D(sampler2D sampler, vec2 coord) { return texture(sampler, coord); }",
-				"vec4 texture3D(sampler3D sampler, vec3 coord) { return texture(sampler, coord); }",
-				"vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) { return textureLod(sampler, coord, lod); }",
-				"vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) { return textureLod(sampler, coord, lod); }",
-				"vec4 shadow2D(sampler2DShadow sampler, vec3 coord) { return vec4(texture(sampler, coord)); }",
-				"vec4 shadow2DLod(sampler2DShadow sampler, vec3 coord, float lod) { return vec4(textureLod(sampler, coord, lod)); }",
-				"ivec4 texture2D(isampler2D sampler, ivec2 coord) { return texture(sampler, coord); }",
-				"uvec4 texture2D(usampler2D sampler, uvec2 coord) { return texture(sampler, coord); }",
-				"vec4 texture2DGrad(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-				"vec4 texture2DGradARB(sampler2D sampler, vec2 coord, vec2 dPdx, vec2 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-				"vec4 texture3DGrad(sampler3D sampler, vec3 coord, vec3 dPdx, vec3 dPdy) { return textureGrad(sampler, coord, dPdx, dPdy); }",
-				"vec4 texelFetch2D(sampler2D sampler, ivec2 coord, int lod) { return texelFetch(sampler, coord, lod); }",
-				"vec4 texelFetch3D(sampler3D sampler, ivec3 coord, int lod) { return texelFetch(sampler, coord, lod); }");
+				"iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));");
+
+		// TODO: Add similar functions for all legacy texture sampling functions
+		renameFunctionCall(root, "texture2D", "texture");
+		renameFunctionCall(root, "texture3D", "texture");
+		renameFunctionCall(root, "texture2DLod", "textureLod");
+		renameFunctionCall(root, "texture3DLod", "textureLod");
+		renameFunctionCall(root, "texture2DGrad", "textureGrad");
+		renameFunctionCall(root, "texture2DGradARB", "textureGrad");
+		renameFunctionCall(root, "texture3DGrad", "textureGrad");
+		renameFunctionCall(root, "texelFetch2D", "texelFetch");
+		renameFunctionCall(root, "texelFetch3D", "texelFetch");
+
+		renameAndWrapShadow(t, root, "shadow2D", "texture");
+		renameAndWrapShadow(t, root, "shadow2DLod", "textureLod");
 	}
 
 	public static void fixVersion(TranslationUnit tree) {
