@@ -39,7 +39,7 @@ import java.util.function.Consumer;
  * values in here & the values parsed from shader source code.
  */
 public class ShaderProperties {
-	private boolean enableClouds = true;
+	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean oldLighting = OptionalBoolean.DEFAULT;
@@ -65,7 +65,7 @@ public class ShaderProperties {
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
 	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
-	private List<String> mainScreenOptions = new ArrayList<>();
+	private List<String> mainScreenOptions = null;
 	private final Map<String, List<String>> subScreenOptions = new HashMap<>();
 	private Integer mainScreenColumnCount = null;
 	private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
@@ -78,6 +78,7 @@ public class ShaderProperties {
 	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
+	private Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 
 	private ShaderProperties() {
 		// empty
@@ -105,9 +106,16 @@ public class ShaderProperties {
 				return;
 			}
 
-			if ("clouds".equals(key) && value.equals("off")) {
-				// TODO: Force clouds to fast / fancy as well if the shaderpack wants it
-				enableClouds = false;
+			if ("clouds".equals(key)) {
+				if ("off".equals(value)) {
+					cloudSetting = CloudSetting.OFF;
+				} else if ("fast".equals(value)) {
+					cloudSetting = CloudSetting.FAST;
+				} else if ("fancy".equals(value)) {
+					cloudSetting = CloudSetting.FANCY;
+				} else {
+					Iris.logger.error("Unrecognized clouds setting: " + value);
+				}
 			}
 
 			handleBooleanDirective(key, value, "oldHandLight", bool -> oldHandLight = bool);
@@ -217,6 +225,10 @@ public class ShaderProperties {
 				}
 
 				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+			});
+
+			handleProgramEnabledDirective("program.", key, value, program -> {
+				conditionallyEnabledPrograms.put(program, value);
 			});
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
@@ -348,6 +360,14 @@ public class ShaderProperties {
 		}
 	}
 
+	private static void handleProgramEnabledDirective(String prefix, String key, String value, Consumer<String> handler) {
+		if (key.startsWith(prefix)) {
+			String program = key.substring(prefix.length(), key.indexOf(".", prefix.length()));
+
+			handler.accept(program);
+		}
+	}
+
 	private static void handleWhitespacedListDirective(String key, String value, String expectedKey, Consumer<List<String>> handler) {
 		if (!expectedKey.equals(key)) {
 			return;
@@ -381,8 +401,8 @@ public class ShaderProperties {
 		return new ShaderProperties();
 	}
 
-	public boolean areCloudsEnabled() {
-		return enableClouds;
+	public CloudSetting getCloudSetting() {
+		return cloudSetting;
 	}
 
 	public OptionalBoolean getOldHandLight() {
@@ -501,6 +521,10 @@ public class ShaderProperties {
 		return Optional.ofNullable(noiseTexturePath);
 	}
 
+	public Object2ObjectMap<String, String> getConditionallyEnabledPrograms() {
+		return conditionallyEnabledPrograms;
+	}
+
 	public List<String> getSliderOptions() {
 		return sliderOptions;
 	}
@@ -509,8 +533,8 @@ public class ShaderProperties {
 		return profiles;
 	}
 
-	public List<String> getMainScreenOptions() {
-		return mainScreenOptions;
+	public Optional<List<String>> getMainScreenOptions() {
+		return Optional.ofNullable(mainScreenOptions);
 	}
 
 	public Map<String, List<String>> getSubScreenOptions() {

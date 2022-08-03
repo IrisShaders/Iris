@@ -10,6 +10,7 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.rendertarget.DepthTexture;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
@@ -25,6 +26,7 @@ public class ShadowRenderTargets {
 
 	private final int[] targets;
 	private final InternalTextureFormat[] formats;
+	private final boolean[] isHardwareFiltered;
 
 	private final DepthTexture depthTexture;
 	private final DepthTexture noTranslucents;
@@ -35,14 +37,26 @@ public class ShadowRenderTargets {
 	private static final IntBuffer NULL_BUFFER = null;
 	private boolean firstTranslucentCopy;
 	private static final boolean supportsFramebufferBlitting = GL.getCapabilities().OpenGL30 || GL.getCapabilities().GL_EXT_framebuffer_blit;
+	private boolean needsFullClear;
 
-	public ShadowRenderTargets(int resolution, InternalTextureFormat[] formats) {
-		if (formats.length > MAX_SHADOW_RENDER_TARGETS) {
-			throw new IllegalStateException("Too many shadow render targets, requested " + formats.length +
-					" but only " + MAX_SHADOW_RENDER_TARGETS + " are allowed.");
+	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
+		this.formats = new InternalTextureFormat[MAX_SHADOW_RENDER_TARGETS];
+		this.isHardwareFiltered = new boolean[MAX_SHADOW_RENDER_TARGETS];
+
+		for (int i = 0; i < formats.length; i++) {
+			if (i < shadowDirectives.getColorSamplingSettings().size()) {
+				this.formats[i] = shadowDirectives.getColorSamplingSettings().get(i).getFormat();
+			} else {
+				this.formats[i] = InternalTextureFormat.RGBA;
+			}
+
+			if (i < shadowDirectives.getDepthSamplingSettings().size()) {
+				this.isHardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
+			} else {
+				this.isHardwareFiltered[i] = false;
+			}
 		}
 
-		this.formats = Arrays.copyOf(formats, formats.length);
 		this.resolution = resolution;
 
 		int[] drawBuffers = new int[formats.length];
@@ -65,7 +79,7 @@ public class ShadowRenderTargets {
 			RenderSystem.bindTexture(targets[i]);
 
 			GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, format.getGlFormat(), resolution, resolution, 0,
-				PixelFormat.RGBA.getGlFormat(), PixelType.UNSIGNED_BYTE.getGlFormat(), NULL_BUFFER);
+				format.getPixelFormat().getGlFormat(), PixelType.UNSIGNED_BYTE.getGlFormat(), NULL_BUFFER);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
 			RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
@@ -80,6 +94,8 @@ public class ShadowRenderTargets {
 		noTranslucentFB.drawBuffers(drawBuffers);
 
 		this.firstTranslucentCopy = true;
+
+		this.needsFullClear = true;
 
 		RenderSystem.bindTexture(0);
 	}
@@ -108,6 +124,15 @@ public class ShadowRenderTargets {
 		return framebuffer;
 	}
 
+	public GlFramebuffer getFramebufferForColorTexture(int buffer) {
+		// TODO: Don't hardcode this!
+		return buffer == 1 ? noTranslucentFB : framebuffer;
+	}
+
+	public boolean isHardwareFiltered(int index) {
+		return isHardwareFiltered[index];
+	}
+
 	public DepthTexture getDepthTexture() {
 		return depthTexture;
 	}
@@ -126,6 +151,18 @@ public class ShadowRenderTargets {
 
 	public InternalTextureFormat getColorTextureFormat(int index) {
 		return formats[index];
+	}
+
+	public int getResolution() {
+		return resolution;
+	}
+
+	public boolean needsFullClear() {
+		return needsFullClear;
+	}
+
+	public void resetClearStatus() {
+		needsFullClear = false;
 	}
 
 	public void destroy() {
