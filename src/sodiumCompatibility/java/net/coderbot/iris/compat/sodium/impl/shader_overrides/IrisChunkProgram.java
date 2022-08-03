@@ -1,7 +1,13 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
+import java.nio.FloatBuffer;
+
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryStack;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
+
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderFogComponent;
@@ -11,10 +17,6 @@ import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.MemoryStack;
-
-import java.nio.FloatBuffer;
 
 public class IrisChunkProgram extends ChunkProgram {
 	// Uniform variable binding indexes
@@ -36,8 +38,8 @@ public class IrisChunkProgram extends ChunkProgram {
 							@Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers,
 							@Nullable ProgramImages irisProgramImages, CustomUniforms customUniforms) {
 		super(owner, name, handle, ChunkShaderFogComponent.None::new);
-		this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
-		this.uNormalMatrix = this.getUniformLocation("u_NormalMatrix");
+		this.uModelViewMatrix = this.getUniformLocation("iris_ModelViewMatrix");
+		this.uNormalMatrix = this.getUniformLocation("iris_NormalMatrix");
 		this.irisProgramUniforms = irisProgramUniforms;
 		this.irisProgramSamplers = irisProgramSamplers;
 		this.irisProgramImages = irisProgramImages;
@@ -75,7 +77,7 @@ public class IrisChunkProgram extends ChunkProgram {
 		// NB: We pass through calls involving u_ModelViewProjectionMatrix, u_ModelScale, and u_TextureScale, since
 		//     currently patched Iris shader programs use those.
 
-		if ("u_BlockTex".equals(name) || "u_LightTex".equals(name)) {
+		if ("iris_BlockTex".equals(name) || "iris_LightTex".equals(name)) {
 			// Not relevant for Iris shader programs
 			return -1;
 		}

@@ -5,10 +5,17 @@
 ### BSL and derivatives
 
 * [BSL Shaders](https://bitslablab.com/bslshaders/)
-* [Complementary Shaders](https://www.curseforge.com/minecraft/customization/complementary-shaders)
 * [Prismarine Shaders](https://www.curseforge.com/minecraft/customization/prismarine-shader)
 * [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
+* [Lux Shaders](https://techdevongithub.github.io/Lux/)
+### Complementary Shaders
+* [Complementary Reimagined](https://www.complementary.dev/reimagined/)
+* [Complementary Shaders](https://www.complementary.dev/shaders-v4/) (BSL derivative)
 
+### MakeUp - Ultra Fast
+
+Only 8.5 and above works on Iris.
+* [MakeUp - Ultra Fast](https://www.curseforge.com/minecraft/customization/makeup-ultra-fast-shader)
 
 ### SEUS and derivatives
 
@@ -43,13 +50,15 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 * [Chocapic v4 - v6](https://www.mediafire.com/folder/qs3lb60h0zw6t/Older_versions)
 * [Triliton's Shaders](https://www.curseforge.com/minecraft/customization/trilitons-shaders)
 * [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
+* [Edi's Shaders](https://download2038.mediafire.com/z9lt7h9j6axg/142fc1vtr1cqcuf/Edi%C2%B4s+Shader+OFFICIAL+V3+ULTRA.zip)
+* [TME Shaders](https://github.com/CrankerMan/TME-Shaders)
 
 
 ### Continuum
 
 The paid versions are not supported, but Continuum 2.0.4 works decently.
 
-* [Continuum 2.0.4](https://continuum.graphics/downloads)
+* [Continuum 2.0.5](https://continuum.graphics/downloads)
 
 
 ### Other
@@ -62,7 +71,7 @@ The paid versions are not supported, but Continuum 2.0.4 works decently.
 * [Tea V1.5.3](https://www.curseforge.com/minecraft/customization/beyondbelief-vanilla-reborn)
 * [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
 * [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus)
-
+* [maple's retro extravaganza](https://github.com/Lana-chan/maples-retro-extravaganza)
 
 # Shaders that do not work on Iris
 
@@ -82,10 +91,8 @@ This is not a complete list, but is just for people trying to control-F their fa
   - SoftVoxels
   - UShader
   - VanillaPlus
-- MakeUp - Ultra Fast
 - Voyager Shaders
 - All shaders made by DrDesten
   - DrDestens MinecraftShaders
   - Stracciatella
 - Voxlementary
-- Lux Shader

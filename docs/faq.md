@@ -21,7 +21,7 @@ Go to Options>Video Settings>Shader Packs>Shader Pack Settings.
 
 ## Is my system supported?
 
-See the [Driver Support](usage/drivers.md) document for more information. 
+See the [Driver Support](usage/drivers.md) document for more information.
 
 ## Why is (insert shader) not working?
 
@@ -40,6 +40,10 @@ There are a few possible reasons:
 - You're using macOS, which has limited support.
 - You may have an incompatible mod installed.
 
+## Why are entities becoming invisible randomly?
+
+You probably have GraalVM installed. Install a normal version of Java to fix the issue.
+
 ## What shaders have been tested and are working with Iris?
 
 See [this](./supportedshaders.md) document for the list
@@ -53,7 +57,6 @@ The following is a short list, more alternatives can be found through further re
 Better Grass/Snow - [LambdaBetterGrass](https://www.curseforge.com/minecraft/mc-mods/lambdabettergrass)
 
 Chunk Caching - [Bobby](https://www.curseforge.com/minecraft/mc-mods/bobby) -
-Bobby is incompatible with Starlight.
 
 Connected Textures - [Continuity](https://modrinth.com/mod/continuity)
 
