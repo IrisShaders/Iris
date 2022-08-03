@@ -110,7 +110,7 @@ public class RenderTargets {
 		return noHand;
 	}
 
-	public void resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat) {
+	public boolean resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat) {
 		boolean recreateDepth = false;
 		if (cachedDepthBufferVersion != newDepthBufferVersion) {
 			recreateDepth = true;
@@ -164,6 +164,8 @@ public class RenderTargets {
 
 			fullClearRequired = true;
 		}
+
+		return sizeChanged;
 	}
 
 	public void copyPreTranslucentDepth() {

@@ -107,6 +107,7 @@ public class FinalPassRenderer {
 
 			SwapPass swap = new SwapPass();
 			RenderTarget target1 = renderTargets.get(target);
+			swap.target = target;
 			swap.width = target1.getWidth();
 			swap.height = target1.getHeight();
 			swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {target});
@@ -133,6 +134,7 @@ public class FinalPassRenderer {
 	}
 
 	private static final class SwapPass {
+		public int target;
 		public int width;
 		public int height;
 		GlFramebuffer from;
@@ -240,6 +242,14 @@ public class FinalPassRenderer {
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+	}
+
+	public void recalculateSwapPassSize() {
+		for (SwapPass swapPass : swapPasses) {
+			RenderTarget target = renderTargets.get(swapPass.target);
+			swapPass.width = target.getWidth();
+			swapPass.height = target.getHeight();
+		}
 	}
 
 	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {

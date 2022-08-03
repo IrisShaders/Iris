@@ -823,8 +823,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		renderTargets.resizeIfNeeded(mainExt.iris$getDepthBufferVersion(), depthTextureId, main.width,
+		boolean changed = renderTargets.resizeIfNeeded(mainExt.iris$getDepthBufferVersion(), depthTextureId, main.width,
 			main.height, depthBufferFormat);
+
+		if (changed) {
+			prepareRenderer.recalculateSizes();
+			deferredRenderer.recalculateSizes();
+			compositeRenderer.recalculateSizes();
+			finalPassRenderer.recalculateSwapPassSize();
+		}
 
 		final ImmutableList<ClearPass> passes;
 

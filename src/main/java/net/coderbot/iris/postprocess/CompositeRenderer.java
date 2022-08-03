@@ -114,6 +114,7 @@ public class CompositeRenderer {
 				}
 			});
 
+			pass.drawBuffers = directives.getDrawBuffers();
 			pass.viewWidth = passWidth;
 			pass.viewHeight = passHeight;
 			pass.stageReadsFromAlt = flipped;
@@ -135,7 +136,24 @@ public class CompositeRenderer {
 		return this.flippedAtLeastOnceFinal;
 	}
 
+	public void recalculateSizes() {
+		for (Pass pass : passes) {
+			int passWidth = 0, passHeight = 0;
+			for (int buffer : pass.drawBuffers) {
+				RenderTarget target = renderTargets.get(buffer);
+				if ((passWidth > 0 && passWidth != target.getWidth()) || (passHeight > 0 && passHeight != target.getHeight())) {
+					throw new IllegalStateException("Pass widths must match");
+				}
+				passWidth = target.getWidth();
+				passHeight = target.getHeight();
+			}
+			pass.viewWidth = passWidth;
+			pass.viewHeight = passHeight;
+		}
+	}
+
 	private static final class Pass {
+		int[] drawBuffers;
 		int viewWidth;
 		int viewHeight;
 		Program program;
