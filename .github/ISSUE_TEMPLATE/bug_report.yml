@@ -28,9 +28,8 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks. If you aren't sure what's relevant, drag and drop your entire log file (found in `.minecraft/logs`) into the "Additional context" section.
-      render: shell
+      label: Log output
+      description: 'Please upload a client log file by dragging and dropping it into this section. Usually this is found at `.minecraft/logs/latest.log`. If you are not sure how to find `.minecraft`, please see this article: https://minecraft.fandom.com/wiki/.minecraft#Locating_.minecraft. Please do not upload a compressed (`.log.gz`) file, they are very difficult for us to read when viewing issue reports. The log file instantly tells us important information like the versions of any other installed mods or if there are errors so it is very very important that you include it in your report.'
   - type: input
     id: minecraft-version
     attributes:
@@ -48,16 +47,8 @@ body:
     validations:
       required: true
   - type: input
-    id: sodium-version
-    attributes:
-      label: Sodium Version
-      description: What version of Sodium are you running along with Iris? Every part is important! If you do not know what version you are using, look at the file name in your "mods" folder. If you aren't running Sodium please put N/A.
-      placeholder: ex. sodium-fabric-mc1.17.1-0.3.3+build.8.jar
-    validations:
-      required: true
-  - type: input
     id: os
-    attributes:
+    attributes: 
       label: Operating System
       description: What is your Operating System?
       placeholder: ex. Windows 10
@@ -71,18 +62,10 @@ body:
       placeholder: ex. Nvidia GeForce RTX 2070
     validations:
       required: true
-  - type: input
-    id: java
-    attributes:
-      label: Java Version
-      description: What Java version are you running? If you haven't touched the one in the launcher, it's Java 8 for 1.16.5 and Java 16 for 1.17
-      placeholder: ex. Java 11
-    validations:
-      required: true
   - type: textarea
     id: additional-context
     attributes:
       label: Additional context
-      description: Add any other context about the problem here.
+      description: 'Add any other context about the problem here. If you are proficient at reading log files and think there is an especially relevant section, feel free to paste it in a code block here - that is not required, though.'
     validations:
       required: false

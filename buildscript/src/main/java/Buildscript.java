@@ -53,7 +53,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
     static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String MC_VERSION = "1.19.1-pre6";
+	static final String MC_VERSION = "1.19.1";
 	static final String customSodiumName = "sodium-fabric-0.5.0+mc1.19-unstable.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
@@ -225,7 +225,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public Path getBuildJarPath() {
-		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + createMcVersion().version + "-" + getVersion() + ".jar");
+		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + MC_VERSION + "-" + getVersion() + ".jar");
 	}
 
 	@Override
