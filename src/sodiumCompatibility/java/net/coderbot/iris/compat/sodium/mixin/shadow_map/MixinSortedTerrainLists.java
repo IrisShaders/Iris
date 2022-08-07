@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SortedTerrainLists.class)
 public class MixinSortedTerrainLists {
-	@Inject(method = "calculateCameraVisibilityBits", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "calculateCameraVisibilityBits", at = @At("HEAD"), cancellable = true, remap = false)
 	private static void iris$modifyVisibilityBitsShadowPass(ChunkRenderBounds bounds, ChunkCameraContext camera, CallbackInfoReturnable<Integer> cir) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			cir.setReturnValue(ChunkMeshFace.ALL_BITS);
