@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+
+import it.unimi.dsi.fastutil.longs.LongList;
 import net.caffeinemc.gfx.api.array.VertexArrayDescription;
 import net.caffeinemc.gfx.api.array.VertexArrayResourceBinding;
 import net.caffeinemc.gfx.api.array.attribute.VertexAttributeBinding;
@@ -19,16 +21,16 @@ import net.caffeinemc.gfx.api.pipeline.state.BlendFunc;
 import net.caffeinemc.gfx.api.pipeline.state.CullMode;
 import net.caffeinemc.gfx.api.shader.Program;
 import net.caffeinemc.gfx.opengl.texture.GlTexture;
-import net.caffeinemc.gfx.util.buffer.DualStreamingBuffer;
-import net.caffeinemc.gfx.util.buffer.SequenceBuilder;
-import net.caffeinemc.gfx.util.buffer.SequenceIndexBuffer;
-import net.caffeinemc.gfx.util.buffer.StreamingBuffer;
+import net.caffeinemc.gfx.util.buffer.streaming.DualStreamingBuffer;
+import net.caffeinemc.gfx.util.buffer.streaming.SequenceBuilder;
+import net.caffeinemc.gfx.util.buffer.streaming.SequenceIndexBuffer;
+import net.caffeinemc.gfx.util.buffer.streaming.StreamingBuffer;
 import net.caffeinemc.sodium.SodiumClientMod;
 import net.caffeinemc.sodium.render.chunk.RenderSection;
 import net.caffeinemc.sodium.render.chunk.draw.AbstractChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkCameraContext;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderMatrices;
-import net.caffeinemc.sodium.render.chunk.draw.SortedChunkLists;
+import net.caffeinemc.sodium.render.chunk.draw.SortedTerrainLists;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPassManager;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderBindingPoints;
@@ -270,7 +272,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
             int frameIndex,
             RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
-            ChunkShaderInterface programInterface,
+			IrisChunkShaderInterface programInterface,
             PipelineState pipelineState
     ) {
         this.setupTextures(renderPass, pipelineState);
@@ -285,7 +287,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
             int frameIndex,
 			RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
-            ChunkShaderInterface programInterface,
+			IrisChunkShaderInterface programInterface,
             PipelineState pipelineState,
             B batch
     ) {
@@ -303,7 +305,7 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
             int frameIndex,
 			RenderPipeline<IrisChunkShaderInterface, BufferTarget> pipeline,
             RenderCommandList<BufferTarget> commandList,
-            ChunkShaderInterface programInterface,
+			IrisChunkShaderInterface programInterface,
             PipelineState pipelineState,
             B batch
     );
@@ -371,60 +373,20 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
 
     //// UTILITY METHODS
 
-    protected static int getMaxSectionFaces(SortedChunkLists list) {
+    protected static int getMaxSectionFaces(SortedTerrainLists list) {
         int faces = 0;
 
-        for (SortedChunkLists.RegionBucket regionBucket : list.unsortedRegionBuckets()) {
-            for (RenderSection section : regionBucket.unsortedSections()) {
-                for (ChunkPassModel model : section.getData().models) {
-					if (model == null) {
-						continue;
-					}
-                    // each bit set represents a model, so we can just count the set bits
-                    faces += Integer.bitCount(model.getVisibilityBits());
-                }
-            }
-        }
+		for (List<LongList> passModelPartSegments : list.modelPartSegments) {
+			for (LongList regionModelPartSegments : passModelPartSegments) {
+				faces += regionModelPartSegments.size();
+			}
+		}
 
         return faces;
     }
 
     protected static float getCameraTranslation(int chunkBlockPos, int cameraBlockPos, float cameraPos) {
         return (chunkBlockPos - cameraBlockPos) - cameraPos;
-    }
-
-    protected static int calculateVisibilityFlags(ChunkRenderBounds bounds, ChunkCameraContext camera) {
-        int flags = ChunkMeshFace.UNASSIGNED_BITS;
-
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			return ChunkMeshFace.ALL_BITS;
-
-		}
-        if (camera.posY > bounds.y1) {
-            flags |= ChunkMeshFace.UP_BITS;
-        }
-
-        if (camera.posY < bounds.y2) {
-            flags |= ChunkMeshFace.DOWN_BITS;
-        }
-
-        if (camera.posX > bounds.x1) {
-            flags |= ChunkMeshFace.EAST_BITS;
-        }
-
-        if (camera.posX < bounds.x2) {
-            flags |= ChunkMeshFace.WEST_BITS;
-        }
-
-        if (camera.posZ > bounds.z1) {
-            flags |= ChunkMeshFace.SOUTH_BITS;
-        }
-
-        if (camera.posZ < bounds.z2) {
-            flags |= ChunkMeshFace.NORTH_BITS;
-        }
-
-        return flags;
     }
 
     //// OVERRIDABLE BATCH

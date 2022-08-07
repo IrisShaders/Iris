@@ -8,7 +8,6 @@ import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderMatrices;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.draw.MdbvChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.draw.MdiChunkRenderer;
-import net.caffeinemc.sodium.render.chunk.draw.MdiCountChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPass;
 import net.caffeinemc.sodium.render.chunk.passes.ChunkRenderPassManager;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexFormats;
@@ -18,7 +17,6 @@ import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOve
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkRenderer;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.MdbvChunkRendererIris;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.MdiChunkRendererIris;
-import net.coderbot.iris.compat.sodium.impl.shader_overrides.MdiCountChunkRendererIris;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -100,43 +98,37 @@ public class MixinRenderSectionManager {
 	private ChunkRenderer irisChunkRendererCreation(RenderDevice device, TerrainVertexType vertexType, ChunkRenderPassManager renderPassManager) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			try {
-				switch (SodiumClientMod.options().advanced.terrainDrawMode) {
+				switch (SodiumClientMod.options().advanced.chunkRendererBackend) {
 					case DEFAULT:
-						return device.properties().preferences.directRendering ? new MdbvChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType) : new MdiChunkRendererIris<>(irisChunkProgramOverrides, device, renderPassManager, vertexType);
+						return device.properties().preferences.directRendering ? new MdbvChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType) : new MdiChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType);
 					case BASEVERTEX:
 						return new MdbvChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType);
 					case INDIRECT:
-						return new MdiChunkRendererIris<>(irisChunkProgramOverrides, device, renderPassManager, vertexType);
-					case INDIRECTCOUNT:
-						return new MdiCountChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType);
+						return new MdiChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType);
 					default:
 						throw new IncompatibleClassChangeError();
 				}
 			} catch (RuntimeException e) {
 				Iris.logger.fatal("Failed to load Sodium shader, falling back to vanilla rendering. See log for more details!", e);
-				switch (SodiumClientMod.options().advanced.terrainDrawMode) {
+				switch (SodiumClientMod.options().advanced.chunkRendererBackend) {
 					case DEFAULT:
 						return device.properties().preferences.directRendering ? new MdbvChunkRenderer(device, renderPassManager, vertexType) : new MdiChunkRenderer(device, renderPassManager, vertexType);
 					case BASEVERTEX:
 						return new MdbvChunkRenderer(device, renderPassManager, vertexType);
 					case INDIRECT:
-						return new MdiChunkRenderer<>(device, renderPassManager, vertexType);
-					case INDIRECTCOUNT:
-						return new MdiCountChunkRenderer(device, renderPassManager, vertexType);
+						return new MdiChunkRenderer(device, renderPassManager, vertexType);
 					default:
 						throw new IncompatibleClassChangeError();
 				}
 			}
 		} else {
-			switch (SodiumClientMod.options().advanced.terrainDrawMode) {
+			switch (SodiumClientMod.options().advanced.chunkRendererBackend) {
 				case DEFAULT:
-					return device.properties().preferences.directRendering ? new MdbvChunkRenderer(device, renderPassManager, vertexType) : new MdiChunkRenderer<>(device, renderPassManager, vertexType);
+					return device.properties().preferences.directRendering ? new MdbvChunkRenderer(device, renderPassManager, vertexType) : new MdiChunkRenderer(device, renderPassManager, vertexType);
 				case BASEVERTEX:
 					return new MdbvChunkRenderer(device, renderPassManager, vertexType);
 				case INDIRECT:
-					return new MdiChunkRenderer<>(device, renderPassManager, vertexType);
-				case INDIRECTCOUNT:
-					return new MdiCountChunkRenderer(device, renderPassManager, vertexType);
+					return new MdiChunkRenderer(device, renderPassManager, vertexType);
 				default:
 					throw new IncompatibleClassChangeError();
 			}

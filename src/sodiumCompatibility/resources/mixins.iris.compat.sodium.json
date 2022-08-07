@@ -25,6 +25,7 @@
     "shader_overrides.MixinRenderSectionManager",
     "shadow_map.MixinTerrainRenderManager",
     "shadow_map.MixinSodiumWorldRenderer",
+    "shadow_map.MixinSortedTerrainLists",
     "shadow_map.frustum.MixinAdvancedShadowCullingFrustum",
     "shadow_map.frustum.MixinBoxCullingFrustum",
     "shadow_map.frustum.MixinCullEverythingFrustum",
@@ -34,6 +35,6 @@
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
-    "vertex_format.MixinRenderRegionArenas",
+    "vertex_format.MixinRenderRegionArenas"
   ]
 }
