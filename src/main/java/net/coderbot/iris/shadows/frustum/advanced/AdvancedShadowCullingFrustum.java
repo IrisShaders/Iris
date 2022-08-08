@@ -331,11 +331,8 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		for (int i = 0; i < planeCount; ++i) {
 			Vector4f plane = this.planes[i];
 
-			// dot(plane, point) > 0.0F implies inside
-			// if no points are inside, then this box lies entirely outside of the frustum.
-			// this avoids false negative - a single point being inside causes the box to pass
-			// this plane test
-
+			// Check if plane is inside or intersecting.
+			// This is ported from JOML's FrustumIntersection.
 			if (plane.x() * (plane.x() < 0 ? minX : maxX) + plane.y() * (plane.y() < 0 ? minY : maxY) + plane.z() * (plane.z() < 0 ? minZ : maxZ) >= -plane.w()) {
 				inside &= plane.x() * (plane.x() < 0 ? maxX : minX) + plane.y() * (plane.y() < 0 ? maxY : minY) + plane.z() * (plane.z() < 0 ? maxZ : minZ) >= -plane.w();
 			} else {
