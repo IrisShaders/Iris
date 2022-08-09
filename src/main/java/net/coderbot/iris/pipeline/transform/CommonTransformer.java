@@ -132,6 +132,7 @@ public class CommonTransformer {
 		renameFunctionCall(root, "texture3DGrad", "textureGrad");
 		renameFunctionCall(root, "texelFetch2D", "texelFetch");
 		renameFunctionCall(root, "texelFetch3D", "texelFetch");
+		renameFunctionCall(root, "textureSize2D", "textureSize");
 
 		renameAndWrapShadow(t, root, "shadow2D", "texture");
 		renameAndWrapShadow(t, root, "shadow2DLod", "textureLod");
