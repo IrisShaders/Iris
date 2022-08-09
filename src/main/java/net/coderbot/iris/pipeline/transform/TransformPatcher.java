@@ -19,6 +19,7 @@ import io.github.douira.glsl_transformer.cst.core.SemanticException;
 import io.github.douira.glsl_transformer.cst.token_filter.ChannelFilter;
 import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
 import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
+import io.github.douira.glsl_transformer.util.LRUCache;
 import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.shader.ShaderType;
