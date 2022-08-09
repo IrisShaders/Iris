@@ -97,4 +97,9 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
     public int getUsedSize() {
         return ((MemoryTrackingBuffer) buffer).getUsedSize();
     }
+
+	@Override
+	public void freeAndDeleteBuffer() {
+		((MemoryTrackingBuffer) buffer).freeAndDeleteBuffer();
+	}
 }

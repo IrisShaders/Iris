@@ -62,8 +62,6 @@ public class FullScreenQuadRenderer {
 		// https://github.com/IrisShaders/Iris/issues/1214
 
 		RenderSystem.enableDepthTest();
-		VertexBuffer.unbind();
-		VertexBuffer.unbindVertexArray();
 		((VertexBufferHelper) quad).restoreBinding();
 	}
 }
