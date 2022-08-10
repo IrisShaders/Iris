@@ -6,6 +6,7 @@ import com.mojang.math.Vector3f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.gl.program.Program;
+import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.layer.IsOutlineRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.pipeline.HandRenderer;
@@ -217,6 +218,7 @@ public class MixinLevelRenderer {
 	private RenderType iris$beginBlockOutline(RenderType type) {
 		return new OuterWrappedRenderType("iris:is_outline", type, IsOutlineRenderStateShard.INSTANCE);
 	}
+
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
 	private void iris$beginTranslucents(PoseStack poseStack, float tickDelta, long limitTime,

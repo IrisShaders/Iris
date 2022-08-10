@@ -52,12 +52,19 @@ public class AttributeShaderTransformer {
 		if (type == ShaderType.VERTEX) {
 			// delete original declaration (fragile!!! we need glsl-transformer to do this robustly)
 			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
+			transformations.replaceRegex("attribute\\s+vec\\d\\s+mc_Entity;", "");
 
 			// add our own declarations
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in this stage. But this is
 			//       needed for the pass-through behavior.
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D iris_overlay;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "varying vec4 entityColor;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "varying vec2 iris_entityInfo;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "attribute vec4 mc_Entity;");
+			transformations.replaceRegex("uniform\\s+int\\s+entityId;", "");
+			transformations.replaceRegex("uniform\\s+int\\s+blockEntityId;", "");
+			transformations.define("entityId", "int(iris_entityInfo.x + 0.5)");
+			transformations.define("blockEntityId", "int(iris_entityInfo.y + 0.5)");
 
 			// Create our own main function to wrap the existing main function, so that we can pass through the overlay color at the
 			// end to the geometry or fragment stage.
@@ -67,6 +74,7 @@ public class AttributeShaderTransformer {
 
 			transformations.replaceExact("main", "irisMain_overlayColor");
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
+					"	iris_entityInfo = mc_Entity.xy;" +
 					"	vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);\n" +
 					"	entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);\n" +
 					// Workaround for a shader pack bug: https://github.com/IrisShaders/Iris/issues/1549
@@ -79,6 +87,8 @@ public class AttributeShaderTransformer {
 		} else if (type == ShaderType.GEOMETRY) {
 			// delete original declaration (fragile!!! we need glsl-transformer to do this robustly)
 			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
+			transformations.replaceRegex("uniform\\s+int\\s+entityId;", "");
+			transformations.replaceRegex("uniform\\s+int\\s+blockEntityId;", "");
 
 			// replace read references to grab the color from the first vertex.
 			transformations.replaceExact("entityColor", "entityColor[0]");
@@ -104,6 +114,11 @@ public class AttributeShaderTransformer {
 			// replace original declaration (fragile!!! we need glsl-transformer to do this robustly)
 			// if entityColor is not declared as a uniform, we don't make it available
 			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "varying vec4 entityColor;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "varying vec2 iris_entityInfo;");
+			transformations.replaceRegex("uniform\\s+int\\s+entityId;", "");
+			transformations.replaceRegex("uniform\\s+int\\s+blockEntityId;", "");
+			transformations.define("entityId", "int(iris_entityInfo.x + 0.5)");
+			transformations.define("blockEntityId", "int(iris_entityInfo.y + 0.5)");
 
 			if (hasGeometry) {
 				// Different output name to avoid a name collision in the goemetry shader.

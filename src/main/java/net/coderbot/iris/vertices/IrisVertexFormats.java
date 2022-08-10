@@ -42,8 +42,9 @@ public class IrisVertexFormats {
 		entityElements.add(DefaultVertexFormat.ELEMENT_UV2); // 32
 		entityElements.add(DefaultVertexFormat.ELEMENT_NORMAL); // 35
 		entityElements.add(DefaultVertexFormat.ELEMENT_PADDING); // 36
-		entityElements.add(MID_TEXTURE_ELEMENT); // 44
-		entityElements.add(TANGENT_ELEMENT); // 48
+		entityElements.add(ENTITY_ELEMENT); // 40
+		entityElements.add(MID_TEXTURE_ELEMENT); // 48
+		entityElements.add(TANGENT_ELEMENT); // 52
 
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());

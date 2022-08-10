@@ -4,11 +4,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
-import net.coderbot.iris.layer.EntityRenderStateShard;
+import net.coderbot.iris.layer.IsEntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
@@ -47,10 +47,10 @@ public class MixinEntityRenderDispatcher {
 		}
 
 		int intId = entityIds.applyAsInt(new NamespacedId(entityId.getNamespace(), entityId.getPath()));
-		RenderStateShard phase = EntityRenderStateShard.forId(intId);
+		CapturedRenderingState.INSTANCE.setCurrentEntity(intId);
 
 		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(layer ->
-				new OuterWrappedRenderType("iris:is_entity", layer, phase));
+				new OuterWrappedRenderType("iris:is_entity", layer, IsEntityRenderStateShard.INSTANCE));
 	}
 
 	// Inject before MatrixStack#pop so that our wrapper stack management operations naturally line up
@@ -59,6 +59,8 @@ public class MixinEntityRenderDispatcher {
 	private void iris$endEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
+		CapturedRenderingState.INSTANCE.setCurrentEntity(-1);
+
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
@@ -70,6 +72,8 @@ public class MixinEntityRenderDispatcher {
 	private void iris$crashedEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									      PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									      CallbackInfo ci) {
+		CapturedRenderingState.INSTANCE.setCurrentEntity(-1);
+
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}

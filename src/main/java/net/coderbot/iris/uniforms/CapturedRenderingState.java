@@ -61,10 +61,6 @@ public class CapturedRenderingState {
 
 	public void setCurrentBlockEntity(int entity) {
 		this.currentRenderedBlockEntity = entity;
-
-		if (this.blockEntityIdListener != null) {
-			this.blockEntityIdListener.run();
-		}
 	}
 
 	public int getCurrentRenderedBlockEntity() {
@@ -73,10 +69,6 @@ public class CapturedRenderingState {
 
 	public void setCurrentEntity(int entity) {
 		this.currentRenderedEntity = entity;
-
-		if (this.entityIdListener != null) {
-			this.entityIdListener.run();
-		}
 	}
 
 	public ValueUpdateNotifier getEntityIdNotifier() {

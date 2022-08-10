@@ -4,10 +4,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
-import net.coderbot.iris.layer.BlockEntityRenderStateShard;
+import net.coderbot.iris.layer.IsBlockEntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -52,15 +52,17 @@ public class MixinBlockEntityRenderDispatcher {
 		// - The block entity thinks that it's supported by a valid block
 
 		int intId = blockStateIds.getOrDefault(blockEntity.getBlockState(), -1);
-		RenderStateShard stateShard = BlockEntityRenderStateShard.forId(intId);
+		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(intId);
 
 		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->
-				new OuterWrappedRenderType("iris:is_block_entity", type, stateShard));
+				new OuterWrappedRenderType("iris:is_block_entity", type, IsBlockEntityRenderStateShard.INSTANCE));
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))
 	private void iris$afterRender(BlockEntity blockEntity, float tickDelta, PoseStack matrix,
 								  MultiBufferSource bufferSource, CallbackInfo ci) {
+		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(-1);
+
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
 		}
