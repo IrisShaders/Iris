@@ -40,6 +40,10 @@ public class MixinBlockEntityRenderDispatcher {
 			return;
 		}
 
+
+		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->
+			new OuterWrappedRenderType("iris:is_block_entity", type, IsBlockEntityRenderStateShard.INSTANCE));
+
 		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
 
 		if (blockStateIds == null) {
@@ -53,9 +57,6 @@ public class MixinBlockEntityRenderDispatcher {
 
 		int intId = blockStateIds.getOrDefault(blockEntity.getBlockState(), -1);
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(intId);
-
-		((WrappingMultiBufferSource) bufferSource).pushWrappingFunction(type ->
-				new OuterWrappedRenderType("iris:is_block_entity", type, IsBlockEntityRenderStateShard.INSTANCE));
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))

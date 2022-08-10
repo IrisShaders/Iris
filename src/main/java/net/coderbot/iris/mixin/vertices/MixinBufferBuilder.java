@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.BufferVertexConsumer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vendored.joml.Vector3f;
@@ -220,10 +221,17 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		int midVOffset;
 		int normalOffset;
 		int tangentOffset;
+		if (iris$isTerrain) {
 			midUOffset = 16;
 			midVOffset = 12;
 			normalOffset = 24;
 			tangentOffset = 8;
+		} else {
+			midUOffset = 12;
+			midVOffset = 8;
+			normalOffset = 20;
+			tangentOffset = 4;
+		}
 
 		for (int vertex = 0; vertex < vertexAmount; vertex++) {
 			buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
