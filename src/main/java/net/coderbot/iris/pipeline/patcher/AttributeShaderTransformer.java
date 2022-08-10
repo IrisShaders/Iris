@@ -5,6 +5,8 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.shaderpack.transform.StringTransformations;
 import net.coderbot.iris.shaderpack.transform.Transformations;
 
+import java.util.regex.Pattern;
+
 public class AttributeShaderTransformer {
 	public static String patch(String source, ShaderType type, boolean hasGeometry, InputAvailability inputs) {
 		if (source.contains("iris_")) {
@@ -29,7 +31,7 @@ public class AttributeShaderTransformer {
 		patchTextureMatrices(transformations, inputs.lightmap);
 
 		if (inputs.overlay) {
-			patchOverlayColor(transformations, type, hasGeometry);
+			patchEntityValues(transformations, type, hasGeometry);
 		}
 
 		if (transformations.contains("gl_MultiTexCoord3") && !transformations.contains("mc_midTexCoord")
@@ -47,20 +49,29 @@ public class AttributeShaderTransformer {
 		return transformations.toString();
 	}
 
-	private static void patchOverlayColor(StringTransformations transformations, ShaderType type, boolean hasGeometry) {
-		// Add entity color -> overlay color attribute support.
+	private static void patchEntityValues(StringTransformations transformations, ShaderType type, boolean hasGeometry) {
+		// Add entity color -> overlay color, entityId, and blockEntityId attribute support
 		if (type == ShaderType.VERTEX) {
-			// delete original declaration (fragile!!! we need glsl-transformer to do this robustly)
+			// delete original declarations (fragile!!! we need glsl-transformer to do this robustly)
 			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
-			transformations.replaceRegex("attribute\\s+vec\\d\\s+mc_Entity;", "");
+
+			// Check if mc_Entity is a float value and is defined. If so, remove it's declaration, and define all current declarations to mc_Entity.x, otherwise just redeclare.
+			if (transformations.containsRegex("attribute\\s+float\\s+mc_Entity;") || transformations.containsRegex("in\\s+float\\s+mc_Entity;")) {
+				transformations.replaceExact("mc_Entity", "mcEntityReplacement");
+				transformations.replaceRegex("attribute\\s+float\\s+mc_Entity;", "");
+				transformations.define("mcEntityReplacement", "mc_Entity.x");
+			} else {
+				transformations.replaceRegex("attribute\\s+vec\\d\\s+mc_Entity;", "");
+			}
 
 			// add our own declarations
-			// TODO: We're exposing entityColor to this stage even if it isn't declared in this stage. But this is
+			// TODO: We're exposing entityColor and mc_Entity to this stage even if it isn't declared in this stage. But this is
 			//       needed for the pass-through behavior.
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform sampler2D iris_overlay;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "varying vec4 entityColor;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "varying vec2 iris_entityInfo;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "attribute vec4 mc_Entity;");
+
 			transformations.replaceRegex("uniform\\s+int\\s+entityId;", "");
 			transformations.replaceRegex("uniform\\s+int\\s+blockEntityId;", "");
 			transformations.define("entityId", "int(iris_entityInfo.x + 0.5)");
@@ -92,12 +103,16 @@ public class AttributeShaderTransformer {
 
 			// replace read references to grab the color from the first vertex.
 			transformations.replaceExact("entityColor", "entityColor[0]");
+			transformations.define("entityId", "int(iris_entityInfo[0].x + 0.5)");
+			transformations.define("blockEntityId", "int(iris_entityInfo[0].y + 0.5)");
 
 			// add our own input and output declarations, after references have been replaced.
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in this stage. But this is
 			//       needed for the pass-through behavior.
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec4 entityColorGS;");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "out vec2 iris_entityInfoGS;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec4 entityColor[];");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "in vec2 iris_entityInfo[];");
 
 			// Create our own main function to wrap the existing main function, so that we can pass through the overlay color at the
 			// end to the fragment stage.
@@ -108,6 +123,7 @@ public class AttributeShaderTransformer {
 			transformations.replaceExact("main", "irisMain");
 			transformations.injectLine(Transformations.InjectionPoint.END, "void main() {\n" +
 					"	 entityColorGS = entityColor[0];\n" +
+					"	 iris_entityInfoGS = iris_entityInfo[0];\n" +
 					"    irisMain();\n" +
 					"}");
 		} else if (type == ShaderType.FRAGMENT) {
@@ -123,6 +139,7 @@ public class AttributeShaderTransformer {
 			if (hasGeometry) {
 				// Different output name to avoid a name collision in the goemetry shader.
 				transformations.replaceExact("entityColor", "entityColorGS");
+				transformations.replaceExact("iris_entityInfo", "iris_entityInfoGS");
 			}
 		}
 	}

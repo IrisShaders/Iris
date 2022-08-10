@@ -15,10 +15,8 @@ public class CapturedRenderingState {
 	private Vector3d fogColor;
 	private float tickDelta;
 	private int currentRenderedBlockEntity;
-	private Runnable blockEntityIdListener = null;
 
-	private int currentRenderedEntity = -1;
-	private Runnable entityIdListener = null;
+	private int currentRenderedEntity;
 
 	private CapturedRenderingState() {
 	}
@@ -69,14 +67,6 @@ public class CapturedRenderingState {
 
 	public void setCurrentEntity(int entity) {
 		this.currentRenderedEntity = entity;
-	}
-
-	public ValueUpdateNotifier getEntityIdNotifier() {
-		return listener -> this.entityIdListener = listener;
-	}
-
-	public ValueUpdateNotifier getBlockEntityIdNotifier() {
-		return listener -> this.blockEntityIdListener = listener;
 	}
 
 	public int getCurrentRenderedEntity() {

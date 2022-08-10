@@ -59,7 +59,7 @@ public class MixinEntityRenderDispatcher {
 	private void iris$endEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
-		CapturedRenderingState.INSTANCE.setCurrentEntity(-1);
+		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
 
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
@@ -72,7 +72,7 @@ public class MixinEntityRenderDispatcher {
 	private void iris$crashedEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									      PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									      CallbackInfo ci) {
-		CapturedRenderingState.INSTANCE.setCurrentEntity(-1);
+		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
 
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;

@@ -1,5 +1,7 @@
 package net.coderbot.iris.shaderpack.transform;
 
+import java.util.regex.Pattern;
+
 public class StringTransformations implements Transformations {
 	private String prefix;
 	private String extensions;
@@ -75,6 +77,11 @@ public class StringTransformations implements Transformations {
 	@Override
 	public boolean contains(String content) {
 		return toString().contains(content);
+	}
+
+	@Override
+	public boolean containsRegex(String regex) {
+		return Pattern.compile(regex).matcher(toString()).find();
 	}
 
 	@Override

@@ -55,14 +55,14 @@ public class MixinBlockEntityRenderDispatcher {
 		// - The block entity has a world
 		// - The block entity thinks that it's supported by a valid block
 
-		int intId = blockStateIds.getOrDefault(blockEntity.getBlockState(), -1);
+		int intId = blockStateIds.getOrDefault(blockEntity.getBlockState(), 0);
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(intId);
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))
 	private void iris$afterRender(BlockEntity blockEntity, float tickDelta, PoseStack matrix,
 								  MultiBufferSource bufferSource, CallbackInfo ci) {
-		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(-1);
+		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(0);
 
 		if (!(bufferSource instanceof WrappingMultiBufferSource)) {
 			return;
