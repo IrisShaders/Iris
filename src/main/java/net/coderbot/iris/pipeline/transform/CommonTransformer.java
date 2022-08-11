@@ -1,13 +1,23 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
-import io.github.douira.glsl_transformer.ast.node.Profile;
+import io.github.douira.glsl_transformer.ast.node.declaration.Declaration;
+import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.declaration.VariableDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
+import io.github.douira.glsl_transformer.ast.node.statement.terminal.DeclarationStatement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
@@ -30,16 +40,16 @@ public class CommonTransformer {
 	}
 
 	private static void renameAndWrapShadow(ASTTransformer<?> t, Root root, String oldName, String innerName) {
-    root.process(root.identifierIndex.getStream(oldName)
-        .filter(id -> id.getParent() instanceof FunctionCallExpression),
-        id -> {
-          FunctionCallExpression functionCall = (FunctionCallExpression) id.getParent();
-          functionCall.getFunctionName().setName(innerName);
-          FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(id, "vec4()");
-          functionCall.replaceBy(wrapper);
-          wrapper.getParameters().add(functionCall);
-        });
-  }
+		root.process(root.identifierIndex.getStream(oldName)
+				.filter(id -> id.getParent() instanceof FunctionCallExpression),
+				id -> {
+					FunctionCallExpression functionCall = (FunctionCallExpression) id.getParent();
+					functionCall.getFunctionName().setName(innerName);
+					FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(id, "vec4()");
+					functionCall.replaceBy(wrapper);
+					wrapper.getParameters().add(functionCall);
+				});
+	}
 
 	public static void transform(
 			ASTTransformer<?> t,
@@ -136,6 +146,8 @@ public class CommonTransformer {
 
 		renameAndWrapShadow(t, root, "shadow2D", "texture");
 		renameAndWrapShadow(t, root, "shadow2DLod", "textureLod");
+
+		compatabilityTransform(t, tree, root);
 	}
 
 	public static void fixVersion(TranslationUnit tree) {
@@ -196,5 +208,52 @@ public class CommonTransformer {
 							return index >= minimum && index <= maximum;
 						}),
 				"vec4(0.0, 0.0, 0.0, 1.0)");
+	}
+
+	private static void compatabilityTransform(
+			ASTTransformer<?> t,
+			TranslationUnit tree,
+			Root root) {
+		// find all non-global const declarations and remove the const qualifier
+		// but only on GLSL versions < 420
+		if (tree.getVersionStatement().version.number < 420) {
+			root.process(root.nodeIndex.getStream(DeclarationStatement.class)
+					.map(declarationStatement -> {
+						// test for type and init declaration
+						Declaration declaration = declarationStatement.getDeclaration();
+						if (!(declaration instanceof TypeAndInitDeclaration)) {
+							return null;
+						}
+
+						// test for not global
+						if (!declarationStatement.hasAncestor(FunctionDefinition.class)) {
+							return null;
+						}
+
+						// test for const qualifier
+						TypeAndInitDeclaration taid = (TypeAndInitDeclaration) declaration;
+						TypeQualifier qualifier = taid.getType().getTypeQualifier();
+						if (qualifier == null) {
+							return null;
+						}
+						for (TypeQualifierPart constQualifier : qualifier.getChildren()) {
+							if (constQualifier instanceof StorageQualifier) {
+								StorageQualifier storageQualifier = (StorageQualifier) constQualifier;
+								if (storageQualifier.storageType == StorageQualifier.StorageType.CONST) {
+									return storageQualifier;
+								}
+							}
+						}
+						return null;
+					})
+					.filter(Objects::nonNull),
+					constQualifier -> {
+						TypeQualifier qualifier = (TypeQualifier)constQualifier.getParent();
+						constQualifier.detachAndDelete();
+						if (qualifier.getChildren().isEmpty()) {
+							qualifier.detachAndDelete();
+						}
+					});
+		}
 	}
 }
