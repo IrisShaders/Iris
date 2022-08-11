@@ -128,6 +128,7 @@ public class TransformPatcher {
 						CompositeTransformer.transform(transformer, tree, root);
 						break;
 				}
+				CompatibilityTransformer.transform(transformer, tree, root, parameters);
 			});
 		});
 		transformer.setParseTokenFilter(parseTokenFilter);
