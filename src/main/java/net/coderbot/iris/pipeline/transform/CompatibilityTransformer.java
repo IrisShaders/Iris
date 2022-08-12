@@ -2,6 +2,9 @@ package net.coderbot.iris.pipeline.transform;
 
 import java.util.Objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.Declaration;
@@ -16,6 +19,8 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
 
 public class CompatibilityTransformer {
+	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
+
 	public static void transform(
 			ASTTransformer<?> t,
 			TranslationUnit tree,
@@ -28,7 +33,7 @@ public class CompatibilityTransformer {
 		// which break on AMD. It also has to be patched above 4.2 because AMD wrongly
 		// doesn't allow non-global const declarations to be initialized with
 		// non-constant expressions.
-		root.process(root.nodeIndex.getStream(DeclarationStatement.class)
+		boolean constDeclarationHit = root.process(root.nodeIndex.getStream(DeclarationStatement.class)
 				.map(declarationStatement -> {
 					// test for type and init declaration
 					Declaration declaration = declarationStatement.getDeclaration();
@@ -65,8 +70,15 @@ public class CompatibilityTransformer {
 						qualifier.detachAndDelete();
 					}
 				});
+		if (constDeclarationHit) {
+			LOGGER.warn(
+					"Removed the const keyword from non-global function definitions. This is done to ensure better compatibility drivers' varying behavior at different versions. See Section 4.3.2 on Constant Qualifiers and Section 4.3.3 on Constant Expressions in the GLSL 4.1 and 4.2 specifications for more information.");
+		}
 
 		// remove empty external declarations
-		root.process(root.nodeIndex.getStream(EmptyDeclaration.class), ASTNode::detachAndDelete);
+		boolean emptyDeclarationHit = root.process(root.nodeIndex.getStream(EmptyDeclaration.class), ASTNode::detachAndDelete);
+		if (emptyDeclarationHit) {
+			LOGGER.warn("Removed empty external declarations (\";\"). Lone semicolons in the global scope, also when placed after an unrelated function definition, are an empty external declaration which constitutes a syntax error for some drivers.");
+		}
 	}
 }
