@@ -3,8 +3,10 @@ package net.coderbot.iris.pipeline.transform;
 import java.util.Objects;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
+import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.Declaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
 import io.github.douira.glsl_transformer.ast.node.statement.terminal.DeclarationStatement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
@@ -63,5 +65,8 @@ public class CompatibilityTransformer {
 						qualifier.detachAndDelete();
 					}
 				});
+
+		// remove empty external declarations
+		root.process(root.nodeIndex.getStream(EmptyDeclaration.class), ASTNode::detachAndDelete);
 	}
 }
