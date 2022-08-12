@@ -183,7 +183,7 @@ public class TransformPatcher {
 		transformer.getLexer().version = version;
 
 		String result = transformer.transform(
-				PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.COMPACT,
+				PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.SIMPLE,
 				source, parameters);
 
 		if (useCache) {
