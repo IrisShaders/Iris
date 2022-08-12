@@ -120,12 +120,6 @@ public class Buildscript extends SimpleFabricProject {
 		return "net.coderbot.iris_mc" + (MC_VERSION.replace('.', '_'));
 	}
 
-	@Override
-	public void getTasks(Consumer<Task> p) {
-		super.getTasks(p);
-		super.getPublishTasks(p);
-	}
-
 	private Path[] getDirs(String subdirectory) {
 		List<Path> paths = new ArrayList<>();
 

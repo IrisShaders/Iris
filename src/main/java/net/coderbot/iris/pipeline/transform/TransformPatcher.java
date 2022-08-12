@@ -136,6 +136,7 @@ public class TransformPatcher {
 						VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
 						break;
 				}
+				CompatibilityTransformer.transform(transformer, tree, root, parameters);
 			});
 		});
 		transformer.setParseTokenFilter(parseTokenFilter);
