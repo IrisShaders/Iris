@@ -10,7 +10,6 @@ import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.Declaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDeclaration;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
 import io.github.douira.glsl_transformer.ast.node.statement.terminal.DeclarationStatement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
@@ -41,10 +40,8 @@ public class CompatibilityTransformer {
 						return null;
 					}
 
-					// test for not global
-					if (!declarationStatement.hasAncestor(FunctionDefinition.class)) {
-						return null;
-					}
+					// all declaration statements must be non-global since statements have to be
+					// inside a function definition
 
 					// test for const qualifier
 					TypeAndInitDeclaration taid = (TypeAndInitDeclaration) declaration;
@@ -76,9 +73,12 @@ public class CompatibilityTransformer {
 		}
 
 		// remove empty external declarations
-		boolean emptyDeclarationHit = root.process(root.nodeIndex.getStream(EmptyDeclaration.class), ASTNode::detachAndDelete);
+		boolean emptyDeclarationHit = root.process(
+				root.nodeIndex.getStream(EmptyDeclaration.class),
+				ASTNode::detachAndDelete);
 		if (emptyDeclarationHit) {
-			LOGGER.warn("Removed empty external declarations (\";\"). Lone semicolons in the global scope, also when placed after an unrelated function definition, are an empty external declaration which constitutes a syntax error for some drivers.");
+			LOGGER.warn(
+					"Removed empty external declarations (\";\"). Lone semicolons in the global scope, also when placed after an unrelated function definition, are an empty external declaration which constitutes a syntax error for some drivers.");
 		}
 	}
 }
