@@ -226,13 +226,14 @@ public class TransformPatcher {
 
 	public static Map<ShaderType, String> patchVanilla(
 			String vertex, String geometry, String fragment, AlphaTest alpha,
-			boolean hasChunkOffset, ShaderAttributeInputs inputs, boolean hasGeometry) {
+			boolean hasChunkOffset, ShaderAttributeInputs inputs) {
 		return transform(vertex, geometry, fragment,
-				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, hasGeometry));
+				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null));
 	}
 
-	public static Map<ShaderType, String> patchSodium(String vertex, String geometry, String fragment) {
-		return transform(vertex, geometry, fragment, new Parameters(Patch.SODIUM));
+	public static Map<ShaderType, String> patchSodium(String vertex, String geometry, String fragment, AlphaTest alpha,
+			ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
+		return transform(vertex, geometry, fragment, new SodiumParameters(Patch.SODIUM, alpha, inputs, positionScale, positionOffset, textureScale));
 	}
 
 	public static Map<ShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
