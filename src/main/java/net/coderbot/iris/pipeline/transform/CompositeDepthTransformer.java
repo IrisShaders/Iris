@@ -7,14 +7,14 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 
 class CompositeDepthTransformer {
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformFloatCenterDepthSmooth = new AutoHintedMatcher<>(
 			"uniform float centerDepthSmooth;", Matcher.externalDeclarationPattern);
 
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root) {
 		// replace original declaration

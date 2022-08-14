@@ -558,21 +558,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow) {
-		// TODO: Properly handle empty shaders
-		String geometry = null;
-		if (source.getGeometrySource().isPresent()) {
-			geometry = TransformPatcher.patchAttributes(source.getGeometrySource().orElse(null),
-				ShaderType.GEOMETRY, true, availability);
-		}
-		String vertex = TransformPatcher.patchAttributes(source.getVertexSource().orElseThrow(NullPointerException::new),
-				ShaderType.VERTEX, geometry != null, availability);
-		String fragment = TransformPatcher.patchAttributes(source.getFragmentSource().orElseThrow(NullPointerException::new),
-				ShaderType.FRAGMENT, geometry != null, availability);
+		// TODO: Properly handle empty shaders?
+		Map<ShaderType, String> transformed = TransformPatcher.patchAttributes(
+			source.getVertexSource().orElseThrow(NullPointerException::new),
+			source.getGeometrySource().orElse(null), 
+			source.getFragmentSource().orElseThrow(NullPointerException::new),
+			availability);
+		String vertex = transformed.get(ShaderType.VERTEX);
+		String geometry = transformed.get(ShaderType.GEOMETRY);
+		String fragment = transformed.get(ShaderType.FRAGMENT);
 
 		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
 
-		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
-				fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
+			IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives(), availability, shadow);
 	}

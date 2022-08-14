@@ -5,11 +5,10 @@ import net.coderbot.iris.gl.shader.ShaderType;
 
 class Parameters extends JobParameters {
 	public final Patch patch;
-	public final ShaderType type;
+	public ShaderType type;
 
-	public Parameters(Patch patch, ShaderType type) {
+	public Parameters(Patch patch) {
 		this.patch = patch;
-		this.type = type;
 	}
 
 	@Override

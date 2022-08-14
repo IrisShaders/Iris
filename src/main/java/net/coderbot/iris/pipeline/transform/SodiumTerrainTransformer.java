@@ -13,14 +13,14 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 
 /**
  * Does the sodium terrain transformations using glsl-transformer AST.
  */
 class SodiumTerrainTransformer {
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
@@ -43,7 +43,7 @@ class SodiumTerrainTransformer {
 	 * Transforms vertex shaders.
 	 */
 	public static void transformVertex(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
@@ -76,7 +76,7 @@ class SodiumTerrainTransformer {
 	 * from the vertex shader.
 	 */
 	public static void transformFragment(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
@@ -88,7 +88,7 @@ class SodiumTerrainTransformer {
 	 * Does the things that transformVertex and transformFragment have in common.
 	 */
 	private static void transformShared(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
@@ -173,7 +173,7 @@ class SodiumTerrainTransformer {
 	 * little more general.
 	 */
 	private static void replaceLightmapForSodium(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {

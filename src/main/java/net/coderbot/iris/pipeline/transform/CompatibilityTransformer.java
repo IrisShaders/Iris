@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,16 +16,13 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifie
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
-	public static void transform(
-			ASTTransformer<?> t,
-			TranslationUnit tree,
-			Root root,
-			Parameters parameters) {
+	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
 		// find all non-global const declarations and remove the const qualifier.
 		// happens on all versions because Nvidia wrongly allows non-constant
 		// initializers const declarations (and instead treats them only as immutable)
@@ -80,5 +78,13 @@ public class CompatibilityTransformer {
 			LOGGER.warn(
 					"Removed empty external declarations (\";\"). Lone semicolons in the global scope, also when placed after an unrelated function definition, are an empty external declaration which constitutes a syntax error for some drivers.");
 		}
+	}
+
+	// does transformations that require cross-shader type data
+	public static void transformGrouped(
+			ASTParser t,
+			Map<ShaderType, TranslationUnit> trees,
+			Parameters parameters) {
+
 	}
 }
