@@ -8,7 +8,7 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CompositeTransformer {
@@ -29,7 +29,7 @@ public class CompositeTransformer {
 	};
 
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {

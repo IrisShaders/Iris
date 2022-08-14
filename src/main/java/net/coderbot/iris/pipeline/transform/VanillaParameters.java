@@ -1,7 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
 import net.coderbot.iris.gl.blending.AlphaTest;
-import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
 public class VanillaParameters extends OverlayParameters {
@@ -9,9 +8,9 @@ public class VanillaParameters extends OverlayParameters {
 	public final ShaderAttributeInputs inputs;
 	public final boolean hasChunkOffset;
 
-	public VanillaParameters(Patch patch, ShaderType type, AlphaTest alpha, boolean hasChunkOffset,
+	public VanillaParameters(Patch patch, AlphaTest alpha, boolean hasChunkOffset,
 			ShaderAttributeInputs inputs, boolean hasGeometry) {
-		super(patch, type, hasGeometry);
+		super(patch, hasGeometry);
 		this.alpha = alpha;
 		this.hasChunkOffset = hasChunkOffset;
 		this.inputs = inputs;

@@ -12,7 +12,7 @@ import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessE
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 
 /**
  * Does the sodium terrain transformations using glsl-transformer AST.
@@ -78,7 +78,7 @@ class SodiumTerrainTransformer {
 	 */
 	public static void replaceLightmapForSodium(
 			final String lightmapCoordsExpression,
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root) {
 		final String lightmapCoordsExpressionS = lightmapCoordsExpression + ".s";

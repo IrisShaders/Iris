@@ -3,14 +3,14 @@ package net.coderbot.iris.pipeline.transform;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.AlphaTests;
 
 // Order fixed
 public class VanillaTransformer {
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			VanillaParameters parameters) {

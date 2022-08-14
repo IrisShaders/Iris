@@ -10,7 +10,7 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**
@@ -19,7 +19,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
  */
 class AttributeTransformer {
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			AttributeParameters parameters) {
@@ -58,7 +58,7 @@ class AttributeTransformer {
 	}
 
 	public static void patchMultiTexCoord3(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
@@ -79,7 +79,7 @@ class AttributeTransformer {
 	}
 
 	private static void patchTextureMatrices(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			boolean hasLightmap) {
@@ -117,7 +117,7 @@ class AttributeTransformer {
 
 	// Add entity color -> overlay color attribute support.
 	public static void patchOverlayColor(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			OverlayParameters parameters) {

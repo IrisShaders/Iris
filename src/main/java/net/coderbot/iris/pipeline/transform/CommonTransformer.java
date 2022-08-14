@@ -12,7 +12,7 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
 
@@ -29,7 +29,7 @@ public class CommonTransformer {
 				id -> id.setName(newName));
 	}
 
-	private static void renameAndWrapShadow(ASTTransformer<?> t, Root root, String oldName, String innerName) {
+	private static void renameAndWrapShadow(ASTParser t, Root root, String oldName, String innerName) {
 		root.process(root.identifierIndex.getStream(oldName)
 				.filter(id -> id.getParent() instanceof FunctionCallExpression),
 				id -> {
@@ -42,7 +42,7 @@ public class CommonTransformer {
 	}
 
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
@@ -185,7 +185,7 @@ public class CommonTransformer {
 	}
 
 	public static void replaceGlMultiTexCoordBounded(
-			ASTTransformer<?> t,
+			ASTParser t,
 			Root root,
 			int minimum,
 			int maximum) {

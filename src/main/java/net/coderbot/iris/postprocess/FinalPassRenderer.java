@@ -275,21 +275,22 @@ public class FinalPassRenderer {
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 								  Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
-		String vertex = TransformPatcher.patchComposite(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX);
-
-		String geometry = null;
-		if (source.getGeometrySource().isPresent()) {
-			geometry = TransformPatcher.patchComposite(source.getGeometrySource().orElseThrow(RuntimeException::new), ShaderType.GEOMETRY);
-		}
-
-		String fragment = TransformPatcher.patchComposite(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT);
-		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
-
+		// TODO: Properly handle empty shaders
+		Objects.requireNonNull(source.getVertexSource());
+		Objects.requireNonNull(source.getFragmentSource());
 		Objects.requireNonNull(flipped);
 
 		ProgramBuilder builder;
 
 		try {
+			Map<ShaderType, String> transformed = TransformPatcher.patchComposite(
+				source.getVertexSource().orElse(null),
+				source.getGeometrySource().orElse(null),
+				source.getFragmentSource().orElse(null));
+			String vertex = transformed.get(ShaderType.VERTEX);
+			String geometry = transformed.get(ShaderType.GEOMETRY);
+			String fragment = transformed.get(ShaderType.FRAGMENT);
+			PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
 			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
 					IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
