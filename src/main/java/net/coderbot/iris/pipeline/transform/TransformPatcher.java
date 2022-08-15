@@ -46,7 +46,7 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	private static EnumASTTransformer<Parameters, PatchShaderType> transformer;
-	private static final boolean useCache = true;
+	private static final boolean useCache = false;
 	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = useCache ? new LRUCache<>(400) : null;
 
 	private static class CacheKey {
@@ -170,7 +170,9 @@ public class TransformPatcher {
 							CompositeTransformer.transform(transformer, tree, root, parameters);
 							break;
 						case SODIUM:
-							SodiumTransformer.transform(transformer, tree, root, (SodiumParameters) parameters);
+							SodiumParameters sodiumParameters = (SodiumParameters) parameters;
+							sodiumParameters.setAlphaFor(type);
+							SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
 							break;
 						case VANILLA:
 							VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
@@ -212,6 +214,12 @@ public class TransformPatcher {
 			inputs.put(PatchShaderType.VERTEX, vertex);
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
 			inputs.put(PatchShaderType.FRAGMENT, fragment);
+
+			// the sodium terrain transformer transforms the fragment shader twice
+			if (parameters instanceof SodiumParameters && ((SodiumParameters) parameters).hasCutoutAlpha()) {
+				inputs.put(PatchShaderType.FRAGMENT_CUTOUT, fragment);
+			}
+
 			result = transformer.transform(inputs, parameters);
 			if (useCache) {
 				cache.put(key, result);
@@ -232,9 +240,11 @@ public class TransformPatcher {
 				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null));
 	}
 
-	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment, AlphaTest alpha,
-			ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
-		return transform(vertex, geometry, fragment, new SodiumParameters(Patch.SODIUM, alpha, inputs, positionScale, positionOffset, textureScale));
+	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
+			AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
+			float positionScale, float positionOffset, float textureScale) {
+		return transform(vertex, geometry, fragment,
+				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset, textureScale));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {

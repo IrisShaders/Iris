@@ -13,7 +13,7 @@ public class SodiumTransformer {
 			Root root,
 			SodiumParameters parameters) {
 		// this happens before common for patching gl_FragData
-		if (parameters.type == ShaderType.FRAGMENT) {
+		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			AlphaTestTransformer.transform(t, tree, root, parameters, parameters.alpha);
 		}
 		CommonTransformer.transform(t, tree, root, parameters);
@@ -21,7 +21,7 @@ public class SodiumTransformer {
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			if (parameters.inputs.hasTex()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 						"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
@@ -49,7 +49,7 @@ public class SodiumTransformer {
 			root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0)");
 		}
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			if (parameters.inputs.hasNormal()) {
 				root.rename("gl_Normal", "iris_Normal");
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec3 iris_Normal;");
@@ -69,7 +69,7 @@ public class SodiumTransformer {
 		// computed on the CPU side...
 		root.rename("gl_ModelViewMatrix", "iris_ModelViewMatrix");
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to
 			// chunks.
 

@@ -54,15 +54,15 @@ public class CommonTransformer {
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
 
 		// TODO: This doesn't handle geometry shaders... How do we do that?
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"out float iris_FogFragCoord;");
-		} else if (parameters.type == ShaderType.FRAGMENT) {
+		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"in float iris_FogFragCoord;");
 		}
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// TODO: This is incorrect and is just the bare minimum needed for SEUS v11 &
 			// Renewed to compile. It works because they don't actually use gl_FrontColor
 			// even though they write to it.
@@ -72,7 +72,7 @@ public class CommonTransformer {
 			root.rename("gl_FrontColor", "iris_FrontColor");
 		}
 
-		if (parameters.type == ShaderType.FRAGMENT) {
+		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			// TODO: Find a way to properly support gl_FragColor, see TransformPatcherOld
 			// which implements this
 			if (root.identifierIndex.has("gl_FragColor")) {
@@ -86,12 +86,12 @@ public class CommonTransformer {
 					"layout (location = 0) out vec4 iris_FragData[8];");
 		}
 
-		if (parameters.type == ShaderType.VERTEX || parameters.type == ShaderType.FRAGMENT) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX || parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			for (StorageQualifier qualifier : root.nodeIndex.get(StorageQualifier.class)) {
 				if (qualifier.storageType == StorageType.ATTRIBUTE) {
 					qualifier.storageType = StorageType.IN;
 				} else if (qualifier.storageType == StorageType.VARYING) {
-					qualifier.storageType = parameters.type == ShaderType.VERTEX
+					qualifier.storageType = parameters.type.glShaderType == ShaderType.VERTEX
 							? StorageType.OUT
 							: StorageType.IN;
 				}

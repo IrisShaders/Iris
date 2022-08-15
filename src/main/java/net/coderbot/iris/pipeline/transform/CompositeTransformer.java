@@ -43,7 +43,7 @@ public class CompositeTransformer {
 
 		// TODO: Other fog things
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 					"vec4(UV0, 0.0, 1.0)");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec2 UV0;");
@@ -53,7 +53,7 @@ public class CompositeTransformer {
 		// No color attributes, the color is always solid white.
 		root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0, 1.0, 1.0, 1.0)");
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glNormal.xml
 			// The initial value of the current normal is the unit vector, (0, 0, 1).
 			root.replaceReferenceExpressions(t, "gl_Normal", "vec3(0.0, 0.0, 1.0)");
@@ -61,7 +61,7 @@ public class CompositeTransformer {
 
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix", "mat3(1.0)");
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec3 Position;",
 					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(Position, 1.0)");
