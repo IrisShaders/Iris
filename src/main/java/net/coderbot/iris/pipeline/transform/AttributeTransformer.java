@@ -62,7 +62,7 @@ class AttributeTransformer {
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
-		if (parameters.type == ShaderType.VERTEX
+		if (parameters.type.glShaderType == ShaderType.VERTEX
 				&& root.identifierIndex.has("gl_MultiTexCoord3")
 				&& !root.identifierIndex.has("mc_midTexCoord")) {
 			// TODO: proper type conversion
@@ -124,7 +124,7 @@ class AttributeTransformer {
 		// delete original declaration
 		root.processMatches(t, uniformVec4EntityColor, ASTNode::detachAndDelete);
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// add our own declarations
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in
 			// this stage. But this is needed for the pass-through behavior.
@@ -147,7 +147,7 @@ class AttributeTransformer {
 					// zero if there is no hit flash, we try to emulate that here
 					"entityColor.rgb *= float(entityColor.a != 0.0);" +
 					"irisMain_overlayColor();}");
-		} else if (parameters.type == ShaderType.GEOMETRY) {
+		} else if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
 			// replace read references to grab the color from the first vertex.
 			root.replaceReferenceExpressions(t, "entityColor", "entityColor[0]");
 
@@ -162,7 +162,7 @@ class AttributeTransformer {
 					"entityColorGS = entityColor[0];" +
 					"iris_vertexColorGS = iris_vertexColor[0];" +
 					"irisMain();}");
-		} else if (parameters.type == ShaderType.FRAGMENT) {
+		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in vec4 entityColor;", "in vec4 iris_vertexColor;");
 

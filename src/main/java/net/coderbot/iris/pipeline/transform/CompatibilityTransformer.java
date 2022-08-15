@@ -17,7 +17,6 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
-import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
@@ -83,7 +82,7 @@ public class CompatibilityTransformer {
 	// does transformations that require cross-shader type data
 	public static void transformGrouped(
 			ASTParser t,
-			Map<ShaderType, TranslationUnit> trees,
+			Map<PatchShaderType, TranslationUnit> trees,
 			Parameters parameters) {
 
 	}

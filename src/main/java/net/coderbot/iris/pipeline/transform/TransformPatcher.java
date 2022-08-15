@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -15,7 +16,7 @@ import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.TriASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
 import io.github.douira.glsl_transformer.cst.core.SemanticException;
 import io.github.douira.glsl_transformer.cst.token_filter.ChannelFilter;
 import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
@@ -23,7 +24,6 @@ import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
-import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
@@ -45,9 +45,9 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
  */
 public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
-	private static TriASTTransformer<Parameters, ShaderType> transformer;
+	private static EnumASTTransformer<Parameters, PatchShaderType> transformer;
 	private static final boolean useCache = true;
-	private static final Map<CacheKey, Map<ShaderType, String>> cache = useCache ? new LRUCache<>(400) : null;
+	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = useCache ? new LRUCache<>(400) : null;
 
 	private static class CacheKey {
 		final Parameters parameters;
@@ -120,10 +120,7 @@ public class TransformPatcher {
 	};
 
 	static {
-		transformer = new TriASTTransformer<Parameters, ShaderType>(ShaderType.class,
-				ShaderType.VERTEX,
-				ShaderType.GEOMETRY,
-				ShaderType.FRAGMENT) {
+		transformer = new EnumASTTransformer<Parameters, PatchShaderType>(PatchShaderType.class) {
 			@Override
 			public TranslationUnit parseTranslationUnit(String input) throws RecognitionException {
 				// parse #version directive using an efficient regex before parsing so that the
@@ -142,7 +139,7 @@ public class TransformPatcher {
 			}
 		};
 		transformer.setTransformation((trees, parameters) -> {
-			for (ShaderType type : ShaderType.values()) {
+			for (PatchShaderType type : PatchShaderType.values()) {
 				TranslationUnit tree = trees.get(type);
 				if (tree == null) {
 					continue;
@@ -191,7 +188,7 @@ public class TransformPatcher {
 
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
 
-	private static Map<ShaderType, String> transform(String vertex, String geometry, String fragment,
+	private static Map<PatchShaderType, String> transform(String vertex, String geometry, String fragment,
 			Parameters parameters) {
 		// stop if all are null
 		if (vertex == null && geometry == null && fragment == null) {
@@ -200,7 +197,7 @@ public class TransformPatcher {
 
 		// check if this has been cached
 		CacheKey key;
-		Map<ShaderType, String> result = null;
+		Map<PatchShaderType, String> result = null;
 		if (useCache) {
 			key = new CacheKey(parameters, vertex, geometry, fragment);
 			if (cache.containsKey(key)) {
@@ -211,7 +208,11 @@ public class TransformPatcher {
 		// if there is no cache result, transform the shaders
 		if (result == null) {
 			transformer.setPrintType(PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.SIMPLE);
-			result = transformer.transform(vertex, geometry, fragment, parameters);
+			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
+			inputs.put(PatchShaderType.VERTEX, vertex);
+			inputs.put(PatchShaderType.GEOMETRY, geometry);
+			inputs.put(PatchShaderType.FRAGMENT, fragment);
+			result = transformer.transform(inputs, parameters);
 			if (useCache) {
 				cache.put(key, result);
 			}
@@ -219,24 +220,24 @@ public class TransformPatcher {
 		return result;
 	}
 
-	public static Map<ShaderType, String> patchAttributes(String vertex, String geometry, String fragment,
+	public static Map<PatchShaderType, String> patchAttributes(String vertex, String geometry, String fragment,
 			InputAvailability inputs) {
 		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs));
 	}
 
-	public static Map<ShaderType, String> patchVanilla(
+	public static Map<PatchShaderType, String> patchVanilla(
 			String vertex, String geometry, String fragment, AlphaTest alpha,
 			boolean hasChunkOffset, ShaderAttributeInputs inputs) {
 		return transform(vertex, geometry, fragment,
 				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null));
 	}
 
-	public static Map<ShaderType, String> patchSodium(String vertex, String geometry, String fragment, AlphaTest alpha,
+	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment, AlphaTest alpha,
 			ShaderAttributeInputs inputs, float positionScale, float positionOffset, float textureScale) {
 		return transform(vertex, geometry, fragment, new SodiumParameters(Patch.SODIUM, alpha, inputs, positionScale, positionOffset, textureScale));
 	}
 
-	public static Map<ShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
+	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
 		return transform(vertex, geometry, fragment, new Parameters(Patch.COMPOSITE));
 	}
 }
