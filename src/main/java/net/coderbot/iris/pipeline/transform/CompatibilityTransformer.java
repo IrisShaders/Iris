@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -10,13 +11,21 @@ import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.Declaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.statement.terminal.DeclarationStatement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
+import io.github.douira.glsl_transformer.ast.query.match.Matcher;
+import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
@@ -79,11 +88,79 @@ public class CompatibilityTransformer {
 		}
 	}
 
+	private static final ShaderType[] pipeline = { ShaderType.VERTEX, ShaderType.GEOMETRY, ShaderType.FRAGMENT };
+	private static final AutoHintedMatcher<ExternalDeclaration> outDeclarationMatcher = new AutoHintedMatcher<ExternalDeclaration>(
+			"out float __name;", Matcher.externalDeclarationPattern, "__") {
+		{
+			markClassWildcard("type", pattern.getRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
+		}
+	};
+	private static final AutoHintedMatcher<ExternalDeclaration> inDeclarationMatcher = new AutoHintedMatcher<ExternalDeclaration>(
+			"in float __name;", Matcher.externalDeclarationPattern, "__") {
+		{
+			markClassWildcard("type", pattern.getRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
+		}
+	};
+
+	private static final String tag = "__";
+	private static final String typeTag = tag + "1";
+	private static final String nameTag = tag + "2";
+	private static final String outDeclarationTemplate = "out " + typeTag + " " + nameTag + ";";
+
 	// does transformations that require cross-shader type data
 	public static void transformGrouped(
 			ASTParser t,
 			Map<PatchShaderType, TranslationUnit> trees,
 			Parameters parameters) {
+		// TODO: improve this when there is node cloning support in glsl-transformer
+		// find attributes that are declared as "in" in geometry or fragment but not
+		// declared as "out" in the previous stage. The missing "out" declarations for
+		// these attributes are added and initialized.
+		for (int i = 1; i < pipeline.length; i++) {
+			ShaderType prevType = pipeline[i - 1];
+			ShaderType type = pipeline[i];
 
+			// the fragment shader has to be processed twice
+			PatchShaderType prevPatchTypes = PatchShaderType.fromGlShaderType(prevType)[0];
+			PatchShaderType[] patchTypes = PatchShaderType.fromGlShaderType(type);
+			TranslationUnit prevTree = trees.get(prevPatchTypes);
+			Root prevRoot = prevTree.getRoot();
+
+			// find out declarations
+			var outDeclarations = new HashMap<>();
+			for (ExternalDeclaration declaration : prevRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
+				if (outDeclarationMatcher.matchesExtract(declaration)) {
+					outDeclarations.put(
+							outDeclarationMatcher.getStringDataMatch("name"),
+							outDeclarationMatcher.getNodeMatch("type", TypeSpecifier.class));
+				}
+			}
+
+			// add out declarations that are missing for in declarations
+			for (PatchShaderType currentType : patchTypes) {
+				TranslationUnit tree = trees.get(currentType);
+				Root root = tree.getRoot();
+				for (ExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
+					if (inDeclarationMatcher.matchesExtract(declaration)) {
+						var name = inDeclarationMatcher.getStringDataMatch("name");
+						var specifier = inDeclarationMatcher.getNodeMatch("type", BuiltinNumericTypeSpecifier.class);
+
+						if (specifier != null && !outDeclarations.containsKey(name)) {
+							var inDeclaration = t.parseExternalDeclaration(tree, outDeclarationTemplate);
+							tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inDeclaration);
+							root.identifierIndex.rename(nameTag, name);
+
+							// TODO: more efficient copying of the fully specified type
+							// use node cloning once available
+							root.identifierIndex.getOne(typeTag).getAncestor(TypeSpecifier.class)
+									.replaceBy(new BuiltinNumericTypeSpecifier(specifier.type));
+						}
+					}
+				}
+
+				// TODO: add a initialization in the main function
+				// LiteralExpression.getDefaultValue(numberType)
+			}
+		}
 	}
 }
