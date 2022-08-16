@@ -1,6 +1,8 @@
 {
+  "modmenu.summaryTranslation.iris":"Современный графический мод для загрузки существующих наборов шейдеров Optifine.",
   "modmenu.descriptionTranslation.iris": "Современный графический мод для Minecraft, предназначенный для загрузки существующих наборов шейдеров формата Optifine.",
   
+
   "iris.shaders.reloaded": "Шейдеры перезагружены.",
   "iris.shaders.disabled": "Шейдеры выключены.",
   "iris.shaders.toggled": "Включён набор шейдеров %s.",
