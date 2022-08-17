@@ -125,6 +125,12 @@ public class CompatibilityTransformer {
 		 * find attributes that are declared as "in" in geometry or fragment but not
 		 * declared as "out" in the previous stage. The missing "out" declarations for
 		 * these attributes are added and initialized.
+		 * 
+		 * It doesn't bother with array specifiers because they are only legal in
+		 * geometry shaders, but then also only as an in declaration. The out
+		 * declaration in the vertex shader is still just a single value. Missing out
+		 * declarations in the geometry shader are also just normal.
+		 * 
 		 * TODO:
 		 * - improve this when there is node cloning support in glsl-transformer
 		 * - fix issues where Iris' own declarations are detected and patched like
@@ -202,12 +208,8 @@ public class CompatibilityTransformer {
 												+ " shader that has a missing corresponding out declaration in the previous stage "
 												+ prevType.name() + " has a non-numeric type and could not be compatibility-patched.");
 								continue;
-							} else if (specifier.getArraySpecifier() != null) {
-								LOGGER.warn("The in declaration '" + name + "' in the " + currentType.glShaderType.name()
-										+ " shader that has a missing corresponding out declaration in the previous stage "
-										+ prevType.name() + " has an array type and could not be compatibility-patched.");
-								continue;
 							}
+
 							var inDeclaration = t.parseExternalDeclaration(prevTree, outDeclarationTemplate);
 							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inDeclaration);
 							// rename happens later
