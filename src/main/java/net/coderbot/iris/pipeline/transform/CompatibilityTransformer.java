@@ -3,20 +3,27 @@ package net.coderbot.iris.pipeline.transform;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.Declaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
+import io.github.douira.glsl_transformer.ast.node.statement.CompoundStatement;
+import io.github.douira.glsl_transformer.ast.node.statement.Statement;
 import io.github.douira.glsl_transformer.ast.node.statement.terminal.DeclarationStatement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
@@ -28,6 +35,7 @@ import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public class CompatibilityTransformer {
@@ -120,6 +128,12 @@ public class CompatibilityTransformer {
 		 * find attributes that are declared as "in" in geometry or fragment but not
 		 * declared as "out" in the previous stage. The missing "out" declarations for
 		 * these attributes are added and initialized.
+		 * 
+		 * It doesn't bother with array specifiers because they are only legal in
+		 * geometry shaders, but then also only as an in declaration. The out
+		 * declaration in the vertex shader is still just a single value. Missing out
+		 * declarations in the geometry shader are also just normal.
+		 * 
 		 * TODO:
 		 * - improve this when there is node cloning support in glsl-transformer
 		 * - fix issues where Iris' own declarations are detected and patched like
@@ -127,7 +141,7 @@ public class CompatibilityTransformer {
 		 * - improved geometry shader support? They use funky declarations
 		 */
 		ShaderType prevType = null;
-		for (int i = 0; i < pipeline.length; i++) {
+		for (int i = 10; i < pipeline.length; i++) {
 			ShaderType type = pipeline[i];
 			PatchShaderType[] patchTypes = PatchShaderType.fromGlShaderType(type);
 
@@ -170,7 +184,7 @@ public class CompatibilityTransformer {
 				Root root = tree.getRoot();
 
 				// find the main function
-				var mainFunction = prevRoot.identifierIndex.getStream("main")
+				Optional<FunctionDefinition> mainFunction = prevRoot.identifierIndex.getStream("main")
 						.map(id -> id.getBranchAncestor(FunctionDefinition.class, FunctionDefinition::getFunctionPrototype))
 						.filter(Objects::nonNull).findAny();
 				if (!mainFunction.isPresent()) {
@@ -178,36 +192,51 @@ public class CompatibilityTransformer {
 							"A shader is missing a main function and could not be compatibility-patched.");
 					continue;
 				}
-				var mainFunctionStatements = mainFunction.get().getBody();
+				CompoundStatement mainFunctionStatements = mainFunction.get().getBody();
 
 				for (ExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (inDeclarationMatcher.matchesExtract(declaration)) {
-						var name = inDeclarationMatcher.getStringDataMatch("name");
-						var specifier = inDeclarationMatcher.getNodeMatch("type", BuiltinNumericTypeSpecifier.class);
+						String name = inDeclarationMatcher.getStringDataMatch("name");
+						BuiltinNumericTypeSpecifier specifier = inDeclarationMatcher.getNodeMatch("type", BuiltinNumericTypeSpecifier.class);
 
 						if (!outDeclarations.contains(name)) {
+							// make sure the declared in is actually used
+							if (!prevRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isPresent()) {
+								continue;
+							}
+
 							if (specifier == null) {
 								LOGGER.warn(
-										"The in declaration " + name + " in the " + currentType.glShaderType.name()
+										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 												+ " shader that has a missing corresponding out declaration in the previous stage "
 												+ prevType.name() + " has a non-numeric type and could not be compatibility-patched.");
+								continue;
 							}
-							var inDeclaration = t.parseExternalDeclaration(prevTree, outDeclarationTemplate);
+
+							ExternalDeclaration inDeclaration = t.parseExternalDeclaration(prevTree, outDeclarationTemplate);
 							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inDeclaration);
 							// rename happens later
 
+							Type specifierType = specifier.type;
 							prevRoot.identifierIndex.getOne(typeTag).getAncestor(TypeSpecifier.class)
-									.replaceByAndDelete(new BuiltinNumericTypeSpecifier(specifier.type));
+									.replaceByAndDelete(new BuiltinNumericTypeSpecifier(specifierType));
 
-							var init = t.parseStatement(prevTree, initTemplate);
+							Statement init = t.parseStatement(prevTree, initTemplate);
 							mainFunctionStatements.getChildren().add(0, init);
 							prevRoot.identifierIndex.rename(nameTag, name);
-							prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
-									.replaceByAndDelete(LiteralExpression.getDefaultValue(specifier.type));
+
+							if (specifierType.isScalar()) {
+								prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
+										.replaceByAndDelete(LiteralExpression.getDefaultValue(specifierType));
+							} else {
+								prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
+										.replaceByAndDelete(new FunctionCallExpression(
+												new Identifier(name), Stream.of(LiteralExpression.getDefaultValue(specifierType))));
+							}
 
 							LOGGER.warn(
-									"The in declaration " + name + " in the " + currentType.glShaderType.name()
-											+ " shader that has a missing corresponding out declaration in the previous stage "
+									"The in declaration '" + name + "'' in the " + currentType.glShaderType.name()
+											+ " shader is missing a corresponding out declaration in the previous stage "
 											+ prevType.name() + " and has been compatibility-patched.");
 
 							// update out declarations to prevent duplicates
