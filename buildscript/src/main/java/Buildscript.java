@@ -98,7 +98,7 @@ public class Buildscript extends SimpleFabricProject {
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.6+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "2.0.1+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
-		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:1.0.0-pre11"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:1.0.0-pre14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.antlr:antlr4-runtime:4.10.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 
 		if (SODIUM) {
@@ -117,12 +117,6 @@ public class Buildscript extends SimpleFabricProject {
 	@Override
 	public String getMavenGroup() {
 		return "net.coderbot.iris_mc" + (MC_VERSION.replace('.', '_'));
-	}
-
-	@Override
-	public void getTasks(Consumer<Task> p) {
-		super.getTasks(p);
-		super.getPublishTasks(p);
 	}
 
 	private Path[] getDirs(String subdirectory) {

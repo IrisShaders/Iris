@@ -3,14 +3,14 @@ package net.coderbot.iris.pipeline.transform;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.AlphaTests;
 
 // Order fixed
 public class VanillaTransformer {
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			VanillaParameters parameters) {
@@ -20,13 +20,13 @@ public class VanillaTransformer {
 			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
 		}
 		// this happens before common for patching gl_FragData
-		if (parameters.type == ShaderType.FRAGMENT) {
+		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			AlphaTestTransformer.transform(t, tree, root, parameters, parameters.alpha);
 		}
 
 		CommonTransformer.transform(t, tree, root, parameters);
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
 			// See https://github.com/IrisShaders/Iris/issues/1149
 			root.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
@@ -72,7 +72,7 @@ public class VanillaTransformer {
 						"(iris_Color * iris_ColorModulator)");
 			}
 
-			if (parameters.type == ShaderType.VERTEX) {
+			if (parameters.type.glShaderType == ShaderType.VERTEX) {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 						"in vec4 iris_Color;");
 			}
@@ -81,7 +81,7 @@ public class VanillaTransformer {
 			root.rename("gl_Color", "iris_ColorModulator");
 		}
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			if (parameters.inputs.hasNormal()) {
 				if (!parameters.inputs.isNewLines()) {
 					root.rename("gl_Normal", "iris_Normal");
@@ -112,7 +112,7 @@ public class VanillaTransformer {
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix",
 				"mat3(transpose(inverse(gl_ModelViewMatrix)))");
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"in vec3 iris_Position;",
 					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");

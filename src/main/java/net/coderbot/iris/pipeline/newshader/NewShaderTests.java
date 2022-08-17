@@ -1,13 +1,23 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import org.jetbrains.annotations.Nullable;
+
+import com.mojang.blaze3d.vertex.VertexFormat;
+
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.pipeline.newshader.fallback.ShaderSynthesizer;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
+import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
@@ -17,12 +27,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import org.jetbrains.annotations.Nullable;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
@@ -34,14 +38,14 @@ public class NewShaderTests {
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
-		String geometry = null;
-		boolean hasGeometry = source.getGeometrySource().isPresent();
-		if (hasGeometry) {
-			geometry = TransformPatcher.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs, true);
-		}
-
-		String vertex = TransformPatcher.patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs, hasGeometry);
-		String fragment = TransformPatcher.patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs, hasGeometry);
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchVanilla(
+			source.getVertexSource().orElseThrow(RuntimeException::new),
+			source.getGeometrySource().orElse(null),
+			source.getFragmentSource().orElseThrow(RuntimeException::new),
+			alpha, true, inputs);
+		String vertex = transformed.get(PatchShaderType.VERTEX);
+		String geometry = transformed.get(PatchShaderType.GEOMETRY);
+		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
 		StringBuilder shaderJson = new StringBuilder("{\n" +
 				"    \"blend\": {\n" +

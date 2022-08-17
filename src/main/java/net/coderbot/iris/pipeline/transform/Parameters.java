@@ -1,15 +1,13 @@
 package net.coderbot.iris.pipeline.transform;
 
 import io.github.douira.glsl_transformer.job_parameter.JobParameters;
-import net.coderbot.iris.gl.shader.ShaderType;
 
 class Parameters extends JobParameters {
 	public final Patch patch;
-	public final ShaderType type;
+	public PatchShaderType type;
 
-	public Parameters(Patch patch, ShaderType type) {
+	public Parameters(Patch patch) {
 		this.patch = patch;
-		this.type = type;
 	}
 
 	@Override
@@ -17,7 +15,6 @@ class Parameters extends JobParameters {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((patch == null) ? 0 : patch.hashCode());
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
 	}
 
@@ -31,8 +28,6 @@ class Parameters extends JobParameters {
 			return false;
 		Parameters other = (Parameters) obj;
 		if (patch != other.patch)
-			return false;
-		if (type != other.type)
 			return false;
 		return true;
 	}

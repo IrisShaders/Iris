@@ -1,9 +1,9 @@
 package net.coderbot.iris.pipeline.transform;
 
+import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
-import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
@@ -12,7 +12,7 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
 
@@ -29,20 +29,20 @@ public class CommonTransformer {
 				id -> id.setName(newName));
 	}
 
-	private static void renameAndWrapShadow(ASTTransformer<?> t, Root root, String oldName, String innerName) {
-    root.process(root.identifierIndex.getStream(oldName)
-        .filter(id -> id.getParent() instanceof FunctionCallExpression),
-        id -> {
-          FunctionCallExpression functionCall = (FunctionCallExpression) id.getParent();
-          functionCall.getFunctionName().setName(innerName);
-          FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(id, "vec4()");
-          functionCall.replaceBy(wrapper);
-          wrapper.getParameters().add(functionCall);
-        });
-  }
+	private static void renameAndWrapShadow(ASTParser t, Root root, String oldName, String innerName) {
+		root.process(root.identifierIndex.getStream(oldName)
+				.filter(id -> id.getParent() instanceof FunctionCallExpression),
+				id -> {
+					FunctionCallExpression functionCall = (FunctionCallExpression) id.getParent();
+					functionCall.getFunctionName().setName(innerName);
+					FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(id, "vec4()");
+					functionCall.replaceBy(wrapper);
+					wrapper.getParameters().add(functionCall);
+				});
+	}
 
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
@@ -54,15 +54,15 @@ public class CommonTransformer {
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
 
 		// TODO: This doesn't handle geometry shaders... How do we do that?
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"out float iris_FogFragCoord;");
-		} else if (parameters.type == ShaderType.FRAGMENT) {
+		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"in float iris_FogFragCoord;");
 		}
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// TODO: This is incorrect and is just the bare minimum needed for SEUS v11 &
 			// Renewed to compile. It works because they don't actually use gl_FrontColor
 			// even though they write to it.
@@ -72,7 +72,7 @@ public class CommonTransformer {
 			root.rename("gl_FrontColor", "iris_FrontColor");
 		}
 
-		if (parameters.type == ShaderType.FRAGMENT) {
+		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			// TODO: Find a way to properly support gl_FragColor, see TransformPatcherOld
 			// which implements this
 			if (root.identifierIndex.has("gl_FragColor")) {
@@ -86,12 +86,12 @@ public class CommonTransformer {
 					"layout (location = 0) out vec4 iris_FragData[8];");
 		}
 
-		if (parameters.type == ShaderType.VERTEX || parameters.type == ShaderType.FRAGMENT) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX || parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			for (StorageQualifier qualifier : root.nodeIndex.get(StorageQualifier.class)) {
 				if (qualifier.storageType == StorageType.ATTRIBUTE) {
 					qualifier.storageType = StorageType.IN;
 				} else if (qualifier.storageType == StorageType.VARYING) {
-					qualifier.storageType = parameters.type == ShaderType.VERTEX
+					qualifier.storageType = parameters.type.glShaderType == ShaderType.VERTEX
 							? StorageType.OUT
 							: StorageType.IN;
 				}
@@ -185,7 +185,7 @@ public class CommonTransformer {
 	}
 
 	public static void replaceGlMultiTexCoordBounded(
-			ASTTransformer<?> t,
+			ASTParser t,
 			Root root,
 			int minimum,
 			int maximum) {
