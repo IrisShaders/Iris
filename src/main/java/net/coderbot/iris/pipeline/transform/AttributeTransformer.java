@@ -124,18 +124,17 @@ class AttributeTransformer {
 					"uniform sampler2D iris_overlay;",
 					"varying vec4 entityColor;");
 
-			// Create our own main function to wrap the existing main function, so that we
-			// can pass through the overlay color at the end to the geometry or fragment
-			// stage.
-			root.rename("main", "irisMain_overlayColor");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.END, "void main() {" +
-					"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);" +
-					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
-					// Workaround for a shader pack bug: https://github.com/IrisShaders/Iris/issues/1549
-					// Some shader packs incorrectly ignore the alpha value, and assume that rgb will be
+			// this is so we can pass through the overlay color at the end to the geometry
+			// or fragment stage.
+			tree.prependMain(t,
+					"vec4 overlayColor = texture2D(iris_overlay, (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy);",
+					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);",
+					// Workaround for a shader pack bug:
+					// https://github.com/IrisShaders/Iris/issues/1549
+					// Some shader packs incorrectly ignore the alpha value, and assume that rgb
+					// will be
 					// zero if there is no hit flash, we try to emulate that here
-					"entityColor.rgb *= float(entityColor.a != 0.0);" +
-					"irisMain_overlayColor(); }");
+					"entityColor.rgb *= float(entityColor.a != 0.0);");
 		} else if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
 			// replace read references to grab the color from the first vertex.
 			root.replaceReferenceExpressions(t, "entityColor", "entityColor[0]");
@@ -145,9 +144,7 @@ class AttributeTransformer {
 					"out vec4 entityColorGS;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"in vec4 entityColor[];");
-			root.rename("main", "irisMain");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.END,
-					"void main() { entityColorGS = entityColor[0]; irisMain(); }");
+			tree.prependMain(t, "entityColorGS = entityColor[0];");
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"varying vec4 entityColor;");
