@@ -73,9 +73,6 @@ public class SodiumTransformer {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to
 			// chunks.
 
-			// Create our own main function to wrap the existing main function, so that we
-			// can run the alpha test at the end.
-			root.rename("main", "irisMain");
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					// translated from sodium's chunk_vertex.glsl
 					"vec3 _vert_position;",
@@ -109,8 +106,7 @@ public class SodiumTransformer {
 					"vec4 getVertexPosition() { return vec4(Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }",
 					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 
-			tree.parseAndInjectNode(t, ASTInjectionPoint.END,
-					"void main() { _vert_init(); irisMain(); }");
+			tree.prependMain(t, "_vert_init();");
 			root.replaceReferenceExpressions(t, "iris_ModelViewProjectionMatrix",
 					"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
