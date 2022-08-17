@@ -10,7 +10,7 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 /**
@@ -19,7 +19,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
  */
 class AttributeTransformer {
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			AttributeParameters parameters) {
@@ -58,11 +58,11 @@ class AttributeTransformer {
 	}
 
 	public static void patchMultiTexCoord3(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
-		if (parameters.type == ShaderType.VERTEX
+		if (parameters.type.glShaderType == ShaderType.VERTEX
 				&& root.identifierIndex.has("gl_MultiTexCoord3")
 				&& !root.identifierIndex.has("mc_midTexCoord")) {
 			// TODO: proper type conversion
@@ -79,7 +79,7 @@ class AttributeTransformer {
 	}
 
 	private static void patchTextureMatrices(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			boolean hasLightmap) {
@@ -117,14 +117,14 @@ class AttributeTransformer {
 
 	// Add entity color -> overlay color attribute support.
 	public static void patchOverlayColor(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			OverlayParameters parameters) {
 		// delete original declaration
 		root.processMatches(t, uniformVec4EntityColor, ASTNode::detachAndDelete);
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// add our own declarations
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in
 			// this stage. But this is needed for the pass-through behavior.
@@ -137,17 +137,16 @@ class AttributeTransformer {
 			// Create our own main function to wrap the existing main function, so that we
 			// can pass through the overlay color at the end to the geometry or fragment
 			// stage.
-			root.rename("main", "irisMain_overlayColor");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.END, "void main() {" +
-					"vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);" +
-					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);" +
-					"iris_vertexColor = iris_Color;" +
-					// Workaround for a shader pack bug: https://github.com/IrisShaders/Iris/issues/1549
-					// Some shader packs incorrectly ignore the alpha value, and assume that rgb will be
-					// zero if there is no hit flash, we try to emulate that here
-					"entityColor.rgb *= float(entityColor.a != 0.0);" +
-					"irisMain_overlayColor();}");
-		} else if (parameters.type == ShaderType.GEOMETRY) {
+			tree.prependMain(t,
+					"vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);",
+					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);",
+					"iris_vertexColor = iris_Color;",
+					// Workaround for a shader pack bug:
+					// https://github.com/IrisShaders/Iris/issues/1549
+					// Some shader packs incorrectly ignore the alpha value, and assume that rgb
+					// will be zero if there is no hit flash, we try to emulate that here
+					"entityColor.rgb *= float(entityColor.a != 0.0);");
+		} else if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
 			// replace read references to grab the color from the first vertex.
 			root.replaceReferenceExpressions(t, "entityColor", "entityColor[0]");
 
@@ -157,12 +156,10 @@ class AttributeTransformer {
 					"in vec4 entityColor[];",
 					"out vec4 iris_vertexColorGS;",
 					"in vec4 iris_vertexColor[];");
-			root.rename("main", "irisMain");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.END, "void main() {" +
-					"entityColorGS = entityColor[0];" +
-					"iris_vertexColorGS = iris_vertexColor[0];" +
-					"irisMain();}");
-		} else if (parameters.type == ShaderType.FRAGMENT) {
+			tree.prependMain(t,
+					"entityColorGS = entityColor[0];",
+					"iris_vertexColorGS = iris_vertexColor[0];");
+		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in vec4 entityColor;", "in vec4 iris_vertexColor;");
 

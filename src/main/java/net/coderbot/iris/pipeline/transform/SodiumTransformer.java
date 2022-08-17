@@ -3,17 +3,17 @@ package net.coderbot.iris.pipeline.transform;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
-import io.github.douira.glsl_transformer.ast.transform.ASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 public class SodiumTransformer {
 	public static void transform(
-			ASTTransformer<?> t,
+			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			SodiumParameters parameters) {
 		// this happens before common for patching gl_FragData
-		if (parameters.type == ShaderType.FRAGMENT) {
+		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			AlphaTestTransformer.transform(t, tree, root, parameters, parameters.alpha);
 		}
 		CommonTransformer.transform(t, tree, root, parameters);
@@ -21,7 +21,7 @@ public class SodiumTransformer {
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			if (parameters.inputs.hasTex()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 						"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
@@ -49,7 +49,7 @@ public class SodiumTransformer {
 			root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0)");
 		}
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			if (parameters.inputs.hasNormal()) {
 				root.rename("gl_Normal", "iris_Normal");
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec3 iris_Normal;");
@@ -69,13 +69,10 @@ public class SodiumTransformer {
 		// computed on the CPU side...
 		root.rename("gl_ModelViewMatrix", "iris_ModelViewMatrix");
 
-		if (parameters.type == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to
 			// chunks.
 
-			// Create our own main function to wrap the existing main function, so that we
-			// can run the alpha test at the end.
-			root.rename("main", "irisMain");
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					// translated from sodium's chunk_vertex.glsl
 					"vec3 _vert_position;",
@@ -110,8 +107,7 @@ public class SodiumTransformer {
 					"vec4 getVertexPosition() { return vec4(u_RegionOffset + Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }",
 					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 
-			tree.parseAndInjectNode(t, ASTInjectionPoint.END,
-					"void main() { _vert_init(); irisMain(); }");
+			tree.prependMain(t, "_vert_init();");
 			root.replaceReferenceExpressions(t, "iris_ModelViewProjectionMatrix",
 					"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
