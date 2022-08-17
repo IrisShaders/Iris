@@ -42,13 +42,26 @@ public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
 	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
-		// find all non-global const declarations and remove the const qualifier.
-		// happens on all versions because Nvidia wrongly allows non-constant
-		// initializers const declarations (and instead treats them only as immutable)
-		// at and below version 4.1 so shaderpacks contain such illegal declarations
-		// which break on AMD. It also has to be patched above 4.2 because AMD wrongly
-		// doesn't allow non-global const declarations to be initialized with
-		// non-constant expressions.
+		/**
+		 * find all non-global const declarations and remove the const qualifier.
+		 * happens on all versions because Nvidia wrongly allows non-constant
+		 * initializers const declarations (and instead treats them only as immutable)
+		 * at and below version 4.1 so shaderpacks contain such illegal declarations
+		 * which break on AMD. It also has to be patched above 4.2 because AMD wrongly
+		 * doesn't allow non-global const declarations to be initialized with
+		 * non-constant expressions.
+		 * 
+		 * TODO:
+		 * - restrict removal of const qualifiers to only those declarations that use
+		 * const-declared function parameters (which are not constant, but rather only
+		 * immutable).
+		 * 
+		 * plan:
+		 * - find all const parameters
+		 * - find the const declarations in the function body
+		 * - find the const declarations that use the const parameters in their initializers
+		 * - remove the const qualifier only from those const declarations (and warn)
+		 */
 		boolean constDeclarationHit = root.process(root.nodeIndex.getStream(DeclarationStatement.class)
 				.map(declarationStatement -> {
 					// test for type and init declaration
@@ -141,7 +154,7 @@ public class CompatibilityTransformer {
 		 * - improved geometry shader support? They use funky declarations
 		 */
 		ShaderType prevType = null;
-		for (int i = 10; i < pipeline.length; i++) {
+		for (int i = 0; i < pipeline.length; i++) {
 			ShaderType type = pipeline[i];
 			PatchShaderType[] patchTypes = PatchShaderType.fromGlShaderType(type);
 
@@ -177,11 +190,11 @@ public class CompatibilityTransformer {
 
 			// add out declarations that are missing for in declarations
 			for (PatchShaderType currentType : patchTypes) {
-				TranslationUnit tree = trees.get(currentType);
-				if (tree == null) {
+				TranslationUnit currentTree = trees.get(currentType);
+				if (currentTree == null) {
 					continue;
 				}
-				Root root = tree.getRoot();
+				Root currentRoot = currentTree.getRoot();
 
 				// find the main function
 				Optional<FunctionDefinition> mainFunction = prevRoot.identifierIndex.getStream("main")
@@ -194,14 +207,15 @@ public class CompatibilityTransformer {
 				}
 				CompoundStatement mainFunctionStatements = mainFunction.get().getBody();
 
-				for (ExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
+				for (ExternalDeclaration declaration : currentRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (inDeclarationMatcher.matchesExtract(declaration)) {
 						String name = inDeclarationMatcher.getStringDataMatch("name");
-						BuiltinNumericTypeSpecifier specifier = inDeclarationMatcher.getNodeMatch("type", BuiltinNumericTypeSpecifier.class);
+						BuiltinNumericTypeSpecifier specifier = inDeclarationMatcher.getNodeMatch("type",
+								BuiltinNumericTypeSpecifier.class);
 
 						if (!outDeclarations.contains(name)) {
 							// make sure the declared in is actually used
-							if (!prevRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isPresent()) {
+							if (!currentRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isPresent()) {
 								continue;
 							}
 
