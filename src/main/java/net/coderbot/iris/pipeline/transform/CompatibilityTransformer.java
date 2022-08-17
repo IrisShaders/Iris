@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline.transform;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -21,6 +22,8 @@ import io.github.douira.glsl_transformer.ast.node.external_declaration.Declarati
 import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
+import io.github.douira.glsl_transformer.ast.node.statement.CompoundStatement;
+import io.github.douira.glsl_transformer.ast.node.statement.Statement;
 import io.github.douira.glsl_transformer.ast.node.statement.terminal.DeclarationStatement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
@@ -181,7 +184,7 @@ public class CompatibilityTransformer {
 				Root root = tree.getRoot();
 
 				// find the main function
-				var mainFunction = prevRoot.identifierIndex.getStream("main")
+				Optional<FunctionDefinition> mainFunction = prevRoot.identifierIndex.getStream("main")
 						.map(id -> id.getBranchAncestor(FunctionDefinition.class, FunctionDefinition::getFunctionPrototype))
 						.filter(Objects::nonNull).findAny();
 				if (!mainFunction.isPresent()) {
@@ -189,12 +192,12 @@ public class CompatibilityTransformer {
 							"A shader is missing a main function and could not be compatibility-patched.");
 					continue;
 				}
-				var mainFunctionStatements = mainFunction.get().getBody();
+				CompoundStatement mainFunctionStatements = mainFunction.get().getBody();
 
 				for (ExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (inDeclarationMatcher.matchesExtract(declaration)) {
-						var name = inDeclarationMatcher.getStringDataMatch("name");
-						var specifier = inDeclarationMatcher.getNodeMatch("type", BuiltinNumericTypeSpecifier.class);
+						String name = inDeclarationMatcher.getStringDataMatch("name");
+						BuiltinNumericTypeSpecifier specifier = inDeclarationMatcher.getNodeMatch("type", BuiltinNumericTypeSpecifier.class);
 
 						if (!outDeclarations.contains(name)) {
 							// make sure the declared in is actually used
@@ -210,7 +213,7 @@ public class CompatibilityTransformer {
 								continue;
 							}
 
-							var inDeclaration = t.parseExternalDeclaration(prevTree, outDeclarationTemplate);
+							ExternalDeclaration inDeclaration = t.parseExternalDeclaration(prevTree, outDeclarationTemplate);
 							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inDeclaration);
 							// rename happens later
 
@@ -218,7 +221,7 @@ public class CompatibilityTransformer {
 							prevRoot.identifierIndex.getOne(typeTag).getAncestor(TypeSpecifier.class)
 									.replaceByAndDelete(new BuiltinNumericTypeSpecifier(specifierType));
 
-							var init = t.parseStatement(prevTree, initTemplate);
+							Statement init = t.parseStatement(prevTree, initTemplate);
 							mainFunctionStatements.getChildren().add(0, init);
 							prevRoot.identifierIndex.rename(nameTag, name);
 
