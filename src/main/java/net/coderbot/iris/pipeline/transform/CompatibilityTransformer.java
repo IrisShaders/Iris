@@ -42,13 +42,15 @@ public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
 	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
-		// find all non-global const declarations and remove the const qualifier.
-		// happens on all versions because Nvidia wrongly allows non-constant
-		// initializers const declarations (and instead treats them only as immutable)
-		// at and below version 4.1 so shaderpacks contain such illegal declarations
-		// which break on AMD. It also has to be patched above 4.2 because AMD wrongly
-		// doesn't allow non-global const declarations to be initialized with
-		// non-constant expressions.
+		/**
+		 * find all non-global const declarations and remove the const qualifier.
+		 * happens on all versions because Nvidia wrongly allows non-constant
+		 * initializers const declarations (and instead treats them only as immutable)
+		 * at and below version 4.1 so shaderpacks contain such illegal declarations
+		 * which break on AMD. It also has to be patched above 4.2 because AMD wrongly
+		 * doesn't allow non-global const declarations to be initialized with
+		 * non-constant expressions.
+		 */
 		boolean constDeclarationHit = root.process(root.nodeIndex.getStream(DeclarationStatement.class)
 				.map(declarationStatement -> {
 					// test for type and init declaration
@@ -197,7 +199,8 @@ public class CompatibilityTransformer {
 				for (ExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (inDeclarationMatcher.matchesExtract(declaration)) {
 						String name = inDeclarationMatcher.getStringDataMatch("name");
-						BuiltinNumericTypeSpecifier specifier = inDeclarationMatcher.getNodeMatch("type", BuiltinNumericTypeSpecifier.class);
+						BuiltinNumericTypeSpecifier specifier = inDeclarationMatcher.getNodeMatch("type",
+								BuiltinNumericTypeSpecifier.class);
 
 						if (!outDeclarations.contains(name)) {
 							// make sure the declared in is actually used
