@@ -52,7 +52,15 @@ public class CompatibilityTransformer {
 		 * non-constant expressions.
 		 * 
 		 * TODO:
-		 * - This breaks array variable initializers because they require constant expressions
+		 * - restrict removal of const qualifiers to only those declarations that use
+		 * const-declared function parameters (which are not constant, but rather only
+		 * immutable).
+		 * 
+		 * plan:
+		 * - find all const parameters
+		 * - find the const declarations in the function body
+		 * - find the const declarations that use the const parameters in their initializers
+		 * - remove the const qualifier only from those const declarations (and warn)
 		 */
 		boolean constDeclarationHit = root.process(root.nodeIndex.getStream(DeclarationStatement.class)
 				.map(declarationStatement -> {
