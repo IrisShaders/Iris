@@ -190,11 +190,11 @@ public class CompatibilityTransformer {
 
 			// add out declarations that are missing for in declarations
 			for (PatchShaderType currentType : patchTypes) {
-				TranslationUnit tree = trees.get(currentType);
-				if (tree == null) {
+				TranslationUnit currentTree = trees.get(currentType);
+				if (currentTree == null) {
 					continue;
 				}
-				Root root = tree.getRoot();
+				Root currentRoot = currentTree.getRoot();
 
 				// find the main function
 				Optional<FunctionDefinition> mainFunction = prevRoot.identifierIndex.getStream("main")
@@ -207,7 +207,7 @@ public class CompatibilityTransformer {
 				}
 				CompoundStatement mainFunctionStatements = mainFunction.get().getBody();
 
-				for (ExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
+				for (ExternalDeclaration declaration : currentRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (inDeclarationMatcher.matchesExtract(declaration)) {
 						String name = inDeclarationMatcher.getStringDataMatch("name");
 						BuiltinNumericTypeSpecifier specifier = inDeclarationMatcher.getNodeMatch("type",
@@ -215,7 +215,7 @@ public class CompatibilityTransformer {
 
 						if (!outDeclarations.contains(name)) {
 							// make sure the declared in is actually used
-							if (!prevRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isPresent()) {
+							if (!currentRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isPresent()) {
 								continue;
 							}
 
