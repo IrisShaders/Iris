@@ -50,6 +50,9 @@ public class CompatibilityTransformer {
 		 * which break on AMD. It also has to be patched above 4.2 because AMD wrongly
 		 * doesn't allow non-global const declarations to be initialized with
 		 * non-constant expressions.
+		 * 
+		 * TODO:
+		 * - This breaks array variable initializers because they require constant expressions
 		 */
 		boolean constDeclarationHit = root.process(root.nodeIndex.getStream(DeclarationStatement.class)
 				.map(declarationStatement -> {
