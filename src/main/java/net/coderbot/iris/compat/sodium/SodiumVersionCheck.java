@@ -28,6 +28,9 @@ public class SodiumVersionCheck {
 	}
 
 	public static boolean isAllowedVersion(String sodiumVersion) {
+		if (Boolean.parseBoolean(System.getProperty("iris.allowAnySodiumVersion")))
+			return true;
+
 		for (AllowedSodiumVersion allowed : ALLOWED_SODIUM_VERSIONS) {
 			if (allowed.matches(sodiumVersion)) {
 				return true;
