@@ -57,7 +57,7 @@ public class PatchedShaderPrinter {
 					Files.write(debugOutDir.resolve(prefix + name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
 				}
 				if (json != null) {
-					Files.write(debugOutDir.resolve(prefix + name + ".json"), fragment.getBytes(StandardCharsets.UTF_8));
+					Files.write(debugOutDir.resolve(prefix + name + ".json"), json.getBytes(StandardCharsets.UTF_8));
 				}
 			} catch (IOException e) {
 				Iris.logger.warn("Failed to write debug patched shader source", e);
