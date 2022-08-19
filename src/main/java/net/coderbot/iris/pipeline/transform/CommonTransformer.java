@@ -77,7 +77,7 @@ public class CommonTransformer {
 			// which implements this
 			if (root.identifierIndex.has("gl_FragColor")) {
 				Iris.logger.warn(
-						"[Triforce Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
+						"[Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
 				root.replaceReferenceExpressions(t, "gl_FragColor", "iris_FragData[0]");
 			}
 
