@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -13,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
-import io.github.douira.glsl_transformer.ast.node.declaration.Declaration;
+import io.github.douira.glsl_transformer.ast.node.declaration.FunctionParameter;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
@@ -24,11 +25,11 @@ import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalD
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
 import io.github.douira.glsl_transformer.ast.node.statement.CompoundStatement;
 import io.github.douira.glsl_transformer.ast.node.statement.Statement;
-import io.github.douira.glsl_transformer.ast.node.statement.terminal.DeclarationStatement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
@@ -41,65 +42,93 @@ import net.coderbot.iris.gl.shader.ShaderType;
 public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
+	private static StorageQualifier getConstQualifier(TypeQualifier qualifier) {
+		if (qualifier == null) {
+			return null;
+		}
+		for (TypeQualifierPart constQualifier : qualifier.getChildren()) {
+			if (constQualifier instanceof StorageQualifier) {
+				StorageQualifier storageQualifier = (StorageQualifier) constQualifier;
+				if (storageQualifier.storageType == StorageQualifier.StorageType.CONST) {
+					return storageQualifier;
+				}
+			}
+		}
+		return null;
+	}
+
 	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
 		/**
-		 * find all non-global const declarations and remove the const qualifier.
-		 * happens on all versions because Nvidia wrongly allows non-constant
-		 * initializers const declarations (and instead treats them only as immutable)
-		 * at and below version 4.1 so shaderpacks contain such illegal declarations
-		 * which break on AMD. It also has to be patched above 4.2 because AMD wrongly
-		 * doesn't allow non-global const declarations to be initialized with
-		 * non-constant expressions.
-		 * 
-		 * TODO:
-		 * - restrict removal of const qualifiers to only those declarations that use
-		 * const-declared function parameters (which are not constant, but rather only
-		 * immutable).
-		 * 
-		 * plan:
-		 * - find all const parameters
-		 * - find the const declarations in the function body
-		 * - find the const declarations that use the const parameters in their initializers
-		 * - remove the const qualifier only from those const declarations (and warn)
+		 * Removes const storage qualifier from declarations in functions if they are
+		 * initialized with const parameters. Const parameters are immutable parameters
+		 * and can't be used to initialize const declarations because they expect
+		 * constant, not just immutable, expressions. This varies between drivers and
+		 * versions.
+		 * See https://wiki.shaderlabs.org/wiki/Compiler_Behavior_Notes
 		 */
-		boolean constDeclarationHit = root.process(root.nodeIndex.getStream(DeclarationStatement.class)
-				.map(declarationStatement -> {
-					// test for type and init declaration
-					Declaration declaration = declarationStatement.getDeclaration();
-					if (!(declaration instanceof TypeAndInitDeclaration)) {
-						return null;
-					}
+		Map<FunctionDefinition, Set<String>> constFunctions = new HashMap<>();
+		Set<String> constParameters = new HashSet<>();
+		for (FunctionDefinition definition : root.nodeIndex.get(FunctionDefinition.class)) {
+			// stop on functions without parameters
+			FunctionPrototype prototype = definition.getFunctionPrototype();
+			if (prototype.children.isEmpty()) {
+				continue;
+			}
 
-					// all declaration statements must be non-global since statements have to be
-					// inside a function definition
+			// find the const parameters
+			Set<String> names = new HashSet<>(prototype.children.size());
+			for (FunctionParameter parameter : prototype.children) {
+				if (getConstQualifier(parameter.getType().getTypeQualifier()) != null) {
+					String name = parameter.getName().getName();
+					names.add(name);
+					constParameters.add(name);
+				}
+			}
+			if (!constParameters.isEmpty()) {
+				constFunctions.put(definition, names);
+			}
+		}
 
-					// test for const qualifier
-					TypeAndInitDeclaration taid = (TypeAndInitDeclaration) declaration;
+		// find the reference expressions for the const parameters
+		// and check that they are in the right function and are of the right type
+		boolean constDeclarationHit = false;
+		for (String name : constParameters) {
+			for (Identifier id : root.identifierIndex.get(name)) {
+				ReferenceExpression reference = id.getAncestor(ReferenceExpression.class);
+				if (reference == null) {
+					continue;
+				}
+				TypeAndInitDeclaration taid = reference.getAncestor(TypeAndInitDeclaration.class);
+				if (taid == null) {
+					continue;
+				}
+				FunctionDefinition inDefinition = taid.getAncestor(FunctionDefinition.class);
+				if (inDefinition == null) {
+					continue;
+				}
+				Set<String> definitionParameters = constFunctions.get(inDefinition);
+				if (definitionParameters == null) {
+					continue;
+				}
+				if (definitionParameters.contains(name)) {
+					// remove the const qualifier from the reference expression
 					TypeQualifier qualifier = taid.getType().getTypeQualifier();
-					if (qualifier == null) {
-						return null;
+					StorageQualifier constQualifier = getConstQualifier(qualifier);
+					if (constQualifier == null) {
+						continue;
 					}
-					for (TypeQualifierPart constQualifier : qualifier.getChildren()) {
-						if (constQualifier instanceof StorageQualifier) {
-							StorageQualifier storageQualifier = (StorageQualifier) constQualifier;
-							if (storageQualifier.storageType == StorageQualifier.StorageType.CONST) {
-								return storageQualifier;
-							}
-						}
-					}
-					return null;
-				})
-				.filter(Objects::nonNull),
-				constQualifier -> {
-					TypeQualifier qualifier = (TypeQualifier) constQualifier.getParent();
 					constQualifier.detachAndDelete();
 					if (qualifier.getChildren().isEmpty()) {
 						qualifier.detachAndDelete();
 					}
-				});
+					constDeclarationHit = true;
+				}
+			}
+		}
+
 		if (constDeclarationHit) {
 			LOGGER.warn(
-					"Removed the const keyword from non-global function definitions. This is done to ensure better compatibility drivers' varying behavior at different versions. See Section 4.3.2 on Constant Qualifiers and Section 4.3.3 on Constant Expressions in the GLSL 4.1 and 4.2 specifications for more information.");
+					"Removed the const keyword from declarations that use const parameters. Const declarations usually require constant initializer expresions which immutable parameters are not. This is done to ensure better compatibility drivers' varying behavior at different versions. See Section 4.3.2 on Constant Qualifiers and Section 4.3.3 on Constant Expressions in the GLSL 4.1 and 4.2 specifications for more information.");
 		}
 
 		// remove empty external declarations
@@ -243,9 +272,11 @@ public class CompatibilityTransformer {
 								prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
 										.replaceByAndDelete(LiteralExpression.getDefaultValue(specifierType));
 							} else {
-								prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
-										.replaceByAndDelete(new FunctionCallExpression(
-												new Identifier(name), Stream.of(LiteralExpression.getDefaultValue(specifierType))));
+								Root.indexBuildSession(prevRoot, () -> {
+									prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
+											.replaceByAndDelete(new FunctionCallExpression(
+													new Identifier(specifierType.getCompactName()), Stream.of(LiteralExpression.getDefaultValue(specifierType))));
+								});
 							}
 
 							LOGGER.warn(
