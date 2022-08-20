@@ -210,10 +210,11 @@ public class CompatibilityTransformer {
 			Root prevRoot = prevTree.getRoot();
 
 			// find out declarations
-			Set<String> outDeclarations = new HashSet<String>();
-			for (ExternalDeclaration declaration : prevRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
+			Map<String, BuiltinNumericTypeSpecifier> outDeclarations = new HashMap<>();
+			for (DeclarationExternalDeclaration declaration : prevRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 				if (outDeclarationMatcher.matchesExtract(declaration)) {
-					outDeclarations.add(outDeclarationMatcher.getStringDataMatch("name"));
+					outDeclarations.put(outDeclarationMatcher.getStringDataMatch("name"),
+							outDeclarationMatcher.getNodeMatch("type", BuiltinNumericTypeSpecifier.class));
 				}
 			}
 
@@ -238,54 +239,112 @@ public class CompatibilityTransformer {
 
 				for (ExternalDeclaration declaration : currentRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (inDeclarationMatcher.matchesExtract(declaration)) {
-						String name = inDeclarationMatcher.getStringDataMatch("name");
-						BuiltinNumericTypeSpecifier specifier = inDeclarationMatcher.getNodeMatch("type",
+						String inName = inDeclarationMatcher.getStringDataMatch("name");
+						BuiltinNumericTypeSpecifier inSpecifier = inDeclarationMatcher.getNodeMatch("type",
 								BuiltinNumericTypeSpecifier.class);
 
-						if (!outDeclarations.contains(name)) {
+						if (!outDeclarations.containsKey(inName)) {
 							// make sure the declared in is actually used
-							if (!currentRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isPresent()) {
+							if (!currentRoot.identifierIndex.getAncestors(inName, ReferenceExpression.class).findAny().isPresent()) {
 								continue;
 							}
 
-							if (specifier == null) {
+							if (inSpecifier == null) {
 								LOGGER.warn(
-										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
+										"The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
 												+ " shader that has a missing corresponding out declaration in the previous stage "
 												+ prevType.name() + " has a non-numeric type and could not be compatibility-patched.");
 								continue;
 							}
 
-							ExternalDeclaration inDeclaration = t.parseExternalDeclaration(prevTree, outDeclarationTemplate);
-							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inDeclaration);
+							DeclarationExternalDeclaration newOutDeclaration = (DeclarationExternalDeclaration) t
+									.parseExternalDeclaration(prevTree, outDeclarationTemplate);
+							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, newOutDeclaration);
 							// rename happens later
 
-							Type specifierType = specifier.type;
+							Type inType = inSpecifier.type;
+							BuiltinNumericTypeSpecifier newOutType = new BuiltinNumericTypeSpecifier(inType);
 							prevRoot.identifierIndex.getOne(typeTag).getAncestor(TypeSpecifier.class)
-									.replaceByAndDelete(new BuiltinNumericTypeSpecifier(specifierType));
+									.replaceByAndDelete(newOutType);
 
 							Statement init = t.parseStatement(prevTree, initTemplate);
 							mainFunctionStatements.getChildren().add(0, init);
-							prevRoot.identifierIndex.rename(nameTag, name);
+							prevRoot.identifierIndex.rename(nameTag, inName);
 
-							if (specifierType.isScalar()) {
+							if (inType.isScalar()) {
 								prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
-										.replaceByAndDelete(LiteralExpression.getDefaultValue(specifierType));
+										.replaceByAndDelete(LiteralExpression.getDefaultValue(inType));
 							} else {
 								Root.indexBuildSession(prevRoot, () -> {
 									prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
 											.replaceByAndDelete(new FunctionCallExpression(
-													new Identifier(specifierType.getCompactName()), Stream.of(LiteralExpression.getDefaultValue(specifierType))));
+													new Identifier(inType.getCompactName()),
+													Stream.of(LiteralExpression.getDefaultValue(inType))));
 								});
 							}
 
 							LOGGER.warn(
-									"The in declaration '" + name + "'' in the " + currentType.glShaderType.name()
+									"The in declaration '" + inName + "'' in the " + currentType.glShaderType.name()
 											+ " shader is missing a corresponding out declaration in the previous stage "
 											+ prevType.name() + " and has been compatibility-patched.");
 
 							// update out declarations to prevent duplicates
-							outDeclarations.add(name);
+							outDeclarations.put(inName, null);
+						} else {
+							// there is an out declaration for this in declaration, check if the types match
+							BuiltinNumericTypeSpecifier outTypeSpecifier = outDeclarations.get(inName);
+
+							// discard newly inserted out declarations and those where the type matches
+							if (outTypeSpecifier == null || outTypeSpecifier.type == inSpecifier.type) {
+								continue;
+							}
+							Type outType = outTypeSpecifier.type;
+							Type inType = inSpecifier.type;
+
+							// bail and warn on mismatching dimensionality
+							if (outType.getDimension() != inType.getDimension()) {
+								LOGGER.warn(
+										"The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
+												+ " shader has a mismatching dimensionality (scalar/vector/matrix) with the out declaration in the previous stage "
+												+ prevType.name() + " and could not be compatibility-patched.");
+								continue;
+							}
+
+							// matrices aren't supported
+							if (outType.isMatrix()) {
+								LOGGER.warn(
+										"The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
+												+ " shader doesn't match the matrix-type out declaration in the previous stage "
+												+ prevType.name() + " and could not be compatibility-patched.");
+								continue;
+							}
+
+							// TODO: finish implementation
+							LOGGER.warn("The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
+									+ " shader doesn't match the type of the out declaration in the previous stage "
+									+ prevType.name() + " and has been compatibility-patched.");
+
+							// make sure the fragment shader is reading a smaller value, larger values are
+							// not supported (since there are no consistent filling semantics)
+							boolean isVector = outType.isVector();
+							if (isVector && outType.getDimension() > inType.getDimension()) {
+								LOGGER.warn(
+										"The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
+												+ " shader has a smaller vector dimension than the out declaration in the previous stage "
+												+ prevType.name() + " and could not be compatibility-patched.");
+								continue;
+							}
+
+							// rename all references of this out declaration to a new name (iris_)
+							// rename the original out declaration back to the original name
+							// add a global variable with the new name and the old type
+							// insert a statement that sets the value of the out declaration to the value of
+							// the global variable and does a truncation if necessary
+
+							// if the type can be converted implicitly, no cast is required
+							// TODO: is this whole thing required at all if the types can be cast implicitly
+							// or does that not apply to mismatching attributes?
+							// outType.getImplicitCasts().contains(inType)
 						}
 					}
 				}
