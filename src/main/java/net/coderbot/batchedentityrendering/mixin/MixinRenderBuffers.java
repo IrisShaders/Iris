@@ -103,6 +103,11 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 	}
 
 	@Override
+	public void freeAndDeleteBuffers() {
+		buffered.freeAndDeleteBuffer();
+	}
+
+	@Override
 	public int getDrawCalls() {
 		return buffered.getDrawCalls();
 	}
