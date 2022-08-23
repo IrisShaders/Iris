@@ -294,7 +294,7 @@ public class CompatibilityTransformer {
 							}
 
 							LOGGER.warn(
-									"The in declaration '" + name + "'' in the " + currentType.glShaderType.name()
+									"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 											+ " shader is missing a corresponding out declaration in the previous stage "
 											+ prevType.name() + " and has been compatibility-patched.");
 
