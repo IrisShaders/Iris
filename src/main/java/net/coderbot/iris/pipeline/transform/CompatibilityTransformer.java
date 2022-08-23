@@ -71,13 +71,13 @@ public class CompatibilityTransformer {
 		for (FunctionDefinition definition : root.nodeIndex.get(FunctionDefinition.class)) {
 			// stop on functions without parameters
 			FunctionPrototype prototype = definition.getFunctionPrototype();
-			if (prototype.children.isEmpty()) {
+			if (prototype.getChildren().isEmpty()) {
 				continue;
 			}
 
 			// find the const parameters
-			Set<String> names = new HashSet<>(prototype.children.size());
-			for (FunctionParameter parameter : prototype.children) {
+			Set<String> names = new HashSet<>(prototype.getChildren().size());
+			for (FunctionParameter parameter : prototype.getChildren()) {
 				if (getConstQualifier(parameter.getType().getTypeQualifier()) != null) {
 					String name = parameter.getName().getName();
 					names.add(name);
@@ -155,11 +155,20 @@ public class CompatibilityTransformer {
 		}
 	};
 
-	private static final String tag = "__";
-	private static final String typeTag = tag + "1";
-	private static final String nameTag = tag + "2";
-	private static final String outDeclarationTemplate = "out " + typeTag + " " + nameTag + ";";
-	private static final String initTemplate = nameTag + " = " + typeTag + ";";
+	private static final String tagPrefix = "_____";
+	private static final String typeTag = tagPrefix + "1";
+	private static final String nameTag = tagPrefix + "2";
+	private static final String nameTag2 = tagPrefix + "3";
+	private static final Statement initTemplate = ASTParser.getInternalInstance()
+			.parseSeparateStatement(nameTag + " = " + typeTag + ";");
+	private static final ExternalDeclaration declarationTemplate = ASTParser.getInternalInstance()
+			.parseSeparateExternalDeclaration("out " + typeTag + " " + nameTag + ";");
+	private static final ExternalDeclaration variableTemplate = ASTParser.getInternalInstance()
+			.parseSeparateExternalDeclaration(typeTag + " " + nameTag + ";");
+	private static final Statement statementTemplate = ASTParser.getInternalInstance()
+			.parseSeparateStatement(nameTag + " = " + typeTag + "(" + nameTag2 + ");");
+	private static final Statement statementTemplateVector = ASTParser.getInternalInstance()
+			.parseSeparateStatement(nameTag + " = " + typeTag + "(" + nameTag2 + ", vec4(0));");
 
 	// does transformations that require cross-shader type data
 	public static void transformGrouped(
@@ -177,7 +186,6 @@ public class CompatibilityTransformer {
 		 * declarations in the geometry shader are also just normal.
 		 * 
 		 * TODO:
-		 * - improve this when there is node cloning support in glsl-transformer
 		 * - fix issues where Iris' own declarations are detected and patched like
 		 * iris_FogFragCoord if there are geometry shaders present
 		 * - improved geometry shader support? They use funky declarations
@@ -209,6 +217,12 @@ public class CompatibilityTransformer {
 			TranslationUnit prevTree = trees.get(prevPatchTypes);
 			Root prevRoot = prevTree.getRoot();
 
+			// test if the prefix tag is used for some reason
+			if (prevRoot.identifierIndex.prefixQueryFlat(tagPrefix).findAny().isPresent()) {
+				LOGGER.warn("The prefix tag " + tagPrefix + " is used in the shader, bailing compatibility transformation.");
+				return;
+			}
+
 			// find out declarations
 			Map<String, BuiltinNumericTypeSpecifier> outDeclarations = new HashMap<>();
 			for (DeclarationExternalDeclaration declaration : prevRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
@@ -239,37 +253,33 @@ public class CompatibilityTransformer {
 
 				for (ExternalDeclaration declaration : currentRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (inDeclarationMatcher.matchesExtract(declaration)) {
-						String inName = inDeclarationMatcher.getStringDataMatch("name");
+						String name = inDeclarationMatcher.getStringDataMatch("name");
 						BuiltinNumericTypeSpecifier inSpecifier = inDeclarationMatcher.getNodeMatch("type",
 								BuiltinNumericTypeSpecifier.class);
 
-						if (!outDeclarations.containsKey(inName)) {
+						if (!outDeclarations.containsKey(name)) {
 							// make sure the declared in is actually used
-							if (!currentRoot.identifierIndex.getAncestors(inName, ReferenceExpression.class).findAny().isPresent()) {
+							if (!currentRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isPresent()) {
 								continue;
 							}
 
 							if (inSpecifier == null) {
 								LOGGER.warn(
-										"The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
+										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 												+ " shader that has a missing corresponding out declaration in the previous stage "
 												+ prevType.name() + " has a non-numeric type and could not be compatibility-patched.");
 								continue;
 							}
 
-							DeclarationExternalDeclaration newOutDeclaration = (DeclarationExternalDeclaration) t
-									.parseExternalDeclaration(prevTree, outDeclarationTemplate);
-							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, newOutDeclaration);
+							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, declarationTemplate.cloneInto(prevRoot));
 							// rename happens later
 
 							Type inType = inSpecifier.type;
-							BuiltinNumericTypeSpecifier newOutType = new BuiltinNumericTypeSpecifier(inType);
 							prevRoot.identifierIndex.getOne(typeTag).getAncestor(TypeSpecifier.class)
-									.replaceByAndDelete(newOutType);
+									.replaceByAndDelete(inSpecifier.cloneInto(prevRoot));
 
-							Statement init = t.parseStatement(prevTree, initTemplate);
-							mainFunctionStatements.getChildren().add(0, init);
-							prevRoot.identifierIndex.rename(nameTag, inName);
+							mainFunctionStatements.getChildren().add(0, initTemplate.cloneInto(prevRoot));
+							prevRoot.identifierIndex.rename(nameTag, name);
 
 							if (inType.isScalar()) {
 								prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
@@ -278,21 +288,21 @@ public class CompatibilityTransformer {
 								Root.indexBuildSession(prevRoot, () -> {
 									prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
 											.replaceByAndDelete(new FunctionCallExpression(
-													new Identifier(inType.getCompactName()),
+													new Identifier(inType.getMostCompactName()),
 													Stream.of(LiteralExpression.getDefaultValue(inType))));
 								});
 							}
 
 							LOGGER.warn(
-									"The in declaration '" + inName + "'' in the " + currentType.glShaderType.name()
+									"The in declaration '" + name + "'' in the " + currentType.glShaderType.name()
 											+ " shader is missing a corresponding out declaration in the previous stage "
 											+ prevType.name() + " and has been compatibility-patched.");
 
 							// update out declarations to prevent duplicates
-							outDeclarations.put(inName, null);
+							outDeclarations.put(name, null);
 						} else {
 							// there is an out declaration for this in declaration, check if the types match
-							BuiltinNumericTypeSpecifier outTypeSpecifier = outDeclarations.get(inName);
+							BuiltinNumericTypeSpecifier outTypeSpecifier = outDeclarations.get(name);
 
 							// discard newly inserted out declarations and those where the type matches
 							if (outTypeSpecifier == null || outTypeSpecifier.type == inSpecifier.type) {
@@ -304,47 +314,47 @@ public class CompatibilityTransformer {
 							// bail and warn on mismatching dimensionality
 							if (outType.getDimension() != inType.getDimension()) {
 								LOGGER.warn(
-										"The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
+										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 												+ " shader has a mismatching dimensionality (scalar/vector/matrix) with the out declaration in the previous stage "
 												+ prevType.name() + " and could not be compatibility-patched.");
 								continue;
 							}
 
-							// matrices aren't supported
-							if (outType.isMatrix()) {
-								LOGGER.warn(
-										"The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
-												+ " shader doesn't match the matrix-type out declaration in the previous stage "
-												+ prevType.name() + " and could not be compatibility-patched.");
-								continue;
-							}
-
-							// TODO: finish implementation
-							LOGGER.warn("The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
-									+ " shader doesn't match the type of the out declaration in the previous stage "
-									+ prevType.name() + " and has been compatibility-patched.");
-
-							// make sure the fragment shader is reading a smaller value, larger values are
-							// not supported (since there are no consistent filling semantics)
 							boolean isVector = outType.isVector();
 							if (isVector && outType.getDimension() > inType.getDimension()) {
 								LOGGER.warn(
-										"The in declaration '" + inName + "' in the " + currentType.glShaderType.name()
+										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 												+ " shader has a smaller vector dimension than the out declaration in the previous stage "
 												+ prevType.name() + " and could not be compatibility-patched.");
 								continue;
 							}
 
 							// rename all references of this out declaration to a new name (iris_)
-							// rename the original out declaration back to the original name
-							// add a global variable with the new name and the old type
-							// insert a statement that sets the value of the out declaration to the value of
-							// the global variable and does a truncation if necessary
+							String newName = tagPrefix + name;
+							prevRoot.identifierIndex.rename(name, newName);
 
-							// if the type can be converted implicitly, no cast is required
-							// TODO: is this whole thing required at all if the types can be cast implicitly
-							// or does that not apply to mismatching attributes?
-							// outType.getImplicitCasts().contains(inType)
+							// rename the original out declaration back to the original name
+							TypeAndInitDeclaration outDeclaration = outTypeSpecifier.getAncestor(TypeAndInitDeclaration.class);
+							if (outDeclaration == null) {
+								continue;
+							}
+							outDeclaration.getMembers().get(0).setName(new Identifier(name));
+
+							// add a global variable with the new name and the old type
+							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, variableTemplate.cloneInto(prevRoot));
+							prevRoot.identifierIndex.rename(nameTag, newName);
+							prevRoot.identifierIndex.getOne(typeTag).getAncestor(TypeSpecifier.class)
+									.replaceByAndDelete(outTypeSpecifier.cloneInto(prevRoot));
+
+							// insert a statement at the end of the main function that sets the value of the
+							// out declaration to the value of the global variable and does a type cast
+							prevTree.appendMain((isVector ? statementTemplateVector : statementTemplate).cloneInto(prevRoot));
+							prevRoot.identifierIndex.rename(nameTag, name);
+							prevRoot.identifierIndex.rename(nameTag2, newName);
+							prevRoot.identifierIndex.rename(typeTag, inType.getMostCompactName());
+
+							// make the out delcaration use the same type as the fragment shader
+							outTypeSpecifier.replaceByAndDelete(inSpecifier.cloneInto(prevRoot));
 						}
 					}
 				}
