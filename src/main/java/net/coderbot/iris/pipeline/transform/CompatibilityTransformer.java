@@ -155,7 +155,7 @@ public class CompatibilityTransformer {
 		}
 	};
 
-	private static final String tagPrefix = "_____";
+	private static final String tagPrefix = "iris__";
 	private static final String typeTag = tagPrefix + "1";
 	private static final String nameTag = tagPrefix + "2";
 	private static final String nameTag2 = tagPrefix + "3";
@@ -293,13 +293,13 @@ public class CompatibilityTransformer {
 								});
 							}
 
-							LOGGER.warn(
-									"The in declaration '" + name + "'' in the " + currentType.glShaderType.name()
-											+ " shader is missing a corresponding out declaration in the previous stage "
-											+ prevType.name() + " and has been compatibility-patched.");
-
 							// update out declarations to prevent duplicates
 							outDeclarations.put(name, null);
+
+							LOGGER.warn(
+									"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
+											+ " shader is missing a corresponding out declaration in the previous stage "
+											+ prevType.name() + " and has been compatibility-patched.");
 						} else {
 							// there is an out declaration for this in declaration, check if the types match
 							BuiltinNumericTypeSpecifier outTypeSpecifier = outDeclarations.get(name);
@@ -321,13 +321,6 @@ public class CompatibilityTransformer {
 							}
 
 							boolean isVector = outType.isVector();
-							if (isVector && outType.getDimension() > inType.getDimension()) {
-								LOGGER.warn(
-										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
-												+ " shader has a smaller vector dimension than the out declaration in the previous stage "
-												+ prevType.name() + " and could not be compatibility-patched.");
-								continue;
-							}
 
 							// rename all references of this out declaration to a new name (iris_)
 							String newName = tagPrefix + name;
@@ -338,7 +331,7 @@ public class CompatibilityTransformer {
 							if (outDeclaration == null) {
 								continue;
 							}
-							outDeclaration.getMembers().get(0).setName(new Identifier(name));
+							outDeclaration.getMembers().get(0).replaceByAndDelete(new Identifier(name));
 
 							// add a global variable with the new name and the old type
 							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, variableTemplate.cloneInto(prevRoot));
@@ -348,13 +341,25 @@ public class CompatibilityTransformer {
 
 							// insert a statement at the end of the main function that sets the value of the
 							// out declaration to the value of the global variable and does a type cast
-							prevTree.appendMain((isVector ? statementTemplateVector : statementTemplate).cloneInto(prevRoot));
+							prevTree.appendMain(
+									(isVector && outType.getDimensions()[0] < inType.getDimensions()[0] ? statementTemplateVector
+											: statementTemplate).cloneInto(prevRoot));
 							prevRoot.identifierIndex.rename(nameTag, name);
 							prevRoot.identifierIndex.rename(nameTag2, newName);
 							prevRoot.identifierIndex.rename(typeTag, inType.getMostCompactName());
 
 							// make the out delcaration use the same type as the fragment shader
 							outTypeSpecifier.replaceByAndDelete(inSpecifier.cloneInto(prevRoot));
+
+							// don't do the patch twice
+							outDeclarations.put(name, null);
+
+							LOGGER.warn(
+									"The out declaration '" + name + "' in the " + prevType.name()
+											+ " shader has a different type " + outType.getMostCompactName()
+											+ " than the corresponding in declaration of type " + inType.getMostCompactName()
+											+ " in the following stage " + currentType.glShaderType.name()
+											+ " and has been compatibility-patched.");
 						}
 					}
 				}
