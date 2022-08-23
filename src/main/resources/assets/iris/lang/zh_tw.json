@@ -43,6 +43,7 @@
   "options.iris.reset.tooltip.holdShift": "按住 SHIFT 後點擊以重設",
   "options.iris.importSettings.tooltip": "從檔案匯入設定",
   "options.iris.exportSettings.tooltip": "匯出設定至檔案",
+  "options.iris.mustDisableFullscreen": "請先結束全螢幕模式！",
   "options.iris.setToDefault": "將選項設為預設？",
   "options.iris.profile": "設定檔",
   "options.iris.profile.custom": "自訂",
