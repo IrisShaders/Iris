@@ -284,14 +284,14 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 			return false;
 		}
 
-		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ);
+		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ) != 0;
 	}
 
 	// For Sodium
 	// TODO: change this to respect intersections on 1.18+!
-	public boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	public int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		if (boxCuller != null && boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ)) {
-			return false;
+			return 0;
 		}
 
 		return isVisible(minX, minY, minZ, maxX, maxY, maxZ);
@@ -303,14 +303,14 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		return false;
 	}
 
-	private boolean isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+	private int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		float f = (float)(minX - this.x);
 		float g = (float)(minY - this.y);
 		float h = (float)(minZ - this.z);
 		float i = (float)(maxX - this.x);
 		float j = (float)(maxY - this.y);
 		float k = (float)(maxZ - this.z);
-		return this.checkCornerVisibility(f, g, h, i, j, k) != 0;
+		return this.checkCornerVisibility(f, g, h, i, j, k);
 	}
 
 
