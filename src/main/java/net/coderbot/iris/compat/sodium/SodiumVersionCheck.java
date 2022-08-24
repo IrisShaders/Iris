@@ -13,10 +13,7 @@ public class SodiumVersionCheck {
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
 			// Dev version
 			AllowedSodiumVersion.exact("0.4.2+build.16",
-					"https://modrinth.com/mod/sodium/version/mc1.19-0.4.2"),
-
-			// For use by ReplayMod
-			AllowedSodiumVersion.prefix("0.4.2+replaymod")
+					"https://modrinth.com/mod/sodium/version/mc1.19-0.4.2")
 	);
 
 	public static String getDownloadLink() {
@@ -31,6 +28,6 @@ public class SodiumVersionCheck {
 			}
 		}
 
-		return false;
+		return true;
 	}
 }

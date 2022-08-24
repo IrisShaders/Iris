@@ -76,7 +76,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		MemoryUtil.memPutShort(i + 12, XHFPModelVertexType.encodeBlockTexture(u));
 		MemoryUtil.memPutShort(i + 14, XHFPModelVertexType.encodeBlockTexture(v));
 
-		MemoryUtil.memPutInt(i + 16, XHFPModelVertexType.encodeLightMapTexCoord(light));
+		MemoryUtil.memPutInt(i + 16, light);
 
 		// NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
 		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
