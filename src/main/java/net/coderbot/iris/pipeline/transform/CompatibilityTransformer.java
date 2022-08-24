@@ -155,7 +155,7 @@ public class CompatibilityTransformer {
 		}
 	};
 
-	private static final String tagPrefix = "iris__";
+	private static final String tagPrefix = "iris_template_";
 	private static final String typeTag = tagPrefix + "1";
 	private static final String nameTag = tagPrefix + "2";
 	private static final String nameTag2 = tagPrefix + "3";
