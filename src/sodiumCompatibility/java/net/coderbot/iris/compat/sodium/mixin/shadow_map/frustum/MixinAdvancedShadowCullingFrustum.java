@@ -9,12 +9,18 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(AdvancedShadowCullingFrustum.class)
 public abstract class MixinAdvancedShadowCullingFrustum implements Frustum, FrustumAdapter {
 	@Shadow(remap = false)
-	public abstract boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
+	public abstract int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
 
 	@Override
 	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		// TODO: Visibility.INSIDE
-		return fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ) ? Visibility.INTERSECT : Visibility.OUTSIDE;
+		return switch(fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ)) {
+			case 0 -> Visibility.OUTSIDE;
+			case 1 -> Visibility.INSIDE;
+			case 2 -> Visibility.INTERSECT;
+			default ->
+				throw new IllegalStateException("Unexpected value: " + fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ));
+		};
 	}
 
 	@Override

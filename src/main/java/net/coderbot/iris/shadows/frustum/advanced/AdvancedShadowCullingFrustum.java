@@ -4,7 +4,6 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
-import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
@@ -285,13 +284,14 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 			return false;
 		}
 
-		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ);
+		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ) != 0;
 	}
 
 	// For Sodium
-	public boolean fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	// TODO: change this to respect intersections on 1.18+!
+	public int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		if (boxCuller != null && boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ)) {
-			return false;
+			return 0;
 		}
 
 		return isVisible(minX, minY, minZ, maxX, maxY, maxZ);
@@ -303,42 +303,42 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		return false;
 	}
 
-	private boolean isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+	private int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		float f = (float)(minX - this.x);
 		float g = (float)(minY - this.y);
 		float h = (float)(minZ - this.z);
 		float i = (float)(maxX - this.x);
 		float j = (float)(maxY - this.y);
 		float k = (float)(maxZ - this.z);
-		return this.isAnyCornerVisible(f, g, h, i, j, k);
+		return this.checkCornerVisibility(f, g, h, i, j, k);
 	}
 
-	private boolean isAnyCornerVisible(float x1, float y1, float z1, float x2, float y2, float z2) {
+
+	/**
+	 * Checks corner visibility.
+	 * @param minX Minimum X value of the AABB.
+	 * @param minY Minimum Y value of the AABB.
+	 * @param minZ Minimum Z value of the AABB.
+	 * @param maxX Maximum X value of the AABB.
+	 * @param maxY Maximum Y value of the AABB.
+	 * @param maxZ Maximum Z value of the AABB.
+	 * @return 0 if nothing is visible, 1 if everything is visible, 2 if only some corners are visible.
+	 */
+	private int checkCornerVisibility(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		boolean inside = true;
+
 		for (int i = 0; i < planeCount; ++i) {
 			Vector4f plane = this.planes[i];
 
-			// dot(plane, point) > 0.0F implies inside
-			// if no points are inside, then this box lies entirely outside of the frustum.
-			// this avoids false negative - a single point being inside causes the box to pass
-			// this plane test
-
-			if (       !(dot(plane, x1, y1, z1) > 0.0F)
-					&& !(dot(plane, x2, y1, z1) > 0.0F)
-					&& !(dot(plane, x1, y2, z1) > 0.0F)
-					&& !(dot(plane, x2, y2, z1) > 0.0F)
-					&& !(dot(plane, x1, y1, z2) > 0.0F)
-					&& !(dot(plane, x2, y1, z2) > 0.0F)
-					&& !(dot(plane, x1, y2, z2) > 0.0F)
-					&& !(dot(plane, x2, y2, z2) > 0.0F)) {
-				return false;
+			// Check if plane is inside or intersecting.
+			// This is ported from JOML's FrustumIntersection.
+			if (plane.x() * (plane.x() < 0 ? minX : maxX) + plane.y() * (plane.y() < 0 ? minY : maxY) + plane.z() * (plane.z() < 0 ? minZ : maxZ) >= -plane.w()) {
+				inside &= plane.x() * (plane.x() < 0 ? maxX : minX) + plane.y() * (plane.y() < 0 ? maxY : minY) + plane.z() * (plane.z() < 0 ? maxZ : minZ) >= -plane.w();
+			} else {
+				return 0;
 			}
 		}
 
-		return true;
-	}
-
-	private float dot(Vector4f input, float x, float y, float z) {
-		// This won't get intrinsics since we compile against J8, but hopefully newer Java can autovectorize this...?
-		return Math.fma(input.x(), x, Math.fma(input.y(), y, Math.fma(input.z(), z, input.w())));
+		return inside ? 1 : 2;
 	}
 }
