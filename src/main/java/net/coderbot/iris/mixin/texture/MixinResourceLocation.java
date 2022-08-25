@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ResourceLocation.class)
+@Mixin(value = ResourceLocation.class, priority = 1010)
 public class MixinResourceLocation {
 	@Inject(method = "isValidPath", at = @At("HEAD"), cancellable = true)
 	private static void iris$allowInvalidPaths(String path, CallbackInfoReturnable<Boolean> cir) {
