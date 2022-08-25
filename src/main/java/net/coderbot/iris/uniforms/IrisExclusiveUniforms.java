@@ -49,7 +49,7 @@ public class IrisExclusiveUniforms {
 			return -1;
 		}
 
-		return Minecraft.getInstance().player.getAirSupply() / Minecraft.getInstance().player.getMaxAirSupply();
+		return (float) Minecraft.getInstance().player.getAirSupply() / (float) Minecraft.getInstance().player.getMaxAirSupply();
 	}
 
 	private static float getMaxAir() {
