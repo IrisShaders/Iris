@@ -11,11 +11,12 @@ public class IrisExclusiveUniforms {
 	public static void addIrisExclusiveUniforms(UniformHolder uniforms) {
 		//All Iris-exclusive uniforms (uniforms which do not exist in either OptiFine or ShadersMod) should be registered here.
 		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);
-		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "currentPlayerHealth", IrisExclusiveUniforms::getCurrentHealth);
-		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "maxPlayerHealth", IrisExclusiveUniforms::getMaxHealth);
-		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "currentPlayerHunger", IrisExclusiveUniforms::getCurrentHunger);
-		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "currentPlayerAir", IrisExclusiveUniforms::getCurrentAir);
-		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "maxPlayerAir", IrisExclusiveUniforms::getMaxAir);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerHealth", IrisExclusiveUniforms::getCurrentHealth);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerHealth", IrisExclusiveUniforms::getMaxHealth);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerHunger", IrisExclusiveUniforms::getCurrentHunger);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerHunger", () -> 20);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerAir", IrisExclusiveUniforms::getCurrentAir);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerAir", IrisExclusiveUniforms::getMaxAir);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "firstPersonCamera", IrisExclusiveUniforms::isFirstPersonCamera);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isSpectator", IrisExclusiveUniforms::isSpectator);
 		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "eyePosition", IrisExclusiveUniforms::getEyePosition);
@@ -32,7 +33,7 @@ public class IrisExclusiveUniforms {
 			return -1;
 		}
 
-		return Minecraft.getInstance().player.getHealth();
+		return Minecraft.getInstance().player.getHealth() / Minecraft.getInstance().player.getMaxHealth();
 	}
 
 	private static float getCurrentHunger() {
@@ -40,7 +41,7 @@ public class IrisExclusiveUniforms {
 			return -1;
 		}
 
-		return Minecraft.getInstance().player.getFoodData().getFoodLevel();
+		return Minecraft.getInstance().player.getFoodData().getFoodLevel() / 20f;
 	}
 
 	private static float getCurrentAir() {
@@ -48,7 +49,7 @@ public class IrisExclusiveUniforms {
 			return -1;
 		}
 
-		return Minecraft.getInstance().player.getAirSupply();
+		return Minecraft.getInstance().player.getAirSupply() / Minecraft.getInstance().player.getMaxAirSupply();
 	}
 
 	private static float getMaxAir() {
