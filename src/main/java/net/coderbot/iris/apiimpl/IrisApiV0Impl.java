@@ -1,5 +1,6 @@
-package net.coderbot.iris;
+package net.coderbot.iris.apiimpl;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
