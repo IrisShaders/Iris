@@ -73,6 +73,7 @@
     "texture.TextureAtlasSpriteAccessor",
     "texture.pbr.MixinTextureAtlas",
     "texture.pbr.MixinTextureAtlasSprite",
+    "texture.pbr.MixinNativeImage",
     "state_tracking.MixinGlStateManager",
     "state_tracking.MixinPostChain",
     "state_tracking.MixinRenderTarget"

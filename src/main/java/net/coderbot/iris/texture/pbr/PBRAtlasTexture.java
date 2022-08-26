@@ -1,6 +1,8 @@
 package net.coderbot.iris.texture.pbr;
 
 import com.mojang.blaze3d.platform.TextureUtil;
+import net.coderbot.iris.gl.IrisRenderSystem;
+
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
 import net.coderbot.iris.texture.util.TextureExporter;
 import net.coderbot.iris.texture.util.TextureManipulationUtil;
@@ -94,6 +96,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	protected void uploadSprite(TextureAtlasSprite sprite) {
 		if (sprite.isAnimation()) {
+			IrisRenderSystem.lockParameters(true);
 			TextureAtlasSpriteAccessor accessor = (TextureAtlasSpriteAccessor) sprite;
 			AnimationMetadataSection metadata = accessor.getMetadata();
 
@@ -107,14 +110,18 @@ public class PBRAtlasTexture extends AbstractTexture {
 			}
 		}
 
+		IrisRenderSystem.lockParameters(false);
+
 		sprite.uploadFirstFrame();
 	}
 
 	public void cycleAnimationFrames() {
 		bind();
+		IrisRenderSystem.lockParameters(true);
 		for (TextureAtlasSprite sprite : animatedSprites) {
 			sprite.cycleFrames();
 		}
+		IrisRenderSystem.lockParameters(false);
 	}
 
 	@Override

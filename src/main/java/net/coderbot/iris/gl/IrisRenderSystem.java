@@ -19,6 +19,16 @@ import java.nio.IntBuffer;
  * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
 public class IrisRenderSystem {
+	private static boolean lockParameters;
+
+	public static void lockParameters(boolean locked) {
+		lockParameters = locked;
+	}
+
+	public static boolean areParametersLocked() {
+		return lockParameters;
+	}
+
 	public static void getIntegerv(int pname, int[] params) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glGetIntegerv(pname, params);
