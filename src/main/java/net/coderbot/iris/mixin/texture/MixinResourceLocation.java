@@ -10,16 +10,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ResourceLocation.class)
 public class MixinResourceLocation {
 	@Inject(method = "isValidPath", at = @At("HEAD"), cancellable = true)
-	private static void iris$allowBrokenPaths(String string, CallbackInfoReturnable<Boolean> cir) {
-		if (string.equals("DUMMY")) {
+	private static void iris$allowInvalidPaths(String path, CallbackInfoReturnable<Boolean> cir) {
+		if (path.equals("DUMMY")) {
 			// This is here to solve a weird case in DFU that expects minecraft:DUMMY to be invalid.
 			cir.setReturnValue(false);
 			return;
 		}
 
-		for (int i = 0; i < string.length(); ++i) {
-			if (ResourceLocation.validPathChar(string.charAt(i))) continue;
-			Iris.logger.warn("Path " + string + " is invalid. Iris allows this behavior, however the pack developer should fix this!");
+		for (int i = 0; i < path.length(); ++i) {
+			if (ResourceLocation.validPathChar(path.charAt(i))) {
+				continue;
+			}
+
+			Iris.logger.warn("Detected invalid path '" + path + "'. Iris allows this path to be used, but the resource pack developer should fix it!");
 			break;
 		}
 
