@@ -64,6 +64,7 @@
     "texture.AnimationMetadataSectionAccessor",
     "texture.MixinAbstractTexture",
     "texture.MixinGlStateManager",
+    "texture.MixinResourceLocation",
     "texture.MixinTextureAtlasSprite",
     "texture.MixinTextureManager",
     "texture.SimpleTextureAccessor",
