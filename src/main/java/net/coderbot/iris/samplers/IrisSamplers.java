@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
@@ -17,8 +18,6 @@ public class IrisSamplers {
 	public static final int ALBEDO_TEXTURE_UNIT = 0;
 	public static final int OVERLAY_TEXTURE_UNIT = 1;
 	public static final int LIGHTMAP_TEXTURE_UNIT = 2;
-	public static final int NORMALS_TEXTURE_UNIT = 3;
-	public static final int SPECULAR_TEXTURE_UNIT = 4;
 
 	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(0, 1, 2, 3, 4);
 
@@ -124,7 +123,7 @@ public class IrisSamplers {
 		return samplers.hasSampler("normals") || samplers.hasSampler("specular");
 	}
 
-	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture whitePixel, InputAvailability availability) {
+	public static void addLevelSamplers(SamplerHolder samplers, WorldRenderingPipeline pipeline, AbstractTexture whitePixel, InputAvailability availability) {
 		if (availability.texture) {
 			samplers.addExternalSampler(ALBEDO_TEXTURE_UNIT, "tex", "texture", "gtexture");
 		} else {
@@ -145,8 +144,9 @@ public class IrisSamplers {
 			samplers.addDynamicSampler(whitePixel::getId, "iris_overlay");
 		}
 
-		samplers.addExternalSampler(NORMALS_TEXTURE_UNIT, "normals");
-		samplers.addExternalSampler(SPECULAR_TEXTURE_UNIT, "specular");
+		samplers.addDynamicSampler(pipeline::getCurrentNormalTexture, "normals");
+		samplers.addDynamicSampler(pipeline::getCurrentSpecularTexture, "specular");
+
 	}
 
 	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {

@@ -134,6 +134,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private SpecialCondition special = null;
 
 	private boolean shouldBindPBR;
+	private int currentNormalTexture;
+	private int currentSpecularTexture;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -336,7 +338,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap(TextureStage.GBUFFERS_AND_SHADOW));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
-			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, whitePixel, new InputAvailability(true, true, false));
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -364,7 +366,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap(TextureStage.GBUFFERS_AND_SHADOW));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedAfterPrepare, renderTargets, false);
-			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, whitePixel, new InputAvailability(true, true, false));
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
 			// Only initialize these samplers if the shadow map renderer exists.
@@ -597,7 +599,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
 		}
 
-		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, whitePixel, availability);
+		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, availability);
 
 		if (!shadow) {
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
@@ -1086,13 +1088,21 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	@Override
+	public int getCurrentNormalTexture() {
+		return currentNormalTexture;
+	}
+
+	@Override
+	public int getCurrentSpecularTexture() {
+		return currentSpecularTexture;
+	}
+
+	@Override
 	public void onBindTexture(int id) {
 		if (shouldBindPBR && isRenderingWorld) {
 			PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
-			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + IrisSamplers.NORMALS_TEXTURE_UNIT);
-			RenderSystem.bindTexture(pbrHolder.getNormalTexture().getId());
-			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + IrisSamplers.SPECULAR_TEXTURE_UNIT);
-			RenderSystem.bindTexture(pbrHolder.getSpecularTexture().getId());
+			currentNormalTexture = pbrHolder.getNormalTexture().getId();
+			currentSpecularTexture = pbrHolder.getSpecularTexture().getId();
 		}
 	}
 }
