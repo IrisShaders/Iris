@@ -3,8 +3,6 @@ package net.coderbot.iris.pipeline.transform;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -241,15 +239,12 @@ public class CompatibilityTransformer {
 				Root currentRoot = currentTree.getRoot();
 
 				// find the main function
-				Optional<FunctionDefinition> mainFunction = prevRoot.identifierIndex.getStream("main")
-						.map(id -> id.getBranchAncestor(FunctionDefinition.class, FunctionDefinition::getFunctionPrototype))
-						.filter(Objects::nonNull).findAny();
-				if (!mainFunction.isPresent()) {
+				CompoundStatement mainFunctionStatements = prevTree.getMainDefinitionBody();
+				if (mainFunctionStatements == null) {
 					LOGGER.warn(
 							"A shader is missing a main function and could not be compatibility-patched.");
 					continue;
 				}
-				CompoundStatement mainFunctionStatements = mainFunction.get().getBody();
 
 				for (ExternalDeclaration declaration : currentRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (inDeclarationMatcher.matchesExtract(declaration)) {
