@@ -45,7 +45,7 @@ public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	private static EnumASTTransformer<Parameters, PatchShaderType> transformer;
 	private static final boolean useCache = true;
-	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = useCache ? new LRUCache<>(400) : null;
+	private static final Map<CacheKey, Map<PatchShaderType, String>> cache =  new LRUCache<>(400);
 
 	private static class CacheKey {
 		final Parameters parameters;
