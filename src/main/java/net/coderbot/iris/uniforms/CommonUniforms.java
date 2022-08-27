@@ -23,6 +23,7 @@ import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.coderbot.iris.vendored.joml.Vector4i;
+import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -34,7 +35,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FogType;
@@ -273,13 +273,11 @@ public final class CommonUniforms {
 
 			ItemStack stack = client.player.getItemInHand(hand);
 
-			if (stack == ItemStack.EMPTY || stack == null || !(stack.getItem() instanceof BlockItem)) {
+			if (stack == ItemStack.EMPTY || stack == null) {
 				return 0;
 			}
 
-			BlockItem item = (BlockItem) stack.getItem();
-
-			return item.getBlock().defaultBlockState().getLightEmission();
+			return ((IrisItemLightProvider)stack.getItem()).getLightEmission(client.player, stack);
 		}
 	}
 
