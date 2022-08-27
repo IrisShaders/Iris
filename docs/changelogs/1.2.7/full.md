@@ -6,6 +6,10 @@ Iris 1.2.7 is now available for download for 1.16.5, 1.17.1, 1.18.2, and 1.19.2,
 
 This release was developed by coderbot and IMS.
 
+## Updates
+
+- Updated to Sodium 0.4.3 (IMS)
+
 ## Performance
 
 - Rewrote shadow frustum calculation to improve shadow performance, and allow skipping some checks on 1.17+. (IMS)
