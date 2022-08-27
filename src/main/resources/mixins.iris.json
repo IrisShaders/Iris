@@ -29,6 +29,7 @@
     "MixinGlStateManager_DepthColorOverride",
     "MixinGlStateManager_FramebufferBinding",
     "MixinGlUniform",
+    "MixinItem",
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
