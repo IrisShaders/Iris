@@ -34,6 +34,7 @@ import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.ast.transform.Template;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.gl.shader.ShaderType;
 
@@ -154,19 +155,34 @@ public class CompatibilityTransformer {
 	};
 
 	private static final String tagPrefix = "iris_template_";
-	private static final String typeTag = tagPrefix + "1";
-	private static final String nameTag = tagPrefix + "2";
-	private static final String nameTag2 = tagPrefix + "3";
-	private static final Statement initTemplate = ASTParser.getInternalInstance()
-			.parseSeparateStatement(nameTag + " = " + typeTag + ";");
-	private static final ExternalDeclaration declarationTemplate = ASTParser.getInternalInstance()
-			.parseSeparateExternalDeclaration("out " + typeTag + " " + nameTag + ";");
-	private static final ExternalDeclaration variableTemplate = ASTParser.getInternalInstance()
-			.parseSeparateExternalDeclaration(typeTag + " " + nameTag + ";");
-	private static final Statement statementTemplate = ASTParser.getInternalInstance()
-			.parseSeparateStatement(nameTag + " = " + typeTag + "(" + nameTag2 + ");");
-	private static final Statement statementTemplateVector = ASTParser.getInternalInstance()
-			.parseSeparateStatement(nameTag + " = " + typeTag + "(" + nameTag2 + ", vec4(0));");
+	private static final Template<ExternalDeclaration> declarationTemplate = Template
+			.withExternalDeclaration("out __type __name;");
+	private static final Template<Statement> initTemplate = Template.withStatement("__decl = __value;");
+	private static final Template<ExternalDeclaration> variableTemplate = Template
+			.withExternalDeclaration("__type __internalDecl;");
+	private static final Template<Statement> statementTemplate = Template
+			.withStatement("__oldDecl = vec3(__internalDecl);");
+	private static final Template<Statement> statementTemplateVector = Template
+			.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
+
+	static {
+		declarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
+		declarationTemplate.markIdentifierReplacement("__name");
+		initTemplate.markIdentifierReplacement("__decl");
+		initTemplate.markLocalReplacement("__value", ReferenceExpression.class);
+		variableTemplate.markLocalReplacement("__type", TypeSpecifier.class);
+		variableTemplate.markIdentifierReplacement("__internalDecl");
+		statementTemplate.markIdentifierReplacement("__oldDecl");
+		statementTemplate.markIdentifierReplacement("__internalDecl");
+		statementTemplate.markLocalReplacement(
+				statementTemplate.getSourceRoot().nodeIndex.getStream(BuiltinNumericTypeSpecifier.class)
+						.filter(specifier -> specifier.type == Type.F32VEC3).findAny().get());
+		statementTemplateVector.markIdentifierReplacement("__oldDecl");
+		statementTemplateVector.markIdentifierReplacement("__internalDecl");
+		statementTemplateVector.markLocalReplacement(
+				statementTemplateVector.getSourceRoot().nodeIndex.getStream(BuiltinNumericTypeSpecifier.class)
+						.filter(specifier -> specifier.type == Type.F32VEC3).findAny().get());
+	}
 
 	// does transformations that require cross-shader type data
 	public static void transformGrouped(
@@ -265,28 +281,19 @@ public class CompatibilityTransformer {
 												+ prevType.name() + " has a non-numeric type and could not be compatibility-patched.");
 								continue;
 							}
-
-							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, declarationTemplate.cloneInto(prevRoot));
-							// rename happens later
-
 							Type inType = inSpecifier.type;
-							prevRoot.identifierIndex.getOne(typeTag).getAncestor(TypeSpecifier.class)
-									.replaceByAndDelete(inSpecifier.cloneInto(prevRoot));
 
-							mainFunctionStatements.getChildren().add(0, initTemplate.cloneInto(prevRoot));
-							prevRoot.identifierIndex.rename(nameTag, name);
+							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, declarationTemplate.getInstanceFor(prevRoot,
+									inSpecifier.cloneInto(prevRoot),
+									new Identifier(name)));
 
-							if (inType.isScalar()) {
-								prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
-										.replaceByAndDelete(LiteralExpression.getDefaultValue(inType));
-							} else {
-								Root.indexBuildSession(prevRoot, () -> {
-									prevRoot.identifierIndex.getOneReferenceExpression(typeTag)
-											.replaceByAndDelete(new FunctionCallExpression(
+							mainFunctionStatements.getChildren().add(0, initTemplate.getInstanceFor(prevRoot,
+									new Identifier(name),
+									inType.isScalar()
+											? LiteralExpression.getDefaultValue(inType)
+											: Root.indexNodes(prevRoot, () -> new FunctionCallExpression(
 													new Identifier(inType.getMostCompactName()),
-													Stream.of(LiteralExpression.getDefaultValue(inType))));
-								});
-							}
+													Stream.of(LiteralExpression.getDefaultValue(inType))))));
 
 							// update out declarations to prevent duplicates
 							outDeclarations.put(name, null);
@@ -303,8 +310,8 @@ public class CompatibilityTransformer {
 							if (outTypeSpecifier == null || outTypeSpecifier.type == inSpecifier.type) {
 								continue;
 							}
-							Type outType = outTypeSpecifier.type;
 							Type inType = inSpecifier.type;
+							Type outType = outTypeSpecifier.type;
 
 							// bail and warn on mismatching dimensionality
 							if (outType.getDimension() != inType.getDimension()) {
@@ -329,21 +336,20 @@ public class CompatibilityTransformer {
 							outDeclaration.getMembers().get(0).replaceByAndDelete(new Identifier(name));
 
 							// add a global variable with the new name and the old type
-							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, variableTemplate.cloneInto(prevRoot));
-							prevRoot.identifierIndex.rename(nameTag, newName);
-							prevRoot.identifierIndex.getOne(typeTag).getAncestor(TypeSpecifier.class)
-									.replaceByAndDelete(outTypeSpecifier.cloneInto(prevRoot));
+							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, variableTemplate.getInstanceFor(prevRoot,
+									outTypeSpecifier.cloneInto(prevRoot),
+									new Identifier(newName)));
 
 							// insert a statement at the end of the main function that sets the value of the
 							// out declaration to the value of the global variable and does a type cast
 							prevTree.appendMain(
 									(isVector && outType.getDimensions()[0] < inType.getDimensions()[0] ? statementTemplateVector
-											: statementTemplate).cloneInto(prevRoot));
-							prevRoot.identifierIndex.rename(nameTag, name);
-							prevRoot.identifierIndex.rename(nameTag2, newName);
-							prevRoot.identifierIndex.rename(typeTag, inType.getMostCompactName());
+											: statementTemplate).getInstanceFor(prevRoot,
+													new Identifier(name),
+													new Identifier(newName),
+													inSpecifier.cloneInto(prevRoot)));
 
-							// make the out delcaration use the same type as the fragment shader
+							// make the out declaration use the same type as the fragment shader
 							outTypeSpecifier.replaceByAndDelete(inSpecifier.cloneInto(prevRoot));
 
 							// don't do the patch twice
