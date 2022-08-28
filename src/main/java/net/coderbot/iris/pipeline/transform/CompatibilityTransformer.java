@@ -1,5 +1,7 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.FunctionParameter;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
@@ -66,7 +69,7 @@ public class CompatibilityTransformer {
 		 * See https://wiki.shaderlabs.org/wiki/Compiler_Behavior_Notes
 		 */
 		Map<FunctionDefinition, Set<String>> constFunctions = new HashMap<>();
-		Set<String> constParameters = new HashSet<>();
+		Set<String> processingSet = new HashSet<>();
 		for (FunctionDefinition definition : root.nodeIndex.get(FunctionDefinition.class)) {
 			// stop on functions without parameters
 			FunctionPrototype prototype = definition.getFunctionPrototype();
@@ -80,10 +83,10 @@ public class CompatibilityTransformer {
 				if (getConstQualifier(parameter.getType().getTypeQualifier()) != null) {
 					String name = parameter.getName().getName();
 					names.add(name);
-					constParameters.add(name);
+					processingSet.add(name);
 				}
 			}
-			if (!constParameters.isEmpty()) {
+			if (!names.isEmpty()) {
 				constFunctions.put(definition, names);
 			}
 		}
@@ -91,8 +94,13 @@ public class CompatibilityTransformer {
 		// find the reference expressions for the const parameters
 		// and check that they are in the right function and are of the right type
 		boolean constDeclarationHit = false;
-		for (String name : constParameters) {
+		Deque<String> processingQueue = new ArrayDeque<>(processingSet);
+		while (!processingQueue.isEmpty()) {
+			String name = processingQueue.poll();
+			processingSet.remove(name);
 			for (Identifier id : root.identifierIndex.get(name)) {
+				// since this searches for reference expressions, this won't accidentally find
+				// the name as the name of a declaration member
 				ReferenceExpression reference = id.getAncestor(ReferenceExpression.class);
 				if (reference == null) {
 					continue;
@@ -105,11 +113,11 @@ public class CompatibilityTransformer {
 				if (inDefinition == null) {
 					continue;
 				}
-				Set<String> definitionParameters = constFunctions.get(inDefinition);
-				if (definitionParameters == null) {
+				Set<String> constIdsInFunction = constFunctions.get(inDefinition);
+				if (constIdsInFunction == null) {
 					continue;
 				}
-				if (definitionParameters.contains(name)) {
+				if (constIdsInFunction.contains(name)) {
 					// remove the const qualifier from the reference expression
 					TypeQualifier qualifier = taid.getType().getTypeQualifier();
 					StorageQualifier constQualifier = getConstQualifier(qualifier);
@@ -121,13 +129,31 @@ public class CompatibilityTransformer {
 						qualifier.detachAndDelete();
 					}
 					constDeclarationHit = true;
+
+					// add all members of the declaration to the list of const parameters to process
+					for (DeclarationMember member : taid.getMembers()) {
+						String memberName = member.getName().getName();
+
+						// the name may not be the same as the parameter name
+						if (constIdsInFunction.contains(memberName)) {
+							throw new IllegalStateException("Illegal redefinition of const parameter " + name);
+						}
+
+						constIdsInFunction.add(memberName);
+
+						// don't add to the queue twice if it's already been added by a different scope
+						if (!processingSet.contains(memberName)) {
+							processingQueue.add(memberName);
+							processingSet.add(memberName);
+						}
+					}
 				}
 			}
 		}
 
 		if (constDeclarationHit) {
 			LOGGER.warn(
-					"Removed the const keyword from declarations that use const parameters. Const declarations usually require constant initializer expresions which immutable parameters are not. This is done to ensure better compatibility drivers' varying behavior at different versions. See Section 4.3.2 on Constant Qualifiers and Section 4.3.3 on Constant Expressions in the GLSL 4.1 and 4.2 specifications for more information.");
+					"Removed the const keyword from declarations that use const parameters. Const declarations usually require constant initializer expresions which immutable parameters are not. This is done to ensure better compatibility drivers' varying behavior at different versions. See Section 4.3.2 on Constant Qualifiers and Section 4.3.3 on Constant Expressions in the GLSL 4.1 and 4.2 specifications for more information. Additionally, see https://wiki.shaderlabs.org/wiki/Compiler_Behavior_Notes for the varying behavior of drivers.");
 		}
 
 		// remove empty external declarations
