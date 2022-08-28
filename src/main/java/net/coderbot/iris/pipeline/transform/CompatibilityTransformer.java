@@ -65,7 +65,8 @@ public class CompatibilityTransformer {
 		 * initialized with const parameters. Const parameters are immutable parameters
 		 * and can't be used to initialize const declarations because they expect
 		 * constant, not just immutable, expressions. This varies between drivers and
-		 * versions.
+		 * versions. Also removes the const qualifier from declarations that use the
+		 * identifiers from which the declaration was removed previously.
 		 * See https://wiki.shaderlabs.org/wiki/Compiler_Behavior_Notes
 		 */
 		Map<FunctionDefinition, Set<String>> constFunctions = new HashMap<>();
