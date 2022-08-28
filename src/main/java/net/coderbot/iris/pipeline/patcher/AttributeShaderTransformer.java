@@ -56,12 +56,12 @@ public class AttributeShaderTransformer {
 			transformations.replaceRegex("uniform\\s+vec4\\s+entityColor;", "");
 
 			// Check if mc_Entity is a float value and is defined. If so, remove it's declaration, and define all current declarations to mc_Entity.x, otherwise just redeclare.
-			if (transformations.containsRegex("attribute\\s+float\\s+mc_Entity;") || transformations.containsRegex("in\\s+float\\s+mc_Entity;")) {
-				transformations.replaceExact("mc_Entity", "mcEntityReplacement");
+			if (transformations.containsRegex("attribute\\s+float\\s+mc_Entity;")) {
 				transformations.replaceRegex("attribute\\s+float\\s+mc_Entity;", "");
-				transformations.define("mcEntityReplacement", "mc_Entity.x");
-			} else {
+				transformations.replaceExact("mc_Entity", "0.0");
+			} else if (transformations.containsRegex("attribute\\s+vec\\d\\s+mc_Entity")) {
 				transformations.replaceRegex("attribute\\s+vec\\d\\s+mc_Entity;", "");
+				transformations.replaceExact("mc_Entity", "vec4(0)");
 			}
 
 			// add our own declarations
