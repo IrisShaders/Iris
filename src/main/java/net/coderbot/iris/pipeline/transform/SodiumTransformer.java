@@ -19,9 +19,15 @@ public class SodiumTransformer {
 		CommonTransformer.transform(t, tree, root, parameters);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
+			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
+			// See https://github.com/IrisShaders/Iris/issues/1149
+			root.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
+
 			if (parameters.inputs.hasTex()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 						"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
@@ -31,15 +37,19 @@ public class SodiumTransformer {
 			}
 
 			if (parameters.inputs.hasLight()) {
-				SodiumTerrainTransformer.replaceLightmapForSodium("_vert_tex_light_coord", t, tree, root);
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
+						"vec4(_vert_tex_light_coord, 0.0, 1.0)");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
-						"vec4(0.0, 0.0, 0.0, 1.0)");
+						"vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
-			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other
-			// texture coordinates are not valid inputs.
-			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 2, 7);
+			AttributeTransformer.patchMultiTexCoord3(t, tree, root, parameters);
+
+			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with
+			// gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture
+			// coordinates are not valid inputs.
+			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
 		if (parameters.inputs.hasColor()) {
