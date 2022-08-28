@@ -11,6 +11,7 @@ public enum RenderCondition {
 	BEACON_BEAM,
 	ENTITIES,
 	GLINT,
+	TEXT,
 	ENTITY_EYES,
 	HAND_OPAQUE,
 	HAND_TRANSLUCENT,

@@ -240,6 +240,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				ProgramId.BeaconBeam, ProgramId.BeaconBeam, ProgramId.BeaconBeam,
 				ProgramId.Entities, ProgramId.Entities, ProgramId.Entities,
 				null, ProgramId.ArmorGlint, ProgramId.ArmorGlint,
+				null, ProgramId.Text, ProgramId.Text,
 				null, ProgramId.SpiderEyes, ProgramId.SpiderEyes,
 				ProgramId.Hand, ProgramId.Hand, ProgramId.Hand,
 				ProgramId.HandWater, ProgramId.HandWater, ProgramId.HandWater,
@@ -461,6 +462,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				return RenderCondition.ENTITY_EYES;
 			} else if (special == SpecialCondition.GLINT) {
 				return RenderCondition.GLINT;
+			} else if (special == SpecialCondition.TEXT) {
+				return RenderCondition.TEXT;
 			}
 		}
 

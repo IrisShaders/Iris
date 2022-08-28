@@ -63,6 +63,16 @@ public class MixinRenderStateShard_Tagging {
 				GbufferPrograms.teardownSpecialRenderCondition(SpecialCondition.ENTITY_EYES);
 				previousClearState.run();
 			};
+		} else if (name.startsWith("text")) {
+			setupState = () -> {
+				GbufferPrograms.setupSpecialRenderCondition(SpecialCondition.TEXT);
+				previousSetupState.run();
+			};
+
+			clearState = () -> {
+				GbufferPrograms.teardownSpecialRenderCondition(SpecialCondition.TEXT);
+				previousClearState.run();
+			};
 		} else if (name.contains("glint")) {
 			// TODO: Use blend mode & depth state instead of matching on render types.
 			//       That would potentially be more more robust... but more complex.
