@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -22,7 +23,7 @@ import java.util.Arrays;
 
 public class ShadowRenderTargets {
 	// TODO: Make this match the value of GL_MAX_DRAW_BUFFERS (or whatever property name it is)
-	public static int MAX_SHADOW_RENDER_TARGETS = 8;
+	public static int MAX_SHADOW_RENDER_TARGETS = SamplerLimits.get().getMaxDrawBuffers();
 
 	private final int[] targets;
 	private final InternalTextureFormat[] formats;
@@ -40,8 +41,9 @@ public class ShadowRenderTargets {
 	private boolean needsFullClear;
 
 	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
-		this.formats = new InternalTextureFormat[MAX_SHADOW_RENDER_TARGETS];
-		this.isHardwareFiltered = new boolean[MAX_SHADOW_RENDER_TARGETS];
+		int TARGET_AMOUNT = shadowDirectives.getColorSamplingSettings().size();
+		this.formats = new InternalTextureFormat[TARGET_AMOUNT];
+		this.isHardwareFiltered = new boolean[TARGET_AMOUNT];
 
 		for (int i = 0; i < formats.length; i++) {
 			if (i < shadowDirectives.getColorSamplingSettings().size()) {
