@@ -22,7 +22,6 @@ import java.nio.IntBuffer;
 import java.util.Arrays;
 
 public class ShadowRenderTargets {
-	// TODO: Make this match the value of GL_MAX_DRAW_BUFFERS (or whatever property name it is)
 	public static int MAX_SHADOW_RENDER_TARGETS = SamplerLimits.get().getMaxDrawBuffers();
 
 	private final int[] targets;
