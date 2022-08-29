@@ -200,7 +200,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(programs.getPackDirectives().getCenterDepthHalfLife());
+		this.centerDepthSampler = new CenterDepthSampler(renderTargets, programs.getPackDirectives().getCenterDepthHalfLife());
 
 		this.shadowMapResolution = programs.getPackDirectives().getShadowDirectives().getResolution();
 
