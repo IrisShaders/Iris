@@ -18,6 +18,7 @@ import net.caffeinemc.gfx.api.types.ElementFormat;
 import net.caffeinemc.gfx.api.types.PrimitiveType;
 import net.caffeinemc.gfx.util.buffer.streaming.DualStreamingBuffer;
 import net.caffeinemc.gfx.util.buffer.streaming.StreamingBuffer;
+import net.caffeinemc.gfx.util.misc.MathUtil;
 import net.caffeinemc.sodium.SodiumClientMod;
 import net.caffeinemc.sodium.render.buffer.arena.BufferSegment;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkCameraContext;
@@ -29,7 +30,7 @@ import net.caffeinemc.sodium.render.chunk.region.RenderRegion;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.sodium.render.shader.ShaderConstants;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
-import net.caffeinemc.sodium.util.MathUtil;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import org.lwjgl.system.MemoryUtil;
 
@@ -41,10 +42,11 @@ public class MdiChunkRendererIris extends AbstractIrisMdChunkRenderer<MdiChunkRe
 	public MdiChunkRendererIris(
 		IrisChunkProgramOverrides overrides,
 		RenderDevice device,
+		ChunkCameraContext camera,
 		ChunkRenderPassManager renderPassManager,
 		TerrainVertexType vertexType
 	) {
-		super(overrides, device, renderPassManager, vertexType);
+		super(overrides, device, camera, renderPassManager, vertexType);
 
 		int maxInFlightFrames = SodiumClientMod.options().advanced.cpuRenderAheadLimit + 1;
 
@@ -82,11 +84,16 @@ public class MdiChunkRendererIris extends AbstractIrisMdChunkRenderer<MdiChunkRe
 	}
 
 	@Override
-	public void createRenderLists(SortedTerrainLists lists, ChunkCameraContext camera, int frameIndex) {
+	public void createRenderLists(SortedTerrainLists lists, int frameIndex) {
 		if (lists.isEmpty()) {
 			this.renderLists = null;
 			return;
 		}
+
+		BlockPos cameraBlockPos = this.camera.getBlockPos();
+		float cameraDeltaX = this.camera.getDeltaX();
+		float cameraDeltaY = this.camera.getDeltaY();
+		float cameraDeltaZ = this.camera.getDeltaZ();
 
 		ChunkRenderPass[] chunkRenderPasses = this.renderPassManager.getAllRenderPasses();
 		int totalPasses = chunkRenderPasses.length;
@@ -196,18 +203,18 @@ public class MdiChunkRendererIris extends AbstractIrisMdChunkRenderer<MdiChunkRe
 
 					float x = getCameraTranslation(
 						SectionPos.sectionToBlockCoord(sectionCoordX),
-						camera.blockX,
-						camera.deltaX
+						cameraBlockPos.getX(),
+						cameraDeltaX
 					);
 					float y = getCameraTranslation(
 						SectionPos.sectionToBlockCoord(sectionCoordY),
-						camera.blockY,
-						camera.deltaY
+						cameraBlockPos.getY(),
+						cameraDeltaY
 					);
 					float z = getCameraTranslation(
 						SectionPos.sectionToBlockCoord(sectionCoordZ),
-						camera.blockZ,
-						camera.deltaZ
+						cameraBlockPos.getZ(),
+						cameraDeltaZ
 					);
 
 					long ptr = transformBufferSectionAddress + transformBufferPosition;

@@ -4,6 +4,7 @@ import net.caffeinemc.gfx.api.device.RenderDevice;
 import net.caffeinemc.sodium.SodiumClientMod;
 import net.caffeinemc.sodium.render.SodiumWorldRenderer;
 import net.caffeinemc.sodium.render.chunk.TerrainRenderManager;
+import net.caffeinemc.sodium.render.chunk.draw.ChunkCameraContext;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderMatrices;
 import net.caffeinemc.sodium.render.chunk.draw.ChunkRenderer;
 import net.caffeinemc.sodium.render.chunk.draw.MdbvChunkRenderer;
@@ -52,10 +53,10 @@ public class MixinRenderSectionManager {
 	private int versionCounterForSodiumShaderReload = -1;
 
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void createShadow(RenderDevice device, SodiumWorldRenderer worldRenderer, ChunkRenderPassManager renderPassManager, ClientLevel world, int renderDistance, CallbackInfo ci) {
+	private void createShadow(RenderDevice device, SodiumWorldRenderer worldRenderer, ChunkRenderPassManager renderPassManager, ClientLevel world, ChunkCameraContext camera, int chunkViewDistance, CallbackInfo ci) {
 		this.irisChunkProgramOverrides = new IrisChunkProgramOverrides();
 
-		this.chunkRenderer = irisChunkRendererCreation(device, createVertexType(), renderPassManager);
+		this.chunkRenderer = irisChunkRendererCreation(device, camera, createVertexType(), renderPassManager);
 
 		this.manager = renderPassManager;
 	}
@@ -82,29 +83,20 @@ public class MixinRenderSectionManager {
 	 * @author IMS
 	 */
 	@Overwrite(remap = false)
-	private static ChunkRenderer createChunkRenderer(RenderDevice device, ChunkRenderPassManager renderPassManager, TerrainVertexType vertexType) {
+	private static ChunkRenderer createChunkRenderer(RenderDevice device, ChunkCameraContext context, ChunkRenderPassManager renderPassManager, TerrainVertexType vertexType) {
 		return null;
 	}
 
-	@ModifyArg(method = "update", at = @At(value = "INVOKE",target = "Lnet/caffeinemc/sodium/render/chunk/occlusion/ChunkOcclusion;calculateVisibleSections(Lnet/caffeinemc/sodium/render/chunk/occlusion/ChunkTree;Lnet/caffeinemc/sodium/interop/vanilla/math/frustum/Frustum;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;IZ)Lit/unimi/dsi/fastutil/ints/IntArrayList;"))
-	private boolean iris$blockChunkTreeCulling(boolean useOcclusionCulling) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			return false;
-		} else {
-			return useOcclusionCulling;
-		}
-	}
-
-	private ChunkRenderer irisChunkRendererCreation(RenderDevice device, TerrainVertexType vertexType, ChunkRenderPassManager renderPassManager) {
+	private ChunkRenderer irisChunkRendererCreation(RenderDevice device, ChunkCameraContext camera, TerrainVertexType vertexType, ChunkRenderPassManager renderPassManager) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			try {
 				switch (SodiumClientMod.options().advanced.chunkRendererBackend) {
 					case DEFAULT:
-						return device.properties().preferences.directRendering ? new MdbvChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType) : new MdiChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType);
+						return device.properties().preferences.directRendering ? new MdbvChunkRendererIris(irisChunkProgramOverrides, device, camera, renderPassManager, vertexType) : new MdiChunkRendererIris(irisChunkProgramOverrides, device, camera, renderPassManager, vertexType);
 					case BASEVERTEX:
-						return new MdbvChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType);
+						return new MdbvChunkRendererIris(irisChunkProgramOverrides, device, camera, renderPassManager, vertexType);
 					case INDIRECT:
-						return new MdiChunkRendererIris(irisChunkProgramOverrides, device, renderPassManager, vertexType);
+						return new MdiChunkRendererIris(irisChunkProgramOverrides, device, camera, renderPassManager, vertexType);
 					default:
 						throw new IncompatibleClassChangeError();
 				}
@@ -112,11 +104,11 @@ public class MixinRenderSectionManager {
 				Iris.logger.fatal("Failed to load Sodium shader, falling back to vanilla rendering. See log for more details!", e);
 				switch (SodiumClientMod.options().advanced.chunkRendererBackend) {
 					case DEFAULT:
-						return device.properties().preferences.directRendering ? new MdbvChunkRenderer(device, renderPassManager, vertexType) : new MdiChunkRenderer(device, renderPassManager, vertexType);
+						return device.properties().preferences.directRendering ? new MdbvChunkRenderer(device, camera, renderPassManager, vertexType) : new MdiChunkRenderer(device, camera, renderPassManager, vertexType);
 					case BASEVERTEX:
-						return new MdbvChunkRenderer(device, renderPassManager, vertexType);
+						return new MdbvChunkRenderer(device, camera, renderPassManager, vertexType);
 					case INDIRECT:
-						return new MdiChunkRenderer(device, renderPassManager, vertexType);
+						return new MdiChunkRenderer(device, camera, renderPassManager, vertexType);
 					default:
 						throw new IncompatibleClassChangeError();
 				}
@@ -124,11 +116,11 @@ public class MixinRenderSectionManager {
 		} else {
 			switch (SodiumClientMod.options().advanced.chunkRendererBackend) {
 				case DEFAULT:
-					return device.properties().preferences.directRendering ? new MdbvChunkRenderer(device, renderPassManager, vertexType) : new MdiChunkRenderer(device, renderPassManager, vertexType);
+					return device.properties().preferences.directRendering ? new MdbvChunkRenderer(device, camera, renderPassManager, vertexType) : new MdiChunkRenderer(device, camera, renderPassManager, vertexType);
 				case BASEVERTEX:
-					return new MdbvChunkRenderer(device, renderPassManager, vertexType);
+					return new MdbvChunkRenderer(device, camera, renderPassManager, vertexType);
 				case INDIRECT:
-					return new MdiChunkRenderer(device, renderPassManager, vertexType);
+					return new MdiChunkRenderer(device, camera, renderPassManager, vertexType);
 				default:
 					throw new IncompatibleClassChangeError();
 			}

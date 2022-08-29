@@ -21,7 +21,7 @@ public class XHFPModelVertexType implements TerrainVertexType {
 		.addElement(TerrainMeshAttribute.POSITION, 0, VertexAttributeFormat.SHORT, 3, true, false)
 		.addElement(TerrainMeshAttribute.COLOR, 8, VertexAttributeFormat.UNSIGNED_BYTE, 4, true, false)
 		.addElement(TerrainMeshAttribute.BLOCK_TEXTURE, 12, VertexAttributeFormat.UNSIGNED_SHORT, 2, true, false)
-		.addElement(TerrainMeshAttribute.LIGHT_TEXTURE, 16, VertexAttributeFormat.UNSIGNED_SHORT, 2, true, false)
+		.addElement(TerrainMeshAttribute.LIGHT_TEXTURE, 16, VertexAttributeFormat.UNSIGNED_SHORT, 2, false, true)
 		.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 20, VertexAttributeFormat.FLOAT, 2, true, false)
 		.addElement(IrisChunkMeshAttributes.TANGENT, 28, VertexAttributeFormat.BYTE, 4, true, false)
 		.addElement(IrisChunkMeshAttributes.NORMAL, 32, VertexAttributeFormat.BYTE, 3, true, false)

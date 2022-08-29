@@ -1,6 +1,5 @@
 package net.coderbot.iris.compat.sodium.mixin.shadow_map.frustum;
 
-import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
 import net.caffeinemc.sodium.interop.vanilla.math.frustum.Frustum;
 import net.caffeinemc.sodium.interop.vanilla.math.frustum.FrustumAdapter;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
@@ -14,11 +13,10 @@ public abstract class MixinAdvancedShadowCullingFrustum implements Frustum, Frus
 
 	@Override
 	public int testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// TODO: Visibility.INSIDE
 		return switch(fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ)) {
-			case 0 -> -3;
-			case 1 -> -1;
-			case 2 -> -2;
+			case 0 -> Frustum.OUTSIDE;
+			case 1 -> Frustum.INSIDE;
+			case 2 -> Frustum.INTERSECT;
 			default ->
 				throw new IllegalStateException("Unexpected value: " + fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ));
 		};

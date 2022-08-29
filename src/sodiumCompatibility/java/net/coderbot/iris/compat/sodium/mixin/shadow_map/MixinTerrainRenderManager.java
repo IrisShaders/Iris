@@ -78,9 +78,6 @@ public abstract class MixinTerrainRenderManager implements SwappableRenderSectio
 	private ChunkBuilder builder;
 
 	@Shadow
-	protected abstract void onChunkDataChanged(RenderSection section, ChunkRenderData prev, ChunkRenderData next);
-
-	@Shadow
 	private int frameIndex;
 	@Unique
     private List<RenderSection> visibleSectionsSwap;
@@ -99,8 +96,7 @@ public abstract class MixinTerrainRenderManager implements SwappableRenderSectio
     private static final ObjectArrayFIFOQueue<?> EMPTY_QUEUE = new ObjectArrayFIFOQueue<>();
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void iris$onInit(RenderDevice device, SodiumWorldRenderer worldRenderer,
-							 ChunkRenderPassManager renderPassManager, ClientLevel world, int renderDistance, CallbackInfo ci) {
+    private void iris$onInit(RenderDevice device, SodiumWorldRenderer worldRenderer, ChunkRenderPassManager renderPassManager, ClientLevel world, ChunkCameraContext camera, int chunkViewDistance, CallbackInfo ci) {
         this.visibleSectionsSwap = new ReferenceArrayList<>();
         this.tickableChunksSwap = new ReferenceArrayList<>();
         this.visibleBlockEntitiesSwap = new ReferenceArrayList<>();
@@ -127,7 +123,7 @@ public abstract class MixinTerrainRenderManager implements SwappableRenderSectio
     }
 
     @Inject(method = "update", at = @At("RETURN"), remap = false)
-	private void iris$captureVisibleBlockEntities(ChunkCameraContext camera, Frustum frustum, boolean spectator, CallbackInfo ci) {
+	private void iris$captureVisibleBlockEntities(Frustum frustum, boolean spectator, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ShadowRenderer.visibleBlockEntities = StreamSupport
 				.stream(this.getVisibleBlockEntities().spliterator(), false)

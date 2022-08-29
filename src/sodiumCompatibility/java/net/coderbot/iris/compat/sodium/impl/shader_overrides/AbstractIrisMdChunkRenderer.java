@@ -25,6 +25,7 @@ import net.caffeinemc.gfx.util.buffer.streaming.DualStreamingBuffer;
 import net.caffeinemc.gfx.util.buffer.streaming.SequenceBuilder;
 import net.caffeinemc.gfx.util.buffer.streaming.SequenceIndexBuffer;
 import net.caffeinemc.gfx.util.buffer.streaming.StreamingBuffer;
+import net.caffeinemc.gfx.util.misc.MathUtil;
 import net.caffeinemc.sodium.SodiumClientMod;
 import net.caffeinemc.sodium.render.chunk.RenderSection;
 import net.caffeinemc.sodium.render.chunk.draw.AbstractChunkRenderer;
@@ -41,7 +42,6 @@ import net.caffeinemc.sodium.render.shader.ShaderConstants;
 import net.caffeinemc.sodium.render.terrain.format.TerrainMeshAttribute;
 import net.caffeinemc.sodium.render.terrain.format.TerrainVertexType;
 import net.caffeinemc.sodium.render.terrain.quad.properties.ChunkMeshFace;
-import net.caffeinemc.sodium.util.MathUtil;
 import net.caffeinemc.sodium.util.TextureUtil;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
@@ -73,10 +73,11 @@ public abstract class AbstractIrisMdChunkRenderer<B extends AbstractIrisMdChunkR
     public AbstractIrisMdChunkRenderer(
 			IrisChunkProgramOverrides overrides,
             RenderDevice device,
+			ChunkCameraContext camera,
             ChunkRenderPassManager renderPassManager,
             TerrainVertexType vertexType
     ) {
-        super(device);
+        super(device, camera);
 
         this.renderPassManager = renderPassManager;
 		this.overrides = overrides;
