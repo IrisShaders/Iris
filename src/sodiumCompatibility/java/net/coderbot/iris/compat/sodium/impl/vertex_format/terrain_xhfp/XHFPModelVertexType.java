@@ -74,22 +74,6 @@ public class XHFPModelVertexType implements TerrainVertexType {
 		return (v + 16384f) / 2048f;
 	}
 
-	static int encodeLightMapTexCoord(int light) {
-		int r = light;
-
-		// Mask off coordinate values outside 0..255
-		r &= 0x00FF_00FF;
-
-		// Light coordinates are normalized values, so upcasting requires a shift
-		// Scale the coordinates from the range of 0..255 (unsigned byte) into 0..65535 (unsigned short)
-		r <<= 8;
-
-		// Add a half-texel offset to each coordinate so we sample from the center of each texel
-		r += 0x0800_0800;
-
-		return r;
-	}
-
 	@Override
 	public float getVertexRange() {
 		return POSITION_RANGE;

@@ -1,6 +1,6 @@
 package net.irisshaders.iris.api.v0;
 
-import net.coderbot.iris.IrisApiV0Impl;
+import net.coderbot.iris.apiimpl.IrisApiV0Impl;
 
 import java.nio.ByteBuffer;
 import java.util.function.IntFunction;
