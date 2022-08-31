@@ -200,13 +200,13 @@ public class CompatibilityTransformer {
 
 	private static final ShaderType[] pipeline = { ShaderType.VERTEX, ShaderType.GEOMETRY, ShaderType.FRAGMENT };
 	private static final AutoHintedMatcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
-			StorageType.OUT);
+			StorageType.VARYING);
 	private static final AutoHintedMatcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(
-			StorageType.IN);
+			StorageType.VARYING);
 
 	private static final String tagPrefix = "iris_template_";
 	private static final Template<ExternalDeclaration> declarationTemplate = Template
-			.withExternalDeclaration("out __type __name;");
+			.withExternalDeclaration("varying __type __name;");
 	private static final Template<Statement> initTemplate = Template.withStatement("__decl = __value;");
 	private static final Template<ExternalDeclaration> variableTemplate = Template
 			.withExternalDeclaration("__type __internalDecl;");
