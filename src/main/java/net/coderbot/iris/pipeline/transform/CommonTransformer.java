@@ -1,10 +1,19 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
+import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
@@ -22,6 +31,19 @@ public class CommonTransformer {
 			"gl_TextureMatrix[0]", Matcher.expressionPattern);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", Matcher.expressionPattern);
+
+	private static final AutoHintedMatcher<Expression> glFragDataI = new AutoHintedMatcher<>(
+			"gl_FragData[index]", Matcher.expressionPattern) {
+		{
+			markClassedPredicateWildcard("index",
+					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
+					LiteralExpression.class,
+					literalExpression -> literalExpression.isInteger() && literalExpression.isPositive());
+		}
+	};
+
+	private static final List<Expression> replaceExpressions = new ArrayList<>();
+	private static final List<Long> replaceIndexes = new ArrayList<>();
 
 	private static void renameFunctionCall(Root root, String oldName, String newName) {
 		root.process(root.identifierIndex.getStream(oldName)
@@ -81,9 +103,30 @@ public class CommonTransformer {
 				root.replaceReferenceExpressions(t, "gl_FragColor", "iris_FragData[0]");
 			}
 
-			root.rename("gl_FragData", "iris_FragData");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-					"layout (location = 0) out vec4 iris_FragData[8];");
+			// change gl_FragData[i] to iris_FragDatai
+			replaceExpressions.clear();
+			replaceIndexes.clear();
+			Set<Long> replaceIndexesSet = new HashSet<>();
+			for (Identifier id : root.identifierIndex.get("gl_FragData")) {
+				ArrayAccessExpression accessExpression = id.getAncestor(ArrayAccessExpression.class);
+				if (accessExpression == null || !glFragDataI.matchesExtract(accessExpression)) {
+					continue;
+				}
+				replaceExpressions.add(accessExpression);
+				long index = glFragDataI.getNodeMatch("index", LiteralExpression.class).getInteger();
+				replaceIndexes.add(index);
+				replaceIndexesSet.add(index);
+			}
+			for (int i = 0; i < replaceExpressions.size(); i++) {
+				replaceExpressions.get(i).replaceByAndDelete(
+						t.parseExpression(replaceExpressions.get(i), "iris_FragData" + replaceIndexes.get(i)));
+			}
+			for (long index : replaceIndexesSet) {
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"layout (location = " + index + ") out vec4 iris_FragData" + index + ";");
+			}
+			replaceExpressions.clear();
+			replaceIndexes.clear();
 		}
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX || parameters.type.glShaderType == ShaderType.FRAGMENT) {
