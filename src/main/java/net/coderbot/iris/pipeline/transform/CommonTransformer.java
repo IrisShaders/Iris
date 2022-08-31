@@ -10,19 +10,30 @@ import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
+import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.statement.CompoundStatement;
+import io.github.douira.glsl_transformer.ast.node.statement.Statement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.ast.transform.Template;
+import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 // Order fixed
@@ -41,6 +52,44 @@ public class CommonTransformer {
 					literalExpression -> literalExpression.isInteger() && literalExpression.isPositive());
 		}
 	};
+
+	private static final AutoHintedMatcher<ExternalDeclaration> out4VectorDeclaration = new AutoHintedMatcher<ExternalDeclaration>(
+			"out float name;", Matcher.externalDeclarationPattern) {
+		{
+			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getOne(TypeQualifier.class));
+			markClassedPredicateWildcard("type",
+					pattern.getRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class),
+					BuiltinNumericTypeSpecifier.class, specifier -> {
+						Type type = specifier.type;
+						return type.isVector() && type.getDimensions()[0] == 4;
+					});
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
+		}
+
+		@Override
+		public boolean matches(ExternalDeclaration tree) {
+			boolean result = super.matches(tree);
+			if (!result) {
+				return false;
+			}
+			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
+			for (TypeQualifierPart part : qualifier.getParts()) {
+				if (part instanceof StorageQualifier) {
+					StorageQualifier storageQualifier = (StorageQualifier) part;
+					if (storageQualifier.storageType == StorageType.OUT) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+	};
+
+	private static final Template<Statement> alphaTestStatement = Template
+			.withStatement("if output.a < iris_currentAlphaTest discard;");
+	{
+		alphaTestStatement.markIdentifierReplacement("output");
+	}
 
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
 	private static final List<Long> replaceIndexes = new ArrayList<>();
@@ -127,6 +176,17 @@ public class CommonTransformer {
 			}
 			replaceExpressions.clear();
 			replaceIndexes.clear();
+
+			// insert alpha test for vec4 outs in the fragment shader
+			if (parameters.getAlphaTest() != AlphaTest.ALWAYS) {
+				CompoundStatement mainBody = tree.getMainDefinitionBody();
+				for (DeclarationExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
+					if (out4VectorDeclaration.matchesExtract(declaration)) {
+						mainBody.getChildren().add(alphaTestStatement.getInstanceFor(tree,
+								new Identifier(out4VectorDeclaration.getStringDataMatch("name"))));
+					}
+				}
+			}
 		}
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX || parameters.type.glShaderType == ShaderType.FRAGMENT) {
