@@ -86,7 +86,7 @@ public class CommonTransformer {
 	};
 
 	private static final Template<Statement> alphaTestStatement = Template
-			.withStatement("if output.a < iris_currentAlphaTest discard;");
+			.withStatement("if (output.a < iris_currentAlphaTest) discard;");
 	private static final Template<ExternalDeclaration> fragDataDeclaration = Template
 			.withExternalDeclaration("layout (location = index) out vec4 name;");
 	{
