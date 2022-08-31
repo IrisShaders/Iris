@@ -11,6 +11,7 @@ import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
+import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
@@ -49,7 +50,7 @@ public class CommonTransformer {
 			markClassedPredicateWildcard("index",
 					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
 					LiteralExpression.class,
-					literalExpression -> literalExpression.isInteger() && literalExpression.isPositive());
+					literalExpression -> literalExpression.isInteger() && literalExpression.getInteger() >= 0);
 		}
 	};
 
@@ -86,13 +87,13 @@ public class CommonTransformer {
 	};
 
 	private static final Template<Statement> alphaTestStatement = Template
-			.withStatement("if (output.a < iris_currentAlphaTest) discard;");
+			.withStatement("if (__output.a < iris_currentAlphaTest) discard;");
 	private static final Template<ExternalDeclaration> fragDataDeclaration = Template
-			.withExternalDeclaration("layout (location = index) out vec4 name;");
-	{
-		alphaTestStatement.markIdentifierReplacement("output");
-		fragDataDeclaration.markLocalReplacement("index", ReferenceExpression.class);
-		fragDataDeclaration.markIdentifierReplacement("name");
+			.withExternalDeclaration("layout (location = __index) out vec4 __name;");
+	static {
+		alphaTestStatement.markIdentifierReplacement("__output");
+		fragDataDeclaration.markLocalReplacement("__index", ReferenceExpression.class);
+		fragDataDeclaration.markIdentifierReplacement("__name");
 	}
 
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
@@ -153,7 +154,7 @@ public class CommonTransformer {
 			if (root.identifierIndex.has("gl_FragColor")) {
 				Iris.logger.warn(
 						"[Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
-				root.replaceReferenceExpressions(t, "gl_FragColor", "iris_FragData[0]");
+				root.replaceReferenceExpressions(t, "gl_FragColor", "gl_FragData[0]");
 			}
 
 			// change gl_FragData[i] to iris_FragDatai
@@ -176,8 +177,9 @@ public class CommonTransformer {
 			}
 			for (long index : replaceIndexesSet) {
 				tree.injectNode(ASTInjectionPoint.BEFORE_FUNCTIONS,
-						fragDataDeclaration.getInstanceFor(tree, new Identifier("iris_FragData" + index),
-								new LiteralExpression(Type.INT32, index)));
+						fragDataDeclaration.getInstanceFor(tree,
+								new LiteralExpression(Type.INT32, index),
+								new Identifier("iris_FragData" + index)));
 			}
 			replaceExpressions.clear();
 			replaceIndexes.clear();
@@ -187,8 +189,13 @@ public class CommonTransformer {
 				CompoundStatement mainBody = tree.getMainDefinitionBody();
 				for (DeclarationExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 					if (out4VectorDeclaration.matchesExtract(declaration)) {
-						mainBody.getChildren().add(alphaTestStatement.getInstanceFor(tree,
-								new Identifier(out4VectorDeclaration.getStringDataMatch("name"))));
+						for (DeclarationMember member : out4VectorDeclaration
+								.getNodeMatch("name*", DeclarationMember.class)
+								.getAncestor(TypeAndInitDeclaration.class)
+								.getMembers()) {
+							mainBody.getChildren().add(alphaTestStatement.getInstanceFor(tree,
+									member.getName().cloneInto(root)));
+						}
 					}
 				}
 			}
