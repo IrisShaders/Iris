@@ -77,18 +77,49 @@ public class ClearPassCreator {
 
 	public static ImmutableList<ClearPass> createShadowClearPasses(ShadowRenderTargets renderTargets, boolean fullClear,
 																   PackShadowDirectives renderTargetDirectives) {
-		List<ClearPass> clearPasses = new ArrayList<>();
+		final int maxDrawBuffers = GlStateManager._getInteger(GL21C.GL_MAX_DRAW_BUFFERS);
 
-		for (int i = 0; i < renderTargets.getNumColorTextures(); i++) {
-			if (i < renderTargetDirectives.getColorSamplingSettings().size()) {
-				if (fullClear || renderTargetDirectives.getColorSamplingSettings().get(i).getClear()) {
-					PackShadowDirectives.SamplingSettings samplingSettings = renderTargetDirectives.getColorSamplingSettings().get(i);
-					clearPasses.add(new ClearPass(samplingSettings.getClearColor(), renderTargets::getResolution, renderTargets::getResolution, renderTargets.getFramebufferForColorTexture(i), GL21C.GL_COLOR_BUFFER_BIT | GL21C.GL_DEPTH_BUFFER_BIT));
-				} else {
-					clearPasses.add(new ClearPass(new Vector4f(1.0F), renderTargets::getResolution, renderTargets::getResolution, renderTargets.getFramebufferForColorTexture(i), GL21C.GL_DEPTH_BUFFER_BIT));
-				}
+		// Sort buffers by their clear color so we can group up glClear calls.
+		Map<Vector4f, IntList> clearByColor = new HashMap<>();
+
+		for (int i = 0; i < renderTargetDirectives.getColorSamplingSettings().size(); i++) {
+			// unboxed
+			PackShadowDirectives.SamplingSettings settings = renderTargetDirectives.getColorSamplingSettings().get(i);
+
+			if (fullClear || settings.getClear()) {
+				Vector4f clearColor = settings.getClearColor();
+				clearByColor.computeIfAbsent(clearColor, color -> new IntArrayList()).add(i);
 			}
 		}
+
+		List<ClearPass> clearPasses = new ArrayList<>();
+
+
+		clearByColor.forEach((clearColor, buffers) -> {
+			int startIndex = 0;
+
+			while (startIndex < buffers.size()) {
+				// clear up to the maximum number of draw buffers per each clear pass.
+				// This allows us to handle having more than 8 buffers with the same clear color on systems with
+				// a max draw buffers of 8 (ie, most systems).
+				int[] clearBuffers = new int[Math.min(buffers.size() - startIndex, maxDrawBuffers)];
+
+				for (int i = 0; i < clearBuffers.length; i++) {
+					clearBuffers[i] = buffers.getInt(startIndex);
+					startIndex++;
+				}
+
+				// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
+				clearPasses.add(new ClearPass(clearColor, renderTargets::getResolution, renderTargets::getResolution,
+					renderTargets.createFramebufferWritingToAlt(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+
+				clearPasses.add(new ClearPass(clearColor, renderTargets::getResolution, renderTargets::getResolution,
+					renderTargets.createFramebufferWritingToMain(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+			}
+		});
+
+		clearPasses.add(new ClearPass(null, renderTargets::getResolution, renderTargets::getResolution,
+			renderTargets.createFramebufferWritingToMain(new int[] { 0 }), GL21C.GL_DEPTH_BUFFER_BIT));
 
 		return ImmutableList.copyOf(clearPasses);
 	}

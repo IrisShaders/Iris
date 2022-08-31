@@ -257,6 +257,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		Map<Pair<ProgramId, InputAvailability>, Pass> cachedPasses = new HashMap<>();
 
+		if (shadowRenderTargets != null) {
+			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
+			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
+
+			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
+				programs.getPackDirectives(), shadowRenderTargets);
+		} else {
+			this.shadowClearPasses = ImmutableList.of();
+			this.shadowClearPassesFull = ImmutableList.of();
+			this.shadowRenderer = null;
+		}
+
 		this.table = new ProgramTable<>((condition, availability) -> {
 			int idx;
 
@@ -283,7 +295,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 						return null;
 					} else if (source == null) {
 						// still need the custom framebuffer, viewport, and blend mode behavior
-						GlFramebuffer shadowFb = shadowRenderTargets.getFramebuffer();
+						GlFramebuffer shadowFb =
+							shadowRenderTargets.createShadowFramebuffer(shadowRenderer.flipped(), new int[] {0});
 						return new Pass(null, shadowFb, shadowFb, null,
 							BlendModeOverride.OFF, true);
 					}
@@ -302,24 +315,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			});
 		});
 
+		if (shadowRenderer != null) {
+			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
+			shadowRenderer.setUsesImages(shadowProgram != null && shadowProgram.getActiveImages() > 0);
+		}
+
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 				programs.getPackDirectives().getRenderTargetDirectives());
-
-		if (shadowRenderTargets != null) {
-			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
-			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
-			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
-			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
-
-			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
-		} else {
-			this.shadowClearPasses = ImmutableList.of();
-			this.shadowClearPassesFull = ImmutableList.of();
-			this.shadowRenderer = null;
-		}
 
 		// SodiumTerrainPipeline setup follows.
 
@@ -614,7 +618,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		GlFramebuffer framebufferAfterTranslucents;
 
 		if (shadow) {
-			framebufferBeforeTranslucents = Objects.requireNonNull(shadowRenderTargets).getFramebuffer();
+			framebufferBeforeTranslucents =
+				Objects.requireNonNull(shadowRenderTargets).createShadowFramebuffer(shadowRenderer.flipped(), programDirectives.getDrawBuffers());
 			framebufferAfterTranslucents = framebufferBeforeTranslucents;
 		} else {
 			framebufferBeforeTranslucents =
@@ -804,9 +809,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			Vector4f emptyClearColor = new Vector4f(1.0F);
 			ImmutableList<ClearPass> passes;
 
-			if (shadowRenderTargets.needsFullClear()) {
+			if (shadowRenderTargets.isFullClearRequired()) {
 				passes = shadowClearPassesFull;
-				shadowRenderTargets.resetClearStatus();
+				shadowRenderTargets.onFullClear();
 			} else {
 				passes = shadowClearPasses;
 			}

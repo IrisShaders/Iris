@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
@@ -68,7 +69,7 @@ public class ShadowRenderer {
 	private final Float fov;
 	private final ShadowRenderTargets targets;
 	private final OptionalBoolean packCullingState;
-	private final boolean packHasVoxelization;
+	private boolean packHasVoxelization;
 	private final boolean shouldRenderTerrain;
 	private final boolean shouldRenderTranslucent;
 	private final boolean shouldRenderEntities;
@@ -85,9 +86,12 @@ public class ShadowRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 	private ProfilerFiller profiler;
+	private final ImmutableSet<Integer> flipped;
 
 	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
-						  ShadowRenderTargets shadowRenderTargets, boolean shadowUsesImages) {
+						  ShadowRenderTargets shadowRenderTargets) {
+
+		this.flipped = ImmutableSet.of();
 
 		this.profiler = Minecraft.getInstance().getProfiler();
 
@@ -115,7 +119,7 @@ public class ShadowRenderer {
 		if (shadow != null) {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// Also assume voxelization if image load / store is detected.
-			this.packHasVoxelization = shadow.getGeometrySource().isPresent() || shadowUsesImages;
+			this.packHasVoxelization = shadow.getGeometrySource().isPresent();
 			this.packCullingState = shadowDirectives.getCullingState();
 		} else {
 			this.packHasVoxelization = false;
@@ -133,6 +137,10 @@ public class ShadowRenderer {
 		}
 
 		configureSamplingSettings(shadowDirectives);
+	}
+
+	public void setUsesImages(boolean usesImages) {
+		this.packHasVoxelization = packHasVoxelization || usesImages;
 	}
 
 	public static PoseStack createShadowModelView(float sunPathRotation, float intervalSize) {
@@ -194,7 +202,7 @@ public class ShadowRenderer {
 		configureDepthSampler(targets.getDepthTextureNoTranslucents().getTextureId(), depthSamplingSettings.get(1));
 
 		for (int i = 0; i < colorSamplingSettings.size(); i++) {
-			int glTextureId = targets.getColorTextureId(i);
+			int glTextureId = targets.get(i).getMainTexture();
 
 			RenderSystem.bindTexture(glTextureId);
 			configureSampler(glTextureId, colorSamplingSettings.get(i));
@@ -649,6 +657,10 @@ public class ShadowRenderer {
 
 	private String getBlockEntitiesDebugString() {
 		return shouldRenderBlockEntities ? (renderedShadowBlockEntities + "/" + Minecraft.getInstance().level.blockEntityList.size()) : "disabled by pack";
+	}
+
+	public ImmutableSet<Integer> flipped() {
+		return flipped;
 	}
 
 	private static class MipmapPass {
