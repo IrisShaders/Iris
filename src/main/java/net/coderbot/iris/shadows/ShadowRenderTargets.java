@@ -2,6 +2,8 @@ package net.coderbot.iris.shadows;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
@@ -30,12 +32,14 @@ public class ShadowRenderTargets {
 	private boolean translucentDepthDirty;
 	private boolean[] hardwareFiltered;
 	private InternalTextureFormat[] formats;
+	private IntList buffersToBeCleared;
 
 	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
 		targets = new RenderTarget[shadowDirectives.getColorSamplingSettings().size()];
 		formats = new InternalTextureFormat[shadowDirectives.getColorSamplingSettings().size()];
 		flipped = new boolean[shadowDirectives.getColorSamplingSettings().size()];
 		hardwareFiltered = new boolean[shadowDirectives.getColorSamplingSettings().size()];
+		buffersToBeCleared = new IntArrayList();
 
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 		this.noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
@@ -46,6 +50,9 @@ public class ShadowRenderTargets {
 				.setInternalFormat(settings.getFormat())
 				.setPixelFormat(settings.getFormat().getPixelFormat()).build();
 			formats[i] = settings.getFormat();
+			if (settings.getClear()) {
+				buffersToBeCleared.add(i);
+			}
 
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
 		}
@@ -247,5 +254,20 @@ public class ShadowRenderTargets {
 
 	public InternalTextureFormat getColorTextureFormat(int index) {
 		return formats[index];
+	}
+
+	public ImmutableSet<Integer> snapshot() {
+		ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
+		for (int i = 0; i < flipped.length; i++) {
+			if (flipped[i]) {
+				builder.add(i);
+			}
+		}
+
+		return builder.build();
+	}
+
+	public IntList getBuffersToBeCleared() {
+		return buffersToBeCleared;
 	}
 }

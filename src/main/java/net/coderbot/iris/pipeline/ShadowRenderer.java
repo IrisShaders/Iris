@@ -21,6 +21,7 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadow.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
+import net.coderbot.iris.shadows.ShadowCompositeRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
@@ -69,6 +70,7 @@ public class ShadowRenderer {
 	private final Float fov;
 	private final ShadowRenderTargets targets;
 	private final OptionalBoolean packCullingState;
+	private final ShadowCompositeRenderer compositeRenderer;
 	private boolean packHasVoxelization;
 	private final boolean shouldRenderTerrain;
 	private final boolean shouldRenderTranslucent;
@@ -89,7 +91,7 @@ public class ShadowRenderer {
 	private final ImmutableSet<Integer> flipped;
 
 	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
-						  ShadowRenderTargets shadowRenderTargets) {
+						  ShadowRenderTargets shadowRenderTargets, ShadowCompositeRenderer compositeRenderer) {
 
 		this.flipped = ImmutableSet.of();
 
@@ -107,6 +109,8 @@ public class ShadowRenderer {
 		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities();
 		this.shouldRenderPlayer = shadowDirectives.shouldRenderPlayer();
 		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities();
+
+		this.compositeRenderer = compositeRenderer;
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
 
@@ -628,6 +632,8 @@ public class ShadowRenderer {
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
+
+		compositeRenderer.renderAll();
 
 		levelRenderer.setRenderBuffers(playerBuffers);
 
