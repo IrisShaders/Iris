@@ -87,8 +87,12 @@ public class CommonTransformer {
 
 	private static final Template<Statement> alphaTestStatement = Template
 			.withStatement("if output.a < iris_currentAlphaTest discard;");
+	private static final Template<ExternalDeclaration> fragDataDeclaration = Template
+			.withExternalDeclaration("layout (location = index) out vec4 name;");
 	{
 		alphaTestStatement.markIdentifierReplacement("output");
+		fragDataDeclaration.markLocalReplacement("index", ReferenceExpression.class);
+		fragDataDeclaration.markIdentifierReplacement("name");
 	}
 
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
@@ -168,11 +172,12 @@ public class CommonTransformer {
 			}
 			for (int i = 0; i < replaceExpressions.size(); i++) {
 				replaceExpressions.get(i).replaceByAndDelete(
-						t.parseExpression(replaceExpressions.get(i), "iris_FragData" + replaceIndexes.get(i)));
+						new ReferenceExpression(new Identifier("iris_FragData" + replaceIndexes.get(i))));
 			}
 			for (long index : replaceIndexesSet) {
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-						"layout (location = " + index + ") out vec4 iris_FragData" + index + ";");
+				tree.injectNode(ASTInjectionPoint.BEFORE_FUNCTIONS,
+						fragDataDeclaration.getInstanceFor(tree, new Identifier("iris_FragData" + index),
+								new LiteralExpression(Type.INT32, index)));
 			}
 			replaceExpressions.clear();
 			replaceIndexes.clear();
