@@ -4,28 +4,21 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
-import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
-import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.statement.CompoundStatement;
-import io.github.douira.glsl_transformer.ast.node.statement.Statement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
@@ -149,8 +142,8 @@ public class CommonTransformer {
 			replaceExpressions.clear();
 			replaceIndexes.clear();
 
-			// insert alpha test for vec4 outs in the fragment shader
-			if (parameters.getAlphaTest() != AlphaTest.ALWAYS && root.identifierIndex.has("iris_FragData0")) {
+			// insert alpha test for iris_FragData0 in the fragment shader
+			if (parameters.getAlphaTest() != AlphaTest.ALWAYS && replaceIndexesSet.contains(0L)) {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_currentAlphaTest;");
 				tree.appendMain(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
 			}
@@ -168,13 +161,11 @@ public class CommonTransformer {
 			}
 		}
 
-		// addition: rename all uses of texture and gcolor to gtexture if it's *not* used as a
-		// function call
-		root.process(root.identifierIndex.getStream("texture")
-				.filter(id -> !(id.getParent() instanceof FunctionCallExpression)),
-				id -> id.setName("gtexture"));
-
-		root.process(root.identifierIndex.getStream("gcolor")
+		// addition: rename all uses of texture and gcolor to gtexture if it's *not*
+		// used as a function call
+		root.process(Stream.concat(
+				root.identifierIndex.getStream("gcolor"),
+				root.identifierIndex.getStream("texture"))
 				.filter(id -> !(id.getParent() instanceof FunctionCallExpression)),
 				id -> id.setName("gtexture"));
 
