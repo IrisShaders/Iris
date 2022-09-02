@@ -297,7 +297,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 					} else if (source == null) {
 						// still need the custom framebuffer, viewport, and blend mode behavior
 						GlFramebuffer shadowFb =
-							shadowRenderTargets.createShadowFramebuffer(shadowRenderer.flipped(), new int[] {0});
+							shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] {0});
 						return new Pass(null, shadowFb, shadowFb, null,
 							BlendModeOverride.OFF, true);
 					}
@@ -621,7 +621,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		if (shadow) {
 			// Always add both draw buffers on the shadow pass.
 			framebufferBeforeTranslucents =
-				Objects.requireNonNull(shadowRenderTargets).createShadowFramebuffer(shadowRenderer.flipped(), new int[] { 0, 1 });
+				Objects.requireNonNull(shadowRenderTargets).createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 			framebufferAfterTranslucents = framebufferBeforeTranslucents;
 		} else {
 			framebufferBeforeTranslucents =

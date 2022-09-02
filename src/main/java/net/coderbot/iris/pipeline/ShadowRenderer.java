@@ -86,12 +86,9 @@ public class ShadowRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 	private ProfilerFiller profiler;
-	private final ImmutableSet<Integer> flipped;
 
 	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
 						  ShadowRenderTargets shadowRenderTargets) {
-
-		this.flipped = ImmutableSet.of();
 
 		this.profiler = Minecraft.getInstance().getProfiler();
 
@@ -657,10 +654,6 @@ public class ShadowRenderer {
 
 	private String getBlockEntitiesDebugString() {
 		return shouldRenderBlockEntities ? (renderedShadowBlockEntities + "/" + Minecraft.getInstance().level.blockEntityList.size()) : "disabled by pack";
-	}
-
-	public ImmutableSet<Integer> flipped() {
-		return flipped;
 	}
 
 	private static class MipmapPass {

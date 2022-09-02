@@ -118,9 +118,6 @@ public class ClearPassCreator {
 			}
 		});
 
-		clearPasses.add(new ClearPass(null, renderTargets::getResolution, renderTargets::getResolution,
-			renderTargets.createFramebufferWritingToMain(new int[] { 0 }), GL21C.GL_DEPTH_BUFFER_BIT));
-
 		return ImmutableList.copyOf(clearPasses);
 	}
 }
