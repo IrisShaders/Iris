@@ -11,11 +11,15 @@ import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
+import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
+import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
@@ -56,6 +60,7 @@ public class CommonTransformer {
 
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
 	private static final List<Long> replaceIndexes = new ArrayList<>();
+	private static boolean hasGtexture = false;
 
 	private static void renameFunctionCall(Root root, String oldName, String newName) {
 		root.process(root.identifierIndex.getStream(oldName)
@@ -163,11 +168,31 @@ public class CommonTransformer {
 
 		// addition: rename all uses of texture and gcolor to gtexture if it's *not*
 		// used as a function call
+		hasGtexture = false;
 		root.process(Stream.concat(
 				root.identifierIndex.getStream("gcolor"),
 				root.identifierIndex.getStream("texture"))
 				.filter(id -> !(id.getParent() instanceof FunctionCallExpression)),
-				id -> id.setName("gtexture"));
+				id -> {
+					id.setName("gtexture");
+					ASTNode parent = id.getParent();
+					if (!(parent instanceof DeclarationMember)) {
+						return;
+					}
+					DeclarationMember member = (DeclarationMember) parent;
+					DeclarationExternalDeclaration declaration = member.getAncestor(DeclarationExternalDeclaration.class);
+					if (declaration == null) {
+						return;
+					}
+					if (!hasGtexture) {
+						hasGtexture = true;
+						return;
+					}
+					member.detachAndDelete();
+					if (((TypeAndInitDeclaration) member.getParent()).getMembers().isEmpty()) {
+						declaration.detachAndDelete();
+					}
+				});
 
 		// This must be defined and valid in all shader passes, including composite
 		// passes. A shader that relies on this behavior is SEUS v11 - it reads
