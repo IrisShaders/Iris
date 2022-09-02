@@ -59,6 +59,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.HashMap;
@@ -618,8 +619,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		GlFramebuffer framebufferAfterTranslucents;
 
 		if (shadow) {
+			// Always add both draw buffers on the shadow pass.
 			framebufferBeforeTranslucents =
-				Objects.requireNonNull(shadowRenderTargets).createShadowFramebuffer(shadowRenderer.flipped(), programDirectives.getDrawBuffers());
+				Objects.requireNonNull(shadowRenderTargets).createShadowFramebuffer(shadowRenderer.flipped(), new int[] { 0, 1 });
 			framebufferAfterTranslucents = framebufferBeforeTranslucents;
 		} else {
 			framebufferBeforeTranslucents =
@@ -806,6 +808,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		if (shadowRenderTargets != null) {
+			// Clear depth first, regardless of any color clearing.
+			shadowRenderTargets.getDepthSourceFb().bind();
+			RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+
 			Vector4f emptyClearColor = new Vector4f(1.0F);
 			ImmutableList<ClearPass> passes;
 
