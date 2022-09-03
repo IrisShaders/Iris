@@ -59,6 +59,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.HashMap;
@@ -257,6 +258,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		Map<Pair<ProgramId, InputAvailability>, Pass> cachedPasses = new HashMap<>();
 
+		if (shadowRenderTargets != null) {
+			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
+			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
+
+			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
+				programs.getPackDirectives(), shadowRenderTargets);
+		} else {
+			this.shadowClearPasses = ImmutableList.of();
+			this.shadowClearPassesFull = ImmutableList.of();
+			this.shadowRenderer = null;
+		}
+
 		this.table = new ProgramTable<>((condition, availability) -> {
 			int idx;
 
@@ -283,7 +296,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 						return null;
 					} else if (source == null) {
 						// still need the custom framebuffer, viewport, and blend mode behavior
-						GlFramebuffer shadowFb = shadowRenderTargets.getFramebuffer();
+						GlFramebuffer shadowFb =
+							shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] {0});
 						return new Pass(null, shadowFb, shadowFb, null,
 							BlendModeOverride.OFF, true);
 					}
@@ -302,24 +316,15 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			});
 		});
 
+		if (shadowRenderer != null) {
+			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
+			shadowRenderer.setUsesImages(shadowProgram != null && shadowProgram.getActiveImages() > 0);
+		}
+
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 				programs.getPackDirectives().getRenderTargetDirectives());
-
-		if (shadowRenderTargets != null) {
-			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
-			boolean shadowUsesImages = shadowProgram != null && shadowProgram.getActiveImages() > 0;
-			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
-			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
-
-			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-				programs.getPackDirectives(), shadowRenderTargets, shadowUsesImages);
-		} else {
-			this.shadowClearPasses = ImmutableList.of();
-			this.shadowClearPassesFull = ImmutableList.of();
-			this.shadowRenderer = null;
-		}
 
 		// SodiumTerrainPipeline setup follows.
 
@@ -614,7 +619,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		GlFramebuffer framebufferAfterTranslucents;
 
 		if (shadow) {
-			framebufferBeforeTranslucents = Objects.requireNonNull(shadowRenderTargets).getFramebuffer();
+			// Always add both draw buffers on the shadow pass.
+			framebufferBeforeTranslucents =
+				Objects.requireNonNull(shadowRenderTargets).createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 			framebufferAfterTranslucents = framebufferBeforeTranslucents;
 		} else {
 			framebufferBeforeTranslucents =
@@ -801,12 +808,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		if (shadowRenderTargets != null) {
+			// Clear depth first, regardless of any color clearing.
+			shadowRenderTargets.getDepthSourceFb().bind();
+			RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+
 			Vector4f emptyClearColor = new Vector4f(1.0F);
 			ImmutableList<ClearPass> passes;
 
-			if (shadowRenderTargets.needsFullClear()) {
+			if (shadowRenderTargets.isFullClearRequired()) {
 				passes = shadowClearPassesFull;
-				shadowRenderTargets.resetClearStatus();
+				shadowRenderTargets.onFullClear();
 			} else {
 				passes = shadowClearPasses;
 			}
