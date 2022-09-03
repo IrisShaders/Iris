@@ -62,6 +62,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
 
 import java.io.IOException;
@@ -371,7 +372,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
 			shadowRenderTargets == null ? null : createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedAfterPrepare, flippedAfterTranslucent,
-			shadowRenderTargets != null ? shadowRenderTargets.getFramebuffer() : null);
+			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 }) : null);
 	}
 
 	@SafeVarargs
@@ -436,7 +437,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
-		GlFramebuffer framebuffer = this.shadowRenderTargets.getFramebuffer();
+		GlFramebuffer framebuffer = this.shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 
 		FallbackShader shader = NewShaderTests.createFallback(name, framebuffer, framebuffer,
 				key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
@@ -449,7 +450,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright) throws IOException {
-		GlFramebuffer framebuffer = this.shadowRenderTargets.getFramebuffer();
+		GlFramebuffer framebuffer = this.shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
 				fallbackAlpha, vertexFormat, updateNotifier, this, FogMode.PER_VERTEX, isIntensity, isFullbright);
@@ -543,12 +544,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
 		if (shadowRenderTargets != null) {
+			// Clear depth first, regardless of any color clearing.
+			shadowRenderTargets.getDepthSourceFb().bind();
+			RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+
 			Vector4f emptyClearColor = new Vector4f(1.0F);
 			ImmutableList<ClearPass> passes;
 
-			if (shadowRenderTargets.needsFullClear()) {
+			if (shadowRenderTargets.isFullClearRequired()) {
 				passes = shadowClearPassesFull;
-				shadowRenderTargets.resetClearStatus();
+				shadowRenderTargets.onFullClear();
 			} else {
 				passes = shadowClearPasses;
 			}
