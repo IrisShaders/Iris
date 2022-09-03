@@ -112,7 +112,7 @@ public class Buildscript extends SimpleFabricProject {
 			if (CUSTOM_SODIUM) {
 				sodium = new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("net.caffeinemc", "sodium-fabric", customSodiumName.replace("sodium-fabric-", "").replace(".jar", "")));
 			} else {
-				sodium = Maven.getMavenJarDep("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.2-0.4.3"));
+				sodium = Maven.getMavenJarDep("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.2-0.4.4"));
 			}
 			d.add(sodium, ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			try {
