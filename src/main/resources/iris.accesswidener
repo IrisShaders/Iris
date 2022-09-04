@@ -9,4 +9,5 @@ accessible  class   net/minecraft/client/renderer/RenderType$CompositeState
 accessible  class   net/minecraft/client/renderer/texture/Stitcher$Holder
 accessible  class   net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
 accessible  class   net/minecraft/client/Options$FieldAccess
+extendable class net/minecraft/client/renderer/texture/TextureAtlasSprite$Info
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;

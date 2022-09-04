@@ -27,6 +27,7 @@ public final class Program extends GlResource {
 
 	public static void unbind() {
 		ProgramUniforms.clearActiveUniforms();
+		ProgramSamplers.clearActiveSamplers();
 		ProgramManager.glUseProgram(0);
 	}
 

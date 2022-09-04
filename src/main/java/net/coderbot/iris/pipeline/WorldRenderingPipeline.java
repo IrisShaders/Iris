@@ -26,6 +26,11 @@ public interface WorldRenderingPipeline {
 	void setSpecialCondition(SpecialCondition special);
 	RenderTargetStateListener getRenderTargetStateListener();
 
+	int getCurrentNormalTexture();
+	int getCurrentSpecularTexture();
+
+	void onBindTexture(int id);
+
 	void beginHand();
 
 	void beginTranslucents();
