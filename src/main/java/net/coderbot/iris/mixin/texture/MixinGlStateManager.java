@@ -3,6 +3,7 @@ package net.coderbot.iris.mixin.texture;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.texture.TextureInfoCache;
 import net.coderbot.iris.texture.TextureTracker;
+import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -42,5 +43,6 @@ public class MixinGlStateManager {
 	private static void iris$onDeleteTexture(int id) {
 		TextureTracker.INSTANCE.onDeleteTexture(id);
 		TextureInfoCache.INSTANCE.onDeleteTexture(id);
+		PBRTextureManager.INSTANCE.onDeleteTexture(id);
 	}
 }

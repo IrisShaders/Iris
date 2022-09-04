@@ -1,5 +1,7 @@
 package net.coderbot.iris.gl.sampler;
 
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
+
 import java.util.function.IntSupplier;
 
 public interface SamplerHolder {
@@ -15,4 +17,5 @@ public interface SamplerHolder {
 	 */
 	boolean addDefaultSampler(IntSupplier sampler, String... names);
 	boolean addDynamicSampler(IntSupplier sampler, String... names);
+	boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names);
 }
