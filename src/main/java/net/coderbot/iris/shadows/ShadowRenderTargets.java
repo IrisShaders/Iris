@@ -1,6 +1,7 @@
 package net.coderbot.iris.shadows;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -13,6 +14,7 @@ import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,9 +124,12 @@ public class ShadowRenderTargets {
 	public void copyPreTranslucentDepth() {
 		if (translucentDepthDirty) {
 			translucentDepthDirty = false;
-			RenderSystem.bindTexture(noTranslucents.getTextureId());
 			depthSourceFb.bindAsReadBuffer();
-			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, DepthBufferFormat.DEPTH.getGlInternalFormat(), 0, 0, resolution, resolution, 0);
+			noTranslucentsDestFb.bindAsDrawBuffer();
+			GlStateManager._glBlitFrameBuffer(0, 0, resolution, resolution,
+				0, 0, resolution, resolution,
+				GL30C.GL_DEPTH_BUFFER_BIT,
+				GL30C.GL_NEAREST);
 		} else {
 			DepthCopyStrategy.fastest(false).copy(depthSourceFb, mainDepth.getTextureId(), noTranslucentsDestFb, noTranslucents.getTextureId(),
 				resolution, resolution);
