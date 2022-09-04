@@ -1,6 +1,7 @@
 package net.coderbot.iris.gl.sampler;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.program.GlUniform1iCall;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import org.lwjgl.opengl.GL20C;
 
@@ -18,11 +19,15 @@ public class SamplerBinding {
 	}
 
 	public void update() {
-		RenderSystem.activeTexture(GL20C.GL_TEXTURE0 + textureUnit);
-		RenderSystem.bindTexture(texture.getAsInt());
+		updateSampler();
 
 		if (notifier != null) {
-			notifier.setListener(this::update);
+			notifier.setListener(this::updateSampler);
 		}
+	}
+
+	private void updateSampler() {
+		RenderSystem.activeTexture(GL20C.GL_TEXTURE0 + textureUnit);
+		RenderSystem.bindTexture(texture.getAsInt());
 	}
 }

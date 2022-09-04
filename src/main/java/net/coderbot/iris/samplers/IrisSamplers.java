@@ -20,7 +20,7 @@ public class IrisSamplers {
 	public static final int OVERLAY_TEXTURE_UNIT = 1;
 	public static final int LIGHTMAP_TEXTURE_UNIT = 2;
 
-	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(0, 1, 2, 3, 4);
+	public static final ImmutableSet<Integer> WORLD_RESERVED_TEXTURE_UNITS = ImmutableSet.of(0, 1, 2);
 
 	// TODO: In composite programs, there shouldn't be any reserved textures.
 	// We need a way to restore these texture bindings.
@@ -145,8 +145,8 @@ public class IrisSamplers {
 			samplers.addDynamicSampler(whitePixel::getId, "iris_overlay");
 		}
 
-		samplers.addDynamicSampler(pipeline::getCurrentNormalTexture, StateUpdateNotifiers.pbrBindingNotifier, "normals");
-		samplers.addDynamicSampler(pipeline::getCurrentSpecularTexture, StateUpdateNotifiers.pbrBindingNotifier, "specular");
+		samplers.addDynamicSampler(pipeline::getCurrentNormalTexture, StateUpdateNotifiers.normalBindingNotifier, "normals");
+		samplers.addDynamicSampler(pipeline::getCurrentSpecularTexture, StateUpdateNotifiers.specularBindingNotifier, "specular");
 
 	}
 

@@ -19,15 +19,24 @@ import java.util.Set;
 import java.util.function.IntSupplier;
 
 public class ProgramSamplers {
+	private static ProgramSamplers active;
 	private final ImmutableList<SamplerBinding> samplerBindings;
+	private final ImmutableList<ValueUpdateNotifier> notifiersToReset;
 	private List<GlUniform1iCall> initializer;
 
-	private ProgramSamplers(ImmutableList<SamplerBinding> samplerBindings, List<GlUniform1iCall> initializer) {
+	private ProgramSamplers(ImmutableList<SamplerBinding> samplerBindings, ImmutableList<ValueUpdateNotifier> notifiersToReset, List<GlUniform1iCall> initializer) {
 		this.samplerBindings = samplerBindings;
+		this.notifiersToReset = notifiersToReset;
 		this.initializer = initializer;
 	}
 
 	public void update() {
+		if (active != null) {
+			active.removeListeners();
+		}
+
+		active = this;
+
 		if (initializer != null) {
 			for (GlUniform1iCall call : initializer) {
 				IrisRenderSystem.uniform1i(call.getLocation(), call.getValue());
@@ -47,6 +56,20 @@ public class ProgramSamplers {
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0 + activeTexture);
 	}
 
+	public void removeListeners() {
+		active = null;
+
+		for (ValueUpdateNotifier notifier : notifiersToReset) {
+			notifier.setListener(null);
+		}
+	}
+
+	public static void clearActiveSamplers() {
+		if (active != null) {
+			active.removeListeners();
+		}
+	}
+
 	public static Builder builder(int program, Set<Integer> reservedTextureUnits) {
 		return new Builder(program, reservedTextureUnits);
 	}
@@ -63,6 +86,7 @@ public class ProgramSamplers {
 		private final int program;
 		private final ImmutableSet<Integer> reservedTextureUnits;
 		private final ImmutableList.Builder<SamplerBinding> samplers;
+		private final ImmutableList.Builder<ValueUpdateNotifier> notifiersToReset;
 		private final List<GlUniform1iCall> calls;
 		private int remainingUnits;
 		private int nextUnit;
@@ -71,6 +95,7 @@ public class ProgramSamplers {
 			this.program = program;
 			this.reservedTextureUnits = ImmutableSet.copyOf(reservedTextureUnits);
 			this.samplers = ImmutableList.builder();
+			this.notifiersToReset = ImmutableList.builder();
 			this.calls = new ArrayList<>();
 
 			int maxTextureUnits = SamplerLimits.get().getMaxTextureUnits();
@@ -145,6 +170,7 @@ public class ProgramSamplers {
 		 */
 		@Override
 		public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+			notifiersToReset.add(notifier);
 			return addDynamicSampler(sampler, false, notifier, names);
 		}
 
@@ -190,7 +216,7 @@ public class ProgramSamplers {
 		}
 
 		public ProgramSamplers build() {
-			return new ProgramSamplers(samplers.build(), calls);
+			return new ProgramSamplers(samplers.build(), notifiersToReset.build(), calls);
 		}
 	}
 

@@ -40,10 +40,13 @@ public class CustomTextureManager {
 	 */
 	private final List<AbstractTexture> ownedTextures = new ArrayList<>();
 
-	private static Runnable pbrBindingListener;
+	// TODO: Figure out how to merge these two.
+	private static Runnable normalBindingListener;
+	private static Runnable specularBindingListener;
 
 	static {
-		StateUpdateNotifiers.pbrBindingNotifier = listener -> pbrBindingListener = listener;
+		StateUpdateNotifiers.normalBindingNotifier = listener -> normalBindingListener = listener;
+		StateUpdateNotifiers.specularBindingNotifier = listener -> specularBindingListener = listener;
 	}
 
 	public CustomTextureManager(PackDirectives packDirectives,
@@ -166,8 +169,12 @@ public class CustomTextureManager {
 	}
 
 	public static void onPBRTextureChanged() {
-		if (pbrBindingListener != null) {
-			pbrBindingListener.run();
+		if (normalBindingListener != null) {
+			normalBindingListener.run();
+		}
+
+		if (specularBindingListener != null) {
+			specularBindingListener.run();
 		}
 	}
 }
