@@ -22,7 +22,6 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -48,8 +47,11 @@ import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.texture.TextureInfoCache;
+import net.coderbot.iris.texture.format.TextureFormat;
+import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.coderbot.iris.texture.pbr.PBRTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
+import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -1104,7 +1106,16 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
 			currentNormalTexture = pbrHolder.getNormalTexture().getId();
 			currentSpecularTexture = pbrHolder.getSpecularTexture().getId();
-			CustomTextureManager.onPBRTextureChanged();
+
+			TextureFormat textureFormat = TextureFormatLoader.getFormat();
+			if (textureFormat != null) {
+				GlStateManager._bindTexture(currentNormalTexture);
+				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.getNormalTexture());
+				GlStateManager._bindTexture(currentSpecularTexture);
+				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.getSpecularTexture());
+			}
+
+			PBRTextureManager.notifyPBRTexturesChanged();
 		}
 	}
 }

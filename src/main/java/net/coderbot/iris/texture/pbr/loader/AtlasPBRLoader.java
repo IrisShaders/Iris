@@ -70,20 +70,19 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 			}
 		}
 
-		TextureFormat textureFormat = TextureFormatLoader.getFormat();
 		if (normalAtlas != null) {
-			if (uploadAtlas(normalAtlas, atlasWidth, atlasHeight, mipLevel, textureFormat)) {
+			if (normalAtlas.tryUpload(atlasWidth, atlasHeight, mipLevel)) {
 				pbrTextureConsumer.acceptNormalTexture(normalAtlas);
 			}
 		}
 		if (specularAtlas != null) {
-			if (uploadAtlas(specularAtlas, atlasWidth, atlasHeight, mipLevel, textureFormat)) {
+			if (specularAtlas.tryUpload(atlasWidth, atlasHeight, mipLevel)) {
 				pbrTextureConsumer.acceptSpecularTexture(specularAtlas);
 			}
 		}
 	}
 
-	private static int fetchAtlasMipLevel(TextureAtlas atlas) {
+	protected static int fetchAtlasMipLevel(TextureAtlas atlas) {
 		TextureAtlasSprite missingSprite = atlas.getSprite(MissingTextureAtlasSprite.getLocation());
 		return ((TextureAtlasSpriteAccessor) missingSprite).getMainImage().length - 1;
 	}
@@ -95,77 +94,59 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(imageLocation);
 
 		TextureAtlasSprite pbrSprite = null;
-		try {
-			Resource resource = resourceManager.getResource(pbrImageLocation);
-
-			try {
-				NativeImage nativeImage = NativeImage.read(resource.getInputStream());
-				AnimationMetadataSection animationMetadata = resource.getMetadata(AnimationMetadataSection.SERIALIZER);
-				if (animationMetadata == null) {
-					animationMetadata = AnimationMetadataSection.EMPTY;
-				}
-
-				Pair<Integer, Integer> frameSize = animationMetadata.getFrameSize(nativeImage.getWidth(), nativeImage.getHeight());
-				int frameWidth = frameSize.getFirst();
-				int frameHeight = frameSize.getSecond();
-				int targetFrameWidth = sprite.getWidth();
-				int targetFrameHeight = sprite.getHeight();
-				if (frameWidth != targetFrameWidth || frameHeight != targetFrameHeight) {
-					int imageWidth = nativeImage.getWidth();
-					int imageHeight = nativeImage.getHeight();
-
-					// We can assume the following is always true as a result of getFrameSize's check:
-					// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
-					int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
-					int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
-
-					NativeImage scaledImage;
-					if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
-						scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
-					} else {
-						scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
-					}
-					nativeImage.close();
-					nativeImage = scaledImage;
-
-					frameWidth = targetFrameWidth;
-					frameHeight = targetFrameHeight;
-
-					if (animationMetadata != AnimationMetadataSection.EMPTY) {
-						AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) animationMetadata;
-						int internalFrameWidth = animationAccessor.getFrameWidth();
-						int internalFrameHeight = animationAccessor.getFrameHeight();
-						if (internalFrameWidth != -1) {
-							animationAccessor.setFrameWidth(frameWidth);
-						}
-						if (internalFrameHeight != -1) {
-							animationAccessor.setFrameHeight(frameHeight);
-						}
-					}
-				}
-
-				ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
-				TextureAtlasSprite.Info pbrSpriteInfo = new PBRTextureAtlasSpriteInfo(pbrSpriteName, frameWidth, frameHeight, animationMetadata, pbrType);
-
-				int x = ((TextureAtlasSpriteAccessor) sprite).getX();
-				int y = ((TextureAtlasSpriteAccessor) sprite).getY();
-				pbrSprite = new PBRTextureAtlasSprite(atlas, pbrSpriteInfo, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
-				syncAnimation(sprite, pbrSprite);
-			} catch (Throwable t) {
-				if (resource != null) {
-					try {
-						resource.close();
-					} catch (Throwable t1) {
-						t.addSuppressed(t1);
-					}
-				}
-
-				throw t;
+		try (Resource resource = resourceManager.getResource(pbrImageLocation)) {
+			NativeImage nativeImage = NativeImage.read(resource.getInputStream());
+			AnimationMetadataSection animationMetadata = resource.getMetadata(AnimationMetadataSection.SERIALIZER);
+			if (animationMetadata == null) {
+				animationMetadata = AnimationMetadataSection.EMPTY;
 			}
 
-			if (resource != null) {
-				resource.close();
+			Pair<Integer, Integer> frameSize = animationMetadata.getFrameSize(nativeImage.getWidth(), nativeImage.getHeight());
+			int frameWidth = frameSize.getFirst();
+			int frameHeight = frameSize.getSecond();
+			int targetFrameWidth = sprite.getWidth();
+			int targetFrameHeight = sprite.getHeight();
+			if (frameWidth != targetFrameWidth || frameHeight != targetFrameHeight) {
+				int imageWidth = nativeImage.getWidth();
+				int imageHeight = nativeImage.getHeight();
+
+				// We can assume the following is always true as a result of getFrameSize's check:
+				// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
+				int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
+				int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
+
+				NativeImage scaledImage;
+				if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
+					scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
+				} else {
+					scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
+				}
+				nativeImage.close();
+				nativeImage = scaledImage;
+
+				frameWidth = targetFrameWidth;
+				frameHeight = targetFrameHeight;
+
+				if (animationMetadata != AnimationMetadataSection.EMPTY) {
+					AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) animationMetadata;
+					int internalFrameWidth = animationAccessor.getFrameWidth();
+					int internalFrameHeight = animationAccessor.getFrameHeight();
+					if (internalFrameWidth != -1) {
+						animationAccessor.setFrameWidth(frameWidth);
+					}
+					if (internalFrameHeight != -1) {
+						animationAccessor.setFrameHeight(frameHeight);
+					}
+				}
 			}
+
+			ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
+			TextureAtlasSprite.Info pbrSpriteInfo = new PBRTextureAtlasSpriteInfo(pbrSpriteName, frameWidth, frameHeight, animationMetadata, pbrType);
+
+			int x = ((TextureAtlasSpriteAccessor) sprite).getX();
+			int y = ((TextureAtlasSpriteAccessor) sprite).getY();
+			pbrSprite = new PBRTextureAtlasSprite(atlas, pbrSpriteInfo, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
+			syncAnimation(sprite, pbrSprite);
 		} catch (FileNotFoundException e) {
 			//
 		} catch (RuntimeException e) {
@@ -213,18 +194,6 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 		targetAccessor.setFrame(targetFrame);
 		targetAccessor.setSubFrame(ticks + sourceAccessor.getSubFrame());
-	}
-
-	protected boolean uploadAtlas(PBRAtlasTexture atlas, int atlasWidth, int atlasHeight, int mipLevel, @Nullable TextureFormat textureFormat) {
-		try {
-			atlas.upload(atlasWidth, atlasHeight, mipLevel);
-		} catch (Exception e) {
-			return false;
-		}
-		if (textureFormat != null) {
-			textureFormat.setupTextureParameters(atlas.getType(), atlas);
-		}
-		return true;
 	}
 
 	protected static class PBRTextureAtlasSpriteInfo extends TextureAtlasSprite.Info {

@@ -28,10 +28,10 @@ public interface WorldRenderingPipeline {
 	void syncProgram();
 	RenderTargetStateListener getRenderTargetStateListener();
 
-    int getCurrentNormalTexture();
-    int getCurrentSpecularTexture();
+	int getCurrentNormalTexture();
+	int getCurrentSpecularTexture();
 
-    void onBindTexture(int id);
+	void onBindTexture(int id);
 
 	void beginHand();
 

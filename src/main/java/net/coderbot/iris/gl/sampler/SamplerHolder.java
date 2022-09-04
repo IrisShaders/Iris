@@ -17,6 +17,5 @@ public interface SamplerHolder {
 	 */
 	boolean addDefaultSampler(IntSupplier sampler, String... names);
 	boolean addDynamicSampler(IntSupplier sampler, String... names);
-
-    boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names);
+	boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names);
 }
