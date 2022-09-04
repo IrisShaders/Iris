@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.mixin.LightTextureAccessor;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
@@ -38,6 +39,12 @@ public class CustomTextureManager {
 	 * Make sure any textures added to this list call releaseId from the close method.
 	 */
 	private final List<AbstractTexture> ownedTextures = new ArrayList<>();
+
+	private static Runnable pbrBindingListener;
+
+	static {
+		StateUpdateNotifiers.pbrBindingNotifier = listener -> pbrBindingListener = listener;
+	}
 
 	public CustomTextureManager(PackDirectives packDirectives,
 								EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap,
@@ -156,5 +163,11 @@ public class CustomTextureManager {
 
 	public void destroy() {
 		ownedTextures.forEach(AbstractTexture::close);
+	}
+
+	public static void onPBRTextureChanged() {
+		if (pbrBindingListener != null) {
+			pbrBindingListener.run();
+		}
 	}
 }

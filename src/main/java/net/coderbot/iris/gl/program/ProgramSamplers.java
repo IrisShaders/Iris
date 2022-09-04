@@ -8,6 +8,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.lwjgl.opengl.GL20C;
@@ -126,7 +127,7 @@ public class ProgramSamplers {
 				throw new IllegalStateException("Texture unit 0 is already used.");
 			}
 
-			return addDynamicSampler(sampler, true, names);
+			return addDynamicSampler(sampler, true, null, names);
 		}
 
 		/**
@@ -135,10 +136,19 @@ public class ProgramSamplers {
 		 */
 		@Override
 		public boolean addDynamicSampler(IntSupplier sampler, String... names) {
-			return addDynamicSampler(sampler, false, names);
+			return addDynamicSampler(sampler, false, null, names);
 		}
 
-		private boolean addDynamicSampler(IntSupplier sampler, boolean used, String... names) {
+		/**
+		 * Adds a sampler
+		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
+		 */
+		@Override
+		public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+			return addDynamicSampler(sampler, false, notifier, names);
+		}
+
+		private boolean addDynamicSampler(IntSupplier sampler, boolean used, ValueUpdateNotifier notifier, String... names) {
 			for (String name : names) {
 				int location = IrisRenderSystem.getUniformLocation(program, name);
 
@@ -165,7 +175,7 @@ public class ProgramSamplers {
 				return false;
 			}
 
-			samplers.add(new SamplerBinding(nextUnit, sampler));
+			samplers.add(new SamplerBinding(nextUnit, sampler, notifier));
 
 			remainingUnits -= 1;
 			nextUnit += 1;
@@ -248,6 +258,13 @@ public class ProgramSamplers {
 			sampler = getOverride(sampler, names);
 
 			return samplerHolder.addDynamicSampler(sampler, names);
+		}
+
+		@Override
+		public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+			sampler = getOverride(sampler, names);
+
+			return samplerHolder.addDynamicSampler(sampler, notifier, names);
 		}
 	}
 }

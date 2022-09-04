@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -144,8 +145,8 @@ public class IrisSamplers {
 			samplers.addDynamicSampler(whitePixel::getId, "iris_overlay");
 		}
 
-		samplers.addDynamicSampler(pipeline::getCurrentNormalTexture, "normals");
-		samplers.addDynamicSampler(pipeline::getCurrentSpecularTexture, "specular");
+		samplers.addDynamicSampler(pipeline::getCurrentNormalTexture, StateUpdateNotifiers.pbrBindingNotifier, "normals");
+		samplers.addDynamicSampler(pipeline::getCurrentSpecularTexture, StateUpdateNotifiers.pbrBindingNotifier, "specular");
 
 	}
 

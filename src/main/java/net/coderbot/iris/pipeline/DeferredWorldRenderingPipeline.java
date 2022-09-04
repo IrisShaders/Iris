@@ -22,6 +22,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -1103,6 +1104,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
 			currentNormalTexture = pbrHolder.getNormalTexture().getId();
 			currentSpecularTexture = pbrHolder.getSpecularTexture().getId();
+			CustomTextureManager.onPBRTextureChanged();
 		}
 	}
 }
