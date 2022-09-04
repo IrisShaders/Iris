@@ -101,7 +101,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void onBindTexture(int id) {
+	public void onSetShaderTexture(int id) {
 
 	}
 

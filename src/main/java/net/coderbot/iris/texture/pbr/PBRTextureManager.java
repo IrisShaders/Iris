@@ -1,10 +1,12 @@
 package net.coderbot.iris.texture.pbr;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.texture.TextureTracker;
 import net.coderbot.iris.texture.pbr.loader.PBRTextureLoader;
@@ -78,7 +80,7 @@ public class PBRTextureManager {
 			Class<? extends AbstractTexture> clazz = texture.getClass();
 			PBRTextureLoader loader = PBRTextureLoaderRegistry.INSTANCE.getLoader(clazz);
 			if (loader != null) {
-				int previousTextureBinding = GlStateManager.getActiveTextureName();
+				int previousTextureBinding = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
 				consumer.clear();
 				try {
 					loader.load(texture, Minecraft.getInstance().getResourceManager(), consumer);

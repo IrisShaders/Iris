@@ -9,9 +9,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(TextureAtlasSprite.class)
 public interface TextureAtlasSpriteAccessor {
-	@Accessor("metadata")
-	AnimationMetadataSection getMetadata();
-
 	@Accessor("mainImage")
 	NativeImage[] getMainImage();
 
@@ -20,19 +17,4 @@ public interface TextureAtlasSpriteAccessor {
 
 	@Accessor("y")
 	int getY();
-
-	@Accessor("frame")
-	int getFrame();
-
-	@Accessor("frame")
-	void setFrame(int frame);
-
-	@Accessor("subFrame")
-	int getSubFrame();
-
-	@Accessor("subFrame")
-	void setSubFrame(int subFrame);
-
-	@Invoker("upload")
-	void callUpload(int frameIndex);
 }

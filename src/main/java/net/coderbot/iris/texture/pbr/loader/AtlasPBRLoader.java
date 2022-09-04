@@ -3,7 +3,9 @@ package net.coderbot.iris.texture.pbr.loader;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.datafixers.util.Pair;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.mixin.texture.AnimatedTextureAccessor;
 import net.coderbot.iris.mixin.texture.AnimationMetadataSectionAccessor;
+import net.coderbot.iris.mixin.texture.FrameInfoAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
 import net.coderbot.iris.texture.TextureInfoCache;
@@ -21,6 +23,7 @@ import net.coderbot.iris.texture.util.ImageManipulationUtil;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.Tickable;
 import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -29,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
@@ -159,31 +163,32 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	}
 
 	protected void syncAnimation(TextureAtlasSprite source, TextureAtlasSprite target) {
-		if (!source.isAnimation() || !target.isAnimation()) {
+		Tickable sourceTicker = source.getAnimationTicker();
+		Tickable targetTicker = target.getAnimationTicker();
+		if (!(sourceTicker instanceof AnimatedTextureAccessor) || !(targetTicker instanceof AnimatedTextureAccessor)) {
 			return;
 		}
 
-		TextureAtlasSpriteAccessor sourceAccessor = ((TextureAtlasSpriteAccessor) source);
-		AnimationMetadataSection sourceMetadata = sourceAccessor.getMetadata();
+		AnimatedTextureAccessor sourceAccessor = (AnimatedTextureAccessor) sourceTicker;
 
 		int ticks = 0;
 		for (int f = 0; f < sourceAccessor.getFrame(); f++) {
-			ticks += sourceMetadata.getFrameTime(f);
+			ticks += ((FrameInfoAccessor) sourceAccessor.getFrames().get(f)).getTime();
 		}
 
-		TextureAtlasSpriteAccessor targetAccessor = ((TextureAtlasSpriteAccessor) target);
-		AnimationMetadataSection targetMetadata = targetAccessor.getMetadata();
+		AnimatedTextureAccessor targetAccessor = (AnimatedTextureAccessor) targetTicker;
+		List<Object> targetFrames = targetAccessor.getFrames();
 
 		int cycleTime = 0;
-		int frameCount = targetMetadata.getFrameCount();
+		int frameCount = targetFrames.size();
 		for (int f = 0; f < frameCount; f++) {
-			cycleTime += targetMetadata.getFrameTime(f);
+			cycleTime += ((FrameInfoAccessor) targetFrames.get(f)).getTime();
 		}
 		ticks %= cycleTime;
 
 		int targetFrame = 0;
 		while (true) {
-			int time = targetMetadata.getFrameTime(targetFrame);
+			int time = ((FrameInfoAccessor) targetFrames.get(targetFrame)).getTime();
 			if (ticks >= time) {
 				targetFrame++;
 				ticks -= time;

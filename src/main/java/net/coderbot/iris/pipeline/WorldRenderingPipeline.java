@@ -1,6 +1,5 @@
 package net.coderbot.iris.pipeline;
 
-import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -29,7 +28,7 @@ public interface WorldRenderingPipeline {
 	int getCurrentNormalTexture();
 	int getCurrentSpecularTexture();
 
-	void onBindTexture(int id);
+	void onSetShaderTexture(int id);
 
 	void beginHand();
 

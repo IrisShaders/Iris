@@ -13,6 +13,7 @@ import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -179,6 +180,22 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 	@Override
 	public boolean addDynamicSampler(IntSupplier sampler, String... names) {
+		boolean used = false;
+
+		for (String name : names) {
+			if (hasSampler(name)) {
+				used = true;
+			}
+
+			addIrisSampler(name, sampler);
+		}
+
+		return used;
+	}
+
+	@Override
+	public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+		// TODO: This isn't right, but it should work due to how 1.17+ handles samplers?
 		boolean used = false;
 
 		for (String name : names) {

@@ -1,10 +1,12 @@
 package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.LightTextureAccessor;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
@@ -144,7 +146,7 @@ public class CustomTextureManager {
 
 						TextureFormat textureFormat = TextureFormatLoader.getFormat();
 						if (textureFormat != null) {
-							int previousBinding = GlStateManager.getActiveTextureName();
+							int previousBinding = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
 							GlStateManager._bindTexture(pbrTexture.getId());
 							textureFormat.setupTextureParameters(pbrType, pbrTexture);
 							GlStateManager._bindTexture(previousBinding);
