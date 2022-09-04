@@ -47,6 +47,11 @@ import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.texture.TextureInfoCache;
+import net.coderbot.iris.texture.format.TextureFormat;
+import net.coderbot.iris.texture.format.TextureFormatLoader;
+import net.coderbot.iris.texture.pbr.PBRTextureHolder;
+import net.coderbot.iris.texture.pbr.PBRTextureManager;
+import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -128,8 +133,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private WorldRenderingPhase overridePhase = null;
 	private WorldRenderingPhase phase = WorldRenderingPhase.NONE;
 	private boolean isBeforeTranslucent;
+	private boolean isRenderingShadow = false;
 	private InputAvailability inputs = new InputAvailability(false, false, false);
 	private SpecialCondition special = null;
+
+	private boolean shouldBindPBR;
+	private int currentNormalTexture;
+	private int currentSpecularTexture;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -336,8 +346,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap(TextureStage.GBUFFERS_AND_SHADOW));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
-			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(),
-				customTextureManager.getSpecular(), whitePixel, new InputAvailability(true, true, false));
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -365,8 +374,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap(TextureStage.GBUFFERS_AND_SHADOW));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedAfterPrepare, renderTargets, false);
-			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(),
-				customTextureManager.getSpecular(), whitePixel, new InputAvailability(true, true, false));
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
 			// Only initialize these samplers if the shadow map renderer exists.
@@ -595,8 +603,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 		IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
 
-		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(),
-			customTextureManager.getSpecular(), whitePixel, availability);
+		if (!shouldBindPBR) {
+			shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
+		}
+
+		IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, availability);
 
 		if (!shadow) {
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
@@ -1090,5 +1101,32 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		return this;
 	}
 
-	private boolean isRenderingShadow = false;
+	@Override
+	public int getCurrentNormalTexture() {
+		return currentNormalTexture;
+	}
+
+	@Override
+	public int getCurrentSpecularTexture() {
+		return currentSpecularTexture;
+	}
+
+	@Override
+	public void onBindTexture(int id) {
+		if (shouldBindPBR && isRenderingWorld) {
+			PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
+			currentNormalTexture = pbrHolder.getNormalTexture().getId();
+			currentSpecularTexture = pbrHolder.getSpecularTexture().getId();
+
+			TextureFormat textureFormat = TextureFormatLoader.getFormat();
+			if (textureFormat != null) {
+				GlStateManager._bindTexture(currentNormalTexture);
+				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.getNormalTexture());
+				GlStateManager._bindTexture(currentSpecularTexture);
+				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.getSpecularTexture());
+			}
+
+			PBRTextureManager.notifyPBRTexturesChanged();
+		}
+	}
 }
