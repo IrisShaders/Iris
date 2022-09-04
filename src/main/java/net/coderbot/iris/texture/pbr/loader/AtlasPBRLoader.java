@@ -32,7 +32,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
@@ -98,65 +100,65 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(imageLocation);
 
 		TextureAtlasSprite pbrSprite = null;
-		try (Resource resource = resourceManager.getResource(pbrImageLocation)) {
-			NativeImage nativeImage = NativeImage.read(resource.getInputStream());
-			AnimationMetadataSection animationMetadata = resource.getMetadata(AnimationMetadataSection.SERIALIZER);
-			if (animationMetadata == null) {
-				animationMetadata = AnimationMetadataSection.EMPTY;
-			}
+		Optional<Resource> resource = resourceManager.getResource(pbrImageLocation);
+		if (resource.isPresent()) {
+			try (InputStream stream = resource.get().open()) {
+				NativeImage nativeImage = NativeImage.read(stream);
+				AnimationMetadataSection animationMetadata = resource.get().metadata().getSection(AnimationMetadataSection.SERIALIZER).orElse(AnimationMetadataSection.EMPTY);
 
-			Pair<Integer, Integer> frameSize = animationMetadata.getFrameSize(nativeImage.getWidth(), nativeImage.getHeight());
-			int frameWidth = frameSize.getFirst();
-			int frameHeight = frameSize.getSecond();
-			int targetFrameWidth = sprite.getWidth();
-			int targetFrameHeight = sprite.getHeight();
-			if (frameWidth != targetFrameWidth || frameHeight != targetFrameHeight) {
-				int imageWidth = nativeImage.getWidth();
-				int imageHeight = nativeImage.getHeight();
+				Pair<Integer, Integer> frameSize = animationMetadata.getFrameSize(nativeImage.getWidth(), nativeImage.getHeight());
+				int frameWidth = frameSize.getFirst();
+				int frameHeight = frameSize.getSecond();
+				int targetFrameWidth = sprite.getWidth();
+				int targetFrameHeight = sprite.getHeight();
+				if (frameWidth != targetFrameWidth || frameHeight != targetFrameHeight) {
+					int imageWidth = nativeImage.getWidth();
+					int imageHeight = nativeImage.getHeight();
 
-				// We can assume the following is always true as a result of getFrameSize's check:
-				// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
-				int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
-				int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
+					// We can assume the following is always true as a result of getFrameSize's check:
+					// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
+					int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
+					int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
 
-				NativeImage scaledImage;
-				if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
-					scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
-				} else {
-					scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
-				}
-				nativeImage.close();
-				nativeImage = scaledImage;
-
-				frameWidth = targetFrameWidth;
-				frameHeight = targetFrameHeight;
-
-				if (animationMetadata != AnimationMetadataSection.EMPTY) {
-					AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) animationMetadata;
-					int internalFrameWidth = animationAccessor.getFrameWidth();
-					int internalFrameHeight = animationAccessor.getFrameHeight();
-					if (internalFrameWidth != -1) {
-						animationAccessor.setFrameWidth(frameWidth);
+					NativeImage scaledImage;
+					if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
+						scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
+					} else {
+						scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
 					}
-					if (internalFrameHeight != -1) {
-						animationAccessor.setFrameHeight(frameHeight);
+					nativeImage.close();
+					nativeImage = scaledImage;
+
+					frameWidth = targetFrameWidth;
+					frameHeight = targetFrameHeight;
+
+					if (animationMetadata != AnimationMetadataSection.EMPTY) {
+						AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) animationMetadata;
+						int internalFrameWidth = animationAccessor.getFrameWidth();
+						int internalFrameHeight = animationAccessor.getFrameHeight();
+						if (internalFrameWidth != -1) {
+							animationAccessor.setFrameWidth(frameWidth);
+						}
+						if (internalFrameHeight != -1) {
+							animationAccessor.setFrameHeight(frameHeight);
+						}
 					}
 				}
+
+				ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
+				TextureAtlasSprite.Info pbrSpriteInfo = new PBRTextureAtlasSpriteInfo(pbrSpriteName, frameWidth, frameHeight, animationMetadata, pbrType);
+
+				int x = ((TextureAtlasSpriteAccessor) sprite).getX();
+				int y = ((TextureAtlasSpriteAccessor) sprite).getY();
+				pbrSprite = new PBRTextureAtlasSprite(atlas, pbrSpriteInfo, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
+				syncAnimation(sprite, pbrSprite);
+			} catch (FileNotFoundException e) {
+				//
+			} catch (RuntimeException e) {
+				Iris.logger.error("Unable to parse metadata from {} : {}", pbrImageLocation, e);
+			} catch (IOException e) {
+				Iris.logger.error("Unable to load {} : {}", pbrImageLocation, e);
 			}
-
-			ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
-			TextureAtlasSprite.Info pbrSpriteInfo = new PBRTextureAtlasSpriteInfo(pbrSpriteName, frameWidth, frameHeight, animationMetadata, pbrType);
-
-			int x = ((TextureAtlasSpriteAccessor) sprite).getX();
-			int y = ((TextureAtlasSpriteAccessor) sprite).getY();
-			pbrSprite = new PBRTextureAtlasSprite(atlas, pbrSpriteInfo, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
-			syncAnimation(sprite, pbrSprite);
-		} catch (FileNotFoundException e) {
-			//
-		} catch (RuntimeException e) {
-			Iris.logger.error("Unable to parse metadata from {} : {}", pbrImageLocation, e);
-		} catch (IOException e) {
-			Iris.logger.error("Unable to load {} : {}", pbrImageLocation, e);
 		}
 
 		return pbrSprite;
