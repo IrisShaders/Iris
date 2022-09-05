@@ -249,12 +249,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
 
 			if (!shouldBindPBR) {
 				shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
 			}
+
+			// This must be done, as there's no Vanilla binding for Sodium shaders.
+			customTextureSamplerInterceptor.addExternalSampler(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, "lightmap");
+			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
+			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
 
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
@@ -288,12 +291,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
 			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow, renderTargets, false);
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
 
 			if (!shouldBindPBR) {
 				shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
 			}
+
+			// This must be done, as there's no Vanilla binding for Sodium shaders.
+			customTextureSamplerInterceptor.addExternalSampler(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, "lightmap");
+			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
+			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
 
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -496,13 +502,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false);
 		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
 
-
-		samplerHolder.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
-		samplerHolder.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
-
 		if (!shouldBindPBR) {
 			shouldBindPBR = IrisSamplers.hasPBRSamplers(samplerHolder);
 		}
+
+		samplerHolder.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
+		samplerHolder.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
 
 		IrisSamplers.addWorldDepthSamplers(samplerHolder, this.renderTargets);
 		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
@@ -580,8 +585,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			TextureFormat textureFormat = TextureFormatLoader.getFormat();
 			if (textureFormat != null) {
+				GlStateManager._activeTexture(33984 + 3);
 				GlStateManager._bindTexture(currentNormalTexture);
 				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.getNormalTexture());
+				GlStateManager._activeTexture(33984 + 4);
 				GlStateManager._bindTexture(currentSpecularTexture);
 				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.getSpecularTexture());
 			}
