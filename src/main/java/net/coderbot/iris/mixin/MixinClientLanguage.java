@@ -46,7 +46,7 @@ public class MixinClientLanguage {
 	@Final
 	private Map<String, String> storage;
 
-	@Inject(method = "loadFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/language/ClientLanguage;appendFrom(Ljava/util/List;Ljava/util/Map;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject(method = "loadFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/language/ClientLanguage;appendFrom(Ljava/lang/String;Ljava/util/List;Ljava/util/Map;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private static void injectFrom(ResourceManager arg, List<LanguageInfo> list, CallbackInfoReturnable<ClientLanguage> cir, Map<String, String> map, boolean bl, Iterator<LanguageInfo> infoIterator, LanguageInfo info, String json) {
 		if (Iris.class.getResource("/assets/iris/" + json) != null) {
 			Language.loadFromJson(Iris.class.getResourceAsStream("/assets/iris/" + json), map::put);
