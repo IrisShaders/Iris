@@ -585,10 +585,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			TextureFormat textureFormat = TextureFormatLoader.getFormat();
 			if (textureFormat != null) {
-				GlStateManager._activeTexture(33984 + 3);
 				GlStateManager._bindTexture(currentNormalTexture);
 				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.getNormalTexture());
-				GlStateManager._activeTexture(33984 + 4);
 				GlStateManager._bindTexture(currentSpecularTexture);
 				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.getSpecularTexture());
 			}
