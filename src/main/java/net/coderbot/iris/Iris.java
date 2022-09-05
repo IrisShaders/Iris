@@ -22,7 +22,6 @@ import net.coderbot.iris.shaderpack.option.Profile;
 import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
@@ -141,13 +140,26 @@ public class Iris {
 
 		this.updateChecker.checkForUpdates(irisConfig);
 
-		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
-		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
-		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
+		reloadKeybind = new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds");
+		toggleShadersKeybind = new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds");
+		shaderpackScreenKeybind = new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds");
 
 		setupCommands(Minecraft.getInstance());
 
 		initialized = true;
+	}
+
+	/**
+	 * Returns all key bindings.
+	 * If you want to add a new key binding, it must be added here.
+	 * @return All key bindings.
+	 */
+	public static KeyMapping[] getKeyMappings() {
+		return new KeyMapping[] {
+			reloadKeybind,
+			toggleShadersKeybind,
+			shaderpackScreenKeybind
+		};
 	}
 
 	private void setupCommands(Minecraft instance) {

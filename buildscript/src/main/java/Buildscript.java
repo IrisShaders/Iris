@@ -91,14 +91,12 @@ public class Buildscript extends SimpleFabricProject {
     @Override
     public void getModDependencies(ModDependencyCollector d) {
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.25+ec94c6f6bf"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.11+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.3+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
-
-		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.8+d7c144a8a7"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-		d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "3.0.0+56447d9ba7"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
 		if (SODIUM) {
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.3+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.8+d7c144a8a7"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "3.0.0+56447d9ba7"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+
 			if (CUSTOM_SODIUM) {
 				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
@@ -141,34 +139,8 @@ public class Buildscript extends SimpleFabricProject {
 	}
 
 	private final Lazy<String> computeVersionLazy = new Lazy<>(() -> {
-		String baseVersion = super.getVersion().replace("-development-environment", "");
+		return super.getVersion().replace("-development-environment", "");
 
-		String build_id = System.getenv("GITHUB_RUN_NUMBER");
-
-		if (Objects.equals(System.getProperty("iris.release", "false"), "true")) {
-			// We don't want any suffix if we're doing a publish.
-			return baseVersion;
-		}
-
-		String commitHash = "";
-		boolean isDirty = false;
-		try {
-			Git git = Git.open(getProjectDir().toFile());
-			isDirty = !git.status().call().getUncommittedChanges().isEmpty();
-			commitHash = git.getRepository().parseCommit(git.getRepository().resolve(Constants.HEAD).toObjectId()).getName().substring(0, 8);
-			git.close();
-		} catch (RepositoryNotFoundException e) {
-			// User might have downloaded the repository as a zip.
-			return baseVersion + "nogit";
-		} catch (IOException | GitAPIException e) {
-			e.printStackTrace();
-		}
-
-		if (build_id != null) {
-			return baseVersion + "-build." + build_id + "-" + commitHash;
-		} else {
-			return baseVersion + "-" + commitHash + (isDirty ? "-dirty" : "");
-		}
 	});
 
 	@Override
