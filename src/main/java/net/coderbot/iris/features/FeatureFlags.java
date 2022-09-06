@@ -7,7 +7,8 @@ public enum FeatureFlags {
 	// STUB: Not implemented yet, added for the names
 	CUSTOM_UNIFORMS("Custom Uniforms", () -> false),
 	PER_BUFFER_BLENDING("Per-Buffer Blending", () -> false),
-	COMPUTE_SHADERS("Compute Shaders", () -> false);
+	COMPUTE_SHADERS("Compute Shaders", () -> false),
+	SHADOWCOMP("Shadow Composites", () -> false);
 
 	private final String name;
 	private final BooleanSupplier optionalRequirement;
