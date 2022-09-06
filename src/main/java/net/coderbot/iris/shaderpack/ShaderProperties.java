@@ -77,6 +77,8 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	private Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
+	private List<String> requiredFeatureFlags = new ArrayList<>();
+	private List<String> optionalFeatureFlags = new ArrayList<>();
 
 	private ShaderProperties() {
 		// empty
@@ -246,6 +248,10 @@ public class ShaderProperties {
 							.put(buffer, shouldFlip);
 				});
 			});
+
+
+			handleWhitespacedListDirective(key, value, "iris.features.required", options -> requiredFeatureFlags = options);
+			handleWhitespacedListDirective(key, value, "iris.features.optional", options -> optionalFeatureFlags = options);
 
 			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
@@ -534,5 +540,13 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, Object2BooleanMap<String>> getExplicitFlips() {
 		return explicitFlips;
+	}
+
+	public List<String> getRequiredFeatureFlags() {
+		return requiredFeatureFlags;
+	}
+
+	public List<String> getOptionalFeatureFlags() {
+		return optionalFeatureFlags;
 	}
 }
