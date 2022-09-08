@@ -86,6 +86,7 @@ public class Iris {
 
 	private static Version IRIS_VERSION;
 	private static UpdateChecker updateChecker;
+	private static boolean fallback;
 
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
@@ -254,7 +255,7 @@ public class Iris {
 					minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.toggled.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
 				}
 				setShadersDisabled();
-				currentPackName = "(off) [fallback, check your logs for errors]";
+				fallback = true;
 			}
 		} else if (shaderpackScreenKeybind.consumeClick()) {
 			minecraft.setScreen(new ShaderPackScreen(null));
@@ -303,7 +304,7 @@ public class Iris {
 		if (!loadExternalShaderpack(externalName.get())) {
 			logger.warn("Falling back to normal rendering without shaders because the shaderpack could not be loaded");
 			setShadersDisabled();
-			currentPackName = "(off) [fallback, check your logs for errors]";
+			fallback = true;
 		}
 	}
 
@@ -393,6 +394,7 @@ public class Iris {
 			return false;
 		}
 
+		fallback = false;
 		currentPackName = name;
 
 		logger.info("Using shaderpack: " + name);
@@ -427,6 +429,7 @@ public class Iris {
 
 	private static void setShadersDisabled() {
 		currentPack = null;
+		fallback = false;
 		currentPackName = "(off)";
 
 		logger.info("Shaders are disabled");
@@ -653,7 +656,7 @@ public class Iris {
 		} catch (Exception e) {
 			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
-			currentPackName = "(off) [fallback, check your logs for details]";
+			fallback = true;
 
 			return new FixedFunctionWorldRenderingPipeline();
 		}
@@ -683,6 +686,10 @@ public class Iris {
 
 	public static UpdateChecker getUpdateChecker() {
 		return updateChecker;
+	}
+
+	public static boolean isFallback() {
+		return fallback;
 	}
 
 	public static String getVersion() {
