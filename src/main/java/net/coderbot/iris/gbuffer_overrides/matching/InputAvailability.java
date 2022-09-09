@@ -38,4 +38,13 @@ public class InputAvailability {
 
 		return packed;
 	}
+
+	@Override
+	public String toString() {
+		return "InputAvailability{" +
+			"texture=" + texture +
+			", lightmap=" + lightmap +
+			", overlay=" + overlay +
+			'}';
+	}
 }

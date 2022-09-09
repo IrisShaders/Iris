@@ -6,11 +6,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.io.IOUtils;
@@ -30,7 +32,7 @@ public class CenterDepthSampler {
 	private final int texture;
 	private final int altTexture;
 
-	public CenterDepthSampler(float halfLife) {
+	public CenterDepthSampler(RenderTargets targets, float halfLife) {
 		this.texture = GlStateManager._genTexture();
 		this.altTexture = GlStateManager._genTexture();
 		this.framebuffer = new GlFramebuffer();
@@ -55,7 +57,7 @@ public class CenterDepthSampler {
 			throw new RuntimeException(e);
 		}
 
-		builder.addDynamicSampler(() -> Minecraft.getInstance().getMainRenderTarget().getDepthTextureId(), "depth");
+		builder.addDynamicSampler(targets::getDepthTexture, "depth");
 		builder.addDynamicSampler(() -> altTexture, "altDepth");
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
 		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife * 0.1) / LN2)));
@@ -79,6 +81,7 @@ public class CenterDepthSampler {
 		FullScreenQuadRenderer.INSTANCE.render();
 
 		ProgramUniforms.clearActiveUniforms();
+		ProgramSamplers.clearActiveSamplers();
 		GlStateManager._glUseProgram(0);
 
 		this.framebuffer.bind();

@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
+import net.coderbot.iris.gl.state.StateUpdateNotifiers;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
@@ -75,7 +77,7 @@ public class IrisSamplers {
 		// TODO: Keep this up to date with the actual definitions.
 		// TODO: Don't query image presence using the sampler interface even though the current underlying implementation
 		//       is the same.
-		ImmutableList<String> shadowSamplers = ImmutableList.of("shadowtex0", "shadowtex1", "shadow", "watershadow",
+		ImmutableList<String> shadowSamplers = ImmutableList.of("shadowtex0", "shadowtex0HW", "shadowtex1", "shadowtex1HW", "shadow", "watershadow",
 				"shadowcolor", "shadowcolor0", "shadowcolor1", "shadowcolorimg0", "shadowcolorimg1");
 
 		for (String samplerName : shadowSamplers) {
@@ -107,11 +109,22 @@ public class IrisSamplers {
 		samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(0), "shadowcolor", "shadowcolor0");
 		samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(1), "shadowcolor1");
 
+		if (shadowRenderTargets.isHardwareFiltered(0)) {
+			samplers.addDynamicSampler(shadowRenderTargets.getDepthTexture()::getTextureId, "shadowtex0HW");
+		}
+
+		if (shadowRenderTargets.isHardwareFiltered(1)) {
+			samplers.addDynamicSampler(shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, "shadowtex1HW");
+		}
+
 		return usesShadows;
 	}
 
-	public static void addLevelSamplers(SamplerHolder samplers, AbstractTexture normals, AbstractTexture specular,
-										AbstractTexture whitePixel, InputAvailability availability) {
+	public static boolean hasPBRSamplers(SamplerHolder samplers) {
+		return samplers.hasSampler("normals") || samplers.hasSampler("specular");
+	}
+
+	public static void addLevelSamplers(SamplerHolder samplers, WorldRenderingPipeline pipeline, AbstractTexture whitePixel, InputAvailability availability) {
 		if (availability.texture) {
 			samplers.addExternalSampler(ALBEDO_TEXTURE_UNIT, "tex", "texture", "gtexture");
 		} else {
@@ -132,8 +145,8 @@ public class IrisSamplers {
 			samplers.addDynamicSampler(whitePixel::getId, "iris_overlay");
 		}
 
-		samplers.addDynamicSampler(normals::getId, "normals");
-		samplers.addDynamicSampler(specular::getId, "specular");
+		samplers.addDynamicSampler(pipeline::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
+		samplers.addDynamicSampler(pipeline::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
 	}
 
 	public static void addWorldDepthSamplers(SamplerHolder samplers, RenderTargets renderTargets) {

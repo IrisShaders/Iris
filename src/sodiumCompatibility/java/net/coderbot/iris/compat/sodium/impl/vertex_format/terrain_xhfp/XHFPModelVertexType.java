@@ -15,7 +15,7 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisGlVertexAttributeF
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements ChunkVertexType {
-	public static final int STRIDE = 40;
+	public static final int STRIDE = 44;
 	public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
 			.addElement(ChunkMeshAttribute.POSITION, 0, GlVertexAttributeFormat.UNSIGNED_SHORT, 3, false)
 			.addElement(ChunkMeshAttribute.COLOR, 8, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true)
@@ -24,7 +24,8 @@ public class XHFPModelVertexType implements ChunkVertexType {
 			.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 20, GlVertexAttributeFormat.FLOAT, 2, false)
 			.addElement(IrisChunkMeshAttributes.TANGENT, 28, IrisGlVertexAttributeFormat.BYTE, 4, true)
 			.addElement(IrisChunkMeshAttributes.NORMAL, 32, IrisGlVertexAttributeFormat.BYTE, 3, true)
-			.addElement(IrisChunkMeshAttributes.BLOCK_ID, 36, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false)
+			.addElement(IrisChunkMeshAttributes.BLOCK_ID, 36, IrisGlVertexAttributeFormat.SHORT, 2, false)
+			.addElement(IrisChunkMeshAttributes.MID_BLOCK, 40, IrisGlVertexAttributeFormat.BYTE, 3, false)
 			.build();
 
 	public static final float MODEL_SCALE = (32.0f / 65536.0f);
