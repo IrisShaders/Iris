@@ -924,8 +924,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
 
-				IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, customTextureManager.getNormals(),
-					customTextureManager.getSpecular(), whitePixel, new InputAvailability(true, true, false));
+				IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 

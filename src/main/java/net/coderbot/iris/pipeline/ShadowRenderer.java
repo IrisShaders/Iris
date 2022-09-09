@@ -84,7 +84,6 @@ public class ShadowRenderer {
 	private final RenderBuffersExt renderBuffersExt;
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
 	private final String debugStringOverall;
-	private final ComputeProgram[] computePrograms;
 	private FrustumHolder terrainFrustumHolder;
 	private FrustumHolder entityFrustumHolder;
 	private String debugStringTerrain = "(unavailable)";
@@ -92,11 +91,10 @@ public class ShadowRenderer {
 	private int renderedShadowBlockEntities = 0;
 	private ProfilerFiller profiler;
 
-	public ShadowRenderer(ProgramSource shadow, ComputeProgram[] compute, PackDirectives directives,
+	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
 						  ShadowRenderTargets shadowRenderTargets) {
 
 		this.profiler = Minecraft.getInstance().getProfiler();
-		this.computePrograms = compute;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
 
