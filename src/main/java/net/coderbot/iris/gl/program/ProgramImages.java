@@ -81,6 +81,11 @@ public class ProgramImages {
 				}
 			}
 
+			if (internalFormat == InternalTextureFormat.RGBA) {
+				// Internal detail of Optifine: Set RGBA8 if RGBA is selected, as RGBA is not valid for images.
+				internalFormat = InternalTextureFormat.RGBA8;
+			}
+
 			images.add(new ImageBinding(nextImageUnit, internalFormat.getGlFormat(), textureID));
 			calls.add(new GlUniform1iCall(location, nextImageUnit));
 
