@@ -138,7 +138,7 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getPositionColorLightmapShader, getPositionColorTexLightmapShader
+	// TODO: getPositionColorLightmapShader
 
 	@Inject(method = "getPositionTexColorNormalShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorNormalShader(CallbackInfoReturnable<ShaderInstance> cir) {
@@ -370,7 +370,8 @@ public class MixinGameRenderer {
 
 	@Inject(method = {
 			"getRendertypeTextShader",
-			"getRendertypeTextSeeThroughShader"
+			"getRendertypeTextSeeThroughShader",
+			"getPositionColorTexLightmapShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTextShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {

@@ -139,8 +139,34 @@ public class Buildscript extends SimpleFabricProject {
 	}
 
 	private final Lazy<String> computeVersionLazy = new Lazy<>(() -> {
-		return super.getVersion().replace("-development-environment", "");
+		String baseVersion = super.getVersion().replace("-development-environment", "");
 
+		String build_id = System.getenv("GITHUB_RUN_NUMBER");
+
+		if (Objects.equals(System.getProperty("iris.release", "false"), "true")) {
+			// We don't want any suffix if we're doing a publish.
+			return baseVersion;
+		}
+
+		String commitHash = "";
+		boolean isDirty = false;
+		try {
+			Git git = Git.open(getProjectDir().toFile());
+			isDirty = !git.status().call().getUncommittedChanges().isEmpty();
+			commitHash = git.getRepository().parseCommit(git.getRepository().resolve(Constants.HEAD).toObjectId()).getName().substring(0, 8);
+			git.close();
+		} catch (RepositoryNotFoundException e) {
+			// User might have downloaded the repository as a zip.
+			return baseVersion + "nogit";
+		} catch (IOException | GitAPIException e) {
+			e.printStackTrace();
+		}
+
+		if (build_id != null) {
+			return baseVersion + "-build." + build_id + "-" + commitHash;
+		} else {
+			return baseVersion + "-" + commitHash + (isDirty ? "-dirty" : "");
+		}
 	});
 
 	@Override
