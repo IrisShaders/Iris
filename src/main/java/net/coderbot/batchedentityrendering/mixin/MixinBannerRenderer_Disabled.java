@@ -19,8 +19,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
+/**
+ * This Mixin groups banner patterns separately, to not batch the wrong patterns.
+ * It has been disabled for now, as the behavior seems to not be required. (IMS, September 2, 2022)
+ */
 @Mixin(BannerRenderer.class)
-public class MixinBannerRenderer {
+public class MixinBannerRenderer_Disabled {
     private static final String RENDER_PATTERNS =
             "Lnet/minecraft/client/renderer/blockentity/BannerRenderer;renderPatterns(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/model/geom/ModelPart;Lnet/minecraft/client/resources/model/Material;ZLjava/util/List;Z)V";
 

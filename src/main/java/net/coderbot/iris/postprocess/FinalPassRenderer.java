@@ -232,6 +232,7 @@ public class FinalPassRenderer {
 		// Also bind the "main" framebuffer if it isn't already bound.
 		main.bindWrite(true);
 		ProgramUniforms.clearActiveUniforms();
+		ProgramSamplers.clearActiveSamplers();
 		GlStateManager._glUseProgram(0);
 
 		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {
