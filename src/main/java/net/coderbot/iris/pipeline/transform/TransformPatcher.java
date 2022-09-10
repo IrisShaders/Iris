@@ -248,6 +248,6 @@ public class TransformPatcher {
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
-		return transform(vertex, geometry, fragment, new Parameters(Patch.COMPOSITE));
+		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE));
 	}
 }

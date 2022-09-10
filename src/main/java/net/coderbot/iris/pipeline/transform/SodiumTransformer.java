@@ -12,10 +12,6 @@ public class SodiumTransformer {
 			TranslationUnit tree,
 			Root root,
 			SodiumParameters parameters) {
-		// this happens before common for patching gl_FragData
-		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
-			AlphaTestTransformer.transform(t, tree, root, parameters, parameters.alpha);
-		}
 		CommonTransformer.transform(t, tree, root, parameters);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");

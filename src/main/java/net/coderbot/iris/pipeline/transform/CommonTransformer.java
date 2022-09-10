@@ -1,11 +1,26 @@
 package net.coderbot.iris.pipeline.transform;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
+import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
+import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
+import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.query.Root;
@@ -13,7 +28,10 @@ import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.ast.transform.Template;
+import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
 
 // Order fixed
@@ -22,6 +40,27 @@ public class CommonTransformer {
 			"gl_TextureMatrix[0]", Matcher.expressionPattern);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", Matcher.expressionPattern);
+
+	private static final AutoHintedMatcher<Expression> glFragDataI = new AutoHintedMatcher<>(
+			"gl_FragData[index]", Matcher.expressionPattern) {
+		{
+			markClassedPredicateWildcard("index",
+					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
+					LiteralExpression.class,
+					literalExpression -> literalExpression.isInteger() && literalExpression.getInteger() >= 0);
+		}
+	};
+
+	private static final Template<ExternalDeclaration> fragDataDeclaration = Template
+			.withExternalDeclaration("layout (location = __index) out vec4 __name;");
+	static {
+		fragDataDeclaration.markLocalReplacement("__index", ReferenceExpression.class);
+		fragDataDeclaration.markIdentifierReplacement("__name");
+	}
+
+	private static final List<Expression> replaceExpressions = new ArrayList<>();
+	private static final List<Long> replaceIndexes = new ArrayList<>();
+	private static boolean hasGtexture = false;
 
 	private static void renameFunctionCall(Root root, String oldName, String newName) {
 		root.process(root.identifierIndex.getStream(oldName)
@@ -78,12 +117,41 @@ public class CommonTransformer {
 			if (root.identifierIndex.has("gl_FragColor")) {
 				Iris.logger.warn(
 						"[Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
-				root.replaceReferenceExpressions(t, "gl_FragColor", "iris_FragData[0]");
+				root.replaceReferenceExpressions(t, "gl_FragColor", "gl_FragData[0]");
 			}
 
-			root.rename("gl_FragData", "iris_FragData");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-					"layout (location = 0) out vec4 iris_FragData[8];");
+			// change gl_FragData[i] to iris_FragDatai
+			replaceExpressions.clear();
+			replaceIndexes.clear();
+			Set<Long> replaceIndexesSet = new HashSet<>();
+			for (Identifier id : root.identifierIndex.get("gl_FragData")) {
+				ArrayAccessExpression accessExpression = id.getAncestor(ArrayAccessExpression.class);
+				if (accessExpression == null || !glFragDataI.matchesExtract(accessExpression)) {
+					continue;
+				}
+				replaceExpressions.add(accessExpression);
+				long index = glFragDataI.getNodeMatch("index", LiteralExpression.class).getInteger();
+				replaceIndexes.add(index);
+				replaceIndexesSet.add(index);
+			}
+			for (int i = 0; i < replaceExpressions.size(); i++) {
+				replaceExpressions.get(i).replaceByAndDelete(
+						new ReferenceExpression(new Identifier("iris_FragData" + replaceIndexes.get(i))));
+			}
+			for (long index : replaceIndexesSet) {
+				tree.injectNode(ASTInjectionPoint.BEFORE_FUNCTIONS,
+						fragDataDeclaration.getInstanceFor(tree,
+								new LiteralExpression(Type.INT32, index),
+								new Identifier("iris_FragData" + index)));
+			}
+			replaceExpressions.clear();
+			replaceIndexes.clear();
+
+			// insert alpha test for iris_FragData0 in the fragment shader
+			if (parameters.getAlphaTest() != AlphaTest.ALWAYS && replaceIndexesSet.contains(0L)) {
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_currentAlphaTest;");
+				tree.appendMain(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
+			}
 		}
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX || parameters.type.glShaderType == ShaderType.FRAGMENT) {
@@ -98,11 +166,33 @@ public class CommonTransformer {
 			}
 		}
 
-		// addition: rename all uses of texture to gtexture if it's *not* used as a
-		// function call
-		root.process(root.identifierIndex.getStream("texture")
+		// addition: rename all uses of texture and gcolor to gtexture if it's *not*
+		// used as a function call
+		hasGtexture = false;
+		root.process(Stream.concat(
+				root.identifierIndex.getStream("gcolor"),
+				root.identifierIndex.getStream("texture"))
 				.filter(id -> !(id.getParent() instanceof FunctionCallExpression)),
-				id -> id.setName("gtexture"));
+				id -> {
+					id.setName("gtexture");
+					ASTNode parent = id.getParent();
+					if (!(parent instanceof DeclarationMember)) {
+						return;
+					}
+					DeclarationMember member = (DeclarationMember) parent;
+					DeclarationExternalDeclaration declaration = member.getAncestor(DeclarationExternalDeclaration.class);
+					if (declaration == null) {
+						return;
+					}
+					if (!hasGtexture) {
+						hasGtexture = true;
+						return;
+					}
+					member.detachAndDelete();
+					if (((TypeAndInitDeclaration) member.getParent()).getMembers().isEmpty()) {
+						declaration.detachAndDelete();
+					}
+				});
 
 		// This must be defined and valid in all shader passes, including composite
 		// passes. A shader that relies on this behavior is SEUS v11 - it reads
