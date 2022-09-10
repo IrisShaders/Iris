@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 
 public class ShaderAttributeInputs {
 	private boolean color;
@@ -69,6 +70,10 @@ public class ShaderAttributeInputs {
 
 	public boolean isNewLines() {
 		return newLines;
+	}
+
+	public InputAvailability toAvailability() {
+		return new InputAvailability(tex, light, overlay);
 	}
 
 	@Override

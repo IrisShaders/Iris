@@ -91,6 +91,21 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public int getCurrentNormalTexture() {
+		return 0;
+	}
+
+	@Override
+	public int getCurrentSpecularTexture() {
+		return 0;
+	}
+
+	@Override
+	public void onSetShaderTexture(int id) {
+
+	}
+
+	@Override
 	public void beginHand() {
 	    // stub: nothing to do here
 	}
