@@ -13,9 +13,9 @@ import java.util.Optional;
 
 /**
  * Maps the key binding categories for Iris to the {@code CATEGORY_SORT_ORDER}, to allow comparisons to work correctly.
- * This is done before Fabric API.
+ * This is done after Fabric API.
  */
-@Mixin(value = KeyMapping.class, priority = 999)
+@Mixin(value = KeyMapping.class, priority = 1010)
 public class MixinKeyMapping {
 	@Shadow
 	@Final
