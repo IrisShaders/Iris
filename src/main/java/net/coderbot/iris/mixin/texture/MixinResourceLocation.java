@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinResourceLocation {
 	@Inject(method = "isValidPath", at = @At("HEAD"), cancellable = true)
 	private static void iris$allowInvalidPaths(String path, CallbackInfoReturnable<Boolean> cir) {
-		if (path.equals("DUMMY")) {
-			// This is here to solve a weird case in DFU that expects minecraft:DUMMY to be invalid.
+		if (path.equals("DUMMY") || path.equals("\u0001")) {
+			// This is here to solve a weird case in DFU that expects minecraft:DUMMY to be invalid, or cases where people pass an "empty" string that is actually \u0001.
 			cir.setReturnValue(false);
 			return;
 		}
