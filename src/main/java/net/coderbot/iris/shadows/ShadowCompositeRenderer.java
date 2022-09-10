@@ -46,7 +46,6 @@ public class ShadowCompositeRenderer {
 	private final FrameUpdateNotifier updateNotifier;
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
-	private final GlFramebuffer baseline;
 	private ImmutableList<SwapPass> swapPasses;
 
 	public ShadowCompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, ShadowRenderTargets renderTargets,
@@ -118,8 +117,6 @@ public class ShadowCompositeRenderer {
 
 		this.passes = passes.build();
 		this.flippedAtLeastOnceFinal = flippedAtLeastOnce.build();
-
-		this.baseline = renderTargets.createShadowFramebuffer(flippedAtLeastOnceFinal, new int[] {0});
 
 		ImmutableList.Builder<SwapPass> swapPasses = ImmutableList.builder();
 

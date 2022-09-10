@@ -4,7 +4,7 @@ import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shaderpack.PackDirectives;
-import net.coderbot.iris.shadow.ShadowMatrices;
+import net.coderbot.iris.shadows.ShadowMatrices;
 
 import java.nio.FloatBuffer;
 import java.util.function.Supplier;
