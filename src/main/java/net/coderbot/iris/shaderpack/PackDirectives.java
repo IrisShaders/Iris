@@ -25,6 +25,7 @@ public class PackDirectives {
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean oldLighting;
+	private boolean oldHandLight;
 	private boolean particlesBeforeDeferred;
 	private boolean prepareBeforeShadow;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
@@ -54,6 +55,7 @@ public class PackDirectives {
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
+		oldHandLight = properties.getOldHandLight().orElse(true);
 		explicitFlips = properties.getExplicitFlips();
 		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
 		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
@@ -127,6 +129,10 @@ public class PackDirectives {
 
 	public boolean isOldLighting() {
 		return oldLighting;
+	}
+
+	public boolean isOldHandLight() {
+		return oldHandLight;
 	}
 
 	public boolean areParticlesBeforeDeferred() {

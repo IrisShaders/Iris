@@ -177,6 +177,7 @@ public class CompositeRenderer {
 		// Also bind the "main" framebuffer if it isn't already bound.
 		main.bindWrite(true);
 		ProgramUniforms.clearActiveUniforms();
+		ProgramSamplers.clearActiveSamplers();
 		GlStateManager._glUseProgram(0);
 
 		// NB: Unbinding all of these textures is necessary for proper shaderpack reloading.

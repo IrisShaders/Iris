@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -7,16 +8,21 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.LightTextureAccessor;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
-import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
+import net.coderbot.iris.texture.format.TextureFormat;
+import net.coderbot.iris.texture.format.TextureFormatLoader;
+import net.coderbot.iris.texture.pbr.PBRTextureHolder;
+import net.coderbot.iris.texture.pbr.PBRTextureManager;
+import net.coderbot.iris.texture.pbr.PBRType;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,8 +34,6 @@ import java.util.function.IntSupplier;
 public class CustomTextureManager {
 	private final EnumMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new EnumMap<>(TextureStage.class);
 	private final IntSupplier noise;
-	private final NativeImageBackedSingleColorTexture normals;
-	private final NativeImageBackedSingleColorTexture specular;
 
 	/**
 	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
@@ -72,13 +76,6 @@ public class CustomTextureManager {
 
 			return texture::getId;
 		});
-
-		// Create some placeholder PBR textures for now
-		normals = new NativeImageBackedSingleColorTexture(127, 127, 255, 255);
-		specular = new NativeImageBackedSingleColorTexture(0, 0, 0, 0);
-
-		ownedTextures.add(normals);
-		ownedTextures.add(specular);
 	}
 
 	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
@@ -98,20 +95,67 @@ public class CustomTextureManager {
 			String namespace = resourceData.getNamespace();
 			String location = resourceData.getLocation();
 
-			ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+			String withoutExtension;
+			int extensionIndex = FilenameUtils.indexOfExtension(location);
+			if (extensionIndex != -1) {
+				withoutExtension = location.substring(0, extensionIndex);
+			} else {
+				withoutExtension = location;
+			}
+			PBRType pbrType = PBRType.fromFileLocation(withoutExtension);
+
 			TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
-			// NB: We have to re-query the TextureManager for the texture object every time. This is because the
-			//     AbstractTexture object could be removed / deleted from the TextureManager on resource reloads,
-			//     and we could end up holding on to a deleted texture unless we added special code to handle resource
-			//     reloads. Re-fetching the texture from the TextureManager every time is the most robust approach for
-			//     now.
-			return () -> {
-				AbstractTexture texture = textureManager.getTexture(textureLocation);
+			if (pbrType == null) {
+				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
 
-				// TODO: Should we give something else if the texture isn't there? This will need some thought
-				return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
-			};
+				// NB: We have to re-query the TextureManager for the texture object every time. This is because the
+				//     AbstractTexture object could be removed / deleted from the TextureManager on resource reloads,
+				//     and we could end up holding on to a deleted texture unless we added special code to handle resource
+				//     reloads. Re-fetching the texture from the TextureManager every time is the most robust approach for
+				//     now.
+				return () -> {
+					AbstractTexture texture = textureManager.getTexture(textureLocation);
+
+					// TODO: Should we give something else if the texture isn't there? This will need some thought
+					return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
+				};
+			} else {
+				location = location.substring(0, extensionIndex - pbrType.getSuffix().length()) + location.substring(extensionIndex);
+				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+
+				return () -> {
+					AbstractTexture texture = textureManager.getTexture(textureLocation);
+
+					if (texture != null) {
+						int id = texture.getId();
+						PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
+						AbstractTexture pbrTexture;
+						switch (pbrType) {
+						case NORMAL:
+							pbrTexture = pbrHolder.getNormalTexture();
+							break;
+						case SPECULAR:
+							pbrTexture = pbrHolder.getSpecularTexture();
+							break;
+						default:
+							throw new Error("Unknown PBRType '" + pbrType + "'");
+						}
+
+						TextureFormat textureFormat = TextureFormatLoader.getFormat();
+						if (textureFormat != null) {
+							int previousBinding = GlStateManager.getActiveTextureName();
+							GlStateManager._bindTexture(pbrTexture.getId());
+							textureFormat.setupTextureParameters(pbrType, pbrTexture);
+							GlStateManager._bindTexture(previousBinding);
+						}
+
+						return pbrTexture.getId();
+					}
+
+					return MissingTextureAtlasSprite.getTexture().getId();
+				};
+			}
 		} else {
 			throw new IllegalArgumentException("Unable to handle custom texture data " + textureData);
 		}
@@ -127,14 +171,6 @@ public class CustomTextureManager {
 
 	public IntSupplier getNoiseTexture() {
 		return noise;
-	}
-
-	public NativeImageBackedSingleColorTexture getNormals() {
-		return normals;
-	}
-
-	public NativeImageBackedSingleColorTexture getSpecular() {
-		return specular;
 	}
 
 	public void destroy() {
