@@ -28,6 +28,9 @@ public class JcppProcessor {
 		source = source.replace("#version", GlslCollectingListener.VERSION_MARKER);
 		source = source.replace("#extension", GlslCollectingListener.EXTENSION_MARKER);
 
+		// Remove null characters. Some packs, such as Chocapic High Performance, have random null characters that trip up JCPP.
+		source = source.replace("\u0000", "");
+
 		GlslCollectingListener listener = new GlslCollectingListener();
 
 		@SuppressWarnings("resource")
