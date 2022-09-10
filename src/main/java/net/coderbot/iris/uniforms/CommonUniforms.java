@@ -64,7 +64,7 @@ public final class CommonUniforms {
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
 		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
-		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
+		IdMapUniforms.addIdMapUniforms(updateNotifier, uniforms, idMap, directives.isOldHandLight());
 		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms);
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
@@ -88,6 +88,14 @@ public final class CommonUniforms {
 
 			return ZERO_VECTOR_2i;
 		}, listener -> {});
+
+		uniforms.uniform2i("gtextureSize", () -> {
+			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
+
+			TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
+			return new Vector2i(info.getWidth(), info.getHeight());
+
+		}, StateUpdateNotifiers.bindTextureNotifier);
 
 		uniforms.uniform4i("blendFunc", () -> {
 			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND();
@@ -116,8 +124,6 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
 			.uniform1f(PER_FRAME, "darknessFactor", CommonUniforms::getDarknessFactor)
 			.uniform1f(PER_FRAME, "darknessLightFactor", CapturedRenderingState.INSTANCE::getDarknessLightFactor)
-			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(InteractionHand.MAIN_HAND))
-			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
 			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
 			//       that the player is trying to turn on fullbright?
@@ -270,30 +276,6 @@ public final class CommonUniforms {
 			return 3;
 		} else {
 			return 0;
-		}
-	}
-
-	private static class HeldItemLightingSupplier implements IntSupplier {
-
-		private final InteractionHand hand;
-
-		private HeldItemLightingSupplier(InteractionHand targetHand) {
-			this.hand = targetHand;
-		}
-
-		@Override
-		public int getAsInt() {
-			if (client.player == null) {
-				return 0;
-			}
-
-			ItemStack stack = client.player.getItemInHand(hand);
-
-			if (stack == ItemStack.EMPTY || stack == null) {
-				return 0;
-			}
-
-			return ((IrisItemLightProvider)stack.getItem()).getLightEmission(client.player, stack);
 		}
 	}
 

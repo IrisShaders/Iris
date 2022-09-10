@@ -21,7 +21,7 @@ public class RenderTarget {
 
 	private static final IntBuffer NULL_BUFFER = null;
 
-	private RenderTarget(Builder builder) {
+	public RenderTarget(Builder builder) {
 		this.isValid = true;
 
 		this.internalFormat = builder.internalFormat;

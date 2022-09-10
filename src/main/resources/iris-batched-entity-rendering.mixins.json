@@ -4,7 +4,8 @@
   "package": "net.coderbot.batchedentityrendering.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinBannerRenderer",
+    "ChunkBufferBuilderPackAccessor",
+    "OutlineBufferSourceAccessor",
     "MixinBufferBuilder",
     "MixinBufferBuilder_SegmentRendering",
     "MixinRenderBuffers",
