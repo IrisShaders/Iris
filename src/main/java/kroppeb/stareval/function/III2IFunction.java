@@ -26,7 +26,7 @@ public interface III2IFunction extends TypedFunction {
 	}
 
 	@Override
-	default Type[] getParameterTypes() {
-		return new Type[]{Type.Int, Type.Int, Type.Int};
+	default Parameter[] getParameters() {
+		return new Parameter[]{Type.IntParameter, Type.IntParameter, Type.IntParameter};
 	}
 }

@@ -18,7 +18,7 @@ public interface I2FFunction extends TypedFunction {
 	}
 
 	@Override
-	default Type[] getParameterTypes() {
-		return new Type[]{Type.Int};
+	default Parameter[] getParameters() {
+		return new Parameter[]{Type.IntParameter};
 	}
 }

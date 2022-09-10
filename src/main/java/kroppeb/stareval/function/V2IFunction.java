@@ -17,7 +17,7 @@ public interface V2IFunction extends TypedFunction {
 	}
 
 	@Override
-	default Type[] getParameterTypes() {
-		return new Type[]{};
+	default Parameter[] getParameters() {
+		return new Parameter[]{};
 	}
 }

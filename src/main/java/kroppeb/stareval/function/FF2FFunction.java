@@ -23,7 +23,7 @@ public interface FF2FFunction extends TypedFunction {
 	}
 
 	@Override
-	default Type[] getParameterTypes() {
-		return new Type[]{Type.Float, Type.Float};
+	default Parameter[] getParameters() {
+		return new Parameter[]{Type.FloatParameter, Type.FloatParameter};
 	}
 }

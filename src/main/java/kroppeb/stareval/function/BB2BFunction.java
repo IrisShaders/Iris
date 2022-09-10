@@ -23,7 +23,7 @@ public interface BB2BFunction extends TypedFunction {
 	}
 
 	@Override
-	default Type[] getParameterTypes() {
-		return new Type[]{Type.Boolean, Type.Boolean};
+	default Parameter[] getParameters() {
+		return new Parameter[]{Type.BooleanParameter, Type.BooleanParameter};
 	}
 }

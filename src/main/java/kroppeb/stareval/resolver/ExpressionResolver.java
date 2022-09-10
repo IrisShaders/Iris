@@ -13,6 +13,7 @@ import kroppeb.stareval.expression.ConstantExpression;
 import kroppeb.stareval.expression.Expression;
 import kroppeb.stareval.expression.VariableExpression;
 import kroppeb.stareval.function.*;
+import kroppeb.stareval.function.TypedFunction.Parameter;
 
 import java.util.*;
 import java.util.function.Function;
@@ -53,25 +54,35 @@ public class ExpressionResolver {
 	) {
 		int innerLength = inner.size();
 		Expression result = null;
+		TypedFunction resultFunction = null;
 		functions:
 		for (TypedFunction f : this.functionResolver.resolve(name, targetType)) {
-			Type[] paramTypes = f.getParameterTypes();
+			Parameter[] paramTypes = f.getParameters();
 			if (paramTypes.length != innerLength)
 				continue;
 
 			Expression[] params = new Expression[innerLength];
 			for (int i = 0; i < innerLength; i++) {
-				Expression expression = this.resolveExpressionInternal(paramTypes[i], inner.get(i),
-						!implicit || innerLength > 1, implicit);
+				ExpressionElement paramExpression = inner.get(i);
+				Parameter param = paramTypes[i];
+				if (param.constant() && !(paramExpression instanceof NumberToken)) {
+					// not a constant
+					continue functions;
+				}
+
+				Expression expression = this.resolveExpressionInternal(param.type(), paramExpression,
+							!implicit || innerLength > 1, implicit);
 				if (expression == null)
 					continue functions;
 				params[i] = expression;
 			}
 			// FIXME
-			if (result != null)
-				throw new RuntimeException("Ambiguity");
-
-			result = new CallExpression(f, params);
+			if (result != null && f.priority() == resultFunction.priority()) {
+				throw new RuntimeException("Ambiguity, \n\told: " + TypedFunction.format(resultFunction, "") + "\n\tnew: " + TypedFunction.format(f, ""));
+			} else if (resultFunction == null || f.priority() >= resultFunction.priority()) {
+				result = new CallExpression(f, params);
+				resultFunction = f;
+			}
 		}
 		return result;
 	}
@@ -106,7 +117,7 @@ public class ExpressionResolver {
 		List<? extends TypedFunction> casts = this.functionResolver.resolve("<cast>", targetType);
 
 		for (TypedFunction f : casts) {
-			Expression u = this.resolveCallExpression(f.getParameterTypes()[0], name, inner, true, true);
+			Expression u = this.resolveCallExpression(f.getParameters()[0].type(), name, inner, true, true);
 			if (u == null)
 				continue;
 			if (result != null)
@@ -247,7 +258,7 @@ public class ExpressionResolver {
 		List<? extends TypedFunction> casts = this.functionResolver.resolve("<cast>", targetType);
 
 		for (TypedFunction f : casts) {
-			if (f.getParameterTypes()[0].equals(innerType)) {
+			if (f.getParameters()[0].type().equals(innerType)) {
 				this.log("[DEBUG] resolved %s to type %s using implicit casts",
 						expression, targetType);
 				return new CallExpression(f, new Expression[]{castable});

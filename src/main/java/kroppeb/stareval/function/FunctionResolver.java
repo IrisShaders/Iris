@@ -114,16 +114,8 @@ public class FunctionResolver {
 				);
 
 			for (Map.Entry<Type, List<TypedFunction>> returnTypeOverloads : overloads.entrySet()) {
-				final Type returnType = returnTypeOverloads.getKey();
 				for (TypedFunction typedFunction : returnTypeOverloads.getValue()) {
-					System.out.printf(
-							"%s %s(%s)%n",
-							returnType.toString(),
-							name,
-							Arrays.stream(typedFunction.getParameterTypes())
-									.map(Object::toString)
-									.collect(Collectors.joining(", "))
-					);
+					System.out.println(TypedFunction.format(typedFunction, name));
 				}
 				System.out.println();
 			}

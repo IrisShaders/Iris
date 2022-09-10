@@ -1,6 +1,7 @@
 package kroppeb.stareval.function;
 
 import kroppeb.stareval.expression.ConstantExpression;
+import kroppeb.stareval.function.TypedFunction.Parameter;
 import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.parsing.MatrixType;
 import net.coderbot.iris.parsing.VectorType;
@@ -154,6 +155,10 @@ public abstract class Type {
 	public static Boolean Boolean = new Boolean();
 	public static Int Int = new Int();
 	public static Float Float = new Float();
+
+	public static Parameter BooleanParameter = new Parameter(Boolean);
+	public static Parameter IntParameter = new Parameter(Int);
+	public static Parameter FloatParameter = new Parameter(Float);
 
 	public static Primitive[] AllPrimitives = {Type.Boolean, Type.Int, Type.Float};
 
