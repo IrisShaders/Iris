@@ -28,9 +28,7 @@ import net.minecraft.world.phys.AABB;
  * cost of slightly more computations.</p>
  */
 public class AdvancedShadowCullingFrustum extends Frustum {
-	// conservative estimate for the maximum number of clipping planes:
-	// 6 base planes, and 5 possible planes added for each base plane.
-	private static final int MAX_CLIPPING_PLANES = 6 * 5;
+	private static final int MAX_CLIPPING_PLANES = 13;
 
 	/**
 	 * We store each plane equation as a Vector4f.
@@ -327,17 +325,47 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	 */
 	private int checkCornerVisibility(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		boolean inside = true;
+		float outsideBoundX;
+		float outsideBoundY;
+		float outsideBoundZ;
+		float insideBoundX;
+		float insideBoundY;
+		float insideBoundZ;
 
 		for (int i = 0; i < planeCount; ++i) {
 			Vector4f plane = this.planes[i];
 
 			// Check if plane is inside or intersecting.
 			// This is ported from JOML's FrustumIntersection.
-			if (plane.x() * (plane.x() < 0 ? minX : maxX) + plane.y() * (plane.y() < 0 ? minY : maxY) + plane.z() * (plane.z() < 0 ? minZ : maxZ) >= -plane.w()) {
-				inside &= plane.x() * (plane.x() < 0 ? maxX : minX) + plane.y() * (plane.y() < 0 ? maxY : minY) + plane.z() * (plane.z() < 0 ? maxZ : minZ) >= -plane.w();
+
+			if (plane.x() < 0) {
+				outsideBoundX = minX;
+				insideBoundX = maxX;
 			} else {
+				outsideBoundX = maxX;
+				insideBoundX = minX;
+			}
+
+			if (plane.y() < 0) {
+				outsideBoundY = minY;
+				insideBoundY = maxY;
+			} else {
+				outsideBoundY = maxY;
+				insideBoundY = minY;
+			}
+
+			if (plane.z() < 0) {
+				outsideBoundZ = minZ;
+				insideBoundZ = maxZ;
+			} else {
+				outsideBoundZ = maxZ;
+				insideBoundZ = minZ;
+			}
+
+			if (Math.fma(plane.x(), outsideBoundX, Math.fma(plane.y(), outsideBoundY, plane.z() * outsideBoundZ)) < -plane.w()) {
 				return 0;
 			}
+			inside &= Math.fma(plane.x(), insideBoundX, Math.fma(plane.y(), insideBoundY, plane.z() * insideBoundZ)) >= -plane.w();
 		}
 
 		return inside ? 1 : 2;
