@@ -89,6 +89,21 @@ public class MixinRenderStateShard_Tagging {
 				GbufferPrograms.setOverridePhase(null);
 				previousClearState.run();
 			};
+		} else if (name.contains("entity_translucent")) {
+			// TODO: Use blend mode & depth state instead of matching on render types.
+			//       That would potentially be more robust... but more complex.
+			//       So this works for now.
+			setupState = () -> {
+				previousSetupState.run();
+				if (GbufferPrograms.getCurrentPhase() == WorldRenderingPhase.ENTITIES) {
+					GbufferPrograms.setOverridePhase(WorldRenderingPhase.ENTITIES_TRANS);
+				}
+			};
+
+			clearState = () -> {
+				previousClearState.run();
+				GbufferPrograms.setOverridePhase(null);
+			};
 		}
 	}
 }

@@ -250,6 +250,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				ProgramId.Block, ProgramId.Block, ProgramId.Block,
 				ProgramId.BeaconBeam, ProgramId.BeaconBeam, ProgramId.BeaconBeam,
 				ProgramId.Entities, ProgramId.Entities, ProgramId.Entities,
+				ProgramId.EntitiesTrans, ProgramId.EntitiesTrans, ProgramId.EntitiesTrans,
 				null, ProgramId.ArmorGlint, ProgramId.ArmorGlint,
 				null, ProgramId.SpiderEyes, ProgramId.SpiderEyes,
 				ProgramId.Hand, ProgramId.Hand, ProgramId.Hand,
@@ -497,6 +498,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				return RenderCondition.TERRAIN_OPAQUE;
 			case ENTITIES:
 				return RenderCondition.ENTITIES;
+			case ENTITIES_TRANS:
+				return RenderCondition.ENTITIES_TRANSLUCENT;
 			case BLOCK_ENTITIES:
 				return RenderCondition.BLOCK_ENTITIES;
 			case DESTROY:
