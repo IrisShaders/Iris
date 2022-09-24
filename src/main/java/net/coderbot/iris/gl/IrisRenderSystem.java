@@ -201,14 +201,32 @@ public class IrisRenderSystem {
 		return GL30C.glGetShaderInfoLog(shader);
 	}
 
-	public static void drawBuffers(int[] buffers) {
+	public static void drawBuffers(int framebuffer, int[] buffers) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glDrawBuffers(buffers);
+		switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				ARBDirectStateAccess.glNamedFramebufferDrawBuffers(framebuffer, buffers);
+				break;
+			case NONE:
+				GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebuffer);
+				GL30C.glDrawBuffers(buffers);
+				break;
+		}
 	}
 
-	public static void readBuffer(int buffer) {
+	public static void readBuffer(int framebuffer, int buffer) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glReadBuffer(buffer);
+		switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				ARBDirectStateAccess.glNamedFramebufferReadBuffer(framebuffer, buffer);
+				break;
+			case NONE:
+				GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebuffer);
+				GL30C.glReadBuffer(buffer);
+				break;
+		}
 	}
 
 	public static String getActiveUniform(int program, int index, int size, IntBuffer type, IntBuffer name) {
@@ -234,6 +252,23 @@ public class IrisRenderSystem {
 	public static void detachShader(int program, int shader) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glDetachShader(program, shader);
+	}
+
+	public static void framebufferTexture2D(int fb, int fbtarget, int format, int target, int texture, int i) {
+		// TODO: A NVIDIA bug prevents this from properly working... pain.
+		/*switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				ARBDirectStateAccess.glNamedFramebufferTexture(fb, target, texture, i);
+				break;
+			case NONE:
+				GlStateManager._glBindFramebuffer(fbtarget, fb);
+				GL30C.glFramebufferTexture2D(fbtarget, format, target, texture, i);
+				break;
+		}*/
+
+		GlStateManager._glBindFramebuffer(fbtarget, fb);
+		GL30C.glFramebufferTexture2D(fbtarget, format, target, texture, i);
 	}
 
 	public static int getTexParameteri(int texture, int target, int pname) {
