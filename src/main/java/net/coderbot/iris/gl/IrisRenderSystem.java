@@ -4,10 +4,10 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.ARBDirectStateAccess;
+import org.lwjgl.opengl.ARBMultiBind;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
@@ -26,6 +26,7 @@ public class IrisRenderSystem {
 		NONE
 	}
 	private static DSAState supportsDSA;
+	private static boolean hasMultibind;
 
 	public static void initRenderer() {
 		if (GL.getCapabilities().OpenGL45) {
@@ -34,6 +35,12 @@ public class IrisRenderSystem {
 			supportsDSA = DSAState.ARB;
 		} else {
 			supportsDSA = DSAState.NONE;
+		}
+
+		if (GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind) {
+			hasMultibind = true;
+		} else {
+			hasMultibind = false;
 		}
 	}
 
@@ -229,9 +236,18 @@ public class IrisRenderSystem {
 		GL30C.glDetachShader(program, shader);
 	}
 
-	public static int getTexParameteri(int target, int pname) {
+	public static int getTexParameteri(int texture, int target, int pname) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		return GL30C.glGetTexParameteri(target, pname);
+		switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				return ARBDirectStateAccess.glGetTextureParameteri(texture, pname);
+			case NONE:
+				GlStateManager._bindTexture(texture);
+				return GL30C.glGetTexParameteri(target, pname);
+		}
+
+		throw new IllegalStateException("Unreachable");
 	}
 
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
@@ -250,6 +266,32 @@ public class IrisRenderSystem {
 			return GlStateManager._getInteger(EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT);
 		} else {
 			return 0;
+		}
+	}
+
+	public static void bindTextures(int startingTexture, int[] bindings) {
+		if (hasMultibind) {
+			ARBMultiBind.glBindTextures(startingTexture, bindings);
+		} else if (supportsDSA != DSAState.NONE) {
+			for (int binding : bindings) {
+				ARBDirectStateAccess.glBindTextureUnit(startingTexture, binding);
+				startingTexture++;
+			}
+		} else {
+			for (int binding : bindings) {
+				GlStateManager._activeTexture(startingTexture);
+				GlStateManager._bindTexture(binding);
+				startingTexture++;
+			}
+		}
+	}
+
+	public static void bindTextureToUnit(int unit, int texture) {
+		if (supportsDSA != DSAState.NONE) {
+			ARBDirectStateAccess.glBindTextureUnit(unit, texture);
+		} else {
+			GlStateManager._activeTexture(unit);
+			GlStateManager._bindTexture(texture);
 		}
 	}
 
