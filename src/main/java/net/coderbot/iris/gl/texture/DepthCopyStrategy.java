@@ -2,6 +2,7 @@ package net.coderbot.iris.gl.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
@@ -26,9 +27,9 @@ public interface DepthCopyStrategy {
 			sourceFb.bindAsReadBuffer();
 
 			int previousTexture = GlStateManager.getActiveTextureName();
-			RenderSystem.bindTexture(destTexture);
 
-			GlStateManager._glCopyTexSubImage2D(
+			IrisRenderSystem.copyTexSubImage2D(
+				destTexture,
 				// target
 				GL20C.GL_TEXTURE_2D,
 				// level

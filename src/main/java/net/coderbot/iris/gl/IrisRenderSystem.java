@@ -3,6 +3,7 @@ package net.coderbot.iris.gl;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.ARBDirectStateAccess;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
@@ -19,6 +20,23 @@ import java.nio.IntBuffer;
  * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
 public class IrisRenderSystem {
+	enum DSAState {
+		CORE,
+		ARB,
+		NONE
+	}
+	private static DSAState supportsDSA;
+
+	public static void initRenderer() {
+		if (GL.getCapabilities().OpenGL45) {
+			supportsDSA = DSAState.CORE;
+		} else if (GL.getCapabilities().GL_ARB_direct_state_access) {
+			supportsDSA = DSAState.ARB;
+		} else {
+			supportsDSA = DSAState.NONE;
+		}
+	}
+
 	public static void getIntegerv(int pname, int[] params) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL30C.glGetIntegerv(pname, params);
@@ -29,9 +47,18 @@ public class IrisRenderSystem {
 		GL30C.glGetFloatv(pname, params);
 	}
 
-	public static void generateMipmaps(int mipmapTarget) {
+	public static void generateMipmaps(int texture, int mipmapTarget) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glGenerateMipmap(mipmapTarget);
+		switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				ARBDirectStateAccess.glGenerateTextureMipmap(texture);
+				break;
+			case NONE:
+				GlStateManager._bindTexture(texture);
+				GL30C.glGenerateMipmap(mipmapTarget);
+				break;
+		}
 	}
 
 	public static void bindAttributeLocation(int program, int index, CharSequence name) {
@@ -39,8 +66,9 @@ public class IrisRenderSystem {
 		GL30C.glBindAttribLocation(program, index, name);
 	}
 
-	public static void texImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
+	public static void texImage2D(int texture, int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		GlStateManager._bindTexture(texture);
 		GL30C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 	}
 
@@ -99,9 +127,61 @@ public class IrisRenderSystem {
 		return GL30C.glGetUniformLocation(programId, name);
 	}
 
-	public static void texParameteriv(int target, int pname, int[] params) {
+	public static void texParameteriv(int texture, int target, int pname, int[] params) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL11C.glTexParameteriv(target, pname, params);
+		switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				ARBDirectStateAccess.glTextureParameteriv(texture, pname, params);
+				break;
+			case NONE:
+				GlStateManager._bindTexture(texture);
+				GL30C.glTexParameteriv(target, pname, params);
+				break;
+		}
+	}
+
+	public static void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
+		switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				ARBDirectStateAccess.glCopyTextureSubImage2D(destTexture, i, i1, i2, i3, i4, width, height);
+				break;
+			case NONE:
+				int previous = GlStateManager.getActiveTextureName();
+				GlStateManager._bindTexture(destTexture);
+				GL30C.glCopyTexSubImage2D(target, i, i1, i2, i3, i4, width, height);
+				GlStateManager._bindTexture(previous);
+				break;
+		}
+	}
+
+	public static void texParameteri(int texture, int target, int pname, int param) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				ARBDirectStateAccess.glTextureParameteri(texture, pname, param);
+				break;
+			case NONE:
+				GlStateManager._bindTexture(texture);
+				GL30C.glTexParameteri(target, pname, param);
+				break;
+		}
+	}
+
+	public static void texParameterf(int texture, int target, int pname, float param) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		switch (supportsDSA) {
+			case ARB:
+			case CORE:
+				ARBDirectStateAccess.glTextureParameterf(texture, pname, param);
+				break;
+			case NONE:
+				GlStateManager._bindTexture(texture);
+				GL30C.glTexParameterf(target, pname, param);
+				break;
+		}
 	}
 
 	public static String getProgramInfoLog(int program) {
