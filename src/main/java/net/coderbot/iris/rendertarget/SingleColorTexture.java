@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
 
 public class SingleColorTexture extends GlResource {
 	public SingleColorTexture(int red, int green, int blue, int alpha) {
-		super(GlStateManager._genTexture());
+		super(IrisRenderSystem.createTexture(GL11C.GL_TEXTURE_2D));
 		ByteBuffer pixel = BufferUtils.createByteBuffer(4);
 		pixel.put((byte) red);
 		pixel.put((byte) green);

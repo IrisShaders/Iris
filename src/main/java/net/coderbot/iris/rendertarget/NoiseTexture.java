@@ -21,7 +21,7 @@ public class NoiseTexture extends GlResource {
 	int height;
 
 	public NoiseTexture(int width, int height) {
-		super(GlStateManager._genTexture());
+		super(IrisRenderSystem.createTexture(GL11C.GL_TEXTURE_2D));
 
 		int texture = getGlId();
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);

@@ -248,7 +248,11 @@ public class IrisRenderSystem {
 	}
 
 	public static int createFramebuffer() {
-		return ARBDirectStateAccess.glCreateFramebuffers();
+		return dsaState.createFramebuffer();
+	}
+
+	public static int createTexture(int target) {
+		return dsaState.createTexture(target);
 	}
 
 	public interface DSAAccess {
@@ -273,6 +277,9 @@ public class IrisRenderSystem {
 		void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter);
 
 		void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels);
+
+		int createFramebuffer();
+		int createTexture(int target);
 	}
 
 	public static class DSACore extends DSAARB {
@@ -341,6 +348,16 @@ public class IrisRenderSystem {
 		@Override
 		public void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
 			ARBDirectStateAccess.glNamedFramebufferTexture(fb, attachment, texture, levels);
+		}
+
+		@Override
+		public int createFramebuffer() {
+			return ARBDirectStateAccess.glCreateFramebuffers();
+		}
+
+		@Override
+		public int createTexture(int target) {
+			return ARBDirectStateAccess.glCreateTextures(target);
 		}
 	}
 
@@ -422,6 +439,20 @@ public class IrisRenderSystem {
 		public void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
 			GlStateManager._glBindFramebuffer(fbtarget, fb);
 			GL30C.glFramebufferTexture2D(fbtarget, attachment, target, texture, levels);
+		}
+
+		@Override
+		public int createFramebuffer() {
+			int framebuffer = GlStateManager.glGenFramebuffers();
+			GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebuffer);
+			return framebuffer;
+		}
+
+		@Override
+		public int createTexture(int target) {
+			int texture = GlStateManager._genTexture();
+			GlStateManager._bindTexture(texture);
+			return texture;
 		}
 	}
 
