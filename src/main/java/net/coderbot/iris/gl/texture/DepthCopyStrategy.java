@@ -56,10 +56,7 @@ public interface DepthCopyStrategy {
 
 		@Override
 		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
-			sourceFb.bindAsReadBuffer();
-			destFb.bindAsDrawBuffer();
-
-			GL30C.glBlitFramebuffer(0, 0, width, height,
+			IrisRenderSystem.blitFramebuffer(sourceFb.getId(), destFb.getId(), 0, 0, width, height,
 				0, 0, width, height,
 				GL30C.GL_DEPTH_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT,
 				GL30C.GL_NEAREST);

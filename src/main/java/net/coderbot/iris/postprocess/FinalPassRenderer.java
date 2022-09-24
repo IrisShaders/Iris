@@ -195,8 +195,7 @@ public class FinalPassRenderer {
 			// https://stackoverflow.com/a/23994979/18166885
 			this.baseline.bindAsReadBuffer();
 
-			RenderSystem.bindTexture(main.getColorTextureId());
-			GlStateManager._glCopyTexSubImage2D(GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
+			IrisRenderSystem.copyTexSubImage2D(main.getColorTextureId(), GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);

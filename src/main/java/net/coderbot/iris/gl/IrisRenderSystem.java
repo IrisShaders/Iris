@@ -252,6 +252,10 @@ public class IrisRenderSystem {
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 	}
 
+	public static void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
+		dsaState.blitFramebuffer(source, dest, offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
+	}
+
 	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
@@ -270,6 +274,8 @@ public class IrisRenderSystem {
 		void bindTextureToUnit(int unit, int texture);
 
 		int bufferStorage(int target, float[] data, int usage);
+
+		void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter);
 	}
 
 	public static class DSACore extends DSAARB {
@@ -328,6 +334,11 @@ public class IrisRenderSystem {
 			int buffer = GL45C.glCreateBuffers();
 			GL45C.glNamedBufferData(buffer, data, usage);
 			return buffer;
+		}
+
+		@Override
+		public void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
+			ARBDirectStateAccess.glBlitNamedFramebuffer(source, dest, offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
 		}
 	}
 
@@ -396,6 +407,13 @@ public class IrisRenderSystem {
 			GlStateManager._glBindBuffer(target, 0);
 
 			return buffer;
+		}
+
+		@Override
+		public void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
+			GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, source);
+			GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, dest);
+			GL30C.glBlitFramebuffer(offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
 		}
 	}
 

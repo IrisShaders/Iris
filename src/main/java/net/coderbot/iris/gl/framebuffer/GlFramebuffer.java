@@ -95,4 +95,8 @@ public class GlFramebuffer extends GlResource {
 
 		return status == GL30C.GL_FRAMEBUFFER_COMPLETE;
 	}
+
+	public int getId() {
+		return getGlId();
+	}
 }
