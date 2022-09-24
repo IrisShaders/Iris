@@ -15,7 +15,7 @@ public class GlFramebuffer extends GlResource {
 	private final int maxColorAttachments;
 
 	public GlFramebuffer() {
-		super(GlStateManager.glGenFramebuffers());
+		super(IrisRenderSystem.createFramebuffer());
 
 		this.attachments = new Int2IntArrayMap();
 		this.maxDrawBuffers = GlStateManager._getInteger(GL30C.GL_MAX_DRAW_BUFFERS);

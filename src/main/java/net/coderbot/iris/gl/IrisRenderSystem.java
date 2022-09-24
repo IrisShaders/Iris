@@ -2,6 +2,7 @@ package net.coderbot.iris.gl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.Iris;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.ARBDirectStateAccess;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
@@ -26,10 +27,13 @@ public class IrisRenderSystem {
 	public static void initRenderer() {
 		if (GL.getCapabilities().OpenGL45) {
 			dsaState = new DSACore();
+			Iris.logger.info("OpenGL 4.5 detected, enabling DSA.");
 		} else if (GL.getCapabilities().GL_ARB_direct_state_access) {
 			dsaState = new DSAARB();
+			Iris.logger.info("ARB_direct_state_access detected, enabling DSA.");
 		} else {
 			dsaState = new DSAUnsupported();
+			Iris.logger.info("DSA support not detected.");
 		}
 
 		if (GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind) {
@@ -189,21 +193,8 @@ public class IrisRenderSystem {
 		GL30C.glDetachShader(program, shader);
 	}
 
-	public static void framebufferTexture2D(int fb, int fbtarget, int format, int target, int texture, int i) {
-		// TODO: A NVIDIA bug prevents this from properly working... pain.
-		/*switch (supportsDSA) {
-			case ARB:
-			case CORE:
-				ARBDirectStateAccess.glNamedFramebufferTexture(fb, target, texture, i);
-				break;
-			case NONE:
-				GlStateManager._glBindFramebuffer(fbtarget, fb);
-				GL30C.glFramebufferTexture2D(fbtarget, format, target, texture, i);
-				break;
-		}*/
-
-		GlStateManager._glBindFramebuffer(fbtarget, fb);
-		GL30C.glFramebufferTexture2D(fbtarget, format, target, texture, i);
+	public static void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
+		dsaState.framebufferTexture2D(fb, fbtarget, attachment, target, texture, levels);
 	}
 
 	public static int getTexParameteri(int texture, int target, int pname) {
@@ -256,6 +247,10 @@ public class IrisRenderSystem {
 		dsaState.blitFramebuffer(source, dest, offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
 	}
 
+	public static int createFramebuffer() {
+		return ARBDirectStateAccess.glCreateFramebuffers();
+	}
+
 	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
@@ -276,6 +271,8 @@ public class IrisRenderSystem {
 		int bufferStorage(int target, float[] data, int usage);
 
 		void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter);
+
+		void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels);
 	}
 
 	public static class DSACore extends DSAARB {
@@ -339,6 +336,11 @@ public class IrisRenderSystem {
 		@Override
 		public void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
 			ARBDirectStateAccess.glBlitNamedFramebuffer(source, dest, offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
+		}
+
+		@Override
+		public void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
+			ARBDirectStateAccess.glNamedFramebufferTexture(fb, attachment, texture, levels);
 		}
 	}
 
@@ -414,6 +416,12 @@ public class IrisRenderSystem {
 			GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, source);
 			GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, dest);
 			GL30C.glBlitFramebuffer(offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
+		}
+
+		@Override
+		public void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
+			GlStateManager._glBindFramebuffer(fbtarget, fb);
+			GL30C.glFramebufferTexture2D(fbtarget, attachment, target, texture, levels);
 		}
 	}
 
