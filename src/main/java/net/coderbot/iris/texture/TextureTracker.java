@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -50,8 +51,7 @@ public class TextureTracker {
 				pipeline.onBindTexture(id);
 			}
 			// Reset texture state
-			GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
-			GlStateManager._bindTexture(id);
+			IrisRenderSystem.bindTextureToUnit(0, id);
 			lockBindCallback = false;
 		}
 	}
