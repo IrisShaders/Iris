@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.ARBDirectStateAccess;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
@@ -13,6 +14,7 @@ import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL45C;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 /**
@@ -54,7 +56,7 @@ public class IrisRenderSystem {
 	}
 
 	public static void generateMipmaps(int texture, int mipmapTarget) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.generateMipmaps(texture, mipmapTarget);
 	}
 
@@ -64,14 +66,14 @@ public class IrisRenderSystem {
 	}
 
 	public static void texImage2D(int texture, int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		GlStateManager._bindTexture(texture);
-		GL30C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+		GL32C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 	}
 
 	public static void uniformMatrix4fv(int location, boolean transpose, FloatBuffer matrix) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GL30C.glUniformMatrix4fv(location, transpose, matrix);
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glUniformMatrix4fv(location, transpose, matrix);
 	}
 
 	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
@@ -110,7 +112,7 @@ public class IrisRenderSystem {
 	}
 
 	public static void texParameteriv(int texture, int target, int pname, int[] params) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.texParameteriv(texture, target, pname, params);
 	}
 
@@ -119,12 +121,12 @@ public class IrisRenderSystem {
 	}
 
 	public static void texParameteri(int texture, int target, int pname, int param) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.texParameteri(texture, target, pname, param);
 	}
 
 	public static void texParameterf(int texture, int target, int pname, float param) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.texParameterf(texture, target, pname, param);
 	}
 
@@ -139,12 +141,12 @@ public class IrisRenderSystem {
 	}
 
 	public static void drawBuffers(int framebuffer, int[] buffers) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.drawBuffers(framebuffer, buffers);
 	}
 
 	public static void readBuffer(int framebuffer, int buffer) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.readBuffer(framebuffer, buffer);
 	}
 
@@ -164,7 +166,7 @@ public class IrisRenderSystem {
 	}
 
 	public static int bufferStorage(int target, float[] data, int usage) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		return dsaState.bufferStorage(target, data, usage);
 	}
 
@@ -183,7 +185,7 @@ public class IrisRenderSystem {
 	}
 
 	public static int getTexParameteri(int texture, int target, int pname) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		return dsaState.getTexParameteri(texture, target, pname);
 	}
 
@@ -354,56 +356,56 @@ public class IrisRenderSystem {
 		@Override
 		public void generateMipmaps(int texture, int target) {
 			GlStateManager._bindTexture(texture);
-			GL30C.glGenerateMipmap(target);
+			GL32C.glGenerateMipmap(target);
 		}
 
 		@Override
 		public void texParameteri(int texture, int target, int pname, int param) {
 			GlStateManager._bindTexture(texture);
-			GL30C.glTexParameteri(target, pname, param);
+			GL32C.glTexParameteri(target, pname, param);
 		}
 
 		@Override
 		public void texParameterf(int texture, int target, int pname, float param) {
 			GlStateManager._bindTexture(texture);
-			GL30C.glTexParameterf(target, pname, param);
+			GL32C.glTexParameterf(target, pname, param);
 		}
 
 		@Override
 		public void texParameteriv(int texture, int target, int pname, int[] params) {
 			GlStateManager._bindTexture(texture);
-			GL30C.glTexParameteriv(target, pname, params);
+			GL32C.glTexParameteriv(target, pname, params);
 		}
 
 		@Override
 		public void readBuffer(int framebuffer, int buffer) {
-			GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebuffer);
-			GL30C.glReadBuffer(buffer);
+			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
+			GL32C.glReadBuffer(buffer);
 		}
 
 		@Override
 		public void drawBuffers(int framebuffer, int[] buffers) {
-			GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebuffer);
-			GL30C.glDrawBuffers(buffers);
+			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
+			GL32C.glDrawBuffers(buffers);
 		}
 
 		@Override
 		public int getTexParameteri(int texture, int target, int pname) {
 			GlStateManager._bindTexture(texture);
-			return GL30C.glGetTexParameteri(target, pname);
+			return GL32C.glGetTexParameteri(target, pname);
 		}
 
 		@Override
 		public void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
-			int previous = GlStateManager.getActiveTextureName();
+			int previous = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
 			GlStateManager._bindTexture(destTexture);
-			GL30C.glCopyTexSubImage2D(target, i, i1, i2, i3, i4, width, height);
+			GL32C.glCopyTexSubImage2D(target, i, i1, i2, i3, i4, width, height);
 			GlStateManager._bindTexture(previous);
 		}
 
 		@Override
 		public void bindTextureToUnit(int unit, int texture) {
-			GlStateManager._activeTexture(GL30C.GL_TEXTURE0 + unit);
+			GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + unit);
 			GlStateManager._bindTexture(texture);
 		}
 
@@ -419,21 +421,21 @@ public class IrisRenderSystem {
 
 		@Override
 		public void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
-			GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, source);
-			GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, dest);
-			GL30C.glBlitFramebuffer(offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
+			GlStateManager._glBindFramebuffer(GL32C.GL_READ_FRAMEBUFFER, source);
+			GlStateManager._glBindFramebuffer(GL32C.GL_DRAW_FRAMEBUFFER, dest);
+			GL32C.glBlitFramebuffer(offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
 		}
 
 		@Override
 		public void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
 			GlStateManager._glBindFramebuffer(fbtarget, fb);
-			GL30C.glFramebufferTexture2D(fbtarget, attachment, target, texture, levels);
+			GL32C.glFramebufferTexture2D(fbtarget, attachment, target, texture, levels);
 		}
 
 		@Override
 		public int createFramebuffer() {
 			int framebuffer = GlStateManager.glGenFramebuffers();
-			GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebuffer);
+			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
 			return framebuffer;
 		}
 
