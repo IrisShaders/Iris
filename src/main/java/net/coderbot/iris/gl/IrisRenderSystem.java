@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -207,5 +208,10 @@ public class IrisRenderSystem {
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.popMatrix();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+	}
+
+	// TODO: Proper notification of compute support
+	public static boolean supportsCompute() {
+		return GL.getCapabilities().glDispatchCompute != MemoryUtil.NULL;
 	}
 }
