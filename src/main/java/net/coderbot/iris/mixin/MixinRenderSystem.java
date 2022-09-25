@@ -6,6 +6,7 @@ import net.coderbot.iris.texture.TextureTracker;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class MixinRenderSystem {
 	@Inject(method = "initRenderer", at = @At("RETURN"), remap = false)
 	private static void iris$onRendererInit(int debugVerbosity, boolean alwaysFalse, CallbackInfo ci) {
+		IrisRenderSystem.initRenderer();
 		Iris.onRenderSystemInit();
 	}
 
