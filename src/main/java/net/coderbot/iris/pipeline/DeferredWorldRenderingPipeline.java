@@ -24,6 +24,7 @@ import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
 import net.coderbot.iris.postprocess.BufferFlipper;
@@ -497,9 +498,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			case TERRAIN_CUTOUT_MIPPED:
 				return RenderCondition.TERRAIN_OPAQUE;
 			case ENTITIES:
-				return RenderCondition.ENTITIES;
-			case ENTITIES_TRANS:
-				return RenderCondition.ENTITIES_TRANSLUCENT;
+				if (GlStateManagerAccessor.getBLEND().srcRgb == GlStateManager.SourceFactor.SRC_ALPHA.value && GlStateManagerAccessor.getBLEND().dstRgb == GlStateManager.SourceFactor.ONE_MINUS_SRC_ALPHA.value && GlStateManagerAccessor.getBLEND().srcAlpha == GlStateManager.SourceFactor.ONE.value && GlStateManagerAccessor.getBLEND().dstAlpha == GlStateManager.SourceFactor.ONE_MINUS_SRC_ALPHA.value) {
+					return RenderCondition.ENTITIES_TRANSLUCENT;
+				} else {
+					return RenderCondition.ENTITIES;
+				}
 			case BLOCK_ENTITIES:
 				return RenderCondition.BLOCK_ENTITIES;
 			case DESTROY:

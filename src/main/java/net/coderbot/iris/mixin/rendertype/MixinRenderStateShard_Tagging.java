@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin.rendertype;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
@@ -28,6 +29,10 @@ public class MixinRenderStateShard_Tagging {
 	@Final
 	@Mutable
 	private Runnable clearState;
+
+	@Shadow
+	@Final
+	protected static RenderStateShard.TransparencyStateShard TRANSLUCENT_TRANSPARENCY;
 
 	@Inject(method = "<init>(Ljava/lang/String;Ljava/lang/Runnable;Ljava/lang/Runnable;)V", at = @At("RETURN"))
 	private void iris$onInit(String nameArg, Runnable clearStateArg, Runnable setupStateArg, CallbackInfo ci) {
@@ -88,21 +93,6 @@ public class MixinRenderStateShard_Tagging {
 			clearState = () -> {
 				GbufferPrograms.setOverridePhase(null);
 				previousClearState.run();
-			};
-		} else if (name.contains("entity_translucent")) {
-			// TODO: Use blend mode & depth state instead of matching on render types.
-			//       That would potentially be more robust... but more complex.
-			//       So this works for now.
-			setupState = () -> {
-				previousSetupState.run();
-				if (GbufferPrograms.getCurrentPhase() == WorldRenderingPhase.ENTITIES) {
-					GbufferPrograms.setOverridePhase(WorldRenderingPhase.ENTITIES_TRANS);
-				}
-			};
-
-			clearState = () -> {
-				previousClearState.run();
-				GbufferPrograms.setOverridePhase(null);
 			};
 		}
 	}
