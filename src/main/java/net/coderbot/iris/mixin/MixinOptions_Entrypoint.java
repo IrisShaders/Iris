@@ -13,12 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = Options.class)
+@Mixin(value = Options.class, priority = 990)
 public class MixinOptions_Entrypoint {
-	@Mutable
-	@Shadow
-	@Final
-	public KeyMapping[] keyMappings;
 	@Unique
 	private static boolean iris$initialized;
 
@@ -30,6 +26,5 @@ public class MixinOptions_Entrypoint {
 
 		iris$initialized = true;
 		new Iris().onEarlyInitialize();
-		this.keyMappings = ArrayUtils.addAll(this.keyMappings, Iris.getKeyMappings());
 	}
 }
