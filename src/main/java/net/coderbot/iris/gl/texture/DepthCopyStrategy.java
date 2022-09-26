@@ -2,6 +2,7 @@ package net.coderbot.iris.gl.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
@@ -25,10 +26,8 @@ public interface DepthCopyStrategy {
 		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
 			sourceFb.bindAsReadBuffer();
 
-			int previousTexture = GlStateManager.getActiveTextureName();
-			RenderSystem.bindTexture(destTexture);
-
-			GlStateManager._glCopyTexSubImage2D(
+			IrisRenderSystem.copyTexSubImage2D(
+				destTexture,
 				// target
 				GL20C.GL_TEXTURE_2D,
 				// level
@@ -41,8 +40,6 @@ public interface DepthCopyStrategy {
 				width,
 				// height
 				height);
-
-			RenderSystem.bindTexture(previousTexture);
 		}
 	}
 
@@ -59,10 +56,7 @@ public interface DepthCopyStrategy {
 
 		@Override
 		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
-			sourceFb.bindAsReadBuffer();
-			destFb.bindAsDrawBuffer();
-
-			GL30C.glBlitFramebuffer(0, 0, width, height,
+			IrisRenderSystem.blitFramebuffer(sourceFb.getId(), destFb.getId(), 0, 0, width, height,
 				0, 0, width, height,
 				GL30C.GL_DEPTH_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT,
 				GL30C.GL_NEAREST);

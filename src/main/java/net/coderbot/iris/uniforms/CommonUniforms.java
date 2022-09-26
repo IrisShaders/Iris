@@ -21,6 +21,7 @@ import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.coderbot.iris.vendored.joml.Vector4i;
+import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -33,7 +34,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FluidState;
@@ -63,7 +63,7 @@ public final class CommonUniforms {
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
 		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
-		IdMapUniforms.addIdMapUniforms(uniforms, idMap);
+		IdMapUniforms.addIdMapUniforms(updateNotifier, uniforms, idMap, directives.isOldHandLight());
 		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms);
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
@@ -81,6 +81,14 @@ public final class CommonUniforms {
 			}
 
 			return ZERO_VECTOR_2i;
+		}, StateUpdateNotifiers.bindTextureNotifier);
+
+		uniforms.uniform2i("gtextureSize", () -> {
+			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
+
+			TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
+			return new Vector2i(info.getWidth(), info.getHeight());
+
 		}, StateUpdateNotifiers.bindTextureNotifier);
 
 		uniforms.uniform4i("blendFunc", () -> {
@@ -108,8 +116,6 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
-			.uniform1i(PER_FRAME, "heldBlockLightValue", new HeldItemLightingSupplier(InteractionHand.MAIN_HAND))
-			.uniform1i(PER_FRAME, "heldBlockLightValue2", new HeldItemLightingSupplier(InteractionHand.OFF_HAND))
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
 			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
 			//       that the player is trying to turn on fullbright?
@@ -247,32 +253,6 @@ public final class CommonUniforms {
 			return 2;
 		} else {
 			return 0;
-		}
-	}
-
-	private static class HeldItemLightingSupplier implements IntSupplier {
-
-		private final InteractionHand hand;
-
-		private HeldItemLightingSupplier(InteractionHand targetHand) {
-			this.hand = targetHand;
-		}
-
-		@Override
-		public int getAsInt() {
-			if (client.player == null) {
-				return 0;
-			}
-
-			ItemStack stack = client.player.getItemInHand(hand);
-
-			if (stack == ItemStack.EMPTY || stack == null || !(stack.getItem() instanceof BlockItem)) {
-				return 0;
-			}
-
-			BlockItem item = (BlockItem) stack.getItem();
-
-			return item.getBlock().defaultBlockState().getLightEmission();
 		}
 	}
 

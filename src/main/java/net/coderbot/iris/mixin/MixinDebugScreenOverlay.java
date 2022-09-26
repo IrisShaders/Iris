@@ -46,7 +46,7 @@ public abstract class MixinDebugScreenOverlay {
 		messages.add("");
 
 		if (Iris.getIrisConfig().areShadersEnabled()) {
-			messages.add("[" + Iris.MODNAME + "] Shaderpack: " + Iris.getCurrentPackName());
+			messages.add("[" + Iris.MODNAME + "] Shaderpack: " + Iris.getCurrentPackName() + (Iris.isFallback() ? " (fallback)" : ""));
 			Iris.getCurrentPack().ifPresent(pack -> {
 				messages.add("[" + Iris.MODNAME + "] " + pack.getProfileInfo());
 			});
