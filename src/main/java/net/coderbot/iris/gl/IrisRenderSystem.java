@@ -277,7 +277,7 @@ public class IrisRenderSystem {
 
 	}
 
-	public static class DSAARB implements DSAAccess {
+	public static class DSAARB extends DSAUnsupported {
 
 		@Override
 		public void generateMipmaps(int texture, int target) {
@@ -321,7 +321,11 @@ public class IrisRenderSystem {
 
 		@Override
 		public void bindTextureToUnit(int unit, int texture) {
-			ARBDirectStateAccess.glBindTextureUnit(unit, texture);
+			if (texture == 0) {
+				super.bindTextureToUnit(unit, texture);
+			} else {
+				ARBDirectStateAccess.glBindTextureUnit(unit, texture);
+			}
 		}
 
 		@Override
