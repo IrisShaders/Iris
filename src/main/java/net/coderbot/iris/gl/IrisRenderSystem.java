@@ -328,14 +328,15 @@ public class IrisRenderSystem {
 			ARBDirectStateAccess.glCopyTextureSubImage2D(destTexture, i, i1, i2, i3, i4, width, height);
 		}
 
-		@Override
+		// TODO: Find out why this causes blurry textures
+		/*@Override
 		public void bindTextureToUnit(int unit, int texture) {
 			if (texture == 0) {
 				super.bindTextureToUnit(unit, texture);
 			} else {
 				ARBDirectStateAccess.glBindTextureUnit(unit, texture);
 			}
-		}
+		}*/
 
 		@Override
 		public int bufferStorage(int target, float[] data, int usage) {
