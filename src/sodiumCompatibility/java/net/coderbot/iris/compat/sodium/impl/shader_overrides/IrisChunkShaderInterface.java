@@ -1,5 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
@@ -61,6 +62,8 @@ public class IrisChunkShaderInterface {
 		// See IrisSamplers#addLevelSamplers
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
+		// This is what is expected by the rest of rendering state, failure to do this will cause blurry textures on particles.
+		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
 
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();

@@ -321,11 +321,7 @@ public class IrisRenderSystem {
 
 		@Override
 		public void bindTextureToUnit(int unit, int texture) {
-			if (texture == 0) {
-				super.bindTextureToUnit(unit, texture);
-			} else {
-				ARBDirectStateAccess.glBindTextureUnit(unit, texture);
-			}
+			ARBDirectStateAccess.glBindTextureUnit(unit, texture);
 		}
 
 		@Override
