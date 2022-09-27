@@ -116,6 +116,14 @@ public class IrisRenderSystem {
 		dsaState.texParameteriv(texture, target, pname, params);
 	}
 
+	/**
+	 * Internal API for use when you don't know the target texture. Should use {@link IrisRenderSystem#texParameteriv(int, int, int, int[])} instead unless you know what you're doing!
+	 */
+	public static void texParameterivDirect(int target, int pname, int[] params) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glGetTexParameteriv(target, pname, params);
+	}
+
 	public static void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
 		dsaState.copyTexSubImage2D(destTexture, target, i, i1, i2, i3, i4, width, height);
 	}

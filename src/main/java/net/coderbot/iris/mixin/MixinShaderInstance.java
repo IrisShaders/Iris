@@ -76,8 +76,7 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 			// https://www.khronos.org/opengl/wiki/Image_Format#Legacy_Image_Formats
 			// https://www.khronos.org/opengl/wiki/Texture#Swizzle_mask
 
-			// TODO: Avoid direct GL calls
-			IrisRenderSystem.texParameteriv(this.getId(), GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+			IrisRenderSystem.texParameterivDirect(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 					new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED });
 		}
 	}
