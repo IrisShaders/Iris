@@ -121,7 +121,7 @@ public class IrisRenderSystem {
 	 */
 	public static void texParameterivDirect(int target, int pname, int[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GL32C.glGetTexParameteriv(target, pname, params);
+		GL32C.glTexParameteriv(target, pname, params);
 	}
 
 	public static void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
