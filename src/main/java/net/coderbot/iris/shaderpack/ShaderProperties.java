@@ -226,7 +226,7 @@ public class ShaderProperties {
 					}
 
 					String[] modeArray = value.split(" ");
-					int[] modes = new int[4];
+					int[] modes = new int[modeArray.length];
 
 					int i = 0;
 					for (String modeName : modeArray) {
@@ -245,7 +245,7 @@ public class ShaderProperties {
 				}
 
 				String[] modeArray = value.split(" ");
-				int[] modes = new int[4];
+				int[] modes = new int[modeArray.length];
 
 				int i = 0;
 				for (String modeName : modeArray) {
