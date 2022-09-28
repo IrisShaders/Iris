@@ -178,13 +178,17 @@ public class CompositeRenderer {
 		FullScreenQuadRenderer.INSTANCE.begin();
 
 		for (Pass renderPass : passes) {
+			boolean ranCompute = false;
 			for (ComputeProgram computeProgram : renderPass.computes) {
 				if (computeProgram != null) {
+					ranCompute = true;
 					computeProgram.dispatch(baseWidth, baseHeight);
 				}
 			}
 
-			IrisRenderSystem.memoryBarrier(40);
+			if (ranCompute) {
+				IrisRenderSystem.memoryBarrier(40);
+			}
 
 			Program.unbind();
 

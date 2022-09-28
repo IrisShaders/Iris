@@ -24,6 +24,7 @@ import java.nio.IntBuffer;
 public class IrisRenderSystem {
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
+	private static boolean supportsCompute;
 
 	public static void initRenderer() {
 		if (GL.getCapabilities().OpenGL45) {
@@ -42,6 +43,8 @@ public class IrisRenderSystem {
 		} else {
 			hasMultibind = false;
 		}
+
+		supportsCompute = supportsCompute();
 	}
 
 	public static void getIntegerv(int pname, int[] params) {
@@ -235,7 +238,9 @@ public class IrisRenderSystem {
 	}
 
 	public static void memoryBarrier(int barriers) {
-		GL45C.glMemoryBarrier(barriers);
+		if (supportsCompute) {
+			GL45C.glMemoryBarrier(barriers);
+		}
 	}
 
 	public static void bindTextureToUnit(int unit, int texture) {
