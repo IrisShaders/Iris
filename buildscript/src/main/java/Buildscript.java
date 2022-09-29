@@ -91,6 +91,7 @@ public class Buildscript extends SimpleFabricProject {
     @Override
     public void getModDependencies(ModDependencyCollector d) {
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.20+aeb40ebe90"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:1.0.0-pre19"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.antlr:antlr4-runtime:4.10.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));

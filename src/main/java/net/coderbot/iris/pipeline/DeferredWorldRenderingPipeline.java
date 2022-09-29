@@ -1128,9 +1128,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			TextureFormat textureFormat = TextureFormatLoader.getFormat();
 			if (textureFormat != null) {
-				GlStateManager._bindTexture(currentNormalTexture);
 				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.getNormalTexture());
-				GlStateManager._bindTexture(currentSpecularTexture);
 				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.getSpecularTexture());
 			}
 
