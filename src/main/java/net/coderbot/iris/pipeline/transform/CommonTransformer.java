@@ -11,7 +11,6 @@ import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
-import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
@@ -23,6 +22,9 @@ import io.github.douira.glsl_transformer.ast.node.external_declaration.Declarati
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier.BuiltinType.TypeKind;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
@@ -40,6 +42,16 @@ public class CommonTransformer {
 			"gl_TextureMatrix[0]", Matcher.expressionPattern);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", Matcher.expressionPattern);
+	public static final AutoHintedMatcher<ExternalDeclaration> sampler = new AutoHintedMatcher<>(
+			"uniform Type name;", Matcher.externalDeclarationPattern, "__") {
+		{
+			markClassedPredicateWildcard("type",
+					pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
+					BuiltinFixedTypeSpecifier.class,
+					specifier -> specifier.type.kind == TypeKind.SAMPLER);
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
+		}
+	};
 
 	private static final AutoHintedMatcher<Expression> glFragDataI = new AutoHintedMatcher<>(
 			"gl_FragData[index]", Matcher.expressionPattern) {
@@ -167,36 +179,37 @@ public class CommonTransformer {
 		}
 
 		// addition: rename all uses of texture and gcolor to gtexture if it's *not*
-		// used as a function call
+		// used as a function call.
+		// it only does this if they are declared as samplers and makes sure that there
+		// is only one sampler declaration.
 		hasGtexture = false;
-		root.process(Stream.concat(
-				root.identifierIndex.getStream("gcolor"),
-				root.identifierIndex.getStream("texture"))
-				.filter(id -> !(id.getParent() instanceof FunctionCallExpression)),
-				id -> {
-					id.setName("gtexture");
-					ASTNode parent = id.getParent();
-					if (!(parent instanceof DeclarationMember)) {
-						return;
-					}
-					DeclarationMember member = (DeclarationMember) parent;
-					DeclarationExternalDeclaration declaration = member.getAncestor(DeclarationExternalDeclaration.class);
-					if (declaration == null) {
-						return;
-					}
-					if (!hasGtexture) {
-						hasGtexture = true;
-						return;
-					}
-
-					// if this was the only member in the declaration, remove the whole thing,
-					// otherwise just remove this member
-					if (((TypeAndInitDeclaration) member.getParent()).getMembers().size() == 1) {
-						declaration.detachAndDelete();
-					} else {
-						member.detachAndDelete();
-					}
-				});
+		RenameTargetResult gcolorResult = getGtextureRenameTargets("gcolor", root);
+		RenameTargetResult textureResult = getGtextureRenameTargets("texture", root);
+		DeclarationMember samplerDeclarationMember = null;
+		Stream<Identifier> targets = Stream.empty();
+		if (gcolorResult != null) {
+			samplerDeclarationMember = gcolorResult.samplerDeclarationMember;
+			targets = Stream.concat(targets, gcolorResult.targets);
+		}
+		if (textureResult != null) {
+			// if two exist, remove the member from the second one
+			if (samplerDeclarationMember == null) {
+				samplerDeclarationMember = textureResult.samplerDeclarationMember;
+			} else {
+				DeclarationMember secondDeclarationMember = textureResult.samplerDeclarationMember;
+				if (((TypeAndInitDeclaration) secondDeclarationMember.getParent()).getMembers().size() == 1) {
+					textureResult.samplerDeclaration.detachAndDelete();
+				} else {
+					secondDeclarationMember.detachAndDelete();
+				}
+			}
+			targets = Stream.concat(targets, textureResult.targets);
+		}
+		if (samplerDeclarationMember != null) {
+			samplerDeclarationMember.getName().setName("gtexture");
+		}
+		root.process(targets.filter(id -> !(id.getParent() instanceof FunctionCallExpression)),
+				id -> id.setName("gtexture"));
 
 		// This must be defined and valid in all shader passes, including composite
 		// passes. A shader that relies on this behavior is SEUS v11 - it reads
@@ -230,6 +243,68 @@ public class CommonTransformer {
 
 		renameAndWrapShadow(t, root, "shadow2D", "texture");
 		renameAndWrapShadow(t, root, "shadow2DLod", "textureLod");
+	}
+
+	private static class RenameTargetResult {
+		public final DeclarationExternalDeclaration samplerDeclaration;
+		public final DeclarationMember samplerDeclarationMember;
+		public final Stream<Identifier> targets;
+
+		public RenameTargetResult(DeclarationExternalDeclaration samplerDeclaration,
+				DeclarationMember samplerDeclarationMember, Stream<Identifier> targets) {
+			this.samplerDeclaration = samplerDeclaration;
+			this.samplerDeclarationMember = samplerDeclarationMember;
+			this.targets = targets;
+		}
+	}
+
+	private static RenameTargetResult getGtextureRenameTargets(String name, Root root) {
+		List<Identifier> gtextureTargets = new ArrayList<>();
+		DeclarationExternalDeclaration samplerDeclaration = null;
+		DeclarationMember samplerDeclarationMember = null;
+
+		// collect targets until we find out if the name is a sampler or not
+		for (Identifier id : root.identifierIndex.get(name)) {
+			gtextureTargets.add(id);
+			if (samplerDeclaration != null) {
+				continue;
+			}
+			DeclarationExternalDeclaration externalDeclaration = (DeclarationExternalDeclaration) id.getAncestor(
+					3, 0, DeclarationExternalDeclaration.class::isInstance);
+			if (externalDeclaration == null) {
+				continue;
+			}
+			if (sampler.matchesExtract(externalDeclaration)) {
+				// check that any of the members match the name
+				boolean foundNameMatch = false;
+				for (DeclarationMember member : sampler
+						.getNodeMatch("name*", DeclarationMember.class)
+						.getAncestor(TypeAndInitDeclaration.class).getMembers()) {
+					if (member.getName().getName().equals(name)) {
+						foundNameMatch = true;
+					}
+				}
+				if (!foundNameMatch) {
+					return null;
+				}
+
+				// no need to check any more declarations
+				samplerDeclaration = externalDeclaration;
+				samplerDeclarationMember = id.getAncestor(DeclarationMember.class);
+
+				// remove since we are treating the declaration specially
+				gtextureTargets.remove(gtextureTargets.size() - 1);
+				continue;
+			}
+			// we found a declaration using this name but it's not a sampler, renaming this
+			// name is disabled
+			return null;
+		}
+		if (samplerDeclaration == null) {
+			// no sampler declaration found, renaming this name is disabled
+			return null;
+		}
+		return new RenameTargetResult(samplerDeclaration, samplerDeclarationMember, gtextureTargets.stream());
 	}
 
 	public static void fixVersion(TranslationUnit tree) {
