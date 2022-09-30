@@ -9,6 +9,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
@@ -72,6 +73,7 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
     @Inject(method = "end", at = @At("HEAD"), remap = false, cancellable = true)
     private void iris$onEnd(CallbackInfo ci) {
         ProgramUniforms.clearActiveUniforms();
+		ProgramSamplers.clearActiveSamplers();
 		irisChunkProgramOverrides.unbindFramebuffer();
 
         if (override != null) {
