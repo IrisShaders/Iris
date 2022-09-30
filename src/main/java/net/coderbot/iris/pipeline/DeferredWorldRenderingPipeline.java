@@ -774,6 +774,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		finalPassRenderer.destroy();
 		centerDepthSampler.destroy();
 
+		horizonRenderer.destroy();
+
 		// Make sure that any custom framebuffers are not bound before destroying render targets
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
