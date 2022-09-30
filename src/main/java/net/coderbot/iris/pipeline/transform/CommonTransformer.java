@@ -188,9 +188,13 @@ public class CommonTransformer {
 						hasGtexture = true;
 						return;
 					}
-					member.detachAndDelete();
-					if (((TypeAndInitDeclaration) member.getParent()).getMembers().isEmpty()) {
+
+					// if this was the only member in the declaration, remove the whole thing,
+					// otherwise just remove this member
+					if (((TypeAndInitDeclaration) member.getParent()).getMembers().size() == 1) {
 						declaration.detachAndDelete();
+					} else {
+						member.detachAndDelete();
 					}
 				});
 
