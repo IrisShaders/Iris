@@ -10,6 +10,7 @@
     "MixinBufferBuilder_SegmentRendering",
     "MixinRenderBuffers",
     "MixinDebugScreenOverlay",
+    "MixinFishingHookRenderer",
     "MixinBufferSource",
     "MixinCompositeRenderType",
     "MixinLevelRenderer",
