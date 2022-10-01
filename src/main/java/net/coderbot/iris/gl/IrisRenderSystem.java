@@ -38,11 +38,7 @@ public class IrisRenderSystem {
 			Iris.logger.info("DSA support not detected.");
 		}
 
-		if (GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind) {
-			hasMultibind = true;
-		} else {
-			hasMultibind = false;
-		}
+		hasMultibind = GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind;
 	}
 
 	public static void getIntegerv(int pname, int[] params) {
@@ -114,6 +110,14 @@ public class IrisRenderSystem {
 	public static void texParameteriv(int texture, int target, int pname, int[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.texParameteriv(texture, target, pname, params);
+	}
+
+	/**
+	 * Internal API for use when you don't know the target texture. Should use {@link IrisRenderSystem#texParameteriv(int, int, int, int[])} instead unless you know what you're doing!
+	 */
+	public static void texParameterivDirect(int target, int pname, int[] params) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glTexParameteriv(target, pname, params);
 	}
 
 	public static void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
