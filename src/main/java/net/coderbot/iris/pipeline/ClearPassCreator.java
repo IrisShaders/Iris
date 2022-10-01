@@ -24,9 +24,8 @@ public class ClearPassCreator {
 		final int maxDrawBuffers = GlStateManager._getInteger(GL21C.GL_MAX_DRAW_BUFFERS);
 
 		// Sort buffers by their clear color so we can group up glClear calls.
-		Map<Vector2i, Map<Vector4f, IntList>> clearByColor = new HashMap<>();
+		Map<Integer, Map<ClearPassInformation, IntList>> clearByColor = new HashMap<>();
 
-		Vector2i tempResolution = new Vector2i();
 		renderTargetDirectives.getRenderTargetSettings().forEach((bufferI, settings) -> {
 			// unboxed
 			final int buffer = bufferI;
@@ -47,14 +46,14 @@ public class ClearPassCreator {
 
 				RenderTarget target = renderTargets.get(buffer);
 				Vector4f clearColor = settings.getClearColor().orElse(defaultClearColor);
-				clearByColor.computeIfAbsent(tempResolution.set(target.getWidth(), target.getHeight()), size -> new HashMap<>()).computeIfAbsent(clearColor, color -> new IntArrayList()).add(buffer);
+				clearByColor.computeIfAbsent(target.getWidth() + (target.getHeight() / 2), size -> new HashMap<>()).computeIfAbsent(new ClearPassInformation(clearColor, target.getWidth(), target.getHeight()), color -> new IntArrayList()).add(buffer);
 			}
 		});
 
 		List<ClearPass> clearPasses = new ArrayList<>();
 
 		clearByColor.forEach((passSize, vector4fIntListMap) -> {
-			vector4fIntListMap.forEach((clearColor, buffers) -> {
+			vector4fIntListMap.forEach((clearInfo, buffers) -> {
 				int startIndex = 0;
 
 				while (startIndex < buffers.size()) {
@@ -69,10 +68,10 @@ public class ClearPassCreator {
 					}
 
 					// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
-					clearPasses.add(new ClearPass(clearColor, passSize::x, passSize::y,
+					clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
 						renderTargets.createFramebufferWritingToAlt(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
 
-					clearPasses.add(new ClearPass(clearColor, passSize::x, passSize::y,
+					clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
 						renderTargets.createFramebufferWritingToMain(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
 				}
 			});
