@@ -532,9 +532,6 @@ public class ShadowRenderer {
 
 		setupGlState(projMatrix);
 
-
-
-
 		// Render all opaque terrain unless pack requests not to
 		if (shouldRenderTerrain) {
 			levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ);

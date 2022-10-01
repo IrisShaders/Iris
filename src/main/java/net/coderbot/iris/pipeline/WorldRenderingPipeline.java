@@ -54,5 +54,4 @@ public interface WorldRenderingPipeline {
 	boolean allowConcurrentCompute();
 
 	float getSunPathRotation();
-
 }
