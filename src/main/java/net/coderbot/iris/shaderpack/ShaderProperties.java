@@ -69,7 +69,7 @@ public class ShaderProperties {
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
 	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
-	private List<String> mainScreenOptions = new ArrayList<>();
+	private List<String> mainScreenOptions = null;
 	private final Map<String, List<String>> subScreenOptions = new HashMap<>();
 	private Integer mainScreenColumnCount = null;
 	private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
@@ -562,8 +562,8 @@ public class ShaderProperties {
 		return profiles;
 	}
 
-	public List<String> getMainScreenOptions() {
-		return mainScreenOptions;
+	public Optional<List<String>> getMainScreenOptions() {
+		return Optional.ofNullable(mainScreenOptions);
 	}
 
 	public Map<String, List<String>> getSubScreenOptions() {

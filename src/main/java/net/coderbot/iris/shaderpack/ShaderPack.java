@@ -277,15 +277,20 @@ public class ShaderPack {
 
 			String mcMetaPath = path + ".mcmeta";
 			Path mcMetaResolvedPath = root.resolve(mcMetaPath);
+
 			if (Files.exists(mcMetaResolvedPath)) {
-				JsonObject meta = loadMcMeta(mcMetaResolvedPath);
-				if (meta.get("texture") != null) {
-					if (meta.get("texture").getAsJsonObject().get("blur") != null) {
-						blur = meta.get("texture").getAsJsonObject().get("blur").getAsBoolean();
+				try {
+					JsonObject meta = loadMcMeta(mcMetaResolvedPath);
+					if (meta.get("texture") != null) {
+						if (meta.get("texture").getAsJsonObject().get("blur") != null) {
+							blur = meta.get("texture").getAsJsonObject().get("blur").getAsBoolean();
+						}
+						if (meta.get("texture").getAsJsonObject().get("clamp") != null) {
+							clamp = meta.get("texture").getAsJsonObject().get("clamp").getAsBoolean();
+						}
 					}
-					if (meta.get("texture").getAsJsonObject().get("clamp") != null) {
-						clamp = meta.get("texture").getAsJsonObject().get("clamp").getAsBoolean();
-					}
+				} catch (IOException e) {
+					Iris.logger.error("Unable to read the custom texture mcmeta at " + mcMetaPath + ", ignoring: " + e);
 				}
 			}
 

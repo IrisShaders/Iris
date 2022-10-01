@@ -6,6 +6,8 @@ import com.mojang.blaze3d.platform.GlUtil;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.shaderpack.StringPair;
+import net.coderbot.iris.texture.format.TextureFormat;
+import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import org.lwjgl.opengl.GL11;
@@ -48,9 +50,18 @@ public class StandardMacros {
 			define(standardDefines, glExtension);
 		}
 
+		define(standardDefines, "MC_NORMAL_MAP");
+		define(standardDefines, "MC_SPECULAR_MAP");
 		define(standardDefines, "MC_RENDER_QUALITY", "1.0");
 		define(standardDefines, "MC_SHADOW_QUALITY", "1.0");
 		define(standardDefines, "MC_HAND_DEPTH", Float.toString(HandRenderer.DEPTH));
+
+		TextureFormat textureFormat = TextureFormatLoader.getFormat();
+		if (textureFormat != null) {
+			for (String define : textureFormat.getDefines()) {
+				define(standardDefines, define);
+			}
+		}
 
 		getRenderStages().forEach((stage, index) -> define(standardDefines, stage, index));
 

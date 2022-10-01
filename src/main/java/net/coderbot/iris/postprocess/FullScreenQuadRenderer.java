@@ -84,12 +84,6 @@ public class FullScreenQuadRenderer {
 			0.0F, 0.0F
 		};
 
-		int buffer = GlStateManager._glGenBuffers();
-
-		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, buffer);
-		IrisRenderSystem.bufferData(GL20C.GL_ARRAY_BUFFER, vertices, GL20C.GL_STATIC_DRAW);
-		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
-
-		return buffer;
+		return IrisRenderSystem.bufferStorage(GL20C.GL_ARRAY_BUFFER, vertices, GL20C.GL_STATIC_DRAW);
 	}
 }

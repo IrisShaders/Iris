@@ -5,6 +5,7 @@ import net.coderbot.iris.shaderpack.LanguageMap;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.client.resources.language.LanguageInfo;
+import net.minecraft.locale.Language;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,8 +14,11 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +45,13 @@ public class MixinClientLanguage {
 	@Shadow
 	@Final
 	private Map<String, String> storage;
+
+	@Inject(method = "loadFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/language/ClientLanguage;appendFrom(Ljava/util/List;Ljava/util/Map;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
+	private static void injectFrom(ResourceManager arg, List<LanguageInfo> list, CallbackInfoReturnable<ClientLanguage> cir, Map<String, String> map, boolean bl, Iterator<LanguageInfo> infoIterator, LanguageInfo info, String json) {
+		if (Iris.class.getResource("/assets/iris/" + json) != null) {
+			Language.loadFromJson(Iris.class.getResourceAsStream("/assets/iris/" + json), map::put);
+		}
+	}
 
 	@Inject(method = "getOrDefault", at = @At("HEAD"), cancellable = true)
 	private void iris$addLanguageEntries(String key, CallbackInfoReturnable<String> cir) {

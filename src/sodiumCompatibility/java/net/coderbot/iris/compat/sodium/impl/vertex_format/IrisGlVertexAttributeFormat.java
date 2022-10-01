@@ -7,4 +7,5 @@ import org.lwjgl.opengl.GL20C;
 public class IrisGlVertexAttributeFormat {
 	public static final GlVertexAttributeFormat BYTE =
 			GlVertexAttributeFormatAccessor.createGlVertexAttributeFormat(GL20C.GL_BYTE, 1);
+	public static final GlVertexAttributeFormat SHORT = GlVertexAttributeFormatAccessor.createGlVertexAttributeFormat(GL20C.GL_SHORT, 2);
 }
