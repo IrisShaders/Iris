@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ProgramImages;
@@ -27,12 +28,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
 public class ExtendedShader extends ShaderInstance implements SamplerHolder, ImageHolder, ShaderInstanceInterface {
 	private final boolean intensitySwizzle;
 	private final ProgramImages.Builder imageBuilder;
+	private final List<BufferBlendOverride> bufferBlendOverrides;
+	private final boolean hasOverrides;
 	NewWorldRenderingPipeline parent;
 	ProgramUniforms uniforms;
 	GlFramebuffer writingToBeforeTranslucent;
@@ -49,7 +53,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
 						  Consumer<DynamicUniformHolder> uniformCreator, boolean isIntensity,
-						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs) throws IOException {
+						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs, @Nullable List<BufferBlendOverride> bufferBlendOverrides) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
@@ -62,6 +66,8 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		this.writingToAfterTranslucent = writingToAfterTranslucent;
 		this.baseline = baseline;
 		this.blendModeOverride = blendModeOverride;
+		this.bufferBlendOverrides = bufferBlendOverrides;
+		this.hasOverrides = bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty();
 		this.dynamicSamplers = new HashMap<>();
 		this.alphaTest = alphaTest.getReference();
 		this.parent = parent;
@@ -82,7 +88,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		ProgramSamplers.clearActiveSamplers();
 		super.clear();
 
-		if (this.blendModeOverride != null) {
+		if (this.blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();
 		}
 
@@ -115,6 +121,10 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
+		}
+
+		if (hasOverrides) {
+			bufferBlendOverrides.forEach(BufferBlendOverride::apply);
 		}
 
 		if (parent.isBeforeTranslucent) {

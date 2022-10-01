@@ -98,7 +98,11 @@ public class CommonTransformer {
 			Root root,
 			Parameters parameters) {
 		// fix version
-		fixVersion(tree);
+		if (parameters instanceof CompositeParameters.ComputeParameters && tree.getVersionStatement().profile == Profile.CORE) {
+			return;
+		}
+
+		fixVersion(tree, parameters instanceof CompositeParameters.ComputeParameters);
 
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
@@ -307,7 +311,7 @@ public class CommonTransformer {
 		return new RenameTargetResult(samplerDeclaration, samplerDeclarationMember, gtextureTargets.stream());
 	}
 
-	public static void fixVersion(TranslationUnit tree) {
+	public static void fixVersion(TranslationUnit tree, boolean isCompute) {
 		VersionStatement versionStatement = tree.getVersionStatement();
 		if (versionStatement == null) {
 			throw new IllegalStateException("Missing the version statement!");
@@ -318,10 +322,12 @@ public class CommonTransformer {
 					"Transforming a shader that is already built against the core profile???");
 		}
 		if (versionStatement.version.number >= 200) {
-			if (profile != Profile.COMPATIBILITY) {
-				throw new IllegalStateException(
+			if (!isCompute) {
+				if (profile != Profile.COMPATIBILITY) {
+					throw new IllegalStateException(
 						"Expected \"compatibility\" after the GLSL version: #version " + versionStatement.version + " "
-								+ profile);
+							+ profile);
+				}
 			}
 			versionStatement.profile = Profile.CORE;
 		} else {
