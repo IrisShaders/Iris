@@ -5,8 +5,11 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -57,11 +60,11 @@ public class HorizonRenderer {
 		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
 		// Build the horizon quads into a buffer
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION);
+		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 		buildHorizon(currentRenderDistance * 16, buffer);
 		buffer.end();
 
-		this.buffer = new VertexBuffer(DefaultVertexFormat.POSITION);
+		this.buffer = new VertexBuffer();
 		this.buffer.upload(buffer);
 	}
 
@@ -161,17 +164,14 @@ public class HorizonRenderer {
 		buildBottomPlane(consumer, 384);
 	}
 
-	public void renderHorizon(Matrix4f matrix) {
+	public void renderHorizon(Matrix4f modelView, Matrix4f projection, ShaderInstance shader) {
 		if (currentRenderDistance != Minecraft.getInstance().options.renderDistance) {
 			currentRenderDistance = Minecraft.getInstance().options.renderDistance;
 			rebuildBuffer();
 		}
 
-		buffer.bind();
-		DefaultVertexFormat.POSITION.setupBufferState(0L);
-		buffer.draw(matrix, GL11.GL_QUADS);
-		DefaultVertexFormat.POSITION.clearBufferState();
-		VertexBuffer.unbind();
+		buffer.drawWithShader(modelView, projection, shader);
+
 	}
 
 	public void destroy() {

@@ -7,6 +7,7 @@ import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -19,7 +20,7 @@ import net.minecraft.world.phys.Vec3;
 // mostly working under Iris.
 public class HardcodedCustomUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
-	private static Biome storedBiome;
+	private static Holder<Biome> storedBiome;
 
 	public static void addHardcodedCustomUniforms(UniformHolder holder, FrameUpdateNotifier updateNotifier) {
 		updateNotifier.addListener(() -> {
@@ -62,14 +63,14 @@ public class HardcodedCustomUniforms {
 			if (storedBiome == null) {
 				return 0;
 			} else {
-				return storedBiome.getBiomeCategory() == Biome.BiomeCategory.SWAMP ? 1 : 0;
+				return Biome.getBiomeCategory(storedBiome) == Biome.BiomeCategory.SWAMP ? 1 : 0;
 			}
 		}, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "BiomeTemp", () -> {
 			if (storedBiome == null) {
 				return 0;
 			} else {
-				return storedBiome.getTemperature(Minecraft.getInstance().getCameraEntity().blockPosition());
+				return storedBiome.value().getBaseTemperature();
 			}
 		});
 
@@ -181,7 +182,7 @@ public class HardcodedCustomUniforms {
 		if (storedBiome == null) {
 			return 0;
 		}
-		Biome.Precipitation precipitation = storedBiome.getPrecipitation();
+		Biome.Precipitation precipitation = storedBiome.value().getPrecipitation();
 		switch (precipitation) {
 			case RAIN:
 				return 1;

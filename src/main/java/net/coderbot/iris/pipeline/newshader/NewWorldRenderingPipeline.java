@@ -850,6 +850,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		customTextureManager.destroy();
 		whitePixel.releaseId();
 
+		horizonRenderer.destroy();
+
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
 		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
