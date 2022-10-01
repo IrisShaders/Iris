@@ -208,6 +208,16 @@ public class RenderTargets {
 		return createFullFramebuffer(true, drawBuffers);
 	}
 
+	public GlFramebuffer createClearFramebuffer(boolean alt, int[] clearBuffers) {
+		ImmutableSet<Integer> stageWritesToMain = ImmutableSet.of();
+
+		if (!alt) {
+			stageWritesToMain = invert(ImmutableSet.of(), clearBuffers);
+		}
+
+		return createColorFramebuffer(stageWritesToMain, clearBuffers);
+	}
+
 	private ImmutableSet<Integer> invert(ImmutableSet<Integer> base, int[] relevant) {
 		ImmutableSet.Builder<Integer> inverted = ImmutableSet.builder();
 
