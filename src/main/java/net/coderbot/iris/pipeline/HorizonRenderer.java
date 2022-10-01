@@ -47,7 +47,7 @@ public class HorizonRenderer {
 	private int currentRenderDistance;
 
 	public HorizonRenderer() {
-		currentRenderDistance = Minecraft.getInstance().options.renderDistance;
+		currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
 
 		rebuildBuffer();
 	}
@@ -165,8 +165,8 @@ public class HorizonRenderer {
 	}
 
 	public void renderHorizon(Matrix4f modelView, Matrix4f projection, ShaderInstance shader) {
-		if (currentRenderDistance != Minecraft.getInstance().options.renderDistance) {
-			currentRenderDistance = Minecraft.getInstance().options.renderDistance;
+		if (currentRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
+			currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
 			rebuildBuffer();
 		}
 
