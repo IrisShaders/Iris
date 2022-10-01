@@ -3,7 +3,6 @@ package net.coderbot.iris.postprocess;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -15,6 +14,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
@@ -100,18 +100,18 @@ public class CompositeRenderer {
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
-			pass.stageReadsFromAlt = flipped;
-			pass.framebuffer = framebuffer;
-			pass.viewportScale = directives.getViewportScale();
-			pass.mipmappedBuffers = directives.getMipmappedBuffers();
-			pass.flippedAtLeastOnce = flippedAtLeastOnceSnapshot;
-
-			passes.add(pass);
-
+			int passWidth = 0, passHeight = 0;
+			// Flip the buffers that this shader wrote to, and set pass width and height
 			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
 
-			// Flip the buffers that this shader wrote to
 			for (int buffer : drawBuffers) {
+				RenderTarget target = renderTargets.get(buffer);
+				if ((passWidth > 0 && passWidth != target.getWidth()) || (passHeight > 0 && passHeight != target.getHeight())) {
+					throw new IllegalStateException("Pass widths must match");
+				}
+				passWidth = target.getWidth();
+				passHeight = target.getHeight();
+
 				// compare with boxed Boolean objects to avoid NPEs
 				if (explicitFlips.get(buffer) == Boolean.FALSE) {
 					continue;
@@ -127,6 +127,17 @@ public class CompositeRenderer {
 					flippedAtLeastOnce.add(buffer);
 				}
 			});
+
+			pass.drawBuffers = directives.getDrawBuffers();
+			pass.viewWidth = passWidth;
+			pass.viewHeight = passHeight;
+			pass.stageReadsFromAlt = flipped;
+			pass.framebuffer = framebuffer;
+			pass.viewportScale = directives.getViewportScale();
+			pass.mipmappedBuffers = directives.getMipmappedBuffers();
+			pass.flippedAtLeastOnce = flippedAtLeastOnceSnapshot;
+
+			passes.add(pass);
 		}
 
 		this.passes = passes.build();
@@ -139,7 +150,27 @@ public class CompositeRenderer {
 		return this.flippedAtLeastOnceFinal;
 	}
 
+
+	public void recalculateSizes() {
+		for (Pass pass : passes) {
+			int passWidth = 0, passHeight = 0;
+			for (int buffer : pass.drawBuffers) {
+				RenderTarget target = renderTargets.get(buffer);
+				if ((passWidth > 0 && passWidth != target.getWidth()) || (passHeight > 0 && passHeight != target.getHeight())) {
+					throw new IllegalStateException("Pass widths must match");
+				}
+				passWidth = target.getWidth();
+				passHeight = target.getHeight();
+			}
+			pass.viewWidth = passWidth;
+			pass.viewHeight = passHeight;
+		}
+	}
+
 	private class Pass {
+		int[] drawBuffers;
+		int viewWidth;
+		int viewHeight;
 		Program program;
 		ComputeProgram[] computes;
 		GlFramebuffer framebuffer;
@@ -173,10 +204,6 @@ public class CompositeRenderer {
 		RenderSystem.disableBlend();
 		RenderSystem.disableAlphaTest();
 
-		final RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		final int baseWidth = main.width;
-		final int baseHeight = main.height;
-
 		FullScreenQuadRenderer.INSTANCE.begin();
 
 		for (Pass renderPass : passes) {
@@ -206,8 +233,8 @@ public class CompositeRenderer {
 				}
 			}
 
-			float scaledWidth = baseWidth * renderPass.viewportScale;
-			float scaledHeight = baseHeight * renderPass.viewportScale;
+			float scaledWidth = renderPass.viewWidth * renderPass.viewportScale;
+			float scaledHeight = renderPass.viewHeight * renderPass.viewportScale;
 			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
 
 			renderPass.framebuffer.bind();
@@ -220,7 +247,7 @@ public class CompositeRenderer {
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
-		main.bindWrite(true);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 		GlStateManager._glUseProgram(0);

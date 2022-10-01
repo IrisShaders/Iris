@@ -15,6 +15,8 @@ public class RenderTarget {
 	private final InternalTextureFormat internalFormat;
 	private final PixelFormat format;
 	private final PixelType type;
+	private int width;
+	private int height;
 
 	private boolean isValid;
 	private final int mainTexture;
@@ -28,6 +30,9 @@ public class RenderTarget {
 		this.internalFormat = builder.internalFormat;
 		this.format = builder.format;
 		this.type = builder.type;
+
+		this.width = builder.width;
+		this.height = builder.height;
 
 		int[] textures = new int[2];
 		GlStateManager._genTextures(textures);
@@ -60,6 +65,9 @@ public class RenderTarget {
 	void resize(int width, int height) {
 		requireValid();
 
+		this.width = width;
+		this.height = height;
+
 		resizeTexture(mainTexture, width, height);
 
 		resizeTexture(altTexture, width, height);
@@ -79,6 +87,14 @@ public class RenderTarget {
 		requireValid();
 
 		return altTexture;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
 	}
 
 	public void destroy() {
