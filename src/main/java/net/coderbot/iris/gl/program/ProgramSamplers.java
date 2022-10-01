@@ -8,6 +8,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.lwjgl.opengl.GL20C;
@@ -18,15 +19,24 @@ import java.util.Set;
 import java.util.function.IntSupplier;
 
 public class ProgramSamplers {
+	private static ProgramSamplers active;
 	private final ImmutableList<SamplerBinding> samplerBindings;
+	private final ImmutableList<ValueUpdateNotifier> notifiersToReset;
 	private List<GlUniform1iCall> initializer;
 
-	private ProgramSamplers(ImmutableList<SamplerBinding> samplerBindings, List<GlUniform1iCall> initializer) {
+	private ProgramSamplers(ImmutableList<SamplerBinding> samplerBindings, ImmutableList<ValueUpdateNotifier> notifiersToReset, List<GlUniform1iCall> initializer) {
 		this.samplerBindings = samplerBindings;
+		this.notifiersToReset = notifiersToReset;
 		this.initializer = initializer;
 	}
 
 	public void update() {
+		if (active != null) {
+			active.removeListeners();
+		}
+
+		active = this;
+
 		if (initializer != null) {
 			for (GlUniform1iCall call : initializer) {
 				IrisRenderSystem.uniform1i(call.getLocation(), call.getValue());
@@ -46,6 +56,20 @@ public class ProgramSamplers {
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0 + activeTexture);
 	}
 
+	public void removeListeners() {
+		active = null;
+
+		for (ValueUpdateNotifier notifier : notifiersToReset) {
+			notifier.setListener(null);
+		}
+	}
+
+	public static void clearActiveSamplers() {
+		if (active != null) {
+			active.removeListeners();
+		}
+	}
+
 	public static Builder builder(int program, Set<Integer> reservedTextureUnits) {
 		return new Builder(program, reservedTextureUnits);
 	}
@@ -62,6 +86,7 @@ public class ProgramSamplers {
 		private final int program;
 		private final ImmutableSet<Integer> reservedTextureUnits;
 		private final ImmutableList.Builder<SamplerBinding> samplers;
+		private final ImmutableList.Builder<ValueUpdateNotifier> notifiersToReset;
 		private final List<GlUniform1iCall> calls;
 		private int remainingUnits;
 		private int nextUnit;
@@ -70,6 +95,7 @@ public class ProgramSamplers {
 			this.program = program;
 			this.reservedTextureUnits = ImmutableSet.copyOf(reservedTextureUnits);
 			this.samplers = ImmutableList.builder();
+			this.notifiersToReset = ImmutableList.builder();
 			this.calls = new ArrayList<>();
 
 			int maxTextureUnits = SamplerLimits.get().getMaxTextureUnits();
@@ -126,7 +152,7 @@ public class ProgramSamplers {
 				throw new IllegalStateException("Texture unit 0 is already used.");
 			}
 
-			return addDynamicSampler(sampler, true, names);
+			return addDynamicSampler(sampler, true, null, names);
 		}
 
 		/**
@@ -135,10 +161,20 @@ public class ProgramSamplers {
 		 */
 		@Override
 		public boolean addDynamicSampler(IntSupplier sampler, String... names) {
-			return addDynamicSampler(sampler, false, names);
+			return addDynamicSampler(sampler, false, null, names);
 		}
 
-		private boolean addDynamicSampler(IntSupplier sampler, boolean used, String... names) {
+		/**
+		 * Adds a sampler
+		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
+		 */
+		@Override
+		public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+			notifiersToReset.add(notifier);
+			return addDynamicSampler(sampler, false, notifier, names);
+		}
+
+		private boolean addDynamicSampler(IntSupplier sampler, boolean used, ValueUpdateNotifier notifier, String... names) {
 			for (String name : names) {
 				int location = IrisRenderSystem.getUniformLocation(program, name);
 
@@ -165,7 +201,7 @@ public class ProgramSamplers {
 				return false;
 			}
 
-			samplers.add(new SamplerBinding(nextUnit, sampler));
+			samplers.add(new SamplerBinding(nextUnit, sampler, notifier));
 
 			remainingUnits -= 1;
 			nextUnit += 1;
@@ -180,7 +216,7 @@ public class ProgramSamplers {
 		}
 
 		public ProgramSamplers build() {
-			return new ProgramSamplers(samplers.build(), calls);
+			return new ProgramSamplers(samplers.build(), notifiersToReset.build(), calls);
 		}
 	}
 
@@ -248,6 +284,13 @@ public class ProgramSamplers {
 			sampler = getOverride(sampler, names);
 
 			return samplerHolder.addDynamicSampler(sampler, names);
+		}
+
+		@Override
+		public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+			sampler = getOverride(sampler, names);
+
+			return samplerHolder.addDynamicSampler(sampler, notifier, names);
 		}
 	}
 }

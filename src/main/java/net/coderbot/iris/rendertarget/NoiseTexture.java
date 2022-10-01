@@ -21,28 +21,26 @@ public class NoiseTexture extends GlResource {
 	int height;
 
 	public NoiseTexture(int width, int height) {
-		super(GlStateManager._genTexture());
-		GlStateManager._bindTexture(getGlId());
+		super(IrisRenderSystem.createTexture(GL11C.GL_TEXTURE_2D));
 
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_REPEAT);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_REPEAT);
+		int texture = getGlId();
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_REPEAT);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_REPEAT);
 
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LEVEL, 0);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_LOD, 0);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LOD,0);
-		GlStateManager._texParameter(GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
-		resize(width, height);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LEVEL, 0);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_LOD, 0);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LOD,0);
+		IrisRenderSystem.texParameterf(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
+		resize(texture, width, height);
 
 		GlStateManager._bindTexture(0);
 	}
 
-	void resize(int width, int height) {
+	void resize(int texture, int width, int height) {
 		this.width = width;
 		this.height = height;
-
-		GlStateManager._bindTexture(getGlId());
 
 		ByteBuffer pixels = generateNoise();
 
@@ -50,7 +48,7 @@ public class NoiseTexture extends GlResource {
 
 		// Since we're using tightly-packed RGB data, we must use an alignment of 1 byte instead of the usual 4 bytes.
 		GlStateManager._pixelStore(GL20C.GL_UNPACK_ALIGNMENT, 1);
-		IrisRenderSystem.texImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGB, width, height, 0, GL11C.GL_RGB, GL11C.GL_UNSIGNED_BYTE, pixels);
+		IrisRenderSystem.texImage2D(texture, GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGB, width, height, 0, GL11C.GL_RGB, GL11C.GL_UNSIGNED_BYTE, pixels);
 
 		GlStateManager._bindTexture(0);
 	}

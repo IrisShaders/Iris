@@ -199,6 +199,7 @@ public class CompositeRenderer {
 		// Also bind the "main" framebuffer if it isn't already bound.
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 		ProgramUniforms.clearActiveUniforms();
+		ProgramSamplers.clearActiveSamplers();
 		GlStateManager._glUseProgram(0);
 
 		// NB: Unbinding all of these textures is necessary for proper shaderpack reloading.
@@ -213,7 +214,7 @@ public class CompositeRenderer {
 	}
 
 	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
-		RenderSystem.bindTexture(readFromAlt ? target.getAltTexture() : target.getMainTexture());
+		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
 		// (since the last mipmap was generated)
@@ -226,8 +227,8 @@ public class CompositeRenderer {
 		//
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
-		IrisRenderSystem.generateMipmaps(GL20C.GL_TEXTURE_2D);
-		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
+		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline

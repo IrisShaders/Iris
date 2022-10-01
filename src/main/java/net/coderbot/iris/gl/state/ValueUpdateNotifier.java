@@ -1,4 +1,4 @@
-package net.coderbot.iris.gl.uniform;
+package net.coderbot.iris.gl.state;
 
 /**
  * A
