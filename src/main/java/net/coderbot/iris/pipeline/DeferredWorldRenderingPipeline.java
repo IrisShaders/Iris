@@ -23,11 +23,11 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
-import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.pipeline.patcher.AttributeShaderTransformer;
+import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -224,6 +224,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			return shadowRenderTargets;
 		};
+
+		PatchedShaderPrinter.resetPrintState();
 
 		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), programs.getPrepareCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
@@ -580,19 +582,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow) {
-		// TODO: Properly handle empty shaders
-		String geometry = null;
-		if (source.getGeometrySource().isPresent()) {
-			geometry = AttributeShaderTransformer.patch(source.getGeometrySource().orElse(null),
-				ShaderType.GEOMETRY, true, availability);
-		}
-		String vertex = AttributeShaderTransformer.patch(source.getVertexSource().orElseThrow(NullPointerException::new),
-				ShaderType.VERTEX, geometry != null, availability);
-		String fragment = AttributeShaderTransformer.patch(source.getFragmentSource().orElseThrow(NullPointerException::new),
-				ShaderType.FRAGMENT, geometry != null, availability);
+		// TODO: Properly handle empty shaders?
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchAttributes(
+			source.getVertexSource().orElseThrow(NullPointerException::new),
+			source.getGeometrySource().orElse(null), 
+			source.getFragmentSource().orElseThrow(NullPointerException::new),
+			availability);
+		String vertex = transformed.get(PatchShaderType.VERTEX);
+		String geometry = transformed.get(PatchShaderType.GEOMETRY);
+		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
-		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry,
-				fragment, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+
+		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
+			IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives(), availability, shadow);
 	}
@@ -789,6 +792,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		deferredRenderer.destroy();
 		finalPassRenderer.destroy();
 		centerDepthSampler.destroy();
+
+		horizonRenderer.destroy();
 
 		// Make sure that any custom framebuffers are not bound before destroying render targets
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
