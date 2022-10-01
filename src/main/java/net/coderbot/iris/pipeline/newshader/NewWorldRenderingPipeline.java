@@ -25,6 +25,7 @@ import net.coderbot.iris.pipeline.ClearPass;
 import net.coderbot.iris.pipeline.ClearPassCreator;
 import net.coderbot.iris.pipeline.CustomTextureManager;
 import net.coderbot.iris.pipeline.HorizonRenderer;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
@@ -56,7 +57,6 @@ import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
@@ -70,8 +70,6 @@ import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -141,23 +139,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private int currentSpecularTexture;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
-
-			if (Files.exists(debugOutDir)) {
-				try (Stream<Path> files = Files.list(debugOutDir)) {
-					files.forEach(path -> {
-						try {
-							Files.delete(path);
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						}
-					});
-				}
-			}
-
-			Files.createDirectories(debugOutDir);
-		}
+		PatchedShaderPrinter.resetPrintState();
 
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
