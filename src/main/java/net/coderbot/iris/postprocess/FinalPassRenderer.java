@@ -13,7 +13,9 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
-import net.coderbot.iris.pipeline.patcher.CompositeDepthTransformer;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
+import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.rendertarget.Blaze3dRenderTargetExt;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -284,14 +286,21 @@ public class FinalPassRenderer {
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 								  Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
 		// TODO: Properly handle empty shaders
-		Objects.requireNonNull(source.getVertexSource());
-		Objects.requireNonNull(source.getFragmentSource());
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
+			source.getVertexSource().orElseThrow(NullPointerException::new),
+			source.getGeometrySource().orElse(null),
+			source.getFragmentSource().orElseThrow(NullPointerException::new));
+		String vertex = transformed.get(PatchShaderType.VERTEX);
+		String geometry = transformed.get(PatchShaderType.GEOMETRY);
+		String fragment = transformed.get(PatchShaderType.FRAGMENT);
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+
 		Objects.requireNonNull(flipped);
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), CompositeDepthTransformer.patch(source.getVertexSource().orElse(null)), CompositeDepthTransformer.patch(source.getGeometrySource().orElse(null)),
-				CompositeDepthTransformer.patch(source.getFragmentSource().orElse(null)), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
+				IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
