@@ -8,6 +8,7 @@ import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -63,7 +64,8 @@ public class HardcodedCustomUniforms {
 			if (storedBiome == null) {
 				return 0;
 			} else {
-				return Biome.getBiomeCategory(storedBiome) == Biome.BiomeCategory.SWAMP ? 1 : 0;
+				// Easiest way to check for "swamp" on 1.19.
+				return storedBiome.is(BiomeTags.HAS_CLOSER_WATER_FOG) ? 1 : 0;
 			}
 		}, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "BiomeTemp", () -> {
