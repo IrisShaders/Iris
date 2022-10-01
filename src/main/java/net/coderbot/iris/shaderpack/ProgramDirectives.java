@@ -10,10 +10,13 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -26,16 +29,19 @@ public class ProgramDirectives {
 	private final AlphaTest alphaTestOverride;
 	@Nullable
 	private final BlendModeOverride blendModeOverride;
+	@Nullable
+	private final List<BufferBlendOverride> bufferBlendOverrides;
 	private final ImmutableSet<Integer> mipmappedBuffers;
 	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
 	private ProgramDirectives(int[] drawBuffers, float viewportScale, @Nullable AlphaTest alphaTestOverride,
-							 @Nullable BlendModeOverride blendModeOverride, ImmutableSet<Integer> mipmappedBuffers,
-							 ImmutableMap<Integer, Boolean> explicitFlips) {
+							  @Nullable BlendModeOverride blendModeOverride, @Nullable List<BufferBlendOverride> bufferBlendOverrides, ImmutableSet<Integer> mipmappedBuffers,
+							  ImmutableMap<Integer, Boolean> explicitFlips) {
 		this.drawBuffers = drawBuffers;
 		this.viewportScale = viewportScale;
 		this.alphaTestOverride = alphaTestOverride;
 		this.blendModeOverride = blendModeOverride;
+		this.bufferBlendOverrides = bufferBlendOverrides;
 		this.mipmappedBuffers = mipmappedBuffers;
 		this.explicitFlips = explicitFlips;
 	}
@@ -68,13 +74,16 @@ public class ProgramDirectives {
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 
 			BlendModeOverride blendModeOverride = properties.getBlendModeOverrides().get(source.getName());
+			List<BufferBlendOverride> bufferBlendOverrides = properties.getBufferBlendOverrides().get(source.getName());
 			this.blendModeOverride = blendModeOverride != null ? blendModeOverride : defaultBlendOverride;
+			this.bufferBlendOverrides = bufferBlendOverrides != null ? bufferBlendOverrides : Collections.emptyList();
 
 			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(source.getName());
 		} else {
 			viewportScale = 1.0f;
 			alphaTestOverride = null;
 			blendModeOverride = defaultBlendOverride;
+			bufferBlendOverrides = Collections.emptyList();
 			explicitFlips = ImmutableMap.of();
 		}
 
@@ -107,7 +116,7 @@ public class ProgramDirectives {
 	}
 
 	public ProgramDirectives withOverriddenDrawBuffers(int[] drawBuffersOverride) {
-		return new ProgramDirectives(drawBuffersOverride, viewportScale, alphaTestOverride, blendModeOverride,
+		return new ProgramDirectives(drawBuffersOverride, viewportScale, alphaTestOverride, blendModeOverride, bufferBlendOverrides,
 			mipmappedBuffers, explicitFlips);
 	}
 
@@ -167,6 +176,11 @@ public class ProgramDirectives {
 	@Nullable
 	public BlendModeOverride getBlendModeOverride() {
 		return blendModeOverride;
+	}
+
+	@Nullable
+	public List<BufferBlendOverride> getBufferBlendOverrides() {
+		return bufferBlendOverrides;
 	}
 
 	public ImmutableSet<Integer> getMipmappedBuffers() {

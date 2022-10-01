@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
@@ -23,6 +24,7 @@ import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -30,12 +32,14 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
 import java.util.Objects;
@@ -79,6 +83,7 @@ public class FinalPassRenderer {
 			ProgramDirectives directives = source.getDirectives();
 
 			pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
+			pass.computes = createComputes(pack.getFinalCompute(), flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
 			pass.stageReadsFromAlt = flippedBuffers;
 			pass.mipmappedBuffers = directives.getMipmappedBuffers();
 
@@ -110,6 +115,10 @@ public class FinalPassRenderer {
 			}
 
 			SwapPass swap = new SwapPass();
+			RenderTarget target1 = renderTargets.get(target);
+			swap.target = target;
+			swap.width = target1.getWidth();
+			swap.height = target1.getHeight();
 			swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {target});
 			// NB: This is handled in RenderTargets now.
 			//swap.from.readBuffer(target);
@@ -125,6 +134,7 @@ public class FinalPassRenderer {
 
 	private static final class Pass {
 		Program program;
+		ComputeProgram[] computes;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
 
@@ -134,6 +144,9 @@ public class FinalPassRenderer {
 	}
 
 	private static final class SwapPass {
+		public int target;
+		public int width;
+		public int height;
 		GlFramebuffer from;
 		int targetTexture;
 	}
@@ -172,6 +185,14 @@ public class FinalPassRenderer {
 			colorHolder.bind();
 
 			FullScreenQuadRenderer.INSTANCE.begin();
+
+			for (ComputeProgram computeProgram : finalPass.computes) {
+				if (computeProgram != null) {
+					computeProgram.dispatch(baseWidth, baseHeight);
+				}
+			}
+
+			IrisRenderSystem.memoryBarrier(40);
 
 			if (!finalPass.mipmappedBuffers.isEmpty()) {
 				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
@@ -219,9 +240,8 @@ public class FinalPassRenderer {
 			// Also note that RenderTargets already calls readBuffer(0) for us.
 			swapPass.from.bind();
 
-			IrisRenderSystem.copyTexSubImage2D(swapPass.targetTexture, GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
-			RenderSystem.bindTexture(0);
-			GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
+			RenderSystem.bindTexture(swapPass.targetTexture);
+			GlStateManager._glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, swapPass.width, swapPass.height);
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
@@ -239,6 +259,14 @@ public class FinalPassRenderer {
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+	}
+
+	public void recalculateSwapPassSize() {
+		for (SwapPass swapPass : swapPasses) {
+			RenderTarget target = renderTargets.get(swapPass.target);
+			swapPass.width = target.getWidth();
+			swapPass.height = target.getHeight();
+		}
 	}
 
 	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
@@ -311,6 +339,51 @@ public class FinalPassRenderer {
 		builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
 
 		return builder.build();
+	}
+
+	private ComputeProgram[] createComputes(ComputeSource[] compute, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot, Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
+		ComputeProgram[] programs = new ComputeProgram[compute.length];
+		for (int i = 0; i < programs.length; i++) {
+			ComputeSource source = compute[i];
+			if (source == null || !source.getSource().isPresent()) {
+				continue;
+			} else {
+				// TODO: Properly handle empty shaders
+				Objects.requireNonNull(flipped);
+				ProgramBuilder builder;
+
+				try {
+					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+				} catch (RuntimeException e) {
+					// TODO: Better error handling
+					throw new RuntimeException("Shader compilation failed!", e);
+				}
+
+				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
+
+				CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, FogMode.OFF);
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+
+				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
+				IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
+
+				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
+					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get());
+					IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get());
+				}
+
+				// TODO: Don't duplicate this with FinalPassRenderer
+				builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
+
+				programs[i] = builder.buildCompute();
+
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+			}
+		}
+
+
+		return programs;
 	}
 
 	public void destroy() {
