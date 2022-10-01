@@ -53,7 +53,7 @@ public class ClearPassCreator {
 
 		List<ClearPass> clearPasses = new ArrayList<>();
 
-		clearByColor.forEach((vector2i, vector4fIntListMap) -> {
+		clearByColor.forEach((passSize, vector4fIntListMap) -> {
 			vector4fIntListMap.forEach((clearColor, buffers) -> {
 				int startIndex = 0;
 
@@ -69,10 +69,10 @@ public class ClearPassCreator {
 					}
 
 					// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
-					clearPasses.add(new ClearPass(clearColor, renderTargets::getCurrentWidth, renderTargets::getCurrentHeight,
+					clearPasses.add(new ClearPass(clearColor, passSize::x, passSize::y,
 						renderTargets.createFramebufferWritingToAlt(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
 
-					clearPasses.add(new ClearPass(clearColor, renderTargets::getCurrentWidth, renderTargets::getCurrentHeight,
+					clearPasses.add(new ClearPass(clearColor, passSize::x, passSize::y,
 						renderTargets.createFramebufferWritingToMain(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
 				}
 			});
