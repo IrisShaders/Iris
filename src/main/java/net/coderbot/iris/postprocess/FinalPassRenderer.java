@@ -108,6 +108,10 @@ public class FinalPassRenderer {
 			}
 
 			SwapPass swap = new SwapPass();
+			RenderTarget target1 = renderTargets.get(target);
+			swap.target = target;
+			swap.width = target1.getWidth();
+			swap.height = target1.getHeight();
 			swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {target});
 			// NB: This is handled in RenderTargets now.
 			//swap.from.readBuffer(target);
@@ -132,6 +136,9 @@ public class FinalPassRenderer {
 	}
 
 	private static final class SwapPass {
+		public int target;
+		public int width;
+		public int height;
 		GlFramebuffer from;
 		int targetTexture;
 	}
@@ -219,7 +226,7 @@ public class FinalPassRenderer {
 			swapPass.from.bind();
 
 			RenderSystem.bindTexture(swapPass.targetTexture);
-			GlStateManager._glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
+			GlStateManager._glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, swapPass.width, swapPass.height);
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
@@ -237,6 +244,14 @@ public class FinalPassRenderer {
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+	}
+
+	public void recalculateSwapPassSize() {
+		for (SwapPass swapPass : swapPasses) {
+			RenderTarget target = renderTargets.get(swapPass.target);
+			swapPass.width = target.getWidth();
+			swapPass.height = target.getHeight();
+		}
 	}
 
 	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
