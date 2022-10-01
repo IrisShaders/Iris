@@ -7,6 +7,8 @@ import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.vendored.joml.Math;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -19,8 +21,17 @@ import net.minecraft.world.phys.Vec3;
 // mostly working under Iris.
 public class HardcodedCustomUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
+	private static Holder<Biome> storedBiome;
 
 	public static void addHardcodedCustomUniforms(UniformHolder holder, FrameUpdateNotifier updateNotifier) {
+		updateNotifier.addListener(() -> {
+			if (Minecraft.getInstance().level != null) {
+				storedBiome = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().getCameraEntity().blockPosition());
+			} else {
+				storedBiome = null;
+			}
+		});
+
 		CameraUniforms.CameraPositionTracker tracker = new CameraUniforms.CameraPositionTracker(updateNotifier);
 
 		SmoothedFloat eyeInCave = new SmoothedFloat(6, 12, HardcodedCustomUniforms::getEyeInCave, updateNotifier);
@@ -47,6 +58,23 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeSmooth", new SmoothedFloat(5, 5, SystemTimeUniforms.TIMER::getLastFrameTime, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "eyeBrightnessM", new SmoothedFloat(5, 5, HardcodedCustomUniforms::getEyeBrightnessM, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "rainFactor", rainStrengthS);
+
+		// The following uniforms are Sildur's specific.
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "inSwamp", new SmoothedFloat(5, 5, () -> {
+			if (storedBiome == null) {
+				return 0;
+			} else {
+				// Easiest way to check for "swamp" on 1.19.
+				return storedBiome.is(BiomeTags.HAS_CLOSER_WATER_FOG) ? 1 : 0;
+			}
+		}, updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "BiomeTemp", () -> {
+			if (storedBiome == null) {
+				return 0;
+			} else {
+				return storedBiome.value().getBaseTemperature();
+			}
+		});
 
 		// The following uniforms are specific to Super Duper Vanilla Shaders.
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "day", HardcodedCustomUniforms::getDay);
@@ -153,10 +181,10 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getRawPrecipitation() {
-		if (Minecraft.getInstance().level == null) {
+		if (storedBiome == null) {
 			return 0;
 		}
-		Biome.Precipitation precipitation = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().getCameraEntity().blockPosition()).value().getPrecipitation();
+		Biome.Precipitation precipitation = storedBiome.value().getPrecipitation();
 		switch (precipitation) {
 			case RAIN:
 				return 1;

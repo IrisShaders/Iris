@@ -8,7 +8,9 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
+import org.lwjgl.opengl.GL11;
 
 /**
  * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
@@ -16,7 +18,7 @@ import net.minecraft.client.renderer.ShaderInstance;
  * allowing shaders to perform more advanced sky rendering.
  * <p>
  * However, the horizon rendering is designed so that when sky shaders are not being used, it looks almost exactly the
- * same as vanilla sky rendering, with the exception of a few almost entirely imperceptible differences where the walls
+ * same as vanilla sky rendering, except a few almost entirely imperceptible differences where the walls
  * of the octagonal prism intersect the top plane.
  */
 public class HorizonRenderer {
@@ -41,34 +43,31 @@ public class HorizonRenderer {
 	 * Sine of 22.5 degrees.
 	 */
 	private static final double SIN_22_5 = Math.sin(Math.toRadians(22.5));
-
 	private VertexBuffer buffer;
-
-	private int cachedRenderDistance;
+	private int currentRenderDistance;
 
 	public HorizonRenderer() {
-		cachedRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-		createBuffer();
+		currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+
+		rebuildBuffer();
 	}
 
-	private void createBuffer() {
-		if (buffer != null) {
-			buffer.close();
+	private void rebuildBuffer() {
+		if (this.buffer != null) {
+			this.buffer.close();
 		}
 
-		buffer = new VertexBuffer();
-
-		BufferBuilder builder = Tesselator.getInstance().getBuilder();
+		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
 		// Build the horizon quads into a buffer
-		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-		buildHorizon(builder);
-		BufferBuilder.RenderedBuffer renderedBuffer = builder.end();
+		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+		buildHorizon(currentRenderDistance * 16, buffer);
+		BufferBuilder.RenderedBuffer renderedBuffer = buffer.end();
 
-		buffer.bind();
-		buffer.upload(renderedBuffer);
+		this.buffer = new VertexBuffer();
+		this.buffer.bind();
+		this.buffer.upload(renderedBuffer);
 		VertexBuffer.unbind();
-
 	}
 
 	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {
@@ -150,9 +149,7 @@ public class HorizonRenderer {
 		}
 	}
 
-	private void buildHorizon(VertexConsumer consumer) {
-		int radius = getRenderDistanceInBlocks();
-
+	private void buildHorizon(int radius, VertexConsumer consumer) {
 		if (radius > 256) {
 			// Prevent the prism from getting too large, this causes issues on some shader packs that modify the vanilla
 			// sky if we don't do this.
@@ -169,19 +166,18 @@ public class HorizonRenderer {
 		buildBottomPlane(consumer, 384);
 	}
 
-	private int getRenderDistanceInBlocks() {
-		return Minecraft.getInstance().options.getEffectiveRenderDistance() * 16;
-	}
-
 	public void renderHorizon(Matrix4f modelView, Matrix4f projection, ShaderInstance shader) {
-		if (cachedRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
-			cachedRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-			createBuffer();
+		if (currentRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
+			currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+			rebuildBuffer();
 		}
 
-		// Despite the name, this actually dispatches the draw call using the specified shader.
 		buffer.bind();
 		buffer.drawWithShader(modelView, projection, shader);
 		VertexBuffer.unbind();
+	}
+
+	public void destroy() {
+		buffer.close();
 	}
 }
