@@ -38,11 +38,7 @@ public class IrisRenderSystem {
 			Iris.logger.info("DSA support not detected.");
 		}
 
-		if (GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind) {
-			hasMultibind = true;
-		} else {
-			hasMultibind = false;
-		}
+		hasMultibind = GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind;
 	}
 
 	public static void getIntegerv(int pname, int[] params) {

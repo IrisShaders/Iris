@@ -9,7 +9,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -79,6 +78,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline, RenderTargetStateListener {
 	private final RenderTargets renderTargets;
@@ -126,10 +126,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private boolean destroyed = false;
 	private boolean isRenderingWorld;
 	private boolean isMainBound;
-	private CloudSetting cloudSetting;
-	private boolean shouldRenderSun;
-	private boolean shouldRenderMoon;
-	private boolean prepareBeforeShadow;
+	private final CloudSetting cloudSetting;
+	private final boolean shouldRenderSun;
+	private final boolean shouldRenderMoon;
+	private final boolean prepareBeforeShadow;
 
 	@Nullable
 	private final ShadowRenderer shadowRenderer;
@@ -383,17 +383,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 }) : null);
 	}
 
-	@SafeVarargs
-	private static <T> Optional<T> first(Optional<T>... candidates) {
-		for (Optional<T> candidate : candidates) {
-			if (candidate.isPresent()) {
-				return candidate;
-			}
-		}
-
-		return Optional.empty();
-	}
-
 	private ShaderInstance createShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
 		if (!source.isPresent()) {
 			return createFallbackShader(name, key);
@@ -418,7 +407,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Supplier<ImmutableSet<Integer>> flipped =
 				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
-		addGbufferOrShadowSamplers(extendedShader, flipped, false, inputs);
+		addGbufferOrShadowSamplers(extendedShader, flipped, false);
 
 		return extendedShader;
 	}
@@ -469,13 +458,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 
-		addGbufferOrShadowSamplers(extendedShader, flipped, true, inputs);
+		addGbufferOrShadowSamplers(extendedShader, flipped, true);
 
 		return extendedShader;
 	}
 
 	private void addGbufferOrShadowSamplers(ExtendedShader extendedShader, Supplier<ImmutableSet<Integer>> flipped,
-											boolean isShadowPass, ShaderAttributeInputs inputs) {
+											boolean isShadowPass) {
 		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
 		ProgramSamplers.CustomTextureSamplerInterceptor samplerHolder =
@@ -831,6 +820,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		compositeRenderer.destroy();
 		customTextureManager.destroy();
 		whitePixel.releaseId();
+
+		horizonRenderer.destroy();
 
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 		GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, 0);
