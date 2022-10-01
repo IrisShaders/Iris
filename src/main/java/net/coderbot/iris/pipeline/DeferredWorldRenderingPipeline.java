@@ -16,6 +16,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -67,6 +68,7 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -311,7 +313,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 						GlFramebuffer shadowFb =
 							shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] {0});
 						return new Pass(null, shadowFb, shadowFb, null,
-							BlendModeOverride.OFF, true);
+							BlendModeOverride.OFF, Collections.emptyList(), true);
 					}
 				}
 
@@ -562,7 +564,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, new int[] {0});
 
 		return new Pass(null, framebufferBeforeTranslucents, framebufferAfterTranslucents, null,
-			null, false);
+			null, Collections.emptyList(), false);
 	}
 
 	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow) {
@@ -652,7 +654,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		AlphaTestOverride alphaTestOverride = programDirectives.getAlphaTestOverride().orElse(null);
 
 		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				programDirectives.getBlendModeOverride(), shadow);
+				programDirectives.getBlendModeOverride(), programDirectives.getBufferBlendOverrides(), shadow);
 	}
 
 	private boolean isPostChain;
@@ -695,15 +697,18 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		private final AlphaTestOverride alphaTestOverride;
 		@Nullable
 		private final BlendModeOverride blendModeOverride;
+		@Nullable
+		private final List<BufferBlendOverride> bufferBlendOverrides;
 		private final boolean shadowViewport;
 
 		private Pass(@Nullable Program program, GlFramebuffer framebufferBeforeTranslucents, GlFramebuffer framebufferAfterTranslucents,
-					 @Nullable AlphaTestOverride alphaTestOverride, @Nullable BlendModeOverride blendModeOverride, boolean shadowViewport) {
+					 @Nullable AlphaTestOverride alphaTestOverride, @Nullable BlendModeOverride blendModeOverride, @Nullable List<BufferBlendOverride> bufferBlendOverrides, boolean shadowViewport) {
 			this.program = program;
 			this.framebufferBeforeTranslucents = framebufferBeforeTranslucents;
 			this.framebufferAfterTranslucents = framebufferAfterTranslucents;
 			this.alphaTestOverride = alphaTestOverride;
 			this.blendModeOverride = blendModeOverride;
+			this.bufferBlendOverrides = bufferBlendOverrides;
 			this.shadowViewport = shadowViewport;
 		}
 
@@ -738,6 +743,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				// Previous program on the stack might have applied an override
 				BlendModeOverride.restore();
 			}
+
+			if (bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty()) {
+				bufferBlendOverrides.forEach(BufferBlendOverride::apply);
+			}
 		}
 
 		public void stopUsing() {
@@ -745,7 +754,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				AlphaTestOverride.restore();
 			}
 
-			if (blendModeOverride != null) {
+			if (blendModeOverride != null || (bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty())) {
 				BlendModeOverride.restore();
 			}
 		}
