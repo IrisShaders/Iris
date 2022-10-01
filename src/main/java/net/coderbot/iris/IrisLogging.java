@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 public class IrisLogging {
 	public static boolean ENABLE_SPAM = false; // FabricLoader.getInstance().isDevelopmentEnvironment();
-	public static boolean ENABLE_TRANSFORM_SPAM = false; 
 
 	private final Logger logger;
 
