@@ -170,8 +170,9 @@ public class HorizonRenderer {
 			rebuildBuffer();
 		}
 
+		buffer.bind();
 		buffer.drawWithShader(modelView, projection, shader);
-
+		VertexBuffer.unbind();
 	}
 
 	public void destroy() {
