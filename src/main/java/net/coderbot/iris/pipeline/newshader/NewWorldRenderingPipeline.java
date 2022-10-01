@@ -9,12 +9,15 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageHolder;
+import net.coderbot.iris.gl.program.ComputeProgram;
+import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
@@ -31,6 +34,7 @@ import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
+import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -41,6 +45,7 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.CloudSetting;
+import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramFallbackResolver;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -54,6 +59,7 @@ import net.coderbot.iris.texture.pbr.PBRTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector4f;
@@ -115,6 +121,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public boolean isBeforeTranslucent;
 
 	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
+	@Nullable
+	private ComputeProgram[] shadowComputes;
 
 	private final float sunPathRotation;
 	private final boolean shouldRenderUnderwaterOverlay;
@@ -130,6 +138,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean shouldRenderSun;
 	private final boolean shouldRenderMoon;
 	private final boolean prepareBeforeShadow;
+	private final boolean allowConcurrentCompute;
 
 	@Nullable
 	private final ShadowRenderer shadowRenderer;
@@ -152,13 +161,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.prepareBeforeShadow = programSet.getPackDirectives().isPrepareBeforeShadow();
+		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
+
+		this.shadowComputes = createShadowComputes(programSet.getShadowCompute(), programSet);
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		int depthTextureId = main.getDepthTextureId();
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings());
+		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings(), programSet.getPackDirectives());
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
 		PackShadowDirectives shadowDirectives = programSet.getPackDirectives().getShadowDirectives();
@@ -200,21 +212,21 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			return shadowRenderTargets;
 		};
 
-		this.prepareRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getPrepare(), renderTargets,
+		this.prepareRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getPrepare(), programSet.getPrepareCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()),
 				programSet.getPackDirectives().getExplicitFlips("prepare_pre"));
 
 		flippedAfterPrepare = flipper.snapshot();
 
-		this.deferredRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getDeferred(), renderTargets,
+		this.deferredRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getDeferred(), programSet.getDeferredCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()),
 				programSet.getPackDirectives().getExplicitFlips("deferred_pre"));
 
 		flippedAfterTranslucent = flipper.snapshot();
 
-		this.compositeRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getComposite(), renderTargets,
+		this.compositeRenderer = new CompositeRenderer(programSet.getPackDirectives(), programSet.getComposite(), programSet.getCompositeCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
 				programSet.getPackDirectives().getExplicitFlips("composite_pre"));
@@ -381,6 +393,58 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
 			shadowRenderTargets == null ? null : createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedAfterPrepare, flippedAfterTranslucent,
 			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 }) : null);
+	}
+
+	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
+		ComputeProgram[] programs = new ComputeProgram[compute.length];
+		for (int i = 0; i < programs.length; i++) {
+			ComputeSource source = compute[i];
+			if (source == null || !source.getSource().isPresent()) {
+				continue;
+			} else {
+				ProgramBuilder builder;
+
+				try {
+					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null)), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+				} catch (RuntimeException e) {
+					// TODO: Better error handling
+					throw new RuntimeException("Shader compilation failed!", e);
+				}
+
+				CommonUniforms.addCommonUniforms(builder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier, FogMode.OFF);
+
+				Supplier<ImmutableSet<Integer>> flipped;
+
+				flipped = () -> flippedBeforeShadow;
+
+				TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+
+				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
+					ProgramSamplers.customTextureSamplerInterceptor(builder,
+						customTextureManager.getCustomTextureIdMap(textureStage));
+
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
+				IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
+
+				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
+
+				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
+					if (shadowRenderTargets != null) {
+						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets);
+						IrisImages.addShadowColorImages(builder, shadowRenderTargets);
+					}
+				}
+
+				programs[i] = builder.buildCompute();
+
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+			}
+		}
+
+
+		return programs;
 	}
 
 	private ShaderInstance createShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
@@ -582,6 +646,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			Vector4f emptyClearColor = new Vector4f(1.0F);
 			ImmutableList<ClearPass> passes;
 
+			for (ComputeProgram computeProgram : shadowComputes) {
+				if (computeProgram != null) {
+					computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
+				}
+			}
+
 			if (shadowRenderTargets.isFullClearRequired()) {
 				passes = shadowClearPassesFull;
 				shadowRenderTargets.onFullClear();
@@ -603,7 +673,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthTextureId, main.width, main.height, depthBufferFormat);
+		boolean changed = renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthTextureId, main.width,
+			main.height, depthBufferFormat);
+
+		if (changed) {
+			prepareRenderer.recalculateSizes();
+			deferredRenderer.recalculateSizes();
+			compositeRenderer.recalculateSizes();
+			finalPassRenderer.recalculateSwapPassSize();
+		}
 
 		final ImmutableList<ClearPass> passes;
 
@@ -764,6 +842,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldRenderParticlesBeforeDeferred() {
 		return shouldRenderParticlesBeforeDeferred;
+	}
+
+	@Override
+	public boolean allowConcurrentCompute() {
+		return allowConcurrentCompute;
 	}
 
 	@Override

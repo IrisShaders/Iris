@@ -30,7 +30,7 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
  * do shader transformation.
- * 
+ *
  * The TransformPatcher does caching on the source string and associated
  * parameters. For this to work, all objects contained in a parameter must have
  * an equals method and they must never be changed after having been used for
@@ -54,12 +54,22 @@ public class TransformPatcher {
 		final String vertex;
 		final String geometry;
 		final String fragment;
+		final String compute;
 
 		public CacheKey(Parameters parameters, String vertex, String geometry, String fragment) {
 			this.parameters = parameters;
 			this.vertex = vertex;
 			this.geometry = geometry;
 			this.fragment = fragment;
+			this.compute = null;
+		}
+
+		public CacheKey(Parameters parameters, String compute) {
+			this.parameters = parameters;
+			this.vertex = null;
+			this.geometry = null;
+			this.fragment = null;
+			this.compute = compute;
 		}
 
 		@Override
@@ -70,6 +80,7 @@ public class TransformPatcher {
 			result = prime * result + ((geometry == null) ? 0 : geometry.hashCode());
 			result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
 			result = prime * result + ((vertex == null) ? 0 : vertex.hashCode());
+			result = prime * result + ((compute == null) ? 0 : compute.hashCode());
 			return result;
 		}
 
@@ -101,6 +112,11 @@ public class TransformPatcher {
 				if (other.vertex != null)
 					return false;
 			} else if (!vertex.equals(other.vertex))
+				return false;
+			if (compute == null) {
+				if (other.compute != null)
+					return false;
+			} else if (!compute.equals(other.compute))
 				return false;
 			return true;
 		}
@@ -228,6 +244,36 @@ public class TransformPatcher {
 		return result;
 	}
 
+	private static Map<PatchShaderType, String> transformCompute(String compute, Parameters parameters) {
+		// stop if all are null
+		if (compute == null) {
+			return null;
+		}
+
+		// check if this has been cached
+		CacheKey key;
+		Map<PatchShaderType, String> result = null;
+		if (useCache) {
+			key = new CacheKey(parameters, compute);
+			if (cache.containsKey(key)) {
+				result = cache.get(key);
+			}
+		}
+
+		// if there is no cache result, transform the shaders
+		if (result == null) {
+			transformer.setPrintType(PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.SIMPLE);
+			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
+			inputs.put(PatchShaderType.COMPUTE, compute);
+
+			result = transformer.transform(inputs, parameters);
+			if (useCache) {
+				cache.put(key, result);
+			}
+		}
+		return result;
+	}
+
 	public static Map<PatchShaderType, String> patchAttributes(String vertex, String geometry, String fragment,
 			InputAvailability inputs) {
 		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs));
@@ -249,5 +295,9 @@ public class TransformPatcher {
 
 	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
 		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE));
+	}
+
+	public static String patchCompute(String compute) {
+		return transformCompute(compute, new CompositeParameters.ComputeParameters(Patch.COMPOSITE)).getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }
