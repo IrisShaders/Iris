@@ -24,7 +24,7 @@ public class ClearPassCreator {
 		final int maxDrawBuffers = GlStateManager._getInteger(GL21C.GL_MAX_DRAW_BUFFERS);
 
 		// Sort buffers by their clear color so we can group up glClear calls.
-		Map<Integer, Map<ClearPassInformation, IntList>> clearByColor = new HashMap<>();
+		Map<Vector2i, Map<ClearPassInformation, IntList>> clearByColor = new HashMap<>();
 
 		renderTargetDirectives.getRenderTargetSettings().forEach((bufferI, settings) -> {
 			// unboxed
@@ -46,7 +46,7 @@ public class ClearPassCreator {
 
 				RenderTarget target = renderTargets.get(buffer);
 				Vector4f clearColor = settings.getClearColor().orElse(defaultClearColor);
-				clearByColor.computeIfAbsent(target.getWidth() + (target.getHeight() / 2), size -> new HashMap<>()).computeIfAbsent(new ClearPassInformation(clearColor, target.getWidth(), target.getHeight()), color -> new IntArrayList()).add(buffer);
+				clearByColor.computeIfAbsent(new Vector2i(target.getWidth(), target.getHeight()), size -> new HashMap<>()).computeIfAbsent(new ClearPassInformation(clearColor, target.getWidth(), target.getHeight()), color -> new IntArrayList()).add(buffer);
 			}
 		});
 
