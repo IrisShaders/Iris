@@ -153,6 +153,9 @@ public class CompositeRenderer {
 
 	public void recalculateSizes() {
 		for (Pass pass : passes) {
+			if (pass instanceof ComputeOnlyPass) {
+				continue;
+			}
 			int passWidth = 0, passHeight = 0;
 			for (int buffer : pass.drawBuffers) {
 				RenderTarget target = renderTargets.get(buffer);
@@ -211,7 +214,8 @@ public class CompositeRenderer {
 			for (ComputeProgram computeProgram : renderPass.computes) {
 				if (computeProgram != null) {
 					ranCompute = true;
-					computeProgram.dispatch(baseWidth, baseHeight);
+					com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+					computeProgram.dispatch(main.width, main.height);
 				}
 			}
 
