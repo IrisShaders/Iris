@@ -212,6 +212,45 @@ public class IrisRenderSystem {
 		}
 	}
 
+	public static void getProgramiv(int program, int value, int[] storage) {
+		GL30C.glGetProgramiv(program, value, storage);
+	}
+
+	public static void dispatchCompute(int workX, int workY, int workZ) {
+		GL45C.glDispatchCompute(workX, workY, workZ);
+	}
+
+	public static void dispatchCompute(Vector3i workGroups) {
+		GL45C.glDispatchCompute(workGroups.x, workGroups.y, workGroups.z);
+	}
+
+	public static void memoryBarrier(int barriers) {
+		RenderSystem.assertOnRenderThreadOrInit();
+
+		if (supportsCompute) {
+			GL45C.glMemoryBarrier(barriers);
+		}
+	}
+
+	public static boolean supportsBufferBlending() {
+		return GL.getCapabilities().GL_ARB_draw_buffers_blend || GL.getCapabilities().OpenGL40;
+	}
+
+	public static void disableBufferBlend(int buffer) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL30C.glDisablei(GL30C.GL_BLEND, buffer);
+	}
+
+	public static void enableBufferBlend(int buffer) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL30C.glEnablei(GL30C.GL_BLEND, buffer);
+	}
+
+	public static void blendFuncSeparatei(int buffer, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL40C.glBlendFuncSeparatei(buffer, srcRGB, dstRGB, srcAlpha, dstAlpha);
+  }
+
 	public static void bindTextureToUnit(int unit, int texture) {
 		dsaState.bindTextureToUnit(unit, texture);
 	}

@@ -24,6 +24,7 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
@@ -574,7 +575,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		// TODO: Properly handle empty shaders?
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchAttributes(
 			source.getVertexSource().orElseThrow(NullPointerException::new),
-			source.getGeometrySource().orElse(null), 
+			source.getGeometrySource().orElse(null),
 			source.getFragmentSource().orElseThrow(NullPointerException::new),
 			availability);
 		String vertex = transformed.get(PatchShaderType.VERTEX);
@@ -879,6 +880,58 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		// Reset framebuffer and viewport
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
+	}
+
+	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
+		ComputeProgram[] programs = new ComputeProgram[compute.length];
+		for (int i = 0; i < programs.length; i++) {
+			ComputeSource source = compute[i];
+			if (source == null || !source.getSource().isPresent()) {
+				continue;
+			} else {
+				ProgramBuilder builder;
+
+				try {
+					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+				} catch (RuntimeException e) {
+					// TODO: Better error handling
+					throw new RuntimeException("Shader compilation failed!", e);
+				}
+
+				CommonUniforms.addCommonUniforms(builder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier, FogMode.OFF);
+
+				Supplier<ImmutableSet<Integer>> flipped;
+
+				flipped = () -> flippedBeforeShadow;
+
+				TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+
+				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
+					ProgramSamplers.customTextureSamplerInterceptor(builder,
+						customTextureManager.getCustomTextureIdMap(textureStage));
+
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
+				IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
+
+				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
+
+				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
+					if (shadowRenderTargets != null) {
+						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets);
+						IrisImages.addShadowColorImages(builder, shadowRenderTargets);
+					}
+				}
+
+				programs[i] = builder.buildCompute();
+
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+			}
+		}
+
+
+		return programs;
 	}
 
 	@Override

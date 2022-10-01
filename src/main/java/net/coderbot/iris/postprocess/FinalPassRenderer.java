@@ -313,6 +313,51 @@ public class FinalPassRenderer {
 		return builder.build();
 	}
 
+	private ComputeProgram[] createComputes(ComputeSource[] compute, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot, Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
+		ComputeProgram[] programs = new ComputeProgram[compute.length];
+		for (int i = 0; i < programs.length; i++) {
+			ComputeSource source = compute[i];
+			if (source == null || !source.getSource().isPresent()) {
+				continue;
+			} else {
+				// TODO: Properly handle empty shaders
+				Objects.requireNonNull(flipped);
+				ProgramBuilder builder;
+
+				try {
+					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null)), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+				} catch (RuntimeException e) {
+					// TODO: Better error handling
+					throw new RuntimeException("Shader compilation failed!", e);
+				}
+
+				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
+
+				CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, FogMode.OFF);
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+
+				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
+				IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
+
+				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
+					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get());
+					IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get());
+				}
+
+				// TODO: Don't duplicate this with FinalPassRenderer
+				builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
+
+				programs[i] = builder.buildCompute();
+
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+			}
+		}
+
+
+		return programs;
+	}
+
 	public void destroy() {
 		if (finalPass != null) {
 			finalPass.destroy();
