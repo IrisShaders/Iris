@@ -65,7 +65,9 @@ public class HorizonRenderer {
 		buffer.end();
 
 		this.buffer = new VertexBuffer();
+		this.buffer.bind();
 		this.buffer.upload(buffer);
+		VertexBuffer.unbind();
 	}
 
 	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {
