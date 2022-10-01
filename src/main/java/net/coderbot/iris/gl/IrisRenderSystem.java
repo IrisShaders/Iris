@@ -5,13 +5,16 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.ARBDirectStateAccess;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL32C;
+import org.lwjgl.opengl.GL40C;
 import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL45C;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -25,6 +28,7 @@ public class IrisRenderSystem {
 
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
+	private static boolean supportsCompute;
 
 	public static void initRenderer() {
 		if (GL.getCapabilities().OpenGL45) {
@@ -39,6 +43,8 @@ public class IrisRenderSystem {
 		}
 
 		hasMultibind = GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind;
+
+		supportsCompute = GL.getCapabilities().glDispatchCompute != MemoryUtil.NULL;
 	}
 
 	public static void getIntegerv(int pname, int[] params) {
@@ -213,7 +219,7 @@ public class IrisRenderSystem {
 	}
 
 	public static void getProgramiv(int program, int value, int[] storage) {
-		GL30C.glGetProgramiv(program, value, storage);
+		GL32C.glGetProgramiv(program, value, storage);
 	}
 
 	public static void dispatchCompute(int workX, int workY, int workZ) {
@@ -238,12 +244,12 @@ public class IrisRenderSystem {
 
 	public static void disableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GL30C.glDisablei(GL30C.GL_BLEND, buffer);
+		GL32C.glDisablei(GL32C.GL_BLEND, buffer);
 	}
 
 	public static void enableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GL30C.glEnablei(GL30C.GL_BLEND, buffer);
+		GL32C.glEnablei(GL32C.GL_BLEND, buffer);
 	}
 
 	public static void blendFuncSeparatei(int buffer, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
@@ -287,6 +293,10 @@ public class IrisRenderSystem {
 
 	public static int createTexture(int target) {
 		return dsaState.createTexture(target);
+	}
+
+	public static boolean supportsCompute() {
+		return supportsCompute;
 	}
 
 	public interface DSAAccess {

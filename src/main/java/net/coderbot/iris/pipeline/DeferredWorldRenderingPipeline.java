@@ -936,7 +936,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 					throw new RuntimeException("Shader compilation failed!", e);
 				}
 
-				CommonUniforms.addCommonUniforms(builder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier);
+				CommonUniforms.addCommonUniforms(builder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier, FogMode.OFF);
 
 				Supplier<ImmutableSet<Integer>> flipped;
 

@@ -98,11 +98,11 @@ public class CommonTransformer {
 			Root root,
 			Parameters parameters) {
 		// fix version
-		if (parameters instanceof CompositeParameters.ComputeParameters && tree.getVersionStatement().profile == Profile.CORE) {
+		if (parameters instanceof ComputeParameters && tree.getVersionStatement().profile == Profile.CORE) {
 			return;
 		}
 
-		fixVersion(tree, parameters instanceof CompositeParameters.ComputeParameters);
+		fixVersion(tree, parameters instanceof ComputeParameters);
 
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 

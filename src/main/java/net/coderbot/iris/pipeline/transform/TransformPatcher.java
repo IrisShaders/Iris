@@ -185,6 +185,9 @@ public class TransformPatcher {
 						case COMPOSITE:
 							CompositeTransformer.transform(transformer, tree, root, parameters);
 							break;
+						case COMPUTE:
+							CommonTransformer.transform(transformer, tree, root, parameters);
+							break;
 						case SODIUM:
 							SodiumParameters sodiumParameters = (SodiumParameters) parameters;
 							sodiumParameters.setAlphaFor(type);
@@ -298,6 +301,6 @@ public class TransformPatcher {
 	}
 
 	public static String patchCompute(String compute) {
-		return transformCompute(compute, new CompositeParameters.ComputeParameters(Patch.COMPOSITE)).getOrDefault(PatchShaderType.COMPUTE, null);
+		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE)).getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }
