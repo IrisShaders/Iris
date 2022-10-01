@@ -39,6 +39,7 @@ Iris, Sodium, Minecraft, and system graphics drivers are all incredibly complex 
 - Mobile devices (PojavLauncher, etc)
   - Not supported. Android OpenGL ES drivers have huge amounts of bugs and poorly support most features of OpenGL ES. GL4ES has many bugs as well, and there are some features of OpenGL that cannot be clearly translated to OpenGL ES.
 
+Some driver issues with specific GLSL features may be fixable through patching of the shader code. If you know of an incompatibility caused by a specific piece of code and potentially how to fix it using [glsl-transformer](https://github.com/IrisShaders/glsl-transformer), please contact us so that we can look into it together.
 
 ## What if I want my drivers / software / hardware to be supported?
 
