@@ -2,6 +2,7 @@ package net.coderbot.iris.gl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import net.coderbot.iris.Iris;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.ARBDirectStateAccess;
@@ -13,6 +14,7 @@ import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL40C;
 import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL45C;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -24,6 +26,7 @@ import java.nio.IntBuffer;
 public class IrisRenderSystem {
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
+	private static boolean supportsCompute;
 
 	public static void initRenderer() {
 		if (GL.getCapabilities().OpenGL45) {
@@ -42,6 +45,8 @@ public class IrisRenderSystem {
 		} else {
 			hasMultibind = false;
 		}
+
+		supportsCompute = supportsCompute();
 	}
 
 	public static void getIntegerv(int pname, int[] params) {
@@ -206,7 +211,7 @@ public class IrisRenderSystem {
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		if (GL.getCapabilities().OpenGL42) {
-			GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
+			GL45C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
 		} else {
 			EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
 		}
@@ -214,11 +219,29 @@ public class IrisRenderSystem {
 
 	public static int getMaxImageUnits() {
 		if (GL.getCapabilities().OpenGL42) {
-			return GlStateManager._getInteger(GL42C.GL_MAX_IMAGE_UNITS);
+			return GlStateManager._getInteger(GL45C.GL_MAX_IMAGE_UNITS);
 		} else if (GL.getCapabilities().GL_EXT_shader_image_load_store) {
 			return GlStateManager._getInteger(EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT);
 		} else {
 			return 0;
+		}
+	}
+
+	public static void getProgramiv(int program, int value, int[] storage) {
+		GL30C.glGetProgramiv(program, value, storage);
+	}
+
+	public static void dispatchCompute(int workX, int workY, int workZ) {
+		GL45C.glDispatchCompute(workX, workY, workZ);
+	}
+
+	public static void dispatchCompute(Vector3i workGroups) {
+		GL45C.glDispatchCompute(workGroups.x, workGroups.y, workGroups.z);
+	}
+
+	public static void memoryBarrier(int barriers) {
+		if (supportsCompute) {
+			GL45C.glMemoryBarrier(barriers);
 		}
 	}
 
@@ -498,4 +521,9 @@ public class IrisRenderSystem {
 		}
 	}
 	 */
+
+	// TODO: Proper notification of compute support
+	public static boolean supportsCompute() {
+		return GL.getCapabilities().glDispatchCompute != MemoryUtil.NULL;
+	}
 }

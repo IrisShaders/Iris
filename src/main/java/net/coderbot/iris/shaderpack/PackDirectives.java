@@ -27,6 +27,7 @@ public class PackDirectives {
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean oldLighting;
+	private boolean concurrentCompute;
 	private boolean oldHandLight;
 	private boolean particlesBeforeDeferred;
 	private boolean prepareBeforeShadow;
@@ -58,6 +59,7 @@ public class PackDirectives {
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
+		concurrentCompute = properties.getConcurrentCompute().orElse(false);
 		oldHandLight = properties.getOldHandLight().orElse(true);
 		explicitFlips = properties.getExplicitFlips();
 		scaleOverrides = properties.getTextureScaleOverrides();
@@ -70,6 +72,7 @@ public class PackDirectives {
 		cloudSetting = directives.cloudSetting;
 		separateAo = directives.separateAo;
 		oldLighting = directives.oldLighting;
+		concurrentCompute = directives.concurrentCompute;
 		explicitFlips = directives.explicitFlips;
 		scaleOverrides = directives.scaleOverrides;
 		particlesBeforeDeferred = directives.particlesBeforeDeferred;
@@ -142,6 +145,10 @@ public class PackDirectives {
 
 	public boolean areParticlesBeforeDeferred() {
 		return particlesBeforeDeferred;
+	}
+
+	public boolean getConcurrentCompute() {
+		return concurrentCompute;
 	}
 
 	public boolean isPrepareBeforeShadow() {
