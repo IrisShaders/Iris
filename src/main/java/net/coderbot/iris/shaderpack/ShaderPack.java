@@ -53,6 +53,7 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
 	private final EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new EnumMap<>(TextureStage.class);
+	private final Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
 	private final OptionMenuContainer menuContainer;
@@ -214,6 +215,14 @@ public class ShaderPack {
 			});
 
 			customTextureDataMap.put(textureStage, innerCustomTextureDataMap);
+		});
+
+		shaderProperties.getIrisCustomTextures().forEach((name, texture) -> {
+			try {
+				irisCustomTextureDataMap.put(name, readTexture(root, texture));
+			} catch (IOException e) {
+				Iris.logger.error("Unable to read the custom texture at " + texture.getName(), e);
+			}
 		});
 	}
 
@@ -378,6 +387,10 @@ public class ShaderPack {
 
 	public EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> getCustomTextureDataMap() {
 		return customTextureDataMap;
+	}
+
+	public Object2ObjectMap<String, CustomTextureData> getIrisCustomTextureDataMap() {
+		return irisCustomTextureDataMap;
 	}
 
 	public Optional<CustomTextureData> getCustomNoiseTexture() {

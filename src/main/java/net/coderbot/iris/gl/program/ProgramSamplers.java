@@ -1,8 +1,11 @@
 package net.coderbot.iris.gl.program;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
@@ -10,6 +13,7 @@ import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.lwjgl.opengl.GL20C;
@@ -89,8 +93,8 @@ public class ProgramSamplers {
 		private final ImmutableList.Builder<SamplerBinding> samplers;
 		private final ImmutableList.Builder<ValueUpdateNotifier> notifiersToReset;
 		private final List<GlUniform1iCall> calls;
-		private int remainingUnits;
-		private int nextUnit;
+		private Object2IntMap<TextureType> remainingUnits;
+		private Object2IntMap<TextureType> nextUnit;
 
 		private Builder(int program, Set<Integer> reservedTextureUnits) {
 			this.program = program;
@@ -109,11 +113,16 @@ public class ProgramSamplers {
 				}
 			}
 
-			this.remainingUnits = maxTextureUnits - reservedTextureUnits.size();
-			this.nextUnit = 0;
+			this.remainingUnits = new Object2IntArrayMap<>();
+			this.nextUnit = new Object2IntArrayMap<>();
+			for (TextureType type : TextureType.values()) {
+				this.remainingUnits.put(type, maxTextureUnits - reservedTextureUnits.size());
+			}
 
-			while (reservedTextureUnits.contains(nextUnit)) {
-				nextUnit += 1;
+			while (reservedTextureUnits.contains(nextUnit.getOrDefault(TextureType.TEXTURE_2D, 0))) {
+				for (TextureType type : TextureType.values()) {
+					this.nextUnit.put(type, this.nextUnit.getOrDefault(type, 0) + 1);
+				}
 			}
 
 			//System.out.println("Begin building samplers. Reserved texture units are " + reservedTextureUnits +
@@ -148,12 +157,12 @@ public class ProgramSamplers {
 
 		@Override
 		public boolean addDefaultSampler(IntSupplier sampler, String... names) {
-			if (nextUnit != 0) {
+			if (nextUnit.getOrDefault(TextureType.TEXTURE_2D, 0) != 0) {
 				// TODO: Relax this restriction!
 				throw new IllegalStateException("Texture unit 0 is already used.");
 			}
 
-			return addDynamicSampler(sampler, true, null, names);
+			return addDynamicSampler(TextureType.TEXTURE_2D, sampler, true, null, names);
 		}
 
 		/**
@@ -161,21 +170,25 @@ public class ProgramSamplers {
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override
-		public boolean addDynamicSampler(IntSupplier sampler, String... names) {
-			return addDynamicSampler(sampler, false, null, names);
+		public boolean addDynamicSampler(TextureType type, IntSupplier sampler, String... names) {
+			return addDynamicSampler(type, sampler, false, null, names);
+		}
+
+		@Override
+		public boolean addDynamicSampler(TextureType type, IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+			return addDynamicSampler(type, sampler, false, notifier, names);
 		}
 
 		/**
 		 * Adds a sampler
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
-		@Override
-		public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
-			notifiersToReset.add(notifier);
-			return addDynamicSampler(sampler, false, notifier, names);
-		}
+		private boolean addDynamicSampler(TextureType type, IntSupplier sampler, boolean used, ValueUpdateNotifier notifier, String... names) {
+			if (notifier != null) {
+				notifiersToReset.add(notifier);
+			}
 
-		private boolean addDynamicSampler(IntSupplier sampler, boolean used, ValueUpdateNotifier notifier, String... names) {
+			int nextUnitForType = nextUnit.getOrDefault(type, 0);
 			for (String name : names) {
 				int location = IrisRenderSystem.getUniformLocation(program, name);
 
@@ -185,14 +198,14 @@ public class ProgramSamplers {
 				}
 
 				// Make sure that we aren't out of texture units.
-				if (remainingUnits <= 0) {
+				if (remainingUnits.getOrDefault(type, 0) <= 0) {
 					throw new IllegalStateException("No more available texture units while activating sampler " + name);
 				}
 
 				//System.out.println("Binding dynamic sampler " + name + " to texture unit " + nextUnit);
 
 				// Set up this sampler uniform to use this particular texture unit.
-				calls.add(new GlUniform1iCall(location, nextUnit));
+				calls.add(new GlUniform1iCall(location, nextUnitForType));
 
 				// And mark this texture unit as used.
 				used = true;
@@ -202,14 +215,16 @@ public class ProgramSamplers {
 				return false;
 			}
 
-			samplers.add(new SamplerBinding(nextUnit, sampler, notifier));
+			samplers.add(new SamplerBinding(type, nextUnitForType, sampler, notifier));
 
-			remainingUnits -= 1;
-			nextUnit += 1;
+			remainingUnits.put(type, remainingUnits.getOrDefault(type, 0) - 1);
+			nextUnitForType++;
 
-			while (remainingUnits > 0 && reservedTextureUnits.contains(nextUnit)) {
-				nextUnit += 1;
+			while (remainingUnits.getOrDefault(type, 0) > 0 && reservedTextureUnits.contains(nextUnitForType)) {
+				nextUnitForType += 1;
 			}
+
+			nextUnit.put(type, nextUnitForType);
 
 			//System.out.println("The next unit is " + nextUnit + ", there are " + remainingUnits + " units remaining.");
 
@@ -288,10 +303,24 @@ public class ProgramSamplers {
 		}
 
 		@Override
+		public boolean addDynamicSampler(TextureType type, IntSupplier sampler, String... names) {
+			sampler = getOverride(sampler, names);
+
+			return samplerHolder.addDynamicSampler(type, sampler, names);
+		}
+
+		@Override
 		public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
 			sampler = getOverride(sampler, names);
 
 			return samplerHolder.addDynamicSampler(sampler, notifier, names);
+		}
+
+		@Override
+		public boolean addDynamicSampler(TextureType type, IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+			sampler = getOverride(sampler, names);
+
+			return samplerHolder.addDynamicSampler(type, sampler, notifier, names);
 		}
 	}
 }

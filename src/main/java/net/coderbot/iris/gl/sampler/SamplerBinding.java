@@ -13,8 +13,10 @@ public class SamplerBinding {
 	private final int textureUnit;
 	private final IntSupplier texture;
 	private final ValueUpdateNotifier notifier;
+	private final TextureType textureType;
 
-	public SamplerBinding(int textureUnit, IntSupplier texture, ValueUpdateNotifier notifier) {
+	public SamplerBinding(TextureType type, int textureUnit, IntSupplier texture, ValueUpdateNotifier notifier) {
+		this.textureType = type;
 		this.textureUnit = textureUnit;
 		this.texture = texture;
 		this.notifier = notifier;
@@ -29,6 +31,6 @@ public class SamplerBinding {
 	}
 
 	private void updateSampler() {
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), textureUnit, texture.getAsInt());
+		IrisRenderSystem.bindTextureToUnit(textureType.getGlType(), textureUnit, texture.getAsInt());
 	}
 }

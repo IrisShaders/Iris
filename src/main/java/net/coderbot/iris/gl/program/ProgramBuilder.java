@@ -10,6 +10,7 @@ import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
+import net.coderbot.iris.gl.texture.TextureType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.IntSupplier;
@@ -120,8 +121,18 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		return samplers.addDynamicSampler(sampler, names);
 	}
 
+	@Override
+	public boolean addDynamicSampler(TextureType type, IntSupplier sampler, String... names) {
+		return samplers.addDynamicSampler(type, sampler, names);
+	}
+
 	public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
 		return samplers.addDynamicSampler(sampler, notifier, names);
+	}
+
+	@Override
+	public boolean addDynamicSampler(TextureType type, IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+		return samplers.addDynamicSampler(type, sampler, notifier, names);
 	}
 
 	@Override

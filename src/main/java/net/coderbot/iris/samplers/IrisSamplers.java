@@ -2,7 +2,9 @@ package net.coderbot.iris.samplers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
+import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.texture.TextureAccess;
@@ -163,5 +165,11 @@ public class IrisSamplers {
 				"depthtex1");
 		samplers.addDynamicSampler(renderTargets.getDepthTextureNoHand()::getTextureId,
 				"depthtex2");
+	}
+
+	public static void addCustomTextures(SamplerHolder samplers, Object2ObjectMap<String, TextureAccess> irisCustomTextures) {
+		irisCustomTextures.forEach((name, texture) -> {
+			samplers.addDynamicSampler(texture.getType(), texture.getTextureId(), name);
+		});
 	}
 }

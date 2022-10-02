@@ -71,19 +71,19 @@ public class IrisRenderSystem {
 
 	public static void texImage1D(int texture, int target, int level, int internalformat, int width, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GlStateManager._bindTexture(texture);
+		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL30C.glTexImage1D(target, level, internalformat, width, border, format, type, pixels);
 	}
 
 	public static void texImage2D(int texture, int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GlStateManager._bindTexture(texture);
+		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL30C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 	}
 
 	public static void texImage3D(int texture, int target, int level, int internalformat, int width, int height, int depth, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
-		GlStateManager._bindTexture(texture);
+		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL30C.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
 	}
 

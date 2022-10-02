@@ -31,18 +31,15 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.coderbot.iris.vendored.joml.Vector3i;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class FinalPassRenderer {
@@ -53,6 +50,7 @@ public class FinalPassRenderer {
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
 	private final GlFramebuffer colorHolder;
+	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
 	private int lastColorTextureId;
 	private int lastColorTextureVersion;
 	private final TextureAccess noiseTexture;
@@ -66,10 +64,11 @@ public class FinalPassRenderer {
 							 CenterDepthSampler centerDepthSampler,
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
 							 Object2ObjectMap<String, TextureAccess> customTextureIds,
-							 ImmutableSet<Integer> flippedAtLeastOnce) {
+							 Object2ObjectMap<String, TextureAccess> irisCustomTextures, ImmutableSet<Integer> flippedAtLeastOnce) {
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.customTextureIds = customTextureIds;
+		this.irisCustomTextures = irisCustomTextures;
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -326,6 +325,7 @@ public class FinalPassRenderer {
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
@@ -362,6 +362,8 @@ public class FinalPassRenderer {
 
 				CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+
 				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);

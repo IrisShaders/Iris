@@ -30,16 +30,13 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.coderbot.iris.vendored.joml.Vector3i;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class CompositeRenderer {
@@ -51,17 +48,19 @@ public class CompositeRenderer {
 	private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
+	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
 
 	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets,
 							 TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
-							 Object2ObjectMap<String, TextureAccess> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips) {
+							 Object2ObjectMap<String, TextureAccess> customTextureIds, Object2ObjectMap<String, TextureAccess> irisCustomTextures, ImmutableMap<Integer, Boolean> explicitPreFlips) {
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.renderTargets = renderTargets;
 		this.customTextureIds = customTextureIds;
+		this.irisCustomTextures = irisCustomTextures;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -314,6 +313,8 @@ public class CompositeRenderer {
 
 		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
@@ -352,6 +353,8 @@ public class CompositeRenderer {
 
 				CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+
 				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
