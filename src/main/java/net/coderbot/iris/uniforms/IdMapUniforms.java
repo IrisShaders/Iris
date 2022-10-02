@@ -5,14 +5,14 @@ import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.coderbot.iris.vendored.joml.Vector3f;
+import net.irisshaders.iris.api.v0.item.IrisItemColorProvider;
 import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.function.IntSupplier;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
@@ -31,7 +31,9 @@ public final class IdMapUniforms {
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId", mainHandSupplier::getIntID)
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2", offHandSupplier::getIntID)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", mainHandSupplier::getLightValue)
-			.uniform1i(PER_FRAME, "heldBlockLightValue2", offHandSupplier::getLightValue);
+			.uniform1i(PER_FRAME, "heldBlockLightValue2", offHandSupplier::getLightValue)
+			.uniform3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
+			.uniform3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
 
 		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
 				CapturedRenderingState.INSTANCE.getEntityIdNotifier());
@@ -50,6 +52,7 @@ public final class IdMapUniforms {
 		private final boolean applyOldHandLight;
 		private int intID;
 		private int lightValue;
+		private Vector3f lightColor;
 
 		HeldItemSupplier(InteractionHand hand, Object2IntFunction<NamespacedId> itemIdMap, boolean shouldApplyOldHandLight) {
 			this.hand = hand;
@@ -62,6 +65,7 @@ public final class IdMapUniforms {
 				// Not valid when the player doesn't exist
 				intID = -1;
 				lightValue = 0;
+				lightColor = IrisItemColorProvider.DEFAULT_LIGHT_COLOR;
 				return;
 			}
 
@@ -78,6 +82,8 @@ public final class IdMapUniforms {
 				lightValue = ((IrisItemLightProvider) heldStack.getItem()).getLightEmission(Minecraft.getInstance().player, heldStack);
 			}
 
+			lightColor = ((IrisItemColorProvider)heldStack.getItem()).getLightColor(Minecraft.getInstance().player, heldStack);
+
 			ResourceLocation heldItemId = Registry.ITEM.getKey(heldStack.getItem());
 			intID = itemIdMap.applyAsInt(new NamespacedId(heldItemId.getNamespace(), heldItemId.getPath()));
 		}
@@ -88,6 +94,10 @@ public final class IdMapUniforms {
 
 		public int getLightValue() {
 			return lightValue;
+		}
+
+		public Vector3f getLightColor() {
+			return lightColor;
 		}
 	}
 }
