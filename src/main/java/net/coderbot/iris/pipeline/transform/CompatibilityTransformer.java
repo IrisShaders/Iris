@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,9 +73,24 @@ public class CompatibilityTransformer {
 		 */
 		Map<FunctionDefinition, Set<String>> constFunctions = new HashMap<>();
 		Set<String> processingSet = new HashSet<>();
+		List<FunctionDefinition> unusedFunctions = new LinkedList<>();
 		for (FunctionDefinition definition : root.nodeIndex.get(FunctionDefinition.class)) {
-			// stop on functions without parameters
+			// check if this function is ever used
 			FunctionPrototype prototype = definition.getFunctionPrototype();
+			String functionName = prototype.getName().getName();
+			if (!functionName.equals("main") && root.identifierIndex.getStream(functionName).count() <= 1) {
+				// remove unused functions
+				// unused function removal can be helpful since some drivers don't do some
+				// checks on unused functions. Additionally, sometimes bugs in unused code can
+				// be avoided this way.
+				// TODO: integrate into debug mode (allow user to disable this behavior for
+				// debugging purposes)
+				unusedFunctions.add(definition);
+				LOGGER.warn("Removing unused function " + functionName);
+				continue;
+			}
+
+			// stop on functions without parameters
 			if (prototype.getChildren().isEmpty()) {
 				continue;
 			}
@@ -91,6 +107,11 @@ public class CompatibilityTransformer {
 			if (!names.isEmpty()) {
 				constFunctions.put(definition, names);
 			}
+		}
+
+		// remove collected unused functions
+		for (FunctionDefinition definition : unusedFunctions) {
+			definition.detachAndDelete();
 		}
 
 		// find the reference expressions for the const parameters
