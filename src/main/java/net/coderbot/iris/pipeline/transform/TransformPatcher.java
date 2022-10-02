@@ -149,7 +149,7 @@ public class TransformPatcher {
 				}
 				Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 				if (version.number >= 200) {
-					version = Version.GL33;
+					version = Version.GLSL33;
 				}
 				transformer.getLexer().version = version;
 
@@ -214,7 +214,7 @@ public class TransformPatcher {
 								// }
 								versionStatement.profile = Profile.CORE;
 							} else {
-								versionStatement.version = Version.GL33;
+								versionStatement.version = Version.GLSL33;
 								versionStatement.profile = Profile.CORE;
 							}
 							switch (parameters.patch) {
