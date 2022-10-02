@@ -8,6 +8,7 @@ import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.texture.TextureDefinition;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
@@ -194,7 +195,7 @@ public class ShaderPack {
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
-				return readTexture(root, path);
+				return readTexture(root, new TextureDefinition.PNGDefinition(path));
 			} catch (IOException e) {
 				Iris.logger.error("Unable to read the custom noise texture at " + path, e);
 
@@ -245,8 +246,9 @@ public class ShaderPack {
 	}
 
 	// TODO: Implement raw texture data types
-	public CustomTextureData readTexture(Path root, String path) throws IOException {
+	public CustomTextureData readTexture(Path root, TextureDefinition definition) throws IOException {
 		CustomTextureData customTextureData;
+		String path = definition.getName();
 		if (path.contains(":")) {
 			String[] parts = path.split(":");
 
@@ -291,7 +293,26 @@ public class ShaderPack {
 
 			byte[] content = Files.readAllBytes(root.resolve(path));
 
-			customTextureData = new CustomTextureData.PngData(new TextureFilteringData(blur, clamp), content);
+			if (definition instanceof TextureDefinition.PNGDefinition) {
+				customTextureData = new CustomTextureData.PngData(new TextureFilteringData(blur, clamp), content);
+			} else if (definition instanceof TextureDefinition.RawDefinition) {
+				TextureDefinition.RawDefinition rawDefinition = (TextureDefinition.RawDefinition) definition;
+				switch (rawDefinition.getTarget()) {
+					case TEXTURE_1D:
+						customTextureData = new CustomTextureData.RawData1D(content, rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
+						break;
+					case TEXTURE_2D:
+						customTextureData = new CustomTextureData.RawData2D(content, rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+						break;
+					case TEXTURE_3D:
+						customTextureData = new CustomTextureData.RawData3D(content, rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
+						break;
+					default:
+						throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
+				}
+			} else {
+				customTextureData = null;
+			}
 		}
 		return customTextureData;
 	}

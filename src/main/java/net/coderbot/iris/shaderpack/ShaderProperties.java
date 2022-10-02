@@ -16,6 +16,7 @@ import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.texture.TextureDefinition;
 import net.coderbot.iris.gl.texture.TextureScaleOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
@@ -82,7 +83,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, TextureScaleOverride> textureScaleOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, ArrayList<BufferBlendOverride>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
-	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
+	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	private Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
@@ -294,7 +295,7 @@ public class ShaderProperties {
 				TextureStage stage = optionalTextureStage.get();
 
 				customTextures.computeIfAbsent(stage, _stage -> new Object2ObjectOpenHashMap<>())
-						.put(samplerName, value);
+						.put(samplerName, new TextureDefinition.PNGDefinition(value));
 			});
 
 			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
@@ -565,7 +566,7 @@ public class ShaderProperties {
 		return bufferBlendOverrides;
 	}
 
-	public EnumMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
+	public EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> getCustomTextures() {
 		return customTextures;
 	}
 
