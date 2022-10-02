@@ -7,10 +7,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
-import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.Version;
-import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
@@ -96,13 +93,6 @@ public class CommonTransformer {
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
-		// fix version
-		if (parameters instanceof ComputeParameters && tree.getVersionStatement().profile == Profile.CORE) {
-			return;
-		}
-
-		fixVersion(tree, parameters instanceof ComputeParameters);
-
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
@@ -307,29 +297,6 @@ public class CommonTransformer {
 			return null;
 		}
 		return new RenameTargetResult(samplerDeclaration, samplerDeclarationMember, gtextureTargets.stream());
-	}
-
-	private static void fixVersion(TranslationUnit tree, boolean isCompute) {
-		VersionStatement versionStatement = tree.getVersionStatement();
-		if (versionStatement == null) {
-			throw new IllegalStateException("Missing the version statement!");
-		}
-		Profile profile = versionStatement.profile;
-		if (profile == Profile.CORE) {
-			throw new IllegalStateException(
-					"Transforming a shader that is already built against the core profile???");
-		}
-		if (versionStatement.version.number >= 200) {
-			if (!isCompute && profile != Profile.COMPATIBILITY) {
-				throw new IllegalStateException(
-						"Expected \"compatibility\" after the GLSL version: #version " + versionStatement.version + " "
-								+ profile);
-			}
-			versionStatement.profile = Profile.CORE;
-		} else {
-			versionStatement.version = Version.GL33;
-			versionStatement.profile = Profile.CORE;
-		}
 	}
 
 	public static void applyIntelHd4000Workaround(Root root) {
