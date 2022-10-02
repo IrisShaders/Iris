@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
+import net.coderbot.iris.gl.texture.TextureAccess;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.lwjgl.opengl.GL20C;
@@ -74,11 +75,11 @@ public class ProgramSamplers {
 		return new Builder(program, reservedTextureUnits);
 	}
 
-	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds) {
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, TextureAccess> customTextureIds) {
 		return customTextureSamplerInterceptor(samplerHolder, customTextureIds, ImmutableSet.of());
 	}
 
-	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+	public static CustomTextureSamplerInterceptor customTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, TextureAccess> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
 		return new CustomTextureSamplerInterceptor(samplerHolder, customTextureIds, flippedAtLeastOnceSnapshot);
 	}
 
@@ -222,10 +223,10 @@ public class ProgramSamplers {
 
 	public static final class CustomTextureSamplerInterceptor implements SamplerHolder {
 		private final SamplerHolder samplerHolder;
-		private final Object2ObjectMap<String, IntSupplier> customTextureIds;
+		private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 		private final ImmutableSet<String> deactivatedOverrides;
 
-		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
+		private CustomTextureSamplerInterceptor(SamplerHolder samplerHolder, Object2ObjectMap<String, TextureAccess> customTextureIds, ImmutableSet<Integer> flippedAtLeastOnceSnapshot) {
 			this.samplerHolder = samplerHolder;
 			this.customTextureIds = customTextureIds;
 
@@ -245,7 +246,7 @@ public class ProgramSamplers {
 		private IntSupplier getOverride(IntSupplier existing, String... names) {
 			for (String name : names) {
 				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
-					return customTextureIds.get(name);
+					return customTextureIds.get(name).getTextureId();
 				}
 			}
 

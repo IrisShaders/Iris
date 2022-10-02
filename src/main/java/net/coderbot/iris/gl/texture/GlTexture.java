@@ -6,8 +6,9 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
+import java.util.function.IntSupplier;
 
-public class GlTexture extends GlResource {
+public class GlTexture extends GlResource implements TextureAccess {
 	private final TextureType target;
 
 	public GlTexture(TextureType target, int sizeX, int sizeY, int sizeZ, int internalFormat, int format, int pixelType, byte[] pixels) {
@@ -17,7 +18,7 @@ public class GlTexture extends GlResource {
 		ByteBuffer buffer = MemoryUtil.memAlloc(pixels.length);
 		buffer.put(pixels);
 		buffer.flip();
-		target.apply(this.getId(), sizeX, sizeY, sizeZ, internalFormat, format, pixelType, buffer);
+		target.apply(this.getGlId(), sizeX, sizeY, sizeZ, internalFormat, format, pixelType, buffer);
 		MemoryUtil.memFree(buffer);
 
 		IrisRenderSystem.bindTextureForSetup(target.getGlType(), 0);
@@ -33,8 +34,14 @@ public class GlTexture extends GlResource {
 		IrisRenderSystem.bindTextureToUnit(target.getGlType(), unit, getGlId());
 	}
 
-	public int getId() {
-		return getGlId();
+	@Override
+	public TextureType getType() {
+		return target;
+	}
+
+	@Override
+	public IntSupplier getTextureId() {
+		return this::getGlId;
 	}
 
 	@Override

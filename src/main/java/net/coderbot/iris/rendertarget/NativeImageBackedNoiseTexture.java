@@ -1,12 +1,15 @@
 package net.coderbot.iris.rendertarget;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.gl.texture.TextureType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 
 import java.util.Objects;
 import java.util.Random;
+import java.util.function.IntSupplier;
 
-public class NativeImageBackedNoiseTexture extends DynamicTexture {
+public class NativeImageBackedNoiseTexture extends DynamicTexture implements TextureAccess {
 	public NativeImageBackedNoiseTexture(int size) {
 		super(create(size));
 	}
@@ -32,5 +35,15 @@ public class NativeImageBackedNoiseTexture extends DynamicTexture {
 
 		bind();
 		image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), true, false, false, false);
+	}
+
+	@Override
+	public TextureType getType() {
+		return TextureType.TEXTURE_2D;
+	}
+
+	@Override
+	public IntSupplier getTextureId() {
+		return this::getId;
 	}
 }
