@@ -185,6 +185,7 @@ public class TransformPatcher {
 						throw new IllegalStateException("Missing the version statement!");
 					}
 					Profile profile = versionStatement.profile;
+					Version version = versionStatement.version;
 					switch (parameters.patch) {
 						case ATTRIBUTES:
 							AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
@@ -195,21 +196,25 @@ public class TransformPatcher {
 							CommonTransformer.transform(transformer, tree, root, parameters);
 							break;
 						default:
-							if (profile == Profile.CORE) {
-								throw new IllegalStateException(
-										"Transforming a shader that is already built against the core profile???");
+							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
+								if (parameters.type == PatchShaderType.VERTEX) {
+									throw new IllegalStateException(
+											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless)");
+								} else {
+									break;
+								}
 							}
-							if (versionStatement.version.number >= 330) {
+							if (version.number >= 330) {
 								if (profile != Profile.COMPATIBILITY) {
 									throw new IllegalStateException(
-											"Expected \"compatibility\" after the GLSL version: #version " + versionStatement.version + " "
+											"Expected \"compatibility\" after the GLSL version: #version " + version + " "
 													+ profile);
 								}
 								// enable this and disable the code above if shaders that aren't declaring
 								// compatibility profile should be allowed
 								// // don't patch no profile is set (by exclusion it can't be core here)
 								// // TODO: Implement Optifine's special core profile mode
-								// if (profile == null) {
+								// if (profile == null) {$
 								// break;
 								// }
 								versionStatement.profile = Profile.CORE;
